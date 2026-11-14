@@ -4,11 +4,11 @@
     "id": "6f5f455d-b744-425d-a21e-494fc18caaf2",
     "title": "Flow",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f45624fe8e84193e",
+  "synced": "eb2dd4781889454d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

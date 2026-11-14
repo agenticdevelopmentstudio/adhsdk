@@ -1,7 +1,7 @@
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| integration-records-001 | clock-format, clock-now | `IntegrationClock.now()` (test `clock`) | The string matches `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$` (the test asserts only that it ends with `Z` and contains `.`) |
+| integration-records-001 | clock-format, clock-now | `IntegrationClock.now()` (test `clock`) | The string matches `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$` |
 | integration-records-002 | column-encoding, json-text-columns, connection-table | Insert `IntegrationConnection(id: "c1", externalAccountId: "a@b.c", displayName: "A", status: .active, syncSettings: includeSpam true, scopes: "gmail.modify")` (test `connectionRoundTrip`) | Column `sync_settings` is text containing `includeSpam` |
 | integration-records-003 | enum-text-columns, connection-status-cases | Same insert | Column `status` reads `active` and `typeof(status)` is `text` |
 | integration-records-004 | column-decoding | Fetch the row by key `c1` (test `connectionRoundTrip`) | `externalAccountId == "a@b.c"`, `status == .active`, `syncSettings.includeSpam == true` |
@@ -16,3 +16,4 @@
 | integration-records-013 | label-table | `EmailLabel.databaseTableName` | `"integration_email_labels"` (untested) |
 | integration-records-014 | provider-config-table | `ProviderConfig.databaseTableName` | `"integration_provider_configs"` (untested) |
 | integration-records-015 | action-log-table | `ActionLog.databaseTableName` | `"integration_action_logs"` (untested) |
+| integration-records-016 | clock-format, clock-now | `IntegrationClock.string(from:)` of the dates 1700000000.123 and 1700000000.5 seconds since 1970-01-01T00:00:00Z (untested) | `2023-11-14T22:13:20.123Z` and `2023-11-14T22:13:20.500Z`; the first sorts before the second as text, and a port's `Date.toISOString()` or C# format string yields the same two strings |

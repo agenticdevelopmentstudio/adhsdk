@@ -3,7 +3,7 @@
 |---|---|---|---|
 | T1 | browse-the-full-forest | open with a 2-level forest | roots render; expanding a root reveals its children |
 | T2 | filter-by-substring-with-trail | type a substring matching a depth-2 node | that node appears as an option with its ancestor trail (names joined with " / ") |
-| T3 | return-a-place-not-a-record, disable-confirm-when-unpickable | open, confirm disabled; click a row, confirm | confirm was disabled with no selection; `onConfirm(nodeId)` fires after the click |
+| T3 | return-a-place-not-a-record, disable-confirm-when-unpickable | open with `allowRoot` unset, confirm disabled; click a row, confirm | confirm was disabled with no selection; `onConfirm(nodeId)` fires after the click |
 | T4 | offer-a-root-row-only-when-allowed | `allowRoot`, select "Top level", confirm | `onConfirm(null)` |
 | T5 | disable-forbidden-rows | `disabledIds=[x]`, click row x | row x stays unselected; confirm stays disabled |
 | T6 | cancel-without-confirming | open, click Cancel | `onCancel` fires; `onConfirm` never fires |

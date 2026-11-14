@@ -20,8 +20,7 @@ common case requires no wiring.
 
 **Decision**: URL-driven selection is opt-in via `paramKey`.
 **Rationale**: Deep-linking (via URL parameter) is a web pattern and not all
-use cases need it; omitting `paramKey` preserves the legacy internal-state-only
-behavior byte-for-byte. When provided, selecting a row mirrors the id to the
+use cases need it; omitting `paramKey` leaves selection in internal state only. When provided, selecting a row mirrors the id to the
 URL and reloading or sharing the link restores the open row without
 remounting.
 **Approved**: pending

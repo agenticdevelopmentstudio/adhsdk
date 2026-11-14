@@ -20,7 +20,7 @@
 | mrr-017 | render-updated-date | `hit.updatedAt = ISO 8601 date string` | Renders " · Updated {formatDate(hit.updatedAt)}" (e.g. " · Updated Jun 24, 2026") after the author line |
 | mrr-018 | render-updated-date | `hit.updatedAt = null` or undefined | Date portion of footer is not rendered |
 | mrr-019 | bind-select-callback | User clicks the button | `onSelect(hit)` is called with the hit object |
-| mrr-020 | highlight-selected-state | `selected = true` | Border color is accent (`apt-gold`) |
+| mrr-020 | highlight-selected-state | `selected = true` | Border color is the accent token (`apt-gold` on web) |
 | mrr-021 | highlight-selected-state | `selected = false` | Border color is neutral; hover state applies strong border |
 | mrr-022 | indicate-pressed-state | `selected = true` | `aria-pressed="true"` on button element |
 | mrr-023 | indicate-pressed-state | `selected = false` | `aria-pressed="false"` on button element |
@@ -29,9 +29,11 @@
 | mrr-026 | implement-roving-tabindex | `active = undefined` | No tabindex attribute set; natural tab order applies |
 | mrr-027 | forward-ref-to-button | `controlRef` is a React ref object | `controlRef.current` points to the button DOM element |
 | mrr-028 | manage-link-tabindex | `active = true` (button's tabIndex is 0) | Link element also has `tabIndex={0}` |
+| mrr-034 | manage-link-tabindex | `active = false` (button's tabIndex is -1) | Link element also has `tabIndex={-1}` |
+| mrr-035 | manage-link-tabindex | `active = undefined` (button has no tabindex attribute) | Link element also has no tabindex attribute |
 | mrr-029 | enlarge-link-touch-target | "View paper" link is rendered | Invisible `::after` overlay covers full link width with 24px height |
 | mrr-030 | enlarge-link-touch-target | User touches link near but outside text bounds | Touch target is activated if within the 24px overlay zone |
 | mrr-031 | set-link-href | `href = "/paper/123"` | Link element has `href="/paper/123"` |
 | mrr-032 | escape-content | `hit.title` contains `<script>alert('xss')</script>` | Content is rendered as text, script is not executed |
-| mrr-033 | render-rounded-corners | Component is rendered | Article, badge, and focus rings display consistent rounded corners |
+| mrr-033 | render-rounded-corners | Component is rendered | Computed `border-radius` of the article equals `--radius-lg`; computed `border-radius` of the select button's focus ring equals `--radius-md` |
 

@@ -1,7 +1,7 @@
 
 - **Unparsable timestamps**: a `lastActivityAt` or `startedAt` that `UTCTimestamp.canonical` rejects MUST pass through unchanged; no error is raised.
 - **Unknown terminal**: an empty or unrecognised `TERM_PROGRAM` yields the raw value as `terminal`; for send it is refused with `an unknown terminal` when empty.
-- **Unnamed session**: `sessionName` is `` and `gitBranch` is `` for a session with no title or repo; both MUST be carried as empty strings, never nil.
+- **Unnamed session**: `sessionName` and `gitBranch` are empty strings for a session with no title or repo (see **summary-session-name** and **summary-git-branch**).
 - **Home directory of `/`**: dropping its one trailing slash leaves an empty home, so `homeRelative` returns the path unchanged.
 - **Path equal to home with a trailing slash in the path**: only the home directory's trailing slash is stripped; a path `/Users/me/` against `/Users/me` starts with the home and a slash, so it returns `~/`.
 - **Detached checkout**: `HEAD` is a base branch, so a detached checkout outside a worktree is not work in progress.

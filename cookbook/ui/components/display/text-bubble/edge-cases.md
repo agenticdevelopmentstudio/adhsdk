@@ -19,4 +19,9 @@
   and cleared as they leave, so only a handful of glyphs are promoted at once.
 - **`pauseMs > 0`**: the lens parks (text plain) for `pauseMs` before each sweep;
   the first park is the start delay, later parks are the between-loop pause.
-
+- **Splitting unit**: the visible copy is split per Unicode code point, not per
+  grapheme cluster, so an emoji ZWJ sequence or a base letter plus a combining mark
+  becomes several spans, and the lens scales and blurs each part separately.
+- **Vertical writing modes**: reading order is lines top-to-bottom, then horizontal
+  along each line by `direction`. Hosts with `writing-mode: vertical-*` are not
+  supported: the sweep order is not meaningful there.

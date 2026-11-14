@@ -1,6 +1,6 @@
 
 **Decision**: `SessionDTO` has a hand-written decoder that makes eight fields optional on decode (defaulting to empty or false), while `SessionEventDTO` and `HealthDTO`'s required fields stay strict.
-**Rationale**: The doc comment explains the tolerant decoder as protecting against an old daemon serving a freshly-updated client while app, daemon and CLI update. The comment names only `project_root`, but the code applies the same default to seven further later-added keys; this recipe follows the code. `SessionEventDTO` never gained a later field, so it stays synthesized.
+**Rationale**: The tolerant decoder protects against an old daemon serving a freshly-updated client while app, daemon and CLI update. It applies a default to `project_root` and to seven further later-added keys, which are the eight tolerant fields. `SessionEventDTO` never gained a later field, so it stays synthesized.
 **Approved**: pending
 
 **Decision**: The `SessionEventDTO.gitBranch` initializer default does not apply on decode.
@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: `subagentWorking` is a verdict computed by the daemon, not a timestamp a client compares.
-**Rationale**: The main agent's `lastEventType` cannot say whether a background subagent is working, and subagent hooks are refused so a late `SubagentStop` cannot leave a finished session spinning. The daemon owns the freshness window so no client re-derives it. The doc comment names `DatabaseManager.fetchSessions` as the owner; that name is stale and the fetch now lives in the daemon database layer.
+**Rationale**: The main agent's `lastEventType` cannot say whether a background subagent is working, and subagent hooks are refused so a late `SubagentStop` cannot leave a finished session spinning. The daemon owns the freshness window so no client re-derives it.
 **Approved**: pending
 
 **Decision**: `transcriptTitle` and `summary` are separate fields.
@@ -16,7 +16,7 @@
 **Approved**: pending
 
 **Decision**: The health memory properties are spelled `Mb`, not `MB`.
-**Rationale**: The doc comment calls the casing load-bearing: the from-snake-case strategy rebuilds `memory_footprint_mb` as `memoryFootprintMb`, an all-caps property would never match, and because it is optional the synthesized decoder returns nil without throwing. The wire format is unchanged.
+**Rationale**: The casing is load-bearing: the from-snake-case strategy rebuilds `memory_footprint_mb` as `memoryFootprintMb`, an all-caps property would never match, and because it is optional the synthesized decoder returns nil without throwing. The wire format is unchanged.
 **Approved**: pending
 
 **Decision**: `/health` carries no database counts; `activeSessionCount` and `totalEventCount` stay in the type but are always nil.

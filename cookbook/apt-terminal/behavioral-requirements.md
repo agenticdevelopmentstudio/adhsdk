@@ -29,7 +29,7 @@
   request a longer-lived session — and on a `200` response MUST store the
   body's `accessToken` as `profile.access_token`, the `refresh_token` cookie
   value (parsed from the raw `Set-Cookie` header) as `profile.refresh_token`,
-  persist via `config_mod.save`, and return the body's `user.email` (falling
+  persist the config file (`config_mod.save` in the source), and return the body's `user.email` (falling
   back to the given `email` when absent).
 - **login-failure-raises**: `login` MUST raise `AuthError` on any non-`200`
   response, with a message derived from the body's `error.message`, `title`,
@@ -46,12 +46,12 @@
   refresh_token=<refresh_token>` header; on a `200` response carrying
   `accessToken` it MUST store the new access token, adopt a rotated
   `refresh_token` cookie when the response sets one (otherwise retain the
-  existing refresh token), persist via `config_mod.save`, and return `True`.
+  existing refresh token), persist the config file (`config_mod.save` in the source), and return `True`.
 - **refresh-failure-returns-false**: `refresh()` MUST return `False`,
   without persisting or mutating the profile, when the response is not
   `200` or its body has no `accessToken`.
 - **logout-clears-session**: `logout()` MUST set both `profile.access_token`
-  and `profile.refresh_token` to `None` and persist via `config_mod.save`,
+  and `profile.refresh_token` to `None` and persist the config file (`config_mod.save` in the source),
   unconditionally — regardless of whether a server-side revoke was attempted
   or what its outcome was.
 - **logout-revokes-when-possible**: `logout()` MUST `POST
@@ -78,14 +78,13 @@
   raise `AuthError` with the fixed message `"not logged in or session
   expired"`, regardless of the actual status code — unlike `execute()`
   (below), `whoami()` does not distinguish error types by status code.
-- **no-request-timeout**: Neither `client_factory()` nor `public_client()`
-  passes a `timeout` argument when constructing `AuthenticatedClient`/`Client`
-  (`auth.py`), so the generated client's `_timeout` field keeps its default of
-  `None`; `generated/client.py`'s `get_httpx_client`/`get_async_httpx_client`
-  pass that `None` straight through to `httpx.Client`/`httpx.AsyncClient`,
-  which disables timeouts entirely rather than falling back to httpx's own
-  default. A command against an unreachable or hanging server therefore
-  blocks indefinitely.
+- **no-request-timeout**: Requests made through `client_factory()` and
+  `public_client()` SHOULD use a finite timeout so a command against an
+  unreachable or hanging server fails instead of blocking. Current behavior is
+  non-conforming: neither passes a `timeout` argument (`auth.py`), the
+  generated client's `_timeout` stays `None`, and `generated/client.py` passes
+  that `None` straight through to `httpx`, which disables timeouts entirely.
+  A port MUST NOT reproduce the hang.
 - **error-status-mapping**: `error_for_status(status, message)` MUST return
   `AuthError` for `401` or `403`, `NotFoundError` for `404`, and
   `ApiError(status, message)` for every other status `>= 400`.
@@ -118,13 +117,13 @@
   the body model from coerced kwargs MUST be re-raised as `AptError` whose
   message includes a hint that `--set` values are JSON-parsed and that a
   literal string value must be quoted (e.g. `--set name='"true"'`).
-- **execute-uses-raw-httpx**: `execute()` MUST build the HTTP request from
-  the generated operation's `_get_kwargs()` and issue it via the client's
-  raw `httpx.Client` (`get_httpx_client().request(**kwargs)`); it MUST NOT
-  call the generated operation's own `sync_detailed()`, because that
-  function's strict `attrs` `from_dict()` raises on any field drift between
-  the OpenAPI spec and the live server, and this tool must display whatever
-  the server actually returned.
+- **execute-uses-raw-httpx**: `execute()` MUST NOT fail on response fields
+  that are absent from, or differ from, the OpenAPI schema, and MUST display
+  whatever the server actually returned. Implementation note: the source does
+  this by building the request from the generated operation's `_get_kwargs()`
+  and issuing it via the client's raw `httpx.Client`
+  (`get_httpx_client().request(**kwargs)`), never calling the operation's own
+  `sync_detailed()`, whose strict `attrs` `from_dict()` raises on field drift.
 - **execute-retries-once-on-401**: `execute()` MUST retry the request
   exactly once, via a freshly built client, when the first response is
   `401` and `session.refresh()` succeeds.

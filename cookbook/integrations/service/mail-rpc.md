@@ -2,7 +2,7 @@
 id: fc9671be-170c-436e-9628-892624952191
 title: "MailRPC"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-11-13
@@ -43,7 +43,7 @@ approved-date: ""
 - `MailAccount`, `MailProviderStatus`, `MailLabel`, `MailMessage`, `MailMessagePage`, `MailThread` and `MailMoveResult` are the records the replies carry.
 - `MailClient` is the caller's side: it encodes a request to JSON, decodes the reply, throws `MailClientError` for a `.failure`, refuses a page that an older service answered without honoring the filter, and reports a thread request that an older service cannot decode as a service too old to show threads.
 
-The service side ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) is outside this file and answers these requests; the transport is injected, so the same client works over XPC, a socket or in-process.
+The service side (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) is outside this file and answers these requests; the transport is injected, so the same client works over XPC, a socket or in-process.
 
 ## Behavioral Requirements
 
@@ -52,38 +52,39 @@ The service side ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b1
 - **request-cases**: `MailRequest` MUST offer exactly these cases: `providerStatus`, `importOAuthClient(json:)`, `removeProvider`, `listAccounts`, `signIn`, `cancelSignIn`, `removeAccount(account:)`, `updateSettings(account:settings:)`, `syncNow(account:)`, `listLabels(account:)`, `listMessages(_:)`, `getMessage(account:id:)`, `getThread(account:id:includeBodies:)`, `modifyLabels(account:messageIds:add:remove:)` and `moveMessages(account:messageIds:destination:from:)`.
 - **request-conformances**: `MailRequest` MUST be `Codable`, `Sendable` and `Equatable`, and so MUST `MailResponse` and every record type in this file.
 - **request-account-argument**: Every `account` argument MUST accept either a connection id or an email address (the type's own comment).
-- **request-sign-in-exclusive**: `signIn` is declared to run the browser flow in the service's process and to be refused while another sign-in is pending (the case's comment); the service ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) enforces it, and this file only declares it.
-- **request-cancel-sign-in**: `cancelSignIn` is declared to end a pending sign-in, which then answers "Sign-in was cancelled", and to be harmless when none is pending (the case's comment); the service ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) enforces it.
-- **request-sync-all**: `syncNow` with a `nil` account is declared to sync every account (the case's comment); the service ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) does the syncing.
+- **request-sign-in-exclusive**: The `signIn` case MUST be documented as running the browser flow in the service's process and as refused while another sign-in is pending (the case's comment); the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) enforces it, and this file only declares it.
+- **request-cancel-sign-in**: The `cancelSignIn` case MUST be documented as ending a pending sign-in, which then answers "Sign-in was cancelled", and to be harmless when none is pending (the case's comment); the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) enforces it.
+- **request-sync-all**: The `syncNow` case MUST be documented as syncing every account when `account` is `nil` (the case's comment); the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) does the syncing.
 - **request-message-id**: `getMessage` MUST accept either this system's message id or Gmail's (the case's comment).
-- **request-thread-id**: `getThread` is declared to take a Gmail thread id, or a message id (this system's or Gmail's) that stands for the thread it is in; the service ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) reads the conversation from Gmail, oldest message first (the case's comment).
+- **request-thread-id**: The `getThread` case MUST be documented as taking a Gmail thread id, or a message id (this system's or Gmail's) that stands for the thread it is in; the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) reads the conversation from Gmail, oldest message first (the case's comment).
 - **request-modify-labels-ids**: `modifyLabels` MUST name messages by this system's id or Gmail's, and labels by Gmail label id or exact name (the case's comment).
-- **request-move-semantics**: `moveMessages` is declared to add `destination` and remove every label in `from`; a `nil` `from` means INBOX, or nothing when `destination` is INBOX, and an empty `from` removes nothing (the case's comment). The service ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) applies this rule; this file only declares it.
-- **request-wire-form**: A request MUST travel as the JSON that the synthesized `Codable` conformance produces for the enum; the tests decode replies such as `{"messages":{"_0":{"messages":[]}}}` and `{"failure":{"_0":"boom"}}`, which show the form for a case with one unlabeled payload.
+- **request-move-semantics**: The `moveMessages` case MUST be documented as adding `destination` and removing every label in `from`; a `nil` `from` means INBOX, or nothing when `destination` is INBOX, and an empty `from` removes nothing (the case's comment). The service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) enforces this rule; this file only declares it.
+- **request-wire-form**: A request MUST travel as the JSON that the synthesized `Codable` conformance produces for the enum: an object with one key, the case name, whose value is an object of the case's payload. A case with no payload has an empty object, as in `{"listAccounts":{}}`. A case with labeled arguments has one key per label, as in `{"getMessage":{"account":"a","id":"m"}}`. A case with one unlabeled argument uses the key `_0`, as in `{"listMessages":{"_0":{"account":"a"}}}`. The tests decode replies of the same form, such as `{"messages":{"_0":{"messages":[]}}}` and `{"failure":{"_0":"boom"}}`.
 
 ### isMailboxAccess
 
 - **mailbox-access-true**: `isMailboxAccess` MUST be true for `listAccounts`, `listLabels`, `listMessages`, `getMessage`, `getThread`, `modifyLabels` and `moveMessages`.
 - **mailbox-access-false**: `isMailboxAccess` MUST be false for `providerStatus`, `importOAuthClient`, `removeProvider`, `signIn`, `cancelSignIn`, `removeAccount`, `updateSettings` and `syncNow`.
-- **mailbox-access-purpose**: `isMailboxAccess` MUST be true exactly for the requests that read or label mail in accounts already signed in, which is everything [MailCommandLine](cookbook:be4db0fe-628d-41f8-9fdf-25a6d46844cf) and [MailToolSource](cookbook:cbee8b02-9456-4d9b-942a-51f8a9c074fc) send; the false side is what a host keeps for its own UI.
+- **mailbox-access-purpose**: `isMailboxAccess` MUST be true exactly for the requests that read or label mail in accounts already signed in; the false side is what a host keeps for its own UI. Which consumers send which requests is left to their own specs.
 - **mailbox-access-exhaustive**: The classification MUST be an exhaustive switch with no default, so a new request cannot compile until it is placed on one side.
 
 ### MailMessageFilter
 
 - **filter-fields**: `MailMessageFilter` MUST carry `account` (required), `since`, `until`, `labels`, `anyLabels`, `limit`, `cursor`, `includeBodies` and `query`.
-- **filter-since-until**: `since` and `until` are declared as inclusive ISO-8601 strings (the type's comment). They are stored as plain `String` and this file does not parse or validate them; see the Design Decision on raw date text.
-- **filter-labels-and**: A listed message MUST carry every entry of `labels`, given as ids or names (the type's comment).
-- **filter-any-labels-or**: When `anyLabels` is not empty, a listed message MUST also carry at least one entry of `anyLabels`.
+- **filter-since-until**: `since` and `until` MUST be documented as inclusive ISO-8601 strings (the type's comment). They are stored as plain `String` and this file does not parse or validate them; see the Design Decision on raw date text.
+- **filter-labels-and**: The filter MUST be documented as listing only messages that carry every entry of `labels`, given as ids or names (the type's comment); the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) enforces it.
+- **filter-any-labels-or**: The filter MUST be documented as listing, when `anyLabels` is not empty, only messages that also carry at least one entry of `anyLabels`; the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) enforces it.
 - **filter-cursor**: `cursor` MUST be the `nextCursor` of the previous page.
-- **filter-query-gmail**: With a `query`, the messages MUST come from a Gmail search instead of the synced copy, so they reach past the sync window and the synced classes; the query is Gmail's search syntax (`from:greenhouse`).
-- **filter-query-narrowing**: With a `query`, `since`, `until` and `labels` are declared to narrow it (the type's comment); the service ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) applies them.
-- **filter-query-any-labels-refused**: With a `query`, a non-empty `anyLabels` is declared to be refused by the service ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)); the caller writes `{label:a label:b}` in the query instead (the type's comment).
+- **filter-query-gmail**: The filter MUST be documented as taking a `query` in Gmail's search syntax (`from:greenhouse`), with the messages coming from a Gmail search instead of the synced copy, so they reach past the sync window and the synced classes; the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) enforces it.
+- **filter-query-narrowing**: The filter MUST be documented as letting `since`, `until` and `labels` narrow a `query` (the type's comment); the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) applies them.
+- **filter-query-any-labels-refused**: The filter MUST be documented as refused by the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) when a `query` comes with a non-empty `anyLabels`; the caller writes `{label:a label:b}` in the query instead (the type's comment).
 - **filter-limit-range**: `MailMessageFilter.limitRange` MUST be 1 through 500 and `defaultLimit` MUST be 50.
 - **filter-limit-clamp-init**: The initializer MUST clamp `limit` into `limitRange`.
 - **filter-limit-clamp-set**: Assigning `limit` after construction MUST clamp it into `limitRange` through a `didSet` observer.
 - **filter-decode-lenient**: Decoding MUST require only `account`; `labels` and `anyLabels` default to empty, `limit` to 50, `includeBodies` to false, and `since`, `until`, `cursor` and `query` to nil.
 - **filter-decode-clamps**: Decoding MUST route `limit` through the initializer, so a decoded out-of-range `limit` is clamped.
 - **filter-encode-keys**: Encoding MUST use the coding keys `account`, `since`, `until`, `labels`, `anyLabels`, `limit`, `cursor`, `includeBodies` and `query`.
+- **filter-clamp-public**: `MailMessageFilter.clamp(_:)` MUST return its argument brought into `limitRange` (`min(max(limit, 1), 500)`). It is `public` so that every mail RPC server applies the same bound (the source's comment); `MailIntegrationService` calls it across the module boundary.
 - **filter-search-query**: `searchQuery` MUST return `query` with surrounding whitespace and newlines trimmed, and nil when `query` is nil or trims to an empty string.
 
 ### Records
@@ -93,19 +94,19 @@ The service side ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b1
 - **provider-client-id-public**: `clientId` MUST be treated as not secret, because a desktop client id "appears in every sign-in URL" (the field's comment).
 - **provider-secret-suffix**: `clientSecretSuffix` MUST hold only the last `secretSuffixLength` characters of the client secret, and `MailProviderStatus.secretSuffixLength` MUST be 5.
 - **provider-secret-never-leaves**: The whole client secret MUST NOT leave the daemon (the field's comment); no field in this file carries it. The one value that carries a secret toward the service is the `json` of `importOAuthClient`.
-- **visible-suffix-rule**: `visibleSuffix(ofSecret:)` MUST return the last `secretSuffixLength` characters of the secret only when the secret has at least `secretSuffixLength * 3` characters (15 today), so that at least twice as many characters stay hidden, and nil otherwise.
+- **visible-suffix-rule**: `visibleSuffix(ofSecret:)` MUST return the last `secretSuffixLength` characters of the secret only when the secret has at least `secretSuffixLength * 3` characters (15 today); a character is a Swift `Character`, a grapheme cluster (`String.count`), so a port that counts UTF-16 units differs for non-ASCII secrets and MUST count grapheme clusters to match, so that at least twice as many characters stay hidden, and nil otherwise.
 - **label-record**: `MailLabel` MUST carry Gmail's label `id`, `name`, `type` ("system" or "user"), and optional `parentName`, `messagesTotal` and `messagesUnread`.
 - **message-record**: `MailMessage` MUST carry `id` (this system's id), `gmailId`, `threadId`, `account` (the account's email address), `from`, `to`, `cc`, `labels` (Gmail label ids), `labelNames`, `subject`, `snippet`, `date`, `mailClass` (a `MailClass`), optional `bodyText`, optional `bodyHtml` and `attachments` (a list of `EmailAttachmentRef`).
 - **message-wire-names**: `to` and `cc` MUST keep those names on the wire; the source's comment calls them "the wire names the RPC contract fixes".
-- **message-label-names**: `labelNames` MUST be `labels` mapped to names, falling back to the id (the field's comment).
-- **message-snippet**: `snippet` MUST be Gmail's preview text with the HTML entities Gmail leaves in it decoded (the field's comment).
-- **message-bodies**: `bodyText` and `bodyHtml` MUST be filled only when bodies are asked for; `bodyText` is the `text/plain` part, or for a message without one its HTML read as text (`HTMLText`), and `bodyHtml` is the `text/html` part as sent.
+- **message-label-names**: `labelNames` MUST be documented as `labels` mapped to names, falling back to the id (the field's comment); the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) fills it.
+- **message-snippet**: `snippet` MUST be documented as Gmail's preview text with the HTML entities Gmail leaves in it decoded (the field's comment); the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) decodes it.
+- **message-bodies**: `bodyText` and `bodyHtml` MUST be documented as filled by the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) only when bodies are asked for; `bodyText` is the `text/plain` part, or for a message without one its HTML read as text (`HTMLText`), and `bodyHtml` is the `text/html` part as sent.
 - **page-record**: `MailMessagePage` MUST carry `messages`, an optional `nextCursor`, `appliedAnyLabels` and `appliedQuery`.
-- **page-cursor**: `nextCursor` MUST be opaque, MUST be passed back as the filter's `cursor`, and MUST be nil on the last page.
+- **page-cursor**: `nextCursor` MUST be documented as opaque, passed back as the filter's `cursor`, and nil on the last page; the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) sets it.
 - **page-applied-flags**: `appliedAnyLabels` MUST be true when the service applied the filter's `anyLabels`, and `appliedQuery` MUST be true when the page is the result of the filter's `query` searched in Gmail.
 - **page-decode-lenient**: Decoding a `MailMessagePage` MUST require `messages` only; a missing `nextCursor` is nil and a missing `appliedAnyLabels` or `appliedQuery` is false.
-- **thread-record**: `MailThread` MUST carry Gmail's thread `id` and `messages`, oldest message first, and a message carrying `SENT` is one the account wrote.
-- **move-result-record**: `MailMoveResult` MUST carry the message's refreshed copy and the names of the labels it gained (`added`) and lost (`removed`), measured against Gmail just before the write; `added` is empty when the message already carried the destination.
+- **thread-record**: `MailThread` MUST carry Gmail's thread `id` and `messages`, documented as oldest message first (the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))) orders them), and a message carrying `SENT` is one the account wrote.
+- **move-result-record**: `MailMoveResult` MUST carry the message's refreshed copy and the names of the labels it gained (`added`) and lost (`removed`), documented as measured against Gmail just before the write (by the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)))); `added` is empty when the message already carried the destination.
 
 ### MailResponse
 
@@ -122,7 +123,7 @@ The service side ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b1
 - **client-failure-not-found**: `send` MUST throw `MailClientError.notFound(message)` when the reply is `.failure` and `notFound` is true.
 - **client-error-description**: `MailClientError.errorDescription` MUST be the carried message for both cases.
 - **client-unexpected**: Each typed method MUST throw `MailClientError.remote("unexpected response from the mail service")` when the reply is a case other than the one it expects.
-- **client-typed-methods**: The client MUST offer `providerStatus()` (expects `.providerStatus`), `accounts()` (sends `listAccounts`, expects `.accounts`), `labels(account:)` (expects `.labels`), `messages(_:)` (expects `.messages`), `thread(account:id:includeBodies:)` (expects `.thread`), `message(account:id:)` (expects `.message`), `modifyLabels(account:messageIds:add:remove:)` and `moveMessages(account:messageIds:destination:from:)` (expects `.moved`). The administration requests (`importOAuthClient`, `signIn`, `cancelSignIn`, `removeAccount`, `updateSettings`, `syncNow`, `removeProvider`) have no typed method; a host sends them through `send(_:)` and receives the raw `MailResponse`, whose case depends on the request and is decided by the service ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)).
+- **client-typed-methods**: The client MUST offer `providerStatus()` (expects `.providerStatus`), `accounts()` (sends `listAccounts`, expects `.accounts`), `labels(account:)` (expects `.labels`), `messages(_:)` (expects `.messages`), `thread(account:id:includeBodies:)` (expects `.thread`), `message(account:id:)` (expects `.message`), `modifyLabels(account:messageIds:add:remove:)` and `moveMessages(account:messageIds:destination:from:)` (expects `.moved`). The administration requests (`importOAuthClient`, `signIn`, `cancelSignIn`, `removeAccount`, `updateSettings`, `syncNow`, `removeProvider`) have no typed method; a host sends them through `send(_:)` and receives the raw `MailResponse`, whose case depends on the request and is decided by the service (MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a))).
 - **client-thread-include-bodies**: `thread` MUST default `includeBodies` to false.
 - **client-modify-labels-reply**: `modifyLabels` MUST expect a `.messages` reply and MUST return that page's `messages`, ignoring the page's other fields.
 - **client-move-from-default**: `moveMessages` MUST default `from` to nil.
@@ -141,7 +142,7 @@ The service side ([MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b1
 
 ### Security
 
-- **sensitive-data**: This contract carries personal mail content (addresses, subjects, snippets, bodies, label names) and, in `importOAuthClient`, the OAuth client JSON that contains the client secret.
+- **sensitive-data**: This contract MUST be treated as carrying personal mail content (addresses, subjects, snippets, bodies, label names) and, in `importOAuthClient`, the OAuth client JSON that contains the client secret.
 - **secret-exposure**: The only form of the client secret the replies carry MUST be `clientSecretSuffix`, produced by `visibleSuffix(ofSecret:)`.
 - **transport-security-outside**: This file MUST NOT encrypt, sign or authenticate a request; confidentiality and caller authentication belong to the injected transport and to the service. Token lifetime, storage and revocation for the Gmail account belong to the service and are outside this file.
 - **host-gating**: A host that exposes non-UI clients MUST gate them on `isMailboxAccess`, so that administration requests stay with the host's own UI (the property's comment; `MailRequestAccessTests` asserts both sides).
@@ -194,7 +195,7 @@ Tests live in `MailIntegrationServiceTests.swift` and `MailRequestAccessTests.sw
 | mail-rpc-028 | client-send-flow | the service handles `Data("nope".utf8)` (`undecodableRequestIsBadRequest`) | the reply decodes to `.failure("bad request")` |
 | mail-rpc-029 | client-transport, client-send-flow | transport throws its own error | `send` rethrows the same error |
 | mail-rpc-030 | page-applied-flags, filter-any-labels-or | service lists with `anyLabels: ["INBOX"]` and again with `labels` only (`MailIntegrationServiceTests`, the any-labels listing test) | first page has `appliedAnyLabels` true; second has it false |
-| mail-rpc-031 | filter-any-labels-or | service lists with `anyLabels: ["INBOX", "Nope"]` | the reply is `.failure("unknown label: Nope")`; the refusal of an unknown label is the service's behavior and no requirement in this recipe covers it |
+| mail-rpc-031 | filter-any-labels-or | service lists with `anyLabels: ["INBOX", "Nope"]` | the reply is `.failure("unknown label: Nope")`; the refusal of an unknown label is the service's behavior and no requirement in this ingredient covers it; the rule declared in `filter-any-labels-or` is the service's to enforce |
 | mail-rpc-032 | filter-query-gmail, page-applied-flags | service lists with `query: " from:sender OR from:other "`, `labels: ["Work"]`, `limit: 2` | first page has `appliedQuery` true |
 | mail-rpc-033 | request-wire-form | encode `MailRequest.listAccounts` and hand the bytes to the service's `handle(requestData:)` (`requestRoundTripsThroughData`) | the reply decodes as `MailResponse.accounts([])`, so the service decoded the request |
 | mail-rpc-034 | response-cases, failure-not-found-factory | `MailResponse.notFound("x")` | equals `.failure("x", notFound: true)` |
@@ -219,7 +220,7 @@ Tests live in `MailIntegrationServiceTests.swift` and `MailRequestAccessTests.sw
 - **Cancellation and timeout**: The client has no cancellation or timeout logic of its own; a cancelled task behaves as the transport does.
 - **Offline or unreachable service**: Surfaces as the transport's thrown error; there is no cached or degraded answer.
 - **Idempotency**: Each call sends one request with no idempotency key; whether a repeated `modifyLabels`, `moveMessages` or `syncNow` is safe is decided by the service, not by this file.
-- **Unvalidated dates**: `since` and `until` pass through as text; the command-line and MCP front ends validate them before building a filter (see the [MailCommandSupport](cookbook:3d12c073-edc3-44fb-a988-5edec20575e0) recipe).
+- **Unvalidated dates**: `since` and `until` pass through as text; the command-line and MCP front ends validate them before building a filter (see the MailCommandSupport ([adhsdk.ingredient.integrations.service.mail-command-support](cookbook:3d12c073-edc3-44fb-a988-5edec20575e0)) recipe).
 
 ## Configuration
 
@@ -270,8 +271,8 @@ Not applicable: the source makes no log call; failures are thrown or returned.
 - **SwiftUI**: Source platform is Swift: `packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift`, in the `AgenticDeveloperHubSDKMail` framework, which builds for macOS and iOS and depends on `Foundation` and GRDB only (the records live beside it in `Mail/Model/`). The RPC file itself uses `Foundation` only: synthesized `Codable` for the enums (which gives the `_0` payload keys seen in the tests), `JSONEncoder` and `JSONDecoder` with default settings, `LocalizedError` on `MailClientError`, and a `@Sendable` async closure as the transport. Tests live in `Tests/AgenticDeveloperHubSDKIntegrationsTests`. The macOS-only `AgenticDeveloperHubSDKIntegrations` framework re-exports the Mail framework (`Integrations/Support/MailReExport.swift`, `@_exported import AgenticDeveloperHubSDKMail`), so a macOS caller that imports Integrations still sees every type here; `MailClient.clamp` and `MailClient.badRequest` are `public` because `MailIntegrationService` in Integrations uses them across that module boundary. A SwiftUI host holds a `MailClient` and awaits its methods from tasks.
 - **Compose**: Model `MailRequest` and `MailResponse` as sealed interfaces with `kotlinx.serialization`, and give each case a serializer that writes the same `_0` payload key (a custom serializer, since Kotlin's default class discriminator differs). Use `Int.coerceIn(1, 500)` for the limit, default values for the lenient decode, and `ignoreUnknownKeys = true` so a new field does not break an older client. The transport becomes a `suspend (ByteArray) -> ByteArray`; `MailClientError` is a sealed `Exception` pair, and the page-flag checks run exactly as in `messages(_:)`.
 - **React/Web**: Use TypeScript discriminated unions for the two enums, writing the wire form by hand to keep the `_0` keys, and `fetch` or a socket as the transport (`(bytes: Uint8Array) => Promise<Uint8Array>`). Missing booleans must be read as false (`page.appliedQuery ?? false`) so the older-service checks still fire. `Math.min(Math.max(limit, 1), 500)` replaces the clamp; there is no property observer, so clamp in a setter or a factory. Throw `Error` subclasses for `remote` and `notFound`.
-- **AppKit / UIKit**: The same Swift source builds for both macOS and iOS, and this recipe lists `swift`, `macos` and `ios`. An AppKit or UIKit host calls the client from an async task and shows `errorDescription` in an alert or label; it gates any non-UI client on `isMailboxAccess` and keeps administration requests behind its own settings panel.
-- **WinUI 3**: Port to C# records with `System.Text.Json`. Model each enum as an abstract record with one derived record per case and a custom `JsonConverter` that writes the case name as the single key and the payload under `_0`; mark optional fields nullable and give `MailMessagePage.AppliedAnyLabels` and `AppliedQuery` a default of false so a missing key reads as false. Use `Math.Clamp(limit, 1, 500)` in the constructor and in the property setter. The transport is a `Func<byte[], CancellationToken, Task<byte[]>>` (named pipe, `Windows.Networking.Sockets`, or an in-process call), and `MailClient` is a sealed class with `async Task<T>` methods that throw `MailClientException` carrying a `NotFound` flag. Keep results as immutable records; there is no `INotifyPropertyChanged` need, since the types are wire data, and a view model that wants binding wraps them in an `ObservableCollection` of its own. Add a `CancellationToken` parameter, which the Swift source lacks, but keep the same refusals and messages.
+- **AppKit / UIKit**: The same Swift source builds for both macOS and iOS, and this ingredient lists `swift`, `macos` and `ios`. An AppKit or UIKit host calls the client from an async task and shows `errorDescription` in an alert or label; it gates any non-UI client on `isMailboxAccess` and keeps administration requests behind its own settings panel.
+- **WinUI 3**: Port to C# records with `System.Text.Json`. Model each enum as an abstract record with one derived record per case and a custom `JsonConverter` that writes the case name as the single key and the payload under `_0`; mark optional fields nullable and give `MailMessagePage.AppliedAnyLabels` and `AppliedQuery` a default of false so a missing key reads as false. Use `Math.Clamp(limit, 1, 500)` in the constructor and in the property setter. The transport is a `Func<byte[], CancellationToken, Task<byte[]>>` (named pipe, `Windows.Networking.Sockets`, or an in-process call), and `MailClient` is a sealed class with `async Task<T>` methods that throw `MailClientException` carrying a `NotFound` flag. Keep results as immutable records; there is no `INotifyPropertyChanged` need, since the types are wire data, and a view model that wants binding wraps them in an `ObservableCollection` of its own. Pass a `CancellationToken` through to the transport only: the client adds no cancellation logic of its own, as the Swift source has none (`client-no-timeout`). Keep the same refusals and messages.
 
 ## Reference Implementations
 
@@ -280,8 +281,8 @@ Not applicable: the source makes no log call; failures are thrown or returned.
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift` | confirmed (1.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/MailReExport.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/MailReExport.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -322,8 +323,9 @@ Not applicable: the source makes no log call; failures are thrown or returned.
 **Approved**: pending
 
 **Decision**: `.failure` carries no error code, so the client recognizes an old service by the text `bad request`, held in `MailClient.badRequest`.
-**Rationale**: Adding a code would be another field an older service does not send. The client and `MailIntegrationService` agree on the text by convention; no test ties `MailClient.badRequest` to the service's own constant, and vector 028 shows the service answering that text.
+**Rationale**: Adding a code would be another field an older service does not send. The constant is shared: `MailIntegrationService` answers an undecodable request with `MailClient.badRequest` itself (which is why the constant is `public`), and vector 028 shows the service answering that text.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -333,15 +335,16 @@ Not applicable: the source makes no log call; failures are thrown or returned.
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 | [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | access-patterns |
 | [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | passed | access-patterns |
-| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | failed | access-patterns |
-| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | access-patterns |
+| [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | partial | access-patterns |
+| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | partial | access-patterns |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | security |
 
-The file separates the wire contract and a one-round-trip client from the service that answers it, so separation of concerns passes. `MailIntegrationServiceTests` and `MailRequestAccessTests` assert the clamp, the lenient decode, the secret suffix rule, the not-found paths, the three older-service refusals and the `isMailboxAccess` split, but vectors 006 to 010, 021, 023 to 026, 029 and 034 are derived from the source and have no named test, so unit-test coverage is partial. Failures are thrown as `MailClientError` with the service's message, and a reply of the wrong shape is an explicit error, so error handling and error-response handling pass. Paging uses an opaque `nextCursor`, so pagination passes. The client sets no timeout and no retry, which are left to the transport on purpose (see the Design Decision on timeout, retry and cancellation), so those two checks fail for this file; a caller needing them adds them in the transport, not in the client. The secret is reduced to a short suffix before it leaves the daemon, which meets data minimization. The file neither encrypts nor authenticates a request and leaves that to the injected transport, so secure transport is partial.
+The file separates the wire contract and a one-round-trip client from the service that answers it, so separation of concerns passes. `MailIntegrationServiceTests` and `MailRequestAccessTests` assert the clamp, the lenient decode, the secret suffix rule, the not-found paths, the three older-service refusals and the `isMailboxAccess` split, but vectors 006 to 010, 021, 023 to 026, 029, 034 and 035 are derived from the source and have no named test, so unit-test coverage is partial. Failures are thrown as `MailClientError` with the service's message, and a reply of the wrong shape is an explicit error, so error handling and error-response handling pass. Paging uses an opaque `nextCursor`, so pagination passes. The client sets no timeout and no retry, which are left to the transport on purpose (see the Design Decision on timeout, retry and cancellation), so those two checks are partial for this file: the decision hands both to the transport, and they are not defects here; a caller needing them adds them in the transport, not in the client. The secret is reduced to a short suffix before it leaves the daemon, which meets data minimization. The file neither encrypts nor authenticates a request and leaves that to the injected transport, so secure transport is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Fixed the bad-request decision to say the constant is shared, wrote service-side rules in the declared form with RFC 2119 keywords, showed the request wire JSON, stated the suffix counting unit, added a clamp requirement, and marked the transport-owned timeout and retry checks partial. |
 | 1.1.0 | 2026-11-14 | Mike Fullerton | Mail RPC moved to the AgenticDeveloperHubSDKMail framework, built for macOS and iOS; Integrations re-exports it |

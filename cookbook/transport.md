@@ -2,11 +2,11 @@
 id: d9dfd305-be0d-4770-9db8-43a35218c8b7
 title: "Hub Client Transport"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,8 +20,11 @@ tags:
   - transport
   - daemon
 depends-on: []
-related: []
-references: []
+related:
+  - 9041d819-d6bf-405a-9129-9730bb2c8a6b
+references:
+  - https://github.com/apple/swift-openapi-runtime
+  - https://github.com/apple/swift-openapi-urlsession
 approved-by: ""
 approved-date: ""
 ---
@@ -37,8 +40,7 @@ a decision actor (`TransportResolver`) that together decide, and cache,
 whether a request goes straight to the backend over HTTPS ("Direct") or to a
 local caching proxy daemon over loopback HTTP ("Daemon").
 
-The three source files, all under the hub client package's
-`Sources/Transport/`, are:
+The three source files, in the hub client package's transport folder, are:
 
 - `APITransport.swift` — `TransportKind`, `APITransport`, and the
   `direct(serverURL:transport:)` / `daemon(port:transport:)` factories.
@@ -52,8 +54,7 @@ itself (not on the transport), Direct and Daemon are fully captured by the
 `(serverURL, transport)` pair `APITransport` carries — the generated `Client`
 is identical either way. `TransportResolver` never launches the daemon; it
 only detects one that is already running, with Direct as the always-available
-fallback. `ADHClient` (`Sources/ADHClient.swift`, outside this component's
-file set) is the consumer: `ADHClient.resolved(using:credentials:)` asks a
+fallback. `ADHClient` (outside this component's file set) is the consumer: `ADHClient.resolved(using:credentials:)` asks a
 `TransportResolver` for a `TransportKind` and rebuilds a fresh `APITransport`
 (`.daemon(port:)` or `.direct()`) from that decision on every call.
 
@@ -82,6 +83,10 @@ file set) is the consumer: `ADHClient.resolved(using:credentials:)` asks a
   `URLSessionConfiguration` (no shared cache or cookies), MUST set
   `waitsForConnectivity = false`, and MUST set
   `timeoutIntervalForRequest = 30` seconds.
+- **daemon-transport-fresh-per-call**: Each call to `daemon(port:transport:)`
+  that omits `transport` (or passes `nil`) MUST build a fresh
+  `makeDaemonURLSessionTransport()` and MUST NOT reuse a transport instance
+  from a prior call; each such call gets its own `URLSession`.
 - **transport-injectable-for-tests**: Both `direct(serverURL:transport:)`
   and `daemon(port:transport:)` MAY be called with a caller-supplied
   `ClientTransport` in place of the production one, so a test MAY substitute
@@ -150,6 +155,10 @@ file set) is the consumer: `ADHClient.resolved(using:credentials:)` asks a
   before `resolve()`/`reresolve()` has ever completed, and MUST return the
   `TransportKind` from the most recently completed `resolve()`/`reresolve()`
   call afterward.
+- **reresolve-last-write-wins**: Two overlapping `reresolve()` calls MUST
+  each run the override/probe decision independently, and whichever finishes
+  last MUST be the value left in `cached`. `reresolve()` makes no exclusivity
+  promise between overlapping calls.
 - **resolver-never-launches-daemon**: `TransportResolver` MUST only detect
   whether a daemon is already listening on `port`; it MUST NOT start,
   install, or otherwise launch a daemon process.
@@ -206,7 +215,7 @@ visual component.
 |----|-------------|-------|----------|
 | hct-001 | forced-override-skips-probe, probe-injectable-for-tests | `TransportResolver(override: .forceDirect, port: p, probe: <counting stub returning true>)`; call `resolve()` | Returns `.direct`; the stub probe is invoked 0 times |
 | hct-002 | forced-override-skips-probe, probe-injectable-for-tests | `TransportResolver(override: .forceDaemon, port: p, probe: <counting stub returning false>)`; call `resolve()` | Returns `.daemon`; the stub probe is invoked 0 times |
-| hct-003 | auto-override-probes, probe-issues-single-bounded-get | `TransportResolver(override: .auto, port: p, probe: <stub returning true>)`; call `resolve()` | Returns `.daemon`; the stub is invoked once with `DaemonContract.healthURL(port: p)` |
+| hct-003 | auto-override-probes | `TransportResolver(override: .auto, port: p, probe: <stub returning true>)`; call `resolve()` | Returns `.daemon`; the stub is invoked once with `DaemonContract.healthURL(port: p)` |
 | hct-004 | auto-override-probes | `TransportResolver(override: .auto, port: p, probe: <stub returning false>)`; call `resolve()` | Returns `.direct` |
 | hct-005 | resolve-serves-from-cache | Resolver as in hct-003; call `resolve()` twice in sequence | Both calls return `.daemon`; the stub probe's call count stays at 1 |
 | hct-006 | reresolve-always-recomputes, cached-kind-reflects-last-decision | Continuing hct-005, call `reresolve()` | Returns `.daemon`; stub call count becomes 2; `cachedKind == .daemon` |
@@ -227,20 +236,16 @@ visual component.
 | hct-021 | resolver-is-an-actor, resolver-nonisolated-config | From a non-actor-isolated context, read `resolver.override` and `resolver.port` on a constructed `TransportResolver` | Both reads compile and return the constructor-supplied values synchronously, without `await` |
 | hct-022 | default-probe-timeout | `TransportResolver(override: .auto, port: <a port with nothing listening>)` constructed with no `probeTimeout` argument; call `resolve()` and measure elapsed time | Returns `.direct`; elapsed time is milliseconds, not close to `2` seconds — a refused loopback connection fails at once and is never bound by `probeTimeout`, so this only confirms the default compiles and resolves, not that it equals `2` (only a non-responding, black-holed target would actually exercise the timeout, and the source has no test for that case) |
 
+
+| hct-023 | reresolve-always-recomputes, cached-kind-reflects-last-decision | `TransportResolver(override: .auto, port: p, probe: <stub returning true on its first call and false on its second>)`; call `resolve()`, then `reresolve()` | `resolve()` returns `.daemon`; `reresolve()` returns `.direct`; `cachedKind == .direct` |
+| hct-024 | probe-success-is-status-200-only, probe-failure-collapses-to-false | `MockDaemonServer(handler:)` answering every request with status `404`, then again with `500`; `TransportResolver(override: .auto, port: <that port>, probeTimeout: 2)`; call `resolve()` | Returns `.direct` in both cases; no error is thrown to the caller |
+| hct-025 | daemon-factory, transport-injectable-for-tests | Call `APITransport.daemon(port: p, transport: nil)` twice | Each call builds its own transport from `makeDaemonURLSessionTransport()`; neither reuses the other's instance |
+| hct-026 | reresolve-last-write-wins | `TransportResolver(override: .auto, port: p, probe: <stub whose first call finishes after its second>)`; start two overlapping `reresolve()` calls | Both run the probe; `cachedKind` is the result of whichever call finished last |
 ## Edge Cases
 
 - **`transport: nil` passed to `daemon(port:transport:)`** (null/empty
-  input — MUST): the default path MUST build a fresh
-  `makeDaemonURLSessionTransport()` rather than reusing any transport
-  instance from a prior call — each call that omits `transport` gets its own
+  input): handled by daemon-transport-fresh-per-call; each call gets its own
   `URLSession`.
-- **Malformed or out-of-range `port`** (boundary values): `daemonURL(port:)`
-  and `healthURL(port:)` build their URL via
-  `URL(string: "http://127.0.0.1:\(port)")!`, force-unwrapping the result;
-  `port` is an unconstrained `Int` accepted by `TransportResolver.init`,
-  `APITransport.daemon(port:)`, and `fromUserDefaults(port:)` alike, with no
-  range or sign check anywhere in the given sources — see the open question
-  on port-validation.
 - **port-validation**: NEEDS REVIEW: Not implemented in source. No range or sign check on `port` guards the force-unwrapped `URL(string: "http://127.0.0.1:\(port)")!` in `daemonURL(port:)`/`healthURL(port:)`, so a negative or larger-than-`65535` port crashes rather than returning an error the caller can handle; `TransportResolverTests.swift` has no test for an out-of-range port, so nothing in the given sources defines the intended failure mode — resolvable by whoever decides whether an invalid port should throw, precondition, or stay an undocumented caller contract.
 - **`probeTimeout <= 0`** (boundary values): `TransportResolver.init` and
   the production probe pass `probeTimeout` straight through to
@@ -249,23 +254,9 @@ visual component.
   no minimum, so the resulting behavior for a non-positive timeout is
   whatever `URLSession` itself does with that value — not defined in
   `TransportResolver.swift`.
-- **Two `resolve()` calls racing before either has cached a decision**
-  (concurrent access): `resolve()`'s cache check
-  (`if let cached { return cached }`) happens synchronously, but the
-  `await reresolve()` it falls through to is a suspension point; because
-  `TransportResolver` is a (reentrant) actor, two overlapping first-time
-  `resolve()` calls can each observe `cached == nil` before either has
-  written a result, so each independently calls `reresolve()` and launches
-  its own probe rather than sharing one in flight — see the open question
-  on concurrent-resolve.
 - **concurrent-resolve**: NEEDS REVIEW: Not implemented in source. No in-flight decision (e.g. a stored `Task<TransportKind, Never>` a second caller awaits instead of re-probing) coalesces concurrent first-time `resolve()` calls into a single probe and cache write; `TransportResolverTests.swift` exercises only sequential `resolve()` calls, so nothing in the given sources shows an intended de-duplication rule — resolvable by whoever adds a concurrent-resolve test and, if the duplicate probing is undesired, an in-flight cache.
-- **Two `reresolve()` calls racing** (concurrent access — MUST, not a gap):
-  the same reentrancy applies to `reresolve()`, but it is not a gap there —
-  `reresolve()`'s own contract ("probe again and replace the cached
-  decision") never claims exclusivity between overlapping calls, unlike
-  `resolve()`'s cache-reuse promise. Two overlapping `reresolve()` calls
-  MUST each run the override/probe decision independently, and whichever
-  finishes last MUST be the value left in `cached` (last-write-wins).
+- **Two `reresolve()` calls racing** (concurrent access): handled by
+  reresolve-last-write-wins; this is not a gap.
 - **Daemon reachable but returns a non-`200` status** (error state — MUST):
   the probe treats any non-`200` status (`404`, `500`, etc.) exactly like a
   thrown error or timeout — indistinguishably folded into `false` — so
@@ -367,9 +358,8 @@ subsystem or category is defined by this source.
 
 ## Platform Notes
 
-- **SwiftUI**: The source lives in the hub client package's
-  `Sources/Transport/{APITransport,DaemonContract,TransportResolver}.swift`.
-  It is UI-framework-agnostic — `APITransport` is a plain `Sendable` struct
+- **SwiftUI**: The source is `APITransport`, `DaemonContract` and `TransportResolver` in the
+  hub client package. It is UI-framework-agnostic — `APITransport` is a plain `Sendable` struct
   and `TransportResolver` a plain `actor`, with no dependency on SwiftUI. A
   SwiftUI host typically calls `await TransportResolver().resolve()` (or
   `ADHClient.resolved(using:)`) once at app-launch time, from a `.task`
@@ -392,7 +382,7 @@ subsystem or category is defined by this source.
   mixed-content and CORS policy in every major browser, so a browser-hosted
   port would need either an HTTPS-fronted local proxy or to drop the Daemon
   path entirely — a genuine platform divergence, not an oversight in this
-  recipe.
+  ingredient.
 - **AppKit / UIKit**: Same underlying Swift package as the SwiftUI note
   above — `APITransport`/`TransportResolver` make no distinction between
   SwiftUI and an imperative AppKit/UIKit host. A UIKit/AppKit call site
@@ -408,10 +398,11 @@ subsystem or category is defined by this source.
   health-status-decoding) to model `HealthStatus`. Model `TransportResolver`
   as a class exposing `Task<TransportKind> ResolveAsync()`/
   `ReresolveAsync()`, guarding its cached field with a `SemaphoreSlim(1,1)`
-  or `lock` — .NET has no actor primitive, so this lock is also the natural
-  place to fix the source's unresolved concurrent-`resolve()` race (see
-  Edge Cases) by caching the in-flight `Task` itself rather than only the
-  completed result. Drive the probe's timeout with a
+  or `lock` — .NET has no actor primitive, so this lock stands in for actor
+  isolation. Mirror the Swift reference on the concurrent-`resolve()` race
+  (see the concurrent-resolve open question in Edge Cases): do not coalesce
+  overlapping first-time calls into one in-flight `Task` until that question
+  is settled for every platform. Drive the probe's timeout with a
   `CancellationTokenSource` (`CancelAfter(probeTimeout)`) rather than
   `HttpClient.Timeout`, so a single `HttpClient` instance can serve probes
   with different timeouts. Use
@@ -420,6 +411,14 @@ subsystem or category is defined by this source.
   are unnecessary — nothing in the source makes `TransportResolver`'s
   decision observable; a caller reads `CachedKind`/awaits `ResolveAsync()`
   on demand.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubClient/AuthSources/Transport/APITransport.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubClient/AuthSources/Transport/DaemonContract.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubClient/AuthSources/Transport/TransportResolver.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -461,24 +460,13 @@ subsystem or category is defined by this source.
   daemon is up," and avoiding a shared cache/cookie jar keeps loopback
   daemon traffic from interacting with any HTTPS backend session state.
   **Approved**: pending
-
-- **Decision**: Concurrent first-time `resolve()` calls are left able to
-  launch duplicate probes (see Edge Cases), and out-of-range `port` values
-  are left to crash at a forced URL unwrap rather than being validated.
-  **Rationale**: neither is addressed anywhere in
-  `TransportResolver.swift`/`DaemonContract.swift`, and neither is exercised
-  by `TransportResolverTests.swift`; both are recorded as open questions
-  under Edge Cases rather than resolved here, since resolving them would
-  mean inventing behavior the source does not define.
-  **Approved**: pending
-
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | partial | Reliability |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
@@ -490,11 +478,14 @@ and none reaches into another's internals. `explicit-error-handling` is
 partial: the production probe folds every failure mode (refused connection,
 DNS failure, timeout, non-200) into the same `false`/`.direct` outcome with
 no distinguishable error surfaced to the caller (see
-probe-failure-collapses-to-false). `unit-test-coverage` passes: all three
+probe-failure-collapses-to-false). `unit-test-coverage` is partial: all three
 files are covered directly by `TransportResolverTests.swift`,
 `DaemonTransportTests.swift`, and `DirectTransportTests.swift`, including
 both hermetic (injected probe) and semi-hermetic (`MockDaemonServer`,
-`StubURLProtocol`) paths. `fault-tolerance` passes: Direct is a documented,
+`StubURLProtocol`) paths, but no test covers daemon-session-is-ephemeral,
+the production probe's configuration, `default-probe-timeout` (a refused
+connection never reaches the timeout), non-200 responses, the
+port-validation open question or the concurrent-resolve open question. `fault-tolerance` passes: Direct is a documented,
 guaranteed fallback, and a daemon probe failure never blocks `ADHClient`
 construction. `graceful-degradation` is partial: the daemon-down path
 degrades cleanly to Direct, but the concurrent-`resolve()` race and the
@@ -511,3 +502,4 @@ Privacy), a distinction this check does not itself encode.
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Removed 8 agenticdeveloperhub product-name mentions (private-scope leak, D_2) via code-identifier rephrasing; hct-022 corrected to reflect that a refused loopback connection fails immediately and does not exercise probeTimeout. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Compliance unit-test-coverage set to partial with the untested requirements named, the open-questions design decision and duplicated edge-case prose removed, the two normative edge cases promoted to named requirements, vectors hct-023 to hct-026 added, WinUI note told to mirror the Swift race behaviour, source paths dropped from the body, and related and references filled in. |

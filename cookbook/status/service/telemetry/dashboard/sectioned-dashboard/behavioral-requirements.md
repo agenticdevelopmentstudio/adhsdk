@@ -23,8 +23,8 @@
 - **loaders-built-per-refresh**: `opts.loaders(key)` MUST be called once at the start of each refresh, so loaders can compute a time window from the current time.
 - **only-due-loaders-run**: A refresh MUST call only the loaders of the sections that were due when it started.
 - **concurrency-default**: Due sections MUST run strictly one after another unless `concurrency` is set. The default is 1.
-- **concurrency-limit**: With `concurrency` greater than 1, at most that many loaders MUST run at once. The work is done by `mapLimit` from `@adh-sdk/deploy-platform/util`, which starts `min(limit, count)` workers that take items in order.
-- **section-publish-on-finish**: Each section MUST be published to state as soon as its own loader settles, before later sections start.
+- **concurrency-limit**: With `concurrency` greater than 1, at most that many loaders MUST run at once, taken in order.
+- **section-publish-on-finish**: Each section MUST be published to state as soon as its own loader settles; with the default `concurrency` of 1 that is before the next section starts.
 - **success-publish**: When a loader resolves, the section MUST become `{ data, error: null, updatedAt }` where `updatedAt` is `new Date(now()).toISOString()`.
 - **failure-keeps-data**: When a loader rejects, the section MUST keep its prior `data` and `updatedAt` and take `error` set to the error's `message`, or `String(err)` for a non-`Error` value.
 - **failure-isolated**: A failing loader MUST NOT stop the remaining due sections from running.
@@ -41,7 +41,7 @@
 - **incomplete-short-answer**: When `incomplete(name, data)` returns true for a resolved answer, the section MUST be published as a success (`error` null, data kept) but scheduled and counted like a failure, so it is retried after the backoff instead of the full TTL. The Vercel dashboard uses this when `data.failed > 0 || data.incomplete > 0`.
 - **incomplete-optional**: When `incomplete` is not given, every resolved answer MUST count as complete.
 - **loaders-builder-throws**: If `opts.loaders(key)` throws, the failure MUST be logged with `console.warn` as `[telemetry] dashboard refresh (<key>) failed: <message>`, every due section that did not settle MUST be scheduled as a failure, and `refreshing` MUST return to false. The builder runs before the first `await` of the refresh, so all of this happens inside the `read` call that triggered it and that `read` already returns `refreshing` false.
-- **wedge-guard**: A refresh MUST NOT leave a key `refreshing` forever. Whatever happens, the refresh's `finally` step clears the flag.
+- **wedge-guard**: A refresh that ends, whether its loaders resolved, rejected or the builder threw, MUST clear the `refreshing` flag in its `finally` step. A loader that never settles is the loader's own responsibility (see the edge case "Loader that never settles").
 
 **settle**
 

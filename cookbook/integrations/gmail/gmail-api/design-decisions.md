@@ -1,6 +1,6 @@
 
 **Decision**: Keep the protocol to the eight operations the sync engine uses.
-**Rationale**: The doc comment says it is "small so tests can fake it"; a narrow surface keeps fakes cheap and the sync engine independent of HTTP.
+**Rationale**: A narrow surface keeps fakes cheap and the sync engine independent of HTTP.
 **Approved**: pending
 
 **Decision**: Surface only one typed error, `GmailCursorExpired`, for HTTP 404 on `history`.
@@ -12,11 +12,11 @@
 **Approved**: pending
 
 **Decision**: Keep `internalDate` as a string and body `data` as base64url text in the DTOs.
-**Rationale**: The DTOs mirror the wire shape; conversion belongs to the parser that consumes them, and the comments in source record the formats.
+**Rationale**: The DTOs mirror the wire shape; conversion belongs to the parser that consumes them, and the DTOs record the formats (epoch milliseconds as a string, base64url body text).
 **Approved**: pending
 
 **Decision**: Let the full-sync query only narrow the fetch.
-**Rationale**: The type's comment makes `MailClassifier` the authority on what is mirrored, so the query is a bandwidth optimization and not a policy.
+**Rationale**: `MailClassifier` ([adhsdk.ingredient.integrations.model.mail-classification](cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43)) is the authority on what is mirrored, so the query is a bandwidth optimization and not a policy. A caller MUST NOT rely on the query to exclude a message from the mirror; it re-checks every fetched message with the classifier.
 **Approved**: pending
 
 **Decision**: Always set `includeSpamTrash` from `includeSpam || includeTrash`, including when `includeArchived` drops the class terms.

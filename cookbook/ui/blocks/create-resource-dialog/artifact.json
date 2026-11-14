@@ -4,11 +4,11 @@
     "id": "9f87b4cd-f3a0-482b-830d-c1482ed51bbe",
     "title": "Create Resource Dialog",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -23,13 +23,19 @@
       "modal",
       "create"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
+      "9e36a0ef-67ef-485d-8ace-68886add841c"
+    ],
     "related": [],
-    "references": [],
+    "references": [
+      "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/",
+      "https://www.w3.org/WAI/WCAG21/Understanding/focus-order.html"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cf21c072c71444c6",
+  "synced": "a88fd831205f26a9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

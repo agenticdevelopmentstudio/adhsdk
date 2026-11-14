@@ -2,7 +2,7 @@
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | avatar-behavior-001 | public-api-surface | Import `* as Avatar from "./index"`; check `useAvatarEngine`, `useBlink`, `useIdleLadder`, `useSpeech`, `useArbitration`, `useGaze`, `useIdleFidget`, `useSpeechBubble`, `applyPose`. | `typeof` each is `"function"` (per `engine.test.ts`'s existing smoke test). |
-| avatar-behavior-002 | tuning-merge | `config.tuning` omitted. | The engine's effective tuning equals `DEFAULT_TUNING` exactly (every field of `DEFAULT_TUNING` is a `number`, per `engine.test.ts`). |
+| avatar-behavior-002 | tuning-merge | `config.tuning` omitted. | The engine's effective tuning equals `DEFAULT_TUNING` exactly (all 15 fields of `Tuning` in `types.ts` are numbers; `engine.test.ts` asserts this for only 13 of them, omitting `swayCalm` and `swayLively`). |
 | avatar-behavior-003 | tuning-merge | `config.tuning = { boredAfterMs: 1000 }`. | Effective tuning has `boredAfterMs: 1000` and every other field equal to `DEFAULT_TUNING`'s value (e.g. `gazeMax: 7`). |
 | avatar-behavior-004 | resting-mood-priority | `expression` unset, `ladder = "active"`, `moods = { idle: "calm" }`. | `resting === "calm"`. |
 | avatar-behavior-005 | resting-mood-priority, mood-map-fallback | `expression` unset, `ladder = "bored"`, `moods = { idle: "calm" }` (no `bored` entry). | `resting === "calm"` (falls back to idle). |
@@ -20,7 +20,7 @@
 | avatar-behavior-017 | waking-trigger-condition | Prior `resting === "calm"`, current `resting === "sleepy"` (the reverse direction of `waking.from`/`to`). | No waking one-shot starts; `effective === "sleepy"`. |
 | avatar-behavior-018 | curious-flag, eyes-shut-flag | `moods = { idle: "calm", asleep: "sleepy" }`, `effective === "sleepy"`. | `curious === false`, `eyesShut === true`. |
 | avatar-behavior-019 | curious-flag, eyes-shut-flag | `effective === moods.idle`. | `curious === true`, `eyesShut === false`. |
-| avatar-behavior-020 | blink-scheduling | `enabled = true`, `tuning = { minBlinkMs: 100, maxBlinkMs: 200, blinkDurationMs: 50, ... }`. | Within any 300ms window, `useBlink` reports `true` for exactly one contiguous `50`ms stretch, preceded by a gap between `100` and `200`ms. |
+| avatar-behavior-020 | blink-scheduling | `enabled = true`, `tuning = { minBlinkMs: 100, maxBlinkMs: 200, blinkDurationMs: 50, ... }`. | Each blink cycle is a gap between `100` and `200`ms with `useBlink` reporting `false`, then a contiguous `50`ms stretch reporting `true`; a 300ms window may therefore contain two blinks. |
 | avatar-behavior-021 | blink-disabled-no-schedule | `enabled = false`. | `useBlink` returns `false` and schedules nothing (no timer fires later even if `enabled` never flips true). |
 | avatar-behavior-022 | blink-enable-condition | `eyesShut = true`. | Blink is disabled regardless of `blinkSuppressed`. |
 | avatar-behavior-023 | blink-enable-condition | `eyesShut = false`, `blinkSuppressed = ["laughing"]`, `effective === "laughing"`. | Blink is disabled. |
@@ -63,4 +63,4 @@
 | avatar-behavior-060 | speech-bubble-pop-and-drift | `speechRef.current` mounted; `speech = { text: "hi", id: 1 }`. | The bubble's timeline runs: opacity `0→0.7`/scale `0.7→1` over `0.22`s, then a `0.5`s hold, then a `1.3`s drift to `0` opacity along a computed `(driftX, driftY)` within `±55°` of straight up. |
 | avatar-behavior-061 | speech-bubble-noop-without-ref-or-speech | `speech = null`. | `useSpeechBubble` starts no timeline. |
 | avatar-behavior-062 | morph-point-count-validation | Two poses for the same mouth channel whose `pose.mouth` path strings have a different point count. | The engine passes both paths to MorphSVGPlugin unchecked; the outcome is the plugin's, so the test asserts only that no engine-side validation or fallback runs. |
-
+| avatar-behavior-063 | gaze-forced-priority | `config.gaze = { x: 2, y: -2 }`, `gazeMax = 7`, `tiltMax = 9`, `leanMax = 6`. | The gaze is clamped to `(1, -1)` before use; iris targets `(7, -7)`; tilt targets `-9`°; lean targets `(6, -6)`. |

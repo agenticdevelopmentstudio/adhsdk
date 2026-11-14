@@ -1,13 +1,13 @@
 
-Tests live in `GmailMessageParserTests.swift` beside the SDK; fixtures are `gmail-message-multipart.json`, `gmail-message-html-only.json`, `gmail-message-latin1.json`, `gmail-message-windows1252.json` and `gmail-message-quoted-charset.json`. Vectors marked "derived" come from the code, not from a named test.
+Tests live in `GmailMessageParserTests.swift` beside the SDK; fixtures live in `Fixtures/` under the tests and are `gmail-message-multipart.json`, `gmail-message-html-only.json`, `gmail-message-latin1.json`, `gmail-message-windows1252.json` and `gmail-message-quoted-charset.json`. Vectors marked "derived" come from the code, not from a named test.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| parser-001 | total-function, part-walk, first-text-wins, attachment-listed, from-raw, subject-raw, external-id-passthrough, mail-class-derived | Test `parsesPlainAndHtmlFromNestedAlternative`: fixture `message-multipart`, connection `c1`, no existing id | `bodyText` is `Hello plain`; `bodyHtml` is `<b>Hi</b>`; `attachments` is one ref (`att1`, `a.pdf`, `application/pdf`, 1234); `fromAddress` is `Jane <j@x.com>`; `subject` is `Hi`; `mailClass` is `filed`; `externalId` is `m1` |
-| parser-002 | no-body-is-nil, mail-class-derived | Test `parsesHtmlOnly`: fixture `message-html-only` | `bodyText` is nil; `bodyHtml` is `<p>x</p>`; `mailClass` is `trash` |
-| parser-003 | charset-declared | Test `decodesLatin1Charset`: bytes C3 A9 with declared Latin-1 | `bodyText` is U+00C3 U+00A9, not the UTF-8 reading |
-| parser-004 | charset-declared | Test `decodesWindows1252Charset`: fixture `message-windows1252`, part header `Content-Type: text/plain; charset=windows-1252`, data the single byte 80 | `bodyText` is U+20AC |
-| parser-005 | charset-parameter-parsing | Test `decodesQuotedMixedCaseCharsetParameter`: fixture `message-quoted-charset`, part header `Content-Type: text/plain; CharSet="iso-8859-1"`, data bytes C3 A9 | `bodyText` is U+00C3 U+00A9 |
+| parser-001 | total-function, part-walk, first-text-wins, attachment-listed, from-raw, subject-raw, external-id-passthrough, mail-class-derived | Test `parsesPlainAndHtmlFromNestedAlternative`: fixture `gmail-message-multipart.json`, connection `c1`, no existing id | `bodyText` is `Hello plain`; `bodyHtml` is `<b>Hi</b>`; `attachments` is one ref (`att1`, `a.pdf`, `application/pdf`, 1234); `fromAddress` is `Jane <j@x.com>`; `subject` is `Hi`; `mailClass` is `filed`; `externalId` is `m1` |
+| parser-002 | no-body-is-nil, mail-class-derived | Test `parsesHtmlOnly`: fixture `gmail-message-html-only.json` | `bodyText` is nil; `bodyHtml` is `<p>x</p>`; `mailClass` is `trash` |
+| parser-003 | charset-declared, charset-declaration-wins | Test `decodesLatin1Charset`: bytes C3 A9 with declared Latin-1 | `bodyText` is U+00C3 U+00A9, not the UTF-8 reading |
+| parser-004 | charset-declared | Test `decodesWindows1252Charset`: fixture `gmail-message-windows1252.json`, part header `Content-Type: text/plain; charset=windows-1252`, data the single byte 80 | `bodyText` is U+20AC |
+| parser-005 | charset-parameter-parsing | Test `decodesQuotedMixedCaseCharsetParameter`: fixture `gmail-message-quoted-charset.json`, part header `Content-Type: text/plain; CharSet="iso-8859-1"`, data bytes C3 A9 | `bodyText` is U+00C3 U+00A9 |
 | parser-006 | recipient-lists, address-split-commas, address-split-keeps-text, headers-absent | Test `splitsAddressListsRespectingQuotes`: `To` is `"Doe, Jane" <j@x.com>, b@y.com`, no `Cc` | `toAddresses` is two entries, `"Doe, Jane" <j@x.com>` and `b@y.com`; `ccAddresses` is empty |
 | parser-007 | date-from-internal-date, date-output-format | Test `internalDateConvertsToISO`: `internalDate` `1730800000000` | `internalDate` is `2024-11-05T09:46:40.000Z` |
 | parser-008 | header-lookup, recipient-lists | Test `parsesANonEmptyCcList`: header named lowercase `cc` | `ccAddresses` is `"Roe, Ann" <a@x.com>` and `b@y.com` |
@@ -41,5 +41,12 @@ Tests live in `GmailMessageParserTests.swift` beside the SDK; fixtures are `gmai
 | parser-036 | embedded-fallback-all-or-nothing | Derived: own HTML only, embedded message with plain text | `bodyHtml` is the own HTML; `bodyText` is nil |
 | parser-037 | headers-absent, total-function, no-body-is-nil | Derived: DTO with `payload` nil and no `internalDate` | `fromAddress`, `subject` empty; no bodies; no attachments; `internalDate` from `now` |
 | parser-038 | undecodable-body-data, first-text-wins | Derived: first `text/plain` part has data `a`, second has `Ym9keQ` | `bodyText` is `body` |
-| parser-039 | no-shared-state, no-io | Derived: two parses of the same DTO with `existingId` set and the same `now` | The two records are equal except that `createdAt` and `updatedAt` are the call-time clock and may differ |
+| parser-039 | no-shared-state | Derived: two parses of the same DTO with `existingId` set and the same `now` | The two records are equal except that `createdAt` and `updatedAt` are the call-time clock and may differ |
+| parser-040 | address-split-unbalanced-quote | Derived: `splitAddresses` on `"Doe, Jane <j@x.com>, b@y.com` | One entry, the whole text unchanged; no error |
+| parser-041 | address-split-backslash-outside-quotes | Derived: `splitAddresses` on `a\, b@x.com` | Two entries, `a\` and `b@x.com`; the backslash did not escape the comma |
+| parser-042 | address-split-trim | Derived: `splitAddresses` on `a@x.com`, a newline, then `, b@y.com` | Two entries; the first still ends with the newline, because only horizontal whitespace is trimmed |
+| parser-043 | base64url-decode | Derived: `base64URLDecode` on `Pz8/` and on `Pz8_` | Both give the three bytes `???`; the standard-alphabet `/` is accepted unchanged |
+| parser-044 | base64url-decode, undecodable-body-data | Derived: `base64URLDecode` on `SGVs bG8` (a space in the middle) | nil; whitespace is rejected, not skipped |
+| parser-045 | record-defaults | Derived: record the clock before and after a parse | `createdAt` and `updatedAt` each fall between the two readings and are not taken from `now` |
+| parser-046 | no-io | Derived: inspect `GmailMessageParser.swift` | It imports only Foundation and makes no file, network, process, notification or logging call |
 

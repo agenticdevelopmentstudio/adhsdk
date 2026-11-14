@@ -4,7 +4,8 @@ A master/detail block in `@adh-sdk/ui`: the shared `ListHeader`
 and the details pane are PEERS in the column — the details never overlays the
 list — and the divider between them renders as the details pane's always-visible
 header bar (`ResizableSplit`'s header-bar variant, titled by `detailsLabel`). It
-composes `ListHeader` + `DataTable` + `ResizableSplit` + `AlertModal` + `Button`.
+composes `ListHeader` + `DataTable` + `ResizableSplit` + `SelectionActions`
+(the toolbar actions and the Delete confirm, built on `Button` and `AlertModal`).
 
 It owns the selection state and filter; it renders rows in a `DataTable`
 (clicking a row selects it; ↑/↓ move the selection — DataTable's keyboard nav),

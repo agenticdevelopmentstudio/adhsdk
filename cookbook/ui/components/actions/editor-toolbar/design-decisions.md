@@ -7,3 +7,6 @@
 **Rationale**: The component composes arbitrary, caller-supplied children and cannot know their keyboard semantics in advance. It establishes the `toolbar` region for assistive technology without promising keyboard behavior it doesn't implement — see **keyboard-navigable** in Compliance for the resulting gap.
 **Approved**: pending
 
+**Decision**: Apply an explicit empty `ariaLabel` as given, without falling back to the default or warning.
+**Rationale**: The component stays a thin pass-through of its prop, with no guard logic to maintain, and `ariaLabel` stays optional with a default for callers who do not care. The cost is that a caller passing `""` gets a toolbar with no accessible name and nothing reports it; the alternative, a fallback name or a development warning, was not adopted.
+**Approved**: pending

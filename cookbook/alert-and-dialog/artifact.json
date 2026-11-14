@@ -4,11 +4,11 @@
     "id": "550f00f7-bfb2-415e-9b15-bd5dce015500",
     "title": "Alert & Dialog System",
     "type": "recipe",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,11 +29,14 @@
     ],
     "depends-on": [],
     "related": [],
-    "references": [],
+    "references": [
+      "https://base-ui.com/react/components/dialog",
+      "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "efb83d701879f6b6",
+  "synced": "267d537a40bd5dab",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

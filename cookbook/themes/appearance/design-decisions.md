@@ -26,8 +26,3 @@
 **Decision**: The Vite plugin injects the script at the end of `<head>`.
 **Rationale**: Prepended, it and the dev server's preamble push `<meta charset>` past the first 1024 bytes, where browsers stop looking for the encoding; a script anywhere in `<head>` still runs before the body paints.
 **Approved**: pending
-
-**Decision**: Test coverage for this module is indirect: `clearAppearance.test.ts` exercises `applyAppearance` and `clearAppearance` directly, and `appearanceScope.test.ts` and `AppearanceScope.test.tsx` exercise them through the store. No test file targets `normalizeAppearance`, the storage functions or the pre-paint script, so the vectors for those are derived from the source.
-**Rationale**: Records the evidence source for the vectors above, per the source-fidelity guideline.
-**Approved**: pending
-

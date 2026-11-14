@@ -18,9 +18,10 @@
 - **React/Web**: this is the source platform. The five files are
   `hooks/useSearchState.ts`, `lib/breadcrumbs.ts`, `lib/lookup.ts`,
   `lib/nav.ts`, and `lib/search.ts` in
-  `packages/web/packages/model/src`, all consumed by `useSearchState.tsx`-style
-  callers through `useMemo`/`useState`/`useCallback` and the `fuse.js`
-  dependency declared in `packages/web/packages/model/package.json`.
+  `packages/web/packages/model/src`, and the `fuse.js`
+  dependency is declared in `packages/web/packages/model/package.json`.
+  `useSearchState` uses `useMemo`/`useState`/`useCallback`, and its in-repo
+  consumer is `SearchDialogConnected.tsx` in `packages/web/packages/controls/src/search-dialog`.
 - **AppKit / UIKit**: the lookup and breadcrumb functions translate directly
   to `NSArray`/`Array` predicate or block-based filtering; there is no
   React-style hook, so `useSearchState`'s state becomes a delegate/closure
@@ -32,7 +33,7 @@
   uppercases the first character and leaves the rest of each word's casing
   untouched — a literal port must replicate the source's naive behavior, not
   Foundation's, to stay conformant.
-- **WinUI 3**: this is the platform this recipe exists to unblock. Expose
+- **WinUI 3**: Expose
   `Query`, `Results`, and `SelectedIndex` as `INotifyPropertyChanged`
   properties on a view-model (or bind through `x:Bind` with
   `ObservableCollection<NavNode>` for the tree), replacing React's

@@ -2,11 +2,11 @@
 id: 79093eb5-83e8-46d8-9efe-3cc6ff88d8db
 title: "Trust"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,6 +41,7 @@ The Trust component renders a semantic unordered list of trust claims—things a
 
 - **Container**: Semantic `<ul>` element with className `lp-trust`; no inline styles. Visual treatment comes entirely from `packages/web/packages/landing/src/css/blocks.css`: a wrapping flex row (not a vertical stack), centered, small uppercase text (`0.72rem`, `0.14em` letter-spacing) in a dim ink color, with no border or box—lighter weight than `.lp-cards`.
 - **Items**: `<li>` elements, each a flex row with a small 5px round accent-colored marker (`::before`) preceding the provided React node content; no other item-level styling.
+- **Marker**: The 5px dot is a web-only styling detail drawn by `.lp-trust li::before` in the stylesheet; the component does not render it and no test vector covers it. A port MAY draw its own marker or none.
 - **Layout**: Items wrap left-to-right and center as a group (`flex-wrap: wrap; justify-content: center`), not stacked vertically; gap of `0.4rem` (row) by `1.5rem` (column) between items.
 
 ## States
@@ -49,8 +50,8 @@ Not applicable: The Trust component is a static container that does not respond 
 
 ## Accessibility
 
-- **Role**: Semantic `<ul>` and `<li>` establish list structure; screen readers announce list length and each item's position.
-- **Label requirements**: Individual items should provide meaningful content; if items contain interactive controls, they MUST include accessible labels or descriptions.
+- **Role**: Semantic `<ul>` and `<li>` establish list structure; screen readers announce list length and each item's position where the browser keeps list semantics. The component does not add `role="list"`, and the stylesheet sets `display: flex` on each `li`.
+- **Label requirements**: Individual items SHOULD provide meaningful content; if items contain interactive controls, they MUST include accessible labels or descriptions.
 - **Keyboard navigation**: No interactive behavior in the container; keyboard access is inherited from item content.
 
 ## Conformance Test Vectors
@@ -86,7 +87,7 @@ Not applicable: The Trust component does not define, render, or own any translat
 ## Accessibility Options
 
 - **Reduce Motion**: Not applicable; component does not animate.
-- **Increase Contrast**: Not applicable; component does not define foreground or background colors.
+- **Increase Contrast**: The stylesheet sets the item text to a dim ink colour (`var(--lp-ink-dim, #a0a0a0)`) at `0.72rem`, uppercase, and draws the marker in the accent colour. A port MUST keep the dim text at a contrast ratio that stays legible at that size, and MUST raise it when the platform requests increased contrast.
 - **Differentiate Without Color**: Not applicable; component relies on semantic structure, not color-based distinctions.
 
 ## Feature Flags
@@ -107,22 +108,22 @@ Not applicable: The Trust component does not emit diagnostic or debug log messag
 
 ## Platform Notes
 
-- **TypeScript/Web**: Render as `<ul className="lp-trust">` wrapping `<li>` children. See `packages/web/packages/landing/src/blocks/Trust.tsx`. Items are passed as `ReactNode[]` and rendered in order via `map()`, including `null`/`undefined` entries, which render as empty `<li>` elements.
-- **SwiftUI**: Compose using a `VStack` (or `HStack`, matching the flex-row layout) with list semantics applied through accessibility traits (e.g. `.accessibilityElement(children: .contain)`)—not `List`, which is a scrolling, selectable collection control that would give the strip more visual weight and interaction affordance than the source's deliberately unstyled, non-elevated intent. Map each item to a `Text` or custom view; styling is delegated to the consuming view's modifiers.
-- **Compose**: Use a wrapping `Row`/`FlowRow` or plain `Column`—not `LazyColumn` with `verticalScroll`, which turns a short static strip into a scrolling list. Apply list semantics with `Modifier.semantics` (e.g. collection item info) rather than a scrolling container. Map each item to a composable within the layout; styling is the responsibility of item-level composables.
-- **AppKit / UIKit**: Use a horizontal `NSStackView` (macOS) or `UIStackView` (iOS)—not `NSTableView`/`UITableView`, which are scrolling, selectable collection controls that would elevate the strip beyond its unstyled, non-feature intent. Provide list semantics via accessibility (list-like traits on the container, with each item announcing its position). No cell-level styling is applied by the component.
-- **WinUI 3**: Use an `ItemsRepeater` without a `ScrollViewer`, or a `StackPanel`, bound to the items collection—not a scrolling `ListView`/`ScrollViewer`, which would add selection and scroll affordances the flat strip does not have. Define a `DataTemplate` per item and expose list semantics via `AutomationProperties`. Apply no item-level styling; styling is delegated to the template and the app's resource dictionary.
+- **React/Web**: Render as `<ul className="lp-trust">` wrapping `<li>` children. See `packages/web/packages/landing/src/blocks/Trust.tsx`. Items are passed as `ReactNode[]` and rendered in order via `map()`, including `null`/`undefined` entries, which render as empty `<li>` elements.
+- **SwiftUI**: Compose using a wrapping layout (a custom SwiftUI `Layout` or flow layout, matching the wrapping flex row) with list semantics applied through accessibility traits (e.g. `.accessibilityElement(children: .contain)`)—not `List`, which is a scrolling, selectable collection control that would give the strip more visual weight and interaction affordance than the source's deliberately unstyled, non-elevated intent. Map each item to a `Text` or custom view; styling is delegated to the consuming view's modifiers.
+- **Compose**: Use a wrapping `FlowRow` (the source is a wrapping row) or plain `Column`—not `LazyColumn` with `verticalScroll`, which turns a short static strip into a scrolling list. Apply list semantics with `Modifier.semantics` (e.g. collection item info) rather than a scrolling container. Map each item to a composable within the layout; styling is the responsibility of item-level composables.
+- **AppKit / UIKit**: Use a wrapping, flow-style collection layout (`NSCollectionView` / `UICollectionView` with a flow layout) on macOS or iOS, since a horizontal `NSStackView` or `UIStackView` does not wrap—not `NSTableView`/`UITableView`, which are scrolling, selectable collection controls that would elevate the strip beyond its unstyled, non-feature intent. Provide list semantics via accessibility (list-like traits on the container, with each item announcing its position). No cell-level styling is applied by the component.
+- **WinUI 3**: Use an `ItemsRepeater` with a wrapping layout (such as `UniformGridLayout`) and no `ScrollViewer`, bound to the items collection—not a scrolling `ListView`/`ScrollViewer`, which would add selection and scroll affordances the flat strip does not have. Define a `DataTemplate` per item and expose list semantics via `AutomationProperties`. Apply no item-level styling; styling is delegated to the template and the app's resource dictionary.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Trust.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Trust.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 **Decision**: The component is deliberately unstyled beyond `.lp-trust`/`.lp-trust li` (a wrapping flex row with small dot markers), and is not built from `Cards`.
-**Rationale**: These are trust claims a visitor wants settled, not product features; boxing them like `Cards` would give them the same visual weight as the product's actual capabilities, which the source comment explicitly rejects.
+**Rationale**: These are trust claims a visitor wants settled, not product features; boxing them like `Cards` would give them the same visual weight as the product's actual capabilities, which the JSDoc on `Trust.tsx` and the `/* ---- trust strip ---- */` comment in `blocks.css` both explicitly reject.
 **Approved**: pending
 
 **Decision**: Items are keyed by array index (`key={i}`) rather than a caller-supplied stable key.
@@ -136,14 +137,15 @@ Not applicable: The Trust component does not emit diagnostic or debug log messag
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Both statuses rest on `Trust.tsx`: the component renders `<ul>`/`<li>` elements exclusively and nothing else (semantic-markup), but because item content is arbitrary consumer-supplied `ReactNode`s, the source cannot guarantee accessible labels on any interactive children it wraps (screen-reader-support). `separation-of-concerns` passes because the component is pure presentation over its `items` prop with no business logic, and `unit-test-coverage` passes on `blocks-close.test.tsx`'s assertion that each item renders as its own list item.
+Both statuses rest on `Trust.tsx`: the component renders `<ul>`/`<li>` elements exclusively and nothing else (semantic-markup), but because item content is arbitrary consumer-supplied `ReactNode`s, the source cannot guarantee accessible labels on any interactive children it wraps (screen-reader-support). `separation-of-concerns` passes because the component is pure presentation over its `items` prop with no business logic, and `unit-test-coverage` is partial: `blocks-close.test.tsx` only asserts that two string items render as two `li` elements under `ul.lp-trust`, so trust-002, trust-004 and trust-005 (single root, `null` entry, empty array) have no test.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.0 | 2026-09-22 | (recipe-author) | Initial creation |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename must-prefixed requirements to subject-only names and merge the duplicate list-structure requirement; correct the null/undefined-item edge case, requirement, and test vector to match the unfiltered `map()` in the source; fix trust-003's attribute assertion and give trust-002 concrete input; correct Appearance/Layout from a vertical stack to the source's wrapping flex row and cite the stylesheet; rewrite non-web Platform Notes from scrolling/selectable controls to non-scrolling stacks with accessibility-driven list semantics; reformat Design Decisions into Decision/Rationale/Approved entries and add one for the index-key choice; add a Compliance table; correct the screen-reader accessibility wording; rephrase the summary; and drop frontmatter date quoting to match the template. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Downgraded unit-test-coverage to partial naming the untested vectors, rewrote the contrast bullet for the dim ink colour, named the source comments, fixed SHOULD wording, React/Web label, wrapping-layout platform notes and a web-only marker note. |

@@ -2,7 +2,7 @@
 id: 02e566d2-7403-4584-948c-1b4fff05070d
 title: "Theme Fonts"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,8 @@ tags:
   - fonts
   - performance
 depends-on: []
-related: []
+related:
+  - 345bb44b-1a4b-46ce-be8f-0796edbf70c9
 references: []
 approved-by: ""
 approved-date: ""
@@ -27,14 +28,15 @@ approved-date: ""
 
 # Theme Fonts
 
+The list of font files a page asks the browser to fetch early, taken from the manifest the css build also reads.
+
 ## Overview
 
 Theme Fonts is the one export of `fonts.ts` in the themes package: `THEME_FONT_PRELOADS`, a read-only list of absolute, same-origin hrefs for the self-hosted Iosevka faces the adh theme ships. A page renders a `<link rel=preload>` for each so the browser starts the download while it is still parsing `<head>`, before any layout.
 
 The module exists for the one thing CSS cannot express, telling the browser to fetch a font before layout. The `@font-face` rules themselves are emitted into the theme css by `scripts/build-tokens.mjs`. Both sides read the same manifest, `src/fonts/metrics.json`, written by `scripts/subset-fonts.py`, so a preload cannot point somewhere the css does not or name a file that no longer exists.
 
-The source's doc comment says the list is consumed by a `ThemeStyle` component rendered in the `<head>` of every consuming site; in this repo the consumer is `AdhThemeStyle` in the adh package, which calls react-dom's `preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' })` for each entry, and only when `usesBaseThemeFonts(DEFAULT_SITE_THEME)` is true, and that the bytes are placed at these paths by `materializeThemeFonts` (the package's `materialize-fonts.mjs`). The module is also published as the `./fonts` subpath export of the package.
-
+The source's doc comment says the list is consumed by a `ThemeStyle` component rendered in the `<head>` of every consuming site. In this repo the consumer is `AdhThemeStyle` in the adh package. It calls react-dom's `preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' })` for each entry. It does so only when `usesBaseThemeFonts(DEFAULT_SITE_THEME)` is true. The doc comment also says the bytes are placed at these paths by `materializeThemeFonts` (the package's `materialize-fonts.mjs`). The module is published as the `./fonts` subpath export of the package. The token build that emits the css is described by [adhsdk.ingredient.themes.tokens](cookbook:345bb44b-1a4b-46ce-be8f-0796edbf70c9).
 ## Behavioral Requirements
 
 ### Exports
@@ -47,22 +49,26 @@ The source's doc comment says the list is consumed by a `ThemeStyle` component r
 
 - **preload-flag-filter**: The list MUST contain exactly the manifest faces whose `preload` flag is truthy, and no face whose flag is false.
 - **manifest-order**: The list MUST keep the order in which the faces appear in the manifest `faces` array.
-- **core-cuts-only**: The faces flagged for preload MUST be the three CORE cuts (regular 400, bold 700 and italic 400); the EXT cuts MUST NOT be flagged, because `unicode-range` already keeps them unfetched until a page paints a codepoint in their range.
-- **italic-included**: The italic 400 CORE cut MUST be in the list, because the `SiteLanding` heading sets its accent word in italic above the fold.
 
 ### Href shape
 
 - **href-format**: Each entry MUST be the manifest `publicPath`, a slash, then the face `file` (for example `/fonts/bb398da1/iosevka-400.woff2`).
 - **same-origin**: Each entry MUST be a root-relative path beginning with a single slash; it MUST NOT carry a scheme or host, since the preload is only worth emitting because the fetch rides the connection that delivered the html.
 - **woff2-only**: Each entry MUST end in `.woff2`.
-- **css-agreement**: Each entry MUST appear as the url of an `@font-face` in the css of the default adh theme built from the same manifest (the css emitted by `scripts/build-tokens.mjs`, as asserted by the adh consumer test).
 - **no-validation**: The module MUST NOT validate the manifest, check that files exist, or filter on the file name; correctness of paths rests on the manifest generator and on the consumer's tests.
 
 ### Side effects and concurrency
 
 - **no-side-effects**: Importing the module MUST NOT touch the network, the file system or the document; it only reads the bundled manifest.
-- **immutable-value**: The value is computed once and never mutated by the module, so concurrent readers see the same list. Module evaluation is single-threaded.
+- **immutable-value**: The module MUST NOT mutate the list after evaluation, so concurrent readers see the same list. Module evaluation is single-threaded.
 
+### Integration requirements
+
+These bind the manifest generator and the consuming package, not this module, which forwards whatever the manifest flags.
+
+- **core-cuts-only**: The manifest generator (`subset-fonts.py`) MUST flag for preload only the faces that are be the three CORE cuts (regular 400, bold 700 and italic 400); the EXT cuts MUST NOT be flagged, because `unicode-range` already keeps them unfetched until a page paints a codepoint in their range.
+- **italic-included**: The manifest generator MUST flag the italic 400 CORE cut so that it is in the list, because the `SiteLanding` heading sets its accent word in italic above the fold.
+- **css-agreement**: Each entry MUST appear as the url of an `@font-face` in the css of the default adh theme built from the same manifest (the css emitted by `scripts/build-tokens.mjs`). This module cannot check it, since **no-validation** forbids that; the adh consumer test enforces it.
 ## Appearance
 
 Not applicable — this is a list of font hrefs, not a visual component.
@@ -77,17 +83,17 @@ Not applicable — this is a list of font hrefs, not a visual component.
 
 ## Conformance Test Vectors
 
-The module has no test file beside it. Vectors 1 to 5 come from the tests of its consumer in the adh package, `landingTypeScale.test.ts` (describe block "the first-load font contract"); the rest follow from the filter and map in the source and the committed manifest.
+The module has no test file beside it. Vectors 1 to 5 come from the tests of its consumer in the adh package, `landingTypeScale.test.ts` (describe block "the first-load font contract"); the rest follow from the filter and map in the source and the committed manifest. Vectors 001 to 005 and 007 exercise the manifest, the css build or the consumer, so they are integration vectors; vectors 008 to 010 have no test yet and should live in a `fonts.test.ts` beside the module, using injected manifests.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| fonts-001 | preload-flag-filter | Import `THEME_FONT_PRELOADS` (test "preloads at least the faces that carry a page layout") | length is greater than 0 |
+| fonts-001 | preload-flag-filter (integration: committed manifest) | Import `THEME_FONT_PRELOADS` (test "preloads at least the faces that carry a page layout") | length is greater than 0 |
 | fonts-002 | same-origin, woff2-only | Every entry (test "preloads only same-origin woff2 paths") | matches `^/[^/]` and ends in `.woff2` |
 | fonts-003 | css-agreement | Each entry against the css of the default adh theme (test "declares an @font-face for every preloaded face") | the css contains the entry wrapped in `url('...')` |
 | fonts-004 | css-agreement | The css of the default theme (test "fetches no font from a third-party stylesheet") | it contains no `@import` statement |
-| fonts-005 | no-validation | Each entry resolved by its file name against the themes package `src/fonts` directory (test "ships the preloaded bytes at the path it preloads") | the file exists for every entry |
-| fonts-006 | preload-flag-filter, manifest-order, href-format | The committed manifest: publicPath `/fonts/bb398da1`, faces in order 400, 400-ext, 700, 700-ext, 400-italic, 400-italic-ext, flagged true, false, true, false, true, false | `["/fonts/bb398da1/iosevka-400.woff2", "/fonts/bb398da1/iosevka-700.woff2", "/fonts/bb398da1/iosevka-400-italic.woff2"]` |
-| fonts-007 | core-cuts-only | The same manifest | no entry ends in `-ext.woff2` |
+| fonts-005 | integration: materialization places the bytes (the module itself checks nothing, per no-validation) | Each entry resolved by its file name against the themes package `src/fonts` directory (test "ships the preloaded bytes at the path it preloads") | the file exists for every entry |
+| fonts-006 | preload-flag-filter, manifest-order, href-format | A fixture manifest with publicPath `/p` and faces `iosevka-400.woff2`, `iosevka-400-ext.woff2`, `iosevka-700.woff2` flagged true, false, true | `["/p/iosevka-400.woff2", "/p/iosevka-700.woff2"]`, in manifest order; against the committed manifest, every entry starts with its `publicPath` |
+| fonts-007 | core-cuts-only (integration: manifest generator) | The committed manifest | no entry ends in `-ext.woff2` |
 | fonts-008 | preload-flag-filter | A manifest in which no face has `preload` true | the list is empty |
 | fonts-009 | href-format | A manifest with publicPath `/x` and one preloaded face file `a.woff2` | `["/x/a.woff2"]` |
 | fonts-010 | no-validation | A preloaded face whose file is absent from disk | the href is still listed; no error is raised |
@@ -95,7 +101,7 @@ The module has no test file beside it. Vectors 1 to 5 come from the tests of its
 ## Edge Cases
 
 - **Empty selection**: When no face is flagged, the list MUST be empty; the module raises nothing. The adh consumer test asserts a non-empty list, which is where that case is caught.
-- **Missing manifest or missing field**: The manifest is a static JSON import, so a missing file fails at build or bundle time. A face lacking `file` would produce the text `undefined` in its href, since nothing checks it; the generator is the guard.
+- **Missing manifest or missing field**: The manifest is a static JSON import, so a missing file fails at build or bundle time. A face lacking `file` would produce the text `undefined` in its href, since nothing checks it; the generator is the guard (see the trade-off in the no-validation decision).
 - **Stale paths**: The `publicPath` embeds a revision. If the bytes are not copied to that path (the app did not call `materializeThemeFonts`), the preload and the inlined `@font-face` both return 404 while the page falls back to the metric-matched fallback; the source's doc comment states that nothing downstream notices.
 - **Non-boolean `preload`**: The filter uses truthiness, so any truthy value selects the face.
 - **Boundary values**: Not applicable; the module takes no input and has no numeric limits.
@@ -146,7 +152,7 @@ Not applicable: the source makes no log calls.
 - **Compose**: Put the faces in `res/font` and build a `FontFamily` of `Font(R.font.x, FontWeight.Normal, FontStyle.Italic)` entries; resource fonts are available synchronously, so no preload list is needed. Downloadable fonts, if used, take the place of the same-origin rule.
 - **React/Web**: The source platform. `src/fonts.ts` imports `./fonts/metrics.json` and exports the filtered, mapped list; `AdhThemeStyle` (adh package) calls react-dom `preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' })` per entry, which emits a font preload link (fonts need the crossorigin attribute even when same-origin), and does so only when the site's default theme uses the base theme fonts. `materialize-fonts.mjs` copies the woff2 into `public/` from each `next.config`, and `build-tokens.mjs` emits the `@font-face` rules. The package exposes the module through its `./fonts` subpath and ships `src/fonts` in its `files`.
 - **AppKit / UIKit**: Register bundled fonts through `ATSApplicationFontsPath` (macOS) or `UIAppFonts` (iOS), or `CTFontManagerRegisterFontsForURL`, then `NSFont(name:size:)` or `UIFont(name:size:)`. No preload step exists; registration at launch is the equivalent.
-- **WinUI 3**: Ship the fonts as `Content` items under `Assets/Fonts` and reference them in XAML with the `FontFamily` property in the form `ms-appx:///Assets/Fonts/Iosevka-Regular.ttf#Iosevka`; WinUI 3 loads TrueType or OpenType, so convert the woff2 cuts to ttf or otf, one file per weight and style, and select them with `FontWeight` and `FontStyle`. There is no browser-style preload; to warm the faces before first layout, create an off-screen `TextBlock` with each `FontFamily` at app start, or load them through a `CanvasTextFormat` in Win2D. Expose the faces as a resource in `App.xaml` (`<FontFamily x:Key="ThemeMono">`) and use `x:Uid` or `ThemeResource` bindings so a theme change swaps them. Keep the manifest as a JSON file read with `System.Text.Json` at startup if the list of faces must stay generated.
+- **WinUI 3**: Ship the fonts as `Content` items under `Assets/Fonts` and reference them in XAML with the `FontFamily` property in the form `ms-appx:///Assets/Fonts/Iosevka-Regular.ttf#Iosevka`; WinUI 3 loads TrueType or OpenType, so convert the woff2 cuts to ttf or otf, one file per weight and style, and select them with `FontWeight` and `FontStyle`. There is no browser-style preload; to warm the faces before first layout, create an off-screen `TextBlock` with each `FontFamily` at app start, or load them through a `CanvasTextFormat` in Win2D. Expose the faces as a resource in `App.xaml` (`<FontFamily x:Key="ThemeMono">`) and use `ThemeResource` bindings so a theme change swaps them. Keep the manifest as a JSON file read with `System.Text.Json` at startup if the list of faces must stay generated.
 
 ## Reference Implementations
 
@@ -155,7 +161,7 @@ Not applicable: the source makes no log calls.
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/fonts.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/themes/src/fonts.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -172,7 +178,7 @@ Not applicable: the source makes no log calls.
 **Approved**: pending
 
 **Decision**: The module does no validation of the manifest or of file presence.
-**Rationale**: The generator owns the manifest and the consumer test in the adh package asserts shape, css agreement and file presence, so a second check here would duplicate it. The cost is that a missing byte file is silent in the page (see Stale paths in Edge Cases).
+**Rationale**: The generator owns the manifest and the consumer test in the adh package asserts shape, css agreement and file presence, so a second check here would duplicate it. The cost is that a missing byte file is silent in the page (see Stale paths in Edge Cases), and a face without a string `file` yields an `undefined` href instead of a thrown error, which trades fail-fast behavior for a single owner of validation.
 **Approved**: pending
 
 ## Compliance
@@ -190,5 +196,6 @@ Separation of concerns passes: the module does one thing, listing preload hrefs,
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Moved the generator-owned and css-agreement requirements to integration requirements, rewrote immutable-value, split the Overview, added an intro sentence, tokens link, fixture-based vector 006, vector labels and dropped x:Uid. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

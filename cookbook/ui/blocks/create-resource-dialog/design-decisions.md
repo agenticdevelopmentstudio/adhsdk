@@ -1,10 +1,6 @@
 
 **Decision**: Render the dialog through `createPortal` into `document.body`, not inline in the tree that opened it.
-**Rationale**: Ancestors of the open button may set `overflow: hidden`/`overflow: auto` or own a stacking context that clips a `fixed`-positioned descendant; in this app's hierarchical pane stack, ancestors above the focused pane are also marked `inert` and `aria-hidden` in narrow mode, which would block keyboard and screen-reader interaction with the dialog if it stayed a descendant. Portaling to `document.body` escapes both constraints.
-**Approved**: pending
-
-**Decision**: Leave focus unmanaged — no focus moved into the dialog on open, no focus trap while it is open, and no focus restored to the invoking control on close.
-**Rationale**: The source implements none of this and records no rationale for the omission; it is documented here as an absent feature, not a decision. See the Focus management entry in Accessibility for what the source does and does not handle. Escape, Cancel, and × still give keyboard users an unambiguous way to close the dialog, so the omission does not leave it unreachable by keyboard.
+**Rationale**: Ancestors of the open button may set `overflow: hidden`/`overflow: auto` or own a stacking context that clips a `fixed`-positioned descendant; hosts that mark ancestor panes `inert` and `aria-hidden` (for example a hierarchical pane stack in narrow mode), which would block keyboard and screen-reader interaction with the dialog if it stayed a descendant. Portaling to `document.body` escapes both constraints.
 **Approved**: pending
 
 **Decision**: Compare draft to pristine state with `JSON.stringify` rather than a structural-equality library or a manual dirty flag.

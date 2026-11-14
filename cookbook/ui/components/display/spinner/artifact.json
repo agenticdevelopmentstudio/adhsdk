@@ -4,11 +4,11 @@
     "id": "c97bebaf-9e6d-49a7-a4bb-90e8e0ea0181",
     "title": "Spinner",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e62d59998442793f",
+  "synced": "fa5e90c713113ffa",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

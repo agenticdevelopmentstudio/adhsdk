@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---|---|---|---|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Backdrop is inert per disablePointerDismissal (not a confirm trigger); note-only entry counts as dirty but isn't discarded; moved API/Accessibility after Compliance for template order. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; state that footer Add calls `onAdd` then `onClose()` immediately regardless of `busy`; define the blank-entry rule inline and cover note-only entries; add a design decision scoping format validation to the caller; align all `AlertModal` mentions to the source's `UnsavedChangesAlert`; fix tab-order wording and drop the unverified row-removal claim; document the internal staged-row id; add test vectors for Esc/backdrop, state reset on reopen, the entry Add button, and Cancel while busy; reword the busy/dismiss edge case; correct SwiftUI/Compose/WinUI 3/AppKit Platform Notes APIs; approve all Design Decisions with pending status; rebuild Compliance with real catalog checks; fix 1.0.1 row author. |
+| 1.0.1 | 2026-09-22 | Mike Fullerton | Restructure Platform Notes with all five platform guidance bullets; correct `busy` behavior to match source; update domain URIs from agenticdeveloperhub to agenticdevelopercookbook; refine requirements for source fidelity. |
+| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial conversion from legacy UI spec. |

@@ -1,3 +1,5 @@
+This recipe is titled Registry Model; its folder, package (`@adh-sdk/registry-types`) and rdid use the name `registry-types`.
+
 
 The registry model is the framework-free logic package `@adh-sdk/registry-types` (`packages/web/packages/registry-types/src/{types,show-if,validate,visibility}.ts`). It defines the closed catalog of field types a registry owner can put on a form, the shape of a field definition and its values, and four pure computations over that data: whether a field is currently shown (`evaluateShowIf`), whether a submitted value is acceptable (`validateFieldValue`), how an accepted value is normalized for storage and search (`coerceFieldValue`, `searchableText`), and which required fields still block an entry from publishing (`publishBlockers`). A separate module, `visibility.ts`, defines the three-tier audience scale (`public` / `authenticated` / `private`) that gates which of those stored values a given viewer may read.
 

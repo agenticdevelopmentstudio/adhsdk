@@ -3,7 +3,7 @@
 
 - **Compose**: Implement using `Row` with `IconButton` (decrement/increment) flanking a `TextField`. Use `value` state and `onValueChange` callback. Apply bounds checking with `coerceIn(min, max)`. Set button enabled state conditionally based on current value vs. min/max. Use `BasicTextField` or `OutlinedTextField` for the value display.
 
-- **React/Web**: The reference implementation (`packages/web/packages/controls/src/user-settings/components/Stepper.tsx`) uses a native `<input type="number">` with `<button type="button">` elements flanking it in a flex container. Its own CSS classes are named `aws-field` / `aws-stepper`; a consuming app SHOULD follow the `{{app_prefix}}-field` / `{{app_prefix}}-stepper` naming pattern instead. A `noAutofillProps` helper prevents browser autofill on the input field. Treat the reference implementation as the behavioral contract for this recipe.
+- **React/Web**: The reference implementation (`packages/web/packages/controls/src/user-settings/components/Stepper.tsx`) uses a native `<input type="number">` with `<button type="button">` elements flanking it in a flex container. Its own CSS classes are named `aws-field` / `aws-stepper`; a consuming app SHOULD follow its own field class namespace (for example `<namespace>-field` / `<namespace>-stepper`) instead. A `noAutofillProps` helper prevents browser autofill on the input field.
 
 - **AppKit / UIKit**: Use `NSStepper` on macOS or `UIStepper` on iOS. Both provide increment/decrement buttons and value management. `UIStepper` does not display the numeric value by default—pair it with a UITextField or UILabel to show the current value. Configure `minimumValue`, `maximumValue`, and `stepValue` properties. Bind target-action or delegation to capture value changes.
 

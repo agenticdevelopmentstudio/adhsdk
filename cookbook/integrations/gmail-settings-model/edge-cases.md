@@ -4,14 +4,14 @@
 - **Null and empty input, timestamp**: A nil or unparsable `lastSyncAt`. `lastSyncedText` MUST return "Never synced".
 - **Null and empty input, selection**: No accounts. `selectedAccountId` MUST become nil after a reload.
 - **Boundary values, sign-in tickets**: A model that has never signed in has no ticket, and `startedLatestSignIn` MUST be false.
-- **Boundary values, secret mask**: The mask MUST be ten characters plus the suffix; the model does not compute the suffix length, the service sends it in the provider status (see the [mail integration service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)).
+- **Boundary values, secret mask**: The mask MUST be ten characters plus the suffix; the model does not compute the suffix length, the service sends it in the provider status (see the mail integration service, [adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)).
 - **Boundary values, settings ranges**: The model does not clamp or validate `windowDays` or `pollIntervalMinutes`; it sends the settings it is given. Range limits live in `MailSyncSettings`.
 - **Concurrent access, overlapping calls**: Calls may overlap; `busy` MUST count them and stay true until all finish. Each call's reload replaces `accounts` with the service's list.
 - **Concurrent access, rapid settings changes**: Only one settings send per account runs at a time; later values replace the pending one (MUST).
 - **Concurrent access, tracker**: The tracker is main-actor isolated, so tickets are issued serially (MUST).
 - **Error states, action failure**: The first failure sets `errorMessage`; the reload still runs (MUST).
 - **Error states, reload failure**: The reload failure sets `errorMessage` only when none is set (MUST). When the account read fails after the provider read succeeded, `provider` is updated and only `accounts` keeps its previous value, so `provider` can be newer than `accounts`. When the provider read fails, both keep their previous values.
-- **Error states, settings send failure**: Pending value dropped, chosen-value override released, reload restores the service's state (MUST). When several values were pending, the failure discards them all.
+- **Error states, settings send failure**: Pending value dropped, chosen-value override released, reload restores the service's state (MUST). Only the single latest pending value exists per account, so the failure drops that value and with it any intermediate choices it replaced.
 - **Error states, cancel failure**: Only `errorMessage` is set; no reload runs (MUST).
 - **Error states, duplicate alerts**: An account error already alerted MUST NOT alert again until the account leaves the error state or its message changes.
 - **Error states, removed account**: When an alerted account is removed, the next reload drops its record, because the alerted record is filtered to accounts still in error (MUST).

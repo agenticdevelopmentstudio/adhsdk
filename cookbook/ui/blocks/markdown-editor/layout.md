@@ -18,6 +18,9 @@
   (if `quickReference`).
 - The textarea sits full-width below the row, mono (`font-mono text-[0.8rem]`),
   `rows` tall (default 16).
-- Tokens only (inherited from Textarea/Label/Button/Popover); no raw hex, no
-  `!important`.
+- With `fill`, the root gains `min-h-0 flex-1` and the textarea flexes to fill it
+  (no `rows`, no resize grip); the parent MUST provide a bounded height (see
+  **fill-parent-height**).
+- Tokens only (the `apt-*` token utilities, inherited from Textarea/Label/Button/Popover);
+  no raw hex, no `!important`.
 

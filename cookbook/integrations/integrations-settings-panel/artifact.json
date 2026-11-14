@@ -4,7 +4,7 @@
     "id": "1c826ac4-20e0-4089-870f-5d1fd4b59983",
     "title": "IntegrationsSettingsPanel",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -24,19 +24,19 @@
       "sidebar",
       "split-view"
     ],
-    "depends-on": [],
-    "related": [
+    "depends-on": [
       "2fa64944-9744-4d71-8fed-f785e7ce1e51",
       "4f066e76-2eca-4cd7-8b73-840178e4edf3",
       "a1d787e2-2e3f-4742-a30b-120a8607c518",
       "0fc99299-f3ba-4883-ab08-9bd614da7900",
       "ba8d9517-2528-4ae9-bc52-16046d68b126"
     ],
+    "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8d6ba162ce618a6b",
+  "synced": "a4eee2dffa1e349f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -7,11 +7,7 @@
 **Rationale**: The doc comment says the daemon's database layer and the app decode the identical shape, and the app, daemon and CLI ship together. The cost shows in the HTTP client's act path, which expects the full body and otherwise falls back to status `acted`.
 **Approved**: pending
 
-**Decision**: The doc comment names `DatabaseManager` as the daemon type that decodes the shape; the daemon type that builds the DTO today is `DaemonDatabase` (its finding-row mapping).
-**Rationale**: Recorded as a stale name in the source comment so a port does not look for a type that no longer exists. It has no behavioral effect.
-**Approved**: pending
-
 **Decision**: `severity` is documented as 0 to 100 but is neither clamped nor validated by the DTO.
-**Rationale**: It is an ordering hint; the only producer in the source passes the session's context-used percentage, which is already a percentage.
+**Rationale**: It is an ordering hint; the script observer builds every finding in the source, including script-driven ones whose observer is the script's `id`, and passes the session's context-used percentage as severity, which is already a percentage. A future producer would set its own severity.
 **Approved**: pending
 

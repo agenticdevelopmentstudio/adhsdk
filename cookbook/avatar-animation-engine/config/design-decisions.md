@@ -5,7 +5,7 @@ handful of broad statements.
 **Rationale**: the source validates on the order of sixty distinct
 invariants across six file types (palette/ink resolution, rig/channel
 derivation, pose/timeline/behavior cross-references, variant patches,
-sayings fallback); a comparable-complexity recipe should track that
+sayings fallback); a comparable-complexity ingredient should track that
 complexity rather than a template's usual UI-widget scale, per the
 cross-recipe-consistency guideline's "comparable complexity is defined by
 distinct behaviors, not visual simplicity."

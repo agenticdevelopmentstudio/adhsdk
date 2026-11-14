@@ -28,11 +28,7 @@
 **Approved**: pending
 
 **Decision**: Deliberate prudent debt: undecodable body data is dropped without a signal, and recursion over parts has no depth limit.
-**Rationale**: Both affect malformed or hostile input only, and the source handles neither. Revisit the silent drop when the sync worker needs to show or count messages whose body failed to decode; revisit the depth limit when the parser reads messages from a source other than the Gmail API, or when a crash from a deeply nested message is reported. Until then a port copies both behaviors, or adds a deliberate signal or limit and says so.
-**Approved**: pending
-
-**Decision**: Whether a dropped body should be surfaced is open: today `undecodable-body-data` yields nil with no log, error or flag.
-**Rationale**: Settling it needs the Gmail API contract for `data` and a decision from the owner of the sync worker. The recipe states the current behavior as a MUST until then.
+**Rationale**: Both affect malformed or hostile input only, and the source handles neither. Revisit the silent drop when the sync worker needs to show or count messages whose body failed to decode; revisit the depth limit when the parser reads messages from a source other than the Gmail API, or when a crash from a deeply nested message is reported. Surfacing a dropped body needs the Gmail API contract for `data` and a decision from the owner of the sync worker. Until then `undecodable-body-data` states the current behavior as a MUST, and a port copies both behaviors, or adds a deliberate signal or limit and says so.
 **Approved**: pending
 
 **Decision**: The parser is not pure: it keeps no shared state, but `createdAt`, `updatedAt` and the generated id read the wall clock and a random UUID inside `parse`, and `now` feeds only the date fallback.

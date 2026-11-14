@@ -2,7 +2,7 @@
 id: 4dc15a9e-c129-412a-9f14-e35146563d8d
 title: "PostHog Dashboard Sections"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -20,10 +20,12 @@ tags:
   - dashboard
   - posthog
   - hogql
-depends-on: []
+depends-on:
+  - 8648272e-2da3-46fc-b9e8-5148dacdbcff
+  - d4e7dd53-4771-425f-af0a-0186ba89c3ef
 related:
   - a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f
-  - 8648272e-2da3-46fc-b9e8-5148dacdbcff
+  - f03325ef-f4c6-43ab-9a88-1a0bf3daa002
 references: []
 approved-by: ""
 approved-date: ""
@@ -33,25 +35,37 @@ approved-date: ""
 
 ## Overview
 
-The PostHog half of the Analytics and Errors dashboards: one HogQL query per section, each with a pure shaper that turns raw rows into the section's wire type. The loaders are `loadTraffic`, `loadDimensions`, `loadPaths`, `loadVitals`, `loadSiteHealth` and `loadSiteErrorDetail`. Each builds a query, runs it through `hogqlRows`, and passes the rows to a shaper (`shapeTraffic`, `shapeDimensions`, `shapeVitals`, `shapeHealth`, and for the detail `shapeErrorDays`, `shapeSiteErrors` and `shapeFailedRequests`). Two helpers, `bucketStart` and `since`, build the UTC time expressions.
+The PostHog half of the Analytics and Errors dashboards: one HogQL query per section, each with a pure shaper that turns raw rows into the section's wire type. The loaders are `loadTraffic`, `loadDimensions`, `loadPaths`, `loadVitals`, `loadSiteHealth` and `loadSiteErrorDetail`. Each builds a query, runs it through `hogqlRows` (from the PostHog fetcher, [adhsdk.ingredient.status.service.telemetry.fetchers](cookbook:8648272e-2da3-46fc-b9e8-5148dacdbcff)), and passes the rows to a shaper (`shapeTraffic`, `shapeDimensions`, `shapeVitals`, `shapeHealth`, and for the detail `shapeErrorDays`, `shapeSiteErrors` and `shapeFailedRequests`). Two helpers, `bucketStart` and `since`, build the UTC time expressions.
 
-Every value interpolated into a query comes from a closed enum or a `Date`, never from a request string. Queries select named properties only, because `SELECT properties` is what times out. The loaders are handed to the section caches by the dashboard set; they never cache anything themselves.
+Every value interpolated into a query comes from a closed enum or a `Date`, never from a request string. Queries select named properties only, because `SELECT properties` is what times out. The loaders are handed to the section caches by the dashboard set ([adhsdk.ingredient.status.service.telemetry.dashboard.dashboard-set](cookbook:f03325ef-f4c6-43ab-9a88-1a0bf3daa002)); they never cache anything themselves.
 
+| Loader | Inputs | Row cap | Shaper | Returns |
+|--------|--------|---------|--------|---------|
+| `loadTraffic` | `PosthogEnv`, `RangeWindow` | 5,000 | `shapeTraffic` | `TrafficSection` |
+| `loadDimensions` | `PosthogEnv`, `RangeWindow` | 5,000 | `shapeDimensions` | `DimensionsSection` |
+| `loadPaths` | `PosthogEnv`, `RangeWindow` | 5,000 | none (maps rows inline) | `PathRow[]` |
+| `loadVitals` | `PosthogEnv`, `RangeWindow` | 200 | `shapeVitals` | `VitalsRow[]` |
+| `loadSiteHealth` | `PosthogEnv`, `RangeWindow` | 200 | `shapeHealth` | `SiteHealthRow[]` |
+| `loadSiteErrorDetail` | `PosthogEnv`, `RangeWindow` | 5,000 per query | `shapeErrorDays`, `shapeSiteErrors`, `shapeFailedRequests` | `SiteErrorDetailSection` |
+
+The `RangeWindow` comes from `rangeWindow` ([adhsdk.ingredient.status.service.telemetry.dashboard.ranges](cookbook:d4e7dd53-4771-425f-af0a-0186ba89c3ef)).
 ## Behavioral Requirements
 
 - **query-per-section**: Each section loader MUST issue its queries through `hogqlRows` with a 45,000 ms timeout and no other transport.
 - **failure-throws**: When a query fails, the loader MUST throw an `Error` with the message `PostHog: <error>`, so a failed query fails the section instead of reading as no traffic.
 - **closed-inputs**: A query MUST interpolate only constants, a `Date`-derived time, or a name from a closed list, and MUST NOT interpolate any request string.
 - **named-properties**: A query MUST select named properties, never `properties` as a whole.
-- **production-hosts**: Every query MUST filter out hosts matching `testing.%`, `staging.%`, `%localhost%`, `%127.0.0.1%` and `%.vercel.app`.
+- **production-hosts**: Every query MUST apply the `PRODUCTION_HOSTS` filter (see Configuration for its patterns).
 - **utc-only**: Every bucket expression (`toStartOfHour` or `toStartOfDay`) and the window lower bound (`toDateTime`) MUST name the `'UTC'` zone, so rows land in the window's buckets whatever zone the PostHog project uses.
 - **bucket-unit**: `bucketStart(unit)` MUST be `toStartOfHour(timestamp, 'UTC')` for `hour` and `toStartOfDay(timestamp, 'UTC')` otherwise.
 - **since-bound**: `since(window)` MUST be `timestamp >= toDateTime('<UTC instant as YYYY-MM-DD HH:MM:SS>', 'UTC')` from the window's `since` date.
 - **row-caps**: The traffic, dimension, path and error-detail queries MUST be limited to 5,000 rows, and the vitals and site-health queries to 200 rows.
-- **one-at-a-time**: The process MUST NOT have two HogQL queries in flight at once, including queries from different sections loading together and from the monitor worker thread that adopted the shared lock state, because the PostHog API returns 503 under concurrent load. The rule is kept by `hogqlRows` in the fetcher through a lease that lapses one second after its holder's timeout, so a holder that is terminated cannot block later queries.
+- **one-at-a-time**: The process MUST NOT have two HogQL queries in flight at once, including queries from different sections loading together and from the monitor worker thread that adopted the shared lock state, because the PostHog API returns 503 under concurrent load. The rule is kept by `hogqlRows` in the fetcher ([adhsdk.ingredient.status.service.telemetry.fetchers](cookbook:8648272e-2da3-46fc-b9e8-5148dacdbcff)) through a lease that lapses one second after its holder's timeout, so a holder that is terminated cannot block later queries.
 - **traffic-shape**: `shapeTraffic(rows, buckets)` MUST read rows as host, bucket, pageviews, sessions; return `totals`, `pageviews` and `sessions` series aligned to `buckets`; and return `sites` with per-host `series`, `pageviews` and `sessions`, ordered by `pageviews` descending then host name.
-- **traffic-alignment**: A point whose timestamp is not on the bucket axis, or unreadable, MUST be dropped, and a bucket with no point MUST be zero.
-- **dimension-shape**: `shapeDimensions` MUST read rows as host, device, browser, country, referrer, pageviews, label blanks (host `(unknown)`, device, browser and country `Unknown`, referrer `$direct`), and set `truncated` when the row count reaches the limit.
+- **traffic-alignment**: A point whose timestamp is not on the bucket axis, or unreadable, MUST be dropped, and a bucket with no point MUST be zero. `totals` and every per-site `pageviews` and `sessions` figure MUST be summed from the aligned series, so a dropped point is in no figure at all.
+- **dimension-shape**: `shapeDimensions` MUST read rows as host, device, browser, country, referrer, pageviews.
+- **dimension-blank-labels**: `shapeDimensions` MUST label a blank host `(unknown)`, a blank device, browser or country `Unknown`, and a blank referrer `$direct`.
+- **dimension-truncated**: `shapeDimensions` MUST set `truncated` when the row count reaches `DIMENSION_ROW_LIMIT`.
 - **paths-shape**: `loadPaths` MUST return rows of `host`, `path` and `pageviews`, with host `(unknown)` and path `/` for blanks.
 - **vitals-shape**: `shapeVitals` MUST read rows as host, samples, lcp, inp, cls, fcp (each the 75th percentile) and MUST keep a vital with no value as null, never zero.
 - **health-shape**: `shapeHealth` MUST read rows as host, errors, requests, failures, p95 milliseconds, with `p95Ms` null when absent.
@@ -60,7 +74,7 @@ Every value interpolated into a query comes from a closed enum or a `Date`, neve
 - **site-detail-shape**: It MUST return `buckets` (the window's), `days` (per host `errors` and `failures`, zero-filled and aligned), `errors` rows of host, name, feature, step, boundary, page, count, lastSeen, and `requests` rows of host, status, method, path, count, lastSeen. Fields the event did not report MUST be null; a missing host MUST read `(unknown)`, a missing error name `(unnamed)` and a missing request path `(unknown)`.
 - **site-detail-truncated**: `truncated` MUST be true when any of the three queries returned 5,000 rows.
 - **metric-coercion**: Counts MUST be read with `toMetricValue`, which accepts a finite number or a numeric string, and a non-numeric value MUST count as zero (or null for the nullable vitals and p95 fields).
-- **per-site-health-source**: Per-site health MUST come from PostHog's `error_reported` and `http_request` events, since GlitchTip's events are pruned and cannot be attributed to a site.
+- **per-site-health-source**: Per-site health MUST come from PostHog's `error_reported` and `http_request` events and MUST NOT query GlitchTip for it.
 
 ## Appearance
 
@@ -76,11 +90,11 @@ Not applicable — this is a query-and-shaping service, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 014 are traced to `telemetry-dashboard-sections.test.ts` (PostHog shapers, `loadSiteErrorDetail` and `loadTraffic`); 015 follows the source.
+Vectors 001 to 014 are traced to `telemetry-dashboard-sections.test.ts` (PostHog shapers, `loadSiteErrorDetail` and `loadTraffic`); 015 and later follow the source.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| posthog-sections-001 | traffic-shape | Rows for two hosts over a bucket axis | Totals sum all rows; `sites` biggest first, each with its own series |
+| posthog-sections-001 | traffic-shape | Rows for two hosts over a bucket axis | Totals sum the aligned series, which here holds every row; `sites` biggest first, each with its own series |
 | posthog-sections-002 | dimension-shape | Rows with blank device and referrer, and a row count at the limit | `Unknown` and `$direct` labels, `truncated` true |
 | posthog-sections-003 | vitals-shape | A host row with LCP 1200, a null INP, CLS `"0.1"` and FCP 800 | `inp` null, not 0; `cls` 0.1 |
 | posthog-sections-004 | health-shape | Row `["a.com", 1, 100, 2, null]` | `{ host: "a.com", errors: 1, requests: 100, failures: 2, p95Ms: null }` |
@@ -95,7 +109,13 @@ Vectors 001 to 014 are traced to `telemetry-dashboard-sections.test.ts` (PostHog
 | posthog-sections-013 | site-detail-sequence | Fetch answers HTTP 503 | `loadSiteErrorDetail` rejects with `HTTP 503` after exactly one fetch call |
 | posthog-sections-014 | one-at-a-time | `loadSiteErrorDetail` and `loadTraffic` started together | At most one fetch in flight at any time |
 | posthog-sections-015 | metric-coercion | Counts `'7'`, `null`, `'abc'` | 7, 0, 0 |
-
+| posthog-sections-016 | closed-inputs, named-properties | The queries of every loader | No query contains `SELECT properties`, and each interpolated value is a constant, a UTC time or a name from the closed list |
+| posthog-sections-017 | bucket-unit | `bucketStart('hour')` and `bucketStart('day')` | `toStartOfHour(timestamp, 'UTC')` and `toStartOfDay(timestamp, 'UTC')` |
+| posthog-sections-018 | since-bound | `since` of a window whose `since` is `2026-01-02T03:04:05Z` | `timestamp >= toDateTime('2026-01-02 03:04:05', 'UTC')` |
+| posthog-sections-019 | traffic-alignment | A traffic row whose bucket timestamp is off the axis, and a bucket with no row | The off-axis point is dropped from the series and from `totals`; the empty bucket is 0 |
+| posthog-sections-020 | paths-shape | `loadPaths` rows `['', '', 3]` and `['a.com', '/x', 2]` | `{ host: '(unknown)', path: '/', pageviews: 3 }` and `{ host: 'a.com', path: '/x', pageviews: 2 }` |
+| posthog-sections-021 | row-caps | `loadVitals` and `loadSiteHealth` queries | Each ends with `LIMIT 200`; the traffic, dimension, path and detail queries end with `LIMIT 5000` |
+| posthog-sections-022 | query-per-section | Any loader with a stubbed `hogqlRows` | The call is made with timeout 45000 and no other transport |
 ## Edge Cases
 
 - An empty result set gives an empty `sites`, zero totals and series of zeros; it is a valid answer, distinct from a failed query, which throws.
@@ -103,8 +123,9 @@ Vectors 001 to 014 are traced to `telemetry-dashboard-sections.test.ts` (PostHog
 - A response with no `results` array fails the query with `response had no results`.
 - A query that outlasts 45 seconds is aborted and fails with the abort message; the timeout starts when the query starts, not while it waits its turn.
 - A host with a null or empty `$host` is grouped under `(unknown)`.
-- Timestamps that are not exactly on a bucket boundary in UTC are dropped from the series but are still counted in nothing else; the UTC bucket expressions are what keep rows on the axis.
+- Timestamps that are not exactly on a bucket boundary in UTC are dropped from the series and from `totals`, which sum the aligned series; the UTC bucket expressions are what keep rows on the axis.
 - A busy site can have hundreds of distinct failing paths, so the detail cap is high and hitting it is reported through `truncated`.
+- `loadTraffic` has no truncation flag; it silently returns at most 5,000 host-and-bucket rows, so a very busy window loses its latest rows' totals without notice.
 - `loadPaths` has no truncation flag; it silently returns at most 5,000 rows, ordered by pageviews.
 - `loadSiteHealth` and `loadVitals` return at most 200 hosts with no truncation flag.
 - Both the API thread and the monitor's worker thread query PostHog; the lease that orders them is in the fetcher and is part of `one-at-a-time`.
@@ -118,7 +139,7 @@ Vectors 001 to 014 are traced to `telemetry-dashboard-sections.test.ts` (PostHog
 | `QUERY_TIMEOUT_MS` | number | 45000 | Per-query timeout; a module constant |
 | `TRAFFIC_ROW_LIMIT`, `DIMENSION_ROW_LIMIT`, `PATH_ROW_LIMIT`, `ERROR_DETAIL_ROW_LIMIT` | number | 5000 | Row caps; module constants |
 | `SITE_ROW_LIMIT` | number | 200 | Row cap for vitals and site health; a module constant |
-
+| `PRODUCTION_HOSTS` | string | `$host NOT LIKE` each of `testing.%`, `staging.%`, `%localhost%`, `%127.0.0.1%` and `%.vercel.app` | The host filter every query applies; a module constant |
 ## Deep Linking
 
 Not applicable: the module builds queries and shapes rows; it has no addressable surface.
@@ -159,18 +180,19 @@ Not applicable: the loaders return or throw failures and make no log call; the s
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/dashboard/posthog-sections.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/telemetry/dashboard/posthog-sections.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
 
 ## Design Decisions
+
 **Decision**: UTC everywhere.
 **Rationale**: HogQL reads a zone-less literal, and starts a day or an hour, in the PostHog project's timezone; naming UTC keeps rows in the window's buckets for any project.
 **Approved**: pending
 
 **Decision**: Production hosts only.
-**Rationale**: Only production sites report analytics, so the host filter keeps stray local, staging and preview hits out of every figure.
+**Rationale**: Stray local, staging and preview hits can reach PostHog, so the host filter removes them from every figure.
 **Approved**: pending
 
 **Decision**: Named properties.
@@ -192,6 +214,7 @@ Not applicable: the loaders return or throw failures and make no log call; the s
 **Decision**: Detail queries in sequence.
 **Rationale**: The first failure ends the section without spending the other two scans.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -208,5 +231,6 @@ Query building, shaping and transport are separate, with pure shapers and a clos
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Added a loader table, links and depends-on for the fetcher and ranges specs, a traffic truncation edge case, seven vectors, a PRODUCTION_HOSTS configuration row, and split dimension-shape; clarified totals, the host-filter rationale and per-site-health-source. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

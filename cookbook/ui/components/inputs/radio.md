@@ -2,11 +2,11 @@
 id: 3b509297-83b2-4a5b-a331-56d0d4be548d
 title: "Radio"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-A radio button is a single-selection control used within a radio group to allow users to select exactly one option from a set of mutually exclusive choices. This recipe covers `RadioGroupItem`, the individual control; the `RadioGroup` container's layout, spacing, and cross-item keyboard navigation are documented in [adhsdk.ingredient.controls.user-settings.components.radio-group](cookbook:d431934e-d64c-4dcf-bdab-b7c3465ee71b). Built on Base UI radio primitives (`@base-ui/react/radio-group`, `@base-ui/react/radio`) with theme tokens for styling.
+A radio button is a single-selection control used within a radio group to allow users to select exactly one option from a set of mutually exclusive choices. This ingredient covers `RadioGroupItem`, the individual control; the `RadioGroup` container's layout, spacing, and cross-item keyboard navigation are documented in [adhsdk.ingredient.controls.user-settings.components.radio-group](cookbook:d431934e-d64c-4dcf-bdab-b7c3465ee71b). Built on Base UI radio primitives (`@base-ui/react/radio-group`, `@base-ui/react/radio`) with theme tokens for styling.
 
 ## Behavioral Requirements
 
@@ -71,10 +71,10 @@ A radio button is a single-selection control used within a radio group to allow 
 
 ## Accessibility
 
-- **Role/trait**: Radio button (native semantic role via Base UI RadioPrimitive.Root)
+- **Role/trait**: Radio button (ARIA `role="radio"` on Base UI RadioPrimitive.Root, with Base UI's hidden input for form submission)
 - **Label requirements**: Labels are external to the RadioGroupItem; the form must associate labels via standard form patterns (e.g., `<label htmlFor="radio-id">` or wrapping)
-- **Announce state changes**: Checked/unchecked state is automatically announced by assistive technology via the semantic radio role
-- **Minimum tap target**: The 16×16px control alone is below the WCAG 2.5.8 (AA) minimum target size of 24×24 CSS pixels. Base UI's radio role lets a click on the associated `<label>` select the item, so consumers MUST ensure the label (or an equivalent wrapping hit area) extends the clickable region to at least 24×24px.
+- **Announce state changes**: Checked/unchecked state is announced by assistive technology via the ARIA radio role
+- **Minimum tap target**: The 16×16px control alone is below the WCAG 2.5.8 (AA) minimum target size of 24×24 CSS pixels. Label association with a `<span role="radio">` is not native, so consumers MUST ensure the label (or an equivalent wrapping hit area) extends the clickable region to at least 24×24px.
 - **Keyboard navigation**: RadioGroupItem supports Space to select while focused (see **space-selects**) and shows a visible focus indicator (see **focus-visible**). Arrow-key navigation between items and the group's single Tab stop are managed by the RadioGroup container — see [adhsdk.ingredient.controls.user-settings.components.radio-group](cookbook:d431934e-d64c-4dcf-bdab-b7c3465ee71b).
 - **Focus indicator**: Visible focus ring (gold border and ring) provides keyboard focus indication
 
@@ -90,12 +90,12 @@ A radio button is a single-selection control used within a radio group to allow 
 | radio-006 | focus-visible | RadioGroupItem with keyboard focus | `apt-gold` border and 2px ring at 25% opacity visible |
 | radio-007 | space-selects | Unchecked RadioGroupItem holds keyboard focus and receives Space | Item becomes checked |
 | radio-008 | theme-token-styling | RadioGroupItem in default state | Border color is `apt-border`, background is `apt-bg` |
-| radio-009 | color-transitions | RadioGroupItem state change from unchecked to checked | Color change animates smoothly via CSS transition |
-| radio-010 | edge case: no initial selection | RadioGroup rendered with neither `value` nor `defaultValue` set | No RadioGroupItem in the group renders its selected indicator |
-| radio-011 | edge case: value matches no item | RadioGroup's `value` does not match any item's `value` | No RadioGroupItem displays as checked |
-| radio-012 | edge case: all items disabled | Every RadioGroupItem in the group has `disabled` set | No item can be selected via pointer or keyboard; none render dimmed, but each carries `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"` |
-| radio-013 | edge case: disabled item already checked | A RadioGroupItem is both checked and disabled | Item shows the selected indicator combined with the disabled item's `aria-disabled`/`data-disabled`/`tabindex="-1"` state, without visual dimming |
-| radio-014 | edge case: boundary size | RadioGroupItem rendered inside a shrinking flex container | Item stays fixed at 16×16px (`shrink-0` prevents resizing) |
+| radio-009 | color-transitions | RadioGroupItem state change from unchecked to checked | Computed `transition-property` includes `color`/`border-color`/`background-color` and `transition-duration` is greater than 0 |
+| radio-010 | no-initial-selection | RadioGroup rendered with neither `value` nor `defaultValue` set | No RadioGroupItem in the group renders its selected indicator |
+| radio-011 | value-matches-no-item | RadioGroup's `value` does not match any item's `value` | No RadioGroupItem displays as checked |
+| radio-012 | all-items-disabled | Every RadioGroupItem in the group has `disabled` set | No item can be selected via pointer or keyboard; none render dimmed, but each carries `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"` |
+| radio-013 | disabled-item-already-checked | A RadioGroupItem is both checked and disabled | Item shows the selected indicator combined with the disabled item's `aria-disabled`/`data-disabled`/`tabindex="-1"` state, without visual dimming |
+| radio-014 | boundary-values | RadioGroupItem rendered inside a shrinking flex container | Item stays fixed at 16×16px (`shrink-0` prevents resizing) |
 
 ## Edge Cases
 
@@ -115,8 +115,9 @@ A radio button is a single-selection control used within a radio group to allow 
 | `name` (RadioGroup) | string | auto-generated | Shared form field name applied to all items in the group |
 | `disabled` (RadioGroup) | boolean | `false` | Disables every RadioGroupItem in the group |
 | `value` (RadioGroupItem) | string | required | The value this item represents; compared against the group's `value` to determine checked state |
-| `disabled` (RadioGroupItem) | boolean | `false` | Disables this individual item, overriding group-level enablement |
-| `className` | string | `undefined` | Additional CSS classes applied to RadioGroup or RadioGroupItem |
+| `disabled` (RadioGroupItem) | boolean | `false` | Disables this individual item; disabling is additive, so an item is disabled if either the item or its group is disabled |
+| `className` (RadioGroup) | string | `undefined` | Additional CSS classes applied to the RadioGroup container |
+| `className` (RadioGroupItem) | string | `undefined` | Additional CSS classes applied to the RadioGroupItem |
 
 ## Deep Linking
 
@@ -153,7 +154,7 @@ Not applicable: The component does not implement logging. Debug logging is the r
 
 ## Platform Notes
 
-- **React/Web**: Source uses Base UI `RadioGroup` and `Radio` primitives via `@base-ui/react/radio-group`. RadioGroupItem wraps `RadioPrimitive.Root`, styled with the `apt-border`/`apt-bg`/`apt-gold` Tailwind theme tokens; `transition-colors` provides the smooth color transition and `focus-visible:ring-2 focus-visible:ring-apt-gold/25` renders the focus ring. The Indicator (hidden when unchecked via `data-[unchecked]:hidden`) shows as an 8×8px gold dot when checked. Reference: `/packages/web/packages/ui/src/components/radio.tsx`.
+- **React/Web**: Source uses Base UI `RadioGroup` and `Radio` primitives via `@base-ui/react/radio-group`. RadioGroupItem wraps `RadioPrimitive.Root`, styled with the `apt-border`/`apt-bg`/`apt-gold` Tailwind theme tokens; `transition-colors` provides the smooth color transition and `focus-visible:ring-2 focus-visible:ring-apt-gold/25` renders the focus ring. The Indicator (hidden when unchecked via `data-[unchecked]:hidden`) shows as an 8×8px gold dot when checked. Reference: `packages/web/packages/ui/src/components/radio.tsx`.
 - **SwiftUI**: On macOS, use `Picker` with `.pickerStyle(.radioGroup)`, which renders true radio buttons with built-in mutual exclusivity and keyboard navigation. iOS has no native SwiftUI radio-group style; use a `List` whose selected row shows a trailing checkmark (`Image(systemName: "checkmark")`) instead. Color tokens and the focus ring translate to SwiftUI's `.tint`/appearance modifiers and focus state.
 - **Compose**: Android Material Design 3 provides the `RadioButton` composable. Color tokens (`apt-gold`, `apt-border`) map to `RadioButtonDefaults.colors(selectedColor, unselectedColor)`, which is the Material 3 API for radio button color states.
 - **AppKit / UIKit**: macOS uses `NSButton(radioButtonWithTitle:)` with shared target/action for mutual exclusivity, or custom views. UIKit has no native radio control; use a `UITableView`/list row with a checkmark accessory (`.checkmark` accessory type) for the selected row rather than `UISegmentedControl`, which represents a different interaction pattern. Focus and disabled states follow platform HIG conventions.
@@ -163,17 +164,17 @@ Not applicable: The component does not implement logging. Debug logging is the r
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/radio.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/radio.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 - **Size**
   **Decision**: RadioGroupItem renders at 16×16px (Tailwind `size-4`).
-  **Rationale**: Matches the toolkit's compact control sizing; this is below the WCAG 2.5.8 (AA) minimum target size of 24×24 CSS pixels, so consumers MUST ensure the associated `<label>` (or an equivalent wrapping hit area) extends the clickable region to at least 24×24px — Base UI's radio role allows selecting via a click on the associated label.
+  **Rationale**: Matches the toolkit's compact control sizing; this is below the WCAG 2.5.8 (AA) minimum target size of 24×24 CSS pixels, so consumers MUST ensure the associated `<label>` (or an equivalent wrapping hit area) extends the clickable region to at least 24×24px — a click on a label associated through Base UI's wiring is how a pointer user reaches the control.
   **Approved**: pending
 
 - **Color transitions**
-  **Decision**: `transition-colors` is applied to all state changes (checked, focused, disabled).
+  **Decision**: `transition-colors` is applied to all state changes (checked and focused; disabled has no color change).
   **Rationale**: Provides visual feedback without jarring state shifts, following modern UI conventions. The transition is a brief color fade only, with no transform or motion, so it is treated as exempt from Reduce Motion policies rather than something the component must gate on `prefers-reduced-motion`; a consuming design system that wants zero transition can override with `transition-none`.
   **Approved**: pending
 
@@ -209,3 +210,4 @@ These statuses rest on the source's use of Base UI's semantic radio primitives a
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from Base UI radio primitives |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: scoped this file to RadioGroupItem only, moving group spacing/layout out and linking radio-group/checkbox/field via `related`; corrected WCAG citations (SC 2.5.8 24×24px target, SC 1.4.11 3:1 contrast); made theme-token and color-transition requirements platform-neutral with Tailwind specifics moved to the React/Web platform note; added `single-selection` and `space-selects` requirements with test vectors and rewrote the disabled-state vectors to test ignored interaction instead of class names; replaced the SwiftUI/UIKit/Compose/WinUI platform notes with real, correct APIs; corrected the Compliance check IDs and expanded coverage; reformatted Design Decisions into Decision/Rationale/Approved form; replaced the Configuration table with Base UI's real API; replaced filler edge cases with real ones and added their test vectors; resolved the Reduce Motion contradiction between Accessibility Options and Design Decisions. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Disabled state: no dimming, aria/data-disabled+tabindex=-1; added best-practices rows. |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Said ingredient not recipe, made disabled additive, corrected the ARIA role and label wording, named the edge-case vectors, made radio-009 measurable, split the className row and dropped the leading slash. |

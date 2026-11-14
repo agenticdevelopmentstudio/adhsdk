@@ -14,7 +14,7 @@
 
 ### Token recovery
 
-- **token-walk**: `run` MUST recover the OAuth token once per invocation by walking up the process tree from the parent pid (at most 16 hops, stopping at pid 1 or below, with a result cached per start pid for 30 seconds), because Claude Code scrubs `CLAUDE_CODE_OAUTH_TOKEN` from the environment it hands the command.
+- **token-walk**: `run` MUST recover the OAuth token once per invocation by walking up the process tree from the parent pid (at most 16 hops, the `maxHops` default of `ProcessEnv.oauthTokenWalkingUp`; stopping at pid 1 or below; with a result cached per start pid for 30 seconds, the `ttl` of `ProcessEnv`), because Claude Code scrubs `CLAUDE_CODE_OAUTH_TOKEN` from the environment it hands the command.
 - **token-carried**: When `captureOnly` is true and the walk finds no token, `run` MUST use `CLAUDE_CODE_OAUTH_TOKEN` from its own environment when that is non-empty, because a detached feed carries the token its renderer recovered for the time `claude` is gone.
 - **token-walk-first**: A token found by the walk MUST take precedence over the carried one.
 - **token-carried-only-capture**: When `captureOnly` is false, `run` MUST NOT use `CLAUDE_CODE_OAUTH_TOKEN` from its own environment as the recovered token.
@@ -39,11 +39,11 @@
 
 - **feed-parse**: `feedOnce` MUST read `session_id` from the payload when the payload is a JSON object with a string `session_id`.
 - **feed-lock**: When the payload has a string `session_id`, `feedOnce` MUST acquire a `FeedLock` for that session and the configuration's `name`, and MUST return without feeding when another feed holds it, because the next render brings a newer snapshot.
-- **feed-lock-release**: `feedOnce` MUST release the lock when the feed ends or its deadline passes.
+- **lock-name-sanitised**: A feed lock's file name MUST keep at most the first 128 Unicode scalars of the session id and MUST replace every scalar that is not an ASCII letter, an ASCII digit or `-` with `_`, so a session id never escapes the lock directory.
+- **feed-lock-release**: `feedOnce` MUST release the lock when the feed ends or its deadline passes, even when the queued work is still running, so a second feed for the session may overlap work the first has not finished; the overlap is accepted.
 - **feed-unlocked**: When the payload is not a JSON object, or has no string `session_id`, `feedOnce` MUST feed without a lock.
 - **feed-deadline**: `feedOnce` MUST wait for the feed no longer than `feedDeadline`, which MUST be 20 seconds, and MUST then return and release the lock even when the feed has not finished.
 - **feed-own-thread**: `feedOnce` MUST run the feed on a global background queue, not on the calling thread.
-- **feed-deadline-purpose**: `feedDeadline` MUST bound the whole feed, because each step has its own timeout (5 seconds per `git` call, 2 seconds for the post) and feeds must not pile up.
 
 ### Feed
 

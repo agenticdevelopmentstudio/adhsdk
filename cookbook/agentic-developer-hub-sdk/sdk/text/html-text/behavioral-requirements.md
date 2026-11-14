@@ -6,7 +6,7 @@
 - **decode-entities-entry**: `HTMLText.decodeEntities(_:)` MUST be public, accept a `String`, return a `String`, and MUST NOT throw.
 - **plain-text-no-ampersand**: `decodeEntities(_:)` MUST return text that has no `&` unchanged, except that control characters and invisible padding are still dropped.
 - **stateless**: Every operation MUST depend only on its arguments and immutable constants, so concurrent calls from any thread do not interact.
-- **stage-order**: `plainText(fromHTML:)` MUST apply, in this order, tag and entity processing, break resolution, whitespace tidying, and restoration of preformatted spaces and tabs.
+- **stage-order**: The order of processing is not itself part of the contract; its observable effects are. Entities MUST be decoded before whitespace is collapsed (**entity-before-whitespace**), and trailing spaces and tabs in `<pre>` MUST be trimmed only after preformatted content is restored (**pre-trailing-trim**). A port MAY use any internal structure that gives these results.
 
 ### Tag recognition
 
@@ -60,11 +60,11 @@
 
 ### Entity decoding
 
-- **entity-named**: A named reference found in the built-in table (`amp`, `lt`, `gt`, `quot`, `apos`, `nbsp`, spacing and joiner entities, typographic punctuation, currency, symbols, arrows, fractions and the listed accented Latin letters) MUST decode to its character; names are case-sensitive.
+- **entity-named**: A named reference found in the built-in table (`amp`, `lt`, `gt`, `quot`, `apos`, `nbsp`, spacing and joiner entities, typographic punctuation, currency, symbols, arrows, fractions and the accented Latin letters) MUST decode to its character; names are case-sensitive. The full table is under Configuration, Entity Tables.
 - **entity-numeric**: A numeric reference, decimal (`&#39;`) or hexadecimal with `x` or `X` (`&#x27;`, `&#X2014;`), MUST decode to its Unicode scalar.
 - **entity-numeric-digits**: A numeric reference MUST have 1 to 8 ASCII digits (hex digits for hexadecimal), no sign and no space, and a non-zero value; otherwise it MUST be left as written.
 - **entity-invalid-scalar**: A numeric reference whose value is not a valid Unicode scalar MUST be left as written.
-- **entity-windows-1252**: A numeric reference from 128 to 159 MUST decode as windows-1252 for the 27 codes that map (for example 146 to a right single quote); the five undefined codes (129, 141, 143, 144, 157) MUST decode to nothing.
+- **entity-windows-1252**: A numeric reference from 128 to 159 MUST decode as windows-1252 for the 27 codes that map under Configuration, Entity Tables (for example 146 to a right single quote); the five undefined codes (129, 141, 143, 144, 157) MUST decode to nothing.
 - **entity-lookahead**: A reference MUST end at a `;` within 12 scalars after the `&` (so a name or number is at most 11 scalars); an `&` with no `;` in that window MUST be left as written.
 - **entity-unknown**: An unknown name, an empty name and any malformed reference MUST be left exactly as written, including the `&` and `;`.
 - **entity-single-pass**: Decoding MUST happen once, so `&amp;lt;` yields `&lt;`.
@@ -82,6 +82,6 @@
 
 ### Resource safety
 
-- **linear-time**: Conversion MUST make a single forward pass in which an unclosed construct ends processing instead of being rescanned; the test suite bounds five hostile 50,000 to 100,000 repetition inputs to under 5 seconds in total.
+- **linear-time**: Conversion MUST take time linear in the number of input Unicode scalars: a single forward pass in which an unclosed construct ends processing instead of being rescanned. The wall-clock budget used by vector html-text-027 is a detail of that test, not part of the requirement.
 - **no-feedback**: The function MUST NOT perform network, file or process access; the output is a pure function of the input string.
 

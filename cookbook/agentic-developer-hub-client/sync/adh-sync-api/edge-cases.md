@@ -5,14 +5,14 @@
   `ADHSyncAPITests.pullFirstSync`.
 - **Empty-string cursor.** Input: `pull(cursor: "", limit: N)`. Because
   `""` is non-`nil`, it is sent as `cursor=` (an empty query value) rather
-  than being treated as equivalent to `nil`. MUST —
-  `pull-cursor-query-item-verbatim`.
+  than being treated as equivalent to `nil`. Current behavior —
+  `pull-cursor-query-item-verbatim`; a port MAY treat `""` as `nil`.
 - **Non-positive or oversized `limit`.** Input: `limit` of `0`, a negative
   number, or `Int.max`. `pull` performs no local validation or clamping;
   `String(limit)` is sent to the server unmodified, and any resulting
   rejection surfaces through the ordinary status-mapping path
-  (`maps-other-status-to-http`). MUST — this is the observed behavior of
-  `pull-limit-query-item`; no client-side bound exists in the source.
+  (`maps-other-status-to-http`). Current behavior of
+  `pull-limit-query-item`; no client-side bound exists in the source, and a port MAY clamp.
 - **Concurrent calls on one instance.** Two or more `pull`/`push` calls
   issued concurrently on the same `ADHSyncAPI` value proceed independently;
   `ADHSyncAPI` has no shared mutable state to race on, and it enforces no
@@ -25,7 +25,7 @@
   `unauthenticated-when-absent`, `maps-401-to-unauthorized`.
 - **Resync required.** Input: server responds `410`. `pull`/`push` throw
   `Failure.resyncRequired` and perform no local resync themselves — that
-  policy belongs to the caller (`offline-sync-client.md`'s `SyncEngine`).
+  policy belongs to the caller (the `SyncEngine` in [adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044)).
   MUST — `maps-410-to-resync-required`.
 - **Unreachable server / offline device.** Input: `session.data(for:)`
   throws (verified in source with `URLError(.notConnectedToInternet)`).
@@ -34,17 +34,17 @@
   `maps-transport-errors`, `ADHSyncAPITests.transportFailureMapping`.
 - **Task cancellation mid-request.** Input: the calling `Task` is cancelled
   while `session.data(for:)` is in flight. `URLSession` surfaces this as a
-  thrown error (typically `URLError(.cancelled)`), which `perform` catches
+  thrown error (typically `URLError(.cancelled)`), which `pull`/`push` catch
   through the same generic `catch` as any other transport error and
   rethrows as `Failure.transport(String(describing: error))`; a caller
   cannot distinguish a user-cancelled request from any other transport
   failure except by inspecting that description string, which is not
-  documented as a stable format. MUST — `maps-transport-errors` (this is
-  the same code path; it is called out separately here because it is easy
-  to overlook that cancellation is not a distinct `Failure` case).
+  documented as a stable format. Current behavior — `maps-transport-errors`
+  (the same code path; see the cancellation Design Decision for why it is
+  not a distinct `Failure` case).
 - **Non-HTTP response.** Input: the `URLResponse` returned by
-  `session.data(for:)` cannot be cast to `HTTPURLResponse`. `perform`
-  throws `Failure.transport("non-HTTP response")`. MUST —
+  `session.data(for:)` cannot be cast to `HTTPURLResponse`. `pull`/`push`
+  throw `Failure.transport("non-HTTP response")`. MUST —
   `maps-non-http-response`.
 - **Error body on a non-2xx, non-401, non-410 status.** Input: a `503`
   response body carrying a structured JSON error (as in

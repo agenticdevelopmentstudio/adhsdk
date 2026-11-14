@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: Reuse `Badge` for the chip body instead of restyling.
-**Rationale**: The chip body is the shared `Badge`, so it inherits every tone and the established pill styling; the recipe adds only `flex items-center gap-1` and the trailing button, keeping one source of truth for chip appearance.
+**Rationale**: The chip body is the shared `Badge`, so it inherits every tone and the established pill styling; the ingredient adds only `flex items-center gap-1` and the trailing button, keeping one source of truth for chip appearance.
 **Approved**: pending
 
 **Decision**: Make the component stateless.

@@ -2,11 +2,11 @@
 id: f3c25236-d72f-4a7b-839a-b7f335b3acd0
 title: "Button"
 type: ingredient
-version: 1.4.1
+version: 1.4.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +23,6 @@ depends-on:
   - f483dfb7-d60e-4b12-8b17-2eb150b550db
 related:
   - 00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2
-  - f483dfb7-d60e-4b12-8b17-2eb150b550db
 references: []
 approved-by: ""
 approved-date: ""
@@ -56,24 +55,8 @@ press correctly clears when the pointer leaves the button while it is still held
 
 ## Behavioral Requirements
 
-*Provenance: `press-on-pointerdown-inside` through `no-pointer-capture` below describe the
-observable pointer-tracking behavior of `Button` as rendered — behavior that `Button` gets by
-composing the sibling `PressableButton` (`button-pressable.tsx`), which is that contract's
-single owner ([adhsdk.ingredient.ui.components.actions.button-pressable](cookbook:f483dfb7-d60e-4b12-8b17-2eb150b550db), see its own
-`pressed-on-pointerdown` through `no-pointer-capture` requirements and its
-**active press** terminology, called "held" below). This recipe restates them at the `Button`
-level only so `Button`'s own Conformance Test Vectors can exercise them end-to-end; do not edit
-them here without also checking `button-pressable.md`, and re-verify them here whenever that
-recipe's requirements change, since `button.md`'s `depends-on` does not by itself trigger
-re-extraction of this file.*
+*Provenance: `Button` gets its pointer-tracking behavior by composing the sibling `PressableButton` (`button-pressable.tsx`), which is that contract's single owner ([adhsdk.ingredient.ui.components.actions.button-pressable](cookbook:f483dfb7-d60e-4b12-8b17-2eb150b550db)). Its `pressed-on-pointerdown` through `no-pointer-capture` requirements and its **active press** terminology (called "held" in this ingredient's test vectors) apply to `Button` as rendered, and are not restated here. Test vectors T1-T6, T9, T10 and T23 exercise them end-to-end through `Button` and cite that ingredient's requirement names.*
 
-- **press-on-pointerdown-inside**: The button MUST set `data-pressed` when a pointer is pressed down inside it.
-- **release-clears-pressed**: The button MUST clear `data-pressed` on `pointerup`.
-- **cancel-clears-pressed**: The button MUST clear `data-pressed` on `pointercancel`.
-- **leave-while-held-clears-pressed**: While the pointer is still held, the button MUST clear `data-pressed` when the pointer leaves it.
-- **reenter-while-held-restores-pressed**: While the pointer is still held, the button MUST restore `data-pressed` if the pointer re-enters it.
-- **release-outside-ends-hold**: The button MUST end the held state when the pointer is released or cancelled anywhere, including outside the button, so the press never sticks.
-- **no-pointer-capture**: The button MUST track the press from held + pointer-inside state and MUST NOT call `setPointerCapture`.
 - **pressed-visual-from-data-attr**: The button MUST express its pressed appearance (the translate-y dip plus darken) purely from `data-pressed`, never from CSS `:active`.
 - **haspopup-suppresses-dip**: A button with `aria-haspopup` (a popup/menu trigger) MUST NOT apply the pressed dip.
 - **keyboard-activates**: Space and Enter on a focused button MUST activate it (fire its click), independent of the pointer pressed visual.
@@ -88,7 +71,9 @@ re-extraction of this file.*
 - **icon-svgs-non-interactive**: An SVG child of the button MUST NOT receive pointer events (`pointer-events: none`) and MUST NOT shrink in the flex layout (`flex-shrink: 0`).
 - **unsized-icon-svgs-scale-with-button-size**: An SVG child that carries no `size-*` class MUST render at `1rem` (16px) square by default, `0.875rem` (14px) at the `sm` size, and `0.75rem` (12px) at the `xs`/`icon-xs` sizes.
 - **consumer-classname-precedence**: The button SHOULD apply a consumer-supplied `className` so it can override the variant/size classes it conflicts with, per the project's `cn()` merge convention. (Rationale: see Design Decisions.)
-
+- **disabled-never-pressed**: A `disabled` button MUST NOT set `data-pressed`; `disabled:pointer-events-none` means it receives no pointer events.
+- **explicit-sized-svgs-untouched**: An SVG child that carries an explicit `size-*` class MUST keep that size; the default icon sizing rule MUST NOT override it (the rule is scoped with `:not([class*='size-'])`).
+- **default-floor-is-zero**: When no ancestor sets `--adh-button-min-height` or `--adh-button-min-width`, both MUST resolve to `0px`, so the button is exactly as large as its `size` variant and no larger.
 ## Appearance
 
 ```
@@ -157,7 +142,7 @@ re-extraction of this file.*
 | Pressed (pointer held inside) | `data-pressed` set → dips `translate-y-px` + `brightness-95` |
 | Held but pointer left | `data-pressed` cleared → returns to the resting look while still armed |
 | Disabled | `pointer-events-none`, `opacity-50` |
-| Invalid (`aria-invalid`) | destructive border + ring |
+| Invalid (`aria-invalid`) | `aria-invalid:border-destructive/50 aria-invalid:ring-3 aria-invalid:ring-destructive/40` |
 | Popup trigger (`aria-haspopup`) | no pressed dip even while held |
 
 ## Accessibility
@@ -186,16 +171,16 @@ re-extraction of this file.*
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | press-on-pointerdown-inside | `pointerdown` on the button | `data-pressed` present |
-| T2 | release-clears-pressed | `pointerdown` then `pointerup` | `data-pressed` absent |
-| T3 | leave-while-held-clears-pressed | `pointerdown` then `pointerleave` | `data-pressed` absent |
-| T4 | reenter-while-held-restores-pressed | after T3, `pointerenter` (still held) | `data-pressed` present |
-| T5 | forwards-consumer-pointer-handlers | `pointerdown` with `onPointerDown` prop | consumer handler called once AND `data-pressed` present |
-| T6 | release-outside-ends-hold | `pointerdown`, `pointerleave`, window `pointerup` | hold ends; a later `pointerenter` does NOT re-press |
+| T1 | button-pressable#pressed-on-pointerdown | `pointerdown` on the button | `data-pressed` present |
+| T2 | button-pressable#pressed-cleared-on-element-pointerup | `pointerdown` then `pointerup` | `data-pressed` absent |
+| T3 | button-pressable#pressed-cleared-on-pointerleave-during-active-press | `pointerdown` then `pointerleave` | `data-pressed` absent |
+| T4 | button-pressable#pressed-restored-on-pointerenter-during-active-press | after T3, `pointerenter` (still held) | `data-pressed` present |
+| T5 | forwards-consumer-pointer-handlers, button-pressable#forwarded-handler-invoked-when-provided | `pointerdown` with `onPointerDown` prop | consumer handler called once AND `data-pressed` present |
+| T6 | button-pressable#pressed-cleared-on-window-release-during-active-press | `pointerdown`, `pointerleave`, window `pointerup` | hold ends; a later `pointerenter` does NOT re-press |
 | T7 | keyboard-activates (Playwright) | focus, press Enter/Space | click fires; no pointer dip |
 | T8 | haspopup-suppresses-dip (Playwright) | `pointerdown` on `aria-haspopup` button | no `translate-y-px` dip |
-| T9 | cancel-clears-pressed | `pointerdown` then `pointercancel` | `data-pressed` absent |
-| T10 | no-pointer-capture | `pointerdown` on the button | `element.hasPointerCapture(pointerId)` is `false` throughout |
+| T9 | button-pressable#pressed-cleared-on-element-pointercancel | `pointerdown` then `pointercancel` | `data-pressed` absent |
+| T10 | button-pressable#no-pointer-capture | `pointerdown` on the button | `element.hasPointerCapture(pointerId)` is `false` throughout |
 | T11 | stable-public-api | render `<Button variant="secondary" size="lg" data-testid="b"/>` | root node has `data-slot="button"`; no runtime error |
 | T12 | supports-eight-variants, warning-variant-uses-warning-role | render `<Button variant="warning">` | class list includes `bg-apt-orange/15` and `text-apt-orange` |
 | T13 | defaults-to-default-variant-and-size | render `<Button/>` with no props | class list includes `bg-primary` and `h-8` |
@@ -205,10 +190,13 @@ re-extraction of this file.*
 | T17 | unsized-icon-svgs-scale-with-button-size | render default-size `<Button><svg data-testid="icon"/></Button>` (svg has no `size-*` class) | svg renders at 16×16px |
 | T18 | consumer-classname-precedence | render `<Button className="bg-brand-500"/>` | class list includes `bg-brand-500`; class list does not include `bg-primary` |
 | T19 | respects-ancestor-min-width-var | render `<Button size="default"/>` (non-icon) under an ancestor with `style="--adh-button-min-width:120px"` | computed `min-width` is `120px` |
-| T20 | pressed-visual-from-data-attr | render `<Button/>`, trigger native `:active` (e.g. `mousedown` without a `pointerdown` event reaching the pressed-tracking handler) without `data-pressed` being set | class list does not include `translate-y-px`/`brightness-95`; computed `transform` shows no dip |
+| T20 | pressed-visual-from-data-attr | render `<Button/>`, force `:active` with Playwright/CDP `forcePseudoState` (no `pointerdown` reaches the pressed-tracking handler), or inspect the emitted CSS | `data-pressed` is absent; class list does not include `translate-y-px`/`brightness-95`; computed `transform` shows no dip; no emitted selector for the button uses `:active` |
 | T21 | unsized-icon-svgs-scale-with-button-size | render `size="sm"` `<Button><svg data-testid="icon"/></Button>` (svg has no `size-*` class) | svg renders at 14×14px |
 | T22 | unsized-icon-svgs-scale-with-button-size | render `size="xs"` (and separately `size="icon-xs"`) `<Button><svg data-testid="icon"/></Button>` (svg has no `size-*` class) | svg renders at 12×12px |
-
+| T23 | button-pressable#pressed-cleared-on-window-release-during-active-press | `pointerdown`, `pointerleave`, then window `pointercancel` | hold ends; a later `pointerenter` does NOT re-press |
+| T24 | disabled-never-pressed | render `<Button disabled/>`, dispatch `pointerdown` | `data-pressed` absent; computed `pointer-events` is `none` |
+| T25 | explicit-sized-svgs-untouched | render default-size `<Button><svg className="size-6" data-testid="icon"/></Button>` | svg renders at 24×24px, not 16×16px |
+| T26 | default-floor-is-zero | render `<Button/>` with no ancestor setting either variable | computed `min-height` and `min-width` are `0px`; rendered height is `32px` |
 ## Edge Cases
 
 - Release outside the button: a window `pointerup`/`pointercancel` listener
@@ -219,18 +207,19 @@ re-extraction of this file.*
 - Keyboard activation never sets `data-pressed` — the pressed look is pointer-only. (MUST — T7.)
 - A consumer's own pointer handler is composed, not replaced. (MUST — T5.)
 - `disabled` buttons receive no pointer events (`pointer-events-none`), so they
-  never enter the pressed state. (MUST.)
+  never enter the pressed state. (`disabled-never-pressed` — T24.)
 - No ancestor sets `--adh-button-min-height`/`--adh-button-min-width`: both
   default to `0px`, which imposes no floor beyond the size variant's own fixed
   `h-*`/`size-*` height/width — the button is exactly as large as its size
-  variant, no larger. (MUST.)
+  variant, no larger. (`default-floor-is-zero` — T26.)
 - An icon-size button (`icon`/`icon-xs`/`icon-sm`/`icon-lg`) whose ancestor
   raises only `--adh-button-min-height`: `--adh-button-min-width` follows it
   automatically, so the button stays square without the ancestor also setting
   a width variable. (MUST — T15.)
 - An SVG child that already carries an explicit `size-*` class: the
   `:not([class*='size-'])` selector excludes it from the default icon sizing
-  rule, so the button MUST NOT override an explicitly sized icon.
+  rule, so the button does not override an explicitly sized icon.
+  (`explicit-sized-svgs-untouched` — T25.)
 - **Null and empty input**: `children` may be omitted or empty; the Base UI
   primitive MUST NOT throw and renders with no visible label (see
   Accessibility for the resulting accessible-name gap). `variant`/`size`
@@ -239,7 +228,10 @@ re-extraction of this file.*
 - **Boundary values**: not applicable in the numeric sense — `variant` and
   `size` are fixed string enumerations, not numeric ranges. A value outside
   the `VariantProps<typeof buttonVariants>` union is a TypeScript compile-time
-  error, not a runtime boundary condition.
+  error for typed callers. Untyped JavaScript callers and `as` casts bypass that
+  check; at runtime `cva` then emits no class for the unmatched `variant` or
+  `size` key, so the button renders with only the base classes. That output is
+  unspecified and not a supported way to get an unstyled button.
 - **Concurrent access**: not applicable — the button is a single, synchronously
   rendered DOM element with no state shared across sessions, tabs, or threads;
   the pressed-tracking state is local to one `PressableButton` instance.
@@ -270,9 +262,8 @@ Not applicable: Button is a UI primitive without its own route or navigation tar
 Not applicable: Button renders consumer-provided text or icons; no built-in strings to localize.
 
 ## Accessibility Options
-
-Not applicable: Button responds to theme tokens that may reflect platform accessibility settings, but the component itself does not directly implement WCAG Rule 15 display options (Reduce Motion, Increase Contrast, Differentiate Without Color).
-
+- **Reduce Motion**: The pressed dip (`translate-y-px`, a 1px translation animated by `transition-all`) is the only motion. The source has no `motion-reduce:` variant, so Reduce Motion does not turn it off. The dip is a single pixel and appears only while a pointer is held, so no requirement is added for it.
+- **Increase Contrast** and **Differentiate Without Color**: Not applicable to the component itself; it renders theme tokens, which may reflect platform accessibility settings.
 ## Feature Flags
 
 Not applicable: Button is a shared UI primitive rendered everywhere; feature flagging belongs to higher-level features that may conditionally render it.
@@ -310,14 +301,14 @@ telemetry belong to the consumer's handler, not the button.
   (native, unlike the DOM pointer tracking this component hand-rolls); use
   `Modifier.defaultMinSize()`, set from a `CompositionLocal`, as the counterpart
   to the CSS custom-property floor.
-- **React/Web**: This recipe's home platform — `button.tsx` (variants,
+- **React/Web**: This ingredient's home platform — `button.tsx` (variants,
   server-safe) plus `button-pressable.tsx` (`"use client"` pointer tracking),
   as documented above.
 - **AppKit / UIKit**: Start from `NSButton`/`UIButton`. `UIControl` already
   tracks touch-down/drag-exit/drag-enter natively, so the
   leave-while-held/reenter-while-held semantics this component re-implements
   for the DOM map directly to `.touchDragExit`/`.touchDragEnter` instead of
-  custom pointer-event listeners. The 44×44pt Apple HIG minimum this recipe's
+  custom pointer-event listeners. The 44×44pt Apple HIG minimum this ingredient's
   `--adh-button-min-height`/`--adh-button-min-width` vars exist to opt into on
   the web is the default expectation here.
 - **WinUI 3**: Start from the `Button` control restyled via a `Style`/
@@ -335,7 +326,7 @@ telemetry belong to the consumer's handler, not the button.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/button.tsx` | confirmed (1.4.1) |
+| web | `packages/web/packages/ui/src/components/button.tsx` | confirmed (1.4.2) |
 
 ## Design Decisions
 
@@ -360,7 +351,7 @@ telemetry belong to the consumer's handler, not the button.
 **Approved**: pending
 
 **Decision**: Make the minimum size ancestor-settable instead of prop-drilled.
-**Rationale**: `--adh-button-min-height` and `--adh-button-min-width` default to `0px`, so nothing changes anywhere until an ancestor sets them; a surface that needs a bigger hit target (`button.tsx`'s own comments cite shipr's dialogs, where the buttons were reported as too small) sets the pair once on itself and every descendant button grows, whatever its `size` — including buttons nested components render that the surface never names. The alternative was passing `size="lg"` down through every dialog and button bar, which is the same decision made in a hundred places and is why it drifted in the first place. The tradeoff, documented honestly in Accessibility above: the default floor is `0px`, so none of the fixed size variants meet the 44×44pt/48×48dp guidance on their own — a surface MUST opt in.
+**Rationale**: `--adh-button-min-height` and `--adh-button-min-width` default to `0px`, so nothing changes anywhere until an ancestor sets them; a surface that needs a bigger hit target (the motivating case was dialogs whose buttons were reported as too small) sets the pair once on itself and every descendant button grows, whatever its `size` — including buttons nested components render that the surface never names. The alternative was passing `size="lg"` down through every dialog and button bar, which is the same decision made in a hundred places and is why it drifted in the first place. The tradeoff, documented honestly in Accessibility above: the default floor is `0px`, so none of the fixed size variants meet the 44×44pt/48×48dp guidance on their own — a surface MUST opt in.
 **Approved**: pending
 
 **Decision**: `icon*` sizes redefine `--adh-button-min-width` rather than emitting a second utility.
@@ -372,7 +363,7 @@ telemetry belong to the consumer's handler, not the button.
 **Approved**: pending
 
 **Decision**: Document the `--adh-button-min-*` / `apt-orange` prefix mismatch as-is rather than normalizing it.
-**Rationale**: `--adh-button-min-height`/`--adh-button-min-width` and the `apt-orange` warning-role token both belong to the `@adh-sdk` package family, but use different abbreviated prefixes (`adh` vs `apt`). Reconciling the two is a source-code naming change outside the scope of this recipe pass, so the recipe records the tokens exactly as `button.tsx` and the theme package expose them.
+**Rationale**: `--adh-button-min-height`/`--adh-button-min-width` and the `apt-orange` warning-role token both belong to the `@adh-sdk` package family, but use different abbreviated prefixes (`adh` vs `apt`). Reconciling the two is a source-code naming change outside the scope of this ingredient pass, so the ingredient records the tokens exactly as `button.tsx` and the theme package expose them.
 **Approved**: pending
 
 ## Compliance
@@ -401,3 +392,4 @@ Statuses rest on the source as documented above: `keyboard-activates` and the na
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Complete Deep Linking, Localization, Accessibility Options, Feature Flags, and Analytics sections as not applicable per source fidelity; set status to review. |
 | 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: moved the `references` entry to `related`; rewrote Compliance as a link/status/category table against the real catalog; reformatted Design Decisions into Decision/Rationale/Approved triples and relocated the pointer-tracking provenance caveat inline above Behavioral Requirements; renamed `should-preserve-consumer-classname-precedence` to `consumer-classname-precedence` everywhere it's cited; added a size-to-utility table and a per-variant hover/active token table; made T18's expectation a concrete class-list assertion and added test vectors for a non-icon min-width floor, `:active`-absence, and sm/xs icon scaling; named `button.tsx` as the source of the shipr's-dialogs citation and dropped the uncitable "~40-site" figure; documented the `adh`/`apt` token-prefix mismatch as a Design Decision. |
 | 1.4.1 | 2026-09-25 | Mike Fullerton | Linked to button-pressable.md as pointer-contract owner; provenance note no longer a stale hedge. |
+| 1.4.2 | 2026-11-14 | Mike Fullerton | Replaced the copied pointer-tracking requirements with a citation of button-pressable, added named requirements and vectors T23-T26 for the disabled, explicit-size SVG, zero-floor and window-pointercancel cases, spelled out the invalid-state tokens, rewrote T20, documented Reduce Motion and the runtime result of an unknown variant, and said ingredient instead of recipe. |

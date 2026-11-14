@@ -1,3 +1,1 @@
-
-Not applicable — `AlertModal` is a presentational component that inherits behavior from `Dialog`, which does not expose per-instance configuration for platform accessibility features such as Reduce Motion, Increase Contrast, or Differentiate Without Color. Implementations MUST rely on platform-level media query support (e.g., `prefers-reduced-motion`) and shared CSS utilities in the Button and Dialog recipes.
-
+Not applicable — `AlertModal` is a presentational component that inherits behavior from `Dialog`, which does not expose per-instance configuration for platform accessibility features such as Reduce Motion, Increase Contrast, or Differentiate Without Color. The alert-mode busy spinner uses `animate-spin` with no `prefers-reduced-motion` handling of its own, so it keeps rotating when the user asks for reduced motion; the Compliance table records this as `partial`.

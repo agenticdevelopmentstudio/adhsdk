@@ -4,7 +4,7 @@
     "id": "b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43",
     "title": "Stenographer Identifiers",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,12 +24,14 @@
       "paths"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "1d48ed86-5704-4631-b643-36f7450c1c83"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "18cbb7bb64a6e1d1",
+  "synced": "e2b9064f43f8d48d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

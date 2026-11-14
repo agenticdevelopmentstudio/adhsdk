@@ -2,16 +2,15 @@
 id: d3e1f776-8ad1-431f-9485-386ac285a039
 title: "Avatar Engine Config"
 type: ingredient
-category: engine
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The two-platform contract for the avatar animation engine's config loader: validates and normalizes six authored JSON files into one CharacterConfig."
+summary: "Validates and normalizes six authored avatar JSON files into one CharacterConfig (Swift and TypeScript)."
 platforms:
   - swift
   - macos
@@ -24,7 +23,8 @@ tags:
   - config
   - validation
 depends-on: []
-related: []
+related:
+  - a7c91832-4059-4e06-b8c6-e8c727567c66
 references: []
 approved-by: ""
 approved-date: ""
@@ -61,7 +61,7 @@ every input. They are not required to agree on exact error message text —
 several messages differ deliberately between platforms, and each divergence
 called out below is intentional, not a defect.
 
-Because this recipe documents a validation contract rather than a widget, the
+Because this ingredient documents a validation contract rather than a widget, the
 Appearance, States, and Accessibility sections below each collapse to one
 line: the loader draws nothing, has no interaction state, and exposes nothing
 to assistive technology.
@@ -79,7 +79,9 @@ to assistive technology.
 - **load-is-pure**: `CharacterConfig.load(_:)` / `loadConfig(input)` MUST be a
   synchronous, side-effect-free function of its input: no network calls, no
   disk writes, no global mutable state. Given the same six inputs, both
-  implementations MUST return an equal result or throw for the same reason.
+  implementations MUST return an equal result or throw for the same reason,
+  meaning the same violated requirement (as named in this document); the
+  message text MAY differ.
 - **load-does-not-mutate-caller-input**: `loadConfig` (web) MUST NOT mutate
   the `RawFiles` object it receives — it clones the input defensively before
   colourizing or canonicalizing any value in place. This guard exists
@@ -192,6 +194,7 @@ to assistive technology.
   associated `Bend` definition (a `"<id>.bend"` channel) MUST apply the
   configured inward damping when the value's sign matches the bend's
   `inwardSign`, and MUST pass the value through unchanged otherwise.
+- **points-count**: NEEDS REVIEW: Not implemented in source. Neither loader validates that a shape's `points` array has a count consistent with what its path-builder kind requires (for example, a cubic-bezier family's point count is expected to satisfy `3n + 1` by the renderer's `Build` functions, which are not part of this recipe's source set); `requireShapeFields` confirms `points` is present but not that its count is valid for the declared kind, so a geometrically-malformed but structurally-present `points` array is accepted at load with undefined downstream behavior.
 
 ### Reference integrity, pairs, and value typing (shared mechanism)
 
@@ -264,10 +267,11 @@ independently testable at any of its listed call sites.
   (whether or not it is also treated as a promotion) MUST have `duration`
   `0`; a non-zero-duration family change MUST reject.
 - **promotion-source-target-kind**: a promotion's source family path kind
-  MUST be an open polyline of the form `M` followed by one or more `L`
-  commands; its target family path kind MUST be `M` followed by that many
-  `C` commands (a whole multiple of the source's line-segment count) — any
-  other source/target kind pairing MUST reject.
+  MUST be an open polyline of the form `M` followed by n ≥ 1 `L`
+  commands; its target family path kind MUST be `M` followed by exactly
+  `promote` `C` commands, where `promote` is the step's own segment count and
+  MUST be k·n for an integer k ≥ 1 — any other source/target kind pairing
+  MUST reject.
 - **timeline-duration-floor**: a timeline's declared `duration` MUST be
   greater than or equal to `max(step.at + step.duration)` across all its
   steps; a declared duration that is shorter than its own last step MUST
@@ -281,10 +285,13 @@ independently testable at any of its listed call sites.
 
 ### Behavior: predicates, loops, and gates
 
-- **predicate-resolution**: every predicate reference (`enabledWhen`,
-  `disabledWhen`, `activeWhen`, `shownWhen`, and similar boolean gates —
-  but not `suppressedIn`, which names moods rather than a predicate; see
-  blink-suppression-moods-real) MUST resolve to one of the two builtin
+- **predicate-resolution**: every predicate reference MUST resolve; the
+  complete list of predicate gates is a loop's `enabledWhen` and
+  `disabledWhen` (in `behavior.loops` and in each `moodEffects.*.loop`),
+  `behavior.gaze.disabledWhen`, `behavior.idleFidget.activeWhen`,
+  `behavior.pinpricks.shownWhen`, and the subject of a `select` param
+  (but not `suppressedIn`, which names moods rather than a predicate; see
+  blink-suppression-moods-real). A gate MUST resolve to one of the two builtin
   predicates (`"eyesShut"`, `"curious"`) or to a `behavior.params` entry of
   boolean (`gt`) form; any other name, including a `select` param's name
   (which resolves to a number, not a boolean; see
@@ -398,13 +405,12 @@ independently testable at any of its listed call sites.
   `Sendable`). Under Swift 6 strict concurrency the value
   `CharacterConfig.load(_:)` returns MUST stay in the isolation domain that
   loaded it; the compiler rejects sending it across an actor boundary. A port
-  that shares one loaded config between threads adds that guarantee itself.
-- **points-count**: NEEDS REVIEW: Not implemented in source. Neither loader validates that a shape's `points` array has a count consistent with what its path-builder kind requires (for example, a cubic-bezier family's point count is expected to satisfy `3n + 1` by the renderer's `Build` functions, which are not part of this recipe's source set); `requireShapeFields` confirms `points` is present but not that its count is valid for the declared kind, so a geometrically-malformed but structurally-present `points` array is accepted at load with undefined downstream behavior.
-
+  that shares one loaded config between threads MUST make it immutable (or
+  otherwise safe to share) itself.
 ## Appearance
 
 Not applicable: the loader has no visual output of its own — it produces a
-data model (`CharacterConfig`) that other, separately-recipe'd components
+data model (`CharacterConfig`) that other, separately documented components
 render.
 
 ## States
@@ -424,22 +430,26 @@ render the `CharacterConfig` it produces.
 
 | # | Requirement | Input | Expected | Source |
 |---|---|---|---|---|
-| 1 | schema-version-required | A rig file with `schemaVersion: 2` while the loader expects `1` | Rejects, naming the file and both version numbers | `ConfigTests.swift` schema-version tests; `load.test.ts` schema version describe block |
-| 2 | duplicate-node-id-rejected | Two rig nodes both authored with id `"torso"` | Rejects on both platforms; Swift message contains "two nodes share the id", TS message contains "duplicate node id" | `ConfigTests.swift` duplicate id test; `load.test.ts` duplicate id test |
-| 3 | palette-hex-format | `character.palette` entry `"ink1": "notahex"` | Rejects, naming the palette key and value | `ConfigTests.swift` `isLoadableHex` / palette tests |
-| 4 | shaped-node-requires-ink | A `path`-shaped rig node with `ink: null` | Rejects, naming the node | `ConfigTests.swift` shape/ink tests |
-| 5 | bend-response-damping | `respond("antennaLeft.bend", 10)` where the bend's `inwardSign` matches the value's sign and damping is configured | Returns a damped value; `load.test.ts` asserts `toBeCloseTo(7.2, 10)` for this exact channel/value pair | `load.test.ts` bend-damping test |
-| 6 | command-signature-agreement | Two poses driving the same `.shape` channel with different path command signatures (e.g. one `M L L`, one `M C C`) | Rejects, naming both conflicting poses/sources | `ConfigTests.swift` all-pairs path-kind tests |
-| 7 | promotion-source-target-kind | A promote step from an `M L L` family to an `M C C C C` family (4 curves for 2 lines, a whole multiple) accepted; a promote step to `M C C C` (3 curves for 2 lines) rejected | First accepted, second rejected naming the mismatched segment counts | `ConfigTests.swift` promotion tests |
-| 8 | timeline-duration-floor | A timeline with `duration: 1000` but a step at `at: 1200, duration: 0` | Rejects, since the last step ends after the declared duration | `ConfigTests.swift` timeline duration tests |
-| 9 | pair-fields-exactly-two | `idleFidget.rearm.gapMs: [500]` (one element) | Rejects for having fewer than two numbers | `ConfigTests.swift` pair-field tests (rearm.gapMs) |
-| 10 | mood-effect-branch-list-defined | An effect with `branch: ["twitch"]` where `twitch: []` is authored as an empty array | Accepted — an authored empty list is a defined branch target, distinct from an absent one | `ConfigTests.swift` comment/test: "still accepts an effect whose branch list is authored empty" |
-| 11 | ladder-three-rungs-required | `behavior.ladder.moods` supplying only `"active"` and `"bored"` (missing `"asleep"`) | Rejects, naming the missing rung | `ConfigTests.swift` ladder tests |
-| 12 | ink-late-binding-target | An ink `color: "@missingNode"` where no rig node has id `"missingNode"` | Rejects, naming the unresolved late-bound reference | `ConfigTests.swift` / `load.test.ts` ink late-binding tests |
-| 13 | variant-shape-patch-target-validated | A variant shape patch targeting a node that already has a `.shape` rest channel (is morphable) | Rejects, since patching a channel-driven shape would be overwritten every frame | `ConfigTests.swift` variant patch tests |
-| 14 | fallback-mood-has-sayings | `sayings` omitting an entry for the pose named at `ladder.moods["active"]` | Rejects, naming the missing fallback mood | `ConfigTests.swift` sayings tests |
-| 15 | load-does-not-mutate-caller-input | Calling `loadConfig` twice with the identical shared `RawFiles` object reference | Both calls succeed independently and the caller's original object is unchanged after either call | `load.test.ts` "loads olylo" fixture tests |
-
+| 1 | schema-version-required | A rig file with `schemaVersion: 2` while the loader expects `1` | Rejects, naming the file and both version numbers | `ConfigTests.testRejectsASchemaVersionMismatch`; `load.test.ts` "rejects a schemaVersion mismatch" |
+| 2 | duplicate-node-id-rejected | Two rig nodes both authored with id `"torso"` | Rejects on both platforms; Swift message contains "two nodes share the id", TS message contains "duplicate node id" | `ConfigTests.testRejectsADuplicateNodeId`; `load.test.ts` "rejects a duplicate node id" |
+| 3 | palette-hex-format | `character.palette` entry `"ink1": "notahex"` | Rejects, naming the palette key and value | `ConfigTests.testRejectsAPaletteEntryParseHexCannotRead`; `load.test.ts` "rejects a palette entry `parseHex` cannot read" |
+| 4 | shaped-node-requires-ink | A `path`-shaped rig node with `ink: null` | Rejects, naming the node | `ConfigTests.testRejectsAShapedNodeWithNoInk`; `load.test.ts` "rejects a shaped node with no ink at all" |
+| 5 | bend-response-damping | `respond("antennaLeft.bend", 10)` on the shipped olylo character, where the bend's `inwardSign` is `+1` and the damp is `0.72` | Returns `7.2` (10 × 0.72); `respond("antennaLeft.bend", -10)` returns `-10` unchanged and `respond("antennaRight.bend", -10)` returns `-7.2` | `load.test.ts` "damps only a bend's inward side, and leaves every other channel alone" |
+| 6 | command-signature-agreement | Two poses driving the same `.shape` channel with different path command signatures (e.g. one `M L L`, one `M C C`) | Rejects, naming both conflicting poses/sources | `ConfigTests.testRejectsTwoPosesDrivingOneChannelWithDifferentPathKinds`; `load.test.ts` "rejects two poses that drive one channel with different path kinds" |
+| 7 | promotion-source-target-kind | A promote step from an `M L L` family to an `M C C C C` family (`promote: 4` for 2 lines, a multiple of 2) accepted; a promote step to `M C C C` (`promote: 3` for 2 lines, not a multiple) rejected | First accepted, second rejected naming the mismatched segment counts | `ConfigTests.testRejectsAPromoteWhoseSourceIsNotAnOpenPolyline` covers the source check only (no test yet for the target segment count) |
+| 8 | timeline-duration-floor | A timeline with `duration: 1000` but a step at `at: 1200, duration: 0` | Rejects, since the last step ends after the declared duration | `ConfigTests.testRejectsATimelineWhoseStepsOutrunItsDeclaredDuration`; `load.test.ts` "rejects a timeline whose steps outrun its declared duration" |
+| 9 | pair-fields-exactly-two | `idleFidget.rearm.gapMs: [500]` (one element) | Rejects for having fewer than two numbers | `ConfigTests.testRejectsAOneElementRearmGapThePairThatUsedToTrapMinutesIn`; `load.test.ts` "rejects a one-element rearm gap, the pair that used to trap minutes in" |
+| 10 | mood-effect-branch-list-defined | An effect with `branch: ["twitch"]` where `twitch: []` is authored as an empty array | Accepted — an authored empty list is a defined branch target, distinct from an absent one | `ConfigTests.testStillAcceptsAnEffectWhoseBranchListIsAuthoredEmpty`; `load.test.ts` "still accepts an effect whose branch list is authored empty" |
+| 11 | ladder-three-rungs-required | `behavior.ladder.moods` supplying only `"active"` and `"bored"` (missing `"asleep"`) | Rejects, naming the missing rung | `ConfigTests.testRejectsALadderMissingOneOfItsThreeRungs`; `load.test.ts` "rejects a ladder missing one of its three rungs" |
+| 12 | ink-late-binding-target | An ink `color: "@missingNode"` where no rig node has id `"missingNode"` | Rejects, naming the unresolved late-bound reference | `ConfigTests.testRejectsAnUnresolvedInk`; `load.test.ts` "rejects an unresolved ink" |
+| 13 | variant-shape-patch-target-validated | A variant shape patch targeting a node that already has a `.shape` rest channel (is morphable) | Rejects, since patching a channel-driven shape would be overwritten every frame | `ConfigTests.testRejectsAVariantPatchingAMorphableNode`; `load.test.ts` "rejects a variant patching a morphable node" |
+| 14 | fallback-mood-has-sayings | `sayings` omitting an entry for the pose named at `ladder.moods["active"]` | Rejects, naming the missing fallback mood | `ConfigTests.testRejectsASayingForAMoodWithNoPose` covers a saying for an unknown mood only (no test yet for the missing fallback mood) |
+| 15 | load-does-not-mutate-caller-input | Calling `loadConfig` twice with the identical shared `RawFiles` object reference | Both calls succeed independently and the caller's original object is unchanged after either call | `load.test.ts` "loads olylo" (no test yet asserts the caller's object is unchanged) |
+| 16 | step-order-stable-on-ties | A timeline with two steps at the same `at` | Steps keep their authored order on both platforms (no test yet) | none |
+| 17 | ink-precedence-inks-before-palette | A colour name present in both `character.inks` and `character.palette` | Resolves as the ink (no test yet) | none |
+| 18 | group-member-must-be-concrete-channel | A `rig.groups` entry whose member is another group | Rejects (no test yet) | none |
+| 19 | shape-value-canonicalized | Two poses writing the same path with different whitespace to one `.shape` channel | The stored values compare equal (no test yet) | none |
+| 20 | raw-file-read-errors-unwrapped | Apple raw-file read of a directory missing a file | The raw Foundation error propagates without `ConfigError` wrapping (no test yet) | none |
 ## Edge Cases
 
 - **Empty/absent collections**: an empty `rig.groups` member list is
@@ -555,8 +565,8 @@ message, never as a separate log line.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AvatarAnimationEngine/Sources/Config/` | unverified |
-| web | `packages/web/packages/avatar-engine/src/config/` | unverified |
+| apple | `packages/apple/AvatarAnimationEngine/Sources/Config/` | confirmed (1.0.4) |
+| web | `packages/web/packages/avatar-engine/src/config/` | confirmed (1.0.4) |
 
 ## Design Decisions
 
@@ -566,7 +576,7 @@ handful of broad statements.
 **Rationale**: the source validates on the order of sixty distinct
 invariants across six file types (palette/ink resolution, rig/channel
 derivation, pose/timeline/behavior cross-references, variant patches,
-sayings fallback); a comparable-complexity recipe should track that
+sayings fallback); a comparable-complexity ingredient should track that
 complexity rather than a template's usual UI-widget scale, per the
 cross-recipe-consistency guideline's "comparable complexity is defined by
 distinct behaviors, not visual simplicity."
@@ -596,12 +606,11 @@ happens, it simply answers it inconsistently with
 | Check | Status | Category |
 |---|---|---|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
-| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
-`separation-of-concerns` is passed: the loader lives in its own `Config` module on both platforms (`Sources/Config/` alongside the sibling `Anim`, `Math`, `Path`, `Render`, `Runtime`, and `Scene` modules on Apple; `src/config/` on web), and it is a pure function with no view, window, or per-frame rendering concern of its own. `unit-test-coverage` is passed: `ConfigTests.swift` and `load.test.ts` both exist and are cited throughout Conformance Test Vectors for schema-version, duplicate-id, palette, shape/ink, bend-damping, path-kind, promotion, timeline-duration, pair-field, branch-list, ladder, ink late-binding, variant-patch, and sayings behavior. `explicit-error-handling` is passed: every rejection surfaces as a typed, attributable error (`ConfigError` on Apple, a prefixed `Error` on web) naming the offending file, key, or reference, and a rejection MUST NOT return a partial `CharacterConfig` — nothing is silently swallowed. `fault-tolerance` is passed: the loader is built to reject malformed or contradictory authored input cleanly rather than crash — `pair-fields-exactly-two` rejects one or three numbers with no special-casing near the boundary, and `primitive-with-family-rejected`/`shape-field-requirements-enforced` reject shape data whose kind and fields disagree — rather than trusting unpredictable authored JSON at face value. `data-integrity` is partial: the loader validates roughly sixty distinct invariants across the six files (references, pair shapes, value types, path syntax), but the recipe itself flags an unresolved gap under Behavioral Requirements → Concurrency — neither loader validates that a shape's `points` array has a count consistent with its declared path-builder kind — so a geometrically-malformed but structurally-present `points` array is accepted at load with undefined downstream behavior.
+`separation-of-concerns` is passed: the loader lives in its own `Config` module on both platforms (`Sources/Config/` alongside the sibling `Anim`, `Math`, `Path`, `Render`, `Runtime`, and `Scene` modules on Apple; `src/config/` on web), and it is a pure function with no view, window, or per-frame rendering concern of its own. `unit-test-coverage` is partial: `ConfigTests.swift` and `load.test.ts` both exist and are cited by name in Conformance Test Vectors for schema-version, duplicate-id, palette, shape/ink, bend-damping, path-kind, promotion, timeline-duration, pair-field, branch-list, ladder, ink late-binding, variant-patch, and sayings behavior, but several requirements (target segment counts, step order on ties, ink precedence, nested groups, shape canonicalization) have no named test. `explicit-error-handling` is passed: every rejection surfaces as a typed, attributable error (`ConfigError` on Apple, a prefixed `Error` on web) naming the offending file, key, or reference, and a rejection MUST NOT return a partial `CharacterConfig` — nothing is silently swallowed. `data-integrity` is partial: the loader validates roughly sixty distinct invariants across the six files (references, pair shapes, value types, path syntax), but this ingredient itself flags an unresolved gap (`points-count`) under Behavioral Requirements → Rig and channels — neither loader validates that a shape's `points` array has a count consistent with its declared path-builder kind — so a geometrically-malformed but structurally-present `points` array is accepted at load with undefined downstream behavior.
 
 ## Change History
 
@@ -611,3 +620,4 @@ happens, it simply answers it inconsistently with
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
 | 1.0.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.3 | 2026-09-25 | Mike Fullerton | Corrected promote-step-shape (promote field, not family diff), rest-value-derivation (.ink/.family/.shape conditional, no .scale rest), group-member/group-expansion (.scale flattening), predicate-resolution (suppressedIn is moods not a predicate; select is numeric), and pair-fields/idle-fidget field names (idleFidget.durationRange, per-step durationRange). Reworded a Design Decisions rationale sentence that spelled out "NEEDS REVIEW" as prose (word-wrapped across a line break), which was tripping the marker checker; verified the points-count NEEDS REVIEW marker itself already matches the required one-line bullet form and the gap it documents is real (`requireShapeFields` checks field presence only, not count validity), so left it unchanged. |
+| 1.0.4 | 2026-11-14 | Mike Fullerton | Removed the category, shortened the summary, linked anim in related, replaced recipe wording, dropped the fault-tolerance row, downgraded unit-test-coverage to partial, moved the points-count marker under Rig and channels, restated promotion and load-is-pure, listed every predicate gate, inlined the damping fixture, cited exact test names and added five vectors. |

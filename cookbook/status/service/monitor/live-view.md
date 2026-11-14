@@ -2,7 +2,7 @@
 id: 1f17d751-d49c-4f0a-89d9-20c17b9dcee4
 title: "Status Server Live View Verdicts"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -14,9 +14,17 @@ summary: "Pure verdict functions for GET /live: snapshot freshness, unconfirmed 
 platforms:
   - typescript
   - web
-tags: []
+tags:
+  - status-server
+  - freshness
+  - deploys
+  - monitoring
 depends-on: []
-related: []
+related:
+  - add8a34c-a40d-417e-9ee8-aec108e73474
+  - 2c8b4572-3851-4111-97d6-a42792fb7150
+  - ac044c52-64bb-4e4f-b0d8-56dd88ab7d47
+  - 9d2d3132-0853-4e3a-8e81-503356e4585d
 references: []
 approved-by: ""
 approved-date: ""
@@ -28,6 +36,7 @@ approved-date: ""
 
 `live-view.ts` holds the judgements that `GET /live` publishes beside its raw facts, so the dashboard reads a verdict instead of re-deriving one with its own copy of the rule. Three verdicts live here: how stale the snapshot is (`snapshotFreshness`, `liveFreshness`), whether an in-flight deploy's phase is still believed (`deployUnconfirmed`, `deployUnconfirmedAt`, `effectiveDeployStatus`), and which down endpoints are stale-monitor candidates to retire (`selectStaleMonitors`, `staleMonitorsView`). Per the source comment, these rules used to live in status-web and ran against the browser's clock; they now run against the snapshot's own `generatedAt` (re-stamped every cycle by the SSE stream) or a caller-supplied `nowMs`, so a verdict is never more than one cycle old, and when the stream stops the freshness verdict is exactly what goes stale and says so. Every function is pure and synchronous: no I/O, no clock reads, no logging.
 
+`/live` carries these verdicts under names that every port MUST emit alike, as defined by Live Types ([adhsdk.ingredient.status.service.monitor.live-types](cookbook:2c8b4572-3851-4111-97d6-a42792fb7150)): `freshness` (a `LiveFreshness`) and `staleMonitors` (a `StaleMonitorsView`) on the snapshot, and `unconfirmedAt` (the `deployUnconfirmedAt` result) on each deploy it lists. The route code that builds them is `monitor/overview.ts` (see Status Server Monitor Overview, [adhsdk.ingredient.status.service.monitor.overview](cookbook:add8a34c-a40d-417e-9ee8-aec108e73474)).
 ## Behavioral Requirements
 
 ### Constants
@@ -68,6 +77,7 @@ approved-date: ""
 - **stale-monitor-shape**: Each selected entry MUST be a `StaleMonitor` with `slug`, `name`, `url`, `environment` (`s.environment || null`, so an empty string becomes `null`), `detail`, `dnsOk`, `downSince` (the input ISO string unchanged) and `ageMs` (the computed age).
 - **stale-monitor-detail**: `detail` MUST be the service's `error` when `error` is not null or undefined (an empty string is kept), else `"HTTP <statusCode>"` when `statusCode` is not null or undefined, else `"down"`.
 - **stale-monitor-order**: The result MUST be sorted by `ageMs` descending (longest-down first).
+- **stale-monitor-ties**: Entries with equal `ageMs` MUST keep their input order, so the sort MUST be stable.
 - **stale-monitors-view**: `staleMonitorsView(services, nowMs)` MUST return `{ thresholdDays, monitors }` where `thresholdDays` is `Math.round(STALE_MONITOR_MS / 86400000)` (currently `7`) and `monitors` is `selectStaleMonitors(services, nowMs)` with the default threshold, so a banner can state the number without owning it.
 
 ### Purity
@@ -113,7 +123,8 @@ Vectors come from `live-view.test.ts` where a test is named; the others are trac
 | status-server-monitor-live-view-019 | stale-monitor-order, stale-monitor-threshold | Down 8 days and 90 days; and exactly 7 days and 6 days | Order `["older", "newer"]`; 7 days is included, 6 days is not — `live-view.test.ts` › "sorts longest-down first and uses an inclusive 7-day threshold" |
 | status-server-monitor-live-view-020 | stale-monitors-view | `staleMonitorsView([svc()], NOW)` | `{ thresholdDays: 7, monitors: [{ slug: "ep1" }] }` — `live-view.test.ts` › "staleMonitorsView names the threshold in days" |
 | status-server-monitor-live-view-021 | stale-monitor-detail, stale-monitor-shape | Down service with `error: null`, `statusCode: null`, `environment: ""` | `detail === "down"`, `environment === null` — traced to the `??` chain and `|| null`; not exercised by a test |
-
+| status-server-monitor-live-view-022 | stale-monitor-detail | Down service with `error: ""` and `statusCode: 503` | `detail === ""`, because an empty string is kept (`??` only skips null and undefined) — traced to the `??` chain; not exercised by a test |
+| status-server-monitor-live-view-023 | stale-monitor-ties | Two down services with the same `downSince`, input order `["first", "second"]` | Slugs `["first", "second"]` — traced to the stable `Array.sort`; not exercised by a test |
 ## Edge Cases
 
 - **Null and empty input**: A null, undefined or empty clock in `snapshotFreshness` returns `"fresh"` — MUST. An empty `services` array returns `[]` monitors and `thresholdDays` `7` — MUST. An empty `phaseConfirmedAt` falls back to `createdAt` — MUST.
@@ -122,13 +133,13 @@ Vectors come from `live-view.test.ts` where a test is named; the others are trac
 - **Error states**: Not applicable — no function performs I/O, throws or catches. Unparseable dates are handled by value: `snapshotFreshness` reads fresh (a banner is never raised on NaN), `deployUnconfirmed` fails closed (not believed), and `selectStaleMonitors` skips the row.
 - **Offline or disconnected state**: Not applicable — the module touches no network. Its freshness verdict is the signal that the data has stopped moving when a poller or the SSE stream stops; the data clock lags the re-stamped read clock.
 - **Unparseable clock asymmetry**: An unparseable data or read clock reads fresh, yet an unparseable deploy clock reads unconfirmed; this opposite direction is deliberate in the source comments (a banner must not rise on NaN, a progress claim must not rest on one) — MUST.
-- **Display older than the snapshot**: A client may keep showing a snapshot after the stream stalls; `deployUnconfirmedAt` is the deadline it ages on — SHOULD be used by the display; this module only publishes it.
+- **Display older than the snapshot**: A client may keep showing a snapshot after the stream stalls; `deployUnconfirmedAt` is the deadline it can age on; this module only publishes the deadline and places no requirement on the display.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `probeIntervalMs` | `number \| null \| undefined` | none (treated as 0) | Probe cadence scaling the freshness and unconfirmed windows to five times the interval, never below their floors. Required by `liveFreshness`, optional elsewhere. |
+| `probeIntervalMs` | `number \| null \| undefined` | none (treated as 0) | Probe cadence scaling the freshness and unconfirmed windows to five times the interval, never below their floors. `liveFreshness` takes a `number` and the other functions accept `null` or `undefined`; any missing value counts as 0. |
 | `SNAPSHOT_STALE_FLOOR_MS` | `number` | `300000` | Minimum freshness window. Compile-time constant. |
 | `UNCONFIRMED_AFTER_MS` | `number` | `600000` | Minimum unconfirmed window. Compile-time constant. |
 | `STALE_MONITOR_MS` | `number` | `604800000` | Default stale-monitor threshold. Compile-time constant. |
@@ -174,13 +185,13 @@ Not applicable: the module contains no `console.*` or logger call.
 - **Compose**: not a view concern. A Kotlin port uses `java.time.Instant.parse` inside `runCatching` to reproduce the NaN rules, `enum class` for the freshness states, and `sortedByDescending { it.ageMs }` for the stale-monitor order; the display ages the deploy against `deployUnconfirmedAt` using its own clock.
 - **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/live-view.ts` with tests in `packages/web/packages/status-server/test/live-view.test.ts`. It relies on `Date.parse` returning `NaN` for bad input and on `Number.isFinite`; the route code in `routes/reads.ts` and `monitor/overview.ts` call it, and the dashboard (status-web) consumes the published verdicts.
 - **AppKit / UIKit**: same non-view framing as SwiftUI; a controller binds to the already-judged `LiveFreshness` and `StaleMonitorsView` values and schedules a one-shot `Timer` at `unconfirmedAt` to flip a still-building deploy to unknown.
-- **WinUI 3**: a .NET port is a static class with `static double SnapshotStaleMs(double? probeIntervalMs)` and the like; use `DateTimeOffset.TryParse(..., CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var t)` to reproduce `Date.parse` and `NaN` (a failed parse maps to the "fresh", "fails closed" or "skip" rule per function), `enum SnapshotFreshnessState { Fresh, Stale, VeryStale }` with a `JsonStringEnumConverter` and a kebab-case naming policy for `very-stale` (via `System.Text.Json`), and `DateTimeOffset.ToString("O")` for the deadline (note `toISOString` always emits three fractional digits and `Z`, so format with `ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")`). Return `IReadOnlyList<StaleMonitor>` from `List<T>.Sort` over `AgeMs` descending (use a stable `OrderByDescending`, because `List.Sort` is unstable and the source's `Array.sort` is stable). Bind a `InfoBar` for the banner and a `DispatcherTimer` set to `UnconfirmedAt` to age the deploy in an `ObservableCollection` row, via `INotifyPropertyChanged`.
+- **WinUI 3**: a .NET port is a static class with `static double SnapshotStaleMs(double? probeIntervalMs)` and the like; use `DateTimeOffset.TryParse(..., CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var t)` to reproduce `Date.parse` and `NaN` (a failed parse maps to the "fresh", "fails closed" or "skip" rule per function), `enum SnapshotFreshnessState { Fresh, Stale, VeryStale }` with a `JsonStringEnumConverter` and a kebab-case naming policy for `very-stale` (via `System.Text.Json`), and format the deadline with `ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")`, because `toISOString` always emits three fractional digits and `Z`. Return `IReadOnlyList<StaleMonitor>` from `OrderByDescending(m => m.AgeMs)`, which is stable like the source's `Array.sort`. Bind an `InfoBar` for the banner and a `DispatcherTimer` set to `UnconfirmedAt` to age the deploy in an `ObservableCollection` row, via `INotifyPropertyChanged`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/live-view.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/monitor/live-view.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -209,6 +220,9 @@ Not applicable: the module contains no `console.*` or logger call.
   **Rationale**: Stated in the doc comment so the banner can state the number "without owning the number". A caller wanting another threshold must call `selectStaleMonitors` directly; recorded as the code's behavior.
   **Approved**: pending
 
+- **Decision**: `detail` is a fixed English string (`"HTTP <statusCode>"` or `"down"`), not structured data.
+  **Rationale**: The doc comment on `StaleMonitor.detail` says only "what the probe last saw: its error, else the status code, else 'down'"; the source gives no reason for building text in a verdict module. A structured `{ kind, value }` that status-web formats would let it be localized, and is the alternative to weigh. Recorded as the code's behavior.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -217,10 +231,13 @@ Not applicable: the module contains no `console.*` or logger call.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | Internationalization |
 
 `separation-of-concerns` passes: the module only judges data it is handed and takes the clock as an argument, leaving probing, persistence, routing and rendering to other files. `unit-test-coverage` passes: `live-view.test.ts` covers every exported function and its boundaries; only the final `down` fallback and the empty-environment mapping are traced directly to source. `good-test-properties` passes: the tests use fixed timestamps and explicit `nowMs`, no real timers, and one concern per `it`. `fault-tolerance` passes: every malformed date has a defined result and no function throws.
 
+`no-hardcoded-strings` is partial: the module builds the English `detail` text (`"down"`, `"HTTP <statusCode>"`) with no localization mechanism; the other strings are enum values, not text.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Added a stable-order tie requirement, defined the /live field names with a Live Types link, recorded the fixed English detail text as a Design Decision and a partial no-hardcoded-strings check, simplified the WinUI note, reworded the configuration and display edge case, added related links and tags, and added vectors 022 and 023. |

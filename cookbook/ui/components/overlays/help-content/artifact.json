@@ -4,11 +4,11 @@
     "id": "d6ff2cc3-89c8-4744-b3f4-7262e45a3414",
     "title": "Help Content",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cec88803bbf5e9dd",
+  "synced": "1cd863f50668ec11",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

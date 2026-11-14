@@ -4,11 +4,11 @@
 **Approved**: pending
 
 **Decision**: `MailJSON` leaves every `JSONEncoder` strategy at its default.
-**Rationale**: The records the front ends print already carry timestamps as strings and keys in the shape the records name, so no conversion is needed. A port that adds a strategy would change the shape both front ends share.
+**Rationale**: The records the front ends print already carry timestamps as strings and keys in the shape the records name, so no conversion is needed, and callers must not pass `Date` or `Data` fields. A port that adds a strategy would change the shape both front ends share.
 **Approved**: pending
 
 **Decision**: Date-only bounds become the first or last millisecond of a UTC day, and timestamps are rewritten to the same millisecond UTC form.
-**Rationale**: The source comment gives the reason: the store compares UTC strings lexically, so every bound must be in one fixed-width form.
+**Rationale**: The store compares UTC strings lexically, so every bound must be in one fixed-width form.
 **Approved**: pending
 
 **Decision**: A date-shaped value that is not a real date is rejected and never retried as a timestamp.

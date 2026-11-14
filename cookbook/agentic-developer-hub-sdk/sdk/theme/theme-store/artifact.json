@@ -4,7 +4,7 @@
     "id": "d15bba09-4574-4fd1-93a0-f7d2cccd04f2",
     "title": "ThemeStore",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,13 +24,20 @@
       "import",
       "persistence"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "932449c9-b57f-4e2c-992a-1e27584742b6",
+      "62abe97d-75f7-48c0-83cd-6df02a48515e"
+    ],
+    "related": [
+      "359491fd-36ee-4e07-9971-76260183f243",
+      "231a7e9a-8c03-44b3-afaf-b71755e05c1d",
+      "ccc0d121-4927-4a83-b0e5-337116edebc0"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d8203d09b6d0789f",
+  "synced": "cf19f16d3284604b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,7 +2,7 @@
 | ID | Requirement | Input | Expected |
 |----|-------------|-------|----------|
 | T1 | tokenize-on-enter | Type `ada@x.io` and press Enter in fused mode | Neutral chip `ada@x.io` added to value; input clears |
-| T2 | tokenize-on-comma | Type `ada@x.io, grace@x.io` and a comma is typed | Two chips added; input clears |
+| T2 | tokenize-on-comma | Type `ada@x.io`, then a comma, then `grace@x.io`, then a comma, in the inline input | `ada@x.io` is added on the first comma and `grace@x.io` on the second; two chips in total; input clears after each |
 | T3 | paste-batch-tokenization | Paste `a@x.io, A@x.io` into the inline input with `kind="email"` | One chip `a@x.io` added; the pasted duplicate (`A@x.io`, same email case-insensitively) is dropped before being added; input clears |
 | T4 | tokenize-on-blur | Type `  ada@x.io  ` and blur the input | Trimmed chip `ada@x.io` added; input clears |
 | T5 | dedup-case-insensitive-email | `kind="email"`: add `Ada@x.io` then attempt to add `ada@x.io` | Second entry rejected; one chip remains; input still clears (see Edge Cases) |
@@ -22,6 +22,10 @@
 | T19 | input-mode-text | `kind="text"` (or unspecified) | Inline input has `inputMode="text"` |
 | T20 | separate-mode-layout | `separateInput=true` | Component renders a recipients box and a separate input below it |
 | T21 | readonly-mode-display | `readOnly=true` with existing recipients | Recipients display as static Badge chips; no input field shown; no remove control on any chip |
-| T22 | readonly-mode-display | `readOnly=true`; attempt any interaction (no input or remove control exists to interact with) | `onChange` is never called |
+| T22 | readonly-mode-display | `readOnly=true` with existing recipients | The rendered output contains no `<input>` and no `<button>`; `onChange` is never called |
 | T23 | disabled-interaction | `disabled=true`; click a chip's remove control or type in the input | Component appears grayed out; pointer interaction and typing are inert; `onChange` is not called |
-
+| T24 | separate-mode-layout | Separate mode with an empty `value` | The recipients box shows "No recipients yet" |
+| T25 | tokenize-on-enter | Fused mode with a `placeholder`: render with an empty `value`, then with one chip | The inline input shows the placeholder when `value` is empty and shows none once a chip exists |
+| T26 | readonly-mode-display | `separateInput=true` and `readOnly=true` with recipients | Recipients box shows static Badge chips; no input below it |
+| T27 | dedup-case-insensitive-email | `kind="email"` with `ada@x.io` already present: type `Ada@x.io` then a comma, and separately type `Ada@x.io` and blur | No chip is added in either case; `onChange` is not called; the input clears |
+| T28 | input-mode-text | No `placeholder` prop, empty `value`, each `kind` | Placeholder is `Add email…` for email, `Add phone…` for phone, `Add…` for text |

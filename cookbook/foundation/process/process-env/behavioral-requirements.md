@@ -6,7 +6,7 @@
 - **env-duplicate-key**: When one key appears more than once in a process's environment, the later entry MUST win.
 - **argv-count**: Exactly the number of arguments the process recorded (its argument count) MUST be returned as arguments, and everything after them MUST be read as the environment.
 - **utf8-lossy**: An argument that is not valid UTF-8 MUST be returned as an empty string, and an environment entry that is not valid UTF-8 MUST be dropped.
-- **process-names**: `processNames(of:)` MUST return the set of names formed from the last path component of the executable path and of the first argument, with a single leading `-` removed from each (a login shell's marker), and empty names left out.
+- **process-names**: `processNames(of:)` MUST return the set of names formed from the last path component of the executable path and of the first argument, with a single leading `-` removed from each (a login shell's marker), and empty names left out; an argument 0 that is not valid UTF-8 reads as an empty string (`utf8-lossy`), so its name is left out the same way.
 - **process-names-unreadable**: `processNames(of:)` MUST return an empty set when the process's launch data cannot be read.
 - **parent-pid**: `parentPid(of:)` MUST return the parent pid of a process, and MUST return nil when the kernel gives no answer or the parent pid is not above 0.
 - **claude-pid-shell-skip**: `claudePid(aboveHookParent:)` MUST, when the given parent's names include a hook shell (`sh`, `bash`, `zsh` or `dash`), step up exactly one level to that shell's parent before testing for `claude`.
@@ -15,7 +15,7 @@
 - **claude-pid-direct**: `claudePid(aboveHookParent:)` MUST accept a given parent that is itself a `claude` or `node` process without stepping up.
 - **claude-pid-seams**: `claudePid(aboveHookParent:)` MUST take the parent lookup and the name lookup as replaceable functions, defaulting to `parentPid(of:)` and `processNames(of:)`, so a caller can supply a fake process table.
 - **token-walk**: `oauthTokenWalkingUp(from:maxHops:)` MUST start at the given pid and return the first non-empty `CLAUDE_CODE_OAUTH_TOKEN` found in a process's launch environment while moving to the parent each step, and MUST return nil when none is found.
-- **token-walk-bounds**: The walk MUST stop, returning nothing, when the pid is 1 or lower, after `maxHops` parent steps (default 16), when a process has no readable parent, or when a process is its own parent.
+- **token-walk-bounds**: The walk MUST stop, returning nothing, when the pid is 1 or lower, once `maxHops` processes (default 16) have been tested, so a `maxHops` of 0 tests none, when a process has no readable parent, or when a process is its own parent.
 - **token-empty-value**: A `CLAUDE_CODE_OAUTH_TOKEN` whose value is empty MUST be treated as absent and the walk MUST continue upward.
 - **token-boundary**: `oauthTokenWalkingUp(from:below:maxHops:)` MUST stop before testing the `boundary` pid and MUST NOT read the boundary process's environment or any process above it.
 - **token-boundary-uncached**: `oauthTokenWalkingUp(from:below:maxHops:)` MUST NOT read from or write to the cache.

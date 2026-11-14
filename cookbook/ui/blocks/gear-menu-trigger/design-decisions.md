@@ -15,3 +15,6 @@
   **Rationale**: This gives keyboard and assistive technology users the browser's standard disabled-state signal; the tradeoff is that it also removes the trigger from the tab order while disabled (see Accessibility).
   **Approved**: pending
 
+- **Decision**: Permit platform-default press feedback; the component defines no pressed appearance of its own.
+  **Rationale**: Porters should use each platform's native press feedback rather than invent one, and the web reference adds none beyond the retained focus ring.
+  **Approved**: pending

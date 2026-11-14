@@ -4,7 +4,7 @@
     "id": "d525cc69-4d2c-4d17-a570-f71e8d5aa273",
     "title": "Work Tracking Preferences",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6903cf8d1d532be6",
+  "synced": "cfdb768330006384",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

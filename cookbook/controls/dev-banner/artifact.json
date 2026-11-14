@@ -4,11 +4,11 @@
     "id": "1cdd9485-95e5-47dd-9346-224b43ce8ab9",
     "title": "DevBanner",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4fcc21482e0209e8",
+  "synced": "1ef6a36d06c678eb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

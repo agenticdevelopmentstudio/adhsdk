@@ -12,6 +12,9 @@
 | `executable` | optional string | main bundle's executable path | The program `detachFeed` starts |
 | `feedDeadline` | seconds | 20 | The longest a feed may run |
 | `captureOnlyFlag` | string | `--capture-only` | The argument that selects the feed-only run |
+| token walk hop limit | integer | 16 | `maxHops` of `ProcessEnv.oauthTokenWalkingUp` |
+| token walk cache | seconds | 30 | `ttl` in `ProcessEnv`, per start pid |
+| session id cut | scalars | 128 | Scalars of the session id kept in the lock file name; see `lock-name-sanitised` |
 | `CLAUDEHELPERS_STATUSLINE_PARENT_PID` | environment variable | absent | The pid that ran the status line, set by the dispatcher and by this command for the feed it detaches |
 | `CLAUDE_CODE_OAUTH_TOKEN` | environment variable | scrubbed by Claude Code | Carried to a detached feed |
 | `<NAME>_DROP_DIR` | environment variable | the configuration's `dropDirectory` | Overrides the drop directory for the configuration when set and non-empty (`HookDropWriter`) |

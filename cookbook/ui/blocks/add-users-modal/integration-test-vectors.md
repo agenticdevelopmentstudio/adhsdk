@@ -8,7 +8,7 @@
 | T5 | disable-footer-add-when-empty | 0 staged rows | Footer Add disabled |
 | T6 | disable-footer-add-when-empty | ≥1 staged row | Footer Add enabled |
 | T7 | disable-footer-add-when-busy | `busy=true` | Footer Add disabled |
-| T8 | call-onadd-and-close | Footer Add with staged rows | `onAdd(stagedRows)` called; internal state resets; `onClose()` called immediately |
+| T8 | call-onadd-and-close | Footer Add with staged rows | `onAdd(stagedRows)` called with rows containing only `{name, email, phone, note}` (no internal id); internal state resets; `onClose()` called immediately |
 | T9 | confirm-cancel-when-dirty | Cancel with staged rows or entry content | Discard-confirm `UnsavedChangesAlert` opens |
 | T10 | confirm-cancel-when-dirty | Esc with staged rows or entry content | Discard-confirm `UnsavedChangesAlert` opens |
 | T11 | confirm-cancel-when-dirty | Backdrop click with staged rows or entry content | No-op: backdrop click is inert (shared `Dialog`'s `disablePointerDismissal`); dialog stays open, no confirm opens |
@@ -17,3 +17,5 @@
 | T14 | tab-order | Tab from Note | Focus lands on the Add button |
 | T15 | confirm-cancel-when-dirty | Add rows, discard via `UnsavedChangesAlert`, then reopen (`open=true` again) | Staged table and entry fields are empty (state was reset on close) |
 
+| T16 | add-row-on-enter-or-button | Enter only an email (name and phone blank), press Enter | Row appended to staged table; entry cleared |
+| T17 | add-row-on-enter-or-button | Enter only a phone (name and email blank), press Enter | Row appended to staged table; entry cleared |

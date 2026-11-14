@@ -1,7 +1,7 @@
 
 The shared `Pagination` in `@adh-sdk/ui` — the list pager used above and below
 paged surfaces in the host application. It is a compact `Prev` / "Page X of Y" / `Next` control: a
-centered `nav` landmark holding two shared `Button`s (`variant="outline"`,
+centered `nav` landmark holding two shared `Button`s ([adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0)) (`variant="outline"`,
 `size="sm"`) around a mono caption.
 
 It is fully **controlled**: the host owns `page` and `totalPages` and receives

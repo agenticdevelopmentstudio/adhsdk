@@ -9,7 +9,7 @@
 
 - **animate-glyph**: The component MUST animate a rotating glyph character on the `frameMs` interval (default 260ms). The glyph cycles through the provided frame array in order.
 
-- **support-phase-machine**: The component MUST drive phase transitions (idle, thinking, utterance, done) using a shared phase machine that tracks when a turn begins and ends, manages word bag state, and calculates elapsed time.
+- **support-phase-machine**: The component MUST drive phase transitions (idle, thinking, utterance, done) so that the phase tracks when a turn begins and ends, the word bag state follows the phase, and elapsed time is calculated. The phase logic MAY live in a shared type (macOS/iOS use `ThinkingPhase.Machine`) or inline in the component (web implements it inside `ThinkingStatus`).
 
 - **show-active-line-while-typing**: When the phase is "thinking" (during active response generation), the component MUST display the current glyph followed by a space and the current status word with an ellipsis (e.g., "⠙ thinking…"). The text MUST use the `.personaName` color by default.
 
@@ -17,7 +17,7 @@
 
 - **show-settled-line-when-done**: When the phase is "done" (the active turn has ended) and no utterance is currently showing, the component MUST display the done glyph followed by a space, the past-tense form of the last status word, and elapsed seconds in the format "[glyph] [past word] for [N]s". This line MUST use the `.thinkingDoneText` color and MUST NOT be tinted by the `colorful` or `tint` configuration options. On web, if an utterance is showing when the turn settles, **show-utterance-when-provided** wins: the settled line MUST NOT appear until the caller clears the utterance. On macOS/iOS, the shared phase machine settles `.utterance` straight into `.done` on the turn ending, so the settled line replaces the utterance immediately and the caller's later call to clear the utterance is a no-op; see the **Turn transitions during utterance** edge case.
 
-- **show-idle-phrase-when-configured**: When an idle phrase is configured and the phase is "idle" (before the first turn), the component MUST display the idle phrase with the done glyph and an ellipsis using `.thinkingIdleText` color.
+- **show-idle-phrase-when-configured**: On web and macOS (iOS does not support idle phrases; see Configuration), when an idle phrase is configured and the phase is "idle" (before the first turn), the component MUST display the idle phrase with the done glyph and an ellipsis using `.thinkingIdleText` color.
 
 - **not-show-idle-phrase-when-not-configured**: When no idle phrase is configured, the component MUST render no visual indicator during the idle phase.
 
@@ -31,13 +31,13 @@
 
 - **support-word-interval-configuration**: The component MUST accept a word interval duration in milliseconds (default 1800ms) controlling how often the status word rotates.
 
-- **support-colorful-mode**: When `colorful` is enabled, the component MUST flash vivid random non-green hues while thinking or uttering. A non-green hue is one that skips the hue band approximately 75°–165° (greens). The color MUST be generated at HSL 85% saturation and 62% lightness. The color MUST NOT be applied to the settled line. On web, the color MUST change on a 1-second cycle during active phases. On macOS (the only other platform where `colorful` is supported; see Configuration), the color is drawn once when a fresh think begins and once per `say()` call, then held for the rest of that phase — it does not recycle every second.
+- **support-colorful-mode**: On web and macOS (iOS does not support `colorful`; see Configuration), when `colorful` is enabled, the component MUST flash vivid random non-green hues while thinking or uttering. A non-green hue is one that skips the hue band approximately 75°–165° (greens). The color MUST be generated at HSL 85% saturation and 62% lightness. The color MUST NOT be applied to the settled line. On web, the color MUST change on a 1-second cycle during active phases. On macOS (the only other platform where `colorful` is supported; see Configuration), the color is drawn once when a fresh think begins and once per `say()` call, then held for the rest of that phase — it does not recycle every second.
 
-- **support-tint-configuration**: The component MUST accept an optional tint specification that colors the glyph, words, or both while thinking or uttering. The tint MUST NOT be applied to the settled line when done.
+- **support-tint-configuration**: On web and macOS (iOS does not support tint; see Configuration), the component MUST accept an optional tint specification that colors the glyph, words, or both while thinking or uttering. The tint MUST NOT be applied to the settled line when done.
 
 - **support-utterance-clear**: The component MUST provide a mechanism for the caller to clear a transient utterance, causing the indicator to resume showing phase-driven content.
 
-- **announce-status-changes**: The component MUST post accessibility announcements when the phase changes (entering thinking, settling to done) or when a fresh utterance is set. Announcements MUST NOT occur on every frame tick or on every status-word rotation — only on phase transitions and utterance changes.
+- **announce-status-changes**: The component MUST post accessibility announcements when the phase changes (entering thinking, settling to done) or when a fresh utterance is set, at the priority given in the Accessibility section. Announcements MUST NOT occur on every frame tick or on every status-word rotation — only on phase transitions and utterance changes.
 
 - **respond-to-theme-changes**: The component MUST listen for theme/palette changes and repaint immediately to reflect new semantic colors without requiring component restart.
 
@@ -45,5 +45,12 @@
 
 - **handle-empty-frame-array**: If the frame array is empty (malformed configuration), the component MUST render an empty string for the glyph and not crash.
 
-- **handle-empty-word-bag**: If status words are empty, absent, or otherwise malformed (e.g., configured but the array is empty), the component MUST fall back to the three-dot animation path.
+- **handle-empty-word-bag**: If status words are absent (null or undefined) or an empty array, the component MUST fall back to the three-dot animation path.
 
+- **rebuild-bag-on-vocabulary-change**: When the status word vocabulary changes in content mid-turn, the component MUST rebuild the draw-without-replacement bag and reset the word index, and MUST keep the current phase. A new array instance with identical content MUST NOT rebuild the bag.
+
+- **fallback-colors-without-theme**: When the semantic palette cannot be resolved, the component MUST render with safe fallback colors (system text colors) and MUST NOT crash.
+
+- **suppress-idle-phrase-without-words**: When an idle phrase is configured but no status words are configured, the component MUST NOT render the idle phrase; it renders the three-dot path instead.
+
+- **elapsed-seconds-minimum-one**: When a turn settles, the elapsed seconds MUST be `max(1, round((now - startTime) / 1000))`, so the settled line never reports less than 1 second.

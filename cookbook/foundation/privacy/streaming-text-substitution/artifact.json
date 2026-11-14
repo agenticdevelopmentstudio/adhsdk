@@ -4,7 +4,7 @@
     "id": "88d2aa75-3a9c-404a-8d3f-7db520d1bec1",
     "title": "Streaming Text Substitution",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -22,13 +22,17 @@
       "privacy",
       "strings"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "998864ec-d852-4e92-aa2c-3177130ff21d"
+    ],
+    "related": [
+      "89df0861-df4c-4839-9da2-bf65910ad5dd"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0c62de4d360c8e12",
+  "synced": "bc4cc72fbb2b18a2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

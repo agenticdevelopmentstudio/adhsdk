@@ -3,7 +3,7 @@
 
 - **accounts-property**: The registry MUST expose `accounts` as a readable array of `any Account`, writable only from inside the registry (`public private(set)`).
 - **accounts-order**: `accounts` MUST hold entries in the order they were supplied to the initializer, followed by entries in the order they were added.
-- **identity-by-id**: The registry MUST treat two accounts as the same account when their `id` strings are equal. It MUST NOT compare object identity.
+- **identity-by-id**: `add` and `remove(id:)` MUST treat two accounts as the same account when their `id` strings are equal. It MUST NOT compare object identity.
 - **init-default-empty**: `init(accounts:)` MUST default `accounts` to an empty array.
 - **init-stores-as-given**: `init(accounts:)` MUST store the supplied array unchanged, including any duplicate ids it contains.
 - **init-silent**: `init(accounts:)` MUST NOT invoke `onChange`.
@@ -18,7 +18,7 @@
 - **remove-notifies**: `remove(id:)` MUST invoke `onChange` exactly once after removing.
 - **remove-unknown-noop**: `remove(id:)` MUST leave `accounts` unchanged and MUST NOT invoke `onChange` when no entry has that `id`.
 - **remove-no-teardown**: `remove(id:)` MUST NOT call `signOut()`, `restore()` or any other method on the removed account, and MUST NOT clear that account's `onChange`.
-- **no-error-surface**: Neither operation MUST throw or return a value; both are declared without `throws` and return `Void`. A duplicate add and an unknown remove are reported to the caller only by the absence of an `onChange` call.
+- **no-error-surface**: Both operations MUST NOT throw and MUST return `Void`; both are declared without `throws` and return `Void`. A duplicate add and an unknown remove are reported to the caller only by the absence of an `onChange` call.
 
 ### Change notification
 
@@ -29,11 +29,12 @@
 
 ### Concurrency
 
-- **main-actor-isolation**: The class MUST be isolated to `@MainActor`, so every property access and call runs on the main actor and calls are serialised. The class declares no explicit `Sendable` conformance; its `@MainActor` isolation is what keeps it in its domain.
-- **no-reentrancy-guard**: The registry has no guard against `onChange` calling `add` or `remove`. A nested call runs synchronously inside the outer one, and the outer call has already finished mutating by then.
+- **main-actor-isolation**: The class MUST be isolated to `@MainActor`, so every property access and call runs on the main actor and calls are serialised.
+- **no-explicit-sendable**: The class MAY omit an explicit `Sendable` conformance; its `@MainActor` isolation is what keeps it in its domain.
+- **no-reentrancy-guard**: The registry MAY omit any guard against `onChange` calling `add` or `remove`. A nested call runs synchronously inside the outer one, and the outer call has already finished mutating by then.
 
 ### Persistence
 
 - **no-persistence**: The registry MUST keep `accounts` in memory only. It reads and writes no files, keychain or defaults, and the list is rebuilt by the app on each launch.
-- **retains-accounts**: The registry holds each account strongly, so a registered account lives at least as long as its entry.
+- **retains-accounts**: The registry MUST hold each account strongly, so a registered account lives at least as long as its entry.
 

@@ -35,3 +35,6 @@
 **Rationale**: Each pane keeps at least 20% of the space by default, preventing either pane from becoming unusably small; callers can override the bounds.
 **Approved**: pending
 
+**Decision**: Accept the `reduced-motion` gap: the line's `transition-colors` has no `prefers-reduced-motion` guard.
+**Rationale**: The transition only fades a color on hover or focus; nothing moves or changes size, so the risk is low. Adding `motion-reduce:transition-none` to the line is the repayment, due the next time the appearance changes.
+**Approved**: pending

@@ -5,4 +5,4 @@
 - **Missing site properties**: The component does not validate site properties and renders them directly without null or undefined checks. If any required property (url, name, emoji, iconGradient) is missing, the component will render an incomplete or broken link and the caller is responsible for ensuring all site data is well-formed.
 - **className prop is empty string**: Empty strings are filtered out before joining; class attribute does not contain empty tokens.
 - **docked=false and docked=undefined**: No `is-docked` class applied; both cases are treated identically.
-
+- **Duplicate site ids**: Every site whose `id` equals `currentSite` is marked current, so several orbs can be current at once, and React warns about the duplicate `key`; the caller is responsible for unique ids.

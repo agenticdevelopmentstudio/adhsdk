@@ -4,7 +4,7 @@
     "id": "e8911288-108d-4050-aec5-663690bd5751",
     "title": "Route Table",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "An ordered list of async route handlers where the first to return a response wins, with table merging and an exact method-and-path handler builder.",
+    "summary": "Ordered async route handlers; the first non-nil response wins, with table merging and an exact method/path builder.",
     "platforms": [
       "swift",
       "macos"
@@ -23,13 +23,16 @@
       "http",
       "dispatch"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "1a8e345f-c602-4ccb-8880-432b1deac6ac",
+      "6a645c72-4525-4b96-9df4-85abecfacd27"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7ae049cd97d94dd8",
+  "synced": "5fccaceba369d161",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -1,9 +1,8 @@
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Appearance determined by CSS class set (`aws-button`, `aws-button--{variant}`) |
-| Hover | Determined by CSS `:hover` pseudo-class applied to the button element |
-| Focus | Determined by CSS `:focus` or `:focus-visible` pseudo-class applied to the button element |
-| Active/Pressed | Determined by CSS `:active` pseudo-class applied to the button element |
-| Disabled | Determined by CSS `:disabled` pseudo-class applied to the button element; appearance changes triggered by the `disabled` HTML attribute |
-
+| Default | Appearance determined by the CSS class set (`aws-button`, `aws-button--{variant}`) |
+| Hover | Applies only when the button is not disabled (`:hover:not(:disabled)`). Primary: `filter: brightness(1.08)`. Secondary: background `--aws-surface-hover`. Destructive: background `--aws-red` with white text. |
+| Focus | `:focus-visible` shows a 2px solid `--aws-accent` outline with a 2px offset; plain `:focus` has no style |
+| Active/Pressed | No `:active` style is defined |
+| Disabled | `:disabled` sets `opacity: 0.5` and `cursor: not-allowed`; triggered by the `disabled` HTML attribute |

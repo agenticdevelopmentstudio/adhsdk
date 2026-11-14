@@ -2,7 +2,7 @@
 id: d2213cbb-1a6e-452e-98f0-acd2007c8430
 title: "Partner Process"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,9 @@ tags:
   - partner
   - process
   - streaming
-depends-on: []
+depends-on:
+  - f333f036-2c23-4a87-8496-bd3616b44786
+  - c77c4cfb-e9be-4339-b40d-3f7abc6a4543
 related: []
 references: []
 approved-by: ""
@@ -38,7 +40,7 @@ approved-date: ""
 - **actor-isolation**: `PartnerProcess` MUST be an `actor`; its `start`, `send`, `terminate`, `isRunning` and `standardErrorText` run serialised on it, and `messages()` MUST be `nonisolated` so it can be called without awaiting.
 - **configured-init**: The public initializer MUST take a `PartnerProcessConfiguration` and an environment dictionary, and launch the configuration's `executable` with its `arguments` and its `workingDirectory` as the child's current directory.
 - **framing**: The channel MUST use newline-delimited framing, so each stdout line is one message and each input is one line.
-- **environment-replace**: The caller's environment MUST be handed over with the replace policy, so a variable the caller removed stays removed (the source comment); an empty dictionary inherits the parent's environment, which is the channel's documented behavior for that policy.
+- **environment-replace**: The caller's environment MUST be handed over with the replace policy, so a variable the caller removed stays removed, because the caller hands over the child's whole environment; an empty dictionary inherits the parent's environment, which is the channel's documented behavior for that policy.
 - **start-launches**: `start()` MUST launch the channel, take its message stream and begin decoding stdout lines; a launch failure MUST propagate as the thrown error.
 - **start-once**: A second `start()` MUST throw, because the channel does not allow a second launch.
 - **send-user-message**: `send(_:)` MUST write one line made by `ClaudeStreamInput.userMessage(text)` (a JSON object of type `user` with the text as one text block, then a newline) to the process's stdin; a failed write MUST propagate as the thrown error.
@@ -47,13 +49,13 @@ approved-date: ""
 - **undecodable-skipped**: A line that fails to decode MUST be skipped without ending the stream, and a debug log line `skipped an undecodable stdout line` MUST be written.
 - **stream-error-ends**: When reading stdout throws, the failure MUST be logged at debug level and the stream MUST finish; it is not rethrown, so an errored end looks like a clean end on the stream.
 - **stream-ends-with-process**: The stream MUST finish when stdout ends, so it ends when the process ends.
-- **single-consumer**: The first `messages()` call MUST return the live stream; every later call MUST return an already-finished stream that yields nothing. The consumer MUST NOT `break` out of the stream, because that ends it for good (the source comment).
+- **single-consumer**: The first `messages()` call MUST return the live stream; every later call MUST return an already-finished stream that yields nothing.
 - **decode-off-actor**: The pump that decodes stdout MUST be a detached task capturing no actor state, so decoding stays off the actor's executor and the pump does not keep the process alive.
 - **terminate**: `terminate()` MUST terminate the channel, wait for the pump to finish, then finish the stream; it MUST leave `isRunning` false.
 - **terminate-unstarted**: `terminate()` before `start()` MUST complete without error, because the pump is absent and the channel's terminate is safe before launch.
 - **deinit-cleanup**: When the actor is released, it MUST cancel the pump and terminate the channel from a detached task.
 - **is-running**: `isRunning` MUST report the channel's state.
-- **stderr-text**: `standardErrorText()` MUST return what the process wrote to stderr so far, for telling a crash from a clean end; it comes from the channel, which waits up to half a second for the stderr drain, keeps only the last 1 MB (with a marker line when it cut or the drain was unfinished) and decodes as UTF-8 with a Latin-1 fallback.
+- **stderr-text**: `standardErrorText()` MUST return what the process wrote to stderr so far, for telling a crash from a clean end; it returns the channel's stderr text, and the channel's own stderr requirement decides how much is kept and how it is decoded.
 - **buffering**: The stream MUST use the default unbounded buffer, so messages decoded before a consumer exists are kept until it reads them.
 
 ## Appearance
@@ -81,11 +83,14 @@ Not applicable — this is a process wrapper that exchanges typed messages, not 
 | partner-process-007 | start-launches | Executable path that does not exist; `start()`. | Throws the channel's launch failure. |
 | partner-process-008 | terminate-unstarted | A process never started; `terminate()`. | Returns without error; `isRunning` is false. |
 | partner-process-009 | stderr-text | A started process of `/bin/sh` that writes `boom` to stderr and exits; after the stream ends call `standardErrorText()`. | The text contains `boom`. |
-
+| partner-process-010 | framing, send-user-message | Process of `/bin/cat`; `start()`; read `messages()` in a task; `send("a")` then `send("b")`; wait 300 ms; `terminate()`. | Two messages of kind `user`, in order, with first-block texts `a` then `b`. |
+| partner-process-011 | environment-replace | Process of `/bin/sh` with arguments `-c` and a script that echoes one `result` JSON line whose `result` is `$FOO-${BAR-unset}`; environment `FOO` `a` and `PATH` `/bin:/usr/bin` only; the parent has `BAR` set. | One message of kind `result` with `resultText` `a-unset`. |
+| partner-process-012 | buffering | Process of `/bin/cat`; `start()`; `send("x")`; wait 300 ms; only then call `messages()` for the first time and read it. | The first message has kind `user` and text `x`, so the message decoded before any consumer existed was kept. |
 ## Edge Cases
 
-- **Null / empty input**: An empty string to `send(_:)` is written as a user message with an empty text block; nothing rejects it. A configuration with no `workingDirectory` cannot be built through the public initializer (the field is a required string); the internal initializer takes an optional one and then passes no current directory.
+- **Null / empty input**: An empty string to `send(_:)` is written as a user message with an empty text block; nothing rejects it. A configuration with no `workingDirectory` cannot be built through the public initializer, because the field is a required string.
 - **Boundary values**: A stdout line that is valid JSON but not an object, or not JSON, fails to decode and is skipped (MUST). A line of a type the decoder does not know decodes to the `other` kind and is yielded.
+- **Consumer breaks out of the stream**: The consumer of `messages()` should not `break` out of the stream, because the source documents that doing so ends the stream for good; the stream is single-consumer, so there is no second consumer to take over.
 - **Concurrent access**: Actor members are serialised. `messages()` is `nonisolated` and guards its hand-out flag with an unfair lock, so two concurrent first calls cannot both receive the live stream.
 - **Error states**: A launch failure and a failed or broken-pipe write surface as thrown errors from `start()` and `send(_:)`. A stdout read error is only logged and finishes the stream; a crash is told from a clean end by `standardErrorText()` and by `isRunning`, not by the stream.
 - **Offline / disconnected state**: Not applicable: the process is local and the type performs no network access; whether `claude` reaches its service is outside this type.
@@ -96,7 +101,7 @@ Not applicable — this is a process wrapper that exchanges typed messages, not 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `configuration` | `PartnerProcessConfiguration` | none, required | Supplies the executable, arguments and working directory (see the Partner Process Configuration recipe). |
+| `configuration` | `PartnerProcessConfiguration` | none, required | Supplies the executable, arguments and working directory (see [Partner Process Configuration](cookbook:c77c4cfb-e9be-4339-b40d-3f7abc6a4543)). |
 | `environment` | `[String: String]` | none, required | The child's whole environment under the replace policy; an empty dictionary inherits the parent's. |
 | framing | fixed | newline-delimited | One JSON object per line in both directions. |
 | stream buffer | fixed | unbounded | The default `AsyncStream` buffering policy. |
@@ -141,17 +146,17 @@ The error description is interpolated without a privacy annotation, so the platf
 
 ## Platform Notes
 
-- **SwiftUI**: Source is `Core/Partner/PartnerProcess.swift`; imports `Foundation` and `os`. It is an `actor` over `SubprocessChannel` (`Core/RPC`), uses `AsyncStream.makeStream`, `OSAllocatedUnfairLock` and a detached `Task`. Nothing is UI-specific; a view model awaits the stream.
+- **SwiftUI**: This is the Swift core implementation note and nothing in it is UI-specific. It imports `Foundation` and `os`, and is an `actor` over `SubprocessChannel`, using `AsyncStream.makeStream`, `OSAllocatedUnfairLock` and a detached `Task`; a view model awaits the stream. A second, internal initializer takes the executable, arguments, environment and an optional working directory directly, for tests.
 - **Compose**: A Kotlin class over `ProcessBuilder` with a coroutine reading `stdout` lines into a `Channel` or `Flow`; use a `Mutex` or a single-threaded dispatcher for the actor serialisation and an `AtomicBoolean` for the single-consumer hand-out. `ProcessBuilder.environment().clear()` gives the replace policy.
 - **React/Web**: Node's `child_process.spawn` with `readline` over stdout and an async iterator; Node is single-threaded, so the hand-out flag needs no lock. Browsers cannot launch processes.
-- **AppKit / UIKit**: Identical to the SwiftUI note; `Process` and pipes are macOS only, and iOS cannot launch a subprocess.
+- **AppKit / UIKit**: On AppKit the SwiftUI note applies unchanged, using `Process` and pipes. UIKit on iOS cannot launch a subprocess, so an iOS port of this type has no implementation and must talk to a process hosted elsewhere.
 - **WinUI 3**: A C# class around `System.Diagnostics.Process` with `RedirectStandardInput`, `RedirectStandardOutput` and `RedirectStandardError`; read lines with `StreamReader.ReadLineAsync` into a `System.Threading.Channels.Channel<ClaudeStreamMessage>` (single reader), serialise `Start`, `Send` and `Terminate` with a `SemaphoreSlim`, and set `ProcessStartInfo.WorkingDirectory`. Call `ProcessStartInfo.Environment.Clear()` before copying in the caller's values for the replace policy, but only when the caller's dictionary is not empty, because the Swift channel inherits the parent's environment for an empty one. Termination needs `Process.Kill(entireProcessTree: true)` for grandchildren, which the Swift channel documents it does not reap. Decode with `System.Text.Json.JsonDocument` and skip a line when parsing throws `JsonException`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcess.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcess.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -171,11 +176,11 @@ The error description is interpolated without a privacy annotation, so the platf
 **Approved**: pending
 
 **Decision**: The caller's environment is applied with the replace policy.
-**Rationale**: The caller hands over the child's whole environment, so a variable it removed stays removed rather than being re-inherited.
+**Rationale**: The caller hands over the child's whole environment, so a variable it removed stays removed rather than being re-inherited; this is the replace policy of the channel the process runs over.
 **Approved**: pending
 
 **Decision**: A stdout read error finishes the stream rather than throwing from it.
-**Rationale**: The stream type has no error channel; the consumer learns the cause from `standardErrorText()` and `isRunning`.
+**Rationale**: The `AsyncStream` type has no error channel; the consumer learns the cause from `standardErrorText()` and `isRunning`. The alternatives weighed are an `AsyncThrowingStream`, which would carry the error but make every consumer handle a throw, and a terminal `ended(reason)` message value, which would carry the reason in-band but change the message type; neither was chosen, so this decision stays pending.
 **Approved**: pending
 
 ## Compliance
@@ -183,12 +188,13 @@ The error description is interpolated without a privacy annotation, so the platf
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | Reliability |
 
-`separation-of-concerns` passes because spawning, framing and pipes are the `SubprocessChannel`'s, line decoding is `ClaudeStreamMessage`'s and launch arguments are `PartnerProcessConfiguration`'s; this type only joins them. `unit-test-coverage` passes because `PartnerProcessTests` runs real processes (`/bin/cat` and `/bin/echo`) and covers echo and terminate, the second `messages()` call, a skipped undecodable line and a decoded result line; launch failure and double start are covered by the channel's own contract rather than by this suite. `error-recovery` is partial: a read error ends the stream with a debug log only, and nothing restarts the process.
+`separation-of-concerns` passes because spawning, framing and pipes are the `SubprocessChannel`'s, line decoding is `ClaudeStreamMessage`'s and launch arguments are `PartnerProcessConfiguration`'s; this type only joins them. `unit-test-coverage` is partial: `PartnerProcessTests` runs real processes (`/bin/cat` and `/bin/echo`) and covers echo and terminate, the second `messages()` call, a skipped undecodable line and a decoded result line, but it has no test for send-before-start, start-once, launch failure, terminate-unstarted or the stderr text; those are covered only by the channel's own contract, not by this suite. `error-recovery` is partial: a read error ends the stream with a debug log only, and nothing restarts the process.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Marked test coverage partial, pointed stderr text at the channel, added a stream-end alternatives discussion and framing, environment and buffering vectors, links to its ingredients, and moved caller and internal-API text out of requirements. |

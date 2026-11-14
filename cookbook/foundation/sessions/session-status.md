@@ -2,7 +2,7 @@
 id: 787b5da6-2f20-4f3e-8104-1763959a735f
 title: "Session Status"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,10 +20,10 @@ tags:
   - claude-hooks
   - lifecycle
 depends-on: []
-related: []
-references:
-  - packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionStatus.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Sessions/LivenessServiceTests.swift (adhsdk)
+related:
+  - bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4
+  - 6a37e531-b5ae-4eea-b4f0-d28866776ddc
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -32,10 +32,11 @@ approved-date: ""
 
 ## Overview
 
-`SessionStatus` is the lifecycle state of a Claude Code session: `active`, `stale` or `ended`. It answers only whether a process exists for the session. What a live session is doing is a separate question, answered by `SessionActivity`.
+`SessionStatus` is the lifecycle state of a Claude Code session: `active`, `stale` or `ended`. It answers only whether a process exists for the session. What a live session is doing is a separate question, answered by `SessionActivity` ([Session Activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4)).
 
-The enum is a `String`-backed value. The raw strings are what the SDK writes to the sessions table's status column, compares against rows read back, and publishes in the `{session_id, status}` payload that `SessionEventEncoding.encodeSessionStatus(sessionId:status:)` builds. A port has to keep those three strings exactly.
+The enum is a `String`-backed value. The raw strings are what the SDK writes to the sessions table's status column, compares against rows read back, and publishes in the `{session_id, status}` payload that `SessionEventEncoding.encodeSessionStatus(sessionId:status:)` builds ([Session Event Sink](cookbook:6a37e531-b5ae-4eea-b4f0-d28866776ddc)). A port has to keep those three strings exactly.
 
+What each case means, as the SDK's daemon uses them. This is description, not requirement; the transitions belong to `LivenessService` and the session-records code. `active` means a live process exists for the session; the liveness service sets it when a live `claude` process maps to the session's id. `ended` means no live process remains; the liveness service sets it when the process is gone and the recorded `cwd` is not empty, and it does not end a session whose `cwd` is empty, because ending it would be a guess. `stale` is declared but nothing in the SDK's own daemon code writes it: the status column's `CHECK(status IN ('active','stale','ended'))` allows it, and `fetchActiveSessionsForLiveness` selects rows whose status is `active` or `stale`. The enum does not conform to `CaseIterable`, and it has no fallback case for an unknown raw string.
 ## Behavioral Requirements
 
 **Shape**
@@ -43,21 +44,17 @@ The enum is a `String`-backed value. The raw strings are what the SDK writes to 
 - **status-cases**: `SessionStatus` MUST have exactly three cases: `active`, `stale` and `ended`.
 - **status-raw-values**: Each case's `String` raw value MUST equal its case name: `"active"`, `"stale"`, `"ended"`.
 - **status-sendable**: `SessionStatus` MUST conform to `Sendable`.
-- **status-not-case-iterable**: `SessionStatus` MUST NOT conform to `CaseIterable`; the source declares only `String` and `Sendable`.
 - **status-raw-init-optional**: Initializing from a raw string that is not one of the three values MUST yield no value (the failable `init(rawValue:)` returns `nil`).
 
-**Meaning of each case, as the SDK uses them**
+**Meaning of each case**
 
-- **active-meaning**: `active` MUST mean a live process exists for the session. The liveness service promotes or resurrects a session to `active` when a live `claude` process maps to its id.
-- **ended-meaning**: `ended` MUST mean no live process remains for the session. The liveness service sets it when the process is gone and the recorded `cwd` is not empty.
-- **stale-declared**: `stale` is a declared case that nothing in the SDK's own daemon code writes. `LivenessService` sets only `active` and `ended`. The sessions table's status column allows it (`CHECK(status IN ('active','stale','ended'))`) and `fetchActiveSessionsForLiveness` selects rows whose status is `active` or `stale`, so a consumer MUST accept it. A `stale` row is not in the active set, so the liveness pass sets it `active` when a live process maps to it and `ended` when none does.
-- **status-vs-activity**: A consumer that needs to know what a live session is doing MUST use `SessionActivity` and not infer it from `SessionStatus`.
+- **stale-declared**: A consumer MUST accept `stale` as a valid status when it reads one, because the sessions table's status column allows it.
+- **status-vs-activity**: A consumer that needs to know what a live session is doing MUST use `SessionActivity` ([Session Activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4)) and not infer it from `SessionStatus`.
 
 **Use as a stored and published value**
 
 - **status-stored-as-raw**: Code that writes or compares the status column MUST use the `rawValue` string, as `updateSessionStatus(_:sessionId:)` and the liveness comparison `status == SessionStatus.active.rawValue` do.
-- **status-update-failure**: `updateSessionStatus(_:sessionId:)` MUST NOT throw; it writes the raw value with a single-row UPDATE and logs a failure through the logger.
-- **status-published-as-raw**: A session-status broadcast MUST carry the raw string in the payload's `status` field (see the `SessionEventSink` recipe).
+- **status-published-as-raw**: A session-status broadcast MUST carry the raw string in the payload's `status` field (see [Session Event Sink](cookbook:6a37e531-b5ae-4eea-b4f0-d28866776ddc)).
 
 ## Appearance
 
@@ -80,29 +77,23 @@ Not applicable — this is a lifecycle enum, not a visual component.
 | session-status-003 | status-raw-init-optional | `SessionStatus(rawValue: "Active")` | `nil`; the match is case-sensitive |
 | session-status-004 | status-raw-init-optional | `SessionStatus(rawValue: "")` | `nil` |
 | session-status-005 | status-raw-init-optional | `SessionStatus(rawValue: "closed")` | `nil` |
-| session-status-006 | status-raw-values, status-stored-as-raw | A session row whose status column holds `"active"`, compared with `SessionStatus.active.rawValue` | Equal; the row counts as active in the liveness pass |
-| session-status-007 | active-meaning | Test in `LivenessServiceTests`: a live `claude` process maps to a session not yet `active` | The session is set to `active` and the status-change callback receives `active` |
-| session-status-008 | ended-meaning | Test in `LivenessServiceTests`: an active session with a non-empty `cwd` and no live process | The session is set to `ended` and the callback receives `ended` |
-| session-status-009 | stale-declared | Decode a stored value `"stale"` with `SessionStatus(rawValue:)` | `.stale` |
+| session-status-006 | status-raw-values, status-stored-as-raw | `SessionStatus(rawValue: "active")` and `SessionStatus.active.rawValue == "active"` | `.active`; the stored string and the enum agree |
+| session-status-007 | status-cases | `SessionStatus(rawValue:)` for each of `"active"`, `"stale"`, `"ended"` | `.active`, `.stale`, `.ended`; no other raw string yields a value |
+| session-status-008 | status-vs-activity | Inspect the enum's API surface | `SessionStatus` offers no operation that returns a `SessionActivity`; activity comes only from `SessionActivity.derive` ([Session Activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4)) |
+| session-status-009 | stale-declared, status-raw-init-optional | Decode a stored value `"stale"` with `SessionStatus(rawValue:)` | `.stale` |
 | session-status-010 | status-published-as-raw | `SessionEventEncoding.encodeSessionStatus(sessionId: "s1", status: .stale)` | JSON whose `status` is `"stale"` |
-
+| session-status-011 | status-sendable | Pass a `SessionStatus` value across a task boundary | Compiles without a `Sendable` diagnostic |
 ## Edge Cases
 
 - **Unknown string**: A string outside the three raw values MUST fail to convert, yielding `nil` from `init(rawValue:)`. The sessions table's `CHECK` constraint keeps the column to the three values, so the case arises from external input such as the `status` query parameter of the session list route, where an unrecognized value becomes `nil` and the list is returned unfiltered. The enum has no fallback case, so the caller owns the handling.
 - **Empty string**: `SessionStatus(rawValue: "")` MUST yield `nil`.
 - **Case variants**: `"Active"` and `"ENDED"` MUST yield `nil`; the raw values are lowercase and the match is exact.
-- **Stale in the SDK's own writes**: No SDK daemon code sets `stale`, so a port MAY omit a transition into it, but MUST keep the case so rows and payloads from other writers still convert.
-- **Ended with no cwd**: The liveness service MUST NOT end a session whose `cwd` is empty, because no live `claude` reports an empty `cwd` and ending it would be a guess. That rule lives in `LivenessService`, not in this enum.
+- **Stale in the SDK's own writes**: No SDK daemon code sets `stale`, so a port MAY omit a transition into it, but MUST keep the case so rows and payloads from other writers still convert (`stale-declared`).
 - **Concurrent access**: Not applicable: the enum is an immutable `Sendable` value with no state of its own; ordering of writes to the status column belongs to the database layer.
 - **Boundary values, errors, offline**: Not applicable: the enum has no numeric inputs, throws nothing and does no I/O.
 
 ## Configuration
-
 Not applicable: the enum has no parameters, defaults, environment variables or injected dependencies; the only input is a raw string through `init(rawValue:)`.
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-
 ## Deep Linking
 
 Not applicable: the enum is a plain value with no URLs or routes.
@@ -132,21 +123,24 @@ Not applicable: the enum carries one of three fixed words and holds no personal 
 Not applicable: the source makes no log calls.
 
 ## Platform Notes
+The `platforms` of this recipe are swift and macos; the notes for the other targets are porting guidance only.
+
 
 - **SwiftUI**: `SessionStatus.swift` in `Core/Sessions` is a Foundation-only `enum` with a `String` raw value. A SwiftUI view should show a label chosen by the view layer and not the raw value.
 - **Compose**: Port as a Kotlin `enum class SessionStatus(val raw: String)` with a `fromRaw(String): SessionStatus?` function that returns `null` for an unknown string, matching the failable initializer.
-- **React/Web**: Port as a TypeScript string-literal union `"active" | "stale" | "ended"` plus a guard function that narrows an arbitrary string, returning `undefined` or `false` for anything else.
+- **React/Web**: Port as a TypeScript string-literal union `"active" | "stale" | "ended"` plus a function `parseSessionStatus(s: string): SessionStatus | undefined` that returns the matching literal and `undefined` for anything else.
 - **AppKit / UIKit**: The same Foundation enum is used unchanged; a table or list cell maps the case to an icon or text. Store and compare the raw string, as the daemon code does.
-- **WinUI 3**: Use a C# `enum SessionStatus { Active, Stale, Ended }`. C# enums carry no string raw value, so serialize with `JsonStringEnumConverter` using a camel-case naming policy in `System.Text.Json` to get the lowercase wire strings, and parse an unknown string with `Enum.TryParse` with `ignoreCase: false` to keep the match exact; `Enum.TryParse` accepts numeric strings, so also check `Enum.IsDefined`. For a SQLite column use `Microsoft.Data.Sqlite` and convert at the boundary. Expose the value on a view model through `INotifyPropertyChanged` and bind a glyph or text to it with an `x:Bind` function.
+- **WinUI 3**: Use a C# `enum SessionStatus { Active, Stale, Ended }`. C# enums carry no string raw value, so serialize with `JsonStringEnumConverter` using a camel-case naming policy in `System.Text.Json` to get the lowercase wire strings, and map the three wire strings explicitly (a `switch` on `"active"`, `"stale"` and `"ended"`, or `[JsonStringEnumMemberName]` in .NET 9 and later), returning no value for anything else. Do not use `Enum.TryParse(..., ignoreCase: false)` on the lowercase wire strings: the members are `Active`, `Stale` and `Ended`, so it rejects every stored value. If you do parse with `Enum.TryParse`, keep the `Enum.IsDefined` guard, since `Enum.TryParse` accepts numeric strings. For a SQLite column use `Microsoft.Data.Sqlite` and convert at the boundary. Expose the value on a view model through `INotifyPropertyChanged` and bind a glyph or text to it with an `x:Bind` function.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionStatus.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionStatus.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Sessions/LivenessServiceTests.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -180,3 +174,4 @@ Separation of concerns passes: the file is three cases and nothing else, with tr
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Dropped status-not-case-iterable and status-update-failure, cut stale-declared to a consumer MUST and moved the case descriptions to Overview, replaced the liveness vectors with enum-level ones, fixed the WinUI parsing note and the web guard signature, linked related specs and emptied references. |

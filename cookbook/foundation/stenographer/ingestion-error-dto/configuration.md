@@ -1,7 +1,2 @@
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| retryCount | Int | 0 | Failed self-healing retries so far. |
-| lastRetriedAt | String? | nil | Time of the most recent retry. |
-| exhausted | Bool | false | True once `retryCount` reaches the daemon's `maxRetries`, which defaults to 3 and is raised to at least 1. |
-
+Not applicable: nothing here is consumer-configurable. The initializer defaults are in `error-init-defaults`, and `exhausted` is derived from the daemon's `maxRetries` (see `error-exhausted`).

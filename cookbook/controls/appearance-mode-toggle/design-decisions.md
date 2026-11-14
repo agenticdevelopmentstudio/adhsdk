@@ -8,7 +8,7 @@
 **External appearance controller**
 
 **Decision**: The component does not manage appearance state itself. It dispatches an `awt:appearance-cycle` `CustomEvent` on `window` (no `detail` payload) when clicked, and listens for an `awt:appearance-changed` `CustomEvent` on `window` (also no `detail` payload) to know when to re-read `document.documentElement`.
-**Rationale**: This keeps the toggle decoupled from any specific state-storage mechanism, so any controller that writes `data-appearance-mode` and the `dark` class and honors this event contract can drive it — for example `ColorModeProvider`/`useColorMode` in `packages/web/packages/themes/src/colorMode.tsx`, which implements this exact contract for a different toggle in this toolkit.
+**Rationale**: This keeps the toggle decoupled from any specific state-storage mechanism, so any controller that writes `data-appearance-mode` and the `dark` class and honors this event contract can drive it — for example `ColorModeProvider`/`useColorMode` in `packages/web/packages/themes/src/colorMode.tsx`, which implements this exact contract. A second toggle, [Color Mode Toggle](cookbook:7b54db6e-755d-4665-a091-d34cfcaac146), exists for the same three-state job but is presentation-only and binds a different document contract; this ingredient is the one for the `data-appearance-mode` plus `awt:appearance-cycle` contract, and the Color Mode Toggle spec explains why the two stay separate.
 **Approved**: pending
 
 **Event-driven state updates**

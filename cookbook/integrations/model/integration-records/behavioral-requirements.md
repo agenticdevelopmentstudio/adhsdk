@@ -38,22 +38,21 @@
 - **message-fields**: It MUST carry `id`, `connectionId`, `provider`, `externalId`, `threadId`, `fromAddress`, `toAddresses`, `ccAddresses`, `subject`, `snippet`, optional `bodyText`, optional `bodyHtml`, `labelIds`, `internalDate`, optional `historyId`, `attachments`, `mailClass`, `isDeleted`, `createdAt`, `updatedAt` and optional `deletedAt`.
 - **message-defaults**: Its initializer MUST default `provider` to `"gmail"`, `toAddresses`, `ccAddresses`, `labelIds` and `attachments` to empty arrays, and `isDeleted` to false.
 - **message-class-derived**: When the initializer is given no `mailClass`, it MUST set it to `MailClassifier.classify(labelIds:)` of the given `labelIds`.
-- **message-class-explicit**: When the initializer is given a `mailClass`, it MUST keep that value and not re-derive it.
-- **message-class-cached**: The record MUST NOT recompute `mailClass` after construction; it is stored on the row (see Design Decisions).
+- **message-class-explicit**: When the initializer is given a `mailClass`, it MUST keep that value and not re-derive it. The record never recomputes `mailClass` after construction; it is stored on the row (see Design Decisions).
 
 ### EmailLabel
 
 - **label-table**: `EmailLabel` MUST map to the table `integration_email_labels`.
 - **label-fields**: It MUST carry `id`, `connectionId`, `externalId`, `sourceProvider`, `name`, optional `parentName`, `type`, optional `color` (a `LabelColor`), optional `messagesTotal`, optional `messagesUnread`, `isDeleted`, `createdAt`, `updatedAt` and optional `deletedAt`.
 - **label-defaults**: Its initializer MUST default `sourceProvider` to `"gmail"`, `type` to `"user"` and `isDeleted` to false.
-- **label-type-values**: The record MUST NOT validate `EmailLabel.type`; it accepts any string, though the source documents `"system"` or `"user"`.
+- **label-type-values**: The record accepts any string for `EmailLabel.type` and does not validate it, though the source documents `"system"` or `"user"`. A port MAY validate it once the value set is closed (see Design Decisions).
 
 ### ActionLog
 
 - **action-log-table**: `ActionLog` MUST map to the table `integration_action_logs`.
 - **action-log-fields**: It MUST carry `id`, `connectionId`, `provider`, `actionType`, optional `idempotencyKey`, `requestPayload` (JSON text), `status`, optional `result`, optional `error`, `createdAt` and `updatedAt`. It has no `deletedAt`.
 - **action-log-defaults**: Its initializer MUST default `provider` to `"gmail"` and `status` to `"pending"`.
-- **action-log-status-values**: The record MUST NOT validate `ActionLog.status`; it accepts any string, though the source documents `"pending"`, `"ok"` or `"error"`.
+- **action-log-status-values**: The record accepts any string for `ActionLog.status` and does not validate it, though the source documents `"pending"`, `"ok"` or `"error"`. A port MAY validate it once the value set is closed (see Design Decisions).
 
 ### Field types
 
@@ -70,5 +69,5 @@ Column names are the snake_case form of the property name. Storage is plain (a n
 ### Concurrency and side effects
 
 - **no-side-effects**: Constructing a record MUST NOT touch the database, files or network; the only environmental read is the clock for default timestamps.
-- **value-semantics**: Records are structs with `var` properties so a caller can change a field on a copy (a status, an `updatedAt`) and write the copy back; they are `Sendable`, and the source declares no locking, so a caller mutating a copy MUST NOT affect other copies.
+- **value-semantics**: Records are structs with `var` properties so a caller can change a field on a copy (a status, an `updatedAt`) and write the copy back. Mutating a copy MUST NOT affect other copies.
 

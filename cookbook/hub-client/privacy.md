@@ -21,6 +21,6 @@
   provides.
 - **Retention**: not applicable to `ADHClient` — it retains nothing after a
   call returns. Retention of the credential/session itself is
-  `hub-client-auth`'s (the injected store's) policy; this recipe's two
+  `hub-client-auth`'s (the injected store's) policy; this ingredient's two
   sources specify no retention duration.
 

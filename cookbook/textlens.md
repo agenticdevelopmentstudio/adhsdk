@@ -2,11 +2,11 @@
 id: 441dd61d-3e76-499b-b45c-92869015eced
 title: "Text Lens"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-09-25
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -114,7 +114,10 @@ can attach per-character views and drive a per-frame callback.
   and `toColor` together or omit both; `resolveRamp` MUST throw an `Error`
   (`"textlens: fromColor and toColor go together — give both, or
   neither."`) when exactly one is supplied, and MUST return `null` (no
-  tinting) when neither is supplied.
+  tinting) when neither is supplied. `resolveRamp` runs in `start()`, not in
+  `createLens`, and only after the empty-target check, so a mismatched pair
+  throws from `start()` and never from `createLens`; a lens over no
+  characters never throws.
 - **idempotent-character-split**: `createLens` MUST replace each target
   element's text with one `<span>` per character exactly once per element,
   guarded by a `textlensSplit` dataset flag; calling `createLens` again over
@@ -128,6 +131,9 @@ can attach per-character views and drive a per-frame callback.
 - **space-preservation**: a plain space character MUST be rendered as a
   non-breaking space (` `) in its character span, so the span does not
   collapse to zero width under `display: inline-block`.
+- **inline-block-spans**: the split MUST write `display: inline-block` on
+  every character span itself, so a caller's CSS does not have to; without
+  it a `transform` has no effect on an inline span.
 - **frozen-glyph-width**: after every character span for an element is
   appended to the document, each span's `width` style MUST be set to its
   measured `getBoundingClientRect().width` (one decimal place, `px`), and
@@ -224,9 +230,11 @@ can attach per-character views and drive a per-frame callback.
 - **pause-rests-without-resetting-the-clock**: while `paused` is `true`,
   each scheduled frame MUST call `restChars` (rest appearance for every
   measured span) and MUST return without calling `apply`, but MUST still
-  reschedule the next animation frame; the sweep's `elapsed` clock (measured
-  from `start()`'s captured `startedAt`) is NOT paused — it continues to
-  advance for the duration of the pause.
+  reschedule the next animation frame. The sweep's `elapsed` clock
+  (measured from `start()`'s captured `startedAt`) is not paused and
+  continues to advance for the duration of the pause. This is what the
+  implementation does, not a behavior anyone chose; a port MAY pause the
+  clock (see Edge Cases, "pause outlives the clock").
 
 **React binding (`useTextLens`)**
 
@@ -260,34 +268,34 @@ can attach per-character views and drive a per-frame callback.
 
 **Ordering, concurrency, and side effects**
 
-- **single-caller-main-thread-only**: the given sources declare no locking,
-  actor isolation, or `Sendable`-equivalent annotation; `createLens`,
-  `Lens.start/stop/destroy`, and the DOM they mutate are usable only from
-  the single JavaScript main thread they run on — there is no concurrency
+- **single-caller-main-thread-only**: `createLens`, `Lens.start/stop/destroy`,
+  and the DOM they mutate MUST be used only from the single JavaScript main
+  thread they run on. The implementation declares no locking, actor
+  isolation, or `Sendable`-equivalent annotation, and there is no concurrency
   concern beyond the ordinary single-threaded browser event loop.
 - **independent-lens-instances**: two `Lens` instances created over
-  overlapping elements run fully independently, each with its own
-  `requestAnimationFrame` chain and closed-over state; the source performs
-  no coordination between instances, so overlapping lenses write
+  overlapping elements MUST run fully independently, each with its own
+  `requestAnimationFrame` chain and closed-over state, and MUST NOT
+  coordinate with each other. Overlapping lenses therefore write
   conflicting inline styles to the same spans rather than one yielding to
-  the other.
+  the other, so a caller SHOULD start at most one lens per element.
 - **no-persistence-or-caching**: neither `createLens` nor `useTextLens`
-  persists any state across page loads or between `Lens` instances; all
-  state (`chars`, `ramp`, `frameId`, `running`, `paused`, `swept`) lives only
-  in memory for the instance's lifetime.
-- **side-effects-are-dom-only**: the only side effects performed are:
+  MUST persist any state across page loads or between `Lens` instances; all
+  state (`chars`, `ramp`, `frameId`, `running`, `paused`, `swept`) MUST live
+  only in memory for the instance's lifetime.
+- **side-effects-are-dom-only**: the only side effects MUST be:
   mutating the DOM (splitting text into spans, writing inline styles),
   reading computed style (`getComputedStyle`, `getBoundingClientRect`), and
   scheduling/cancelling timers (`requestAnimationFrame`,
-  `cancelAnimationFrame`, `setTimeout`, `clearTimeout`). There is no network,
-  file, process, or storage I/O anywhere in the given sources.
+  `cancelAnimationFrame`, `setTimeout`, `clearTimeout`). It MUST NOT perform
+  network, file, process, or storage I/O.
 
 ## Appearance
 
 Not applicable — this is a headless DOM-mutation effect with no rendered
 surface, corner radius, padding, or font of its own; it writes inline
 `transform`/`color`/`filter` styles onto character spans the caller already
-rendered (see **scale-formula**, **blur-floor**, and **colour-interpolation**
+rendered (see `#requirements/scale-formula`, `#requirements/blur-floor`, and `#requirements/colour-interpolation`
 under Behavioral Requirements for the exact values it writes).
 
 ## States
@@ -307,9 +315,10 @@ rather than here.
 
 ## Conformance Test Vectors
 
-Vectors 1–10 are traced to `color.test.ts`; vectors 11–20 to `lens.test.ts`.
-Vectors 21–23 are derived directly from the `apply` arithmetic in `lens.ts`
-and have no dedicated assertion in the given test files.
+Vectors 001–011 are traced to `color.test.ts`; vectors 012–021 to `lens.test.ts`.
+Vectors 022–024 are derived directly from the `apply` arithmetic in `lens.ts`
+and have no dedicated assertion in `color.test.ts` or `lens.test.ts`. Vectors
+025 and 026 are read from `useTextLens.ts`, which has no test file.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -324,7 +333,7 @@ and have no dedicated assertion in the given test files.
 | text-lens-009 | custom-property-resolution | element with `--accent: #e8a33d` set; `resolveColor('--accent', el)` | `[232, 163, 61]` (`reads a custom property off the element`) |
 | text-lens-010 | resolve-throws-on-unreadable-color, resolve-error-names-both-forms | `resolveColor('--missing', el)` where `--missing` is unset | throws with message containing `"--missing"` (`throws naming the property when it is not set`) |
 | text-lens-011 | resolve-error-names-both-forms | element with `--accent: rebeccapurple`; `resolveColor('--accent', el)` | throws with message containing `resolved to "rebeccapurple"` (`throws showing what an unreadable property resolved to`) |
-| text-lens-012 | idempotent-character-split, space-preservation | `createLens([element])` where `element.textContent === 'abc'` | 3 child `<span>`s with text `['a', 'b', 'c']` (`splits the text into one span per character`) |
+| text-lens-012 | destructive-split | `createLens([element])` where `element.textContent === 'abc'` | 3 child `<span>`s with text `['a', 'b', 'c']` (`splits the text into one span per character`) |
 | text-lens-013 | space-preservation | `createLens([element])` where `element.textContent === 'a b'` | the middle span's `textContent` is `' '` (`keeps spaces from collapsing`) |
 | text-lens-014 | idempotent-character-split | `createLens([element])` called twice on the same already-split element | still 3 spans; `element.firstChild` is the same node both times (`leaves an already-split element alone`) |
 | text-lens-015 | reduced-motion-gate | `matchMedia` stubbed to `{ matches: true }`; `createLens([el]).start()` | `requestAnimationFrame` is never called (`schedules no frames when the user prefers reduced motion`) |
@@ -337,19 +346,20 @@ and have no dedicated assertion in the given test files.
 | text-lens-022 | radius-cutoff, smoothstep-easing, scale-formula | sweep centre exactly `radius` px from a glyph's centre (`distance === radius`) | `linear = 0`, `t = 0`; `transform` is `scale(1.000)` (no growth), `filter` is cleared (no dedicated test — derived from `apply`'s formula) |
 | text-lens-023 | blur-floor | default `blur: 0.35`, glyph at the sweep centre (`distance = 0`, `t = 1`) | computed `blur = 0.35`; since `0.35 > 0.03`, `filter` is set to `blur(0.35px)` (no dedicated test — derived from `apply`'s formula) |
 | text-lens-024 | leg-direction-alternation, cubic-ease-in-out | `elapsed === duration` exactly (leg boundary) | `leg = 1` (odd), `progress = 0`, `eased = 0`; the sweep centre is exactly `rightEdge` at that instant, having just switched to the return leg (no dedicated test — derived from `apply`/`step`'s formula) |
-
+| text-lens-025 | resweep-is-immediate-after-the-first, deferred-first-sweep | `useTextLens` with `startDelay: 500`, fake timers; the hook runs, 500 ms pass, `enabled` goes `false`, then `true` again | the first run starts the lens after 500 ms; the second run starts it after 0 ms (no delay) |
+| text-lens-026 | cleanup-clears-the-pending-timer-and-destroys | `useTextLens` with `startDelay: 500`; unmount at 100 ms, then advance fake timers past 500 ms | `start()` is never called; `destroy()` is called once |
 ## Edge Cases
 
 - **Null/empty input — unparseable colour string**: `parseColor` MUST return
   `null` (never throw) for `''`, a named colour, `hsl()`/`color()`, or a
-  malformed hex/`rgb()` string (see **unreadable-input-returns-null**).
+  malformed hex/`rgb()` string (see `#requirements/unreadable-input-returns-null`).
 - **Null/empty input — no target elements or empty text**: `createLens([])`
   or `createLens` over elements whose text is empty produces zero character
   spans; a subsequent `start()` MUST return with no scheduled frame and no
-  thrown error (see **empty-target-no-op**).
+  thrown error (see `#requirements/empty-target-no-op`).
 - **Null/empty input — selector matches nothing**: `useTextLens` MUST build
   no `Lens` at all when `selector` matches zero elements inside the
-  container (see **no-elements-no-op**) — not a `Lens` that then no-ops on
+  container (see `#requirements/no-elements-no-op`) — not a `Lens` that then no-ops on
   `start()`.
 - **Boundary value — single-character text**: with exactly one character
   span, `firstGlyphCentre === lastGlyphCentre`, so `leftEdge`/`rightEdge`
@@ -368,12 +378,12 @@ and have no dedicated assertion in the given test files.
 - **Concurrent access — overlapping lenses**: two `Lens` instances created
   over the same or overlapping elements run independently and both write
   inline styles to shared spans every frame with no coordination or
-  precedence rule (see **independent-lens-instances**); the source
+  precedence rule (see `#requirements/independent-lens-instances`); the source
   documents this as the caller's responsibility (start at most one at a
   time), not a bug to be fixed internally.
 - **Error state — mismatched colour ramp**: `createLens`'s `start()` throws
   synchronously when exactly one of `fromColor`/`toColor` is given (see
-  **colour-ramp-pairing**). Called directly, this is a normal, catchable
+  `#requirements/colour-ramp-pairing`). Called directly, this is a normal, catchable
   synchronous throw. Called through `useTextLens`, the same throw happens
   inside the deferred `window.setTimeout` callback that invokes
   `lens.start()`, which makes it an uncaught exception in that timer's own
@@ -381,23 +391,25 @@ and have no dedicated assertion in the given test files.
   error boundary around the component, can intercept.
 - **Error state — unreadable colour**: `resolveColor` throws for an empty or
   unparseable literal or custom-property value (see
-  **resolve-throws-on-unreadable-color**); this reaches the caller through
+  `#requirements/resolve-throws-on-unreadable-color`); this reaches the caller through
   the same deferred-`setTimeout` path as the mismatched-ramp case when
   driven through `useTextLens`.
 - **Cancellation — pause outlives the clock**: pausing (pointer-enter) rests
   every glyph immediately, but the sweep's `elapsed` clock is not paused
-  (see **pause-rests-without-resetting-the-clock**); a long pause SHOULD be
+  (see `#requirements/pause-rests-without-resetting-the-clock`); a long pause SHOULD be
   expected to make the sweep resume mid-leg (or on a different leg
   entirely) rather than resuming smoothly from the visual position it held
   when paused, because no accumulated-pause-duration bookkeeping exists in
-  the source to compensate for it.
+  the source to compensate for it. This is what the implementation does, not
+  a chosen behavior; no one has decided whether resuming should catch up or
+  continue smoothly.
 - **Cancellation — destroy while a `startDelay` timer is pending**: when
   `useTextLens`'s cleanup runs before the deferred `start()` timer has
   fired, `clearTimeout` prevents that `start()` from ever running, and
   `lens.destroy()` still runs (calling `stop()` on a lens whose `chars` is
-  still `[]`, which is a no-op — see **stop-before-start-is-safe**).
-- **Offline/disconnected state**: not applicable — the given sources make
-  no network request of any kind (see **side-effects-are-dom-only**).
+  still `[]`, which is a no-op — see `#requirements/stop-before-start-is-safe`).
+- **Offline/disconnected state**: not applicable — the implementation makes
+  no network request of any kind (see `#requirements/side-effects-are-dom-only`).
 
 ## Configuration
 
@@ -407,23 +419,23 @@ and have no dedicated assertion in the given test files.
 | `options.radius` | `number` (CSS px) | `55` | Half-width of the lens; glyphs whose measured centre is farther than this from the sweep centre are left at rest. |
 | `options.duration` | `number` (ms) | `8000` | Time for one pass across the text in one direction; the return pass takes the same duration again. |
 | `options.scale` | `number` | `0.25` | Extra scale applied at the dead centre of the lens (`0.25` means `125%`). |
-| `options.blur` | `number` (CSS px) | `0.35` | Blur applied at the dead centre of the lens; `0` disables it (see **blur-floor**). |
-| `options.fromColor` | `string \| undefined` | `undefined` | Colour a glyph holds at rest: a hex/`rgb()` literal or a `--custom-property` name read off the element. Must be given together with `toColor` or omitted (see **colour-ramp-pairing**). |
+| `options.blur` | `number` (CSS px) | `0.35` | Blur applied at the dead centre of the lens; `0` disables it (see `#requirements/blur-floor`). |
+| `options.fromColor` | `string \| undefined` | `undefined` | Colour a glyph holds at rest: a hex/`rgb()` literal or a `--custom-property` name read off the element. Must be given together with `toColor` or omitted (see `#requirements/colour-ramp-pairing`). |
 | `options.toColor` | `string \| undefined` | `undefined` | Colour a glyph reaches at the dead centre of the lens; same forms and pairing rule as `fromColor`. |
-| `options.respectReducedMotion` | `boolean` | `true` | When `true`, `prefers-reduced-motion: reduce` makes `start()` a no-op (see **reduced-motion-gate**). |
+| `options.respectReducedMotion` | `boolean` | `true` | When `true`, `prefers-reduced-motion: reduce` makes `start()` a no-op (see `#requirements/reduced-motion-gate`). |
 | `useTextLens`'s `containerRef` | `RefObject<HTMLElement \| null>` | — (required) | The container whose descendants are searched for `selector`. |
 | `useTextLens`'s `selector` | `string` | — (required) | CSS selector (relative to the container) for the elements to split and sweep, e.g. `'.tag'`. |
 | `useTextLens`'s `enabled` | `boolean` | `true` | `false` destroys the lens and returns its glyphs to rest; `true` (re)builds and starts it. |
-| `useTextLens`'s `startDelay` | `number` (ms) | `0` | Delay before the FIRST sweep only; re-enabling later starts immediately (see **resweep-is-immediate-after-the-first**). |
+| `useTextLens`'s `startDelay` | `number` (ms) | `0` | Delay before the FIRST sweep only; re-enabling later starts immediately (see `#requirements/resweep-is-immediate-after-the-first`). |
 
 ## Deep Linking
 
-Not applicable: the given sources contain no URL, route, or deep-link
+Not applicable: the implementation contain no URL, route, or deep-link
 handling of any kind.
 
 ## Localization
 
-Not applicable: the three thrown error messages
+Not applicable: the two thrown error messages
 (`"textlens: cannot read ... as a colour. ..."`,
 `"textlens: fromColor and toColor go together — give both, or neither."`)
 are fixed, non-localized diagnostic strings aimed at the developer who
@@ -436,25 +448,25 @@ locale-aware formatting or string lookup anywhere.
 behavior in this component: when `true` and the browser reports
 `prefers-reduced-motion: reduce`, `start()` never schedules a single
 animation frame, so the character spans stay at rest and the sweep never
-runs (see **reduced-motion-gate**). Setting `respectReducedMotion: false`
+runs (see `#requirements/reduced-motion-gate`). Setting `respectReducedMotion: false`
 makes the sweep run regardless of that OS/browser setting (see
-**reduced-motion-opt-out**). The character split itself (turning the text
+`#requirements/reduced-motion-opt-out`). The character split itself (turning the text
 into per-character spans) still happens even when reduced motion suppresses
 the sweep — `createLens` does not gate the split on this setting, only the
 frame-scheduling in `start()`. No other accessibility display option
 (contrast, larger text, differentiate-without-color) is read anywhere in
-the given sources.
+the implementation.
 
 ## Feature Flags
 
-Not applicable: the given sources read no feature-flag or remote-config
+Not applicable: the implementation read no feature-flag or remote-config
 value; every branch is driven only by the caller's `LensOptions`/
 `UseTextLensOptions` and the browser's own `matchMedia` reduced-motion
 query.
 
 ## Analytics
 
-Not applicable: the given sources contain no analytics, telemetry, or usage
+Not applicable: the implementation contain no analytics, telemetry, or usage
 event calls.
 
 ## Privacy
@@ -466,7 +478,7 @@ DOM/stylesheet the caller controls, holds them only in memory for the
 
 ## Logging
 
-Not applicable: the given sources contain no logging or console calls; the
+Not applicable: the implementation contain no logging or console calls; the
 only diagnostic output is the two thrown `Error` messages described above.
 
 ## Platform Notes
@@ -498,8 +510,11 @@ only diagnostic output is the two thrown `Error` messages described above.
 - **AppKit / UIKit**: split the label into one `NSTextField`/`UILabel` (or
   `CATextLayer`) per character, frozen at its measured width in an
   `NSStackView`/`UIStackView` (or manual frame layout) the same way the web
-  split freezes span widths, and drive `transform`/`shadowRadius`/
-  `textColor` per frame from a `CADisplayLink`; gate the sweep on
+  split freezes span widths, and drive `transform`/`textColor` per frame from a
+  `CADisplayLink`, and blur with a `CIGaussianBlur` in the layer's
+  `CALayer.filters` on macOS (UIKit has no layer filters: use a snapshot
+  blurred with `CIGaussianBlur`, or a `UIVisualEffectView` whose effect is
+  animated); gate the sweep on
   `NSWorkspace.shared.accessibilityDisplayShouldReduceMotion` (AppKit) or
   `UIAccessibility.isReduceMotionEnabled` (UIKit) in place of the web's
   `prefers-reduced-motion` query.
@@ -509,7 +524,7 @@ only diagnostic output is the two thrown `Error` messages described above.
   `CompositionTarget.Rendering` handler (the closest analogue to
   `requestAnimationFrame`) writing each `TextBlock`'s `ScaleTransform`,
   a `Composition` `GaussianBlurEffect` via Win2D, and `Foreground` from a
-  linear channel interpolation matching **colour-interpolation**. Gate the
+  linear channel interpolation matching `#requirements/colour-interpolation`. Gate the
   sweep on `Windows.UI.ViewManagement.UISettings.AnimationsEnabled` (the
   Windows equivalent of `prefers-reduced-motion`) in place of the web's
   media query, and resolve the colour ramp from an
@@ -521,7 +536,7 @@ only diagnostic output is the two thrown `Error` messages described above.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/textlens/src/` | unverified |
+| web | `packages/web/packages/textlens/src/` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -556,22 +571,6 @@ only diagnostic output is the two thrown `Error` messages described above.
   review unnoticed, so an unresolvable colour is made to fail loudly, on
   the first frame, instead.
   **Approved**: pending
-- **Decision**: pausing the sweep (via `pointerenter`) rests every glyph
-  immediately but does not adjust the sweep's `startedAt` reference, so
-  `elapsed` keeps advancing in real time for the whole duration of the
-  pause.
-  **Rationale**: not stated in the source — the pause's own comment
-  addresses only that a glyph being read or about to be clicked should not
-  keep swelling and blurring, and says nothing about whether resuming
-  should catch up or continue smoothly. Compensating for paused time would
-  require tracking accumulated pause duration, which the source does not
-  do; the observable consequence is that a long hover can make the sweep
-  resume mid-leg, or on a different leg entirely, rather than where it
-  visually left off. This is carried here as a documented, deliberate-or-not
-  fact about the current implementation (see the Edge Cases entry "pause
-  outlives the clock"), not as a claim that it is the intended behavior.
-  **Approved**: pending
-
 ## Compliance
 
 | Check | Status | Category |
@@ -610,3 +609,4 @@ mechanism to limit or virtualize it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Downgraded the unchosen pause and no-ramp colour behaviors, moved the pause-clock decision to Edge Cases, made four requirements normative, added an inline-block requirement, stated that the ramp resolves in start(), fixed vector ranges and tags, added vectors 025-026 for useTextLens, corrected the blur platform note, and switched cross-references to fragments. |

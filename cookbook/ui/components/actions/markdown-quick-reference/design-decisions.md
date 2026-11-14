@@ -16,3 +16,6 @@ lightweight, non-modal reference should not trap focus or dim the page.
 even when a consumer shortens the visible label.
 **Approved**: pending
 
+**Decision**: Keep the markdown snippets fixed, but let a consumer override the labels, `title` and `ariaLabel`.
+**Rationale**: The snippets are literal markdown and must not diverge between consumers, while the labels are prose a locale must translate; tying both to one fixed constant makes the localization gap permanent. The trade-off is a wider props surface.
+**Approved**: pending

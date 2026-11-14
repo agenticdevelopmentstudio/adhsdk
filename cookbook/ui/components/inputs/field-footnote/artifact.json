@@ -4,11 +4,11 @@
     "id": "e9504a52-046c-4777-9704-20f611cf76f7",
     "title": "FieldFootnote",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4d9431a23964efe3",
+  "synced": "06e3b533ced9af7b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

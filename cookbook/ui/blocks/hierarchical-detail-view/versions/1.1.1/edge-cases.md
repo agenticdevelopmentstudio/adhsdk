@@ -1,0 +1,6 @@
+
+- **No provider mounted**: When `useHierarchicalMenuDetailView()` is called without a `HierarchicalDetailViewProvider` ancestor, the hook MUST return the default context value `false` without error.
+- **Cascading prop without cascading context**: When a consumer passes `disclosureStyle: "cascading"` while context is `false`, the component MUST map it to `disclosureStyle: "covered"` to avoid passing an invalid prop to `HierarchicalTopicDetail`.
+- **autoHideTopics in topic view**: When a consumer passes `autoHideTopics` while context is `false`, the prop passes through unchanged to `HierarchicalTopicDetail` in the rest props; `HierarchicalTopicDetail` ignores it as an unrecognized prop rather than erroring (see **cascade-only-props**).
+- **Prop surface tracks HierarchicalMenuDetail, not a true superset**: `HierarchicalDetailView`'s prop type is exactly `ComponentProps<typeof HierarchicalMenuDetail>`, which is not a superset of `HierarchicalTopicDetail`'s props. `HierarchicalTopicDetail`'s `surfaceScope` prop has no counterpart on `HierarchicalMenuDetail`, so passing `surfaceScope` to the router is a type error regardless of context value; every other topic-view prop that `HierarchicalMenuDetail` also declares passes through to whichever view is active, unmodified.
+

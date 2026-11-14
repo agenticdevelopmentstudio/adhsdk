@@ -4,11 +4,11 @@
     "id": "85ce8c4b-5233-48af-9268-30cddd4747f9",
     "title": "Accordion",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d1cba61cda5bd390",
+  "synced": "53dc658b40298c74",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

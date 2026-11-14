@@ -14,5 +14,4 @@
   caption renders the literal text `"NaN"`; a negative or non-integer value is compared
   and displayed exactly as given (e.g. `page={-3}` disables `Prev` since `-3 <= 1`, and
   `page={2.5}` renders `"Page 2.5 of 5"`). Passing well-formed integers is the host's
-  responsibility.
-
+  responsibility.- Clicking `Next` onto the last page disables the button that was just clicked, and `Prev` likewise on the first page. Because the pager uses the native `disabled` attribute and does not move focus, keyboard focus does not stay on a usable control and may fall back to the document; the pager does not manage focus at the edges.

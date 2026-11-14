@@ -4,7 +4,7 @@
     "id": "2a298bb0-d8af-40aa-8fec-42dd3b1d8f43",
     "title": "Partner Review",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,13 +23,15 @@
       "review",
       "data-model"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "79810488-c613-4f9b-af2a-4ba9d8ee1c26"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7130a0ecf609e947",
+  "synced": "040b0ca859dbdab6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

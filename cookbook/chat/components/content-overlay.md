@@ -2,11 +2,11 @@
 id: bd17a89e-aac9-475d-adcd-98b61d24f941
 title: "Content Overlay"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -35,7 +35,8 @@ ContentOverlay is a controlled React component that conditionally displays conte
 
 ## Behavioral Requirements
 
-- **closed-non-interactive**: When `open` is `false`, the overlay MUST be non-interactive (clicks/taps on the header, close button, and body do not invoke `onClose` or otherwise pass through) and MUST NOT be visible.
+- **closed-invisible**: When `open` is `false`, the overlay MUST NOT be visible.
+- **closed-non-interactive**: When `open` is `false`, the overlay MUST NOT respond to pointer input (clicks/taps on the header, close button, and body do not invoke `onClose` or otherwise pass through). This covers pointer input only: keyboard focus and Enter/Space activation of the close button are not blocked by the source, which is a known gap (see the non-modal Design Decision).
 - **apply-open-class**: The component MUST apply the `open` CSS class to the root element when the `open` prop is `true`.
 - **omit-open-class**: The component MUST NOT apply the `open` CSS class to the root element when the `open` prop is `false`.
 - **invoke-on-close**: The component MUST invoke the `onClose` callback function when the close button is clicked.
@@ -79,18 +80,19 @@ Traced to `packages/web/packages/chat/src/css/components/content-overlay.css`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| overlay-001 | closed-non-interactive | open=false | Header, close button, and body remain present but the root has no `open` class, `pointer-events: none` applies, and clicking the close button does not invoke `onClose` |
+| overlay-001 | closed-invisible, closed-non-interactive | open=false | Header, close button, and body remain present but the root has no `open` class, `opacity: 0` and `pointer-events: none` apply, and a pointer click on the close button does not invoke `onClose` |
 | overlay-002 | apply-open-class | open=true | Root div has class `pc-content-overlay open` |
 | overlay-003 | omit-open-class | open=false | Root div has class `pc-content-overlay` (no `open` class) |
 | overlay-004 | invoke-on-close | open=true; user clicks close button; onClose is a spy function | onClose is called exactly once |
-| overlay-005 | render-children | children="<div>test content</div>", open=true | Text "test content" appears in body element |
+| overlay-005 | render-children | children=a `<div>test content</div>` element, open=true | Text "test content" appears in body element |
 | overlay-006 | close-label | closeLabel="Custom Label", open=true | Close button displays "Custom Label" |
 | overlay-007 | default-close-label | closeLabel is undefined, open=true | Close button displays "← back" |
 | overlay-008 | custom-class-name | className="custom-style", open=true | Root div includes class `custom-style` |
 | overlay-009 | close-label | closeLabel="", open=true | Close button renders with empty text content; button remains present and clickable |
 | overlay-010 | invoke-on-close | open=true; user clicks close button 3 times in rapid succession; onClose is a spy function | onClose is called exactly 3 times, once per click (invocations are not merged or debounced) |
 | overlay-011 | render-children | children=null, open=true | Body element renders with no content and no thrown error |
-
+| overlay-012 | closed-non-interactive | open=false; the close button is focused and the user presses Enter | `onClose` is called once (keyboard activation is not blocked while closed; known gap) |
+| overlay-013 | custom-class-name | className is undefined, open=true | Root div class is exactly `pc-content-overlay open`, with no literal `undefined` in the class string |
 ## Edge Cases
 
 - **Null or undefined children**: When children is null or undefined, the body element renders empty. Expected behavior: no error, body is rendered and visible (empty). (MUST render without error)
@@ -111,6 +113,7 @@ Not applicable: ContentOverlay is a presentation component with no navigation or
 
 The `closeLabel` prop's value, when supplied by the caller, should be localized by the caller — ContentOverlay performs no translation itself. The default value used when `closeLabel` is omitted, `'← back'`, is a hardcoded English string with a decorative arrow glyph baked into the same text node; it is not sourced from a localization resource and does not adapt to locale. Callers targeting non-English locales MUST always pass a localized `closeLabel` rather than relying on the default. See **default-close-label**.
 
+The default `'← back'` bakes a left-pointing arrow into the text, which points the wrong way in right-to-left locales. The source does not mirror it. Callers in RTL locales should pass a localized `closeLabel` with the arrow omitted or mirrored, and a port may keep the arrow as a separate, mirrored icon rather than part of the text.
 ## Accessibility Options
 
 The component does not directly respond to system-level accessibility options. Increase Contrast and Differentiate Without Color are not addressed in the traced stylesheet. Reduce Motion is also not addressed: the root's `opacity` transition (see Appearance → Transitions) runs unconditionally, with no `prefers-reduced-motion` media query gating it.
@@ -135,19 +138,19 @@ Not applicable: The component does not emit log messages.
 
 - **React/Web**: Implemented in `packages/web/packages/chat/src/components/ContentOverlay.tsx`. The component is a stateless, controlled component that always mounts the header/close-button/body structure and toggles visibility and interactivity via CSS classes rather than conditional rendering, satisfying **closed-non-interactive** through `pointer-events`/`opacity` rather than unmounting. Visibility and styling are delegated to the stylesheet using class names `pc-content-overlay`, `pc-content-overlay-header`, `pc-content-overlay-close`, and `pc-content-overlay-body`.
 
-- **SwiftUI**: Implement as a `ZStack` layer that stays in the view hierarchy at all times (mirroring **closed-non-interactive**), not a `.sheet()` or `.fullScreenCover()`, both of which unmount when dismissed. Bind visibility to `open` with `.opacity(open ? 1 : 0)` and `.allowsHitTesting(open)`, matching the CSS `opacity`/`pointer-events` toggle. Structure a header row (a close `Button` bound to `onClose`, label from the `closeLabel` parameter, default `"← back"`) above a content area holding the children view. Animate the opacity change with a timing curve matching `cubic-bezier(0.16, 1, 0.3, 1)` over `0.3s`.
+- **SwiftUI**: Implement as a `ZStack` layer that stays in the view hierarchy at all times (mirroring **closed-non-interactive**), not a `.sheet()` or `.fullScreenCover()`, both of which unmount when dismissed. Bind visibility to `open` with `.opacity(open ? 1 : 0)` and `.allowsHitTesting(open)`, matching the CSS `opacity`/`pointer-events` toggle. Structure a header row (a close `Button` bound to `onClose`, label from the `closeLabel` parameter, default `"← back"`) above a content area holding the children view. Animate the opacity change with a timing curve matching `cubic-bezier(0.16, 1, 0.3, 1)` over `0.3s`. The web source leaves the closed layer reachable by keyboard and screen reader; a port should instead hide it while closed (`.accessibilityHidden(!open)`).
 
-- **Compose**: Implement as a `Box` that is always composed, not a `Dialog` or `Popup`, which unmount when dismissed. Drive visibility with `Modifier.graphicsLayer { alpha = if (open) 1f else 0f }` and gate interaction with a disabled-hit-testing modifier keyed on `open` (e.g. consuming pointer input without dispatching it) so the header/close button/body stay composed but non-interactive when closed. A header `Row` holds a close `Button` (`onClick = onClose`, text from the `closeLabel` parameter, default `"← back"`). Animate alpha with `animateFloatAsState` using a matching easing curve.
+- **Compose**: Implement as a `Box` that is always composed, not a `Dialog` or `Popup`, which unmount when dismissed. Drive visibility with `Modifier.graphicsLayer { alpha = if (open) 1f else 0f }` and gate interaction with `Modifier.pointerInput(open) { if (!open) awaitPointerEventScope { while (true) { awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() } } } }` so the closed layer swallows pointer input before its children see it, and hide it from accessibility while closed with `Modifier.semantics { if (!open) invisibleToUser() }` so the header/close button/body stay composed but non-interactive when closed. A header `Row` holds a close `Button` (`onClick = onClose`, text from the `closeLabel` parameter, default `"← back"`). Animate alpha with `animateFloatAsState` using a matching easing curve.
 
-- **AppKit / UIKit**: Add the overlay view as a permanent full-bleed subview of the window's content view — not a sheet, popover, or modal view controller, all of which remove the view when dismissed. On iOS (UIKit), toggle `view.alpha` and `view.isUserInteractionEnabled` from the `open` state. On macOS (AppKit), toggle `view.alphaValue` and override `hitTest(_:)` to return `nil` when closed (AppKit has no `isUserInteractionEnabled` equivalent). The header is a stack view with a close `UIButton`/`NSButton` whose action calls `onClose`, titled from the `closeLabel` parameter (default `"← back"`). Animate the alpha change over `0.3s` with a matching timing curve (`UIView.animate` / `NSAnimationContext`).
+- **AppKit / UIKit**: Add the overlay view as a permanent full-bleed subview of the window's content view — not a sheet, popover, or modal view controller, all of which remove the view when dismissed. On iOS (UIKit), toggle `view.alpha` and `view.isUserInteractionEnabled` from the `open` state. On macOS (AppKit), toggle `view.alphaValue` and override `hitTest(_:)` to return `nil` when closed (AppKit has no `isUserInteractionEnabled` equivalent). The header is a stack view with a close `UIButton`/`NSButton` whose action calls `onClose`, titled from the `closeLabel` parameter (default `"← back"`). Animate the alpha change over `0.3s` with a matching timing curve (`UIView.animate` / `NSAnimationContext`). The web source leaves the closed layer reachable by keyboard and screen reader; a port should instead hide it while closed (on iOS, `accessibilityElementsHidden = !open`; on macOS, keep it out of the key-view loop and accessibility hierarchy).
 
-- **WinUI 3**: Implement as a `Grid` overlay layer that stays in the visual tree alongside the page's main content — not a `ContentDialog`, which is a true modal. Bind `Opacity` and `IsHitTestVisible` to the `open` state so the header/close button/body remain in the tree but are invisible and non-interactive when closed, mirroring the CSS `opacity`/`pointer-events` behavior. The header is a `Grid`/`StackPanel` containing a close `Button` whose `Click` event calls `onClose`, with `Content` bound to the close-label parameter (default `"← back"`). Animate `Opacity` with a `DoubleAnimation` using a `KeySpline` matching `cubic-bezier(0.16, 1, 0.3, 1)`.
+- **WinUI 3**: Implement as a `Grid` overlay layer that stays in the visual tree alongside the page's main content — not a `ContentDialog`, which is a true modal. Bind `Opacity` and `IsHitTestVisible` to the `open` state so the header/close button/body remain in the tree but are invisible and non-interactive when closed, mirroring the CSS `opacity`/`pointer-events` behavior. The header is a `Grid`/`StackPanel` containing a close `Button` whose `Click` event calls `onClose`, with `Content` bound to the close-label parameter (default `"← back"`). Animate `Opacity` with a `DoubleAnimation` using a `KeySpline` matching `cubic-bezier(0.16, 1, 0.3, 1)`. The web source leaves the closed layer reachable by keyboard and screen reader; a port should instead set `IsTabStop=false` on the close button while closed and keep the layer out of the automation tree.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/components/ContentOverlay.tsx` | unverified |
+| web | `packages/web/packages/chat/src/components/ContentOverlay.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -160,7 +163,7 @@ Not applicable: The component does not emit log messages.
 **Approved**: pending
 
 **Decision**: The overlay is intentionally non-modal: it always stays mounted and toggles visibility purely through CSS (`opacity`/`pointer-events`) rather than conditional mounting or `aria-hidden`/`inert`, and it defines no ARIA dialog role, no focus trap, no Escape-to-close, and no focus move on open or focus return on close.
-**Rationale**: Keeps the component a lightweight, always-present layer suited to being toggled behind a persistent surface such as chat. The tradeoff is that the closed state's header, close button, and body remain keyboard-focusable and screen-reader-reachable (see **focus-management** in Compliance) until the source adds `inert`/`aria-hidden` gating.
+**Rationale**: Keeps the component a lightweight, always-present layer suited to being toggled behind a persistent surface such as chat. The tradeoff is that the closed state's header, close button, and body remain keyboard-focusable and screen-reader-reachable (see the [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) check in Compliance) until the source adds `inert`/`aria-hidden` gating.
 **Approved**: pending
 
 ## Compliance
@@ -168,7 +171,7 @@ Not applicable: The component does not emit log messages.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | passed | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
@@ -178,14 +181,15 @@ Not applicable: The component does not emit log messages.
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-The close button is a native `<button>` (keyboard-navigable, dynamic-type via `rem` sizing), but the source defines no fallback accessible name for an empty `closeLabel`, no `prefers-reduced-motion` gating for the root's opacity transition, no explicit touch-target sizing or resolvable contrast values (colors depend on unresolved `--text-muted`/`--accent` custom properties), no ARIA dialog role for the overlay container, and no focus containment when closed (see the non-modal Design Decision) — and the default `closeLabel` of `'← back'` is a hardcoded, non-externalized English string. separation-of-concerns passes because `ContentOverlay.tsx` is a stateless controlled component that toggles CSS classes from its `open` prop with no business logic of its own, and unit-test-coverage passes because `ContentOverlay.test.tsx` exercises the open/closed classes, the close callback, custom and default labels, and rendered children with meaningful assertions.
+The close button is a native `<button>` (dynamic-type via `rem` sizing), but keyboard-navigable is partial because a closed, invisible overlay keeps its close button in the tab order (see the non-modal Design Decision), and the source defines no fallback accessible name for an empty `closeLabel`, no `prefers-reduced-motion` gating for the root's opacity transition, no explicit touch-target sizing or resolvable contrast values (colors depend on unresolved `--text-muted`/`--accent` custom properties), no landmark or region label on the overlay container (it is deliberately non-modal, so it has no dialog role), and no focus containment when closed (see the non-modal Design Decision) — and the default `closeLabel` of `'← back'` is a hardcoded, non-externalized English string. separation-of-concerns passes because `ContentOverlay.tsx` is a stateless controlled component that toggles CSS classes from its `open` prop with no business logic of its own, and unit-test-coverage is partial because `ContentOverlay.test.tsx` asserts only the `open` class when open, its absence when closed, that `onClose` is called on a click, and that children render; it does not assert the closed-state `pointer-events`, either label (the default is only matched incidentally by a `/back/` lookup), an empty label, rapid clicks, null children or `className` (vectors overlay-001, 006 to 011).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Lint fixes: split closed-invisible from closed-non-interactive and narrowed the latter to pointer input, downgraded keyboard-navigable and unit-test-coverage to partial, rebased semantic-markup on a real gap, linked the focus-management check, added keyboard and className vectors, fixed overlay-005, gave native ports accessibility-hiding guidance and a concrete Compose modifier, and noted RTL arrow mirroring. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and promoted className to MUST; added tags and a related link to persona-chat; reformatted Design Decisions and added one documenting the non-modal tradeoff; built the Compliance table; resolved the missing-onClose edge-case contradiction; corrected the Reduce Motion and Responsive claims; rewrote the native Platform Notes as full-bleed overlays instead of modal dialogs; added test vectors for empty label, rapid clicks, and null children; and reworded the render-structure requirement and Localization/Accessibility Options sections around observable behavior |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Filled Appearance and States from content-overlay.css; dropped the review marker |

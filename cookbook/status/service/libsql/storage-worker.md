@@ -2,7 +2,7 @@
 id: 020cc0f0-04e9-4d03-8796-76027fb1131f
 title: "Status Server Storage Worker"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -14,9 +14,15 @@ summary: "Database-thread entry that owns the one libSQL connection, migrates it
 platforms:
   - typescript
   - web
-tags: []
-depends-on: []
-related: []
+tags:
+  - storage
+  - libsql
+  - worker-threads
+  - concurrency
+depends-on:
+  - e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d
+related:
+  - dccad63a-f56e-4c97-b182-8cdeb7c1a983
 references: []
 approved-by: ""
 approved-date: ""
@@ -26,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-The storage worker is the entry module of the status server's database thread. It runs inside a `worker_threads` `Worker` spawned by `startStorageThread` (in `storage-thread.ts`). It opens the ONE connection to the database file, tunes it, applies pending migrations, wraps the connection as a `Storage` port, and serves that port to every thread that attaches over a `MessagePort`. Every other thread (the API thread, the monitor worker) reaches the database only as a client of this thread. Per the source comment, this file is "Glue only": spawn and attach policy live in `storage-thread.ts`, the queue and wire protocol live in `storage/remote.ts`, and the connection helpers live in `libsql/client.ts`. The module has no exports; its only outputs are a single `StorageWorkerReply` posted to the parent and the attach handling described below.
+The storage worker is the entry module of the status server's database thread. It runs inside a `worker_threads` `Worker` spawned by `startStorageThread` (in `storage-thread.ts`, see Storage Thread, [adhsdk.ingredient.status.service.libsql.storage-thread](cookbook:dccad63a-f56e-4c97-b182-8cdeb7c1a983)). It opens the ONE connection to the database file, tunes it, applies pending migrations, wraps the connection as a `Storage` port, and serves that port to every thread that attaches over a `MessagePort`. Every other thread (the API thread, the monitor worker) reaches the database only as a client of this thread. Per the source comment, this file is "Glue only": spawn and attach policy live in `storage-thread.ts`, the queue and wire protocol live in `storage/remote.ts` (Storage Remote, [adhsdk.ingredient.status.service.storage.remote](cookbook:e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d)), and the connection helpers live in `libsql/client.ts`. The module has no exports; its only outputs are a single `StorageWorkerReply` posted to the parent and the attach handling described below.
 
 ## Behavioral Requirements
 
@@ -41,7 +47,7 @@ The storage worker is the entry module of the status server's database thread. I
 
 - **startup-order**: The module MUST run these steps in this order and each step MUST complete before the next begins: `openLibsql(conn)`, `tuneDbForConcurrency(db, conn)`, `migrateDb(db)`, `createStorageServer(createLibsqlStorage(db, conn))`, attach the `message` listener, post the ready reply.
 - **single-connection**: The module MUST open exactly one database connection, via one `openLibsql` call, and MUST pass that same connection to tuning, migration and `createLibsqlStorage`.
-- **tune-before-migrate**: The module MUST apply `tuneDbForConcurrency` before `migrateDb`. For an embedded `file:` URL, `tuneDbForConcurrency` sets `PRAGMA journal_mode = WAL`, `PRAGMA busy_timeout = 5000` and `PRAGMA synchronous = NORMAL`; for any other URL it returns without change (these behaviors belong to `client.ts`).
+- **tune-before-migrate**: The module MUST apply `tuneDbForConcurrency` before `migrateDb`. What `tuneDbForConcurrency` does to the connection belongs to `libsql/client.ts`, not to this module.
 - **self-migrate-on-boot**: The module MUST call `migrateDb(db)` with the default migrations folder on every boot, for every connection kind, per the source comment "embedded-file deployments self-migrate on boot". `migrateDb` is idempotent, because drizzle skips migrations already recorded in `__drizzle_migrations`.
 - **storage-composition**: The module MUST build the served `Storage` with `createLibsqlStorage(db, conn)` and MUST wrap it with `createStorageServer` exactly once, so every attached port shares one server and therefore one FIFO queue.
 - **ready-after-listener**: The module MUST attach the `message` listener on the parent port before it posts `{ ready: true }`, so a listener is already in place when the host sees the ready reply.
@@ -50,23 +56,20 @@ The storage worker is the entry module of the status server's database thread. I
 ### Startup failure
 
 - **startup-failure-reply**: When any startup step (open, tune, migrate, storage or server construction) throws or rejects, the module MUST post `{ ready: false, error: <message> }` to the parent port, where `<message>` is `err.message` for an `Error` and `String(err)` for any other thrown value.
-- **startup-failure-no-listener**: When startup fails before the listener step, the module MUST NOT attach the `message` listener, so no attach request is served.
-- **startup-failure-no-exit**: The module MUST NOT call `process.exit`, `port.close` or any other termination on startup failure; the module does nothing to end the worker after posting the failure reply (it attaches no listener either), and ending it is the host's decision.
-- **startup-failure-no-log**: The module MUST NOT log a startup failure; the posted reply is the only signal. The host (`startStorageThread`) turns it into `Error("storage thread failed to start: <error>")`.
+- **startup-failure-no-listener**: When startup fails, the module MUST NOT attach the `message` listener, so no attach request is served.
+- **startup-failure-no-exit**: Current behavior: on startup failure the module calls no `process.exit`, `port.close` or other termination; it does nothing to end the worker after posting the failure reply (it attaches no listener either), and ending it is the host's decision.
+- **startup-failure-no-log**: Current behavior: the module does not log a startup failure; the posted reply is the only signal. The host (`startStorageThread`) turns it into `Error("storage thread failed to start: <error>")`.
 
 ### Serving
 
 - **attach-request**: For each message received on the parent port, the module MUST treat it as a `StorageWorkerRequest` (`{ attach: MessagePort }`) and call `server.serve(msg.attach)` once.
-- **attach-no-validation**: The module MUST NOT validate the shape of a received message; the `StorageWorkerRequest` type is the documented contract, and the host's `connect()` is the only sender.
+- **attach-no-validation**: Current behavior: the module does not validate the shape of a received message; the `StorageWorkerRequest` type is the documented contract, and the host's `connect()` is the only sender.
 - **attach-multiplicity**: The module MUST accept any number of attach requests over the life of the thread, one per connecting thread, each served by the same server and queue.
-- **one-at-a-time-queue**: Every Storage call from every attached port MUST be run one at a time in arrival order (FIFO) on the single connection, per the contract of `createStorageServer` in `storage/remote.ts`; a call's statements MUST NOT interleave with another call's.
-- **attach-reply**: On each attach the server MUST post a `{ shape }` hello (the method tree of the `Storage`) on the attached port; a client resolves once it has received it.
-- **error-fidelity**: A Storage call that throws MUST reach the caller as an `Error` carrying `name`, `message`, `stack`, `code` (as a string) and a `cause` chain of at most 4 further levels, so callers that match on `code` or the cause chain (for example `isUniqueViolation`) still work. This is `createStorageServer` behavior that the worker exposes.
-- **slow-call-warning**: A single Storage call that takes 2000 ms or more MUST be logged by the server with `console.warn` as `[storage] slow call <path> <ms>ms`, because it holds up the whole queue. This is `createStorageServer` behavior that the worker exposes.
+- **serving-is-remote**: Everything about how an attached port is served MUST be as Storage Remote ([adhsdk.ingredient.status.service.storage.remote](cookbook:e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d)) specifies for `createStorageServer`: `single-queue` (one call at a time, in arrival order, with no interleaving), `shape-handshake` (the `{ shape }` hello on attach), `error-flatten` (errors that keep their detail) and `slow-call-log` (the 2000 ms warning). This module adds none of that behavior; it only wraps the storage once (`storage-composition`).
 
 ### Runtime failure
 
-- **post-startup-throws-uncaught**: The module has no handler for a throw inside its `message` listener after startup; such a throw is an uncaught exception in the worker thread, which ends the worker and surfaces on the host as the Worker's `error` and `exit` events (`startStorageThread` forwards both to `opts.onExit`).
+- **post-startup-throws-uncaught**: The host MUST treat a throw inside the worker's `message` listener after startup as the end of the worker: the module has no handler for it, so it is an uncaught exception in the worker thread, which ends the worker and surfaces on the host as the Worker's `error` and `exit` events (`startStorageThread` forwards both to `opts.onExit`).
 - **no-restart**: The module MUST NOT reopen or retry the connection after startup; recovery from a dead database thread is the host's responsibility.
 
 ## Appearance
@@ -86,23 +89,21 @@ Not applicable — this is a database-thread entry point, not a visual component
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | status-server-libsql-storage-worker-001 | startup-order, self-migrate-on-boot, ready-reply, attach-request, attach-multiplicity | Spawn the built worker with `workerData = { db: { url: "file:<tmpdir>/status.db" } }` on a fresh directory, wait for the first message, then post two `{ attach: port }` requests | First message deep-equals `{ ready: true }`; the file is created and migrated; each attached port receives a `{ shape }` hello; a user insert through one port is readable through the other — `storage-thread.int.test.ts` › "migrates, serves two ports, and carries driver errors intact" (result `foundSame: true`, `createdAtIsDate: true`) |
-| status-server-libsql-storage-worker-002 | error-fidelity | Through a served port, insert the same unique value twice (for example a duplicate email) | The second call rejects with an Error whose `message`/`cause` chain makes `isUniqueViolation` return `true` — `storage-thread.int.test.ts` (result `dupChain`) |
-| status-server-libsql-storage-worker-003 | one-at-a-time-queue, storage-composition | A monitor worker handed only a storage port runs one monitor cycle against the worker | The cycle completes with `cycle: "ok"` and the worker reports `exits: []` (no thread died) — `storage-thread.int.test.ts` |
+| status-server-libsql-storage-worker-002 | serving-is-remote | Through a served port, insert the same unique value twice (for example a duplicate email) | The second call rejects with an Error whose `message`/`cause` chain makes `isUniqueViolation` return `true` — `storage-thread.int.test.ts` (result `dupChain`) |
+| status-server-libsql-storage-worker-003 | serving-is-remote, storage-composition | A monitor worker handed only a storage port runs one monitor cycle against the worker | The cycle completes with `cycle: "ok"` and the worker reports `exits: []` (no thread died) — `storage-thread.int.test.ts` |
 | status-server-libsql-storage-worker-004 | requires-db-url, precondition-throws-are-unreplied | Spawn the worker with `workerData = {}` | The Worker emits `error` with message `storage worker spawned without workerData.db.url (see StorageWorkerData)`; no message is posted to the parent — traced to the module's top-level guard; no test given |
 | status-server-libsql-storage-worker-005 | requires-db-url | Spawn the worker with `workerData = { db: { url: "" } }` | Same `error` event and message as vector 004 (an empty url is falsy) — traced directly to the guard; no test given |
 | status-server-libsql-storage-worker-006 | requires-worker-context | Import the module on the main thread (`parentPort` is null) | Import throws `storage worker must be spawned via worker_threads (see storage-thread.ts)` — traced directly to the guard; no test given |
 | status-server-libsql-storage-worker-007 | startup-failure-reply, startup-failure-no-listener, startup-failure-no-exit | Spawn the worker with `workerData = { db: { url: "file:/nonexistent-dir/x/status.db" } }` so opening or tuning throws | First message is `{ ready: false, error: <the Error's message> }`; later attach requests receive no `{ shape }` hello; the module does not call exit or close — traced to the `catch` branch; no test given |
-| status-server-libsql-storage-worker-008 | startup-failure-reply | A startup step throws a non-Error value, for example the string `"boom"` | Reply is `{ ready: false, error: "boom" }` — traced to `String(err)` in the `catch` branch; no test given |
-| status-server-libsql-storage-worker-009 | tune-before-migrate | Spawn with a `file:` URL, then read `PRAGMA journal_mode` and `PRAGMA busy_timeout` through the database | `wal` and `5000` — traced to `tuneDbForConcurrency`; no test given |
-| status-server-libsql-storage-worker-010 | tune-before-migrate | Spawn with a non-`file:` URL (`libsql://...`) | No PRAGMA is issued by tuning and migration still runs — traced to the early return in `tuneDbForConcurrency`; no test given |
-
+| status-server-libsql-storage-worker-008 | startup-failure-reply | A startup step throws a non-Error value; the module has no seam to inject one, so trigger it with a module mock of `openLibsql` that throws the string `"boom"` (not runnable against the built worker without that mock) | Reply is `{ ready: false, error: "boom" }` — traced to `String(err)` in the `catch` branch; no test given |
+| status-server-libsql-storage-worker-009 | serving-is-remote, attach-multiplicity | Two attached ports each send a call at the same time | The calls complete one after the other in arrival order (FIFO), with no interleaving of their statements; derived from Storage Remote's `single-queue`, no test given |
 ## Edge Cases
 
 - **Null and empty input**: `workerData` undefined, `workerData.db` undefined, or `db.url` equal to `""` MUST throw the `requires-db-url` error at load, with no reply posted. An `authToken` that is absent is valid and is passed through to `openLibsql` as `undefined` — MUST.
-- **Boundary values**: A Storage call at or above 2000 ms MUST log the slow-call warning; one below 2000 ms MUST NOT. The `busy_timeout` of 5000 ms bounds how long a lock wait spins on the database thread — MUST (set by `tuneDbForConcurrency`).
+- **Boundary values**: The slow-call warning at 2000 ms and the `busy_timeout` that bounds a lock wait belong to Storage Remote ([adhsdk.ingredient.status.service.storage.remote](cookbook:e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d), `slow-call-log`) and to `tuneDbForConcurrency` in `libsql/client.ts`.
 - **Concurrent access**: Many threads can attach and call at once. The server serialises every call through one FIFO queue on the one connection, so calls never contend for a lock and never interleave their statements — MUST. Within the worker thread itself JavaScript is single-threaded, so the `message` listener cannot race itself.
 - **Error states**: A failed open, tune, migrate or construction posts the `ready: false` reply, attaches no listener and does not end the worker itself — MUST. A Storage call that throws is returned to its caller as a wire error and does not stop the queue — MUST. A result the structured clone cannot carry is reported to the caller as an error reply rather than left hanging — MUST (`createStorageServer`). A malformed attach message, or any throw in the listener after startup, is an uncaught exception that ends the worker, and the host's `onExit` is the only recovery path — this is the behavior of the code, not an additional guarantee.
-- **Offline or disconnected state**: For an embedded `file:` URL there is no network to lose. For a remote libSQL URL, a failure to reach the server during tuning-free open or migration surfaces through the startup failure path; a failure during a later Storage call surfaces to that call's caller as a wire error. The worker performs no reconnection or retry of its own — MUST NOT.
+- **Offline or disconnected state**: For an embedded `file:` URL there is no network to lose. For a remote libSQL URL, a failure to reach the server during open or migration (tuning is a no-op for remote URLs) surfaces through the startup failure path; a failure during a later Storage call surfaces to that call's caller as a wire error. The worker performs no reconnection or retry of its own — MUST NOT.
 - **Port lifetime**: An attached port whose thread exits stops sending; the server removes its `message` listener when the port closes and drops any reply addressed to it — MUST (`createStorageServer`).
 
 ## Configuration
@@ -161,7 +162,7 @@ Subsystem: none | Category: `storage`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/libsql/storage-worker.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/libsql/storage-worker.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -200,3 +201,4 @@ Subsystem: none | Category: `storage`
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Restated three MUST NOT rules as current behavior, replaced the queue, hello, error and slow-call requirements with one dependency on Storage Remote, dropped the client.ts vectors, added a FIFO vector, added depends-on, related and tags, and clarified the startup and offline wording. |

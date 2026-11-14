@@ -4,13 +4,13 @@
     "id": "932449c9-b57f-4e2c-992a-1e27584742b6",
     "title": "ColorTheme",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
     "modified": "2026-11-14",
-    "author": "mfullerton",
-    "copyright": "2026 mfullerton",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
     "license": "MIT",
     "summary": "The app-wide color theme value type: terminal palette, identity and lock flags, semantic role overrides, typography and per-feature options, with tolerant Codable decoding.",
     "platforms": [
@@ -24,15 +24,22 @@
       "model",
       "codable"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "ad5bae6b-0172-4cd4-a4b7-297eb58eb28d",
+      "ccc0d121-4927-4a83-b0e5-337116edebc0",
+      "794a60b5-7833-4dc3-a7b9-8280333cde8b"
+    ],
     "related": [
-      "0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6"
+      "0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6",
+      "1f80f43d-5aa4-42cf-bc3e-fb742662b615",
+      "62abe97d-75f7-48c0-83cd-6df02a48515e",
+      "d15bba09-4574-4fd1-93a0-f7d2cccd04f2"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e19f0bc7aae5907e",
+  "synced": "2774764047b3142c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

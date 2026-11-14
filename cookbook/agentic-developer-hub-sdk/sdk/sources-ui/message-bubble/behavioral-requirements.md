@@ -7,10 +7,10 @@
 - **failure-announced-on-web**: On Web, the component MUST place the failure reason inside a `role="alert"` container so assistive technology announces it automatically when it appears.
 - **theme-by-sender-role**: The component MUST apply the appropriate semantic theme colors based on whether the sender is the local user or a persona.
 - **size-to-content**: The component's bubble width MUST NOT exceed the caller-provided maximum width; text MUST wrap rather than overflow horizontally at that width, and the bubble MUST shrink to fit shorter content.
-- **flat-theme-fill**: When a theme provides no fill (alpha ≤ 0.001), the component MUST render as a flat line (no background, no padding, no corner radius), even when a bubble border role is declared.
+- **flat-theme-fill**: When a theme provides no fill (alpha ≤ 0.001), the component MUST render as a flat line (no background, no padding, no corner radius), and MUST suppress any declared bubble border role, except that the failure border of **failed-state-indicator** still renders.
 - **optional-theme-border**: When a theme declares a bubble border role with visible alpha and the bubble is neither flat nor in a failed state, the component MUST apply a 1pt border in the declared color.
 - **rich-content-rendering**: The component MAY render rich content items (images, etc.) inline after the text.
-- **rich-content-load-gating**: On platforms that preload rich-content images, the component MUST defer rendering the entire bubble, including its text, until every image has finished loading.
+- **rich-content-load-gating**: On Web, the only one of the three implementations that renders rich-content images, the component MUST defer rendering the entire bubble, including its text, until every image has finished loading.
 - **detail-indicator**: The component MAY display an optional detail indicator (e.g., arrow) controlled by the caller, and MUST invoke the caller-provided callback when the indicator is activated.
 - **tool-call-pills**: The component MAY render an inline status pill for each tool call attached to the message (started, completed, or failed).
 - **avatar-slot-rendered**: The component MUST render an avatar slot for every message, even when the sender has no avatar image, so that a transcript's left edge stays aligned.

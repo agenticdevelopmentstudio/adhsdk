@@ -2,11 +2,11 @@
 id: 60a907a2-2cc8-4c0c-bb54-3b0516d280b6
 title: "Facet Menu"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,9 +18,15 @@ tags:
   - filter
   - multi-select
   - menu
-depends-on: []
+depends-on:
+  - c61a220c-b63e-4dcd-a12b-715de20f7b5d
+  - f3c25236-d72f-4a7b-839a-b7f335b3acd0
+  - a105b6cf-307d-4156-8b73-468f627f3c9b
 related: []
-references: []
+references:
+  - https://unicode-org.github.io/icu/userguide/format_parse/messages/
+  - https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
+  - https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html
 approved-by: ""
 approved-date: ""
 ---
@@ -42,7 +48,7 @@ A facet menu is a multi-select filter control presented as a button with a popov
 - **render-options**: The component MUST render each option as a checkbox with an associated label, derived from the options array.
 - **label-transform**: The component MAY accept a `labelOf` function to transform option values into display labels; if not provided, the option value MUST be displayed as-is.
 - **toggle-on-checkbox-click**: The component MUST add or remove an option from the selection when its checkbox is toggled (by click or by keyboard activation), invoking the `onChange` callback with the updated selection.
-- **synchronous-selection-update**: Each `onChange` call MUST be computed from the current `selected` prop at the moment of the toggle. The component holds no selection state of its own, so the host MUST apply each `onChange` to `selected` before the next toggle is processed, or rapid toggles will each compute from the same stale `selected` value and overwrite one another instead of accumulating.
+- **compute-from-current-prop**: Each `onChange` call MUST be computed from the current `selected` prop at the moment of the toggle. The component holds no selection state of its own and does not accumulate toggles between prop updates.
 - **render-all-button**: The component MUST render an "All" quick-select button that selects every option and invokes `onChange`.
 - **disable-all-button**: The component MUST disable the "All" button when all options are already selected.
 - **render-none-button**: The component MUST render a "None" quick-select button that clears all selections and invokes `onChange`.
@@ -78,8 +84,8 @@ A facet menu is a multi-select filter control presented as a button with a popov
 - **Option Checkboxes**:
   - Checkbox: 16×16px
   - Label text: 14px (small body text style), rendered inline with checkbox
-  - Row gap: 8px between checkbox and label
-  - Row padding: 2px vertical (0.125rem) per row
+  - Inline gap: 8px between checkbox and label
+  - Row padding: 2px vertical (0.125rem) per row, giving a row about 20px tall; on touch platforms each row MUST have a minimum height of 44px (the web reference implementation does not set one, see the touch-target check in Compliance)
   - Cursor: pointer on label (entire row is clickable)
 
 ## States
@@ -87,7 +93,7 @@ A facet menu is a multi-select filter control presented as a button with a popov
 | State | Appearance Change |
 |-------|------------------|
 | Trigger Default | Ghost button, chevron down, no count if selection empty |
-| Trigger Disabled | Opacity reduced, pointer-events disabled (when options.length === 0) |
+| Trigger Disabled | Opacity reduced, non-interactive (when options.length === 0) |
 | Trigger Hover | Platform-standard ghost button hover (if enabled) |
 | Trigger Pressed | Platform-standard ghost button pressed |
 | Popover Open | Popover visible, stacked "All"/"None" buttons above scrollable option list |
@@ -108,14 +114,14 @@ A facet menu is a multi-select filter control presented as a button with a popov
 - **Checkbox Labels**: Each checkbox MUST have an associated label via `<label>` wrapping. The label text is derived from the option value or the `labelOf` function; the base checkbox component points `aria-labelledby` at the wrapping `<label>` automatically.
 - **Checkbox State**: Each checkbox MUST have `aria-checked` set to match the checked state (the checkbox is an ARIA-pattern control, not a native `<input type="checkbox">`, so this state is not implicit).
 - **Popover Accessibility**: The popover MUST be exposed with `role="dialog"` (provided by the underlying Popover component) — a non-modal disclosure surface, not a menu. Focus SHOULD move to the first interactive element in the popover (per platform conventions).
-- **Keyboard Navigation**: The popover MUST be navigable by keyboard (Tab moves between checkboxes and buttons; Enter or Space toggles a checkbox); the Escape key or clicking outside SHOULD close the popover without altering the selection (see **preserve-selection-state**).
+- **Keyboard Navigation**: The popover MUST be navigable by keyboard (Tab moves between checkboxes and buttons; Enter or Space toggles a checkbox); the Escape key MUST close the popover, and clicking outside SHOULD close it, without altering the selection (see **preserve-selection-state**).
 - **Touch Target**: All interactive elements (trigger button, checkboxes, quick-select buttons) MUST have a touch target of at least 44×44px on touch-enabled platforms; on web with mouse/pointer input, 16×16px is acceptable for checkboxes if the associated label is large enough to encompass a 44×44px target.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| facet-001 | render-trigger, omit-count-when-empty, empty-selection-semantics | options: ["A", "B"], selected: empty | Trigger displays "Label" only, no count; the component performs no filtering logic of its own |
+| facet-001 | render-trigger, omit-count-when-empty, empty-selection-semantics | options: ["A", "B"], selected: empty | Trigger displays "Label" only, no count; `onChange` is never called on render |
 | facet-002 | render-trigger, omit-count-when-empty | options: ["A", "B"], selected: {"A"} | Trigger displays "Label (1)" |
 | facet-003 | disable-trigger | options: [], selected: empty | Trigger button's `disabled` attribute is `true`; clicking it does not open the popover |
 | facet-004 | show-chevron | options: ["A", "B"], selected: empty | ChevronDown icon is visible and aria-hidden="true" |
@@ -139,16 +145,17 @@ A facet menu is a multi-select filter control presented as a button with a popov
 | facet-022 | stale-selection-values | options: ["B"], selected: {"A", "B"} (A stale), popover opened | Only checkbox "B" is rendered; trigger displays "Label (2)" |
 | facet-023 | stale-selection-values, disable-all-button | options: ["B", "C"], selected: {"A", "B"} ("A" stale, "C" unselected), click "All" | "All" is enabled (not every current option is selected); onChange called with {"B", "C"} (stale "A" dropped) |
 | facet-024 | stale-selection-values | options: ["B"], selected: {"A", "B"}, click "None" | onChange called with an empty Set (stale "A" dropped) |
-| facet-025 | synchronous-selection-update | options: ["A", "B"], selected: {"A"}, checkbox "B" clicked twice in immediate succession with no intervening prop update | onChange is invoked twice, each call computed from selected={"A"} (both calls yield {"A", "B"}); the component does not accumulate a running selection internally |
-
+| facet-025 | compute-from-current-prop | options: ["A", "B"], selected: {"A"}, checkbox "B" clicked twice in immediate succession with no intervening prop update | onChange is invoked twice, each call computed from selected={"A"} (both calls yield {"A", "B"}); the component does not accumulate a running selection internally |
+| facet-026 | stale-selection-values, disable-all-button, disable-none-button | options: ["B"], selected: {"A", "B"} ("A" stale, every current option selected), popover opened | "All" is disabled; "None" is enabled and, when clicked, calls onChange with an empty Set |
+| facet-027 | label-transform | options: ["a"], labelOf: () => "", selected: empty | One checkbox is rendered with an empty label text; no error is thrown |
 ## Edge Cases
 
 - **Empty options array**: When `options.length === 0`, the trigger MUST be disabled and the popover MUST NOT open. The selection is unchanged (even if it was previously populated).
-- **Selected items not in options**: If the `selected` set contains a value not present in the current `options` array, that value MUST remain in the selection and continue to count toward the trigger's badge, but MUST NOT be rendered as a checkbox in the popover. (This can occur if options are dynamically filtered and a selected value is removed from the list.) See **stale-selection-values** for how "All" and "None" resolve this: "None" always replaces the selection outright, dropping the stale value; "All" does the same, but only while it is enabled — if every current option is already selected alongside the stale value, **disable-all-button** disables "All", and only "None" (or a host-driven `onChange`) can drop the stale value. Because the component is controlled, a host can also clear a stale value directly through `onChange` without going through the UI — which matters because the trigger (and therefore the popover) is disabled whenever `options` is empty.
+- **Selected items not in options**: If the `selected` set contains a value not present in the current `options` array, that value MUST remain in the selection and continue to count toward the trigger's badge, but MUST NOT be rendered as a checkbox in the popover. (This can occur if options are dynamically filtered and a selected value is removed from the list.) How "All" and "None" resolve this is specified once, in `#requirements/stale-selection-values`.
 - **All selected after filtering**: If options are filtered and all remaining options become selected, the "All" button MUST be disabled.
-- **Rapid onChange calls**: Multiple rapid checkbox clicks MUST result in multiple separate `onChange` calls; no debouncing or coalescing is performed by the component. See **synchronous-selection-update**: each call is computed from whatever `selected` prop the component currently has, so clicks made before the host re-renders with the previous call's result will each compute from the same starting selection rather than building on each other.
-- **LabelOf function returns empty string**: If `labelOf(option)` returns an empty string, the checkbox is rendered with no visible label text (the label container is still present for accessibility but empty).
-- **Very long option labels**: Long labels MUST wrap or truncate gracefully within the popover width; no minimum or maximum label length is enforced.
+- **Rapid onChange calls**: Multiple rapid checkbox clicks MUST result in multiple separate `onChange` calls; no debouncing or coalescing is performed by the component. See **compute-from-current-prop**: each call is computed from whatever `selected` prop the component currently has, so clicks made before the host re-renders with the previous call's result will each compute from the same starting selection rather than building on each other. Host note: the host MUST apply each `onChange` to `selected` before the next toggle is processed.
+- **LabelOf function returns empty string**: If `labelOf(option)` returns an empty string, the checkbox is rendered with no visible label text (the label container is still present for accessibility but empty); a host SHOULD NOT return an empty label.
+- **Very long option labels**: Long labels MUST wrap at word boundaries onto additional lines within the popover width and MUST NOT be truncated; no minimum or maximum label length is enforced. A single unbreakable word wider than the list scrolls horizontally inside the option list.
 
 ## Configuration
 
@@ -206,7 +213,7 @@ Not applicable: FacetMenu is a UI component and does not perform logging. Errors
 
 - **Compose**: Implement with a custom, non-dismissing dropdown surface (e.g. a themed `Popup` or `DropdownMenu` composable configured to stay open on item selection) anchored to the trigger `Button` — not `ExposedDropdownMenuBox`, which is a single-select text-field pattern that closes on pick. Render "All"/"None" as `Button`s above a `Column` of checkbox rows constrained with `Modifier.heightIn(max = 256.dp)` and vertical scrolling.
 
-- **React/Web**: Implement using this package's `Popover`/`PopoverTrigger`/`PopoverContent`, `Button`, and `Checkbox` components, as shown in `blocks/facet-menu.tsx`: the trigger is a ghost `Button` (disabled when `options` is empty); the popover content holds "All"/"None" ghost `Button`s above a vertically scrollable (`max-h-64 overflow-auto`) column of `<label>`-wrapped `Checkbox` rows.
+- **React/Web**: Implement using this package's `Popover`/`PopoverTrigger`/`PopoverContent`, `Button`, and `Checkbox` components, as shown in `blocks/facet-menu.tsx`: the trigger is a ghost `Button` (disabled when `options` is empty, so it is non-interactive); the popover content holds "All"/"None" ghost `Button`s above a vertically scrollable (`max-h-64 overflow-auto`) column of `<label>`-wrapped `Checkbox` rows.
 
 - **AppKit / UIKit**: Implement with a custom, non-dismissing popover — `NSPopover` on macOS, a custom-anchored or sheet-presented view controller on iOS — rather than `NSMenu`/`UIMenu`, both of which close after a single item is picked and would break the multi-select toggle. The popover content mirrors the React layout: "All"/"None" buttons above a scrollable checkbox list.
 
@@ -216,7 +223,7 @@ Not applicable: FacetMenu is a UI component and does not perform logging. Errors
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/facet-menu.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/facet-menu.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -224,24 +231,24 @@ Not applicable: FacetMenu is a UI component and does not perform logging. Errors
   **Rationale**: Operators rely on this count to verify that filters are active without opening the popover; a hidden count risks acting on a filtered set as though it were the full list — for example, deleting the "wrong" rows when a filter is invisibly active.
   **Approved**: pending
 
-- **Decision**: Both "All" and "None" quick-select buttons are kept, even though selecting every option and clearing the selection show the same filtered rows.
-  **Rationale**: They serve different interaction purposes: "All" is the starting point for excluding a single option ("everything except this"), which requires the boxes to actually be checked to represent that intent; "None" is the way back to no active filter. The trigger's count (N vs. 0) makes the two states visibly distinct.
+- **Decision**: Both "All" and "None" quick-select buttons are kept, even though they overlap as shortcuts.
+  **Rationale**: They serve different interaction purposes: "All" is the starting point for excluding a single option ("everything except this"), which requires the boxes to actually be checked to represent that intent; "None" is the way back to an empty selection. The trigger's count (N vs. 0) makes the two states visibly distinct.
   **Approved**: pending
 
 - **Decision**: Checkboxes do not carry an individual `aria-label`; each is wrapped in a `<label>` element with text content, and the base checkbox component points `aria-labelledby` at that wrapping label.
   **Rationale**: Adding an `aria-label` on top of the `<label>`/`aria-labelledby` association would make the computed accessible name announce the option text twice.
   **Approved**: pending
 
-- **Decision**: The option list is constrained to a maximum height (16rem / 256px) with vertical scrolling enabled; horizontal scrolling is not enabled.
-  **Rationale**: This keeps the popover from exceeding the visible viewport on small screens and keeps the behavior consistent across platforms; long labels are expected to wrap or be truncated by the host container instead.
+- **Decision**: The option list is constrained to a maximum height (16rem / 256px) with vertical scrolling enabled; a horizontal scrollbar appears only when a single unbreakable word is wider than the list.
+  **Rationale**: This keeps the popover from exceeding the visible viewport on small screens and keeps the behavior consistent across platforms; long labels wrap onto additional lines within the popover width (see the "Very long option labels" edge case).
   **Approved**: pending
 
 - **Decision**: FacetMenu is implemented and documented as a popover that stays open across multiple selections, not as a native auto-dismissing menu.
   **Rationale**: A native menu (SwiftUI `Menu`, `NSMenu`/`UIMenu`, a dismiss-on-pick WinUI `MenuFlyout`) closes after each item is picked, which breaks the multi-select toggle interaction the component depends on.
   **Approved**: pending
 
-- **Decision**: "All" replaces the selection with exactly the current `options`, and "None" replaces it with an empty set — both drop any stale selected values not present in `options`.
-  **Rationale**: The component only ever sets `selected` to values it can see; a value that came from a since-filtered-out option has no representation in the current option list, so neither quick-select action can special-case it.
+- **Decision**: "All" replaces the selection with exactly the current `options`, and "None" replaces it with an empty set — both drop any stale selected values not present in `options`; the full rules are in `#requirements/stale-selection-values`.
+  **Rationale**: The component only ever sets `selected` to values it can see, so neither quick-select action can special-case a value that has no representation in the current option list.
   **Approved**: pending
 
 ## Compliance
@@ -267,6 +274,7 @@ The trigger, checkboxes, and quick-select buttons are built on ARIA-pattern prim
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Stated the stale-value rules once, removed filtering meaning from the All/None rationale, renamed synchronous-selection-update to compute-from-current-prop, specified label wrapping, made Escape a MUST, added depends-on and standards references, and added two test vectors. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | All-button disables when every option selected; stale-selection, facet-023, edge case fixed. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; rewrote Overview, Popover Accessibility, and Platform Notes to describe a non-dismissing popover instead of a native menu; added trigger-expanded-state, empty-selection-semantics, stale-selection-values, and synchronous-selection-update requirements grounded in the source's controlled-Set behavior; filled Configuration with the prop types; reformatted Design Decisions into Decision/Rationale/Approved form and added two new decisions; replaced the "Not applicable" Compliance section with a check table and supporting sentence; fixed the Tailwind-class and self-contradictory padding value in Appearance; added a localization key and casing-transform note for the trigger count; added conformance vectors for All/None payloads, unchecking, the disabled-menu case, keyboard toggling, Escape, and stale selections; replaced facet-003's nondeterministic assertion with a `disabled`-attribute check |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

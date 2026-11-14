@@ -17,14 +17,14 @@
 
 `unit-test-coverage` is `partial`: most types here are pure protocols/interfaces
 with nothing to unit-test directly; only `ScriptedBackend`, the one concrete
-conformer given as source, has direct tests (`ScriptedBackendTests`), while
+conformer specified here, has direct tests (`ScriptedBackendTests`, `SDK/Tests/AgenticDeveloperHubSDKTests/Chat/ScriptedBackendTests.swift`), while
 several of the contract's other invariants (draft replace, status
 out-of-band, command in-place update, orphan-result drop) are corroborated
-only through tests of a conformer not included among the given sources.
+only through `ObservableChatViewModelTests` (`SDK/TestsUI/AgenticDeveloperHubSDKUITests/Chat/ObservableChatViewModelTests.swift`), which tests the `ObservableChatViewModel` conformer.
 `explicit-error-handling` is `partial`: `Backend`/hook/permission methods are
 either fallible or answer with an explicit `HookDecision.block(reason:)`, but
 `ScriptedBackend.replay` swallows a `Task.sleep` cancellation error via
-`try?` rather than propagating or logging it. `fault-tolerance` is `partial`:
+`try?` rather than propagating or logging it (accepted in Design Decisions). `fault-tolerance` is `partial`:
 failures are always signaled (`transportError`, `messageFailed`,
 `HookDecision.block`), but no retry, backoff, or reconnection policy is
 defined at this layer — each `Backend` conformer owns that decision.

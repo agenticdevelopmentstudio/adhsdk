@@ -19,3 +19,4 @@ The model contract the controller relies on is covered by `MailBrowserModelTests
 | mail-browser-vc-014 | poll-default-interval | Construct without an interval. | Refreshes occur every 30 seconds while on screen. |
 | mail-browser-vc-015 | poll-no-retain | Release the controller while a refresh task is waiting. | When the wait ends the task exits and makes no model call. |
 | mail-browser-vc-016 | poll-interval, poll-action, poll-stop, poll-cancel-exit, poll-no-retain | Construct with `refreshInterval` of 100 ms and a scripted client whose account sync time changes once; appear, wait 250 ms, then disappear and wait 250 ms more; repeat, releasing the controller instead of disappearing. | No refresh before 100 ms; the refresh after the sync change reloads the list; no model call follows the disappearance or the release. Runs in milliseconds, with no 30 s wait; vectors 008, 009, 014 and 015 use the same check with the default interval. |
+

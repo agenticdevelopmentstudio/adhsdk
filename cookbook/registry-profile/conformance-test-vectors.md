@@ -35,4 +35,7 @@
 | profile-032 | omit-fields-section-when-empty | `entry.fields = []` | Output does not contain `rp__fields` element; contrast with profile-016, where one field is present |
 | profile-033 | render-full-display-name-untruncated | `entry.displayName = "A".repeat(300)` | Output contains the full 300-character string inside `<h1 class="rp__name">`, with no truncation or ellipsis |
 | profile-034 | render-metadata-list-unconditionally | `entry.category = ""`, `entry.locationText = ""`, `entry.languages = []` | Output still contains `<dl class="rp__meta">`, with no `rp__meta-row` children inside it |
-
+| profile-035 | render-photo-when-available | `entry.photoAttachmentId = null` | No photo element rendered; `resolveImageUrl` is not called |
+| profile-036 | render-field-visibility-marker | `field.visibility = "authenticated"` | The marker span has `data-audience="authenticated"` |
+| profile-037 | render-all-fields | `entry.fields = [{key: "email", label: "Email", value: "alice@example.com", visibility: "public", type: "email"}]` | The field's `<dt>` text is "Email" and its `<dd>` text is "alice@example.com" |
+| profile-038 | render-languages-list | `entry.category = ""`, `entry.locationText = ""`, `entry.languages = ["English"]` | `<dl class="rp__meta">` contains exactly one row, with `<dt>` "Languages" and `<dd>` "English" |

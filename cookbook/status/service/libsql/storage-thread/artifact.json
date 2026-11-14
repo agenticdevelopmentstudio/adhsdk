@@ -4,7 +4,7 @@
     "id": "dccad63a-f56e-4c97-b182-8cdeb7c1a983",
     "title": "Status Server Storage Thread",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -14,10 +14,14 @@
     "license": "MIT",
     "summary": "Main-thread handle that spawns the database thread, waits for it to be ready, and hands out Storage ports to this thread and to any other thread.",
     "platforms": [
-      "typescript",
-      "web"
+      "typescript"
     ],
-    "tags": [],
+    "tags": [
+      "storage",
+      "worker-threads",
+      "libsql",
+      "concurrency"
+    ],
     "depends-on": [
       "020cc0f0-04e9-4d03-8796-76027fb1131f",
       "e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d"
@@ -29,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "537303d25a917cb3",
+  "synced": "7167478ceca76b7c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

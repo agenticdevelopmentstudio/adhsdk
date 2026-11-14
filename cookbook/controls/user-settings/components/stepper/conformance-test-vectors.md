@@ -12,7 +12,7 @@
 | stepper-009 | disable-increment-at-max | value=10, max=10 | Increment button disabled |
 | stepper-010 | disable-all-controls-when-disabled | disabled=true | Input, decrement button, increment button all disabled |
 | stepper-011 | support-direct-input | User types "42" in input, min=0, max=100 | onChange called with 42 |
-| stepper-012 | support-direct-input | User types "abc" in input | Input ignores non-numeric input; value unchanged |
+| stepper-012 | support-direct-input | User types "abc" in input | In a browser, unparseable text reports `value === ""`, so the result matches stepper-020: onChange called with clamp(0); a parse to `NaN` is ignored with no onChange call |
 | stepper-013 | support-optional-label | label="Quantity" | Label element rendered and associated with input |
 | stepper-014 | support-optional-hint | hint="Enter a value between 1 and 10" | Hint text displayed below stepper |
 | stepper-015 | custom-classname | className="my-stepper" | Custom class applied to wrapper element |

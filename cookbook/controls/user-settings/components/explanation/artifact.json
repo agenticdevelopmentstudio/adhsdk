@@ -4,11 +4,11 @@
     "id": "eeb45f5b-e482-4bea-8827-74f80a1fd21b",
     "title": "Explanation",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e9a88e4c06067e48",
+  "synced": "d871c5cd0b4ace97",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

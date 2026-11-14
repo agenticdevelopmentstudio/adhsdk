@@ -1,7 +1,7 @@
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Content is displayed in monospace with deck-defined colors and spacing |
-| User selects text | Text selection styling follows deck's text selection color and appearance |
-| User scrolls horizontally | Horizontal scrollbar appears (or deck-defined scroll behavior) |
+| Default | Content is displayed in monospace (`--lp-font-mono`) with `--lp-ink` text on a `--lp-card` background, with the spacing set in Appearance |
+| User selects text | The block sets no `::selection` rule, so selection uses the browser's default selection styling |
+| User scrolls horizontally | The native horizontal scrollbar appears when content is wider than the block (`overflow-x: auto`) |
 

@@ -1,10 +1,10 @@
 
 1. **Decision**: The lightweight variant remains mounted in the DOM at all times and is hidden via CSS (`opacity`/`visibility`) rather than unmounting; the full-featured variant unmounts `PopoverContent` when closed (Base UI's default `keepMounted={false}`, not overridden by this wrapper).
-   **Rationale**: For the lightweight variant, this ensures server-rendered HTML includes the full page structure, accessible to non-JavaScript clients and screen readers, and lets CSS transitions work smoothly. The full-featured variant instead relies on Base UI's own mount/unmount and animation-completion handling.
+   **Rationale**: For the lightweight variant, this ensures server-rendered HTML includes the full page structure, present in the HTML for non-JavaScript clients (while closed it is hidden with `visibility:hidden`, so it is not exposed to assistive technology until open), and lets CSS transitions work smoothly. The full-featured variant instead relies on Base UI's own mount/unmount and animation-completion handling.
    **Approved**: pending
 
 2. **Decision**: The `arrow` prop on `PopoverContent` defaults to `false`.
-   **Rationale**: Maintains backward compatibility with existing consumers who were built before the arrow feature was added and do not expect it.
+   **Rationale**: The source comment on `PopoverContent` records that it has consumers that predate the arrow, and turning the arrow on for them would be a restyle nobody asked for; call sites opt in (the help popover does).
    **Approved**: pending
 
 3. **Decision**: On web, `PopoverContent` renders in a React Portal.
@@ -16,7 +16,7 @@
    **Approved**: pending
 
 5. **Decision**: Default placement is `bottom` for the full-featured variant and `top` for the lightweight variant, with an 8px offset on the full-featured variant.
-   **Rationale**: Conventional defaults for popover components, providing adequate visual separation from the trigger without excessive displacement.
+   **Rationale**: Conventional defaults for popover components, providing adequate visual separation from the trigger without excessive displacement. The two variants were written independently and do not share a placement contract: the prop names (`side` vs `placement`) and default sides (`bottom` vs `top`) differ, so a consumer who swaps one variant for the other MUST set the placement prop explicitly.
    **Approved**: pending
 
 6. **Decision**: The full-featured variant is non-modal by default and delegates its accessibility behavior (dialog role, non-modal focus handling, Escape, aria-expanded) to Base UI's Popover rather than re-implementing it; the lightweight variant implements no accessibility behavior at all.

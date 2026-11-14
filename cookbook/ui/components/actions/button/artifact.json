@@ -4,11 +4,11 @@
     "id": "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
     "title": "Button",
     "type": "ingredient",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,14 +27,13 @@
       "f483dfb7-d60e-4b12-8b17-2eb150b550db"
     ],
     "related": [
-      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2",
-      "f483dfb7-d60e-4b12-8b17-2eb150b550db"
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "56672fae92c50c4c",
+  "synced": "63bdf7d712e7e9fb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

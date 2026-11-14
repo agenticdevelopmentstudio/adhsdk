@@ -2,11 +2,11 @@
 id: dcf1a793-0a47-466b-8b09-0bcf091fd55a
 title: "Topics Pane"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,7 +44,7 @@ The Topics Pane is a container component that displays a list of topic items as 
 
 ## Appearance
 
-- **Container**: Full-width pane with CSS classes `pc-topics-pane` and visibility modifier class
+- **Container**: Pane with CSS classes `pc-topics-pane` and visibility modifier class; width and layout are defined by the stylesheet, not the component source
 - **Header**: Styled section with CSS class `pc-panel-header` containing the text "Topics"
 - **List**: Unordered list with CSS class `pc-topic-list` containing list items
 - **Topic Item**: Button element with CSS class `pc-topic-item` and optional "active" class modifier
@@ -63,7 +63,7 @@ The Topics Pane is a container component that displays a list of topic items as 
 ## Accessibility
 
 - Role: Container with a header and list of buttons for topic selection
-- Label: The "Topics" header text serves as the pane label
+- Label: The "Topics" header is visible text only; the source does not associate it with the container (no `aria-labelledby` or landmark role)
 - Button elements: Each topic button SHOULD have an accessible label from its `title` text
 - Active state: The "active" class on the selected topic button SHOULD be announced to screen readers or conveyed through semantic HTML attributes
 - Keyboard navigation: Topic buttons SHOULD be keyboard accessible and focusable in tab order
@@ -83,7 +83,10 @@ The Topics Pane is a container component that displays a list of topic items as 
 | topics-008 | render-connector-anchor | topics=[{title: "Topic", messageIndex: 5}] | ConnectorAnchor component rendered with id="topic-5" and className="pc-connector-anchor-out" |
 | topics-009 | indicate-active-topic | topics=[{title: "First", messageIndex: 1}], activeIndex=0 | Button contains "active" class |
 | topics-010 | topic-selection-callback | topics=[{title: "A", messageIndex: 1}, {title: "B", messageIndex: 2}, {title: "C", messageIndex: 3}], user clicks second button | onSelectTopic callback invoked with index 1 |
-
+| topics-011 | indicate-active-topic | topics=[{title: "A", messageIndex: 1}], activeIndex=-1 | No button has "active" class |
+| topics-012 | indicate-active-topic | topics=[{title: "A", messageIndex: 1}], activeIndex=5 | No button has "active" class |
+| topics-013 | render-topic-list | topics=[], visible=true | No `<li>` elements rendered; header still present |
+| topics-014 | respect-visibility-state | topics=[{title: "A", messageIndex: 1}], visible=false | Root div has "pc-pane-hidden" class; the button remains in the DOM and is neither inert nor aria-hidden |
 ## Edge Cases
 
 - **Empty topics array**: Component renders header and empty list when `topics` is an empty array. No buttons are rendered.
@@ -91,6 +94,7 @@ The Topics Pane is a container component that displays a list of topic items as 
 - **Large topic list**: Component renders all topics provided; no pagination or virtualization is implemented. Scrolling is handled by CSS/container layout.
 - **Missing or undefined title**: `TopicData.title` is typed as a required `string` (see the `TopicData` interface), so a well-typed caller cannot omit it. If the type system is bypassed and `title` is `undefined` at runtime, React renders no text for that child, leaving the button visually empty; the component does not guard against this itself.
 - **Visibility toggle**: Switching `visible` between true and false updates only the CSS class; underlying DOM elements remain in the tree, affecting accessibility and layout reflow.
+- **Duplicate messageIndex values**: Two topics with the same `messageIndex` produce duplicate `topic-<n>` DOM ids for their `ConnectorAnchor` elements. The component does not disambiguate them; uniqueness of `messageIndex` across `topics` is a caller precondition.
 - **Rapid selection changes**: Multiple rapid calls to `onSelectTopic` are processed sequentially; no debouncing or race condition handling is present in the component.
 
 ## Configuration
@@ -108,6 +112,7 @@ The Topics Pane is a container component that displays a list of topic items as 
 |----------|-----------|
 | Apple | Not applicable: selection state (`activeIndex`) is owned by the parent; deep-linking to a topic is the parent's routing responsibility |
 | Android | Not applicable: selection state (`activeIndex`) is owned by the parent; deep-linking to a topic is the parent's routing responsibility |
+| Windows | Not applicable: selection state (`activeIndex`) is owned by the parent; deep-linking to a topic is the parent's routing responsibility |
 | Web | Deep linking is not implemented in the component; URL routing is handled by the consuming application |
 
 ## Localization
@@ -128,61 +133,38 @@ The header text is currently a hardcoded string literal in `TopicsPane.tsx` (see
 
 ## Feature Flags
 
-Recommended for future rollout control; the current source contains no feature-flag check — `topics_pane.enabled` is not read anywhere in `TopicsPane.tsx`.
-
-| Flag Key | Default | Description |
-|----------|---------|-------------|
-| topics_pane.enabled | true | Feature flag to enable/disable the topics pane component |
-
+None. The current source contains no feature-flag check.
 ## Analytics
 
-Recommended instrumentation; the current source emits no analytics events.
-
-| Event | Properties | When |
-|-------|-----------|------|
-| topics_pane.displayed | { visible: boolean } | Component renders with visible state |
-| topics_pane.topic_selected | { topicIndex: number } | User clicks a topic button |
-
+None. The current source emits no analytics events.
 ## Privacy
 
-- **Data collected**: Topic title text and selection index. No personal data is collected by the component itself.
+- **Data collected**: None; renders caller-supplied props only.
 - **Storage**: No data is persisted by the component; selections are passed to parent via callback.
 - **Transmission**: Selections are passed to parent component; data transmission depends on parent implementation.
 - **Retention**: No data is retained by the component.
 
 ## Logging
 
-Recommended log points; the current source contains no logging calls.
-
-Subsystem: `chat.topics-pane` | Category: `TopicsPane`
-
-| Event | Level | Message |
-|-------|-------|---------|
-| Component render | debug | `TopicsPane: rendered with ${topics.length} topics, activeIndex=${activeIndex}, visible=${visible}` |
-| Topic selected | debug | `TopicsPane: topic selected, index=${index}` |
-
+None. The current source contains no logging calls.
 ## Platform Notes
 
 - **Web**: Source implementation uses React functional component with CSS class-based styling. Topics rendered as semantic `<button>` elements within `<ul><li>` structure. Visibility toggled via CSS classes `pc-pane-visible` and `pc-pane-hidden`.
 - **SwiftUI**: Implement as a ScrollView containing a VStack of Button elements. Selection is parent-controlled: bind the active index to a value the parent owns (e.g. a passed-in parameter or `Binding<Int?>`) rather than local `@State`, mirroring the source's `activeIndex`/`onSelectTopic` props. Apply opacity or a visibility modifier based on the `visible` prop. Render a Text header above the list.
 - **Compose**: Use a Column containing a Text header and a LazyColumn of Button composables. Selection is parent-controlled: hoist the active index to a parameter/callback pair supplied by the caller rather than local `mutableStateOf`, mirroring the source's `activeIndex`/`onSelectTopic` props. Apply alpha or visibility based on the `visible` prop.
 - **AppKit / UIKit**: Implement as an NSView or UIView containing an NSTableView/UITableView or NSCollectionView/UICollectionView displaying topics as cells. Apply NSView.isHidden or UIView.alpha based on visible prop. Highlight the selected row from a parent-owned index rather than internally tracked selection state.
-- **WinUI 3**: Implement as a Grid or StackPanel containing a TextBlock header and an ItemsControl or ListView displaying topics as Button elements. Use the `Visibility` property (`Visible`/`Collapsed`) for the visibility state, mirroring the source's `pc-pane-visible`/`pc-pane-hidden` classes — not `IsEnabled`, which governs interactability rather than visibility. Apply visual state or highlight to the selected item via `ItemContainerStyle`, driven by a parent-owned selected index.
+- **WinUI 3**: Implement as a Grid or StackPanel containing a TextBlock header and an ItemsControl displaying topics as Button elements (not a ListView, whose own selection would compete with the parent-owned index). Use the `Visibility` property (`Visible`/`Collapsed`) for the visibility state, mirroring the source's `pc-pane-visible`/`pc-pane-hidden` classes — not `IsEnabled`, which governs interactability rather than visibility. Apply visual state or highlight to the selected item via `ItemContainerStyle`, driven by a parent-owned selected index.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/modes/three-pane/TopicsPane.tsx` | unverified |
+| web | `packages/web/packages/chat/src/modes/three-pane/TopicsPane.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 **Decision**: Apply visibility and active state via CSS classes (`pc-pane-visible`/`pc-pane-hidden`, `active`) rather than inline styles.
 **Rationale**: Delegates appearance control to stylesheets, supporting theme switching and design system consistency.
-**Approved**: pending
-
-**Decision**: Identify the active topic by its array index rather than by object identity or a unique key property.
-**Rationale**: Keeps selection state simple and couples it directly to list order.
 **Approved**: pending
 
 **Decision**: Render a `ConnectorAnchor` child inside each topic button.
@@ -193,17 +175,16 @@ Subsystem: `chat.topics-pane` | Category: `TopicsPane`
 **Rationale**: Leaves the choice of a default selection to the parent component's own logic.
 **Approved**: pending
 
-**Decision**: Accept the connascence-of-position risk of index-based selection (`activeIndex`, `onSelectTopic(index)`) rather than keying selection to a stable identifier such as `messageIndex`.
-**Rationale**: Matches the source's array-index selection model described above; reordering or inserting topics can silently shift which topic `activeIndex` points at. This is recorded as known debt rather than fixed here, since the source does not implement stable-key selection.
+**Decision**: Identify the active topic by its array index (`activeIndex`, `onSelectTopic(index)`) rather than by object identity or a stable key such as `messageIndex`.
+**Rationale**: Keeps selection state simple and matches the source's array-index model. The cost is connascence of position: reordering or inserting topics can silently shift which topic `activeIndex` points at. This is recorded as known debt rather than fixed here, since the source does not implement stable-key selection.
 **Approved**: pending
-
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
@@ -212,12 +193,13 @@ Subsystem: `chat.topics-pane` | Category: `TopicsPane`
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-Passed rows rest on the source's use of semantic `<button>`, `<ul>`, and `<li>` elements whose accessible names come from topic title text content; partial rows reflect that touch-target sizing, color contrast, and font scaling are defined in an external stylesheet this component's source does not show; the failed rows reflect the "Topics" header being a hardcoded string literal in `TopicsPane.tsx` rather than a resource lookup. `separation-of-concerns` passes because `TopicsPane.tsx` is pure presentation over its props with no business logic of its own, while `unit-test-coverage` fails because no test exercises it.
+The passed `semantic-markup` row rests on the source's use of semantic `<button>`, `<ul>`, and `<li>` elements whose accessible names come from topic title text content; `screen-reader-support` is partial because the active topic is conveyed only by the `active` class, with no `aria-current` or `aria-pressed` attribute; `keyboard-navigable` is partial because buttons in a `pc-pane-hidden` pane stay in the DOM and nothing in the source makes them inert or `aria-hidden`; other partial rows reflect that touch-target sizing, color contrast, and font scaling are defined in an external stylesheet this component's source does not show; the failed rows reflect the "Topics" header being a hardcoded string literal in `TopicsPane.tsx` rather than a resource lookup. `separation-of-concerns` passes because `TopicsPane.tsx` is pure presentation over its props with no business logic of its own, while `unit-test-coverage` fails because no test exercises it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Downgraded screen-reader and keyboard compliance to partial, merged the duplicate index-selection decisions, cut flags, analytics and logging to None, fixed the privacy and label claims, added a Windows deep-linking row, a duplicate-messageIndex edge case and four test vectors, and chose ItemsControl for WinUI 3. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; clarified the connector-anchor id format and reworded the selection-callback requirement; corrected Configuration to reflect that all props are required with no defaults; fixed the WinUI visibility API and made SwiftUI/Compose selection parent-controlled; rebuilt Compliance with valid checks and links; reformatted Design Decisions and recorded index-based selection as known debt; marked Feature Flags/Analytics/Logging as recommendations rather than observed behavior; corrected the web tap-target guidance to WCAG 2.5.8; resolved the Deep Linking/Platform Notes contradiction; clarified the Localization key as a recommended externalization target; and added connector-anchor to depends-on |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source code analysis |

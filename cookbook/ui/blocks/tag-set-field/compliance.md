@@ -13,5 +13,15 @@
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on the source: `ariaLabel` props reach the Combobox, EntityChooser, and EntitySelectionChips directly and each sub-control provides its own keyboard support, but this component adds no ARIA live-region announcement on add/remove, and chip-removal keyboard behavior is EntitySelectionChips's own to confirm; no color, contrast, or type-scale tokens are set at this level (all delegated to Tailwind utility classes and sub-components, which this source cannot confirm); every placeholder and label string is a hardcoded English template literal built from `noun`, not an externalized key; and the fixed 176px EntityChooser width could truncate a longer translated string, which this component does nothing to accommodate; the acceptance-matching logic (`onText`, the `suggestions` filter) is inline in the component rather than extracted apart from rendering (separation-of-concerns partial), and `tagSetField.test.tsx` exercises the autocomplete-acceptance rule, the chooser's add/remove/mint paths, and the layout fix directly (unit-test-coverage passed).
+Evidence for each status, in table order:
 
+- screen-reader-support (partial): `ariaLabel` props reach the Combobox, EntityChooser, and EntitySelectionChips directly, but this component adds no ARIA live-region announcement on add/remove.
+- keyboard-navigable (partial): each sub-control provides its own keyboard support, and chip-removal keyboard behavior is EntitySelectionChips's own to confirm.
+- semantic-markup (passed): grouping and labels come from the shared `Field` and the sub-controls' own roles.
+- touch-target-size (partial): this component sets no target sizes; they come from the sub-components.
+- dynamic-type-support, contrast-ratio (partial): no color, contrast, or type-scale tokens are set at this level (all delegated to Tailwind utility classes and sub-components, which this source cannot confirm).
+- string-externalization (failed): every placeholder and label string is a hardcoded English template literal built from `noun`, not an externalized key.
+- rtl-layout-support (partial): the layout is flexbox and inherits direction from its parent; this source does not confirm RTL behavior.
+- text-expansion-tolerance (partial): the fixed 176px EntityChooser width could truncate a longer translated string, which this component does nothing to accommodate.
+- separation-of-concerns (partial): the acceptance-matching logic (`onText`, the `suggestions` filter) is inline in the component rather than extracted apart from rendering.
+- unit-test-coverage (passed): `tagSetField.test.tsx` exercises the autocomplete-acceptance rule, the chooser's add/remove/mint paths, and the layout fix directly.

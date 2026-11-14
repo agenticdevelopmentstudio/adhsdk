@@ -48,10 +48,10 @@
 **Approved**: pending
 
 **Decision**: Accept swallowed store failures on background paths for now, instead of logging or signalling them.
-**Rationale**: `startDueSyncs` reads connections with `try?`, `performSync` skips when the connection read fails, and `record` writes status with `try?`. A store outage therefore appears as no sync and no status change, not as an error. Revisit when a store failure needs to be visible to a user; until then a port should keep the behavior or log it as a deliberate change.
+**Rationale**: `startDueSyncs` reads connections with `try?`, `performSync` skips when the connection read fails, and `record` writes status with `try?`. A store outage therefore appears as no sync and no status change, not as an error. A port MUST keep this behavior; making store failures visible is a change to this spec, to be made when one needs to reach a user.
 **Approved**: pending
 
 **Decision**: Accept that a Gmail profile failure during sign-in leaves the issued grant unrevoked, instead of revoking it.
-**Rationale**: Only the provider-removed paths revoke the discarded credential; a profile error (`sign-in-profile-failure-no-revoke`) leaves the grant at Google. Revisit when sign-in failures are reported to users; until then a port must either match this or change it deliberately.
+**Rationale**: Only the provider-removed paths revoke the discarded credential; a profile error (`sign-in-profile-failure-no-revoke`) leaves the grant at Google. A port MUST match this; revoking on a profile failure is a change to this spec, to be made when sign-in failures are reported to users.
 **Approved**: pending
 

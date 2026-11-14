@@ -30,8 +30,8 @@
 | T27 | announce-its-state | before and after activation | `aria-expanded` flips `false`→`true`; `aria-controls` equals the panel's non-empty `id` |
 | T27b | announce-its-state | collapsed, expanded, collapsed again | `aria-controls` is ABSENT both times the panel is — no dangling IDREF |
 | T28 | toggle-both-ways | activate | the chevron gains `rotate-90` only while open |
-| T29 | spread-host-attributes | default, then `label` | the trigger reads "View source", then the host's label |
-| T30 | spread-host-attributes | `data-testid`, `defaultOpen` | row, trigger, and panel `className`s equal their exported contracts EXACTLY |
+| T29 | honour-trigger-label | default, then `label` | the trigger reads "View source", then the host's label |
+| T30 | export-class-contracts | `data-testid`, `defaultOpen` | row, trigger, and panel `className`s equal their exported contracts EXACTLY |
 | T31 | toggle-both-ways | `source=""` with `defaultOpen` | the panel renders and is empty — not absent |
 | T32 | collapse-only-the-top-level, open-the-active-section | `activePath="/"` | the section's children are absent; its control reads `aria-expanded="false"` and is named "Expand Principles" |
 | T33 | open-the-active-section | `activePath` = a depth-3 page | that section's pages are present; the sibling section's are not |
@@ -55,18 +55,18 @@
 | T51 | share-one-nav | `open` | two `aside`s in order [aside, drawer], and two `nav`s |
 | T52 | control-the-drawer, announce-one-dismiss-control | click the scrim, then the close control | exactly ONE announced control named "Close navigation"; the scrim is an `aria-hidden` `div` with no `tabindex`; `onClose` fires twice |
 | T53 | control-the-drawer | `title="Contents" closeLabel="Dismiss"` | the drawer reads "Contents" and there is exactly ONE control named "Dismiss" |
-| T54 | spread-host-attributes | `className="w-96"` + `data-testid` | the column keeps `sticky`, carries `w-96`, has no `w-80`, and the attribute lands on it |
+| T54 | merge-host-classname, spread-host-attributes | `className="w-96"` + `data-testid` | the column keeps `sticky`, carries `w-96`, has no `w-80`, and the attribute lands on it |
 | T55 | place-the-nav-before-the-document | `nav` + children | 2 children: the nav node itself, then a region whose class equals `HIERARCHICAL_DOCUMENT_VIEW_CONTENT_CLASS` and which holds the document |
 | T56 | slot-columns-unwrapped | `nav` | the nav's `parentElement` is the frame itself, so its `sticky` resolves against the frame |
 | T57 | drop-an-omitted-column | no `nav` | exactly 1 child, the content region |
 | T58 | render-no-landmark | `nav` + children | no `main` element and no `main` role anywhere in the output |
-| T59 | spread-host-attributes | `className="gap-4"` | the frame keeps `flex-1` and gains `gap-4` |
+| T59 | merge-host-classname | `className="gap-4"` | the frame keeps `flex-1` and gains `gap-4` |
 | T60 | spread-host-attributes | `id` + `data-*` | both land on the frame |
 | T61 | place-the-nav-before-the-document, cap-the-measure | `toc` + children | 2 children: the measure column holding the document, then the rail node |
 | T62 | cap-the-measure | `<DocPage>{doc}</DocPage>` | `DOC_PAGE_ARTICLE_CLASS` contains both `max-w-3xl` and `min-w-0` |
 | T63 | drop-an-omitted-column | no `toc` | exactly 1 child, the measure column |
 | T64 | slot-columns-unwrapped | `toc` | the rail's `parentElement` is the row itself |
-| T65 | spread-host-attributes | `className="items-start"` + `id` | the row keeps `flex`, gains `items-start`, and carries the `id` |
+| T65 | merge-host-classname, spread-host-attributes | `className="items-start"` + `id` | the row keeps `flex`, gains `items-start`, and carries the `id` |
 | T66 | slot-columns-unwrapped | a `DocPage` inside a `HierarchicalDocumentView` | nav → content region → row → measure → document, with the rail on the row and the nav on the frame — neither frame reaches into the other |
 | T67 | mark-the-current-heading, carry-visibility-across-callbacks | ONE callback reporting `c`, `a`, `b` as entering together | `a` is marked — the first in `ids` order, not the last reported |
 | T68 | carry-visibility-across-callbacks | `a` enters; `b` enters in a SECOND callback; then `a` leaves | `a`, still `a`, then `b` — `b`'s visibility survived a callback that never mentioned it |
@@ -74,4 +74,4 @@
 | T70 | carry-visibility-across-callbacks | DOM order `b`, `a` with `ids = ['a','b']` | `a` is marked — document order comes from `ids`, not from the DOM |
 | T71 | share-one-nav | expand a section in the drawer, then close the drawer | the desktop column's section is still expanded |
 | T72 | route-through-injected-link | a leaf's inlined `headings` with a `LinkComponent` | the heading anchors carry the adapter's marker too — a heading link is a route, not a document load |
-
+| T73 | render-no-landmark | `toc` + children in a `DocPage` | no `main` element and no `main` role anywhere in the output |

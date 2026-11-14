@@ -5,7 +5,7 @@
 |--------|------|---------|-------------|
 | `id` | `(row: T) => string` | Required | Accessor returning a unique string ID for each row. `flattenTree()` does not validate uniqueness — see Edge Cases → Duplicate IDs for the behavior when this precondition is violated. |
 | `parentId` | `(row: T) => string \| null \| undefined` | Required | Accessor returning the ID of the row's parent, or null/undefined for a root. |
-| `expanded` | `ReadonlySet<string>` | Omit (expand all) | Set of parent row IDs whose children SHOULD be shown. If omitted, all rows are expanded. See **omit-collapsed-descendants**. |
+| `expanded` | `ReadonlySet<string>` | Omit (expand all) | Set of parent row IDs whose children are shown. If omitted, all rows are expanded. See **omit-collapsed-descendants**. |
 | `compare` | `(a: T, b: T) => number` | Omit (input order) | Comparison function to sort roots and sibling groups. If omitted, input order is preserved. |
 
 **Output — `TreeRow<T>`**

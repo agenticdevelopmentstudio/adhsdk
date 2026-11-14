@@ -4,11 +4,11 @@
     "id": "ff445185-2322-4c94-ad9d-3ad27a50677d",
     "title": "App Tabs",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dec0b3a1fc0c7e29",
+  "synced": "fad91613f75450e9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

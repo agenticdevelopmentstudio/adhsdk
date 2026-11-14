@@ -2,7 +2,7 @@
 id: 79810488-c613-4f9b-af2a-4ba9d8ee1c26
 title: "Partner Job"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -10,7 +10,7 @@ modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The data shape of a partner job and its steps: a named standing piece of work with an optional timer, guidelines text and ordered steps to type into a terminal or Claude."
+summary: "Data shape of a partner job and its ordered terminal or Claude steps."
 platforms:
   - swift
   - macos
@@ -38,7 +38,7 @@ Step shape (`PartnerJobStep`)
 
 - **step-fields**: A step MUST carry exactly four fields: `name` (string), `environment`, `command` (string) and `condition` (string), all required at construction.
 - **step-environment-set**: `Environment` MUST be a closed enumeration of two cases, `terminal` and `claude`, whose string raw values are `terminal` and `claude`.
-- **step-environment-meaning**: `terminal` MUST mean the command is a shell command line typed into a terminal shell, and `claude` MUST mean it is a prompt typed at Claude Code's prompt; this is the meaning other code (step templating and the prompt's step list) attaches to the two cases.
+- **step-environment-meaning**: `terminal` means the command is a shell command line typed into a terminal shell, and `claude` means it is a prompt typed at Claude Code's prompt; this is the meaning other code (step templating and the prompt's step list) attaches to the two cases, and the type itself only carries the value.
 - **step-command-template**: A step's `command` MAY contain placeholders written as a brace-wrapped word; the type neither parses nor validates them.
 - **step-condition-free-text**: A step's `condition` MUST be free text, and an empty string MUST be a valid value meaning no condition.
 
@@ -48,7 +48,7 @@ Job shape (`PartnerJob`)
 - **job-identity**: A job MUST be `Identifiable` by its `id` string, and the id is the key every other layer uses to find, store and replace the job.
 - **job-initializer-defaults**: The public initializer MUST default `scheduleSeconds` to nil and `isBuiltIn` to false; every other parameter MUST be required.
 - **job-schedule-optional**: `scheduleSeconds` MUST be an optional integer; nil means the job has no timer and runs only on request.
-- **job-schedule-consumers**: A consumer that arms a timer MUST treat a nil or non-positive `scheduleSeconds` as no timer; the type itself accepts any integer, including zero and negatives. `PartnerController` is the consumer in the source and arms a timer only when the job is enabled and the value is greater than zero.
+- **job-schedule-any-integer**: The type MUST accept any integer for `scheduleSeconds`, including zero and negatives, and MUST NOT interpret it; deciding what counts as a usable interval belongs to the consumer that arms a timer.
 - **job-steps-ordered**: `steps` MUST preserve the order given; the order is the order the steps are meant to be run.
 - **job-steps-may-be-empty**: `steps` MAY be empty.
 - **job-built-in-flag**: `isBuiltIn` MUST record that the app, not the owner, created the job; the type attaches no other behavior to it.
@@ -59,6 +59,7 @@ Value semantics and coding
 - **value-types**: Both types MUST be value types that are `Sendable` and `Equatable`, where equality compares every field, so two jobs with the same id but different guidelines are not equal.
 - **codable-keys**: Both types MUST encode to and decode from JSON objects whose keys are the field names exactly as written above (`id`, `name`, `isEnabled`, `scheduleSeconds`, `guidelines`, `steps`, `isBuiltIn`; `name`, `environment`, `command`, `condition`), with the environment as its raw string.
 - **decode-requires-fields**: Decoding MUST fail when a non-optional key is missing, including `isBuiltIn`, or when `environment` holds a value other than `terminal` or `claude`.
+- **decode-new-fields**: A field added to either type after jobs have been stored MUST be optional (decoded as nil when missing) or MUST ship with a store migration, because decoding fails when a non-optional key is missing.
 - **decode-optional-schedule**: Decoding MUST accept a missing or null `scheduleSeconds` as nil.
 - **no-validation**: The types MUST NOT validate their contents: an empty id or name, a negative schedule and a duplicate step name are all accepted as given. A caller that puts the id in a file path is responsible for checking it first (`PartnerGuidelinesInstaller` rejects unsafe ids with `InstallError.invalidJobID`).
 
@@ -80,12 +81,12 @@ Not applicable — these are data model types, not visual components.
 
 ## Conformance Test Vectors
 
-The source has no test that targets these two types directly; vectors 001 and 002 are asserted indirectly in `PartnerModelsTests` and `PartnerJobsEditorModelTests`, and the rest are derived from the type declarations.
+The source has no test that targets these two types directly; the vectors are derived from the type declarations and use literal values, so they do not depend on any seeded default job.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| partner-job-001 | job-fields, step-fields, job-steps-ordered | Build the default code-reviews job and read its steps (`defaultsHaveTheTwoBuiltInJobs` in `PartnerModelsTests`) | The step names are, in order, `open session`, `review`, `fix` |
-| partner-job-002 | value-types | Compare a stored default job's steps to the freshly built default (`testResetToDefaultRestoresStepsAndDeletesGuidelinesFile` in `PartnerJobsEditorModelTests`) | The step arrays are equal, and there are 3 steps |
+| partner-job-001 | job-fields, step-fields, job-steps-ordered | `PartnerJob(id: "j", name: "J", isEnabled: true, guidelines: "g", steps: [s1, s2, s3])` with literal steps named `open`, `review`, `fix` | The step names read back, in order, `open`, `review`, `fix`; the job has 3 steps |
+| partner-job-002 | value-types | Two jobs built from the same literal values, including the same three literal `PartnerJobStep` values | The jobs are equal, and their step arrays are equal |
 | partner-job-003 | job-initializer-defaults | `PartnerJob(id: "x", name: "X", isEnabled: true, guidelines: "g", steps: [])` | `scheduleSeconds` is nil and `isBuiltIn` is false |
 | partner-job-004 | step-environment-set, codable-keys | Encode a step with environment `claude` | JSON object whose `environment` value is the string `claude`, with keys `name`, `environment`, `command`, `condition` |
 | partner-job-005 | decode-requires-fields | Decode a step whose `environment` is `shell` | Decoding throws |
@@ -95,16 +96,14 @@ The source has no test that targets these two types directly; vectors 001 and 00
 | partner-job-009 | value-types, job-identity | Two jobs with the same id and every field equal except `guidelines` | Not equal; both report the same `id` |
 | partner-job-010 | job-steps-ordered | Build a job with steps `b` then `a` and encode then decode | Decoded steps are still `b` then `a` |
 | partner-job-011 | job-steps-may-be-empty, step-condition-free-text | Job with no steps; a step whose condition is `""` | Both construct and round-trip through JSON |
-| partner-job-012 | no-validation | Job with id `""`, name `""` and `scheduleSeconds: -5` | Constructs without error and compares equal to an identical copy |
-| partner-job-013 | job-schedule-consumers | Enabled job with `scheduleSeconds` of nil, 0 and -5 (consumer rule; see `PartnerController`) | No timer is armed for any of the three |
-| partner-job-014 | job-schedule-consumers | Enabled job with `scheduleSeconds` of 1800 | A timer is armed with a 1800-second interval |
-| partner-job-015 | no-side-effects | Encode the same job from two threads at once | Both succeed with identical output |
+| partner-job-012 | no-validation, job-schedule-any-integer | Job with id `""`, name `""` and `scheduleSeconds: -5` | Constructs without error, keeps `-5` as given, and compares equal to an identical copy |
+| partner-job-013 | no-side-effects | Encode the same job from two threads at once | Both succeed, and both outputs decode to values equal to the job |
 
 ## Edge Cases
 
 - **Empty and missing values**: An empty `steps` array, an empty `guidelines`, an empty `condition` and a nil `scheduleSeconds` are all valid (MUST). A missing non-optional key fails to decode (MUST).
 - **Unknown environment**: A step whose environment is not `terminal` or `claude` fails to decode (MUST). A stored job holding such a step makes a whole-array decode fail, because the store decodes all steps together.
-- **Boundary values**: `scheduleSeconds` accepts any integer; zero and negative values are valid data but mean no timer to the consumer (MUST at the consumer, MAY at the type). There is no upper bound.
+- **Boundary values**: `scheduleSeconds` accepts any integer; zero and negative values are valid data that the type keeps as given; what they mean is up to the consumer that arms a timer. There is no upper bound.
 - **Duplicate ids and names**: The types do not enforce uniqueness. The store keys jobs by `id` and replaces a row with the same id (see the store's upsert), so uniqueness is the store's concern, not this type's.
 - **Unsafe ids**: An id with path characters is valid data here; callers that use it in a file path MUST check it first (MUST, per no-validation).
 - **Concurrent access**: Not applicable beyond value semantics — each copy is independent, so there is no shared mutable state.
@@ -163,13 +162,13 @@ Not applicable: the source makes no log call.
 - **Compose**: Port as Kotlin `data class` types, with `PartnerJobStep.Environment` as an `enum class`; use `kotlinx.serialization` with `@Serializable` and set `scheduleSeconds` to `Int? = null` with `encodeDefaults` as needed. Keep `isBuiltIn` without a default in the serialized form if missing-key failure on decode is to be preserved; `Boolean = false` would instead accept a missing key.
 - **React/Web**: Port as TypeScript interfaces with `environment` typed as the union `terminal` or `claude` and `scheduleSeconds` as `number | null`. Parse stored JSON through a schema validator such as one written with zod so that a missing key or unknown environment fails like the source; plain `JSON.parse` would not. Use the job `id` as the React `key`.
 - **AppKit / UIKit**: Identical to the SwiftUI note: the types are UI-framework agnostic. The macOS editor model (`PartnerJobsEditorModel`) edits copies of these structs and saves them back through the store.
-- **WinUI 3**: Port as C# `record` types (`public sealed record PartnerJob`) with `init` properties for value equality and immutability, and `PartnerJobStep.Environment` as an `enum` with `[JsonConverter(typeof(JsonStringEnumConverter))]` using camel-case names so the wire values stay `terminal` and `claude`. Use `System.Text.Json` with `JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase` to get the key names, and mark non-optional properties `required` so a missing key fails on decode as in the source; `int?` for `ScheduleSeconds`. Records compare lists by reference, so give the steps a value-comparable collection (such as `ImmutableArray` with a custom equality) if equality must match the source. For binding in XAML, wrap a job in a view model implementing `INotifyPropertyChanged`, since a record is immutable. Persist the steps as a JSON text column in SQLite or a file under `Windows.Storage.ApplicationData`.
+- **WinUI 3**: Port as C# `record` types (`public sealed record PartnerJob`) with `init` properties for value equality and immutability, and `PartnerJobStep.Environment` as an `enum` with `[JsonConverter(typeof(JsonStringEnumConverter))]` using camel-case names so the wire values stay `terminal` and `claude`. Use `System.Text.Json` with `JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase` to get the key names, and mark non-optional properties `required` so a missing key fails on decode as in the source; `int?` for `ScheduleSeconds`. Records compare lists by reference, so override `Equals` and `GetHashCode` on the record to compare `Steps` with `SequenceEqual` (an `ImmutableArray` also compares by reference) if equality must match the source. For binding in XAML, wrap a job in a view model implementing `INotifyPropertyChanged`, since a record is immutable. Persist the steps as a JSON text column in SQLite or a file under `Windows.Storage.ApplicationData`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerJob.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerJob.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -180,7 +179,7 @@ Not applicable: the source makes no log call.
 **Rationale**: The partner follows guidelines written in prose and types steps verbatim, so the model only needs to carry them; templating, scheduling and prompt assembly sit in separate types that read these fields.
 **Approved**: pending
 
-**Decision**: `scheduleSeconds` is an optional integer, and non-positive values are left to consumers to treat as no timer.
+**Decision**: `scheduleSeconds` is an optional integer, and the type keeps any integer as given; what a non-positive value means is left to the consumer that arms a timer.
 **Rationale**: The type stays a passive value; the controller that arms timers decides what a usable interval is, so the model needs no validation and can round-trip whatever the editor stored.
 **Approved**: pending
 
@@ -210,4 +209,5 @@ The types are inert data with no persistence, scheduling or UI code, so separati
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Moved timer-arming rules out of the type, made vectors self-contained, added a new-field decoding rule and tightened the summary, environment, determinism and WinUI 3 wording. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

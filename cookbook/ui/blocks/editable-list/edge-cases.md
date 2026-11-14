@@ -1,5 +1,5 @@
 
-- **Null or empty search**: Search input defaults to empty; component renders all rows until user types.
+- **Null or empty search**: Search input defaults to empty; the component renders `list.rows` as the controller supplies them, unaffected by the search term (text filters or facets may still narrow `list.rows`).
 - **Empty list with no filter**: Component displays empty message; bar, search, and filters remain interactive.
 - **Filter that matches zero rows**: Component displays filtered-empty message; selection survives the filter but hidden count is shown.
 - **Selection survives filter**: Selected row IDs are not cleared when a filter is applied; selected row that becomes hidden shows in the hidden count.
@@ -13,7 +13,7 @@
 - **Details pane divider position**: Divider position is persisted under `details.storageKey` if provided; otherwise position resets on remount.
 - **Error state during loading**: See **loading-preempts-error-replacement** — the whole-list replacement is skipped while `loading` is true, so the bar, the error strip, and the table's own loading indicator all render together.
 - **Error title missing**: See **default-error-title** — the title is derived from `ariaLabel`, lowercased.
-- **Row activation with no details pane**: `onRowActivate` can be used independently of `details` pane; row double-click or Enter key calls the callback.
+- **Row activation with no details pane**: `onRowActivate` can be used independently of `details` pane; row double-click calls the callback, as does Enter on the focused row when `selectable` is true.
 - **Facet with no options**: Facet menu renders with empty options list.
 - **Text filter with no width**: Text filter input uses default width of 14rem.
 

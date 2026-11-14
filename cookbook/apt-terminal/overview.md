@@ -1,8 +1,8 @@
 
 `apt` (package `apt-terminal`, entry point `apt_terminal.cli:_run`, version
-`0.1.0`) is the Python terminal client for the Agentic Developer Hub backend
+`{__version__}` from `apt_terminal/__init__.py`) is the Python terminal client for the Agentic Developer Hub backend
 (`api.agenticdeveloperhub.com`, `DEFAULT_BASE_URL` in `config.py`). It is a
-headless **client/engine** — no visual surface — built from eight
+headless **client/engine** — no visual surface — built from nine
 collaborating modules:
 
 - **`config.py`** — reads and writes `~/.config/apt/config.toml` (or an
@@ -19,17 +19,19 @@ collaborating modules:
   `Resource` declaration into a Typer sub-app.
 - **`resources.py`** — the fixed, import-time catalog of resources
   (`PERSONA`, `AUTH_TOKENS`, `ALL_DOMAINS`) built on top of a generated
-  OpenAPI client (`apt_terminal.generated`, not itself part of this recipe's
+  OpenAPI client (`apt_terminal.generated`, not itself part of this ingredient's
   sources).
 - **`public.py`** — the two unauthenticated lookup commands
   (`public persona <slug>`, `public user <slug>`).
 - **`output.py`** — the rendering layer (`render`, `emit_table`,
   `emit_json`, `emit_kv`, `confirm`, `warn`, `die`) every command funnels
   through.
+- **`auth_commands.py`** — the `auth` sub-app: the `login`, `logout`,
+  `whoami` and `refresh` commands, built over `Session`.
 - **`cli.py`** — assembles the Typer `app` from the above at import time and
   provides the process entry point (`_run`).
 
-The resource catalog this recipe documents (`PERSONA`, `AUTH_TOKENS`) is
+The resource catalog this ingredient documents (`PERSONA`, `AUTH_TOKENS`) is
 declarative data, not hard-coded commands:
 
 | Domain mount | Resource | `list` | `get` | `create` | `update` | `delete` | Named actions |
@@ -43,7 +45,7 @@ declarative data, not hard-coded commands:
 `services` updates via `PATCH` and `personas` via `PUT` because that is what
 their respective generated operations (`patch_persona_services_id_body` /
 `put_persona_personas_id_body`) implement; the source gives no rationale for
-the difference and this recipe does not invent one. `templates` intentionally
+the difference and this ingredient does not invent one. `templates` intentionally
 lists `get_persona_provider_templates` (a redacting catalog) rather than a raw
 `service-templates` endpoint, per `resources.py`'s own comment: the raw
 endpoint was removed from the backend.

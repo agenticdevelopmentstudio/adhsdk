@@ -2,13 +2,13 @@
   "format": 2,
   "meta": {
     "id": "ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43",
-    "title": "MailClassification",
+    "title": "Mail Classification",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1bf26692748b0781",
+  "synced": "61adf87abc917683",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

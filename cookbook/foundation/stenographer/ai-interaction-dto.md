@@ -2,7 +2,7 @@
 id: 7a776b77-a7b2-4ed5-a26f-94795434d675
 title: "AI Interaction DTO"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,8 @@ tags:
   - ai-log
   - dto
 depends-on: []
-related: []
+related:
+  - 08d59319-de4b-438a-a144-dcf3912aa2e5
 references: []
 approved-by: ""
 approved-date: ""
@@ -40,22 +41,32 @@ List reads truncate the three long text fields (`systemPrompt`, `userPrompt`, `r
 - **immutable**: Every field MUST be a constant set once by the initializer.
 - **codable-keys**: The DTO MUST encode and decode with its property names as the wire keys, using the synthesized `Codable` conformance.
 - **decode-all-required**: Decoding MUST fail when any of the fourteen keys is missing; unlike its sibling `ConversationEntryDTO`, it has no tolerant decode.
-- **initializer-complete**: The public memberwise initializer MUST take every field and no field has a default.
+- **initializer-complete**: The public memberwise initializer MUST take every field and MUST NOT give any field a default.
 - **feature-vocabulary**: `feature` is documented as `summarize` or `oversight`, naming which feature asked; the type MUST NOT reject any other string.
-- **session-id-empty**: `sessionId` MUST be the empty string when the call was not scoped to a session.
 - **provider-kind-vocabulary**: `providerKind` is documented as `plugin` (a selected provider configuration) or `cli` (the zero-config `claude -p` fallback); the type MUST NOT reject any other string.
-- **config-name-empty-on-cli**: `configName` MUST be the empty string on the CLI path.
-- **model-label**: `model` MUST be the model label the call resolved to: the configuration's model, the plugin id, or the CLI model.
 - **outcome-vocabulary**: `outcome` is documented as `ok`, `error`, `guard_blocked` or `guard_deferred`; the type MUST NOT reject any other string.
-- **failure-reason**: When the call did not complete, `error` MUST hold the reason and `response` MUST be empty; on success `error` MUST be the empty string.
 - **is-failure**: `isFailure` MUST be true for every `outcome` other than the exact string `ok`, including a value outside the documented four.
 - **is-failure-case-sensitive**: `isFailure` MUST compare `outcome` exactly, so `OK` counts as a failure.
-- **truncated-list**: A list read MUST set `truncated` to true when any of `systemPrompt`, `userPrompt` or `response` was cut, so a viewer knows to fetch the full text by id.
-- **truncated-detail**: A by-id read MUST return the full text with `truncated` false.
+- **truncated-list**: `truncated` MUST report whether the producer cut any of `systemPrompt`, `userPrompt` or `response`, so a viewer knows to fetch the full text by id. (The daemon store's list read is the producer that cuts and sets it.)
+- **truncated-detail**: A producer that returns the full text (the daemon store's by-id read) MUST set `truncated` to false.
 - **timestamp-text**: `createdAt` MUST be carried as the text the daemon stored, with no parsing or reformatting by the DTO.
-- **rendering-split**: List and detail rendering MUST derive their success/failure split from `isFailure` and not from comparing `outcome` themselves.
-- **no-secrets-handling**: The DTO MUST carry prompts and responses verbatim; it applies no redaction.
+- **verbatim-no-redaction**: The DTO MUST carry prompts and responses verbatim; it applies no redaction.
+- **decoder-empty-string-present**: A decoder MUST NOT treat an empty string as a missing value.
 
+### Producer contract
+
+The type cannot enforce these; whoever builds the DTO (`AIInteractionStore`, `DaemonAIChat`) MUST honor them.
+
+- **session-id-empty**: `sessionId` MUST be the empty string when the call was not scoped to a session.
+- **config-name-empty-on-cli**: `configName` MUST be the empty string on the CLI path.
+- **model-label**: `model` MUST be the model label the call resolved to: the configuration's model, the plugin id, or the CLI model.
+- **failure-reason**: When the call did not complete, `error` MUST hold the reason and `response` MUST be empty; on success `error` MUST be the empty string.
+
+### Consumer contract
+
+The type cannot enforce this; the AI Log window is the consumer.
+
+- **rendering-split**: List and detail rendering MUST derive their success/failure split from `isFailure` and not from comparing `outcome` themselves.
 ## Appearance
 
 Not applicable — this is a data transfer type, not a visual component.
@@ -80,12 +91,12 @@ Not applicable — this is a data transfer type, not a visual component.
 | ai-interaction-dto-006 | is-failure-case-sensitive | `outcome` is `OK`. | `isFailure` is true (derived from the source expression; no test). |
 | ai-interaction-dto-007 | codable-keys, field-set | Encode a DTO and decode the result. | The decoded value equals the original (derived from the synthesized conformance; no test of the DTO round trip). |
 | ai-interaction-dto-008 | decode-all-required | Decode JSON that lacks `truncated`. | Decoding throws `keyNotFound` (derived from the synthesized conformance; no test). |
-| ai-interaction-dto-009 | truncated-list | List read of a row whose `userPrompt` is longer than the truncation length (default 300 characters, in the daemon's store). | `truncated` is true and the three text fields are cut to that length (source: the daemon's `fetchAIInteractions`; test: testListTruncatesLongTextAndFlagsIt, which asserts a 400-character `userPrompt` reads back as 300 characters with `truncated` true). |
+| ai-interaction-dto-009 | truncated-list | List read of a row whose `userPrompt` is longer than the truncation length (default 300 characters, in the daemon's store). | `truncated` is true; each field longer than the limit is cut to it and each shorter field comes back unchanged (source: the daemon's `fetchAIInteractions`; test: testListTruncatesLongTextAndFlagsIt, which asserts a 400-character `userPrompt` reads back as 300 characters with `truncated` true). |
 | ai-interaction-dto-010 | truncated-detail | By-id read of the same row. | Full text with `truncated` false (source: the daemon's `fetchAIInteraction`; test: testListTruncatesLongTextAndFlagsIt, which asserts the by-id text equals the original and `truncated` is false). |
-
+| ai-interaction-dto-011 | truncated-list | List read of a row whose longest text field is exactly 300 characters, at the default truncation length. | `truncated` is false and the text is unchanged, because the store's check is a strict length greater than the limit (derived from the source; no test). |
 ## Edge Cases
 
-- **Null / empty input**: The DTO has no optionals; absent values are carried as empty strings (`sessionId` when not session-scoped, `configName` on the CLI path, `error` on success, `response` on failure). A decoder MUST NOT treat the empty string as a missing value.
+- **Null / empty input**: The DTO has no optionals; absent values are carried as empty strings (`sessionId` when not session-scoped, `configName` on the CLI path, `error` on success, `response` on failure); see `decoder-empty-string-present`.
 - **Boundary values**: A row whose text is exactly at the truncation length is not marked truncated, because the daemon's check is a strict length greater than the limit. The DTO itself holds no limit.
 - **Concurrent access**: Not applicable: the type is an immutable value and `Sendable`.
 - **Error states**: A DTO whose `outcome` is not `ok` is a failure result, not a decoding error; the reason is in `error`. A missing key fails decoding for the whole payload, with no field fallback.
@@ -131,17 +142,18 @@ Not applicable: the type calls no logging API; recording an interaction is the d
 
 ## Platform Notes
 
-- **SwiftUI**: Source is `Core/Stenographer/AIInteractionDTO.swift`, importing only `Foundation`. A `public struct` conforming to `Codable`, `Sendable` and `Equatable` with `let` properties, a long explicit public initializer and one computed property, `isFailure`. The AI Log window reads it in `AILogListSource` and `AILogViewController`; the daemon builds it in `AIInteractionStore`.
-- **Compose**: Use a Kotlin `data class` with `val` properties, annotated `@Serializable` for kotlinx.serialization, and a computed `val isFailure get() = outcome != "ok"`. All fields are required, so give none a default value, matching the source.
-- **React/Web**: Use a TypeScript `readonly` interface or `type` with the same fourteen keys, decoded from `GET /ai/interactions`. Validate presence of every key if parsing untyped JSON, since the source's decode fails on a missing key, and export `isFailure(dto)` as a function.
-- **AppKit / UIKit**: Identical to the SwiftUI note: the DTO is UI-framework-agnostic; the AppKit AI Log view controller consumes it.
-- **WinUI 3**: Use a C# `record` (or `sealed record class`) with `init`-only properties and `System.Text.Json` attributes. Mark each property `[JsonRequired]` to match the source's missing-key failure, set `JsonSerializerDefaults.Web` naming to camelCase to match the wire keys, and add `public bool IsFailure => Outcome != "ok";` with `[JsonIgnore]`. Bind a `ListView` or `DataGrid` row to the record, using `IsFailure` for a warning-glyph visual state.
+- **SwiftUI**: Framework-agnostic `struct`; same as AppKit.
+- **Source**: `Core/Stenographer/AIInteractionDTO.swift`, importing only `Foundation`. A `public struct` conforming to `Codable`, `Sendable` and `Equatable` with `let` properties, a long explicit public initializer and one computed property, `isFailure`. The AI Log window reads it in `AILogListSource` and `AILogViewController`; the daemon builds it in `AIInteractionStore`.
+- **Compose**: Use a Kotlin `data class` with `val` properties, annotated `@Serializable` for kotlinx.serialization, and a computed `val isFailure get() = outcome != OUTCOME_OK`, with one shared `OUTCOME_OK` constant. All fields are required, so give none a default value, matching the source.
+- **React/Web**: Use a TypeScript `readonly` interface or `type` with the same fourteen keys, decoded from `GET /ai/interactions`. Validate presence of every key if parsing untyped JSON, since the source's decode fails on a missing key, and export `isFailure(dto)` as a function comparing against one shared `OUTCOME_OK` constant.
+- **AppKit / UIKit**: The source description above applies as is: the DTO is UI-framework-agnostic, and the AppKit AI Log view controller consumes it.
+- **WinUI 3**: Use a C# `record` (or `sealed record class`) with `init`-only properties and `System.Text.Json` attributes. Mark each property `[JsonRequired]` to match the source's missing-key failure, set `JsonSerializerDefaults.Web` naming to camelCase to match the wire keys, and add `public bool IsFailure => Outcome != OutcomeOk;` with one shared `OutcomeOk` constant with `[JsonIgnore]`. Bind a `ListView` or `DataGrid` row to the record, using `IsFailure` for a warning-glyph visual state.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIInteractionDTO.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIInteractionDTO.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -178,3 +190,4 @@ Not applicable: the type calls no logging API; recording an interaction is the d
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Recast truncation as the producer-reported truncated flag, grouped producer and consumer duties in their own subsections, made the decoder rule and no-default rule explicit, renamed no-secrets-handling to verbatim-no-redaction, added a boundary vector, shared OUTCOME_OK in ports, fixed the platform notes, and linked Conversation Entry DTO. |

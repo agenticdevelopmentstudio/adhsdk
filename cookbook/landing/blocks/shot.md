@@ -2,11 +2,11 @@
 id: 53a37583-e86d-41ca-8dd2-8394ba530091
 title: "Shot"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -30,14 +30,14 @@ approved-date: ""
 
 ## Overview
 
-Shot renders a macOS window frame around visual content—screenshots, video clips, or images. When media is not provided, it displays an obviously unfinished placeholder with optional status text and a caption, designed to prevent accidental shipment of unfinished frames. The component applies no transformation to the media; it renders exactly what the host provides.
+Shot renders a macOS window frame around visual content—screenshots, video clips, or images. When media is not provided, it displays an obviously unfinished placeholder with optional status text and a caption, designed to make an unfinished frame obvious (the check is for `undefined` only; see Design Decisions). The component applies no transformation to the media; it renders exactly what the host provides.
 
 ## Behavioral Requirements
 
 - **frame-chrome**: Component MUST render a macOS-style window frame: a title bar with three decorative dots (styled after macOS traffic lights, uniformly colored) and a window title.
 - **title-in-bar**: Component MUST display the `title` prop text in the frame's title bar.
 - **media-verbatim**: When `media` is provided, component MUST render it exactly as passed, with no transformation, processing, or motion handling.
-- **placeholder-when-no-media**: When `media` prop is absent, component MUST render an obviously unfinished placeholder frame.
+- **placeholder-when-no-media**: When `media` is `undefined` (or the prop is omitted), component MUST render an obviously unfinished placeholder frame. Any other value, including `null` and `false`, is treated as media and renders no placeholder.
 - **caption-in-placeholder**: Component MUST render the `caption` prop as text content in the placeholder.
 - **pending-label-above-caption**: When `pendingLabel` is provided, component MUST render it above the caption in the placeholder; when omitted, the placeholder displays only the caption.
 - **falsy-pending-label-omitted**: When `pendingLabel` is a falsy `ReactNode` (`""`, `false`, `null`), it MUST NOT render visible content — the same visible result as when it is omitted.
@@ -82,6 +82,10 @@ Not applicable: Shot is a presentational container with no interactive states. I
 | shot-011 | caption-in-placeholder | caption="" | Placeholder renders an empty `<b>` element; no caption text is visible |
 | shot-012 | title-in-bar | title="" | `.lp-shot__name` renders empty; the frame and dots still display |
 
+| shot-013 | falsy-pending-label-omitted | `pendingLabel={false}` | No visible pending-label text renders; placeholder shows only the caption |
+| shot-014 | falsy-pending-label-omitted | `pendingLabel={null}` | No visible pending-label text renders; placeholder shows only the caption |
+| shot-015 | placeholder-when-no-media | `media={null}` | No `.lp-shot__placeholder` renders; the frame shows the title bar only |
+| shot-016 | placeholder-when-no-media | `media={false}` | No `.lp-shot__placeholder` renders; the frame shows the title bar only |
 ## Edge Cases
 
 - **Media is undefined (or the prop is omitted)**: Placeholder renders; this is the design's primary state until a capture exists. The check is `media === undefined`, not a general falsy/nullish check: passing `media={null}` or `media={false}` takes the `media` branch and renders nothing, leaving a bare title bar with no placeholder and no caption — a host that wants the placeholder must leave `media` undefined (e.g. `capture ?? undefined`, not `capture ?? null`).
@@ -89,7 +93,7 @@ Not applicable: Shot is a presentational container with no interactive states. I
 - **PendingLabel is empty string or falsy**: See **falsy-pending-label-omitted**; no visible content renders and the placeholder shows only the caption, the same visible result as pendingLabel being omitted.
 - **Title is empty string**: Renders with an empty title bar; frame still displays.
 - **Media is a complex nested component tree**: Rendered as-is without interaction or state management by Shot.
-- **Media is a video element without preload/autoplay attributes**: Shot does not apply Reduce Motion behavior; host or a wrapper component (e.g., Clip from the same package) must handle motion preferences.
+- **Media is a video element without preload/autoplay attributes**: Shot does not apply Reduce Motion behavior; host or a wrapper component (for example the `Clip` ingredient ([adhsdk.ingredient.landing.blocks.clip](cookbook:e268fe4f-8e83-4189-b1d2-105cd177308c))) must handle motion preferences.
 
 ## Configuration
 
@@ -133,17 +137,17 @@ Not applicable: Shot performs no operations requiring diagnostic logging.
 
 ## Platform Notes
 
-- **TypeScript/Web**: Component defined in `packages/web/packages/landing/src/blocks/Shot.tsx`. Renders a `<div class="lp-shot">` containing a title bar (`.lp-shot__bar`) with three dots (`.lp-shot__dot`) and title text (`.lp-shot__name`), followed by either the placeholder (`.lp-shot__placeholder`, containing `pendingLabel` then a `<b>` caption) or `media`. When `media` is provided it is rendered directly as `.lp-shot`'s only remaining child — not wrapped in any additional element, and never a sibling of the placeholder, which is not rendered in that case. Styles are external CSS; Shot applies no inline styles. For autoplaying video or motion-sensitive content, host should use the `Clip` component (from `@adh-sdk/landing/client`) or the `usePrefersReducedMotion` hook to respect `prefers-reduced-motion`.
-- **SwiftUI**: Use a `VStack` or `ZStack` wrapping a custom overlay view that draws the macOS window chrome (title bar with traffic light dots, title text). Place the content view (or a placeholder image with a hatching pattern) in the main body. Bind the optional `media` property to conditional rendering of content vs. placeholder. Title and caption are `String` properties; optional label is a generic `View`. Apply system fonts and colors for macOS chrome appearance.
-- **Compose**: Build with `Column` or `Box` containing a header composable that renders the title bar (horizontal row of three colored `Surface` circles and `Text` for the title) and a content area. Compose has no built-in hatch drawable; render the placeholder's diagonal hatch with `Modifier.drawBehind { }` drawing repeating diagonal lines on the `DrawScope`, or by tiling a small hatch `ImageBitmap` as the background brush. Media is a nullable slot. Caption and pendingLabel are optional `@Composable` parameters. Use Material 3 color tokens for macOS-like chrome (dark surface, text on surface).
-- **AppKit / UIKit**: On macOS, wrap the content in a custom `NSView` that draws the window chrome (frame border, title bar with traffic lights, title text) using `NSBezierPath` and `CAShapeLayer`. On iOS, Shot would be less applicable (iOS does not feature window frames), but if adapted, use a rounded `UIView` with a `UIImageView` showing a window-mockup image, or a `CAShapeLayer`-drawn chrome, as the outer frame. Placeholder is a `UIView` with a pattern or cross-hatched texture (Core Graphics or a pattern image). Media is a `UIView` or `UIImageView`.
-- **WinUI 3**: Implement using a `Grid` with two rows: title bar (top) and content area (bottom). Title bar is a `StackPanel` with three `Ellipse` shapes and a `TextBlock` for the title, on a dark background matching the same macOS-style chrome used on every other platform — not the Windows system chrome aesthetic. WinUI 3 has no built-in pattern/hatch brush: render the placeholder's diagonal hatch with a Win2D `CanvasControl` (`Microsoft.Graphics.Canvas.UI.Xaml`) drawing repeating diagonal lines, or tile a small hatch bitmap with an `ImageBrush`, with an overlay `TextBlock` for caption and pendingLabel. For the title bar background, use `SystemControlBackgroundChromeMediumLowBrush` or a hardcoded dark color — there is no `SystemChromeLow` brush resource. Use conditional binding or `VisualStateManager` to toggle placeholder vs. media state.
+- **React/Web**: Component defined in `packages/web/packages/landing/src/blocks/Shot.tsx`. Renders a `<div class="lp-shot">` containing a title bar (`.lp-shot__bar`) with three dots (`.lp-shot__dot`) and title text (`.lp-shot__name`), followed by either the placeholder (`.lp-shot__placeholder`, containing `pendingLabel` then a `<b>` caption) or `media`. When `media` is provided it is rendered directly as `.lp-shot`'s only remaining child — not wrapped in any additional element, and never a sibling of the placeholder, which is not rendered in that case. Styles are external CSS; Shot applies no inline styles. For autoplaying video or motion-sensitive content, host should use the `Clip` ingredient ([adhsdk.ingredient.landing.blocks.clip](cookbook:e268fe4f-8e83-4189-b1d2-105cd177308c)), exported from `@adh-sdk/landing/client`, or the `usePrefersReducedMotion` hook to respect `prefers-reduced-motion`.
+- **SwiftUI**: Use a `VStack` or `ZStack` wrapping a custom overlay view that draws the macOS window chrome (title bar with traffic light dots, title text). Place the content view (or a placeholder image with a hatching pattern) in the main body. Bind the optional `media` property to conditional rendering of content vs. placeholder. Title and caption are `String` properties; optional label is a generic `View`. Use fixed colors, not system colors, so the chrome matches the web: bar gradient from `#1c1c1c` to `rgba(16, 16, 16, 0.6)`, three dots in `rgba(237, 237, 237, 0.22)`, title in `#a0a0a0` at 0.7 of body size.
+- **Compose**: Build with `Column` or `Box` containing a header composable that renders the title bar (horizontal row of three `Surface` circles, all filled with `Color(0x38EDEDED)` (the web's `rgba(237, 237, 237, 0.22)`), and `Text` for the title) and a content area. Compose has no built-in hatch drawable; render the placeholder's diagonal hatch with `Modifier.drawBehind { }` drawing repeating diagonal lines on the `DrawScope`, or by tiling a small hatch `ImageBitmap` as the background brush. Media is a nullable slot. Caption and pendingLabel are optional `@Composable` parameters. Use fixed colors, not Material 3 theme tokens, so the chrome is the same on every platform: frame `#1c1c1c`, title text `#a0a0a0`.
+- **AppKit / UIKit**: On macOS, wrap the content in a custom `NSView` that draws the window chrome (frame border, title bar with traffic lights, title text) using `NSBezierPath` and `CAShapeLayer`. On macOS, the placeholder is an `NSView` with a repeating diagonal hatch drawn in `draw(_:)`, and media is an `NSView` or `NSImageView`. On iOS, draw the same macOS-style frame, not a native iOS chrome: use a rounded `UIView` containing a title-bar view with three equal dots and the title label (fixed colors as above), a placeholder `UIView` whose hatch is a Core Graphics pattern color, and media as a `UIView` or `UIImageView`.
+- **WinUI 3**: Implement using a `Grid` with two rows: title bar (top) and content area (bottom). Title bar is a `StackPanel` with three `Ellipse` shapes and a `TextBlock` for the title, on a dark background matching the same macOS-style chrome used on every other platform — not the Windows system chrome aesthetic. WinUI 3 has no built-in pattern/hatch brush: render the placeholder's diagonal hatch with a Win2D `CanvasControl` (`Microsoft.Graphics.Canvas.UI.Xaml`) drawing repeating diagonal lines, or tile a small hatch bitmap with an `ImageBrush`, with an overlay `TextBlock` for caption and pendingLabel. For the title bar background, use a hardcoded `SolidColorBrush` or `LinearGradientBrush` from `#1c1c1c` to `#101010` (not a system theme brush, which would change with the system theme), with the title in `#a0a0a0` and the three dots in `#38EDEDED`. Use conditional binding or `VisualStateManager` to toggle placeholder vs. media state.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Shot.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Shot.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -153,6 +157,14 @@ Not applicable: Shot performs no operations requiring diagnostic logging.
 
 **Decision**: The placeholder is a mandatory visual state, not an optional one — when `media` is absent, an obviously unfinished frame (diagonal hatch background) renders to prevent shipping an incomplete capture by accident.
 **Rationale**: The source JSDoc for `media` states: "Absent renders the placeholder frame — deliberately, obviously unfinished, so one shipped by accident is caught rather than mistaken for a screenshot of a product that looks like that."
+**Approved**: pending
+
+**Decision**: The placeholder check is a deliberate `media === undefined`, not a nullish or falsy check.
+**Rationale**: A host that passes `media={null}` or `media={false}` has made an explicit choice to render nothing there, and Shot renders `media` verbatim. The cost is that the unfinished-frame safeguard does not catch those values: they leave a bare title bar with no placeholder, so a host that wants the placeholder must leave `media` undefined (`capture ?? undefined`).
+**Approved**: pending
+
+**Decision**: The caption in the placeholder is rendered in a `<b>` element that the stylesheet resets to normal weight.
+**Rationale**: This is how the source is written, and the `<b>` gives the CSS a hook for the caption. It carries no emphasis meaning, but assistive technology may read it as emphasis, so `semantic-markup` stays partial; a port SHOULD use a plain `<span>` (or its platform's plain text element) instead.
 **Approved**: pending
 
 **Decision**: Shot does not apply Reduce Motion handling itself; for autoplaying video or motion-sensitive clips, hosts use the package's `Clip` component or the `usePrefersReducedMotion` hook.
@@ -175,6 +187,7 @@ Statuses rest on `Shot.tsx` and its CSS: text sizes are set in `rem` (`.lp-shot_
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Restated placeholder-when-no-media in terms of undefined, added design decisions for the undefined check and the caption b element, linked Clip as an ingredient, added vectors for null/false media and pendingLabel, and gave native ports fixed chrome colors and definite macOS and iOS guidance. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed Media-is-null/undefined edge case: the placeholder check is media === undefined only; media={null}/{false} renders nothing. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and added falsy-pending-label-omitted with a vector, added vectors for media-present/empty-caption/empty-title, corrected Compose/UIKit/WinUI 3 Platform Notes APIs and macOS-chrome parity, resolved the media-wrapping contradiction between Platform Notes and shot-003, reformatted Design Decisions and quoted the source JSDoc instead of pointing at it, replaced Compliance/Configuration/Accessibility Options "Not applicable" with a grounded table, grounded Appearance in actual CSS values, reworded summary, and added Clip to related |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from Shot.tsx source |

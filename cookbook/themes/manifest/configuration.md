@@ -1,7 +1,1 @@
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `./theme-data` exports | string constants | generated | Supplied by `scripts/build-theme-data.mjs`; one named export per theme, listed in the Registered themes table. |
-
-The manifest has no parameters, environment variables or settings keys.
-
+No configuration. The manifest has no parameters, environment variables or settings keys. Its stylesheet strings come from the generated `theme-data` module ([adhsdk.ingredient.themes.theme-data](cookbook:6ddafe05-a417-498d-90b1-00f69c89f7ac)), which is a dependency, not a setting.

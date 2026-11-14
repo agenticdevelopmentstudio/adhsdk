@@ -1,10 +1,10 @@
 
 **Decision**: A daemon builds one configuration and hands it to the shared runtime; the shared code spells no daemon name or directory.
-**Rationale**: The source says so directly. It lets several daemons share one runtime while each keeps its own paths, hook marker and identity.
+**Rationale**: The doc comment on `SessionDaemonConfiguration` in `SessionDaemonConfiguration.swift` says so directly ("nothing in the shared code spells a daemon's name or directory itself"). It lets several daemons share one runtime while each keeps its own paths, hook marker and identity.
 **Approved**: pending
 
 **Decision**: `summariesDefaultEnabled` has no default.
-**Rationale**: The source says every daemon states its own: a daemon that must not double LLM spend over sessions another daemon already summarizes passes `false`. A default would let that mistake happen by omission.
+**Rationale**: The doc comment on `summariesDefaultEnabled` in `SessionDaemonConfiguration.swift` says every daemon states its own: a daemon that must not double LLM spend over sessions another daemon already summarizes passes `false`. A default would let that mistake happen by omission.
 **Approved**: pending
 
 **Decision**: Paths and the subsystem are derived from other arguments when the caller passes `nil`, and the initializer stores them as plain values.
@@ -16,10 +16,10 @@
 **Approved**: pending
 
 **Decision**: `test(port:root:)` roots every path, and the hook's `settings.json`, in one directory.
-**Rationale**: The source says a test must never touch the real Claude Code settings. It also uses port 0 so parallel tests do not collide, a 1-second liveness interval so tests do not wait, and `summariesDefaultEnabled` of `false`.
+**Rationale**: The doc comment on `test(port:root:)` in `SessionDaemonConfiguration.swift` says a test must never touch the real Claude Code settings. It also uses port 0 so parallel tests do not collide, a 1-second liveness interval so tests do not wait, and `summariesDefaultEnabled` of `false`.
 **Approved**: pending
 
-**Decision**: `httpPort`, `label`, `retentionDays` and the two intervals are carried but not read by the SDK's database daemon code.
+**Decision**: `httpPort`, `label`, `retentionDays` and the two intervals are carried for the host daemon and are not depended on by the shared runtime.
 **Rationale**: The host daemon owns the listener, the launchd registration and the timers; the shared struct exists so one value describes the whole daemon.
 **Approved**: pending
 

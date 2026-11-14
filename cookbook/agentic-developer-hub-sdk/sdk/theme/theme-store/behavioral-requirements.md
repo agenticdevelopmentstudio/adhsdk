@@ -14,8 +14,7 @@ Public surface: `ThemeStore.init(storage:)`, `customThemes`, `allThemes`, `theme
 - **update-noop-unknown**: `update(_:)` MUST do nothing, and MUST NOT write to storage, when no custom theme has the given `id`; this includes every built-in id.
 - **delete-removes-custom**: `delete(id:)` MUST remove every custom theme with the given `id` and write the filtered list to storage.
 - **delete-clears-active-id**: `delete(id:)` MUST set `storage.activeThemeID` to `nil` when it equals the given `id`, so storage never keeps pointing at a removed theme.
-- **delete-builtin-noop**: `delete(id:)` MUST be a no-op when `id` names no custom theme, built-ins included: it writes nothing and leaves `activeThemeID` alone even when that id is the active theme. Covered by `builtInsAreUndeletable` and `deletingActiveBuiltInKeepsIt`.
-- **delete-skips-noop-write**: `delete(id:)` MUST NOT write storage when no custom theme matched, so an unknown or built-in id leaves `customThemes` and `activeThemeID` untouched.
+- **delete-builtin-noop**: `delete(id:)` MUST be a no-op when `id` names no custom theme, built-ins and unknown ids included: it MUST NOT write storage, so `customThemes` and `activeThemeID` stay untouched even when that id is the active theme. Covered by `builtInsAreUndeletable` and `deletingActiveBuiltInKeepsIt`.
 - **add-new-seed**: `addNewTheme(basedOn:name:)` MUST copy the template, defaulting to `BuiltInThemes.solarizedDark`, so the new theme keeps the template's palette, typography and other fields.
 - **add-new-identity**: `addNewTheme` MUST give the copy a fresh `UUID().uuidString` id, set `isBuiltIn` and `isImported` to `false`, set `attribution` to `nil`, and store it through `add(_:)`.
 - **add-new-name**: `addNewTheme` MUST name the copy `uniqueName(name)`, with `name` defaulting to `"New Theme"`.
@@ -49,5 +48,5 @@ Public surface: `ThemeStore.init(storage:)`, `customThemes`, `allThemes`, `theme
 
 Concurrency: the type is `@MainActor`, and every method is synchronous, so each read-modify-write (`add`, `update`, `delete`) runs without interleaving with another store call. A change made to the storage from outside the store (a settings panel, a sync from another device) can land between two calls; the store does not detect it, and the next call reads the new value. `ThemeStorage.onExternalChange` is how a host learns of that, and `ThemeStore` never sets or invokes it.
 
-Persistence: nothing is persisted by the store itself. Custom themes and `activeThemeID` survive a restart only to the extent the injected `ThemeStorage` round-trips them, which the protocol requires of every conformer. Built-ins are never stored, and the ephemeral data is the store instance itself.
+Persistence: nothing is persisted by the store itself. Custom themes and `activeThemeID` survive a restart only to the extent the injected `ThemeStorage` round-trips them, which the protocol requires of every conformer. Built-ins are never stored, and nothing is ephemeral because the store keeps no state of its own.
 

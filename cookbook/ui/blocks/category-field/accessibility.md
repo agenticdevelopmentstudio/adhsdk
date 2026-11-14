@@ -8,5 +8,5 @@
 - **Entity chooser**: Receives `ariaLabel="Browse <label.toLowerCase()>"` to announce the browsing intent.
 - **Semantic structure**: Breadcrumbs use list structure (`<ol>`, `<li>`) to convey hierarchy; this is announced by assistive technology.
 - **Label association**: The component is wrapped in a Field that associates the label with the input via `htmlFor` or an external label pattern.
-- **Minimum tap target**: The breadcrumb rename buttons are inline text elements (`text-xs`, sized by their content) rather than a discrete tap target of their own; as inline text links they are exempt from the 44×44pt guideline. The Combobox and EntityChooser inputs meet their own minimums independently.
+- **Minimum tap target**: The breadcrumb rename buttons are standalone buttons in a breadcrumb row, sized by their text content (`text-xs`), with no minimum hit area. They are not inline links in running text, so the inline-text exception of WCAG 2.5.8 is not claimed; `touch-target-size` is recorded as partial in Compliance. The Combobox and EntityChooser inputs meet their own minimums independently.
 

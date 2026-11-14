@@ -10,4 +10,5 @@
 - **labels-from-prop**: The component MUST expose `label` as its accessible name via `aria-label`.
 - **decorative-icon**: The component MUST mark its glyph `aria-hidden` so the accessible name comes solely from `label`.
 - **forwards-classname**: The component MUST merge a consumer `className` onto the button element via `cn()`.
+- **classname-overrides-default-size**: Because `cn()` merges through tailwind-merge, a consumer `className` that conflicts with a built-in class (for example `size-8` against the built-in `size-6`) MUST win, and the conflicting built-in class MUST be dropped.
 

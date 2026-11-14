@@ -4,7 +4,7 @@
     "id": "6a645c72-4525-4b96-9df4-85abecfacd27",
     "title": "Route Response",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "095f5e633624c305",
+  "synced": "0d8a534b9d8f60a6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

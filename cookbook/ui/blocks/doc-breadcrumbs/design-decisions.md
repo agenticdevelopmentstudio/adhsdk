@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: The component deliberately does not derive breadcrumbs from the URL or page slug; crumbs are caller-supplied.
-**Rationale**: Each site has its own URL structure and labeling convention (e.g., cookbook's `slugToBreadcrumbs` title-cases domain segments; another site might look labels up in a manifest). Deriving them here would bake one site's URL convention into the toolkit. Responsibility for breadcrumb construction belongs to the host application.
+**Rationale**: Each site has its own URL structure and labeling convention (e.g., one site title-cases URL segments; another looks labels up in a manifest). Deriving them here would bake one site's URL convention into the toolkit. Responsibility for breadcrumb construction belongs to the host application.
 **Approved**: pending
 
 **Decision**: The component accepts a `LinkComponent` prop instead of hardcoding native `<a>` elements.

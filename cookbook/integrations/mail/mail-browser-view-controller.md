@@ -2,11 +2,11 @@
 id: 018e4a69-cbeb-4105-8f39-dae3e6f7d8ec
 title: "MailBrowserViewController"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,7 +39,7 @@ approved-date: ""
 
 ## Overview
 
-The content of the mail window. It lays out three panes side by side: a sidebar of mailboxes, the selected mailbox's message list, and a reader for the open message. A host app puts it in a window; it needs only a mail client, which it hands to a `MailBrowserModel` that holds all state and actions (the three pane controllers read and call that model).
+The content of the mail window. It lays out three panes side by side: a sidebar of mailboxes, the selected mailbox's message list, and a reader for the open message. A host app puts it in a window; it needs only a mail client, which it hands to a `MailBrowserModel` ([adhsdk.ingredient.integrations.mail.mail-browser-model](cookbook:b3edb32d-7473-464b-acfb-c19cdd44e99e)) that holds all state and actions (the three pane controllers read and call that model).
 
 This controller owns three things the panes do not: the split layout (pane order, widths, remembered divider positions), a background poll that reloads the model when a sync has finished, and the alert that reports the model's error message. It is the composition root for the mail window, not a place for mail logic.
 
@@ -48,7 +48,7 @@ This controller owns three things the panes do not: the split layout (pane order
 - **client-only-dependency**: The component MUST be constructible from a mail client alone, with no other required argument.
 - **model-owned**: The component MUST create one model from the supplied client at construction and expose it as a public `model`.
 - **shared-model**: The component MUST give that same model instance to the sidebar, the message list and the reader.
-- **no-coder-init**: The component does not support construction from an archive; in the macOS source `init(coder:)` traps with the message "init(coder:) has not been implemented", and a port MAY trap or fail the same way (see the design decision on technical debt).
+- **no-coder-init**: The component MUST NOT support construction from an archive, and `init(coder:)` MUST trap; the macOS source traps with the message "init(coder:) has not been implemented" (see the design decision on technical debt).
 - **pane-order**: The component MUST lay out the panes in this order: mailbox sidebar, message list, reader.
 - **sidebar-width**: The sidebar pane MUST be between 180 and 320 points wide.
 - **list-min-width**: The message list pane MUST be at least 280 points wide.
@@ -58,17 +58,16 @@ This controller owns three things the panes do not: the split layout (pane order
 - **poll-start**: The component MUST start a repeating refresh task each time the view appears, cancelling any task already running first.
 - **poll-interval**: The refresh task MUST wait one refresh interval before each refresh, so the first refresh follows the appearance by one full interval.
 - **poll-default-interval**: The refresh interval MUST default to 30 seconds and MAY be set at construction.
-- **poll-action**: Each tick MUST call the model's refresh-if-synced action, which reads the local store and never calls the remote mail provider.
+- **poll-action**: Each tick MUST call the model's refresh-if-synced action. That the action reads only the local store is the model's contract, in the `MailBrowserModel` artifact.
 - **poll-stop**: The component MUST cancel the refresh task and drop it when the view disappears.
 - **poll-cancel-exit**: The refresh task MUST end without calling the model when it was cancelled during its wait.
 - **poll-no-retain**: The refresh task MUST hold the controller weakly while it waits; if the controller is gone when a wait ends, the task MUST end. (It holds the controller strongly only for the duration of one refresh call.)
 - **error-observe**: The component MUST observe the model's error message on the main queue and present an alert for every non-nil value.
 - **error-nil-ignored**: The component MUST NOT present an alert when the error message becomes nil.
 - **error-alert-content**: The alert MUST use the title "Mail", the model's message as informative text, the warning style and a single "OK" button.
-- **error-sheet**: When the view is in a window, the alert MUST be presented as a sheet on that window.
-- **error-modal-fallback**: When the view has no window, the alert MUST be run application-modally.
+- **error-sheet**: When the view is in a window, the alert MUST be attached to that window, as a sheet where the platform has one.
+- **error-modal-fallback**: When the view has no window, the alert MUST be shown application-modally where the platform allows it.
 - **error-dismiss**: The component MUST call the model's dismiss-error action after the alert is closed, in both the sheet and modal paths.
-
 ## Appearance
 
 - **Corner radius**: Not applicable: the controller draws nothing itself; the panes and the system split view draw their own content.
@@ -125,6 +124,7 @@ The model contract the controller relies on is covered by `MailBrowserModelTests
 | mail-browser-vc-014 | poll-default-interval | Construct without an interval. | Refreshes occur every 30 seconds while on screen. |
 | mail-browser-vc-015 | poll-no-retain | Release the controller while a refresh task is waiting. | When the wait ends the task exits and makes no model call. |
 | mail-browser-vc-016 | poll-interval, poll-action, poll-stop, poll-cancel-exit, poll-no-retain | Construct with `refreshInterval` of 100 ms and a scripted client whose account sync time changes once; appear, wait 250 ms, then disappear and wait 250 ms more; repeat, releasing the controller instead of disappearing. | No refresh before 100 ms; the refresh after the sync change reloads the list; no model call follows the disappearance or the release. Runs in milliseconds, with no 30 s wait; vectors 008, 009, 014 and 015 use the same check with the default interval. |
+
 ## Edge Cases
 
 - **Refresh while off screen**: No refresh task exists while the view is not on screen. The component MUST NOT poll in that state.
@@ -138,7 +138,7 @@ The model contract the controller relies on is covered by `MailBrowserModelTests
 - **No accounts or provider not configured**: Not a controller concern: the model clears the list and the panes show their empty state.
 - **Concurrent access**: The controller and model are confined to the main actor; the refresh task hops to the main actor to call the model, so calls are serialized with UI work.
 - **Offline**: The poll reads only the local store, so loss of connectivity does not affect it; the controller makes no network call.
-- **Initial reload not cancelled on disappear**: The initial reload is an unstructured main-actor task whose handle is not kept, so it MAY outlive the view and is not cancelled when the view disappears. A port SHOULD keep the handle and cancel it on disappear.
+- **Initial reload not cancelled on disappear**: The initial reload is an unstructured main-actor task whose handle is not kept, so it MAY outlive the view and is not cancelled when the view disappears. The source does not cancel it; a port may keep the handle and cancel it on disappear.
 
 ## Configuration
 
@@ -155,8 +155,8 @@ Not applicable: the controller is the content of a window and defines no URL or 
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| none in source (a port should use `mail.alert.title`) | Mail | Alert title |
-| none in source (a port should use `mail.alert.ok`) | OK | Alert button |
+| `mail.alert.title` | Mail | Alert title; a literal in source |
+| `mail.alert.ok` | OK | Alert button; a literal in source |
 
 - **localization-support**: NEEDS REVIEW: Not implemented in source. The alert title and button are string literals with no localization lookup, and the model's message is passed through as the error's description; a decision on supported locales would settle whether these need keys.
 
@@ -188,14 +188,14 @@ Not applicable: the source writes no log line; failures reach the user as the al
 - **SwiftUI**: Source is AppKit. Start from `NavigationSplitView` with sidebar, content and detail columns and `navigationSplitViewColumnWidth(min:ideal:max:)`; `.alert` or `.sheet` bound to an optional error; `.task` with a loop and `Task.sleep` gives the poll, cancelled automatically when the view goes away. Divider persistence needs `SceneStorage` or similar, unlike the autosave name here.
 - **Compose**: Start from a three-pane layout (`Row` with weighted or fixed-width panes, or the Material 3 list-detail adaptive scaffold on large screens); `LaunchedEffect` with a `delay` loop for the poll, scoped to the lifecycle; `AlertDialog` for errors. Divider positions are not remembered for free.
 - **React/Web**: Three CSS grid columns with `min-width`, a drag handle component for dividers, positions in local storage; `useEffect` with `setInterval` or a timeout loop and cleanup on unmount; a modal `role="alertdialog"` for errors, with focus moved into it.
-- **AppKit / UIKit**: Source: `macOS/Features/Integrations/Mail/MailBrowserViewController.swift`, an `NSSplitViewController` main-actor subclass using `NSSplitViewItem` factories for sidebar and content-list styles, `autosaveName` for dividers, `NSAlert` with `beginSheetModal`. The polling task starts in `viewDidAppear` and stops in `viewDidDisappear`. On UIKit use `UISplitViewController` (triple-column style) with column width properties; there is no autosave name, and alerts are `UIAlertController`.
+- **AppKit / UIKit**: Source: `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift`, an `NSSplitViewController` main-actor subclass using `NSSplitViewItem` factories for sidebar and content-list styles, `autosaveName` for dividers, `NSAlert` with `beginSheetModal` when the view has a window (the sheet of **error-sheet**) and `runModal` when it has none (**error-modal-fallback**). The polling task starts in `viewDidAppear` and stops in `viewDidDisappear`. On UIKit use `UISplitViewController` (triple-column style) with column width properties; there is no autosave name, and alerts are `UIAlertController`.
 - **WinUI 3**: Use a `Grid` with three `ColumnDefinition` entries and two `GridSplitter` controls from the Windows Community Toolkit, setting `MinWidth` 180, 280 and 360 on the columns and `MaxWidth` 320 on the first, since WinUI has no built-in autosave for column widths; persist `ColumnDefinition.Width` in `ApplicationData.Current.LocalSettings` on `SizeChanged`. A `NavigationView` in `Left` pane mode can host the mailbox sidebar instead of a first column. Start the poll in the page's `Loaded` handler with a `DispatcherQueueTimer` (`Interval` of 30 seconds, `IsRepeating` true) and stop it in `Unloaded`; the timer's first tick falls one full interval after `Start`, matching the source. Show errors with a `ContentDialog` (`Title` "Mail", `Content` the message, `CloseButtonText` "OK", `XamlRoot` set to the page's root); `ContentDialog` allows one open at a time, so a second error while one is showing needs queuing, which the source does not define. The fallback with no window has no WinUI equivalent; a `ContentDialog` always needs a `XamlRoot`. Set `AutomationProperties.Name` on each pane and keep Tab order across panes in a `TabNavigation` group.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift` | confirmed (1.0.1) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -212,7 +212,7 @@ Not applicable: the source writes no log line; failures reach the user as the al
 **Approved**: pending
 
 **Decision**: Each tick calls the model's refresh-if-synced action, a read of the local store that never calls the remote mail provider.
-**Rationale**: The class comment says it is "a read of the local store, never a Gmail call"; the poll costs no network or API quota. How the model decides a sync has landed belongs to the `MailBrowserModel` artifact.
+**Rationale**: The class comment says it is "a read of the local store, never a Gmail call"; the poll costs no network or API quota. How the model decides a sync has landed belongs to the `MailBrowserModel` artifact ([adhsdk.ingredient.integrations.mail.mail-browser-model](cookbook:b3edb32d-7473-464b-acfb-c19cdd44e99e)).
 **Approved**: pending
 
 **Decision**: The poll runs only between appear and disappear.
@@ -224,7 +224,7 @@ Not applicable: the source writes no log line; failures reach the user as the al
 **Approved**: pending
 
 **Decision**: Pane widths are 180 to 320 for the sidebar, 280 minimum for the list and 360 minimum for the reader, with divider positions saved under "MailBrowserSplit".
-**Rationale**: The values are fixed in source with no comment; their reasons are not recorded there, so this records what the code does.
+**Rationale**: The values are fixed in source with no comment, and no reason for them is recorded anywhere, so they are unexplained, not design intent; this records what the code does.
 **Approved**: pending
 
 **Decision**: The controller's alert strings are literals, and `init(coder:)` traps.
@@ -232,12 +232,13 @@ Not applicable: the source writes no log line; failures reach the user as the al
 **Approved**: pending
 
 **Decision**: The refresh interval is accepted as given, with no check for zero or negative values.
-**Rationale**: The source takes a `Duration` and passes it to the sleep; a very short interval only makes the local-store read run more often, and the only caller uses the default. Rejecting bad values at construction is left to a future change.
+**Rationale**: The source takes a `Duration` and passes it to the sleep; a very short interval only makes the local-store read run more often, and the only caller uses the default. Rejecting bad values at construction is left to a future change. The debt is retired when the initializer rejects a zero or negative interval or a second caller sets a non-default one.
 **Approved**: pending
 
 **Decision**: Overlapping errors each present their own alert; the controller neither coalesces nor queues them.
 **Rationale**: The source presents one alert per non-nil error value and leaves stacking to AppKit. A port to a platform that allows one dialog at a time (WinUI `ContentDialog`) needs a queue or coalescing step, which this spec does not define yet.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -255,3 +256,4 @@ The controller is a thin composition root: layout, a poll and an error alert, wi
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Made no-coder-init testable, limited poll-action to the controller, reworded alert requirements platform-neutrally, linked the model, marked pane widths unexplained, added debt retirement for the interval, and fixed spacing, paths and localization keys. |

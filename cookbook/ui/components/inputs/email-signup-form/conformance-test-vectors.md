@@ -6,7 +6,7 @@
 | esf-003 | timeout-config-request, show-unavailable-state | Config fetch hangs beyond 10,000ms | Component enters unavailable state and displays "Try again" button |
 | esf-004 | handle-config-not-ok, show-unavailable-state | Config fetch returns 404 or 500 | Component enters unavailable state; console error logged with public key |
 | esf-005 | show-closed-state | Config fetch returns 200 with status "closed" | Component displays "{list name} is closed to new signups right now." with no form |
-| esf-006 | validate-email-locally, reject-invalid-email | User enters "notanemail" and clicks submit | The browser's native constraint validation (`type="email"`) blocks the `submit` event first and shows its own bubble ("Please include an '@' in the email address…"); the component's handler does not run and its "Enter a valid email address." message does not appear. The component's own check and message are exercised only by a value that passes native `type="email"` but fails the stricter local pattern (e.g. "a@b"), or by a submit that bypasses native validation |
+| esf-006 | native-constraint-validation (see the Empty email field edge case) | User enters "notanemail" and clicks submit | The browser's native constraint validation (`type="email"`) blocks the `submit` event first and shows its own bubble; the component's handler does not run and its "Enter a valid email address." message does not appear |
 | esf-007 | validate-email-locally | User enters "user@example.com" | Form passes validation check |
 | esf-008 | trim-email-before-submit | User enters "  user@example.com  " | Email is trimmed before validation and submission |
 | esf-009 | wait-for-nonce-age, add-timing-buffer | Config returned with minAgeMs 3000; user submits after 1000ms | Submission waits `(3000 - 1000) + 250` = 2250ms before sending |
@@ -35,4 +35,11 @@
 | esf-032 | description-fallback | Mount with description="Custom description" | Description displays "Custom description" instead of config.description |
 | esf-033 | success-message-default | Mount without successMessage prop | Success state displays the default "Thanks for signing up! Check your inbox for a confirmation." message |
 | esf-034 | show-unavailable-state | Click "Try again" after config fetch fails | Phase returns to loading, and the config fetch is retried |
-
+| esf-035 | validate-email-locally, reject-invalid-email, mark-email-invalid-on-validation-error | User enters "a@b" (passes native `type="email"`, fails the local pattern) and submits | "Enter a valid email address." is shown with `role="alert"`; no POST is sent |
+| esf-036 | enter-submitting-state, mark-submit-busy, mark-submit-disabled-during-submit | Config returned with minAgeMs 3000; user submits after 1000ms | The button is disabled with `aria-busy="true"` immediately, throughout the 2250ms wait and the POST |
+| esf-037 | render-email-label, mark-email-required, set-email-type | Inspect DOM | A visible label "Email address" is tied to the email input, which has `required` and `type="email"` |
+| esf-038 | opt-out-honeypot-autofill | Inspect DOM | The honeypot has `autocomplete="off"` and the `data-form-type`, `data-1p-ignore`, `data-lpignore`, `data-bwignore` and `data-protonpass-ignore` attributes |
+| esf-039 | enter-submitting-state | User double-clicks submit | Only one POST is sent; the second invocation is a no-op |
+| esf-040 | refresh-nonce-on-error, log-failures-to-console | Submission fails and the follow-up config refresh also fails | The form stays usable and the console logs `[EmailSignupForm] could not refresh the signup nonce for public key "{publicKey}": {reason}` |
+| esf-041 | show-closed-state | Config returns status "closed" with `name` null or missing | Component displays "This list is closed to new signups right now." |
+| esf-042 | include-honeypot-in-post, handle-submission-ok | Honeypot is non-empty and the server returns 200 | Component enters `done` and shows the success message; the POST body carried the honeypot value as `website` |

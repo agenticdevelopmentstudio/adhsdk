@@ -3,7 +3,7 @@ Text roles
 
 - **role-cases**: `TextRole` MUST have exactly six cases: `title`, `heading`, `body`, `caption`, `code` and `button`.
 - **role-raw-value**: `TextRole` MUST be a `String`-backed enum whose raw value equals the case name (`"title"`, `"heading"`, `"body"`, `"caption"`, `"code"`, `"button"`).
-- **role-meaning**: Each role MUST mean what its doc comment says: `title` large window or screen titles; `heading` section or group headers; `body` default body text; `caption` small secondary text; `code` monospaced text; `button` control labels.
+- **role-meaning**: Each role SHOULD be used for the meaning its doc comment gives: `title` large window or screen titles; `heading` section or group headers; `body` default body text; `caption` small secondary text; `code` monospaced text; `button` control labels.
 - **role-conformances**: `TextRole` MUST be `CaseIterable` and `Sendable`.
 
 Font weight
@@ -57,19 +57,15 @@ System defaults
 | `code` | 12 | `.regular` | true |
 | `button` | 13 | `.medium` | false |
 
-- **default-style-basis**: The default sizes mirror AppKit's standard metrics, so an uncustomized theme looks like the app does today (the source's doc comment).
 - **system-constant**: `ThemeTypography.system` MUST equal `ThemeTypography()`: `sizeScale` 1.0, empty `styles`, every role at its system default.
 - **default-covers-roles**: `defaultStyle(_:)` MUST return a style with `size` greater than 0 for every `TextRole` case.
 
 Size scale limits
 
 - **scale-range**: `ThemeTypography.sizeScaleRange` MUST be the closed range 0.5 to 4.
-- **scale-range-rationale**: The lower bound exists because below 0.5 `size(_:)` collapses every role toward zero and takes any constraint built on an intrinsic size with it; the upper bound exists because above 4 the size exceeds what a layout that assumes a roughly system-sized label can hold (the doc comment).
-- **clamp-function**: `clampedSizeScale(_:)` MUST return the value limited to `sizeScaleRange`: a value below 0.5 returns 0.5, a value above 4 returns 4, and a value inside the range is returned unchanged; this holds for finite input (`clamp-nan` covers non-finite input).
-- **clamp-infinity**: `clampedSizeScale(_:)` MUST return `1.0` for negative and positive infinity alike, not the nearest bound, because the finite check runs before the limit.
-- **clamp-nan**: `clampedSizeScale(_:)` MUST return `1.0`, the unscaled size, for a non-finite input (NaN or either infinity), because `min` and `max` would pass NaN straight through the limit. Covered by `clampNonFinite`.
-- **clamp-callers**: The clamp MUST be applied by every path that sets a scale from outside the type: `SemanticPalette.scaled(by:)` (the reader's runtime "Text Size" control) and `ThemeStore.importJSON` (a theme file's declared `typography.sizeScale`). Both call `clampedSizeScale(_:)` so the two cannot drift onto different limits.
-- **clamp-repair-not-refuse**: `ThemeStore.importJSON` repairs an out-of-range scale by clamping it rather than rejecting the file, because a bad scale leaves a theme mis-sized, not unusable (its doc comment).
+- **clamp-function**: `clampedSizeScale(_:)` MUST return the value limited to `sizeScaleRange`: a value below 0.5 returns 0.5, a value above 4 returns 4, and a value inside the range is returned unchanged; this holds for finite input (`clamp-non-finite` covers non-finite input).
+- **clamp-non-finite**: `clampedSizeScale(_:)` MUST return `1.0`, the unscaled size, for a non-finite input (NaN, positive infinity or negative infinity), not the nearest bound, because the finite check runs before the limit and `min` and `max` would pass NaN straight through it. Covered by `clampNonFinite`.
+- **clamp-callers**: Callers that set a scale from outside the type MUST use `clampedSizeScale(_:)`, so every caller shares one limit. The callers' own requirements live in the ThemeStore and SemanticPalette ingredients.
 
 Persistence and side effects
 

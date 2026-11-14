@@ -15,3 +15,7 @@
 **Rationale**: Zero columns is a degenerate input but not inherently invalid — the same width check that guards against misaligned cells already rejects any row that doesn't match it, so no separate rule against empty `columns` is needed. Banning zero columns outright would reject legitimate callers, such as a table rendered before its columns are known, without preventing any misalignment the existing check doesn't already catch.
 **Approved**: pending
 
+
+**Decision**: Rows have no header cell: every cell in a row is a `<td>`, and there is no `rowHeader` option or `<th scope="row">`.
+**Rationale**: The source renders every row cell as `<td>`, and the first column is data like any other. A table whose rows need their own headers is outside what this component models; adding the option later is additive, so excluding it now keeps room to change.
+**Approved**: pending

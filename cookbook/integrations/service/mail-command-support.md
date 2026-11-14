@@ -2,11 +2,11 @@
 id: 3d12c073-edc3-44fb-a988-5edec20575e0
 title: "MailCommandSupport"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -35,12 +35,12 @@ approved-date: ""
 
 ## Overview
 
-`MailCommandSupport.swift` holds two caseless, internal enums used by both front ends of the mail integration: the `--json` flag of the command-line tool ([MailCommandLine](cookbook:be4db0fe-628d-41f8-9fdf-25a6d46844cf)) and the MCP tools ([MailToolSource](cookbook:cbee8b02-9456-4d9b-942a-51f8a9c074fc)). Putting them in one place means the two front ends print the same JSON and read dates by the same rules.
+`MailCommandSupport.swift` holds two caseless, internal enums used by both front ends of the mail integration: the `--json` flag of the command-line tool ([adhsdk.ingredient.integrations.cli.mail-command-line](cookbook:be4db0fe-628d-41f8-9fdf-25a6d46844cf)) and the MCP tools ([adhsdk.ingredient.integrations.mcp.mail-tool-source](cookbook:cbee8b02-9456-4d9b-942a-51f8a9c074fc)). Putting them in one place means the two front ends print the same JSON and read dates by the same rules.
 
 - `MailJSON` turns any `Encodable` value into the JSON text both front ends print.
 - `MailDateBound` reads a `since` or `until` value and returns a UTC timestamp string, or nil when the text is not a date or timestamp.
 
-They sit beside the [mail integration service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a). The source file is `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailCommandSupport.swift`. It uses `Foundation` only: `JSONEncoder` with `.prettyPrinted` and `.sortedKeys`, `Calendar(identifier: .gregorian)` pinned to UTC, and `ISO8601DateFormatter` with two option sets. No test sits beside it.
+They sit beside the mail integration service ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)). The source file is `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailCommandSupport.swift`. It uses `Foundation` only: `JSONEncoder` with `.prettyPrinted` and `.sortedKeys`, `Calendar(identifier: .gregorian)` pinned to UTC, and `ISO8601DateFormatter` with two option sets. No test sits beside it.
 
 Neither type holds state, touches a file, uses the network, or logs.
 
@@ -51,10 +51,10 @@ Neither type holds state, touches a file, uses the network, or logs.
 - **json-encode-signature**: `MailJSON.encode(_:)` MUST accept any `Encodable` value and return its JSON as a `String`.
 - **json-pretty-printed**: The output MUST be pretty-printed (multi-line, indented).
 - **json-sorted-keys**: Object keys MUST be written in sorted order, so the same value always prints the same text.
-- **json-output-contract**: Ports MUST produce valid JSON, pretty-printed, with sorted keys and deterministic text. They need not match Swift byte for byte: Apple's Foundation writes `/` as `\/`, and a port MAY write `/` unescaped. Output compared across front ends of one platform MUST come from one encoder.
-- **json-source-of-truth**: The comment on the type, which names [MailCommandLine] and [MailToolSource], states that this is "the JSON shape the MCP tools and the `--json` flag both print"; both front ends MUST call `MailJSON.encode` for every JSON result and MUST NOT configure their own encoder.
+- **json-output-contract**: Ports MUST produce valid JSON, pretty-printed, with sorted keys and deterministic text. They need not match Swift byte for byte: Apple's Foundation writes `/` as `\/`, and a port MAY write `/` unescaped. Both front ends on a platform MUST call the same shared encode function.
+- **json-source-of-truth**: `MailJSON.encode` MUST be the one encoder for the JSON that the MCP tools and the `--json` flag both print. How each front end calls it is specified in its own recipe (see Callers below).
 - **json-encoder-errors**: `encode` MUST throw whatever error the encoder throws for a value it cannot encode; the error is not wrapped or caught. (The source also has a guard that throws `EncodingError.invalidValue` if the bytes are not UTF-8; it is unreachable and is described in Design Decisions, not required of ports.)
-- **json-default-strategies**: `encode` MUST NOT set a date, data, key or non-conforming-float strategy; the encoder's defaults apply to every value.
+- **json-default-strategies**: `encode` MUST NOT set a date, data, key or non-conforming-float strategy. Values passed to `encode` MUST NOT contain `Date` or `Data` fields: timestamps arrive as strings, because Swift's default would write a `Date` as a number of seconds from 2001-01-01 (a `Date` at the Unix epoch encodes as -978307200) and no other platform has a matching default.
 - **json-no-shared-state**: `encode` MUST NOT depend on state kept between calls, so the same value always gives the same text.
 
 ### MailDateBound
@@ -63,22 +63,20 @@ Neither type holds state, touches a file, uses the network, or logs.
 - **bound-date-start**: Text shaped `YYYY-MM-DD` that names a real date MUST return the text followed by `T00:00:00.000Z` when `edge` is `start`.
 - **bound-date-end**: Text shaped `YYYY-MM-DD` that names a real date MUST return the text followed by `T23:59:59.999Z` when `edge` is `end`.
 - **bound-date-shape**: A value counts as `YYYY-MM-DD` only when it splits on `-` into exactly three parts of 4, 2 and 2 characters, and every character is `-` or an ASCII digit.
-- **bound-date-reality**: A value of that shape that does not name a real Gregorian date, in UTC, MUST return nil (the source comment says "including a date that does not exist"). The check builds the date and compares the year, month and day it reads back; a date the calendar rolls forward is rejected.
+- **bound-date-reality**: A value of that shape that does not name a real Gregorian date, in UTC, MUST return nil. The check builds the date and compares the year, month and day it reads back; a date the calendar rolls forward is rejected.
 - **bound-date-no-fallthrough**: A value of `YYYY-MM-DD` shape that is not a real date MUST return nil and MUST NOT be tried as a timestamp.
-- **bound-timestamp-utc**: Text that is not date-shaped but is a full ISO-8601 internet date-time (with a zone designator) MUST return that instant converted to UTC and written by `IntegrationClock.string(from:)`, (see [IntegrationClock](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f)), which gives the form `yyyy-MM-dd'T'HH:mm:ss.SSS'Z'`.
+- **bound-timestamp-utc**: Text that is not date-shaped but is a full ISO-8601 internet date-time (with a zone designator) MUST return that instant converted to UTC and written by `IntegrationClock.string(from:)` (see [adhsdk.ingredient.integrations.model.integration-records](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f)), which gives the form `yyyy-MM-dd'T'HH:mm:ss.SSS'Z'`.
 - **bound-timestamp-fractions**: A timestamp MUST be accepted both with fractional seconds and without them; the fractional form is tried first.
+- **bound-timestamp-form**: The accepted timestamp text MUST match `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|z|[+-]\d{2}(:?\d{2})?)$`: an uppercase `T`, seconds, and a zone designator that is `Z`, `z` or a signed offset with or without a colon. Text without a zone designator, with a lowercase `t`, or with a space instead of `T` MUST return nil.
+- **bound-fraction-truncate**: Fractional seconds beyond the millisecond MUST be truncated, not rounded, so `10:30:00.9996Z` gives `10:30:00.999Z`.
 - **bound-timestamp-edge-ignored**: For a timestamp, `edge` MUST have no effect; the result is the given instant, not a start or end of day.
 - **bound-reject-other**: Any other text, including the empty string, MUST return nil.
-- **bound-lexical-compare**: The UTC string form is required because the store compares UTC strings lexically, as the source comment says; callers MUST pass the returned string to the store unchanged.
+- **bound-lexical-compare**: The UTC string form is required because the store compares UTC strings lexically; callers MUST pass the returned string to the store unchanged.
 - **bound-no-throw**: `normalize` MUST NOT throw; rejection is expressed only by nil.
 
-### Callers' handling of a rejected bound
+### Callers
 
-These rules belong to the callers and are recorded here only so the helpers' nil result has a defined meaning; the callers' own recipes are [MailCommandLine](cookbook:be4db0fe-628d-41f8-9fdf-25a6d46844cf) and [MailToolSource](cookbook:cbee8b02-9456-4d9b-942a-51f8a9c074fc).
-
-- **bound-mcp-rejection**: `MailToolSource` MUST turn a nil result into an `ArgumentError` whose message is `<key> must be YYYY-MM-DD or an ISO-8601 timestamp`, where `<key>` is the argument name.
-- **bound-cli-rejection**: `MailCommandLine` MUST treat a nil result for `--since` or `--until` as a failed parse (it returns no parsed command) and does not name the offending value.
-- **bound-cli-edges**: `MailCommandLine` MUST read `--since` with `edge: .start` and `--until` with `edge: .end`, so a bare date range is inclusive of both days.
+How a nil bound is reported, which edge each argument uses and how JSON is printed belong to the callers: [adhsdk.ingredient.integrations.cli.mail-command-line](cookbook:be4db0fe-628d-41f8-9fdf-25a6d46844cf) and [adhsdk.ingredient.integrations.mcp.mail-tool-source](cookbook:cbee8b02-9456-4d9b-942a-51f8a9c074fc). They are not repeated here.
 
 ### Runtime shape
 
@@ -116,28 +114,32 @@ No test in the repository references `MailJSON` or `MailDateBound`; every vector
 | mail-command-support-012 | bound-reject-other | `normalize("2026-11-13T10:30:00", edge: .start)` (no zone designator) | nil |
 | mail-command-support-013 | json-sorted-keys, json-pretty-printed | `encode` of a dictionary with keys `b` then `a` | multi-line text in which `"a"` appears before `"b"` |
 | mail-command-support-014 | json-encoder-errors | `encode` of a value whose `encode(to:)` throws | the same error is thrown |
-| mail-command-support-015 | bound-mcp-rejection | MCP argument `since` = `"2026-13-01"` | `ArgumentError` with `since must be YYYY-MM-DD or an ISO-8601 timestamp` |
-| mail-command-support-016 | bound-cli-rejection, bound-cli-edges | CLI `list <account> --since 2026-02-30` | parse fails; no command runs |
-| mail-command-support-017 | bound-date-shape, bound-reject-other | `normalize(" 2026-11-13", edge: .start)` (leading space) | nil |
-| mail-command-support-018 | bound-date-shape, bound-reject-other | `normalize("2026/11/13", edge: .start)` | nil |
-| mail-command-support-019 | bound-date-reality | `normalize("2026-00-10", edge: .start)` | nil |
-| mail-command-support-020 | bound-timestamp-utc | `normalize("2026-11-13T10:30:00.1234Z", edge: .start)` | `"2026-11-13T10:30:00.123Z"` |
-
+| mail-command-support-015 | bound-date-shape, bound-reject-other | `normalize(" 2026-11-13", edge: .start)` (leading space) | nil |
+| mail-command-support-016 | bound-date-shape, bound-reject-other | `normalize("2026/11/13", edge: .start)` | nil |
+| mail-command-support-017 | bound-date-reality | `normalize("2026-00-10", edge: .start)` | nil |
+| mail-command-support-018 | bound-timestamp-utc | `normalize("2026-11-13T10:30:00.1234Z", edge: .start)` | `"2026-11-13T10:30:00.123Z"` |
+| mail-command-support-019 | bound-fraction-truncate | `normalize("2026-11-13T10:30:00.9996Z", edge: .start)` | `"2026-11-13T10:30:00.999Z"` (truncated, not rounded) |
+| mail-command-support-020 | bound-timestamp-form | `normalize("2026-11-13t10:30:00Z", edge: .start)` (lowercase `t`) | nil |
+| mail-command-support-021 | bound-timestamp-form | `normalize("2026-11-13T10:30:00z", edge: .start)` (lowercase `z`) | `"2026-11-13T10:30:00.000Z"` |
+| mail-command-support-022 | bound-timestamp-form, bound-timestamp-utc | `normalize("2026-11-13T10:30:00+0200", edge: .start)` (offset without a colon) | `"2026-11-13T08:30:00.000Z"` |
+| mail-command-support-023 | bound-date-reality | `normalize("0000-01-01", edge: .start)` | nil |
+| mail-command-support-024 | json-default-strategies | `encode` of a struct holding a `Date` at the Unix epoch (a value callers must not pass) | the field is written as the number `-978307200`, which is why callers must not pass a `Date` |
+| mail-command-support-025 | json-output-contract | `encode` of the string `"a/b"` | valid JSON that decodes back to `a/b`; the text is `"a\/b"` on Apple Foundation and a port MAY write `"a/b"` |
 ## Edge Cases
 
 - **Empty text**: `normalize("")` MUST return nil. It is not date-shaped and is not a timestamp.
 - **Surrounding whitespace**: `normalize(" 2026-11-13")` MUST return nil. The source does not trim, so a leading or trailing space breaks both the date shape and the timestamp parse.
 - **Wrong separators or lengths**: `2026/11/13`, `26-11-13` and `2026-1-5` MUST return nil.
 - **Non-ASCII digits**: Digits from other scripts MUST NOT count; only `-` and ASCII digits pass the shape test.
-- **Year range**: The source sets no year range of its own; a four-digit year is accepted when the Gregorian calendar can build the date and read the same year, month and day back. Years such as `0001` and `2026` satisfy that; `0000` is not verified, because the calendar may map it to 1 BC and the read-back check may then reject it.
+- **Year range**: The source sets no year range of its own; a four-digit year is accepted when the Gregorian calendar can build the date and read the same year, month and day back. Years such as `0001` and `2026` satisfy that; `0000` returns nil, because the year read back from the calendar is not 0 (vector 023).
 - **Impossible dates**: A month of `00` or `13`, a day of `00` or `32`, and 29 February in a non-leap year MUST return nil.
 - **Date-only start and end**: The same date returns different strings for `start` and `end`, so `since=until=D` covers the whole UTC day.
-- **Timestamp without a zone designator**: Rejected. Both ISO-8601 option sets used require an internet date-time, which carries a zone.
+- **Timestamp without a zone designator**: Rejected. Both ISO-8601 option sets used require an internet date-time, which carries a zone (see #requirements/bound-timestamp-form).
 - **Local time**: Date-only values are read as UTC days regardless of the machine's zone; a timestamp's offset is honored and converted.
-- **Precision loss**: A timestamp with more precision than milliseconds is rewritten by `IntegrationClock.string(from:)` in millisecond form (vector 020).
+- **Precision loss**: A timestamp with more precision than milliseconds is rewritten by `IntegrationClock.string(from:)` in millisecond form, truncating the extra digits (vectors 018 and 019).
 - **Unencodable value**: `MailJSON.encode` MUST propagate the encoder's error; the front ends decide how to show it. The source also guards against bytes that are not UTF-8 by throwing `EncodingError.invalidValue` (`not UTF-8`); the standard encoder never produces such bytes, so the branch is unreachable and no port needs it.
-- **Escaped slashes**: Because the encoder is left on its defaults, a `/` in a string is written as `\/` on Apple's Foundation. This is not part of the output contract (see json-output-contract); ports need only valid, sorted, deterministic output.
-- **Dates inside encoded values**: No date strategy is set, so a `Date` field is written in the encoder's default numeric form; the records the front ends print carry timestamps as strings already.
+- **Escaped slashes**: Because the encoder is left on its defaults, a `/` in a string is written as `\/` on Apple's Foundation. This is not part of the output contract (see #requirements/json-output-contract); ports need only valid, sorted, deterministic output.
+- **Dates inside encoded values**: Callers must not pass `Date` or `Data` fields (see #requirements/json-default-strategies); the records the front ends print carry timestamps as strings already.
 - **Concurrent calls**: Not applicable to shared state; every call makes its own encoder, calendar and formatters, so calls cannot interfere.
 - **Offline, cancellation, timeouts**: Not applicable; both enums are synchronous and touch no network, file or process.
 
@@ -148,9 +150,8 @@ No test in the repository references `MailJSON` or `MailDateBound`; every vector
 | `value` (encode) | `Encodable` | none, required | The value to print. |
 | `text` (normalize) | `String` | none, required | The raw `since` or `until` value. |
 | `edge` (normalize) | `MailDateBound.Edge` | none, required | `start` or `end`; used only for date-only text. |
-| `IntegrationClock.string(from:)` | `(Date) -> String` | fixed | Writes the UTC timestamp for a parsed instant; it lives in `Integrations/Model/IntegrationRecords.swift`. |
 
-There are no environment variables, settings keys or injected dependencies.
+There are no environment variables, settings keys or injected dependencies. The one fixed dependency is `IntegrationClock.string(from:)`, which writes the UTC timestamp for a parsed instant; it lives in `Mail/Model/IntegrationRecords.swift` ([adhsdk.ingredient.integrations.model.integration-records](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f)).
 
 ## Deep Linking
 
@@ -185,17 +186,17 @@ Not applicable: the source makes no log call.
 
 ## Platform Notes
 
-- **SwiftUI**: Both enums are internal to the SDK module, so a SwiftUI host reaches them only through [MailCommandLine](cookbook:be4db0fe-628d-41f8-9fdf-25a6d46844cf) and [MailToolSource](cookbook:cbee8b02-9456-4d9b-942a-51f8a9c074fc); it never calls them directly. The source file is described in the Overview.
-- **Compose**: Kotlin has no pretty printer with sorted keys by default; use `kotlinx.serialization` `Json { prettyPrint = true }` and sort map keys before encoding (or encode to a `JsonObject` built with a `TreeMap`). For dates, apply the `bound-date-shape` check (exactly 4-2-2 characters, ASCII digits and `-`) first, because `LocalDate.parse` also accepts signed and longer years; then use `java.time.LocalDate.parse` in strict mode, then `atStartOfDay(ZoneOffset.UTC)` or `atTime(LocalTime.of(23, 59, 59, 999_000_000))`, and `OffsetDateTime.parse(...).withOffsetSameInstant(ZoneOffset.UTC)` formatted with a fixed pattern for the timestamp form. `LocalDate.parse` rejects 30 February without a manual round-trip check.
-- **React/Web**: Use `JSON.stringify(value, sortedReplacer, 2)` with a replacer that rebuilds objects with sorted keys (`JSON.stringify` does not escape `/`, which json-output-contract allows). For dates, match `^\d{4}-\d{2}-\d{2}$` with ASCII digit classes, build `new Date(Date.UTC(y, m - 1, d))` and compare the year, month and day it reports; for a timestamp require a zone designator and call `toISOString()`, which already gives the milliseconds-and-Z form.
-- **AppKit / UIKit**: The same Swift source is the plan for iOS, since it uses only `Foundation`. Output goes to a terminal for the CLI and to an MCP tool result, never to a view.
-- **WinUI 3**: Write a static class `MailJson` and a static class `MailDateBound` in C#. For JSON, use `System.Text.Json.JsonSerializer.Serialize` with `JsonSerializerOptions { WriteIndented = true }`; `System.Text.Json` does not sort object keys, so serialize through a `JsonNode` tree and re-add properties in ordinal order, or sort dictionaries first, and leave `/` escaping to the serializer, since json-output-contract does not require the `\/` form. For bounds, use `DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)` after the same shape check (it also rejects 30 February), then `date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)` or `new TimeOnly(23, 59, 59, 999)`; for a timestamp use `DateTimeOffset.TryParseExact` with explicit ISO-8601 formats (`yyyy-MM-dd'T'HH:mm:ssK` and `yyyy-MM-dd'T'HH:mm:ss.FFFFFFFK`, each requiring a zone designator) and `CultureInfo.InvariantCulture`, because `TryParse` accepts many non-ISO forms the Swift version rejects; then `ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture)`. Port the `MailJSON` UTF-8 guard and the per-call encoder only if the platform needs them; neither is behavior. Return `string?` and keep rejection as null rather than an exception. These are pure static helpers, so no `ObservableCollection` or `INotifyPropertyChanged` is involved.
+- **SwiftUI**: The Swift source is the reference, so there is nothing to translate. Both enums are internal to the SDK module, so a SwiftUI host reaches them only through [adhsdk.ingredient.integrations.cli.mail-command-line](cookbook:be4db0fe-628d-41f8-9fdf-25a6d46844cf) and [adhsdk.ingredient.integrations.mcp.mail-tool-source](cookbook:cbee8b02-9456-4d9b-942a-51f8a9c074fc); it never calls them directly.
+- **Compose**: Kotlin has no pretty printer with sorted keys by default; use `kotlinx.serialization` `Json { prettyPrint = true }` and sort map keys before encoding (or encode to a `JsonObject` built with a `TreeMap`). For dates, apply the #requirements/bound-date-shape check (exactly 4-2-2 characters, ASCII digits and `-`) first, because `LocalDate.parse` also accepts signed and longer years; then use `java.time.LocalDate.parse` in strict mode, then `atStartOfDay(ZoneOffset.UTC)` or `atTime(LocalTime.of(23, 59, 59, 999_000_000))`, and `OffsetDateTime.parse(...).withOffsetSameInstant(ZoneOffset.UTC)` formatted with a fixed pattern for the timestamp form. `LocalDate.parse` rejects 30 February without a manual round-trip check.
+- **React/Web**: Use `JSON.stringify(value, sortedReplacer, 2)` with a replacer that rebuilds objects with sorted keys (`JSON.stringify` does not escape `/`, which #requirements/json-output-contract allows). For dates, match `^\d{4}-\d{2}-\d{2}$` with ASCII digit classes, build `new Date(Date.UTC(y, m - 1, d))` and compare the year, month and day it reports; for a timestamp, do not rely on `Date` parsing, which is lenient: first require the text to match the regex in #requirements/bound-timestamp-form, then truncate any fraction beyond three digits (#requirements/bound-fraction-truncate) before calling `new Date(text)` and `toISOString()`, which gives the milliseconds-and-Z form.
+- **AppKit / UIKit**: The same Swift source serves AppKit; it uses only `Foundation` and has no AppKit or UIKit dependency. Output goes to a terminal for the CLI and to an MCP tool result, never to a view.
+- **WinUI 3**: Write a static class `MailJson` and a static class `MailDateBound` in C#. For JSON, use `System.Text.Json.JsonSerializer.Serialize` with `JsonSerializerOptions { WriteIndented = true }`; `System.Text.Json` does not sort object keys, so serialize through a `JsonNode` tree and re-add properties in ordinal order, or sort dictionaries first, and leave `/` escaping to the serializer, since #requirements/json-output-contract does not require the `\/` form. For bounds, use `DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)` after the same shape check (it also rejects 30 February), then `date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)` or `new TimeOnly(23, 59, 59, 999)`; for a timestamp use `DateTimeOffset.TryParseExact` with explicit ISO-8601 formats (`yyyy-MM-dd'T'HH:mm:ssK` and `yyyy-MM-dd'T'HH:mm:ss.FFFFFFFK`, each requiring a zone designator, and after the regex in #requirements/bound-timestamp-form has passed) and `CultureInfo.InvariantCulture`, because `TryParse` accepts many non-ISO forms the Swift version rejects; then `ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture)`. Port the `MailJSON` UTF-8 guard and the per-call encoder only if the platform needs them; neither is behavior. Return `string?` and keep rejection as null rather than an exception. These are pure static helpers, so no `ObservableCollection` or `INotifyPropertyChanged` is involved.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailCommandSupport.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailCommandSupport.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -207,11 +208,11 @@ Not applicable: the source makes no log call.
 **Approved**: pending
 
 **Decision**: `MailJSON` leaves every `JSONEncoder` strategy at its default.
-**Rationale**: The records the front ends print already carry timestamps as strings and keys in the shape the records name, so no conversion is needed. A port that adds a strategy would change the shape both front ends share.
+**Rationale**: The records the front ends print already carry timestamps as strings and keys in the shape the records name, so no conversion is needed, and callers must not pass `Date` or `Data` fields. A port that adds a strategy would change the shape both front ends share.
 **Approved**: pending
 
 **Decision**: Date-only bounds become the first or last millisecond of a UTC day, and timestamps are rewritten to the same millisecond UTC form.
-**Rationale**: The source comment gives the reason: the store compares UTC strings lexically, so every bound must be in one fixed-width form.
+**Rationale**: The store compares UTC strings lexically, so every bound must be in one fixed-width form.
 **Approved**: pending
 
 **Decision**: A date-shaped value that is not a real date is rejected and never retried as a timestamp.
@@ -244,3 +245,4 @@ The two enums each do one job, encoding and date-bound parsing, and leave argume
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the caller rules out to the callers' recipes, pinned JSON date handling, truncation, timestamp regex and year 0000 from the source, added nine vectors, and replaced prose link labels and bare fragment names. |

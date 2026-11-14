@@ -15,4 +15,5 @@ Tests named below are in the `RouteTable` suite (`RouteTableTests`).
 | route-table-010 | exact-path-via-components | `exact("GET", ["a"])`; request `GET //a/`. | The handler claims it and `respond` runs (derived from `pathComponents` dropping empty segments, tested in the `RouteRequest` suite; no `RouteTable` test). |
 | route-table-011 | merging-non-mutating | `first.merging(second)` evaluated, then `first.handle` of a request only `second` claims. | `nil`: `first` is unchanged (derived; no test beside the source). |
 | route-table-012 | later-handlers-skipped | Table of [claiming handler, handler that records a call]; `handle` a request. | The recording handler is never called (derived; no test beside the source). |
+| route-table-013 | handle-is-async-sequential | Table of two handlers that each record "start" and "end" around an await; `handle` a request that neither claims. | The record reads first-start, first-end, second-start, second-end (derived; no test beside the source). |
 

@@ -1,0 +1,26 @@
+
+- **render-columns**: Component MUST display all columns defined in the `columns` prop, rendering column headers when `showHeader` is true.
+- **render-rows**: Component MUST render all visible log lines as rows with cell values keyed by column id from the `lines` prop.
+- **show-empty-state**: Component MUST display the `emptyMessage` (default: `"(no events)"`) when `lines` is empty or no rows are visible.
+- **enforce-max-lines**: Component MUST limit visible rows to the count specified in `maxLines` by retaining only the most recent entries, discarding older ones. See Edge Cases for behavior when `maxLines` is negative, `NaN`, or fractional.
+- **follow-tail-by-default**: Component MUST scroll to the bottom when new lines are added, if `followTail` is true (default).
+- **honor-follow-tail-toggle**: Component MUST stop scrolling to the bottom when `followTail` is set to false, and resume scrolling when `followTail` is set back to true.
+- **detect-user-scroll**: Component MUST detect when the user has scrolled away from the bottom and stop following the tail until they scroll back to near the bottom (slack of 4 pixels).
+- **handle-cell-click**: Component MUST invoke `column.onCellClick` when a cell is clicked, passing the entire `LogLine` object, if the handler is defined.
+- **handle-cell-double-click**: Component MUST invoke `column.onCellDoubleClick` when a cell is double-clicked, passing the entire `LogLine` object, if the handler is defined. The click events that precede a double-click gesture still invoke `onCellClick`, if defined, per native browser event order (see Edge Cases).
+- **apply-column-widths**: Component MUST apply the width from `column.width` to each column as a CSS grid track size, using the format `${width}px` for numeric values and the string value directly for other formats.
+- **apply-default-column-width**: Component MUST use `minmax(120px, 1fr)` as the default grid track size for columns that do not specify a width.
+- **apply-cell-text-alignment**: Component MUST align cell text according to `column.align` (e.g., `start`, `center`, `end`), defaulting to `start`.
+- **apply-cell-level-color**: Component MUST apply the color for the log level (`cell.level`, falling back to `column.defaultLevel` when `cell.level` is not set) using the Level Colors table (see Appearance), when `cell.color` is not set.
+- **apply-cell-custom-color**: Component MUST apply `cell.color` as the CSS color value if provided; it takes precedence over any level-based color.
+- **apply-cell-mono-font**: Component MUST apply monospace font (CSS variable `--font-mono` or fallback to system monospace) when the effective mono flag is true. The effective flag is `cell.mono` when it is explicitly set, including an explicit `false`, and `column.defaultMono` otherwise.
+- **apply-cell-strong-weight**: Component MUST apply font-weight of 600 if `cell.strong` is true.
+- **apply-cell-link-styling**: Component MUST add the CSS class `lp-cell--link` if `cell.link` is true, allowing stylistic differentiation (e.g., underline, color change).
+- **show-interactive-indicator**: Component MUST add the CSS class `lp-cell--interactive` to cells if `column.isClickable`, `cell.link`, or `column.onCellClick` is defined.
+- **apply-cell-title-attribute**: Component MUST set the HTML `title` attribute on each cell to the cell's text content for tooltip display on hover.
+- **support-max-height**: Component MUST apply the `maxHeight` style to the scrollable body container if `maxHeight` is provided.
+- **support-custom-class**: Component MUST apply the `className` prop to the root container; the root class is `lp-root`, followed by `className` when provided.
+- **apply-grid-layout**: Component MUST use CSS Grid with the grid-template-columns derived from all column widths for both the header and each row.
+- **include-aria-roles**: Component MUST include ARIA roles: `row` on header and each row, `columnheader` on header cells, `cell` on body cells, and `rowgroup` on the rows list.
+- **stop-event-propagation**: Component MUST call `stopPropagation()` on a cell's click or double-click event only when that cell has a corresponding `onCellClick` or `onCellDoubleClick` handler defined, preventing the event from bubbling to parent elements in that case. No listener is attached, and nothing is stopped, when no handler is defined for that interaction.
+

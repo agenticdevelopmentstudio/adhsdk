@@ -1,7 +1,7 @@
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| facet-001 | render-trigger, omit-count-when-empty, empty-selection-semantics | options: ["A", "B"], selected: empty | Trigger displays "Label" only, no count; the component performs no filtering logic of its own |
+| facet-001 | render-trigger, omit-count-when-empty, empty-selection-semantics | options: ["A", "B"], selected: empty | Trigger displays "Label" only, no count; `onChange` is never called on render |
 | facet-002 | render-trigger, omit-count-when-empty | options: ["A", "B"], selected: {"A"} | Trigger displays "Label (1)" |
 | facet-003 | disable-trigger | options: [], selected: empty | Trigger button's `disabled` attribute is `true`; clicking it does not open the popover |
 | facet-004 | show-chevron | options: ["A", "B"], selected: empty | ChevronDown icon is visible and aria-hidden="true" |
@@ -25,5 +25,6 @@
 | facet-022 | stale-selection-values | options: ["B"], selected: {"A", "B"} (A stale), popover opened | Only checkbox "B" is rendered; trigger displays "Label (2)" |
 | facet-023 | stale-selection-values, disable-all-button | options: ["B", "C"], selected: {"A", "B"} ("A" stale, "C" unselected), click "All" | "All" is enabled (not every current option is selected); onChange called with {"B", "C"} (stale "A" dropped) |
 | facet-024 | stale-selection-values | options: ["B"], selected: {"A", "B"}, click "None" | onChange called with an empty Set (stale "A" dropped) |
-| facet-025 | synchronous-selection-update | options: ["A", "B"], selected: {"A"}, checkbox "B" clicked twice in immediate succession with no intervening prop update | onChange is invoked twice, each call computed from selected={"A"} (both calls yield {"A", "B"}); the component does not accumulate a running selection internally |
-
+| facet-025 | compute-from-current-prop | options: ["A", "B"], selected: {"A"}, checkbox "B" clicked twice in immediate succession with no intervening prop update | onChange is invoked twice, each call computed from selected={"A"} (both calls yield {"A", "B"}); the component does not accumulate a running selection internally |
+| facet-026 | stale-selection-values, disable-all-button, disable-none-button | options: ["B"], selected: {"A", "B"} ("A" stale, every current option selected), popover opened | "All" is disabled; "None" is enabled and, when clicked, calls onChange with an empty Set |
+| facet-027 | label-transform | options: ["a"], labelOf: () => "", selected: empty | One checkbox is rendered with an empty label text; no error is thrown |

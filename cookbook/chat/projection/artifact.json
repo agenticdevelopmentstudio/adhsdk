@@ -4,11 +4,11 @@
     "id": "cfb09ec6-c38f-474a-bd79-be8f67ab523c",
     "title": "Chat Coordinator Projection",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-24",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -23,12 +23,15 @@
       "view-model"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "447d0e33-c66e-4bf9-8511-e7823bdbcf9b",
+      "259f4a99-1b18-44a2-a102-e14e0fd8e30f"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "222b7df435857d52",
+  "synced": "100f3d0452c542cf",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -4,7 +4,7 @@
     "id": "9a4dcb9e-5e7e-479b-922c-37d066a8a18a",
     "title": "HTML Text",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,8 +23,7 @@
       "text",
       "entities",
       "parsing",
-      "mail",
-      "logic"
+      "mail"
     ],
     "depends-on": [],
     "related": [],
@@ -32,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4357158f5d4da898",
+  "synced": "806c8dab3cb9561a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

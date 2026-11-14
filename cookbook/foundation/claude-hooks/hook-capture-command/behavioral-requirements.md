@@ -3,9 +3,10 @@
 
 - **exit-status-zero**: `run` MUST return 0 on every path: a missing event flag, a tracked-out event, a malformed payload and a failed drop-file write alike.
 - **event-flag-required**: `run` MUST write nothing and return 0 when the arguments carry no `--event` value or an empty one.
-- **no-stdout**: The command MUST NOT write to standard output or standard error; the source contains no print, log or stderr call, and the comment on the write explains that stderr from a hook can confuse Claude Code.
-- **write-failure-swallowed**: `run` MUST swallow any error thrown while writing the drop file and still return 0; the source comment gives the reason as "the next event brings the same information".
+- **no-stdout**: The command MUST NOT write to standard output or standard error.
+- **write-failure-swallowed**: `run` MUST swallow any error thrown while writing the drop file and still return 0.
 - **flag-parsing**: The argument parser MUST accept only `--key value` pairs, where a value is the next argument and does not begin with `--`; positional arguments and `--key=value` forms are ignored.
+- **duplicate-flag-last-wins**: When the same `--key` appears more than once, the argument parser MUST keep the later value.
 - **ppid-flag-optional**: `--ppid` MAY be omitted; the registered command does not pass it.
 
 ### Envelope content

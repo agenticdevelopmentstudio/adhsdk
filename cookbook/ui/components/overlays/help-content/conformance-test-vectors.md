@@ -10,10 +10,11 @@
 | help-content-007 | support-three-flavors | Pass `{body: "text", flavor: "help"}` to HelpEntry | Accepted without type error |
 | help-content-008 | support-three-flavors | Pass `{body: "text", flavor: "info"}` to HelpEntry | Accepted without type error |
 | help-content-009 | support-three-flavors | Pass `{body: "text", flavor: "new"}` to HelpEntry | Accepted without type error |
-| help-content-010 | default-flavor-to-info | Retrieve a HelpEntry with no `flavor` property specified | useHelpEntry returns the entry unchanged with `flavor` equal to `undefined`; a consumer reading the entry MUST treat the missing `flavor` as `"info"` |
+| help-content-010 | default-flavor-to-info | Retrieve a HelpEntry with no `flavor` property specified | useHelpEntry returns the entry unchanged with `flavor` equal to `undefined`; a consumer reading the entry SHOULD treat the missing `flavor` as `"info"` |
 | help-content-011 | support-optional-title | Pass HelpEntry without `title` property | Entry is valid and accepted; `title` is `undefined` |
 | help-content-012 | support-optional-title | Pass HelpEntry with `title: "How this works"` | Entry is valid and accepted; `title` is returned unchanged as `"How this works"` |
 | help-content-013 | require-body | Attempt to create HelpEntry without `body` property | Type error; body is required |
-| help-content-014 | accept-string-body | Pass `{body: "plain text"}` | Accepted; JSX or ReactNode is not accepted for `body` |
-| help-content-015 | accept-string-body | Pass `{body: "multiline\ntext"}` | Accepted; JSX or ReactNode is not accepted for `body` |
+| help-content-014 | accept-string-body | Pass `{body: "plain text"}` | Accepted |
+| help-content-015 | accept-string-body | Pass `{body: <b>x</b>}` | Type error; JSX or ReactNode is not accepted for `body` |
+| help-content-016 | support-three-flavors | Pass `{body: "text", flavor: "warning"}` | Type error; only "help", "info" and "new" are accepted |
 

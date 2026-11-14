@@ -8,5 +8,5 @@
 | `error` | `string \| null` | `null` | Error message to display, or `null` if no error. Optional. |
 | `busy` | `boolean` | `false` | Indicates an async action (e.g., API call) is in progress. Replaces both action buttons with a loading indicator and blocks dismissal when `true`. Optional. |
 | `onConfirm` | `() => void` | — | Callback invoked when the user clicks "Delete". REQUIRED. |
-| `onCancel` | `() => void` | — | Callback invoked when the user clicks "Cancel" or uses the close affordance while not busy. A backdrop click never invokes it — the shared `Dialog` primitive disables pointer-based outside dismissal unconditionally. REQUIRED. |
+| `onCancel` | `() => void` | — | Callback invoked when the user clicks "Cancel" or uses the close affordance while not busy. Outside clicks never invoke it (see `#requirements/calls-oncancel-on-close-affordance`). REQUIRED. |
 

@@ -3,8 +3,8 @@
 |---|---|---|
 | [adc.check.artifact-formatting.ingredient-formatting.if-frontmatter-complete](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/083aeeb8-a2fa-5fbc-a3e6-82df9a653872) | passed | Artifact Formatting |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
@@ -17,8 +17,11 @@ non-duplicated landmark ground `semantic-markup` as passed; `aria-expanded` /
 `aria-controls` on the view-source and collapse controls, `aria-hidden` on the
 chevron and scrim, the IDREF that only exists while its referent does, and the
 drawer's removal from the DOM when closed ground `screen-reader-support` as
-passed; native buttons, links and anchors throughout ground `keyboard-navigable`
-as passed; the flat `--color-*` token family grounds `contrast-ratio` as
+partial; native buttons, links and anchors throughout ground `keyboard-navigable`
+as partial — both stop short of passed because the web drawer has no rule for
+moving focus into it, trapping focus, or closing on Escape (the host's trigger owns
+Escape), although the SwiftUI, Compose and UIKit notes expect focus to move into
+the modal; the flat `--color-*` token family grounds `contrast-ratio` as
 partial, since the source cannot show computed contrast values; the view-source
 panel renders raw text while `DocArticle`'s HTML path is documented as
 trusted-input only rather than type-enforced, grounding `input-sanitization` as

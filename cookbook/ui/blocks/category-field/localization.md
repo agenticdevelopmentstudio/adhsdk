@@ -12,5 +12,5 @@ The `label` and `noun` props are host-supplied and already localizable. The rema
 | `category-field.path-singular` | "{label} path" | Breadcrumb `<nav>` `aria-label`, one trail |
 | `category-field.path-plural` | "{label} paths" | Breadcrumb `<nav>` `aria-label`, multiple trails — a binary singular/plural, not a locale-aware plural rule (see Compliance: `plural-forms`) |
 
-`label.toLowerCase()`, used to build the EntityChooser's `ariaLabel`, is a locale-sensitive casing transform: it must run in the user's locale rather than an invariant-culture lowercase call, since casing rules differ by language (e.g. Turkish dotless/dotted I).
+`label.toLowerCase()`, used to build the EntityChooser's `ariaLabel`, is a locale-sensitive casing transform, but the web source calls plain `toLowerCase()`, which is not locale-aware. This is a known gap, recorded under `string-externalization` in Compliance; ports SHOULD lowercase in the user's locale, since casing rules differ by language (e.g. Turkish dotless/dotted I).
 

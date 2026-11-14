@@ -19,8 +19,7 @@
 | privacy-016 | apply-disabled-styling | disabled={true} | Trigger renders with opacity 50%, cursor not-allowed |
 | privacy-017 | focus-listbox-on-open | User opens popover via trigger click | Listbox surface receives focus (can accept keyboard input immediately) |
 | privacy-018 | reset-cursor-to-value-on-open | value="public", user clicks trigger to open | Cursor initializes to "public" option (keyboard can select immediately without navigation) |
-| privacy-019 | initialize-null-cursor-to-first-option | Cursor forced to null, `move(1)` (ArrowDown) invoked directly against the null-cursor branch | Cursor becomes the second option ("hub"), not "only-me"; `move(-1)` (ArrowUp) from the same null cursor becomes the first option ("only-me") instead — this branch is unreachable through the UI (see Edge Cases) |
-| privacy-020 | read-value-prop | value prop changes from "only-me" to "public" externally | Trigger updates to show "Public"; all visual indicators update |
+| privacy-020 | read-value-prop | value prop changes from "only-me" to "public" externally while the popover is closed, then it is opened | Trigger shows "Public" with the Globe icon; on open the "Public" option has `aria-selected="true"` and the check icon, the other options `aria-selected="false"`; `aria-activedescendant` points to the "Public" option |
 | privacy-021 | call-onchange-with-selected-level | User clicks "hub" option | onChange callback invoked with argument "hub" (string, not object) |
 | privacy-022 | support-aria-label | ariaLabel="Profile visibility", rendered | Trigger and listbox both have aria-label="Profile visibility" |
 | privacy-023 | apply-aria-haspopup | Component rendered | Trigger element has aria-haspopup="listbox" |
@@ -33,6 +32,10 @@
 | privacy-030 | support-custom-class-name | className="custom-class" prop passed | Trigger element includes custom-class in its className |
 | privacy-031 | prevent-default-on-trigger-keys | Trigger focused, user presses ArrowDown to open | Browser default behavior is prevented; page does not scroll |
 | privacy-032 | prevent-default-on-navigation-keys | Popover open, user presses ArrowUp | Browser default behavior is prevented; page does not scroll |
-| privacy-033 | use-unique-option-ids | Component renders multiple times in a page | Each option ID is unique across all component instances |
+| privacy-033 | use-unique-option-ids | Two instances rendered on one page, both opened | Every option `id` is unique across the page (each of the form `<useId>-opt-only_me`, `-opt-hub`, `-opt-public`); each listbox's `aria-activedescendant` resolves to an option inside that same listbox |
 | privacy-034 | truncate-trigger-text | Trigger width constrained, long label text | Label text truncates with an ellipsis; the icon does not shrink and remains fully visible |
-
+| privacy-035 | read-value-prop | popover open with cursor on "only-me" (value "only-me"), then ArrowDown to "hub", then `value` changes externally to "public" | Trigger shows "Public" and the check moves to "Public"; `aria-activedescendant` still points to the "hub" option (cursor not moved) |
+| privacy-036 | prevent-default-on-navigation-keys | Popover open, user presses Escape | The keydown's default is prevented; popover closes; no `onChange` call |
+| privacy-037 | respect-disabled-prop | Popover open, then `disabled` becomes `true` | Popover stays open (see the disabled-while-open Design Decision); trigger renders at 50% opacity with cursor `not-allowed` |
+| privacy-038 | open-popover-with-trigger-keys | Trigger focused, popover closed, user presses Enter | Popover opens; `aria-expanded="true"`; listbox receives focus; cursor on the current value |
+| privacy-039 | select-with-enter-or-space | Popover open, cursor on "hub", user presses Space | Popover closes; `onChange` called once with "hub" |

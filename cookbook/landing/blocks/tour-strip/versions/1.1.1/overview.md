@@ -1,0 +1,3 @@
+
+The Tour Strip is a full-viewport screen component that introduces a single stop within a guided tour. It displays a header identifying the tour step, a primary promise or headline, optional multi-column pillar content (title and body), and conditional back/next navigation links. The component cannot control where a host page places it, so it is the host's responsibility to render Tour Strip as the first screen on a tour page, before any hero or other content, so a reader arriving mid-tour is oriented immediately; the **render-as-tour-screen** requirement below covers only what the component itself controls — rendering as a full-viewport `Screen` with id `tour` and class `lp-tour`.
+

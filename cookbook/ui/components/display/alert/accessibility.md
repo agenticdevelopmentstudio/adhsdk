@@ -2,7 +2,7 @@
 - Role/trait: `role="alert"` on the root element, for every variant.
   `AlertTitle` and `AlertDescription` carry no ARIA role of their own — they
   are plain `<div>`s identified only by their `data-slot` attribute.
-- Label requirements: Not applicable: AlertTitle and AlertDescription are unstyled, positioned grid cells; callers provide content and manage any labeling strategy independently.
+- Label requirements: Not applicable: AlertTitle and AlertDescription are positioned grid cells (AlertTitle in medium weight, AlertDescription in small muted text) with no labeling of their own; callers provide content and manage any labeling strategy independently.
 - Announce state changes: `role="alert"` makes the root an implicit ARIA
   live region (assertive, atomic, per the ARIA specification), so
   assistive technology announces the element's text content when it is

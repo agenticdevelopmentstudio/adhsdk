@@ -12,7 +12,7 @@
 - **later-finish-ignored**: A call to `finish` on a box that is already settled MUST return `false` and MUST NOT change the stored outcome.
 - **winner-decided-atomically**: Checking whether the box is settled and storing the outcome MUST be one atomic step, so exactly one of any set of concurrent `finish` calls returns `true`.
 - **failure-is-an-outcome**: `finish(.failure(error))` MUST settle the box the same way a success does; a failure counts as the winning call.
-- **release-all-waiters**: The winning `finish` MUST resume every waiter that was suspended in `value()` with the winning outcome, in the order they were added.
+- **release-all-waiters**: The winning `finish` MUST resume every waiter that was suspended in `value()` with the winning outcome; the source iterates its waiter list in insertion order, which a caller cannot observe because resuming a continuation only schedules the task.
 - **waiters-cleared**: The winning `finish` MUST empty the waiter list when it settles the box, so no continuation is resumed twice.
 - **resume-outside-lock**: The winning `finish` MUST resume waiters after the lock is released, so a resumed continuation can call back into the box without deadlocking.
 - **loser-resumes-nothing**: A losing `finish` MUST NOT resume any waiter.
@@ -36,5 +36,5 @@
 - **one-shot**: A settled box MUST stay settled; there is no reset, and the outcome never changes.
 - **losers-not-awaited**: The box MUST NOT wait for, track or cancel the tasks that lose the race; releasing waiters depends only on a winning `finish`.
 - **value-not-cancellable**: `value()` itself MUST NOT react to cancellation of the calling task; the source registers a checked continuation and nothing else, so a caller that wants cancellation to end the wait must race a `finish` of its own (as `withSignInDeadline` does with `withTaskCancellationHandler`).
-- **never-settled-never-returns**: If no `finish` is ever called, `value()` suspends for as long as the box lives. The box has no timeout of its own; the owner supplies one by racing a timer.
+- **never-settled-never-returns**: `value()` MUST remain suspended until a `finish` wins, and the box MUST NOT impose a timeout of its own; the owner supplies one by racing a timer.
 

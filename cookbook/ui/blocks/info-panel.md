@@ -2,15 +2,15 @@
 id: 2ad7c681-6a9e-43ae-a9d9-b448939d3455
 title: "InfoPanel"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A themable dashboard panel: bordered card with a standard header ([icon] title count · center · actions) over a content-sized or fill+scroll body."
+summary: "Themable dashboard card: standard header (icon, title, count, center, actions) over a content-sized or scrolling body."
 platforms:
   - typescript
   - web
@@ -64,11 +64,12 @@ Two symbols ship from `@adh-sdk/ui/blocks/info-panel`:
 - **content-sized-by-default**: By default (`scroll` false) the component MUST size the panel to its content and MUST NOT scroll the body.
 - **fill-and-scroll-on-scroll**: When `scroll` is true, the component MUST let the panel flex to fill its track and MUST make the body scroll vertically when its content overflows.
 - **body-ref-exposure**: The component MUST attach `bodyRef` to the scrolling body element so the host can tail or anchor it.
-- **label-region**: The component MUST expose the panel as a labeled region whenever an accessible name can be computed — `ariaLabel` when provided, else `title` when it is a string. It leaves the region unnamed only when `title` is a non-string node and no `ariaLabel` is given (see Edge Cases, "Non-string title").
+- **label-region**: The component MUST expose the panel as a labeled region whenever an accessible name can be computed, taking the first available of: the `ariaLabel` prop, then a raw `aria-label` passed through the host attributes, then `title` when it is a string. It leaves the region unnamed only when none of the three is available (a non-string `title`, no `ariaLabel` and no raw `aria-label`; see Edge Cases, "Non-string title").
 - **mode-default-padding**: The component MUST apply body padding defaulting by mode (card vs scroll) and MUST use `bodyPadding` when provided.
 - **layout-prop-passthrough**: The component MUST apply caller-supplied `flex` and `maxHeight` to the outer element for host-controlled sizing.
 - **host-attribute-passthrough**: The component MUST spread remaining host attributes (`data-*`, `id`, event handlers) onto the outer `<section>`, without overriding the computed accessible name: an explicit `ariaLabel` prop takes precedence over a raw `aria-label` present in the spread attributes, which in turn takes precedence over the string `title` fallback.
-
+- **decorative-icon**: The component MUST mark the `icon` slot `aria-hidden` so assistive tech reads the title rather than an unlabeled glyph.
+- **style-precedence**: The component MUST merge caller-supplied `style` onto the outer `<section>` after the computed `flex` and `maxHeight`, so a `style.flex` or `style.maxHeight` wins over the `flex`/`maxHeight` props; and MUST append `className` after the base classes and merge them as utility classes (conflicting utilities resolve in favor of `className`).
 ## Appearance
 
 Content-sized card (default):
@@ -127,7 +128,7 @@ Fill + scroll (`scroll`):
 ## Accessibility
 
 - The panel renders as a `<section>` with an accessible name: `ariaLabel` when
-  given, else the `title` when it is a string, so the panel is a labeled landmark
+  given, else a raw `aria-label` attribute, else the `title` when it is a string, so the panel is a labeled landmark
   region.
 - The leading `icon` is decorative and marked `aria-hidden`, so assistive tech reads
   the title rather than an unlabeled glyph.
@@ -161,10 +162,13 @@ Fill + scroll (`scroll`):
 | T16 | host-attribute-passthrough | `title="Fleet"` (string), rest `aria-label="FromRest"`, no `ariaLabel` prop | `<section aria-label="FromRest">` — the rest attribute wins over the string `title` fallback when `ariaLabel` is absent |
 | T17 | count-when-positive | `count={-3}` | no count rendered (negative is treated as not positive) |
 | T18 | label-region | non-string `title`, no `ariaLabel` | `<section>` has no `aria-label` — the known gap (see Edge Cases, "Non-string title") |
-
+| T19 | label-region | non-string `title`, rest `aria-label="FromRest"`, no `ariaLabel` | `<section aria-label="FromRest">` — the raw attribute names the region even though `title` cannot |
+| T20 | decorative-icon | `icon=<I/>` | the icon's wrapper carries `aria-hidden="true"`; the title text is still exposed |
+| T21 | style-precedence | `flex="2 1 0"`, `maxHeight={400}`, `style={{ flex: "3 1 0", maxHeight: 200 }}` | outer style is `flex: 3 1 0` and `max-height: 200px` — `style` wins over the props |
+| T22 | style-precedence | `className="rounded-none"` | the outer `<section>` has `rounded-none` and not `rounded-[10px]` |
 ## Edge Cases
 
-- **Non-string title**: when `title` is a node (not a string) and no `ariaLabel` is
+- **Non-string title**: when `title` is a node (not a string) and neither `ariaLabel` nor a raw `aria-label` is
   given, the region has no accessible name — hosts SHOULD pass `ariaLabel` in that
   case.
 - **Actions without center**: the actions container is given `ml-auto` only when
@@ -176,7 +180,8 @@ Fill + scroll (`scroll`):
 - **Body padding override**: `bodyPadding` fully replaces the mode default; hosts
   needing edge-to-edge content (e.g. a table) pass `bodyPadding="0"`.
 - **maxHeight with card mode**: a content-sized card given a `maxHeight` will clip via
-  the outer `overflow-hidden`; use `scroll` to make the body scroll within that cap.
+  the outer `overflow-hidden`, and the content past the cap cannot be reached; hosts SHOULD
+  pass `scroll` together with `maxHeight` so the body scrolls within that cap.
 
 ## Configuration
 
@@ -237,15 +242,15 @@ inside the slots it renders.
 
 - **SwiftUI**: Create a custom `View` that composes a header `HStack` — leading icon, title, trailing `titleAfter`, centered content, right-aligned actions — given `.frame(minHeight: 41)` (a floor, not a fixed height, so sibling headers align while still growing for taller content; no `GeometryReader` needed) above a body that conditionally wraps content in a `ScrollView` when `scroll` is true.
 - **Compose**: Build with a `Column` holding a `Row` for the header (`weight` and `align` modifiers for the slots) above a body. Apply `Modifier.weight(1f).fillMaxHeight()` to the body only when `scroll` is true — applying it unconditionally would make card mode fill its track too — and wrap the body in a scrollable container in that same branch. Use `Box` and `Row` compositions for the slot layout and card styling.
-- **React/Web**: File: `packages/web/packages/ui/src/blocks/info-panel.tsx`. Outer: `flex flex-col overflow-hidden rounded-[10px] border border-apt-border bg-apt-surface text-apt-text`, plus `min-h-0` in scroll mode. Header: `flex flex-none items-center gap-2` with a bottom border and `min-height: 41px` (`INFO_PANEL_HEADER_HEIGHT`); title `text-sm font-semibold whitespace-nowrap`; count `font-mono text-[11px] text-apt-text-dim`. Body: `flex-none` (card) or `min-h-0 flex-auto overflow-y-auto` (scroll). All colors and surfaces come from the `apt-*` token classes; React's `Ref` API exposes the body element. Template and host props determine all header slot content.
-- **AppKit / UIKit**: Implement as a `UIView` (iOS) or `NSView` (macOS) subclass composing an `NSStackView` (macOS) or `UIStackView` (iOS) with a header view constrained to `>= 41pt` (a floor, matching the min-height design decision, not a fixed height) above a scrollable content view; conditionally wrap it in `NSScrollView` / `UIScrollView` when scroll mode is enabled. For body padding, `UIStackView` (UIKit) can use `layoutMargins` with `isLayoutMarginsRelativeArrangement = true`; `NSStackView` (AppKit) has no such property — use its `edgeInsets` instead.
-- **WinUI 3**: Use a custom `UserControl` with a `Grid` of two rows, `Auto` and `*` — a vertical `StackPanel` would give both rows unlimited height and the `ScrollViewer` would never scroll. Put a `Border` in the `Auto` row for the header, with `MinHeight="41"` (or bound to the constant, not a fixed `Height`) and a `ScrollViewer` in the `*` row (conditionally visible/enabled by scroll mode). Style header and body using theme resources for borders, backgrounds, and text. The ScrollViewer's `Content` property holds the body content; set `ScrollViewer.VerticalScrollBarVisibility` to `Auto` in scroll mode and hide it in card mode.
+- **React/Web**: Outer: `flex flex-col overflow-hidden rounded-[10px] border border-apt-border bg-apt-surface text-apt-text`, plus `min-h-0` in scroll mode. Header: `flex flex-none items-center gap-2` with a bottom border and `min-height: 41px` (`INFO_PANEL_HEADER_HEIGHT`); title `text-sm font-semibold whitespace-nowrap`; count `font-mono text-[11px] text-apt-text-dim`. Body: `flex-none` (card) or `min-h-0 flex-auto overflow-y-auto` (scroll). All colors and surfaces come from the `apt-*` token classes; React's `Ref` API exposes the body element. Template and host props determine all header slot content.
+- **AppKit / UIKit**: Implement as a container view built from a header view and a body view (composition over subclassing, matching the host-owned slots), using an `NSStackView` (macOS) or `UIStackView` (iOS) with the header view constrained to `>= 41pt` (a floor, matching the min-height design decision, not a fixed height) above a scrollable content view; conditionally wrap it in `NSScrollView` / `UIScrollView` when scroll mode is enabled. For body padding, `UIStackView` (UIKit) can use `layoutMargins` with `isLayoutMarginsRelativeArrangement = true`; `NSStackView` (AppKit) has no such property — use its `edgeInsets` instead.
+- **WinUI 3**: Use a custom `UserControl` with a `Grid` of two rows, header `Auto` and body `*` in scroll mode — a vertical `StackPanel` would give both rows unlimited height and the `ScrollViewer` would never scroll. Put a `Border` in the `Auto` row for the header, with `MinHeight="41"` (or bound to the constant, not a fixed `Height`) and a `ScrollViewer` in the body row (conditionally visible/enabled by scroll mode). In card mode make the body row `Auto` so the panel is content-sized (**content-sized-by-default**); switch it to `*` only when `scroll` is true. Style header and body using theme resources for borders, backgrounds, and text. The ScrollViewer's `Content` property holds the body content; set `ScrollViewer.VerticalScrollBarVisibility` to `Auto` in scroll mode and hide it in card mode.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/info-panel.tsx` | confirmed (1.3.1) |
+| web | `packages/web/packages/ui/src/blocks/info-panel.tsx` | confirmed (1.3.2) |
 
 ## Design Decisions
 
@@ -317,3 +322,4 @@ rendering.
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Complete recipe sections: add Deep Linking, Localization, Accessibility Options, Feature Flags, Privacy; expand Platform Notes with translation guidance for all five platforms; set status to review. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; resolve the label-region contradiction with Edge Cases and state the aria-label precedence, with new test vectors T15-T18; correct the keyboard-scrollable overclaim; write a Logging statement distinct from Analytics; reformat Design Decisions and Compliance to the canonical forms; fix WinUI 3's Grid/MinHeight, the SwiftUI/AppKit min-height wording, AppKit-vs-UIKit padding APIs, and Compose's scroll-gated fillMaxHeight; mark T6/T8 as Playwright/E2E and reword T5 behaviorally; rewrite Appearance in neutral terms and move Tailwind classes into the React/Web note; drop the unsupported "manages layout state" phrase from Privacy. |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.3.2 | 2026-11-14 | Mike Fullerton | Documented the full accessible-name order, added decorative-icon and style-precedence requirements with vectors T19-T22, stated that content past maxHeight in card mode is unreachable, shortened the summary, and fixed the WinUI 3 and AppKit notes. |

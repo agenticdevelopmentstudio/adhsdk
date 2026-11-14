@@ -1,10 +1,10 @@
 
-Vectors 001 to 011 derive from `__tests__/ThemeStyle.test.tsx` and `__tests__/buildScopedCss.test.ts` beside the source; the rest derive from the source. The component tests mock the manifest with a stub theme whose CSS is `:root:not(.dark) { --a: 1; } :root.dark { --a: 2; }`.
+Vectors 001 to 011 derive from `__tests__/ThemeStyle.test.tsx` and `__tests__/buildScopedCss.test.ts` beside the source; the rest derive from the source and have no test yet. Vectors 012 to 015 and 018 to 021 belong in `buildScopedCss.test.ts`, and vector 016 and 017's component cases in `ThemeStyle.test.tsx`. The component tests mock the manifest with a stub theme whose CSS is `:root:not(.dark) { --a: 1; } :root.dark { --a: 2; }`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | theme-style-001 | global-id, inline-style-element, unscoped-passthrough | `ThemeStyle.test.tsx` "renders an unscoped theme inline": `<ThemeStyle theme="stub" />` | a `style` in the render container with id `adh-sdk-theme`, none in `document.head`, body contains `--a: 1` |
-| theme-style-002 | scoped-id-prefix, scoped-id-slug | "gives two differently-scoped renders two different ids": scopes `.host-a` and `.host-b` rendered on one page | both ids non-empty and different from each other |
+| theme-style-002 | distinct-scope-ids | "gives two differently-scoped renders two different ids": scopes `.host-a` and `.host-b` rendered on one page | both ids non-empty and different from each other |
 | theme-style-003 | theme-color-mode-type, legacy-root-dark, legacy-root-not-dark | "resolves colorMode dark and light to different CSS": scope `.host`, `colorMode` `dark` then `light` | the two style bodies differ |
 | theme-style-004 | system-mode-default | "defaults colorMode to system": scope `.host`, no `colorMode` | body contains `html.dark :scope` and `html:not(.dark) :scope` |
 | theme-style-005 | unknown-theme-renders-nothing | "renders nothing for an unknown theme key": `theme="not-a-real-theme"` | render does not throw and no `style` element exists |
@@ -20,3 +20,8 @@ Vectors 001 to 011 derive from `__tests__/ThemeStyle.test.tsx` and `__tests__/bu
 | theme-style-015 | scoped-id-slug | scope `Host B > .x` | id is `adh-sdk-theme-scoped-host-b-x-g3a3in` (the run space, `>`, space, `.` collapses to one `-`; the scope is not its own slug, so the FNV-1a hash is appended) |
 | theme-style-016 | color-mode-scoped-only | `<ThemeStyle theme="stub" colorMode="dark" />` with no `scope` | body equals the stub CSS exactly |
 | theme-style-017 | distinct-scope-ids, scoped-id-prefix | "keeps scopes that differ only in punctuation or case on different ids": scopes `.host-a`, `#host-a`, `.Host-A`, `host-a` | four distinct ids; `host-a` gives `adh-sdk-theme-scoped-host-a`; `.host-a` gives `adh-sdk-theme-scoped-host-a-5l1jl5`; `#host-a` gives `adh-sdk-theme-scoped-host-a-lcrp5y` |
+| theme-style-018 | import-form-limit | `buildScopedCss("@import 'a.css';\nhtml:root { --a: 1; }", '.host')` | `"\n@scope (.host) {\n@import 'a.css';\n:scope { --a: 1; }\n}"`; the quoted `@import` is not hoisted |
+| theme-style-019 | scope-not-escaped | `buildScopedCss('body {}', '.a > .b')` | `"\n@scope (.a > .b) {\n:scope {}\n}"` |
+| theme-style-020 | legacy-root-not-dark, empty stylesheet | `buildScopedCss(':root:not(.dark) {}', '.host', mode)` for `system`, `light`, `dark`; and `buildScopedCss('', '.host')` | the body is `html:not(.dark) :scope {}`, `:scope {}`, `:scope.pc-colormode-off {}` respectively; the empty stylesheet gives `"\n@scope (.host) {\n\n}"` |
+| theme-style-021 | light-anchor-not-in-lists | `buildScopedCss('html:root, html:root[data-color-mode]:not(.dark) {}', '.host')` | `"\n@scope (.host) {\n:scope, html[data-color-mode]:not(.dark) :scope {}\n}"`; this records a known limitation, not desired behavior: the discriminator at the end of a comma list directly before `{` gets the colorMode rewrite |
+| theme-style-022 | rerender-swaps-css | render `<ThemeStyle theme="stub" scope=".a" />`, then rerender with `scope=".b"` | the style body equals `buildScopedCss(stub css, '.b')` and the id is the one for `.b` |

@@ -7,7 +7,7 @@
   monitor card's live status word), right-justified by InfoPanel.
 - **`footnote` guard is `!= null`**: `null`/`undefined` hide the footnote; an empty
   string (`""`) is *not* null and WOULD render an empty caption — pass `undefined` to
-  hide, not `""`.
+  hide, not `""` (see **footnote-guard-is-null-check**).
 - **Rows + children + footnote together**: order is always rows → children → footnote
   within the one `gap-2.5` stack; `children` is the escape hatch for anything the
   declarative `stats[]` can't express (e.g. the status Errors card's live error line

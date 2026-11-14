@@ -1,6 +1,6 @@
 
 The CLI has no localization mechanism: no source imports `gettext`, no
-message-catalog or string-key indirection exists anywhere in the eight given
+message-catalog or string-key indirection exists anywhere in the nine given
 modules, and every user-facing string is a hardcoded English literal (or an
 f-string built from one) embedded directly at its call site. The table below
 lists them, using the literal message itself in place of a string key:

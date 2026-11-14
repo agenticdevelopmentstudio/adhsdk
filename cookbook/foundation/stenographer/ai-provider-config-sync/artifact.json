@@ -4,7 +4,7 @@
     "id": "b05ceb21-7c1c-4d62-83ba-01a3132df00a",
     "title": "AI Provider Config Sync",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -25,12 +25,16 @@
       "sync"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "1a0b943c-35f4-4568-9d92-033acce97afb",
+      "9c7c78d3-23ca-4ca6-a519-9968b440b8c6",
+      "96f73261-cf32-42cc-92f3-f8b58542382a"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6e9757ed5e44db3f",
+  "synced": "8b147818b64eb9cd",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

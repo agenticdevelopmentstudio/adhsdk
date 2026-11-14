@@ -1,9 +1,9 @@
 
 - **render-confirm**: The component MUST always render a confirm button labeled with `confirmLabel` that invokes `onConfirm` when activated.
 - **render-cancel-when-labeled**: The component MUST render a cancel button that invokes `onCancel` when `cancelLabel` is provided, and MUST omit the cancel button entirely when `cancelLabel` is absent.
-- **equal-width-when-narrow**: In `auto` layout with two buttons, when the container is too narrow for both at their natural width, the component MUST give each button up to an equal share of the row, capped at its own natural width, with any share a button doesn't use falling to the other button.
-- **natural-width-when-wide**: In `auto` layout with two buttons, when the container has room for both at their natural width, the component MUST hold each at that width and right-justify the row.
-- **cap-growth-at-natural-width**: In `auto` layout, no button may be stretched past its own natural width; the space a button declines MUST fall to the other button if it needs it, and otherwise to the left of the row.
+- **equal-width-when-narrow**: In `auto` layout with two buttons, when the container is too narrow for both at their natural width, the component MUST split the row between the buttons under the growth cap of [cap-growth-at-natural-width](#requirements/cap-growth-at-natural-width).
+- **natural-width-when-wide**: In `auto` layout with two buttons, when the container has room for both at their natural width, the component MUST hold each at that width and right-justify the row, as [cap-growth-at-natural-width](#requirements/cap-growth-at-natural-width) leaves the spare space to the left.
+- **cap-growth-at-natural-width**: In `auto` layout, a button MUST NOT be stretched past its own natural width; the space a button declines MUST fall to the other button if it needs it, and otherwise to the left of the row.
 - **settle-before-interactive**: The component MUST present its final button geometry on the first frame it paints. It MUST NOT move or resize a button after mount as a result of deciding its own layout — a button that shifts while the dialog is already clickable can swallow the click that was aimed at it.
 - **follow-the-container**: The layout MUST be derived from the container's own width, not the viewport's, and MUST re-resolve when the container's width changes.
 - **honor-forced-layout**: When `layout` is `equal` or `natural`, the component MUST use that layout regardless of the container's width.

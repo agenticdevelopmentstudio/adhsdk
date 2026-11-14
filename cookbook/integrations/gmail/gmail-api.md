@@ -2,11 +2,11 @@
 id: 18871853-95b7-492a-9f1f-417283594824
 title: "Gmail API"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -40,7 +40,7 @@ approved-date: ""
 
 ## Overview
 
-`GmailAPI` is the narrow protocol through which the mail sync engine talks to Gmail: profile, message-id listing, search, thread and message fetch, history, labels and label changes. The file also holds the decoded wire shapes (`GmailProfile`, `GmailIdPage`, `GmailThreadDTO`, `GmailHistoryPage`, `GmailHeader`, `GmailBody`, `GmailPart`, `GmailMessageDTO`, `GmailLabelDTO`), the `GmailCursorExpired` error, and `GmailQuery`, which builds the `messages.list` query for a full sync. The protocol's own comment states the design intent: "Small so tests can fake it." The concrete HTTP implementation is `GmailRESTClient`, a separate file; this ingredient specifies the contract; `GmailRESTClient` has its own ingredient. Use it wherever sync code needs Gmail data without depending on HTTP.
+`GmailAPI` is the narrow protocol through which the mail sync engine talks to Gmail: profile, message-id listing, search, thread and message fetch, history, labels and label changes. The file also holds the decoded wire shapes (`GmailProfile`, `GmailIdPage`, `GmailThreadDTO`, `GmailHistoryPage`, `GmailHeader`, `GmailBody`, `GmailPart`, `GmailMessageDTO`, `GmailLabelDTO`), the `GmailCursorExpired` error, and `GmailQuery`, which builds the `messages.list` query for a full sync from a `MailSyncSettings` value ([adhsdk.ingredient.integrations.model.mail-sync-settings](cookbook:df121975-deb8-49a9-b023-0aadcb0923d8)). The protocol's own comment states the design intent: "Small so tests can fake it." The concrete HTTP implementation is `GmailRESTClient`, a separate file with its own ingredient ([adhsdk.ingredient.integrations.gmail.gmail-rest-client](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914)); this ingredient specifies the contract. Use it wherever sync code needs Gmail data without depending on HTTP.
 
 ## Behavioral Requirements
 
@@ -59,19 +59,18 @@ approved-date: ""
 - **part-tree**: `GmailPart` MUST be a recursive tree: every field (`partId`, `mimeType`, `filename`, `headers`, `body`, `parts`) is optional and `parts` holds child `GmailPart` values.
 - **body-encoding**: `GmailBody.data` MUST carry the body as base64url text, left undecoded; `attachmentId` and `size` MUST be optional.
 - **header-shape**: `GmailHeader` MUST carry a required `name` and `value`.
-- **history-page**: `history(startHistoryId:pageToken:)` MUST return a `GmailHistoryPage` with `changedIds`, `deletedIds`, the `historyId` and an optional `nextPageToken`.
+- **history-page**: `history(startHistoryId:pageToken:)` MUST return a `GmailHistoryPage` with `changedIds`, `deletedIds`, the `historyId` and an optional `nextPageToken`. `changedIds` MUST hold the message ids from `messagesAdded`, `labelsAdded` and `labelsRemoved` history records and `deletedIds` those from `messagesDeleted` records. Each list MUST hold an id once (de-duplicated, first occurrence kept), and an id that appears in both lists MUST appear only in `deletedIds`.
 - **cursor-expired**: `history` MUST throw `GmailCursorExpired` when Gmail answers HTTP 404, meaning the cursor "is older than Gmail keeps"; the caller then needs a full sync.
 - **cursor-expired-shape**: `GmailCursorExpired` MUST be an `Error`, `Equatable` and `Sendable` with a no-argument initializer and no payload.
 - **labels-list**: `labels()` MUST return the account's labels as `[GmailLabelDTO]`.
 - **label-shape**: `GmailLabelDTO` MUST require `id`, `name` and `type` and MUST treat `messagesTotal`, `messagesUnread` and `color` (a `LabelColor` from the integration model) as optional.
 - **batch-modify**: `batchModify(ids:add:remove:)` MUST apply the `add` and `remove` label ids to every id in `ids` and return nothing on success.
-- **batch-modify-limits**: A conforming REST client MUST reject an empty `ids` list and a list longer than `GmailRESTClient.batchModifyLimit` (1000) with an `IntegrationError`, without calling Gmail. The protocol does not state this limit; `GmailRESTClient` enforces it and its tests assert it.
+- **batch-modify-limits**: A conforming REST client MUST reject an empty `ids` list and a list longer than `GmailRESTClient.batchModifyLimit` (1000) with an `IntegrationError` (see [adhsdk.ingredient.integrations.model.integration-error](cookbook:351e3bf8-b137-4f59-94de-c769aa8b0666)), without calling Gmail. The protocol does not state this limit; `GmailRESTClient` enforces it and its tests assert it.
 - **full-sync-after**: `GmailQuery.fullSync(settings:now:)` MUST start the query with `after:` followed by the whole-second epoch of `now` minus `settings.windowDays` days (86,400 seconds each).
 - **full-sync-class-filter**: When `settings.includeArchived` is false, `fullSync` MUST append the space-joined terms `in:inbox in:sent in:drafts is:starred has:userlabels` inside braces, which Gmail reads as OR.
 - **full-sync-spam-trash-terms**: When `includeArchived` is false, `fullSync` MUST add `in:spam` inside the braces, after `has:userlabels`, when `includeSpam` is true and `in:trash` after that when `includeTrash` is true.
 - **full-sync-archived**: When `settings.includeArchived` is true, `fullSync` MUST return only the `after:` term, with no class filter and no `in:spam` or `in:trash` terms.
 - **full-sync-include-flag**: `fullSync` MUST return `includeSpamTrash` equal to `settings.includeSpam || settings.includeTrash`, whether or not `includeArchived` is set.
-- **query-narrows-only**: `GmailQuery` output MUST be treated as a fetch narrowing only; `MailClassifier` stays the authority on what is mirrored (the type's own comment).
 - **no-error-translation-here**: The protocol MUST NOT define errors other than `GmailCursorExpired`; other failures surface as the throwing implementation's own errors (for `GmailRESTClient`, `IntegrationError.gmail(status:message:)`).
 
 ### Security
@@ -99,29 +98,31 @@ Not applicable — this is a data-access protocol and set of wire types, not a v
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| gmail-api-001 | full-sync-after, full-sync-class-filter, full-sync-include-flag | `fullSync(settings: .default, now: Date(timeIntervalSince1970: 1_730_800_000))`; default is 30 days, nothing included (test `fullSyncQueryDefault`) | query `after:<1730800000 - 30*86400> {in:inbox in:sent in:drafts is:starred has:userlabels}`, `includeSpamTrash` false |
-| gmail-api-002 | full-sync-spam-trash-terms, full-sync-include-flag | `includeSpam` and `includeTrash` true, `windowDays` 1, `now` is `Date(timeIntervalSince1970: 1_730_800_000)` (test `fullSyncQueryWithSpamAndTrash`) | query `after:<1730800000 - 86400> {in:inbox in:sent in:drafts is:starred has:userlabels in:spam in:trash}`, `includeSpamTrash` true |
-| gmail-api-003 | full-sync-archived, full-sync-include-flag | `includeArchived` and `includeSpam` true, `windowDays` 2, `now` is `Date(timeIntervalSince1970: 1_730_800_000)` (test `fullSyncQueryArchivedDropsClassFilter`) | query exactly `after:<1730800000 - 2*86400>`, `includeSpamTrash` true |
+| gmail-api-001 | full-sync-after, full-sync-class-filter, full-sync-include-flag | `fullSync(settings: .default, now: Date(timeIntervalSince1970: 1_730_800_000))`; default is 30 days, nothing included (test `fullSyncQueryDefault`) | query `after:1728208000 {in:inbox in:sent in:drafts is:starred has:userlabels}`, `includeSpamTrash` false |
+| gmail-api-002 | full-sync-spam-trash-terms, full-sync-include-flag | `includeSpam` and `includeTrash` true, `windowDays` 1, `now` is `Date(timeIntervalSince1970: 1_730_800_000)` (test `fullSyncQueryWithSpamAndTrash`) | query `after:1730713600 {in:inbox in:sent in:drafts is:starred has:userlabels in:spam in:trash}`, `includeSpamTrash` true |
+| gmail-api-003 | full-sync-archived, full-sync-include-flag | `includeArchived` and `includeSpam` true, `windowDays` 2, `now` is `Date(timeIntervalSince1970: 1_730_800_000)` (test `fullSyncQueryArchivedDropsClassFilter`) | query exactly `after:1730627200`, `includeSpamTrash` true |
 | gmail-api-004 | cursor-expired | `history` against a server answering 404 (test `historyNotFoundThrowsCursorExpired`) | throws `GmailCursorExpired` |
 | gmail-api-005 | thread-messages-optional | decode `{"id":"t1"}` as a thread (test `aThreadWithNoMessagesDecodesEmpty`) | `id` is `t1`, `messages` is empty |
 | gmail-api-006 | batch-modify | `batchModify(ids: ["a"], add: ["STARRED"], remove: ["INBOX"])` (test `batchModifyPostsBody`) | one POST with body `ids ["a"]`, `addLabelIds ["STARRED"]`, `removeLabelIds ["INBOX"]` |
 | gmail-api-007 | batch-modify-limits | empty `ids`, then 1001 ids (test `batchModifyRejectsEmptyAndOversizedListsWithoutCallingGmail`) | each throws `IntegrationError`; zero requests sent |
 | gmail-api-008 | history-page | a history response with changed and deleted entries (test `historyPageCollectsChangedAndDeleted`) | `changedIds`, `deletedIds`, `historyId` and `nextPageToken` populated from the response |
 | gmail-api-009 | thread-id-required | decode `{"messages":[]}` as a thread (no test yet) | decoding throws |
-| gmail-api-010 | failure-surfaces, no-error-translation-here | `profile()` against a 403 with message `Insufficient Permission` (test `errorBodyMessageSurfaces`) | throws `IntegrationError.gmail(status: 403, message: "Insufficient Permission")`, one request, no retry |
+| gmail-api-010 | failure-surfaces, no-error-translation-here | `profile()` against a 403 with message `Insufficient Permission` (test `errorBodyMessageSurfaces`) | throws an implementation error other than `GmailCursorExpired` (for `GmailRESTClient`, `IntegrationError.gmail(status: 403, message: "Insufficient Permission")` after one request) |
 | gmail-api-011 | message-shape | decode `{"id":"m","threadId":"t"}` as a message (no test yet) | succeeds; all optional fields are nil |
 | gmail-api-012 | label-shape | decode `{"id":"L","name":"n"}` as a label (no test yet) | decoding throws because `type` is missing |
-
+| gmail-api-013 | part-tree | decode `{"mimeType":"multipart/mixed","parts":[{"mimeType":"text/plain","body":{"data":"aGk","size":2}},{"mimeType":"multipart/alternative","parts":[{"mimeType":"text/html"}]}]}` as a part (no test yet) | `parts` has two children; the first has `body.data` `aGk` and `size` 2; the second has one child with `mimeType` `text/html`; every other field is nil |
+| gmail-api-014 | sub-second-now, full-sync-after | `fullSync(settings: .default, now: Date(timeIntervalSince1970: 1_730_800_000.9))` with `windowDays` 1 (no test yet) | query starts `after:1730713600` (the fraction is dropped) |
+| gmail-api-015 | window-days-boundary, full-sync-after | `fullSync` with `windowDays` 0, `includeArchived` true and `now` `Date(timeIntervalSince1970: 1_730_800_000)` (no test yet) | query exactly `after:1730800000` |
 ## Edge Cases
 
-- **empty-thread**: A thread with no `messages` key MUST decode to an empty `messages` array, not fail.
+- **empty-thread**: See #behavioral-requirements/thread-messages-optional.
 - **empty-listing**: A listing with no messages MUST yield a `GmailIdPage` with empty `ids`; `GmailRESTClient` tolerates a missing `messages` key and de-duplicates ids (test `listMessageIdsDedupesAndToleratesEmpty`).
-- **expired-cursor**: A 404 on `history` MUST throw `GmailCursorExpired` and not a generic error, so the caller can fall back to a full sync.
+- **expired-cursor**: See #behavioral-requirements/cursor-expired.
 - **other-404**: A 404 on any other operation is not translated by this contract; it surfaces as the implementation's error.
 - **window-days-boundary**: `fullSync` applies no clamping; `MailSyncSettings` documents `windowDaysRange` as 1 through 3650, and enforcement belongs to that type. A `windowDays` of 0 yields an `after:` equal to `now`.
 - **sub-second-now**: `fullSync` truncates `now` to whole seconds through `Int`.
 - **archived-with-spam**: With `includeArchived` true, `includeSpam` and `includeTrash` add no query terms but still set `includeSpamTrash`, so the listing call includes spam and trash.
-- **batch-oversize**: More than 1000 ids MUST be rejected before any request.
+- **batch-oversize**: See #behavioral-requirements/batch-modify-limits.
 - **malformed-wire**: Missing required fields (`id`, `threadId`, `name`, `type`, `emailAddress`, `historyId`) cause decoding to throw; the contract does not recover.
 - **concurrent-calls**: The protocol is `Sendable`, so callers MAY invoke operations concurrently; it states no ordering rule, and a fake or client decides its own serialization. `GmailRESTClient` paces calls against a quota (test `eachCallWaitsForTheQuotaItCosts`).
 - **offline**: A network failure surfaces as a thrown error from the implementation; the contract defines no offline mode. `GmailRESTClient` retries transient network errors and fails fast on non-transient ones (test `nonTransientNetworkErrorsAreNotRetried`).
@@ -171,25 +172,26 @@ Not applicable: the file contains no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Not a view; a SwiftUI app consumes it through a service or model that holds a `GmailAPI`. The protocol and the DTOs conform to `Sendable`, and the DTOs are value types, so they can be passed to `@MainActor` view models. Source file: `GmailAPI.swift`, in the Integrations/Gmail folder; the implementation is `GmailRESTClient.swift` beside it.
+- **SwiftUI**: Not a view; a SwiftUI app consumes it through a service or model that holds a `GmailAPI`. The protocol and the DTOs conform to `Sendable`, and the DTOs are value types, so they can be passed to `@MainActor` view models.
 - **Compose**: Define a Kotlin interface with `suspend` functions for the protocol, `data class` types decoded with kotlinx.serialization (`@Serializable`, nullable fields with defaults, `ignoreUnknownKeys`), and a custom error `class GmailCursorExpired : Exception()`. Use Retrofit or Ktor for HTTP and a `ViewModel` coroutine scope for calls. Differs from the source: the Swift `Sendable` guarantee has no Kotlin equivalent.
 - **React/Web**: Define a TypeScript interface returning Promises, with `interface` types for the DTOs and a `class GmailCursorExpired extends Error`. Base64url data decodes with a manual replace of `-` and `_` before `atob`. `GmailQuery.fullSync` is a pure function taking a settings object and a `Date`, using `Math.floor(ms / 1000)`.
 - **AppKit / UIKit**: Same Swift types as the source on macOS and iOS; it uses only Foundation, so no platform branching is needed. Tests fake `GmailAPI` with a struct or actor conforming to the protocol, as the source's test support does.
-- **WinUI 3**: Define `interface IGmailApi` with `Task<T>` methods taking a `CancellationToken`; model the DTOs as C# `record` types deserialized with `System.Text.Json` (`JsonSerializerOptions` with `PropertyNameCaseInsensitive`, nullable reference types for optional fields, and a custom `JsonConverter` or default-initialized property so a missing `messages` yields an empty list). `GmailCursorExpired` becomes a sealed `Exception` subclass. Implement the REST client with `HttpClient` plus a `DelegatingHandler` for the bearer token, retry with exponential backoff capped at 32 seconds, and rate pacing; `Retry-After` is read from `HttpResponseMessage.Headers.RetryAfter`. Base64url bodies decode with `Convert.FromBase64String` after replacing `-` and `_` and padding. Keep the query builder a static class with `DateTimeOffset.ToUnixTimeSeconds()`. Tokens persist in `Windows.Security.Credentials.PasswordVault`; sync work runs in a background `Task` or an `IHostedService`. Differs from the source: there is no `Sendable` compile-time check, so keep DTOs immutable `record` types.
+- **WinUI 3**: Define `interface IGmailApi` with `Task<T>` methods taking a `CancellationToken`; model the DTOs as C# `record` types deserialized with `System.Text.Json` (`JsonSerializerOptions` with `PropertyNameCaseInsensitive`, nullable reference types for optional fields, and a custom `JsonConverter` or default-initialized property so a missing `messages` yields an empty list). `GmailCursorExpired` becomes a sealed `Exception` subclass. Base64url bodies decode with `Convert.FromBase64String` after replacing `-` and `_` and padding. Keep the query builder a static class with `DateTimeOffset.ToUnixTimeSeconds()`. Differs from the source: there is no `Sendable` compile-time check, so keep DTOs immutable `record` types.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailAPI.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailAPI.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailAPI.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
 **Decision**: Keep the protocol to the eight operations the sync engine uses.
-**Rationale**: The doc comment says it is "small so tests can fake it"; a narrow surface keeps fakes cheap and the sync engine independent of HTTP.
+**Rationale**: A narrow surface keeps fakes cheap and the sync engine independent of HTTP.
 **Approved**: pending
 
 **Decision**: Surface only one typed error, `GmailCursorExpired`, for HTTP 404 on `history`.
@@ -201,11 +203,11 @@ Not applicable: the file contains no log calls.
 **Approved**: pending
 
 **Decision**: Keep `internalDate` as a string and body `data` as base64url text in the DTOs.
-**Rationale**: The DTOs mirror the wire shape; conversion belongs to the parser that consumes them, and the comments in source record the formats.
+**Rationale**: The DTOs mirror the wire shape; conversion belongs to the parser that consumes them, and the DTOs record the formats (epoch milliseconds as a string, base64url body text).
 **Approved**: pending
 
 **Decision**: Let the full-sync query only narrow the fetch.
-**Rationale**: The type's comment makes `MailClassifier` the authority on what is mirrored, so the query is a bandwidth optimization and not a policy.
+**Rationale**: `MailClassifier` ([adhsdk.ingredient.integrations.model.mail-classification](cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43)) is the authority on what is mirrored, so the query is a bandwidth optimization and not a policy. A caller MUST NOT rely on the query to exclude a message from the mirror; it re-checks every fetched message with the classifier.
 **Approved**: pending
 
 **Decision**: Always set `includeSpamTrash` from `includeSpam || includeTrash`, including when `includeArchived` drops the class terms.
@@ -223,9 +225,10 @@ Not applicable: the file contains no log calls.
 | [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | partial | access-patterns |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | partial | security |
 
-Separation of concerns passes because the file holds only the contract, wire types and query builder, while HTTP, retry, pacing and classification live in `GmailRESTClient` and `MailClassifier`. Unit-test coverage is partial: the query builder, the expired cursor, the empty thread and batch limits all have tests, in `GmailMessageParserTests` and `GmailRESTClientTests`, but vectors gmail-api-009, gmail-api-011 and gmail-api-012 (required `id`, optional message fields, required label `type`) have no test. Explicit error handling passes because the one actionable failure has its own type and the rest throw. Pagination passes because both listing results and history carry `nextPageToken`. Rate-limit handling and token lifecycle are partial: this file declares neither, and the behavior lives in `GmailRESTClient` and in whatever supplies its access token, outside the file this ingredient covers.
+Separation of concerns passes because the file holds only the contract, wire types and query builder, while HTTP, retry, pacing and classification live in `GmailRESTClient` and `MailClassifier`. Unit-test coverage is partial: the query builder, the expired cursor, the empty thread and batch limits all have tests, in `GmailMessageParserTests` and `GmailRESTClientTests`, but vectors gmail-api-009, gmail-api-011 and gmail-api-012 (required `id`, optional message fields, required label `type`) and the source-derived gmail-api-013 to gmail-api-015 (part tree, sub-second `now`, zero `windowDays`) have no test. Explicit error handling passes because the one actionable failure has its own type and the rest throw. Pagination passes because both listing results and history carry `nextPageToken`. Rate-limit handling and token lifecycle are partial: this file declares neither, and the behavior lives in `GmailRESTClient` and in whatever supplies its access token, outside the file this ingredient covers.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Specified history-page mapping and de-duplication, replaced vector arithmetic with literals, linked related ingredients, trimmed WinUI notes, and added vectors 013 to 015. |

@@ -6,11 +6,9 @@
 | cp-003 | open-change-on-dismiss | User presses Escape | `onOpenChange(false)` is called |
 | cp-004 | open-change-on-dismiss, run-on-enter | User selects an item via Enter | `onOpenChange(false)` is called, then item's `onSelect()` is called |
 | cp-005 | display-query | `query: "test"` | Input field shows "test" |
-| cp-006 | query-change-callback | User types "foo" in input | `onQueryChange("foo")` is called for each keystroke |
+| cp-006 | query-change-callback | User types "foo" in input | With the host updating `query` after each change, `onQueryChange` is called three times, in order, with "f", "fo", "foo" |
 | cp-007 | render-groups-in-order | `groups: [{id: "g1", …}, {id: "g2", …}]` | Group headings appear in order g1, then g2 |
 | cp-008 | render-groups-in-order | `groups: [{id: "g1", items: []}, {id: "g2", items: [{…}]}]` | Only g2 heading is rendered; g1 is dropped entirely |
-| cp-009 | render-groups-in-order | Group with 0 items | Group heading is not rendered |
-| cp-010 | render-groups-in-order | Group with 1+ items | Group heading is rendered |
 | cp-011 | reset-highlight-to-first-item | Dialog opens with 3 items | First item is highlighted |
 | cp-012 | reset-highlight-to-first-item | Item list changes from [A, B, C] to [X, Y] | Highlight moves to X (first of new list) |
 | cp-013 | arrow-navigation | Highlight on item 1 of 3, press ArrowDown | Highlight moves to item 2 |
@@ -32,4 +30,11 @@
 | cp-029 | no-reserved-space-for-missing-icon-badge | Item with `icon: undefined`, `badge: undefined` | No empty space is rendered where the icon/badge would be |
 | cp-030 | arrow-navigation | Exactly one item, press ArrowDown then ArrowUp | Highlight stays on the single item both times (wraps to itself) |
 | cp-031 | display-error-message, display-loading-state | `loading: true` and `error: "Network error"` together | Both the error text and the loading indicator are visible |
-
+| cp-032 | open-change-on-dismiss | User clicks outside the dialog | `onOpenChange` is not called; the dialog stays open |
+| cp-033 | no-op-on-empty-list | `groups: []`, press ArrowDown, ArrowUp, Home, End, Enter | No highlight, no `onSelect`, no `onOpenChange` call |
+| cp-034 | unique-item-ids | Two groups each containing an item with `id: "a"` | Not a supported input: both rows read as highlighted together and `aria-activedescendant` is ambiguous |
+| cp-035 | filter-empty-query-passthrough | `filterCommandItems(items, "   ")` | Returns `items` unchanged |
+| cp-036 | filter-case-insensitive-substring | `filterCommandItems([{label: "Open File"}], "  oPEN ")` | The item is returned |
+| cp-037 | filter-matched-fields | One item per field: query matches only its `label`, `keywords`, `badge` or `description`; and one matching only `hint` | The first four items are returned; the `hint`-only item is not |
+| cp-038 | use-placeholder | `placeholder` omitted, then `placeholder: "Find…"`, with an empty query | Input placeholder is "Search…", then "Find…" |
+| cp-039 | accept-open-prop | Palette open, item at index 1 highlighted | The input has `role="combobox"`, `aria-controls` equal to the listbox id, `aria-expanded="true"` and `aria-activedescendant` equal to the highlighted option's id |

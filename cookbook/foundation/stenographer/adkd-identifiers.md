@@ -2,7 +2,7 @@
 id: 1d48ed86-5704-4631-b643-36f7450c1c83
 title: "ADKD Identifiers"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,8 @@ tags:
   - identifiers
   - paths
 depends-on: []
-related: []
+related:
+  - b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43
 references: []
 approved-by: ""
 approved-date: ""
@@ -47,11 +48,12 @@ The values that could collide differ from the Stenographer daemon's (`Stenograph
 - **hook-lock-name**: `ADKDIdentifiers.ownHookLockName` MUST be `.adkd-hooks.lock`, the lock file that serialises edits to Claude Code's hook settings.
 - **cli-name**: `ADKDIdentifiers.cliName` MUST be `adk`, the tool at `Contents/Helpers/adk` in the app bundle.
 - **daemon-executable-name**: `ADKDIdentifiers.daemonExecutableName` MUST be `adkd`, the executable at `Contents/MacOS/adkd` in the app bundle.
-- **no-collision-with-stenographer**: Every identifier and path the type defines MUST differ from its Stenographer counterpart: label, HTTP port, keychain service, hook marker, database file name, support directory, logs directory, launch-agent plist, drop directory name, socket file name and hook lock name.
+- **no-collision-with-stenographer**: Each of the following MUST differ from its Stenographer counterpart, and this list is the full contract: label, HTTP port, keychain service, hook marker, database file name, support directory, logs directory, launch-agent plist, drop directory name, socket file name and hook lock name.
 - **storage-token**: `ADKDPaths.storageToken` MUST be `AgenticDeveloperKitchen`, the app's display name with non-alphanumerics dropped.
 - **storage-token-duplicated**: The storage token is spelled in `ADKDPaths` because Core cannot import the database layer that derives it; the two spellings MUST agree.
+- **storage-token-agreement-test**: A port MUST carry a test that asserts its spelled storage token equals the value the database layer derives from the display name.
 - **display-name**: `ADKDPaths.displayName` MUST be `Agentic Developer Kitchen`, the name of the app's folder under Application Support.
-- **file-names**: The database file MUST be named `adkd.db`, the ingest spool `ingest.db`, the launchd output files `stdout.log` and `stderr.log`, and the user-stop marker `daemon-stopped-by-user`.
+- **file-names**: The database file MUST be named `adkd.db`, the ingest spool `ingest.db`, the launchd output files `stdout.log` and `stderr.log`, and the user-stop marker `daemon-stopped-by-user`. The type defines only the two launchd output file names (`launchdStdoutLogName`, `launchdStderrLogName`), not a path for them; callers choose the directory.
 - **home-injection**: `ADKDPaths.init(home:)` MUST take the home directory as a parameter defaulting to the current user's home directory, and every path property MUST be derived from it.
 - **storage-directory**: `storageDirectory` MUST be `.` followed by the lowercased storage token, directly under home (`~/.agenticdeveloperkitchen`).
 - **support-directory**: `supportDirectory` MUST be the `adkd` directory under `storageDirectory`.
@@ -91,7 +93,9 @@ Not applicable — this is a set of identifier constants and path derivations, n
 | adkd-identifiers-008 | no-collision-with-stenographer | Compare against `StenographerIdentifiers` and `StenographerPaths` for the same home. | Label, port, keychain service, hook marker, database file name, support directory, logs directory, launch-agent plist, drop directory name, socket file name and lock name all differ (test: testNothingCollidesWithStenographer). |
 | adkd-identifiers-009 | subsystem-suffix | `subsystem("")` | The label followed by a trailing dot: `com.agenticdevelopmentstudio.adkd.` (derived from the source expression; no test). |
 | adkd-identifiers-010 | pure-derivation | `ADKDPaths(home:)` with a home directory that does not exist. | Every property still returns a URL; nothing is created (derived from the source; no test). |
-
+| adkd-identifiers-011 | subsystem-is-label, hook-name | `ADKDIdentifiers.subsystem`, `ADKDIdentifiers.hookName` | `com.agenticdevelopmentstudio.adkd` and `adkd` (derived from the source; no test). |
+| adkd-identifiers-012 | display-name, storage-token | `ADKDPaths.displayName`, `ADKDPaths.storageToken` | `Agentic Developer Kitchen` and `AgenticDeveloperKitchen` (derived from the source; no test). |
+| adkd-identifiers-013 | file-names | `ADKDPaths.launchdStdoutLogName`, `ADKDPaths.launchdStderrLogName` | `stdout.log` and `stderr.log` (derived from the source; no test). |
 ## Edge Cases
 
 - **Null / empty input**: `subsystem("")` returns the label plus a trailing dot; the suffix is not validated (the type MUST NOT reject it). A `home` that does not exist yields URLs for nonexistent paths without error.
@@ -99,7 +103,7 @@ Not applicable — this is a set of identifier constants and path derivations, n
 - **Concurrent access**: Not applicable: every member is an immutable constant or a pure computed property over an immutable `home`, and `ADKDPaths` is `Sendable`.
 - **Error states**: Not applicable: no member throws, returns an optional or touches the file system.
 - **Offline / disconnected state**: Not applicable: the type performs no network access; `httpBaseURL` is only a string naming the loopback address.
-- **Drift between the two storage-token spellings**: `storageToken` is a hand-written copy of a value the database layer derives from the display name. The source comment says a test in the app's own target checks the two agree; that test is outside the sources given here, so a port MUST carry an equivalent check.
+- **Drift between the two storage-token spellings**: `storageToken` is a hand-written copy of a value the database layer derives from the display name. The doc comment on `ADKDPaths.storageToken` in `ADKDIdentifiers.swift` says a test in the app's own target checks the two agree; that test is outside the sources given here, so a port carries its own check (see `storage-token-agreement-test`).
 
 ## Configuration
 
@@ -152,7 +156,7 @@ Not applicable: the type calls no logging API; `subsystem(_:)` only builds the s
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ADKDIdentifiers.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ADKDIdentifiers.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -160,7 +164,7 @@ Not applicable: the type calls no logging API; `subsystem(_:)` only builds the s
 ## Design Decisions
 
 **Decision**: Every launchd, log, keychain, hook, port and path name is spelled once, in this type, and read by the daemon, CLI and host app.
-**Rationale**: The source comment states the aim: the three binaries never spell them twice, so a rename or a collision fix lands in one place.
+**Rationale**: The doc comment on `ADKDIdentifiers` in `ADKDIdentifiers.swift` states the aim: the three binaries never spell them twice, so a rename or a collision fix lands in one place.
 **Approved**: pending
 
 **Decision**: Every identifier and path that could collide differs from the Stenographer daemon's, and a test asserts it.
@@ -172,7 +176,7 @@ Not applicable: the type calls no logging API; `subsystem(_:)` only builds the s
 **Approved**: pending
 
 **Decision**: There are no legacy names and no migration.
-**Rationale**: The source comment states the daemon has no history, so nothing needs to be read from an older location.
+**Rationale**: The doc comment on `ADKDIdentifiers` in `ADKDIdentifiers.swift` states the daemon has no history, so nothing needs to be read from an older location.
 **Approved**: pending
 
 ## Compliance
@@ -180,12 +184,13 @@ Not applicable: the type calls no logging API; `subsystem(_:)` only builds the s
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
 
-`separation-of-concerns` passes because the type only names things; creating directories, registering with launchd and opening the keychain stay with callers. `unit-test-coverage` passes because `ADKDIdentifiersTests` asserts every path, the base URL, the fixed names and the absence of collisions with the Stenographer daemon; only the empty-suffix and nonexistent-home behaviors have no test. `no-hardcoded-strings` passes because none of the strings is shown to a user; they are identifiers and file names.
+`separation-of-concerns` passes because the type only names things; creating directories, registering with launchd and opening the keychain stay with callers. `unit-test-coverage` is partial: `ADKDIdentifiersTests` asserts every path, the base URL, the fixed names and the absence of collisions with the Stenographer daemon, but the empty-suffix and nonexistent-home behaviors, the `subsystem`, `hookName`, `displayName`, storage-token and launchd log file name literals, and the agreement of the storage token with the database layer have no test here. `no-hardcoded-strings` passes because none of the strings is shown to a user; they are identifiers and file names.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Reworded the collision requirement as a full list, cited source comments, made the storage-token agreement test a named requirement, added vectors for the untested literals, downgraded unit-test-coverage to partial, and linked Stenographer Identifiers. |

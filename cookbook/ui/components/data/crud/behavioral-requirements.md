@@ -5,7 +5,7 @@
 - **provide-letter-mapping**: An exported `CRUD_LETTER` object MUST map each key to its canonical single-letter representation: `create` → `"C"`, `read` → `"R"`, `update` → `"U"`, `delete` → `"D"`.
 - **provide-no-access-default**: A `noAccess()` function MUST return a Crud instance with all four properties set to `false`.
 - **provide-read-only-default**: A `readOnly()` function MUST return a Crud instance with `read` set to `true` and all other properties set to `false`.
+- **clamp-child-to-parent**: A `clampToParent(child: Crud, parent: Crud)` function MUST return a new Crud instance where each capability is the logical AND of the child and parent values: if either the child or parent denies a capability, the result MUST deny it.
 - **not-mutate-inputs**: `clampToParent()` MUST NOT mutate either of its input objects; the `child` and `parent` arguments MUST retain their original property values after the call.
 - **fresh-instance-per-call**: `noAccess()` and `readOnly()` MUST return a newly created object on each call; two separate calls MUST NOT return the same object reference.
-- **clamp-child-to-parent**: A `clampToParent(child: Crud, parent: Crud)` function MUST return a new Crud instance where each capability is the logical AND of the child and parent values: if either the child or parent denies a capability, the result MUST deny it.
-
+- **independent-capabilities**: The four capabilities MUST be independent booleans on every platform (not an enum or bitflags type), so each can be set on its own and the per-capability AND in `clampToParent()` is unambiguous.

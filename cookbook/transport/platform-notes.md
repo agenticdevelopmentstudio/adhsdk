@@ -1,7 +1,6 @@
 
-- **SwiftUI**: The source lives in the hub client package's
-  `Sources/Transport/{APITransport,DaemonContract,TransportResolver}.swift`.
-  It is UI-framework-agnostic — `APITransport` is a plain `Sendable` struct
+- **SwiftUI**: The source is `APITransport`, `DaemonContract` and `TransportResolver` in the
+  hub client package. It is UI-framework-agnostic — `APITransport` is a plain `Sendable` struct
   and `TransportResolver` a plain `actor`, with no dependency on SwiftUI. A
   SwiftUI host typically calls `await TransportResolver().resolve()` (or
   `ADHClient.resolved(using:)`) once at app-launch time, from a `.task`
@@ -24,7 +23,7 @@
   mixed-content and CORS policy in every major browser, so a browser-hosted
   port would need either an HTTPS-fronted local proxy or to drop the Daemon
   path entirely — a genuine platform divergence, not an oversight in this
-  recipe.
+  ingredient.
 - **AppKit / UIKit**: Same underlying Swift package as the SwiftUI note
   above — `APITransport`/`TransportResolver` make no distinction between
   SwiftUI and an imperative AppKit/UIKit host. A UIKit/AppKit call site
@@ -40,10 +39,11 @@
   health-status-decoding) to model `HealthStatus`. Model `TransportResolver`
   as a class exposing `Task<TransportKind> ResolveAsync()`/
   `ReresolveAsync()`, guarding its cached field with a `SemaphoreSlim(1,1)`
-  or `lock` — .NET has no actor primitive, so this lock is also the natural
-  place to fix the source's unresolved concurrent-`resolve()` race (see
-  Edge Cases) by caching the in-flight `Task` itself rather than only the
-  completed result. Drive the probe's timeout with a
+  or `lock` — .NET has no actor primitive, so this lock stands in for actor
+  isolation. Mirror the Swift reference on the concurrent-`resolve()` race
+  (see the concurrent-resolve open question in Edge Cases): do not coalesce
+  overlapping first-time calls into one in-flight `Task` until that question
+  is settled for every platform. Drive the probe's timeout with a
   `CancellationTokenSource` (`CancelAfter(probeTimeout)`) rather than
   `HttpClient.Timeout`, so a single `HttpClient` instance can serve probes
   with different timeouts. Use

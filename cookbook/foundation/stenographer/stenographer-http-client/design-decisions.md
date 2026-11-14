@@ -1,3 +1,4 @@
+
 **Decision**: Failures read as `nil` or `false` rather than throwing, with `summarize` as the exception.
 **Rationale**: The source comment states the aim: a failed connection, a non-2xx reply or an undecodable body all mean "unreachable", so callers handle one case. `summarize` throws so the daemon's reason (a memory guard, a provider error) reaches the user instead of a generic failure.
 **Approved**: pending
@@ -21,3 +22,4 @@
 **Decision**: The client does not retry or back off.
 **Rationale**: The source has no retry; a failed call returns at once and the caller decides. The poll interval is the only repetition.
 **Approved**: pending
+

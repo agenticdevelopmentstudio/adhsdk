@@ -1,5 +1,5 @@
 
-The source has no test of its own (no test file in the repository names the type). The vectors are derived from the source. Unless stated, the filter has one pair, alias `robin` and real `mike`, direction `concealing`; `feed` takes ASCII bytes and returns the bytes shown as text.
+The source has no test of its own (no test file in the repository names the type). The vectors are derived from the source, and they are the tests to write for this type. Unless stated, the filter has one pair, alias `robin` and real `mike`, direction `concealing`; `feed` takes ASCII bytes and returns the bytes shown as text.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -19,4 +19,8 @@ The source has no test of its own (no test file in the repository names the type
 | streaming-text-substitution-014 | flush-empty | A new instance; `flush()` | Empty array. |
 | streaming-text-substitution-015 | order-preserved | `feed("a mike b")` | `a robin b`. |
 | streaming-text-substitution-016 | no-patterns | Identity filter; `feed("abc")` | `abc`, `isHolding` false. |
-
+| streaming-text-substitution-017 | generic-input | `feed` of a `[UInt8]` array, then of an `ArraySlice<UInt8>`, each holding bytes of `mi` and `ke` respectively | Both calls compile and run; the second returns `robin`. |
+| streaming-text-substitution-018 | hold-bound | Pair (`robert`, `mike fullerton`), concealing; `feed("mike fullert")` | Returns empty; the held run is 12 bytes, shorter than the 14-byte pattern. |
+| streaming-text-substitution-019 | pass-through-bytes | `feed("hello world")` | `hello world`, `isHolding` false; no byte is held because none is the first byte of a pattern (`m`). |
+| streaming-text-substitution-020 | hold-released, hold-over-shorter-match | Pairs (`rob`, `mike`) and (`robert`, `mike fullerton`), concealing; `feed("mike x")` | `rob x`, `isHolding` false. |
+| streaming-text-substitution-021 | flush, emit-complete-match | Same two pairs; `feed("mike fu")`, then `flush()` | `feed` returns empty and holds; `flush` returns `rob fu`. |

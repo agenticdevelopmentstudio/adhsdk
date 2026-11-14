@@ -6,6 +6,8 @@
 - **color-shift-under-lens**: The component MUST shift each in-lens glyph's colour from `colorFrom` toward `colorTo` in proportion to its nearness to the lens centre.
 - **preserve-accessible-text**: While animating, the component MUST keep the full string available to assistive technology and MUST mark the visible per-glyph copy `aria-hidden`.
 - **restore-on-cleanup**: On unmount, on `active` becoming false, or on a `resetKey` change, the component MUST restore the element's original plain text.
+- **sweep-duration**: The component MUST make one sweep last `max(minDuration, text.length × msPerChar)` ms, where `text.length` is the length of the original string.
+- **idle-hold-before-sweep**: Each cycle MUST begin with an idle hold of `pauseMs` ms during which every glyph is plain, followed by one sweep; with `pauseMs` of 0 there is no hold and the first sweep starts immediately.
 - **follow-text-direction**: The lens MUST travel left-to-right for `ltr` elements and right-to-left for `rtl` elements, top line to bottom line.
 - **skip-cursive-scripts**: For text containing cursive-joining scripts — the Unicode `Script=` values `Arabic`, `Syriac`, `Mongolian`, `Nko`, `Mandaic`, `Adlam` (matched by `\p{Script=Arabic}|\p{Script=Syriac}|\p{Script=Mongolian}|\p{Script=Nko}|\p{Script=Mandaic}|\p{Script=Adlam}`) — the component MUST leave the text rendered normally and MUST NOT split it into per-character spans.
 - **not-break-words-at-wrap**: The component MUST only allow line breaks between words (never mid-word) when it splits the visible copy into glyphs.

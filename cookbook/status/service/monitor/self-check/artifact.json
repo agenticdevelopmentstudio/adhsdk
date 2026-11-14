@@ -4,7 +4,7 @@
     "id": "9baed0c1-00e0-4186-9fd3-410039dc9881",
     "title": "Status Server Self-Check View",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -17,14 +17,21 @@
       "typescript",
       "web"
     ],
-    "tags": [],
-    "depends-on": [],
+    "tags": [
+      "status",
+      "self-check",
+      "integrations",
+      "verdict"
+    ],
+    "depends-on": [
+      "4e32bf7a-b87a-44f6-aa16-f57a533e3b77"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f9afc07630fd3ddc",
+  "synced": "1d896a1fff57e089",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,7 +2,7 @@
 id: 53408483-6ccf-4a69-bc29-3b5b6e16d4a8
 title: "Invalid Timestamp"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,9 @@ tags:
   - errors
   - timestamps
 depends-on: []
-related: []
+related:
+  - 1a8e345f-c602-4ccb-8880-432b1deac6ac
+  - 6a645c72-4525-4b96-9df4-85abecfacd27
 references: []
 approved-by: ""
 approved-date: ""
@@ -30,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`InvalidTimestamp` is the failure type for a rejected `?since=` style query parameter. The source comment gives the reason it exists: `Result`'s failure must be an `Error`, and a retroactive `extension String: Error` would make every string in the process a throwable, a cure worse than the bare `String` it replaces. It is a public struct that carries one human-readable `message`, compares by value, and prints as its message. It holds no parsing logic; `RouteRequest` builds it when a timestamp does not parse.
+`InvalidTimestamp` is the failure type for a rejected `?since=` style query parameter. The doc comment on the type in `InvalidTimestamp.swift` gives the reason it exists: `Result`'s failure must be an `Error`, and a retroactive `extension String: Error` would make every string in the process a throwable, a cure worse than the bare `String` it replaces. It is a public struct that carries one human-readable `message`, compares by value, and prints as its message. It holds no parsing logic; `RouteRequest` builds it when a timestamp does not parse (see the [`RouteRequest` recipe](cookbook:1a8e345f-c602-4ccb-8880-432b1deac6ac)).
 
 ## Behavioral Requirements
 
@@ -39,7 +41,7 @@ approved-date: ""
 - **init-takes-message**: `InvalidTimestamp` MUST be constructible with `init(message:)` from any string, and MUST NOT transform or validate it.
 - **description-is-message**: `InvalidTimestamp.description` (its `CustomStringConvertible` text) MUST equal `message`.
 - **equatable-by-message**: Two `InvalidTimestamp` values MUST compare equal exactly when their `message` strings are equal.
-- **no-string-error-extension**: The component MUST NOT make `String` itself an `Error`; the dedicated type is the only error shape for a rejected timestamp.
+- **no-string-error-extension**: The module that declares `InvalidTimestamp` MUST NOT declare `extension String: Error`; the dedicated type is the only error shape for a rejected timestamp. This is a module-level rule, checked by searching the module's source (vector 010), not by running the type.
 - **immutable**: `message` MUST be a `let`; a value MUST NOT change after construction.
 
 ## Appearance
@@ -66,8 +68,10 @@ Not applicable — this is an error value type, not a visual component.
 | invalid-timestamp-006 | conforms-to-error | Use a value as the failure of `Result<String, InvalidTimestamp>`, then `throw` it. | Compiles and throws; the caught error is an `InvalidTimestamp` with the same `message`. |
 | invalid-timestamp-007 | carries-message | `RouteRequest(method: "GET", path: "/events", queryValues: ["since": ["yesterday"]]).validatedTimestamp("since")` | `.failure` whose `message` contains both `since` and `yesterday` (test: aWordIsRejectedRatherThanSortingAboveEveryRealTimestamp in the RouteRequest tests). |
 | invalid-timestamp-008 | carries-message | `RouteRequest.activitySince("yesterday")` | `.failure` whose `message` contains `` `since` `` (test: activitySinceTakesOnlyTheTextAndItsRefusalNamesSince in the RouteRequest tests). |
+| invalid-timestamp-009 | immutable | Compile `var e = InvalidTimestamp(message: "a"); e.message = "b"` | Compilation fails: `message` is a `let` and cannot be assigned (a compile check, derived from the declaration). |
+| invalid-timestamp-010 | no-string-error-extension | Search the module's source for `extension String: Error` | No match (a search check, derived from the declaration). |
 
-Vectors 001 to 006 are derived from the declaration; no test beside the source constructs the type directly. Vectors 007 and 008 are the existing assertions that exercise it through `RouteRequest`.
+Vectors 001 to 006, 009 and 010 are derived from the declaration in `InvalidTimestamp.swift`; no test constructs the type directly. Vectors 007 and 008 are the existing assertions that exercise it through `RouteRequest`.
 
 ## Edge Cases
 
@@ -89,7 +93,7 @@ Not applicable: `InvalidTimestamp` defines no URL scheme, route or navigation de
 
 ## Localization
 
-Not applicable: `InvalidTimestamp` contains no string literal; the message text, which is English and built by `RouteRequest`, is the caller's. The open concern for translating that message belongs to the recipe for `RouteRequest`.
+Not applicable: `InvalidTimestamp` contains no string literal; the message text, which is English and built by `RouteRequest`, is the caller's. The open concern for translating that message belongs to the [`RouteRequest` recipe](cookbook:1a8e345f-c602-4ccb-8880-432b1deac6ac).
 
 ## Accessibility Options
 
@@ -106,6 +110,7 @@ Not applicable: `InvalidTimestamp` contains no analytics call.
 ## Privacy
 
 - **Data handled**: Only the message its caller passes in; `RouteRequest` includes the rejected raw query value in it.
+- **Echoed value**: The message includes the raw, untrusted query value (`RouteRequest.swift`, `parseISO8601`), which can hold quotes, newlines or markup. The type does not limit its length or escape it. A consumer MUST NOT write the message to a log or render it as markup without escaping; `RouteResponse.error` JSON-encodes it.
 - **Storage**: None; it persists nothing.
 - **Transmission**: None; it performs no network access itself.
 - **Retention**: None beyond the lifetime of the value the caller holds.
@@ -126,7 +131,7 @@ Not applicable: `InvalidTimestamp` calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/InvalidTimestamp.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/InvalidTimestamp.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -134,11 +139,11 @@ Not applicable: `InvalidTimestamp` calls no logging API.
 ## Design Decisions
 
 **Decision**: A dedicated `InvalidTimestamp` struct is used as the `Result` failure instead of `String`.
-**Rationale**: The source comment states that `Result`'s failure must be an `Error`, and a retroactive `extension String: Error` would make every string in the process throwable, which it calls a cure worse than the bare `String` it replaces.
+**Rationale**: The doc comment on `InvalidTimestamp` in `InvalidTimestamp.swift` states that `Result`'s failure must be an `Error`, and a retroactive `extension String: Error` would make every string in the process throwable, which it calls a cure worse than the bare `String` it replaces.
 **Approved**: pending
 
 **Decision**: The type carries only a `message` and conforms to `CustomStringConvertible` with `description` equal to `message`.
-**Rationale**: `RouteRequest` reports a rejected bound as a 400 with one human-readable reason (its doc comment says this one is a 400, not a silent clamp); printing the value yields the message itself with no wrapper text.
+**Rationale**: A malformed `since` gets a 400 with a single human-readable reason, instead of being clamped silently; the doc comment on `validatedTimestamp` in `RouteRequest.swift` explains that a malformed bound would otherwise quietly select the wrong rows and return 200. Printing the value yields the message itself with no wrapper text.
 **Approved**: pending
 
 ## Compliance
@@ -147,12 +152,14 @@ Not applicable: `InvalidTimestamp` calls no logging API.
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | partial | Security |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only carries a message; deciding a timestamp is malformed and wording the message belong to `RouteRequest`. `unit-test-coverage` is partial because no test constructs `InvalidTimestamp` directly; only the `RouteRequest` tests assert on its `message`, through the failure path. `explicit-error-handling` passes because the type exists to give a rejected timestamp a typed, equatable error instead of a bare string.
+`separation-of-concerns` passes because the type only carries a message; deciding a timestamp is malformed and wording the message belong to `RouteRequest`. `unit-test-coverage` is partial because no test constructs `InvalidTimestamp` directly; only the `RouteRequest` tests assert on its `message`, through the failure path. `explicit-error-handling` passes because the type exists to give a rejected timestamp a typed, equatable error instead of a bare string. `secure-log-output` is partial: the message echoes an untrusted query value and the type leaves escaping to its consumers, so each consumer MUST NOT log or render it unescaped (see Privacy).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Cited InvalidTimestamp.swift and RouteRequest.swift next to the quoted claims, linked RouteRequest and RouteResponse in related and the text, added vectors 009 and 010, clarified the 400 rationale and added an echoed-value privacy note with a secure-log-output row. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

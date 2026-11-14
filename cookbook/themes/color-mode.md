@@ -2,7 +2,7 @@
 id: 3bff70de-bfca-4bfd-b112-2a6044416ddc
 title: "Color Mode"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,10 @@ tags:
   - color-mode
   - appearance
 depends-on: []
-related: []
+related:
+  - 112f2150-3fcd-416c-bd25-b40f729b8ef2
+  - 0f721fc3-0e8f-4a1b-b895-1b1bad370bd0
+  - 46e077a8-1171-4564-9781-7997ff76813a
 references: []
 approved-by: ""
 approved-date: ""
@@ -31,14 +34,14 @@ approved-date: ""
 
 Color Mode is the legacy, Provider-based color-mode context of the customer-facing toolkit. `ColorModeProvider` holds the user's choice (`auto`, `light` or `dark`), resolves `auto` against the operating system's `prefers-color-scheme` setting, persists the choice in `localStorage`, and writes the result onto the document root. `useColorMode` gives descendants the choice, the resolved mode, a setter and a cycle operation.
 
-The source's header comment states that the ADH chrome and sites use a newer, Provider-free appearance system instead (`appearance.ts` and `appearance-store.tsx`, storage key `adh:appearance`, attribute `data-color-mode`), that the two are intentionally separate, and that they must not both be mounted on one document. This recipe covers only the legacy context.
+The source's header comment states that the ADH chrome and sites use a newer, Provider-free appearance system instead (`appearance.ts` ([adhsdk.ingredient.themes.appearance](cookbook:0f721fc3-0e8f-4a1b-b895-1b1bad370bd0)) and `appearance-store.tsx` ([adhsdk.ingredient.themes.appearance-store](cookbook:112f2150-3fcd-416c-bd25-b40f729b8ef2)), storage key `adh:appearance`, attribute `data-color-mode`), that the two are intentionally separate, and that they must not both be mounted on one document. This ingredient covers only the legacy context. Its main consumer is `AppearanceModeToggle` ([adhsdk.ingredient.controls.appearance-mode-toggle](cookbook:46e077a8-1171-4564-9781-7997ff76813a)).
 
 ## Behavioral Requirements
 
 ### Types and exports
 
 - **color-mode-type**: `ColorMode` MUST be exactly one of `auto`, `light` or `dark`.
-- **resolved-color-mode-type**: `ResolvedColorMode` MUST be exactly one of `light` or `dark`, never `auto`.
+- **resolved-color-mode-type**: `ResolvedColorMode` MUST be exactly one of `light` or `dark`, never `auto`. This holds for valid input only, and the guarantee comes from TypeScript: a caller that passes an untyped string to `setMode` makes `resolved` that string (see Edge Cases, "Invalid mode through `setMode`").
 - **context-value-shape**: The value returned by `useColorMode` MUST carry `mode` (a `ColorMode`), `resolved` (a `ResolvedColorMode`), `setMode(mode)` and `cycle()`.
 - **provider-props**: `ColorModeProvider` MUST accept `children`, an optional `storageKey` and an optional `defaultMode`.
 - **client-only-module**: The module MUST be marked `'use client'`, so a server-component framework treats it as client code.
@@ -64,7 +67,7 @@ The source's header comment states that the ADH chrome and sites use a newer, Pr
 
 - **dark-class**: The provider MUST add the class `dark` to `document.documentElement` when `resolved` is `dark` and remove it when `resolved` is `light`.
 - **appearance-mode-attribute**: The provider MUST set `data-appearance-mode` on `document.documentElement` to the current `mode` (`auto`, `light` or `dark`), not to the resolved value.
-- **no-attribute-removal**: The provider MUST NOT remove the `dark` class or `data-appearance-mode` attribute when it unmounts; the source has no cleanup for them.
+- **no-attribute-removal**: The provider MAY leave the `dark` class and `data-appearance-mode` attribute in place when it unmounts. The source has no cleanup for them, which is observed behavior, not a chosen one; a port MAY remove them.
 - **changed-event**: After each change of `mode` or `resolved`, including the first effect run on mount, the provider MUST dispatch a `CustomEvent` named `awt:appearance-changed` on `window`.
 - **no-document-effects**: When `document` is undefined the provider MUST skip the class and attribute writes, and when `window` is undefined it MUST skip the event dispatch.
 
@@ -74,11 +77,11 @@ The source's header comment states that the ADH chrome and sites use a newer, Pr
 - **persist-auto-removes**: When `mode` is `auto`, the provider MUST remove `storageKey` from `localStorage` rather than write `auto`.
 - **persist-on-first-render**: The persistence effect runs on mount as well as on change, so a mode chosen from the default or the legacy key MUST be written (or removed) under `storageKey` immediately after the first render.
 - **legacy-key-not-cleaned**: The provider MUST NOT write to or remove `agentic-toolkit:color-mode`; the legacy key is read only.
-- **storage-failure-silent**: A throwing `localStorage` read, write or remove MUST be caught and ignored (the source marks each catch `/* ignore */`), with no log or other signal; the choice then fails to persist while state and document effects continue.
+- **storage-failure-silent**: A throwing `localStorage` read, write or remove MUST be caught and ignored (the source marks each catch `/* ignore */`); the choice then fails to persist while state and document effects continue. The source emits no log or other signal, and a port MAY report the failure.
 
 ### Operations
 
-- **set-mode**: `setMode(mode)` MUST replace the current mode with the given `ColorMode`; the source performs no validation of the argument beyond its TypeScript type.
+- **set-mode**: `setMode(mode)` MUST replace the current mode with the given `ColorMode`. The source performs no validation of the argument beyond its TypeScript type; a port MAY validate it.
 - **cycle-order**: `cycle()` MUST advance the mode through the fixed order `auto`, `dark`, `light`, then back to `auto`.
 - **cycle-fallback**: When the current mode is not found in the cycle order, `cycle()` MUST fall back to `auto`.
 - **cycle-event**: The provider MUST listen on `window` for an event named `awt:appearance-cycle` and call `cycle()` for each one received, after mount.
@@ -125,18 +128,23 @@ The only test beside the source that exercises the provider is `AppearanceModeTo
 | color-mode-011 | changed-event | provider mounts, then `setMode('light')` | `awt:appearance-changed` is dispatched once on mount and once after the change |
 | color-mode-012 | storage-failure-silent | `localStorage.getItem` and `setItem` throw | provider renders with `defaultMode`, `setMode` still updates state and the document, no exception reaches the caller |
 | color-mode-013 | no-window-initial-mode, no-document-effects | server render with `window` undefined | mode is `defaultMode`, `systemDark` is false, no document access occurs |
-
+| color-mode-014 | persist-on-first-render | only `localStorage['agentic-toolkit:color-mode']` is `light`, default `storageKey`; mount and make no other call | after the first render `localStorage['adh-sdk:color-mode']` is `light` |
+| color-mode-015 | system-listener-cleanup | mount a provider, then unmount it | the `change` listener added to the `(prefers-color-scheme: dark)` query is removed |
+| color-mode-016 | cycle-event-cleanup | mount a provider, unmount it, then dispatch `awt:appearance-cycle` | no `cycle()` call happens and no state changes |
+| color-mode-017 | stable-callbacks | render a consumer, force a parent re-render with no `mode` or `resolved` change | `cycle` is the same function and the context value is the same object (`Object.is`) |
+| color-mode-018 | no-attribute-removal | mode `dark`, then unmount the provider | the `dark` class and `data-appearance-mode="dark"` are still on `document.documentElement` (observed behavior, a port MAY clear them) |
+| color-mode-019 | set-mode | `setMode('light')` while mode is `dark` | `mode` is `light` and `resolved` is `light` |
 ## Edge Cases
 
 - **Empty or missing storage** (MUST): with no stored value the mode is `defaultMode`; with `defaultMode` omitted it is `auto`.
 - **Unrecognised stored value** (MUST): a stored string that is not `light`, `dark` or `auto`, for example an empty string, is ignored and the fallback chain continues to the legacy key and then `defaultMode`.
 - **Unreadable storage** (MUST): when `localStorage` throws on read, write or remove (disabled storage, quota, privacy mode), the error is caught and discarded; state and document effects continue and only persistence is lost. See `storage-failure-silent`.
-- **Non-auto defaultMode loses the auto choice** (MUST): because `auto` is persisted by removing the key, a provider whose `defaultMode` is `light` or `dark` restores that default on the next load even when the user last chose `auto`.
-- **Legacy key resurrects after auto** (MUST): with the default `storageKey`, choosing `auto` removes `adh-sdk:color-mode` but not `agentic-toolkit:color-mode`, so a surviving legacy value is read again on the next load.
+- **Non-auto defaultMode loses the auto choice** (observed behavior): because `auto` is persisted by removing the key, a provider whose `defaultMode` is `light` or `dark` restores that default on the next load even when the user last chose `auto`.
+- **Legacy key resurrects after auto** (observed behavior): with the default `storageKey`, choosing `auto` removes `adh-sdk:color-mode` but not `agentic-toolkit:color-mode`, so a surviving legacy value is read again on the next load.
 - **Server render and hydration** (MUST): on the server the initial mode is `defaultMode` and `systemDark` is false; the client initializer reads real storage and the real media query, so the first client render can differ from the server markup.
 - **Cross-tab changes** (not provided): the provider has no `storage` event listener, so a choice made in another tab is not picked up until reload.
 - **Both appearance systems mounted** (precondition): the two systems write different keys and attributes and the source does not guard against mounting both, so the document would carry both sets.
-- **Unmount** (MUST): listeners are removed, but the `dark` class, `data-appearance-mode` attribute and stored value remain.
+- **Unmount** (observed behavior for the leftovers; see `no-attribute-removal`): listeners are removed, but the `dark` class, `data-appearance-mode` attribute and stored value remain.
 - **Concurrent calls** (MUST): `setMode` and `cycle` use React state updates; `cycle` uses the functional updater, so several `cycle()` calls in one batch each advance the mode.
 - **Invalid mode through `setMode`** (not validated): an untyped caller can pass any string; it becomes `mode`, `resolved` becomes that string, and it is written to storage and discarded as invalid on the next load.
 - **Network and offline**: not applicable; the provider performs no network access.
@@ -197,7 +205,7 @@ Not applicable: the module makes no log calls; storage errors are discarded with
 - **SwiftUI**: Start from `@AppStorage` or `UserDefaults` for the stored choice and `@Environment(\.colorScheme)` for the system value; apply the resolved mode with `.preferredColorScheme(nil)` for auto and `.light` or `.dark` otherwise. There is no document element or class, and no cross-component window event; use a shared `ObservableObject` or the Observation framework instead.
 - **Compose**: Hold the mode in a `ViewModel` or `rememberSaveable` with DataStore persistence, resolve auto with `isSystemInDarkTheme()`, and pass the result to `MaterialTheme` with a dark or light color scheme. System changes recompose automatically, so no listener is needed.
 - **React/Web**: The source is `packages/web/packages/themes/src/colorMode.tsx`, a `'use client'` module re-exported from the themes package and imported by the controls package as `@adh-sdk/themes/colorMode`. It uses `createContext`, `useState` initializers, `matchMedia` and `localStorage` guarded by `typeof window` and `typeof document`. Its hydration risk comes from reading storage in a state initializer.
-- **AppKit / UIKit**: Persist with `UserDefaults` and apply the resolved mode through `NSApplication.appearance` (set to `NSAppearance(named: .darkAqua)`, `.aqua` or nil for auto) on macOS, or `overrideUserInterfaceStyle` on `UIWindow` on iOS. System changes arrive through KVO on `effectiveAppearance` or `traitCollectionDidChange`.
+- **AppKit / UIKit**: Persist with `UserDefaults` and apply the resolved mode through `NSApplication.appearance` (set to `NSAppearance(named: .darkAqua)`, `.aqua` or nil for auto) on macOS, or `overrideUserInterfaceStyle` on `UIWindow` on iOS. System changes arrive through KVO on `effectiveAppearance` on macOS, and through `registerForTraitChanges([UITraitUserInterfaceStyle.self])` on iOS 17 and later (`traitCollectionDidChange` is deprecated since iOS 17).
 - **WinUI 3**: Store the choice with `ApplicationData.Current.LocalSettings` (or `Windows.Storage.ApplicationDataContainer`), keep it in a class implementing `INotifyPropertyChanged`, and apply it by setting `FrameworkElement.RequestedTheme` on the root element to `ElementTheme.Default` (auto), `Light` or `Dark`. For auto, read `UISettings.GetColorValue(UIColorType.Background)` and subscribe to `UISettings.ColorValuesChanged`, marshalling to the UI thread through `DispatcherQueue.TryEnqueue`. Resource dictionaries use `ThemeDictionaries` keyed `Light` and `Dark`, which replace the CSS `dark` class. The window-event cycle command maps to an `ICommand` bound to a toggle button, and the cycle order is a plain array indexed modulo three.
 
 ## Reference Implementations
@@ -207,7 +215,7 @@ Not applicable: the module makes no log calls; storage errors are discarded with
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/colorMode.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/themes/src/colorMode.tsx` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -235,10 +243,10 @@ Not applicable: the module makes no log calls; storage errors are discarded with
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
-| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
-| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | platform-compliance |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
 
 The provider keeps one concern: it owns the mode, resolution, persistence and document attributes, and leaves the toggle control and the stylesheets to other modules, so separation of concerns passes. No test sits beside `colorMode.tsx`; the only test that touches it is the controls package's `AppearanceModeToggle.test.tsx`, which covers a small part of the behavior, so unit-test coverage fails. Misuse outside a provider throws a clear error, but storage failures are discarded without a signal, so explicit error handling is partial. Following `prefers-color-scheme` and offering an explicit override satisfies platform theming.
 
@@ -246,4 +254,5 @@ The provider keeps one concern: it owns the mode, resolution, persistence and do
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the appearance modules and the toggle, qualified the resolved-type guarantee, downgraded accidental behaviors to MAY or observed notes, added vectors 014-019, switched Compliance categories to title case, and updated the UIKit note to registerForTraitChanges. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |

@@ -2,11 +2,11 @@
 id: fcd5062f-05c2-4877-adfb-9b77c75c6076
 title: "Editable List"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -38,7 +38,7 @@ approved-date: ""
 
 A configurable list/table component combining a button bar (with search, text filters, and facet menus), a data table (with sortable and resizable columns), row selection via checkboxes, and an optional details pane for viewing one selected row in full. Rows do not carry their own action buttons; actions operate on the selection and are supplied via the bar. The component never paginates; the full matching set is on screen and scrolls.
 
-"Editable" names what the list is *for*, not a per-cell edit mode the component itself provides: the bar's actions mutate the underlying data by acting on the selection, and the underlying `DataTable` cells are built to stay usable as inline-editable controls (a column's own `render` can put an input, a select, or a button in a cell without that click stealing the row's selection — see `data-table.tsx`'s `fromCellControl` guard) if the caller's column wants one. No row carries a built-in edit control of its own.
+"Editable" names what the list is *for*, not a per-cell edit mode the component itself provides: the bar's actions mutate the underlying data by acting on the selection, and the underlying `DataTable` cells are built to stay usable as inline-editable controls (a column's own `render` can put an input, a select, or a button in a cell without that click stealing the row's selection) if the caller's column wants one. No row carries a built-in edit control of its own.
 
 ## Behavioral Requirements
 
@@ -49,9 +49,9 @@ A configurable list/table component combining a button bar (with search, text fi
 - **render-facet-menus**: The component MUST render facet dropdown menus (from `list.facets`) in the bar with options and selected state from controller.
 - **update-facet-selection**: The component MUST update facet selection via `list.setFacetSelection()` when the user selects options in a facet menu.
 - **render-table**: The component MUST render a data table with rows from `list.rows` and columns from `list.columns`.
-- **render-column-headers**: Each column MUST render a header (from column metadata) and cell content (from `column.value` or `column.render`).
+- **render-columns**: Each column MUST render a header (from column metadata) and cell content (from `column.value` or `column.render`).
 - **support-sorting**: The component MUST render sortable columns and call `list.setSort()` when the user clicks a sortable header.
-- **preserve-sort-state**: The component MUST display the current sort state (from `list.sort`) on the active column header.
+- **show-sort-indicator**: The component MUST display the current sort state (from `list.sort`) on the active column header.
 - **support-column-resizing**: The component MUST allow users to resize columns and persist widths under the key provided by `columnWidthsKey`.
 - **render-selection-checkboxes**: When `selectable` is true, the component MUST render checkboxes for each row and a select-all header checkbox.
 - **select-all-scope**: The select-all header checkbox MUST select or deselect only the rows currently in `list.rows` (the visible/filtered set). It MUST NOT alter the selection state of any row hidden by the active filter — "all" means "all that is on screen," not "all that was ever selected."
@@ -60,15 +60,15 @@ A configurable list/table component combining a button bar (with search, text fi
 - **show-hidden-selected-count**: When `selectable` is true and one or more selected rows are hidden by the active filter, the selection-count button MUST include the literal text "(N not shown)" naming how many. An accent color on that text is a supplementary visual cue, never the sole means of conveying it.
 - **provide-clear-selection-button**: The count button MUST be clickable and MUST call `list.clearSelection()` to deselect all rows.
 - **render-actions**: The component MUST render any action nodes passed via the `actions` prop in the bar to the right of filters.
-- **support-row-activation**: When `onRowActivate` is provided, the component MUST call it with the row's ID when the user double-clicks a row or presses Enter on a focused row.
+- **support-row-activation**: When `onRowActivate` is provided, the component MUST call it with the row's ID when the user double-clicks a row. When `selectable` is true it MUST also call it when the user presses Enter on the focused row; when `selectable` is false, double-click is the only activation path, because the table then has no focus model and claims no keys (see **grid-role-and-focus**).
 - **grid-role-and-focus**: When `selectable` is true, the table MUST use `role="grid"` on a single focusable container (`tabIndex=0`), track exactly one focused row in state rather than giving any row its own `tabIndex`, expose the focused row via `aria-activedescendant`, move it with ArrowUp/ArrowDown, toggle the focused row's selection with Space, and — only when `onRowActivate` is provided — activate the focused row on Enter. When `selectable` is false, the table MUST use `role="table"` instead and MUST claim none of those keys, so an in-cell control's own Space/Enter/Arrow handling is never intercepted.
-- **render-empty-state**: When the list is empty (no rows) and no filter is active, the component MUST display the text from `emptyLabel`.
-- **render-filtered-empty-state**: When the list is empty due to filtering, the component MUST display the text from `emptyFilteredLabel`.
+- **render-empty-state**: When `list.rows` is empty and `list.filtered === false`, the component MUST display the text from `emptyLabel`.
+- **render-filtered-empty-state**: When `list.filtered === true` and `list.rows` is empty, the component MUST display the text from `emptyFilteredLabel`.
 - **render-loading-state**: When `loading` is true, the component MUST display a loading indicator in the table.
 - **handle-error-no-rows**: When an error is present, no rows exist, and the list is not loading, the component MUST replace the entire list with an error alert (not render the bar or table).
 - **loading-preempts-error-replacement**: When an error is present, no rows exist, but `loading` is true, the component MUST NOT replace the whole list with the error alert. It MUST instead render the bar, the error alert above the table (see **handle-error-with-rows**), and the table's own loading indicator.
 - **handle-error-with-rows**: When an error is present but rows exist (e.g., a refetch failed) or the list is loading, the component MUST display an error alert above the table without removing the rows or the loading indicator.
-- **error-with-rows-suffix**: The error-with-rows alert's description MUST append the literal text " — showing the last rows that loaded." after the error's own message.
+- **error-with-rows-suffix**: The error-with-rows alert's description MUST read "{message} — showing the last rows that loaded.", where `{message}` is the error's own message, as one string so a locale can reorder it.
 - **default-error-title**: When `errorTitle` is omitted and `error` is present, the component MUST derive the alert title as "Couldn't load {ariaLabel}", with `ariaLabel` lowercased.
 - **render-truncation-notice**: When `truncationNotice` is provided, the component MUST display it as an alert above the table.
 - **render-details-pane**: When `details` is provided, the component MUST render a resizable split with the table on top and details pane on bottom.
@@ -107,7 +107,7 @@ A configurable list/table component combining a button bar (with search, text fi
 | Empty (no filter) | Table displays empty message, bar and filters visible |
 | Empty (filtered) | Table displays filtered-empty message, current filters visible |
 | Rows selected | Selection count button appears in bar, highlighted row(s) in table |
-| Hidden selected rows | Selection count button shows hidden count in gold next to main count |
+| Hidden selected rows | Selection count button shows hidden count in the accent color next to main count |
 | Details pane shown | Split view with table on top, details pane on bottom |
 | Details pane - no selection | Details pane shows empty message |
 | Details pane - many selected | Details pane shows many-selection message |
@@ -137,14 +137,14 @@ A configurable list/table component combining a button bar (with search, text fi
 | editable-list-005 | render-facet-menus | list.facets contains one facet with id="role", label="Role", options ["Admin", "User"] | Dropdown menu visible with label "Role" and options shown on click |
 | editable-list-006 | update-facet-selection | User selects "Admin" in role facet | `list.setFacetSelection("role", new Set(["Admin"]))` called |
 | editable-list-007 | render-table | list.rows contains 3 rows; list.columns defined | Data table renders with 3 rows |
-| editable-list-008 | render-column-headers | Column has header="Name" and value=(row) => row.name | Table header shows "Name"; cells show row.name values |
+| editable-list-008 | render-columns | Column has header="Name" and value=(row) => row.name | Table header shows "Name"; cells show row.name values |
 | editable-list-009 | support-sorting | Column key="name", sortable=true, list.sort=null; user clicks the "Name" header once | `list.setSort({ key: "name", dir: "asc" })` called |
-| editable-list-010 | preserve-sort-state | list.sort = { key: "name", direction: "asc" } | Table header shows sort indicator on "Name" column pointing up |
-| editable-list-011 | support-column-resizing | columnWidthsKey="users_table"; column key="email" dragged to 220px | Column resizes to (at least) the 48px minimum; `localStorage.setItem("data-table-cols:users_table", JSON.stringify({ email: 220 }))` called — widths are stored as a column-key-to-pixel-integer map under the `data-table-cols:<key>` prefix |
+| editable-list-010 | show-sort-indicator | list.sort = { key: "name", dir: "asc" } | Table header shows sort indicator on "Name" column pointing up |
+| editable-list-011 | support-column-resizing | columnWidthsKey="users_table"; column key="email" dragged to 220px | Column width becomes 220px; `localStorage.setItem("data-table-cols:users_table", JSON.stringify({ email: 220 }))` called — widths are stored as a column-key-to-pixel-integer map under the `data-table-cols:<key>` prefix |
 | editable-list-012 | render-selection-checkboxes | selectable=true; list.rows contains 2 rows | Checkbox in header and checkbox in each of 2 rows visible |
 | editable-list-013 | update-selection | User checks checkbox on row 1 | `list.setSelectedIds(new Set([row1_id]))` called; row1 highlighted |
 | editable-list-014 | show-selection-count | selectable=true; 2 rows selected | Count button shows "2 selected" |
-| editable-list-015 | show-hidden-selected-count | selectable=true; 3 rows selected but filter hides 1 | Count button shows "3 selected (1 not shown)" with hidden count in gold |
+| editable-list-015 | show-hidden-selected-count | selectable=true; 3 rows selected but filter hides 1 | Count button shows "3 selected (1 not shown)" with the hidden count in the accent color |
 | editable-list-016 | provide-clear-selection-button | Count button displayed with 2 rows selected; user clicks button | `list.clearSelection()` called; all rows deselected; count button hidden |
 | editable-list-017 | render-actions | actions=`<button>Delete</button>` | Delete button visible in bar to right of filters |
 | editable-list-018 | support-row-activation | onRowActivate=(id) => {...}; user double-clicks row with id="row123" | `onRowActivate("row123")` called |
@@ -171,10 +171,16 @@ A configurable list/table component combining a button bar (with search, text fi
 | editable-list-039 | error-with-rows-suffix | error={new Error("Refetch failed")}, list.allRows contains 2 rows | Error alert text reads "Refetch failed — showing the last rows that loaded." |
 | editable-list-040 | default-error-title | error={new Error("x")}, errorTitle omitted, ariaLabel="Users" | Alert title reads "Couldn't load users" (ariaLabel lowercased) |
 | editable-list-041 | support-sorting | Column key="name", sortable=true, list.sort={key:"name",dir:"asc"}; user clicks the "Name" header again | `list.setSort({ key: "name", dir: "desc" })` called — the toggle is asc↔desc only; there is no third click that clears the sort |
-
+| editable-list-042 | support-column-resizing | Column key="email" dragged to 20px | Column width clamps to the 48px minimum |
+| editable-list-043 | grid-role-and-focus | selectable=true; row 2 is focused; user presses Space | Row 2's selection toggles; `list.setSelectedIds()` called |
+| editable-list-044 | support-row-activation, grid-role-and-focus | selectable=true; onRowActivate provided; row "row123" is focused; user presses Enter | `onRowActivate("row123")` called |
+| editable-list-045 | grid-role-and-focus, support-row-activation | selectable=false; onRowActivate provided; focused element is the table; user presses Space, Enter and ArrowDown | Table has `role="table"`; none of the keys is claimed or acted on; double-click on a row still calls `onRowActivate` |
+| editable-list-046 | update-selection | selectable=true; row 1 is selected; user unchecks row 1's checkbox | `list.setSelectedIds()` called with a set without row 1's id |
+| editable-list-047 | update-selection, select-all-scope | selectable=true; all visible rows selected; user clicks the header checkbox | `list.setSelectedIds()` called with the visible rows' ids removed; nothing else changes |
+| editable-list-048 | describe-rows-for-accessibility | describeRow omitted; row has id "r1" and fields {id:"r1", name:"Alice"} | Checkbox's label names the row from its first non-empty string field that is not the id, "Alice" |
 ## Edge Cases
 
-- **Null or empty search**: Search input defaults to empty; component renders all rows until user types.
+- **Null or empty search**: Search input defaults to empty; the component renders `list.rows` as the controller supplies them, unaffected by the search term (text filters or facets may still narrow `list.rows`).
 - **Empty list with no filter**: Component displays empty message; bar, search, and filters remain interactive.
 - **Filter that matches zero rows**: Component displays filtered-empty message; selection survives the filter but hidden count is shown.
 - **Selection survives filter**: Selected row IDs are not cleared when a filter is applied; selected row that becomes hidden shows in the hidden count.
@@ -188,7 +194,7 @@ A configurable list/table component combining a button bar (with search, text fi
 - **Details pane divider position**: Divider position is persisted under `details.storageKey` if provided; otherwise position resets on remount.
 - **Error state during loading**: See **loading-preempts-error-replacement** — the whole-list replacement is skipped while `loading` is true, so the bar, the error strip, and the table's own loading indicator all render together.
 - **Error title missing**: See **default-error-title** — the title is derived from `ariaLabel`, lowercased.
-- **Row activation with no details pane**: `onRowActivate` can be used independently of `details` pane; row double-click or Enter key calls the callback.
+- **Row activation with no details pane**: `onRowActivate` can be used independently of `details` pane; row double-click calls the callback, as does Enter on the focused row when `selectable` is true.
 - **Facet with no options**: Facet menu renders with empty options list.
 - **Text filter with no width**: Text filter input uses default width of 14rem.
 
@@ -267,10 +273,13 @@ Not applicable: This component is not designed to participate in deep linking. I
 | empty.no-filter | "Nothing here." | Message when list is empty with no active filter |
 | empty.filtered | "Nothing matches these filters." | Message when list is empty due to active filters |
 | selection.count | "{count} selected" | Selection count button text |
-| selection.hidden | "({count} not shown)" | Hidden selection count (appended in gold color) |
+| selection.hidden | "({count} not shown)" | Hidden selection count (appended in the accent color) |
 | selection.clear | "Clear selection" | Screen-reader label for clear-selection button |
 | table.error | "Couldn't load {ariaLabel}" | Error alert title (default, overridable via `errorTitle` prop) |
-| table.error.with-rows | "— showing the last rows that loaded." | Error alert description when rows exist |
+| table.error.with-rows | "{message} — showing the last rows that loaded." | Error alert description when rows exist; a single template so a locale can reorder the message |
+| table.select-all | "Select all" | Accessible label of the header checkbox; hardcoded in `DataTable` |
+| table.empty | "No items." | `DataTable`'s own default empty text; `EditableList` always overrides it with `emptyLabel` or `emptyFilteredLabel` |
+| table.resize-column | "Resize column {key}" | Accessible label of a column's resize handle; hardcoded in `DataTable` |
 | details.label | "Details" | Default label for details pane header |
 | details.empty | "Select a row to see its details." | Message when details pane has no selection |
 | details.many | "Select a single row to see its details." | Message when details pane has multiple selections |
@@ -285,7 +294,7 @@ The `ariaLabel.toLowerCase()` call used to build both `search.aria-label` and th
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | The `ResizableSplit` divider's expand/collapse animation MUST be suppressed when the app's `data-reduce-motion` setting is `"on"` (read from `document.documentElement.dataset.reduceMotion`); a direct drag is never animated regardless of the setting. |
-| Increase Contrast | The component references named design tokens (`apt-gold`, `apt-border`, `apt-text-dim`, …) rather than fixed color values. Resolving those tokens to higher-contrast values under the platform's Increase Contrast setting is the responsibility of the token/theme layer — this component does not read the setting itself. |
+| Increase Contrast | The component references named design tokens (the accent token, `apt-border`, `apt-text-dim`, …) rather than fixed color values. Resolving those tokens to higher-contrast values under the platform's Increase Contrast setting is the responsibility of the token/theme layer — this component does not read the setting itself. |
 | Differentiate Without Color | The hidden-selection count is never color-only: it MUST render as literal text ("(N not shown)"), with an accent color as a supplementary cue — see **show-hidden-selected-count**. Sort indicators MUST use (and already do use) a directional chevron icon alongside the header's sort state, so sort order is never conveyed by color alone. |
 
 ## Feature Flags
@@ -305,6 +314,8 @@ This component does not emit analytics itself; instrumentation is the responsibi
 
 ## Logging
 
+Not normative: no requirement obliges the component to emit these events, and the React/Web source emits none of them. The table describes the events a host or port MAY emit.
+
 Subsystem: `adhsdk.ui.blocks` | Category: `EditableList`
 
 | Event | Level | Message |
@@ -312,14 +323,14 @@ Subsystem: `adhsdk.ui.blocks` | Category: `EditableList`
 | Render | debug | `EditableList rendered: ${ariaLabel}, rows: ${list.rows.length}, filtered: ${list.filtered}, selected: ${list.selectedIds.size}` |
 | Error | error | `EditableList error: ${errorMessage(error)}, ariaLabel: ${ariaLabel}, rows: ${list.allRows.length}` |
 | Column resize | debug | `EditableList column resized: column=${column.key}, stored under key=${columnWidthsKey}` |
-| Sort change | debug | `EditableList sort changed: key=${sort.key}, direction=${sort.direction}` |
+| Sort change | debug | `EditableList sort changed: key=${sort.key}, dir=${sort.dir}` |
 | Selection change | debug | `EditableList selection changed: selected=${list.selectedIds.size}, hidden=${hiddenSelected}` |
 
 `error` is typed `unknown`. `errorMessage()` is the same coercion the component's own render path uses (`err instanceof Error ? err.message : String(err)`) — an `Error`'s `.message` for a real error, `String(err)` for anything else thrown, never a raw property access that would fail on a non-Error value.
 
 ## Platform Notes
 
-- **React/Web**: Source implementation in `packages/web/packages/ui/src/blocks/editable-list.tsx`, composed from `DataTable`, `ResizableSplit`, `Input`, `Button`, `Alert`/`AlertDescription`/`AlertTitle`, `ButtonBar`, and `FacetMenu` (all sibling ingredients). Uses React 18 `"use client"`, with `useState`/`useMemo`/`useCallback` inside the `useEditableList()` controller hook. The appearance details described generically above map to these Tailwind utilities: `h-8`/`max-w-xs` (search/filter inputs), `h-7` (selection-count button), `text-apt-text-dim` (em-dash cells), `text-apt-gold` (hidden-count suffix), `rounded-t-lg border-x` (bar), `rounded-t-none border-t-0` / `rounded-none border-0` (table nested in the details split), and `max-h-[60vh]` (default standalone cap). Column-width persistence uses `localStorage` under `data-table-cols:${columnWidthsKey}`; the details-pane divider ratio persists under `details.storageKey` the same way, inside `ResizableSplit`. Selection state survives filter changes by design — selected IDs are not cleared when filters update.
+- **React/Web**: Source implementation in `packages/web/packages/ui/src/blocks/editable-list.tsx`, composed from `DataTable`, `ResizableSplit`, `Input`, `Button`, `Alert`/`AlertDescription`/`AlertTitle`, `ButtonBar`, and `FacetMenu` (all sibling ingredients). `DataTable`'s `fromCellControl` guard keeps a click on an in-cell control (input, select, button) from stealing the row's selection. Uses React 19 `"use client"`, with `useState`/`useMemo`/`useCallback` inside the `useEditableList()` controller hook. The appearance details described generically above map to these Tailwind utilities: `h-8`/`max-w-xs` (search/filter inputs), `h-7` (selection-count button), `text-apt-text-dim` (em-dash cells), `text-apt-gold` (hidden-count suffix), `rounded-t-lg border-x` (bar), `rounded-t-none border-t-0` / `rounded-none border-0` (table nested in the details split), and `max-h-[60vh]` (default standalone cap). Column-width persistence uses `localStorage` under `data-table-cols:${columnWidthsKey}`; the details-pane divider ratio persists under `details.storageKey` the same way, inside `ResizableSplit`. Selection state survives filter changes by design — selected IDs are not cleared when filters update.
 - **SwiftUI**: `Table` (macOS 13+ / iOS 16+) for the grid, with the `.searchable(text:)` modifier — not a `SearchField` view, which does not exist in SwiftUI — for the search box in a toolbar. `Table` supports sorting natively through a `sortOrder: Binding<[KeyPathComparator<T>]>` parameter, and its columns resize natively on macOS (not on iOS/iPadOS, where `Table` has no user-resizable columns). Selection uses `Table`'s own `selection: Binding<Set<ID>>`. Filter and facet inputs would be custom toolbar views. The details pane would be a `NavigationSplitView` or a manual `VStack`-based split.
 - **Compose**: A `LazyColumn` for the rows, with a sticky header `Row` rendered above it (Compose has no built-in table/grid with a header and resizable columns), each cell sized via `Modifier.weight`/`width`. Search: an `OutlinedTextField` above the list. Selection: `selectedIds: Set<ID>` needs a custom `Saver` to survive process death in `rememberSaveable` — `Set` is not one of the types it can serialize out of the box; plain `remember` works for in-memory-only persistence. Facet menus: `DropdownMenu` with checkable items. Column resizing has no Compose primitive and would need custom pointer-drag/gesture handling.
 - **AppKit / UIKit**: `NSTableView` (macOS) or `UITableViewController`/`UICollectionView` (iOS) with a search controller and text-field filters in a toolbar. Selection tracked via delegate methods. Details view: a split view controller (macOS) or a pushed/presented detail controller (iOS). `NSTableView` supports column resizing natively; UIKit tables have no column concept to resize.
@@ -329,7 +340,7 @@ Subsystem: `adhsdk.ui.blocks` | Category: `EditableList`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/editable-list.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/editable-list.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -391,3 +402,4 @@ These statuses rest on: the ARIA roles/labels, `aria-live` region, and chevron s
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case; added `EditableListController`/`EditableListDetails` configuration sub-tables; fixed the `h-8`/`h-7` appearance px values and moved Tailwind-class detail out of Appearance into the React/Web platform note; corrected the null-value/no-value-column contradiction, the hidden-count color-only contradiction, and the details-header fallback ambiguity; added `select-all-scope`, `grid-role-and-focus`, `loading-preempts-error-replacement`, `error-with-rows-suffix`, and `default-error-title` requirements with test vectors; made the sort-toggle (009/041) and column-width-storage (011) test vectors concrete; corrected the unknown-typed error logging to use `errorMessage()`; corrected the SwiftUI (`.searchable`, native `Table` sort/resize), Compose (`Saver`, header row), and WinUI 3 (no built-in `DataGrid`, `Grid`+`GridSplitter`) platform notes; converted Design Decisions to Decision/Rationale/Approved form and retitled the search-persistence one; filled in `depends-on` and a real Compliance table; noted the locale-sensitivity of the `ariaLabel.toLowerCase()` casing transform; and reframed Analytics as non-normative guidance to drop the raw-query PII exposure. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Wrapped generics/JSX in code spans (EditableListController<T>/EditableListDetails<T> headings and table cells, details.actions JSX examples) so GitHub stops stripping them. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Unified the sort shape on dir, limited Enter activation to selectable tables, renamed two requirements, tied the empty states to list.filtered, made the error-with-rows text one template, completed the localization keys, marked Logging non-normative, and added seven test vectors. |

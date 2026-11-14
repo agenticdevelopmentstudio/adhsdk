@@ -1,5 +1,5 @@
 
-Contract: `GmailRESTClient` conforms to `GmailAPI` (itself `Sendable`) and every operation is `async throws`. The initializer is `init(session: URLSession = .shared, sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }, pacer: GmailQuotaPacer = .shared, accessToken: @escaping @Sendable () async throws -> String)`. The module-visible helpers `isRateLimited(_:_:)`, `backoff(retry:retryAfter:)` and `maxRetries` are specified here because tests call them.
+Contract: `GmailRESTClient` conforms to `GmailAPI` (itself `Sendable`) and every operation is `async throws`. The initializer is `init(session: URLSession = .shared, sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }, pacer: GmailQuotaPacer = .shared, accessToken: @escaping @Sendable () async throws -> String)`. The module-visible helpers `isRateLimited(_:_:)`, `backoff(retry:retryAfter:)` and `maxRetries` are Swift-specific test hooks, not part of the contract: a port reproduces the behavior in `rate-limit-detection`, `backoff-schedule` and `retry-budget` and tests it through whatever hooks it chooses.
 
 ### Request construction
 
@@ -7,38 +7,38 @@ Contract: `GmailRESTClient` conforms to `GmailAPI` (itself `Sendable`) and every
 - **bearer-header**: Every request MUST carry the header `Authorization: Bearer <token>`, where `<token>` is the string returned by the `accessToken` closure.
 - **token-once-per-call**: The `accessToken` closure MUST be awaited once when an operation builds its request, and the retries of that request MUST reuse the same `Authorization` header without calling the closure again.
 - **token-failure-propagates**: An error thrown by the `accessToken` closure MUST propagate unchanged to the caller, and no HTTP request MUST be sent.
-- **invalid-url-error**: When the base URL plus path cannot form a valid URL, the operation MUST throw `IntegrationError.gmail(status: 0, message: "Invalid URL for <path>")` and MUST NOT send a request.
+- **invalid-url-error**: When the base URL plus path cannot form a valid URL, the operation MUST throw `IntegrationError.gmail(status: 0, message: "Invalid URL for <path>")` and MUST NOT send a request. This requirement is best-effort: no input fails URL construction on every platform, so no vector must pass for it.
 - **query-only-when-present**: The query string MUST be set only when the operation supplies at least one query item; `profile` and `labels` send none.
 
 ### Operations
 
-- **profile-call**: `profile()` MUST send `GET profile` with no query and a pacer cost of 1, and MUST return the decoded `GmailProfile` (`emailAddress`, `historyId`).
-- **list-parameters**: `listMessageIds(query:includeSpamTrash:pageToken:)` MUST send `GET messages` with `q` set to the query and `maxResults` fixed at `500`, and a pacer cost of 5.
+- **profile-call**: `profile()` MUST send `GET profile` with no query and the pacer cost given in `quota-costs`, and MUST return the decoded `GmailProfile` (`emailAddress`, `historyId`).
+- **list-parameters**: `listMessageIds(query:includeSpamTrash:pageToken:)` MUST send `GET messages` with `q` set to the query and `maxResults` fixed at `500`, and the pacer cost given in `quota-costs`.
 - **list-spam-trash-flag**: `listMessageIds` MUST add `includeSpamTrash=true` only when `includeSpamTrash` is true, and MUST omit the parameter when it is false.
 - **list-page-token**: `listMessageIds` MUST add `pageToken` only when `pageToken` is non-nil.
 - **list-result**: `listMessageIds` MUST return the ids from the response `messages` array with duplicates removed (the first occurrence of each id kept, order preserved), an empty list when `messages` is absent, and the response `nextPageToken` unchanged.
-- **search-parameters**: `searchMessageIds(query:labelIds:maxResults:pageToken:)` MUST send `GET messages` with `q` set to the query, `maxResults` set to the caller's integer in decimal, a pacer cost of 5, and MUST NOT send `includeSpamTrash`.
+- **search-parameters**: `searchMessageIds(query:labelIds:maxResults:pageToken:)` MUST send `GET messages` with `q` set to the query, `maxResults` set to the caller's integer in decimal, the pacer cost given in `quota-costs`, and MUST NOT send `includeSpamTrash`.
 - **search-label-ids**: `searchMessageIds` MUST send one `labelIds` query item per element of `labelIds`, in array order, and none when the array is empty.
 - **search-page-token**: `searchMessageIds` MUST add `pageToken` only when `pageToken` is non-nil.
 - **search-result**: `searchMessageIds` MUST return the same page shape as `list-result`: deduplicated ids in first-seen order, an empty list when `messages` is absent, and `nextPageToken` unchanged.
-- **thread-call**: `thread(id:)` MUST send `GET threads/<id>` with `format=full` and a pacer cost of 10, and MUST return the decoded `GmailThreadDTO`.
-- **message-call**: `message(id:)` MUST send `GET messages/<id>` with `format=full` and a pacer cost of 5, and MUST return the decoded `GmailMessageDTO`.
-- **labels-call**: `labels()` MUST send `GET labels` with a pacer cost of 1 and MUST return the response `labels` array, or an empty list when `labels` is absent.
-- **history-request**: `history(startHistoryId:pageToken:)` MUST send `GET history` with `startHistoryId` and four `historyTypes` items in the order `messageAdded`, `messageDeleted`, `labelAdded`, `labelRemoved`, with a pacer cost of 2, and MUST add `pageToken` only when it is non-nil.
+- **thread-call**: `thread(id:)` MUST send `GET threads/<id>` with `format=full` and the pacer cost given in `quota-costs`, and MUST return the decoded `GmailThreadDTO`.
+- **message-call**: `message(id:)` MUST send `GET messages/<id>` with `format=full` and the pacer cost given in `quota-costs`, and MUST return the decoded `GmailMessageDTO`.
+- **labels-call**: `labels()` MUST send `GET labels` with the pacer cost given in `quota-costs` and MUST return the response `labels` array, or an empty list when `labels` is absent.
+- **history-request**: `history(startHistoryId:pageToken:)` MUST send `GET history` with `startHistoryId` and four `historyTypes` items in the order `messageAdded`, `messageDeleted`, `labelAdded`, `labelRemoved`, with the pacer cost given in `quota-costs`, and MUST add `pageToken` only when it is non-nil.
 - **history-changed-ids**: `GmailHistoryPage.changedIds` MUST list the message ids from each history entry's `messagesAdded`, then `labelsAdded`, then `labelsRemoved` (entries in response order), with duplicates removed and with any id that also appears in `deletedIds` removed.
 - **history-deleted-ids**: `GmailHistoryPage.deletedIds` MUST list the message ids from every entry's `messagesDeleted`, with duplicates removed in first-seen order.
 - **history-passthrough**: `GmailHistoryPage.historyId` and `nextPageToken` MUST equal the response `historyId` and `nextPageToken`, and an absent `history` array MUST yield empty `changedIds` and `deletedIds`.
 - **history-cursor-expired**: When the `history` call fails with `IntegrationError.gmail(status: 404, ...)`, the client MUST throw `GmailCursorExpired` instead, and MUST NOT retry the 404.
 - **batch-modify-bounds**: `batchModify(ids:add:remove:)` MUST throw `IntegrationError.gmail(status: 0, message: "batchModify takes 1–1000 ids, got <count>")` when `ids.count` is outside 1 through 1000, and MUST NOT send a request or reserve quota in that case. The check runs before the request is built, so the token closure is not awaited either.
 - **batch-modify-limit**: The public constant `GmailRESTClient.batchModifyLimit` MUST equal `1000`, Gmail's own limit on ids per `messages/batchModify` call.
-- **batch-modify-request**: `batchModify` MUST send `POST messages/batchModify` with `Content-Type: application/json`, a pacer cost of 50, and a JSON body of `ids`, `addLabelIds` and `removeLabelIds` taken from the arguments.
+- **batch-modify-request**: `batchModify` MUST send `POST messages/batchModify` with `Content-Type: application/json`, the pacer cost given in `quota-costs`, and a JSON body of `ids`, `addLabelIds` and `removeLabelIds` taken from the arguments.
 - **batch-modify-result**: `batchModify` MUST return no value and MUST ignore the response body of a 2xx reply.
 - **caller-chunks**: `batchModify` MUST NOT split a list itself; a caller with more than 1000 ids sends chunks (the source comment calls an empty or oversized list "a caller bug, not a Gmail call").
 
 ### Pacing
 
-- **reserve-before-each-attempt**: Every attempt, including each retry, MUST call `pacer.reserve(cost)` before sending, and MUST sleep for the returned duration through the injected `sleep` when that duration is greater than zero.
-- **quota-costs**: The reserved cost MUST be 1 for `profile` and `labels`, 2 for `history`, 5 for `listMessageIds`, `searchMessageIds` and `message`, 10 for `thread`, and 50 for `batchModify`, from Google's published quota table.
+- **reserve-before-each-attempt**: Every attempt, including each retry, MUST call `pacer.reserve(cost)` before sending, and MUST sleep for the returned duration through the injected `sleep` when that duration is greater than zero. The rate, burst and cumulative-wait arithmetic behind that duration belongs to the pacer's `wait-formula` and `drain-advance` requirements.
+- **quota-costs**: The reserved cost MUST be 1 for `profile` and `labels`, 2 for `history`, 5 for `listMessageIds`, `searchMessageIds` and `message`, 10 for `thread`, and 50 for `batchModify`, from Google's published quota table. This is the one place the costs are stated; the operation requirements point here, and the `GmailQuotaPacer` type ([adhsdk.ingredient.integrations.gmail.gmail-quota-pacer](cookbook:f0543d0b-31fe-4dcc-833e-21ead91bdca5)) states the same table as its `cost-table` requirement.
 - **pacer-injectable**: The `sleep` closure and the `pacer` MUST be constructor parameters, defaulting to `Task.sleep(for:)` and `GmailQuotaPacer.shared`, so a test records delays instead of sleeping. The `pacer` is the concrete `GmailQuotaPacer` actor, not a protocol, so a test cannot count reservations directly; it observes them through the recorded sleeps of a pacer built with a low rate, zero burst and a stopped `now` clock, where each reservation adds its cost divided by the rate to the next wait.
 
 ### Retry and failure
@@ -49,7 +49,7 @@ Contract: `GmailRESTClient` conforms to `GmailAPI` (itself `Sendable`) and every
 - **no-retry-other-403**: A 403 response for which `isRateLimited` is false MUST be thrown immediately as `IntegrationError.gmail` and MUST NOT be retried.
 - **no-retry-other-status**: Any other non-2xx status (for example 400, 401, 404) MUST be thrown immediately and MUST NOT be retried.
 - **retry-transient-network**: A `URLError` whose code is `timedOut`, `networkConnectionLost`, `notConnectedToInternet` or `cannotConnectToHost` MUST be retried while retries remain.
-- **no-retry-other-network**: Any other error from the session, such as another `URLError` code, MUST propagate unchanged on the first occurrence and MUST NOT be retried.
+- **no-retry-other-network**: Any other error from the session, such as another `URLError` code, MUST propagate unchanged on the first occurrence and MUST NOT be retried. A port whose platform cannot tell these codes apart (a web `fetch` failure, or a name-resolution failure the source does not retry) MAY retry a wider set of transient failures, and its Platform Note MUST say so.
 - **retry-budget**: One shared counter MUST limit retries to `maxRetries = 6` per call, counting network errors and retryable statuses together, so a call makes at most 7 attempts.
 - **retries-exhausted**: When the retry budget is spent, the client MUST throw the last failure: an `IntegrationError.gmail` for a status, or the `URLError` for a transient network error.
 - **backoff-schedule**: Without a `Retry-After` value, the wait before retry number `n` (0-based) MUST be 1 second doubled `n` times, capped at 32 seconds, giving 1, 2, 4, 8, 16 and 32 seconds for the six retries; the same formula for a larger `n` stays at 32 seconds.

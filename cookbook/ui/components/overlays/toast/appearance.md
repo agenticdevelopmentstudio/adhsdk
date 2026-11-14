@@ -8,5 +8,5 @@
 - **Border**: 1px solid, color `apt-border`
 - **Shadow**: drop shadow, large blur radius
 - **Gap between title and description**: 0.25rem
-- **Close button**: 1rem icon, positioned absolute, offset 0.75rem from the toast's top and right edges, color `apt-text-muted` at rest, color `apt-text` on hover
+- **Close button**: 1rem icon, positioned absolute, offset 0.75rem from the toast's top and right edges (physical edges in the source), color `apt-text-muted` at rest, color `apt-text` on hover
 

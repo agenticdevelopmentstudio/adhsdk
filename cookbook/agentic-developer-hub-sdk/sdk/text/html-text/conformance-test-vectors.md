@@ -37,5 +37,12 @@ Tests are in `HTMLTextTests` (`packages/apple/AgenticDeveloperHubSDK/SDK/Tests/A
 | html-text-032 | declaration, bogus-close | `<p>A</p><!DOCTYPE html><?xml version="1.0"?></ x><p>B</p>` (derived from `tag(in:at:)`; no test) | `A\n\nB` |
 | html-text-033 | pre-depth | `<pre>a</pre></pre><p>b</p>` and `<pre>a  b` (derived from `TextWriter.write(tag:)`; no test) | `a\n\nb`; `a  b` |
 | html-text-034 | pre-private-use | `plainText("a" U+E000 "b")` (derived from `TextWriter.write(text:)`; no test) | `ab` |
-| html-text-035 | stateless, no-feedback, stage-order | Two concurrent calls on different strings (derived from the type declaration; no test) | Each returns the result it returns alone |
-
+| html-text-035 | stateless | Two concurrent calls on different strings (derived from the type declaration; no test, unverified) | Each returns the result it returns alone |
+| html-text-036 | comment | `a<!--x-->b` (derived from the comment rule; no test) | `a b` |
+| html-text-037 | hidden-open-space, hidden-elements | `a<script>x</script>b` (derived; no test) | `a b` |
+| html-text-038 | hidden-stray-close | `a</style>b` (derived; no test) | `ab` |
+| html-text-039 | list-bullet-empty | `<ul><li></li><li>x</li></ul>` (derived; no test) | `- x` |
+| html-text-040 | comment | `a<!-->b-->c` (the comment edge; derived; no test) | `a c` |
+| html-text-041 | control-dropped | `a` U+000C `b` (the form feed edge case; derived; no test) | `ab` |
+| html-text-042 | entity-scalar-based, entity-unknown | `&am<b>p;` (an entity split by a tag; derived; no test) | `&amp;` as literal text, not decoded |
+| html-text-043 | blank-line-collapse | `<pre>a` LF LF LF `b</pre>` (blank lines inside `pre`; derived; no test) | `a\n\nb` |

@@ -1,3 +1,3 @@
 
-# MailClassification
+# Mail Classification
 

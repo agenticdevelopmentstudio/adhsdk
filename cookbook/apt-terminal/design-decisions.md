@@ -15,7 +15,7 @@
   `AuthError("not logged in or session expired")`, whereas `execute()`
   dispatches by status via `error_for_status`.
   **Rationale**: The source gives no comment explaining the duplication;
-  this recipe records it as an observed inconsistency rather than
+  this ingredient records it as an observed inconsistency rather than
   reconciling it, per source fidelity. A port should decide deliberately
   whether to preserve the fixed-message behavior for `whoami` or unify it
   with `execute()`'s per-status mapping — the two are not currently the
@@ -37,7 +37,7 @@
   rather than a raw `service-templates` endpoint.
   **Rationale**: `resources.py`'s own comment states the raw
   `/persona/service-templates` endpoint was removed from the backend; this
-  is a historical/backend-driven rename this recipe documents as-is, per
+  is a historical/backend-driven rename this ingredient documents as-is, per
   source fidelity, without further explanation the source does not give.
   **Approved**: pending
 - **Decision**: `config.py`'s `save()` both opens a new file with an
@@ -53,7 +53,7 @@
   manual `bytes` decode) for every other authenticated/public call — both
   ultimately delegating to the same `errors._message_from_body`.
   **Rationale**: The source gives no comment explaining two entry points
-  instead of one; this recipe records the duplication as a fact rather than
+  instead of one; this ingredient records the duplication as a fact rather than
   merging it into a single normative requirement the source does not
   express as one.
   **Approved**: pending

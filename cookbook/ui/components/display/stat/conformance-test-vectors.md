@@ -10,4 +10,5 @@
 | T7 | forwards-classname | `<StatRow className="pt-1" .../>` | wrapper carries `pt-1` |
 | T8 | renders-label-and-value | `label={<b>N</b>} value={0}` | node label rendered; value `0` rendered (not dropped) |
 | T9 | forwards-classname | `<Stat className="pb-2" label="x" value="1" />` | wrapper carries `pb-2` |
-
+| T10 | column-align-start | `<Stat align="start" label="x" value="1" />` | wrapper carries `flex-col items-start` and NOT `items-end` |
+| T11 | strip-wraps-stats | `<StatStrip className="pt-2"><Stat label="a" value="1" /></StatStrip>` | wrapper carries `flex flex-wrap gap-x-8 gap-y-3` and `pt-2`; the `Stat` is rendered inside |

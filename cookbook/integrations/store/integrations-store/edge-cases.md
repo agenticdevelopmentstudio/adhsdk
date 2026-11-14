@@ -8,7 +8,7 @@
 - **Negative `limit` or `offset`**: both are clamped to 0, so a negative `limit` returns no rows and a negative `offset` skips none (query-limit, query-offset).
 - **`limit` 0**: returns no rows (query-limit).
 - **`after` and `offset` together**: both apply; `offset` skips rows after the `after` filter (query-after, query-offset).
-- **Label id absent from every message**: matches nothing, so `labelIds` containing it returns no rows, and `anyLabelIds` containing only it returns no rows (MUST). The store does not validate label ids.
+- **Label id absent from every message**: matches nothing, so `labelIds` containing it returns no rows, and `anyLabelIds` containing only it returns no rows (MUST; query-labels-all, query-labels-any). The store does not validate label ids.
 - **Dates that are not ISO-8601 UTC strings of the same width**: `since`, `until`, `cutoff` and `after.internalDate` are compared as strings with no validation, so a differently formatted value gives an order that does not follow time (callers SHOULD NOT pass them; the contract is the format `IntegrationClock` writes, and the store rejects nothing).
 - **Missing connection on `updateSyncState`**: throws `IntegrationError.unknownAccount` after the statement runs and finds no row (MUST).
 - **Tombstoned connection on `updateSyncState`**: treated as missing and throws (MUST).
@@ -17,9 +17,9 @@
 - **Same account signed in again after a delete**: no live row matches, so a new row is stored under the id the caller gave, and the tombstoned row stays (MUST).
 - **Message whose `id` equals another message's `external_id`**: `message(connectionId:idOrExternalId:includingDeleted:)` matches either column and returns the first row the database yields under the live-first ordering (SHOULD NOT be relied on by callers).
 - **Concurrent calls**: writes serialise on the one writer connection; a read on a file database runs on a reader and sees the last committed state; an in-memory database shares one connection, so reads and writes queue together. A call made from inside another `read` or `write` on the same thread runs inline in that transaction (transaction-per-call).
-- **Slow statement**: a read past 10 seconds or a write past 60 seconds (the `BoundedDatabase` defaults) is aborted and surfaces as `BoundedDatabaseError.deadlineExceeded`; a write that throws leaves no partial change (MUST).
+- **Slow statement**: a read past 10 seconds or a write past 60 seconds (the `BoundedDatabase` defaults) is aborted and surfaces as `BoundedDatabaseError.deadlineExceeded`; a write that throws leaves no partial change (MUST; errors-unwrapped, transaction-per-call).
 - **Database busy**: a write waits up to the database's `busyTimeout` (5 seconds by default) and then fails with the database's error; this is `BoundedDatabase` behavior that the store passes through (errors-unwrapped).
 - **Offline or disconnected**: not applicable; the store reads and writes a local SQLite file and makes no network call.
-- **Missing required value**: the store writes the strings it is given without trimming or checking them; a `NOT NULL` column the record leaves unset is rejected with the database's error (MUST).
+- **Missing required value**: the store writes the strings it is given without trimming or checking them; a `NOT NULL` column the record leaves unset is rejected with the database's error (MUST; errors-unwrapped).
 - **Action log `status` text**: not validated; `finishActionLog` stores any `status` string, although `ActionLog.status` documents "pending", "ok" or "error" (SHOULD callers pass one of the three).
 

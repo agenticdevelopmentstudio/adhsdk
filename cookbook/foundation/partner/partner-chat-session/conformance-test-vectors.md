@@ -11,7 +11,7 @@ Vectors 001 to 005 are the cases asserted in `PartnerChatSessionTests` (named in
 | partner-chat-session-006 | send-forwarding, send-no-local-effect | Session with a recording send closure; call `send("go")` | Closure called once with "go"; transcript unchanged; no event after `.transcriptLoaded` |
 | partner-chat-session-007 | interrupt-forwarding | Call `interrupt()` | Interrupt closure called once; no event emitted |
 | partner-chat-session-008 | close-signals-closed, close-detaches, close-keeps-transcript | Subscribe; call `close()`; then `apply` an assistant text block | Stream yields `.stateChanged(.closed)` then ends; the later events reach no stream; the transcript still holds the reply |
-| partner-chat-session-009 | close-idempotent | Call `close()` twice with one stream attached | Second call emits nothing and does not fail |
+| partner-chat-session-009 | close-without-stream-silent | Call `close()` twice with one stream attached | Second call emits nothing and does not fail |
 | partner-chat-session-010 | events-single-subscriber | Call `events()` twice, then `noteUserMessage` | First stream ends; only the second stream receives `.userMessage` |
 | partner-chat-session-011 | events-no-buffer-without-subscriber, state-not-replayed | Call `setState(.responding)` and `noteUserMessage` with no stream attached, then call `events()` | The new stream's first event is `.transcriptLoaded` containing the noted message; no `.stateChanged(.responding)` is delivered |
 | partner-chat-session-012 | assistant-empty-text-skipped | `apply` an assistant message with text blocks "" and nil | Returns empty; transcript and stream unchanged |
@@ -24,8 +24,8 @@ Vectors 001 to 005 are the cases asserted in `PartnerChatSessionTests` (named in
 | partner-chat-session-019 | system-init-and-other-ignored, assistant-other-blocks-ignored | `apply` a `.systemInit` message, an `.other` message and an assistant message holding only a thinking block | All return empty and emit nothing |
 | partner-chat-session-020 | transcript-never-cleared | Add a noted message, call `clear()`, then call `events()` | First event is `.transcriptLoaded` with the message still present |
 | partner-chat-session-021 | set-state-emits | Subscribe, call `setState(.responding)` | Stream yields `.stateChanged(.responding)` |
-| partner-chat-session-022 | lock-guarded-state, yield-outside-lock | Call `noteUserMessage` from many tasks while a consumer reads the stream | No crash or data race; every call yields exactly one `.userMessage` |
-| partner-chat-session-023 | result-errors-array-unused | `apply` an error `.result` with resultText nil, subtype nil and errors ["x"] | Message is "error", not "x" |
+| partner-chat-session-022 | lock-guarded-state, yield-outside-lock | Call `noteUserMessage` from many tasks while a consumer reads the stream | Run under Thread Sanitizer: no data race is reported, and exactly one `.userMessage` per call is delivered |
+| partner-chat-session-023 | result-failure-text | `apply` an error `.result` with resultText nil, subtype nil and errors ["x"] | Message is "error", not "x" |
 | partner-chat-session-024 | events-never-throw | `apply` an error `.result`, then `noteUserMessage` | Stream stays open and delivers the later `.userMessage` |
-| partner-chat-session-025 | transcript-grows-by-owner-lines, transcript-grows-by-assistant-text, cross-thread-event-order | `noteUserMessage` then an assistant text `apply`; open a new stream | `.transcriptLoaded` holds both messages in call order when the calls are made from one thread |
+| partner-chat-session-025 | transcript-grows-by-owner-lines, transcript-grows-by-assistant-text | `noteUserMessage` then an assistant text `apply`; open a new stream | `.transcriptLoaded` holds both messages in call order when the calls are made from one thread |
 

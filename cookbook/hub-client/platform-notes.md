@@ -1,7 +1,8 @@
 
-- **SwiftUI** (source platform — apple, `macOS 14.0` / `iOS 17.0`, one
+- **SwiftUI**: No UI layer; `ADHClient` uses no SwiftUI, so a SwiftUI host calls it from a view model.
+- **Apple source** (neutral Swift, `macOS 14.0` / `iOS 17.0`, one
   multi-destination target): `ADHClient.swift`, `ADHClient+Raw.swift`
-  (`packages/apple/AgenticDeveloperHubClient/Sources/`) and their tests,
+  (`packages/apple/AgenticDeveloperHubClient/AuthSources/`) and their tests,
   `ADHClientWiringTests.swift`, `RawJSONTests.swift`
   (`.../Tests/AgenticDeveloperHubClientTests/`, using `MockClientTransport`).
   Built on the generated swift-openapi-runtime `Client` /
@@ -10,6 +11,7 @@
   `APITransport` / `TransportResolver` (`hub-client-transport`) and
   `CredentialStore` / `SessionStore` / `AuthenticationMiddleware` /
   `SessionRefreshMiddleware` (`hub-client-auth`) types.
+- **Query encoding mechanism**: the Swift source encodes keys and values against `CharacterSet.urlQueryAllowed` minus `+&=?#`, sorted by key; the middleware chain is composed by reversing `middlewares` and wrapping the transport's `send`.
 - **Compose** (Android/Kotlin): start from a generated OpenAPI client (or a
   hand-rolled `OkHttpClient` / Ktor `HttpClient` wrapper) for the typed
   surface `api` exposes here, a small façade class mirroring `ADHClient`'s
@@ -24,7 +26,7 @@
   the same query-encoding, header-override, and cap contract; browser
   `fetch` has no built-in response-size limit, so a port must enforce the 16
   MiB cap itself while reading the body.
-- **AppKit / UIKit**: no change from the SwiftUI bullet — `ADHClient` has no
+- **AppKit / UIKit**: no change from the Apple source bullet — `ADHClient` has no
   UI layer; both AppKit and UIKit hosts consume the same
   `AgenticDeveloperHubClient` package target unmodified.
 - **WinUI 3**: start from the nearest .NET OpenAPI-generated client (or a

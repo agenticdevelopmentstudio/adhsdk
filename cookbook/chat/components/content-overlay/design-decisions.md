@@ -8,6 +8,6 @@
 **Approved**: pending
 
 **Decision**: The overlay is intentionally non-modal: it always stays mounted and toggles visibility purely through CSS (`opacity`/`pointer-events`) rather than conditional mounting or `aria-hidden`/`inert`, and it defines no ARIA dialog role, no focus trap, no Escape-to-close, and no focus move on open or focus return on close.
-**Rationale**: Keeps the component a lightweight, always-present layer suited to being toggled behind a persistent surface such as chat. The tradeoff is that the closed state's header, close button, and body remain keyboard-focusable and screen-reader-reachable (see **focus-management** in Compliance) until the source adds `inert`/`aria-hidden` gating.
+**Rationale**: Keeps the component a lightweight, always-present layer suited to being toggled behind a persistent surface such as chat. The tradeoff is that the closed state's header, close button, and body remain keyboard-focusable and screen-reader-reachable (see the [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) check in Compliance) until the source adds `inert`/`aria-hidden` gating.
 **Approved**: pending
 

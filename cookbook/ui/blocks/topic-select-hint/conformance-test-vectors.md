@@ -18,5 +18,5 @@
 | topic-select-hint-015 | accept-custom-title, hide-headline-when-not-selectable | `title="Confirm delete"` `selectable={false}` | Headline still renders as "Confirm delete" — an explicit `title` takes precedence over `selectable` |
 | topic-select-hint-016 | use-fallback-headline | `noun=""` | Headline renders as "Select an item from the list to view or edit it here." — an empty string is falsy in JS, so `noun` is treated as not provided |
 | topic-select-hint-017 | use-fallback-headline | `listTitle=""` | Headline renders as "Select an item from the list to view or edit it here." — an empty string is falsy in JS, so `listTitle` is treated as not provided |
-| topic-select-hint-018 | compute-headline-from-noun | `noun="hour"` | Headline renders as "Select a hour to view or edit it here." — the article rule tests only the first letter, not English pronunciation, so this is a known grammatical miss |
-
+| topic-select-hint-018 | render-children, append-edit-suffix | `children=""` `noun="site"` | The description container is rendered (empty) and the headline does NOT end with " to view or edit it here." — the test is `children == null`, so an empty string counts as provided |
+| topic-select-hint-019 | accept-custom-title | `title=""` `noun="site"` | An empty headline element is rendered; the computed headline does not appear — the test is `title ?? computed`, so an empty string counts as provided |

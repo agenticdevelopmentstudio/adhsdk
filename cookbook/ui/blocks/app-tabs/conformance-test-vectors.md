@@ -12,4 +12,9 @@
 | app-tabs-009 | apply-class-name | `className="custom-class"` | Root container's class list contains `custom-class`. |
 | app-tabs-010 | no-content-panels | Any valid props | All tabs are self-contained `<button>` elements; no `role="tabpanel"` (or equivalent content-panel element) exists anywhere in the rendered output. |
 | app-tabs-011 | invoke-callback-on-click | `items=[{id:"tab1", label:"T1"}]`, `endItem={id:"settings", label:"Settings"}`, `onValueChange={spy}` | Clicking `endItem` invokes `onValueChange("settings")`, using the same click handler as any other tab. |
-
+| app-tabs-012 | render-items, render-end-item-if-provided | `items=[]`, `endItem={id:"settings", label:"Settings"}` | The tab list container renders with no item buttons; the endItem button still renders. |
+| app-tabs-013 | mark-active-tab | `items=[{id:"tab1", label:"T1"}]`, `value="missing"` | No tab has `data-active`; every tab has `aria-selected="false"`; nothing throws. |
+| app-tabs-014 | respect-end-item-active-state | `endItem={id:"settings", label:"Settings"}` with no `active` property | The endItem has `aria-selected="false"` and no `data-active` attribute. |
+| app-tabs-015 | render-icon-if-provided | `items=[{id:"tab1", label:"Tab", icon:null}]`, then again with `icon:false` | Nothing renders for the icon slot; the label still renders. |
+| app-tabs-016 | invoke-callback-on-click | `items=[{id:"tab1", label:"T1"}]`, no `onValueChange` | Clicking the tab does nothing and does not throw. |
+| app-tabs-017 | mark-active-tab | `items=[{id:"a", label:"A"}, {id:"a", label:"B"}]`, `value="a"` | Both tabs have `aria-selected="true"` (duplicate ids are unsupported). |

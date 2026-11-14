@@ -2,11 +2,11 @@
 id: 120ac7e5-949e-40c9-bb15-b24350356763
 title: "Site Model"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -37,7 +37,7 @@ lives at a given slug (`lookup.ts`), what breadcrumb trail leads to a slug
 (`breadcrumbs.ts`), what the section/page tree looks like (`nav.ts`), and
 which entries fuzzy-match a search query (`search.ts`) — plus a headless
 React hook (`useSearchState.ts`) that wires a `SearchIndex` to
-keyboard-driven selection state for a search palette. None of the five
+keyboard-driven selection state for a search palette. Inputs: `entries` is the full `SiteEntry[]` corpus (for `findBySlug`, `getBySection`, `getByDomain`, `buildNavTree`, `createSearchIndex`); `slug`, `section` and `domain` are the exact-match keys for lookup and breadcrumbs; `sections` is the declared `NavSectionConfig[]` (`key`, `label`, `path`) that seeds `buildNavTree`; `index` is the `SearchIndex` that `createSearchIndex` returns and `useSearchState` takes. None of the five
 sources performs network, file-system, or persistence access; every function
 is a synchronous, pure transformation over caller-supplied arrays, and the
 hook holds only transient React state.
@@ -95,7 +95,12 @@ hook holds only transient React state.
   existing child node of the current node when that child's label equals
   `titleCase(segment)` and the child already has at least one child of its
   own; otherwise it MUST create a new child node with that label and the
-  accumulated path.
+  accumulated path. The accumulated path includes the section segment: for
+  the slug `/guides/install/linux/x`, the `install` node's path is
+  `/guides/install` and the `linux` node's path is `/guides/install/linux`.
+  Known source behavior: because a leaf is never reused, a leaf followed by a
+  same-label folder yields two sibling nodes with that label (site-model-027);
+  a port is not required to treat that as a design goal.
 - **leaf-node-creation**: `buildNavTree` MUST append a leaf `NavNode` for the
   entry's final path segment, using `entry.frontmatter.title` as the label,
   `entry.slug` as the path, and `entry.domain` as the domain.
@@ -120,6 +125,10 @@ hook holds only transient React state.
 - **search-result-shape**: For a non-blank query, `SearchIndex.query` MUST
   return an array of `{ entry, score }` pairs, one per match, where `score`
   is the underlying match score, or `0` when no score is provided.
+- **search-result-order**: `SearchIndex.query` MUST return its pairs in the
+  order Fuse.js returns them: ascending `score`, where `score` is Fuse's
+  weighted match score between `0` (exact match) and `1` (no match), so a
+  lower score is a better match and the best match comes first.
 
 ### Search state hook (`hooks/useSearchState.ts`)
 
@@ -142,9 +151,18 @@ hook holds only transient React state.
 - **unhandled-key-no-op**: For any key other than `ArrowDown`, `ArrowUp`, or
   `Escape`, `handleKey` MUST leave `query`, `results`, and `selectedIndex`
   unchanged.
-- **selected-index-direct-set-unclamped**: `setSelectedIndex` MAY be called
-  directly by the caller to set `selectedIndex` to any value; `useSearchState`
-  MUST NOT clamp that value against `results.length`.
+- **memoize-search-inputs**: Callers SHOULD memoize the `SearchIndex` passed
+  into `useSearchState`, and the `entries` array passed to `createSearchIndex`
+  and `buildNavTree`. `results-track-query`'s `useMemo` depends on the
+  referential identity of `index`, so a newly constructed `SearchIndex` on
+  every render rebuilds the underlying Fuse instance on every re-render. This
+  is a caller-side performance recommendation, not a contract the sources
+  enforce.
+- **selected-index-direct-set-unclamped**: `setSelectedIndex` is the raw state
+  setter, and `useSearchState` applies no clamp to it: a value past
+  `results.length - 1` is stored as given. Known source behavior, pinned by
+  site-model-024; a port may clamp out-of-range values without breaking any
+  other requirement.
 
 ## Appearance
 
@@ -187,56 +205,63 @@ inspection of the five sources where no test asserts the behavior.
 | site-model-015 | search-index-fields | `createSearchIndex(entries).query('auth flows')` where only `/api/auth`'s `frontmatter.summary` is `'API auth flows'` | First result's `entry.slug` is `'/api/auth'` |
 | site-model-016 | empty-query-short-circuit | `createSearchIndex(entries).query('')` | Returns `[]` |
 | site-model-017 | initial-search-state | `renderHook(() => useSearchState(idx))`, no interaction | `query === ''`, `results` equals `[]`, `selectedIndex === 0` |
-| site-model-018 | results-track-query, set-query-resets-selection | Call `setQuery('alph')` against entries `Alpha`, `Alphabet`, `Beta` | `results.length > 0` |
+| site-model-018 | results-track-query, set-query-resets-selection | Call `setSelectedIndex(1)`, then `setQuery('alph')`, against entries `Alpha`, `Alphabet`, `Beta` | `results.length > 0` and `selectedIndex === 0` |
 | site-model-019 | arrow-down-advances-selection | After `setQuery('alph')`, call `handleKey({key:'ArrowDown'})` | `selectedIndex === Math.min(1, results.length - 1)` |
 | site-model-020 | arrow-up-retreats-selection | Continuing from site-model-019, call `handleKey({key:'ArrowUp'})` | `selectedIndex === 0` |
-| site-model-021 | escape-resets | After `setQuery('alph')`, call `handleKey({key:'Escape'})` | `query === ''` and `results` equals `[]` |
+| site-model-021 | escape-resets | After `setQuery('alph')`, call `handleKey({key:'Escape'})` | `query === ''`, `results` equals `[]` and `selectedIndex === 0` |
 | site-model-022 | unhandled-key-no-op | With `query` already `'alph'` and `results` non-empty, call `handleKey({key:'Enter'})` | `query`, `results`, and `selectedIndex` are unchanged from immediately before the call |
 | site-model-023 | arrow-down-advances-selection | Call `handleKey({key:'ArrowDown'})` when `results.length === 0` | `selectedIndex` stays `0` |
 | site-model-024 | selected-index-direct-set-unclamped | Call `setSelectedIndex(99)` when `results.length === 1` | `selectedIndex === 99` (not clamped) |
+| site-model-025 | reset-clears-state | After `setQuery('alph')` and `setSelectedIndex(1)`, call `reset()` | `query === ''`, `results` equals `[]`, `selectedIndex === 0` |
+| site-model-026 | empty-query-short-circuit | `createSearchIndex(entries).query('   ')` | Returns `[]` |
+| site-model-027 | intermediate-segment-nodes | `buildNavTree` on `{slug:'/guides/install', section:'guides', frontmatter:{title:'Install'}}` then `{slug:'/guides/install/linux', section:'guides', frontmatter:{title:'Linux'}}`, with `sections` declaring `guides` | `guides` has two children labeled `Install`: a folder (path `/guides/install`, one child `Linux`) sorted first, and the leaf (path `/guides/install`, no children); the leaf is not merged into the folder |
+| site-model-028 | empty-entries-search-index | `createSearchIndex([]).query('anything')` | Returns `[]` and does not throw |
+| site-model-029 | whitespace-only-query | `createSearchIndex(entries).query('\t  ')` | Returns `[]` |
+| site-model-030 | search-result-order | `createSearchIndex(entries).query('alph')` against entries `Alpha`, `Alphabet`, `Beta` | Every result's `score` is at least the previous result's `score`, and `Alpha` precedes `Beta` if `Beta` appears |
+| site-model-031 | breadcrumb-path-accumulation, intermediate-segment-nodes | `buildNavTree` on `{slug:'/guides/install/linux/x', section:'guides', frontmatter:{title:'X'}}` with `sections` declaring `guides` | The `install` node has path `/guides/install`; its child `linux` has path `/guides/install/linux`; the leaf `X` has path `/guides/install/linux/x` |
 
 ## Edge Cases
 
-- **Empty `entries` array** (null/empty input): `findBySlug` MUST return
+- **empty-entries-lookup** (null/empty input): `findBySlug` MUST return
   `undefined`; `getBySection` and `getByDomain` MUST return `[]`. This is the
   native behavior of `Array.prototype.find`/`.filter` on an empty array
   (`lib/lookup.ts`).
-- **Slug `''` (empty string, not `/`)** (boundary value): `slugToBreadcrumbs`
+- **empty-slug-breadcrumbs** (boundary value): `slugToBreadcrumbs`
   MUST return `[]`, because `''.split('/').filter(Boolean)` yields no
   segments — the same effective result as the explicit `/` case, though only
   `/` is checked directly (`lib/breadcrumbs.ts`).
-- **Slug with consecutive or trailing separators** (e.g. `/guides//x/`)
+- **separator-runs-in-slug** (e.g. `/guides//x/`)
   (boundary value): `slugToBreadcrumbs` MUST produce breadcrumbs only for the
   non-empty segments, since `.filter(Boolean)` drops the empty strings that
   consecutive or trailing `/` characters produce.
-- **`buildNavTree` called with an empty `entries` array** (null/empty input):
+- **empty-entries-nav-tree** (null/empty input):
   MUST still return one node per declared section, each with `children: []`
   (test-verified in `nav.test.ts`).
-- **Entry whose `section` is `undefined`, `null`, or `''`** (null/empty
+- **falsy-entry-section** (null/empty
   input): `buildNavTree` MUST skip the entry entirely, producing no node for
   it anywhere in the tree.
 - **duplicate-section-keys**: NEEDS REVIEW: Not implemented in source. Duplicate keys within the `sections` array passed to `buildNavTree` (boundary/malformed input): `sectionMap.set` overwrites the earlier node for a repeated key, but `sectionOrder` still records the key twice, so the array returned by `buildNavTree` (`sectionOrder.map((key) => sectionMap.get(key)!)`) contains the same node object twice; the source never validates that section keys are unique, and there is no rule for which duplicate should "win" — a fix needs either a uniqueness check before calling `buildNavTree` or a decision on de-duplication.
-- **Entry with a missing or non-string `frontmatter.title` reaching leaf-node-creation** (malformed input): `SiteFrontmatter.title` is typed as a required `string`, so `buildNavTree` reads `entry.frontmatter.title` directly into the leaf node's `label` with no runtime fallback or validation, relying entirely on that type contract from a well-typed caller; `tree-sort-order`'s subsequent `a.label.localeCompare(b.label)` would throw a `TypeError` only if a caller violated that contract by supplying a missing or non-string title.
-- **`createSearchIndex` called with an empty `entries` array** (null/empty
+- **missing-leaf-title** (malformed input): `SiteFrontmatter.title` is typed as a required `string`, so `buildNavTree` reads `entry.frontmatter.title` directly into the leaf node's `label` with no runtime fallback or validation, relying entirely on that type contract from a well-typed caller; `tree-sort-order`'s subsequent `a.label.localeCompare(b.label)` would throw a `TypeError` only if a caller violated that contract by supplying a missing or non-string title.
+- **empty-entries-search-index** (null/empty
   input): MUST build a valid, empty Fuse index; `query` MUST return `[]` for
-  any input against it.
-- **`SearchIndex.query` called with a whitespace-only string** (e.g. `'   '`)
+  any input against it (site-model-028).
+- **whitespace-only-query** (e.g. `'   '`)
   (boundary value): MUST return `[]` per the `q.trim()` guard, without
-  invoking Fuse's search.
-- **`handleKey('ArrowDown')` when `results.length === 0`** (boundary value):
+  invoking Fuse's search (site-model-029).
+- **arrow-down-without-results** (boundary value):
   MUST leave `selectedIndex` at `0`, because
   `Math.max(results.length - 1, 0)` evaluates to `0` and
   `Math.min(i + 1, 0)` cannot exceed it.
-- **Concurrent calls to `SearchIndex.query` from multiple callers sharing one
-  `SearchIndex`** (concurrent access): MUST be safe. `query` performs a
+- **shared-index-queries** (concurrent access): Concurrent calls to
+  `SearchIndex.query` from callers sharing one `SearchIndex` MUST be safe (no test asserts this). `query` performs a
   read-only `fuse.search` call against a Fuse instance that is never mutated
   after `createSearchIndex` constructs it, and JavaScript's single-threaded
   execution model serializes all such calls regardless of caller count.
-- **Unmount or cancellation while `useSearchState` is in use** (cancellation):
-  MUST simply stop invoking the hook's callbacks; there is no in-flight
+- **unmount-during-use** (cancellation): Unmounting or cancelling while
+  `useSearchState` is in use MUST simply stop invoking the hook's callbacks; there is no in-flight
   asynchronous work to cancel, because `index.query` and every state update
-  in `useSearchState.ts` are synchronous.
-- **Dependency (network, file system) unavailable** (error states/offline):
+  in `useSearchState.ts` are synchronous (no test asserts this).
+- **dependency-unavailable** (error states/offline):
   Not applicable — none of the five sources performs a network request, file
   read, or any other external call; `createSearchIndex` and its consumers
   operate entirely on the in-memory `SiteEntry[]` array the caller supplies.
@@ -245,16 +270,11 @@ inspection of the five sources where no test asserts the behavior.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `entries` | `SiteEntry[]` | required | Full corpus of parsed site pages; input to `findBySlug`, `getBySection`, `getByDomain`, `buildNavTree`, and `createSearchIndex`. |
-| `slug` | `string` | required | Path lookup key for `findBySlug` and `slugToBreadcrumbs`. |
-| `section` | `string` | required | Exact-match filter key for `getBySection`. |
-| `domain` | `string` | required | Exact-match filter key for `getByDomain`. |
-| `sections` | `NavSectionConfig[]` | required | Declared nav sections (`key`, `label`, `path`) that seed `buildNavTree`'s top-level nodes and their order. |
-| `index` | `SearchIndex` | required | The Fuse-backed index returned by `createSearchIndex`, injected into `useSearchState`. |
 | Fuse `threshold` | `number` | `0.3` | Hardcoded fuzzy-match tolerance inside `createSearchIndex`; not exposed as a caller-supplied option. |
 | Fuse `minMatchCharLength` | `number` | `2` | Hardcoded minimum characters before a match registers; not exposed as a caller-supplied option. |
 | Fuse key weights | `number` | title `3`, summary `2`, domain `1` | Hardcoded relative weighting of the three indexed fields; not exposed as a caller-supplied option. |
 
+The functions' inputs (`entries`, `slug`, `section`, `domain`, `sections`, `index`) are call parameters, not configuration; they are described in the Overview and in Behavioral Requirements.
 ## Deep Linking
 
 Not applicable: none of the five sources registers or parses an app-scheme or
@@ -327,9 +347,10 @@ API.
 - **React/Web**: this is the source platform. The five files are
   `hooks/useSearchState.ts`, `lib/breadcrumbs.ts`, `lib/lookup.ts`,
   `lib/nav.ts`, and `lib/search.ts` in
-  `packages/web/packages/model/src`, all consumed by `useSearchState.tsx`-style
-  callers through `useMemo`/`useState`/`useCallback` and the `fuse.js`
-  dependency declared in `packages/web/packages/model/package.json`.
+  `packages/web/packages/model/src`, and the `fuse.js`
+  dependency is declared in `packages/web/packages/model/package.json`.
+  `useSearchState` uses `useMemo`/`useState`/`useCallback`, and its in-repo
+  consumer is `SearchDialogConnected.tsx` in `packages/web/packages/controls/src/search-dialog`.
 - **AppKit / UIKit**: the lookup and breadcrumb functions translate directly
   to `NSArray`/`Array` predicate or block-based filtering; there is no
   React-style hook, so `useSearchState`'s state becomes a delegate/closure
@@ -341,7 +362,7 @@ API.
   uppercases the first character and leaves the rest of each word's casing
   untouched — a literal port must replicate the source's naive behavior, not
   Foundation's, to stay conformant.
-- **WinUI 3**: this is the platform this recipe exists to unblock. Expose
+- **WinUI 3**: Expose
   `Query`, `Results`, and `SelectedIndex` as `INotifyPropertyChanged`
   properties on a view-model (or bind through `x:Bind` with
   `ObservableCollection<NavNode>` for the tree), replacing React's
@@ -368,7 +389,7 @@ API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/model/src/` | unverified |
+| web | `packages/web/packages/model/src/` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -379,18 +400,7 @@ requirements.
 uppercase only each word's first character, join with a space); treating
 them as one shared behavior avoids stating conflicting requirements for what
 is, in the source, unshared duplicated code — a maintenance liability worth
-noting even though this recipe does not change it.
-**Approved**: pending
-
-**Decision**: Callers SHOULD memoize the `SearchIndex` passed into
-`useSearchState`, and SHOULD memoize the `entries` array passed to
-`createSearchIndex` and `buildNavTree`.
-**Rationale**: `results-track-query`'s `useMemo` depends on the referential
-identity of `index`; passing a newly constructed `SearchIndex` on every
-render defeats that memoization and rebuilds the underlying Fuse instance on
-every re-render, even though `index.query`'s selection of matches would be
-identical either way. This is a caller-side performance recommendation, not
-a contract the five sources themselves enforce.
+noting even though this ingredient does not change it.
 **Approved**: pending
 
 **Decision**: Preserve `intermediate-segment-nodes`'s exact reuse condition
@@ -428,3 +438,4 @@ meaningful assertions.
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation from web sources: `hooks/useSearchState.ts`, `lib/breadcrumbs.ts`, `lib/lookup.ts`, `lib/nav.ts`, `lib/search.ts`. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Pinned search ordering, path format, memoize and unclamped behavior as requirements, named edge cases, fixed vectors and added seven, and moved inputs out of Configuration. |

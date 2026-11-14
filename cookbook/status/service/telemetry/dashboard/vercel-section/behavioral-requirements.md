@@ -7,7 +7,8 @@
 - **domain-lookup-concurrency**: Domain lookups MUST run with at most 6 at once.
 - **domain-lookup-failure**: A failed domain lookup MUST NOT fail the section. `fetchProjectPrimaryDomain` answers null when the project has no verified custom domain that is not a redirect, and when the lookup failed (403, 5xx, timeout) with no cached list; a failed lookup answers from the last cached list when there is one. While the shared Vercel cooldown is in force the lookup does not call the API and is answered as a failure. In every null case the alias fallback applies.
 - **listed-filter**: After the domain is known, a project whose domain is a `staging.` or `testing.` host MUST be dropped, uncounted and unqueried. The remaining projects are the `listed` set.
-- **enabled-rule**: A project counts as enabled when `analyticsEnabled` is true: `webAnalytics.enabledAt` is set and `webAnalytics.disabledAt` is not.
+- **enabled-rule**: A project MUST count as enabled when `analyticsEnabled` is true: `webAnalytics.enabledAt` is set and `webAnalytics.disabledAt` is not.
+- **no-projects**: An empty project list MUST give an empty roster, `projectsTotal` 0 and zero totals, with no error.
 - **projects-total**: `projectsTotal` MUST be the size of the listed set and `projectsEnabled` the number of enabled projects in it.
 
 **Window parameters**
@@ -23,7 +24,7 @@
 - **count-failure**: A project whose count call fails with any error other than a rate limit MUST be counted in `failed`, and MUST NOT fail the section.
 - **count-all-failed**: When at least one project is enabled and every count failed, the loader MUST throw `Error("every Vercel analytics call failed")`.
 - **count-none-enabled**: When no project is enabled, the loader MUST NOT throw; `failed` is 0 and the totals are 0.
-- **rate-limit-ends-load**: A `VercelRateLimited` error in any phase MUST end the whole load and reject the section. Further calls do not run, because each call checks the shared cooldown first and throws.
+- **rate-limit-ends-load**: A `VercelRateLimited` error from the project list, count or breakdown phase MUST end the whole load and reject the section. Domain lookups never throw it (see `domain-lookup-failure`), so when a lookup is the one that hits a 429, the load ends at the next `vercelGet` call after the cooldown is recorded. Further calls do not run, because each call checks the shared cooldown first and throws.
 
 **Breakdown phase**
 
@@ -52,16 +53,16 @@
 - **projects-sort**: `projects` MUST be sorted by `pageviews`, highest first.
 - **roster-membership**: `roster` MUST list every listed project, whether or not analytics is on or it had traffic.
 - **roster-entry**: Each roster entry MUST carry `project`, `domain`, `analyticsOn`, and the project's counted `pageviews` and `visitors`, or `null` for both when the project has no count.
-- **roster-null-cases**: A project has no count when analytics is off or its count call failed; both give `null`, which is not a zero.
+- **roster-null-cases**: A project with analytics off, or whose count call failed, MUST have no count, so its roster entry MUST hold `null`, which is not a zero.
 - **roster-sort**: `roster` MUST be sorted by `pageviews` descending, with a missing count (null) after every number including 0, and ties broken by `project` name with `localeCompare`.
 - **section-buckets**: `buckets` MUST be the window's buckets.
 - **section-counters**: The section MUST carry `failed` (count calls that failed), `incomplete` (projects with short breakdowns), `projectsTotal` and `projectsEnabled`.
 
 **Side effects**
 
-- **network-only**: The loader's only side effects are HTTP calls to the Vercel API (the project list, domain lookups, counts, aggregates). It writes no files or storage.
-- **domain-cache**: Domain lookups share an hour-long per-project cache inside `fetchProjectPrimaryDomain`'s module, so repeated loads do not repeat the domains call.
+- **network-only**: The loader's only side effects MUST be HTTP calls to the Vercel API (the project list, domain lookups, counts, aggregates); it MUST NOT write files or storage.
+- **domain-cache**: Domain lookups SHOULD share an hour-long per-project cache inside `fetchProjectPrimaryDomain`'s module, so repeated loads do not repeat the domains call.
 - **rate-limit-recording**: A 429 answer from a call made through `vercelGet` MUST record the shared cooldown (`noteRateLimited("vercel", retry-after)`) and throw `VercelRateLimited`; the cooldown is honored by the deploy poll as well.
-- **per-call-timeout**: Each analytics call is bounded by a 20-second timeout, and each domain lookup by 5 seconds, both set in the shared clients.
-- **no-retry**: The loader never retries a call. Retrying a section is left to the sectioned-dashboard cache, which re-runs the section after its retry delay when `failed > 0` or `incomplete > 0`.
+- **per-call-timeout**: Each analytics call MUST be bounded by a 20-second timeout, and each domain lookup by 5 seconds, both set in the shared clients.
+- **no-retry**: The loader MUST NOT retry a call. Retrying a section is left to the sectioned-dashboard cache ([adhsdk.ingredient.status.service.telemetry.dashboard.sectioned-dashboard](cookbook:af0bacb9-bc1f-4773-85f5-35e33ae590ab)), which re-runs the section after its retry delay when `failed > 0` or `incomplete > 0`.
 

@@ -4,7 +4,7 @@
     "id": "345bb44b-1a4b-46ce-be8f-0796edbf70c9",
     "title": "Theme Tokens",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dfd924a9c90867ae",
+  "synced": "c9691f348931935a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -4,11 +4,11 @@
     "id": "a63de97e-d75c-4733-a875-bad20e001fcb",
     "title": "Stats",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d1378103459e8354",
+  "synced": "deff7151f41595e3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

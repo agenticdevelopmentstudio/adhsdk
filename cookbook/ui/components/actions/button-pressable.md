@@ -2,11 +2,11 @@
 id: f483dfb7-d60e-4b12-8b17-2eb150b550db
 title: "PressableButton"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -66,7 +66,7 @@ window-level `pointerup`/`pointercancel` — rather than over the internal
 - **forwarded-handler-invoked-when-provided**: PressableButton MUST invoke a caller-supplied `onPointerDown`, `onPointerUp`, `onPointerLeave`, `onPointerEnter`, or `onPointerCancel` prop, when one is provided, every time the corresponding pointer event fires on the rendered primitive.
 - **pressed-unaffected-by-keyboard-activation**: PressableButton MUST NOT change the `data-pressed` attribute in response to keyboard activation (Space or Enter).
 - **no-pointer-capture**: PressableButton MUST NOT call `setPointerCapture` on any pointer event it handles.
-
+- **no-window-listener-after-unmount**: PressableButton MUST leave no `window` `pointerup` or `pointercancel` listener attached after it unmounts, including when it unmounts during an active press.
 ## Appearance
 
 Not applicable: PressableButton is a pointer-event tracking layer with no styling of its own; visual appearance (radius, padding, font, colors, borders, shadows, size constraints) is defined in `button.tsx`'s `buttonVariants` and the Base UI `Button` primitive.
@@ -122,7 +122,12 @@ with internal `held`/`pressed` `useState` values; see Design Decisions.)
 | button-pressable-020 | window-release-no-effect-outside-active-press | `pointerdown` then `pointerup`, both on the element (ending the active press), then `pointercancel` dispatched on the element | `data-pressed` remains absent; no error is thrown |
 | button-pressable-021 | pressed-cleared-on-window-release-during-active-press | `pointerdown` with `pointerId` 1 on the element, then `pointerdown` with `pointerId` 2 on the element (no intervening release), then `pointerup` with `pointerId` 1 dispatched on `window` | `data-pressed` is cleared — the window listener ends the active press regardless of which `pointerId` released |
 | button-pressable-022 | pressed-unaffected-by-pointerenter-outside-active-press | `pointerdown` then `pointerup` on the element (completing a press), then `pointerenter` on the element | `data-pressed` remains absent after the later `pointerenter`, since the active press already ended |
-
+| button-pressable-023 | forwarded-handler-invoked-when-provided | Render with an `onPointerUp` spy prop, dispatch `pointerdown` then `pointerup` on the element | Spy is called exactly once, on `pointerup` |
+| button-pressable-024 | forwarded-handler-invoked-when-provided | Render with an `onPointerLeave` spy prop, dispatch `pointerdown` then `pointerleave` on the element | Spy is called exactly once, on `pointerleave`; `data-pressed` is also cleared |
+| button-pressable-025 | forwarded-handler-invoked-when-provided | Render with an `onPointerEnter` spy prop, dispatch `pointerdown`, `pointerleave`, then `pointerenter` on the element | Spy is called exactly once, on `pointerenter`; `data-pressed=""` is also restored |
+| button-pressable-026 | forwarded-handler-invoked-when-provided | Render with an `onPointerCancel` spy prop, dispatch `pointerdown` then `pointercancel` on the element | Spy is called exactly once, on `pointercancel`; `data-pressed` is also cleared |
+| button-pressable-027 | forwarded-handler-invoked-when-provided, pressed-on-pointerdown | Render with an `onPointerDown` spy prop, dispatch `pointerdown` on the element | Both fire: the spy is called exactly once and `data-pressed=""` is set |
+| button-pressable-028 | no-window-listener-after-unmount | Spy on `window.addEventListener` and `window.removeEventListener`, dispatch `pointerdown` on the element, then unmount before any release | Every `pointerup` and `pointercancel` listener added to `window` has been removed; a later `pointerup` on `window` throws no error and calls no state update |
 ## Edge Cases
 
 - **Handler prop omitted** (no `onPointerDown`/`onPointerUp`/`onPointerLeave`/`onPointerEnter`/`onPointerCancel` prop supplied): the component MUST NOT throw when the corresponding pointer event fires — `button-pressable.tsx`'s `compose()` helper short-circuits safely via `theirs?.(event)`'s optional chaining.
@@ -135,18 +140,20 @@ with internal `held`/`pressed` `useState` values; see Design Decisions.)
 - **Concurrent access**: Not applicable — pointer events are dispatched serially on the browser's single UI thread, and `held`/`pressed` are local, in-memory React state with no cross-thread or cross-session access path.
 - **Error states**: Not applicable — the component has no dependency on a network, database, or file system; it performs no I/O.
 - **Offline or disconnected state**: Not applicable — the component performs no network operation, so connectivity has no effect on its behavior.
-
+- **Unmount during an active press**: the `useEffect` cleanup in `button-pressable.tsx` removes the `window` `pointerup`/`pointercancel` listeners when the component unmounts, so no listener remains and a later window release has no effect (see **no-window-listener-after-unmount**).
+- **Disabled primitive**: PressableButton has no `disabled` check of its own and sets `data-pressed` on any `pointerdown` it receives. Whether a disabled button receives a `pointerdown` at all is decided by the Base UI `Button` primitive and the browser, not by this component.
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `onPointerDown` | `(event: PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked before the component's own `pointerdown` tracking runs. |
-| `onPointerUp` | `(event: PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked before the component's own `pointerup` tracking runs. |
-| `onPointerLeave` | `(event: PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked before the component's own `pointerleave` tracking runs. |
-| `onPointerEnter` | `(event: PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked before the component's own `pointerenter` tracking runs. |
-| `onPointerCancel` | `(event: PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked before the component's own `pointercancel` tracking runs. |
+| `onPointerDown` | `(event: React.PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked when `pointerdown` fires; composed with, never replacing, the component's own `pointerdown` tracking. |
+| `onPointerUp` | `(event: React.PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked when `pointerup` fires; composed with, never replacing, the component's own `pointerup` tracking. |
+| `onPointerLeave` | `(event: React.PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked when `pointerleave` fires; composed with, never replacing, the component's own `pointerleave` tracking. |
+| `onPointerEnter` | `(event: React.PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked when `pointerenter` fires; composed with, never replacing, the component's own `pointerenter` tracking. |
+| `onPointerCancel` | `(event: React.PointerEvent) => void` (optional) | `undefined` | Consumer handler invoked when `pointercancel` fires; composed with, never replacing, the component's own `pointercancel` tracking. |
 | `...props` | `ButtonPrimitive.Props` | — | All other Base UI `Button` props, forwarded unchanged. |
 
+The handler event type is React's synthetic `React.PointerEvent` (the type `ButtonPrimitive.Props` declares), not the DOM `PointerEvent`.
 ## Deep Linking
 
 Not applicable: PressableButton is a pointer-event tracking layer with no navigation or routing responsibility.
@@ -156,15 +163,11 @@ Not applicable: PressableButton is a pointer-event tracking layer with no naviga
 Not applicable: PressableButton renders no user-facing strings.
 
 ## Accessibility Options
-
-Document which accessibility display options (Rule 15 ([adc.guideline.implementing.accessibility.accessibility](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3d970d6a-2d71-48f3-9f84-69c1d823d6e8))) this component responds to:
-
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: PressableButton contains no motion or transitions. |
 | Increase Contrast | Not applicable: PressableButton contains no color or contrast logic. |
 | Differentiate Without Color | Not applicable: PressableButton contains no color-dependent signaling. |
-
 ## Feature Flags
 
 Not applicable: PressableButton contains no feature-flag logic or conditional behavior.
@@ -200,81 +203,69 @@ forwarded pointer handler, not in this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/button-pressable.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/button-pressable.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
-
 **Decision**: Requirements are phrased over an **active press** — the interval from a `pointerdown` on the rendered primitive to the earliest of an element-level or window-level `pointerup`/`pointercancel` — rather than over the internal `held` state variable.
-**Rationale**: `held` and `pressed` are private `useState` values in `button-pressable.tsx` with no attribute of their own; every requirement that referenced `held` directly (13 of the previous 24) forced its Conformance Test Vector to prove the internal value by indirect inference (e.g. dispatching a window-level release afterward and checking that `data-pressed` still cleared). Anchoring requirements to "active press" — a window defined purely by dispatched events — states the same contract in terms an outside test can observe and drive directly, and keeps `held`/`pressed` as the implementation detail that satisfies it.
+**Rationale**: `held` and `pressed` are private `useState` values in `button-pressable.tsx` with no attribute of their own, so a requirement written over `held` can only be proven by indirect inference (for example, dispatching a window-level release afterward and checking that `data-pressed` still cleared). An "active press" is a window defined purely by dispatched events, so an outside test can observe and drive it directly, and `held`/`pressed` stay the implementation detail that satisfies it.
 **Approved**: pending
 
-**Decision**: Every Behavioral Requirement above is a MUST; none are SHOULD or MAY.
+**Decision**: Every Behavioral Requirement is a MUST; none are SHOULD or MAY.
 **Rationale**: `button-pressable.tsx` contains no conditional or caller-configurable deviation in its press-tracking logic — every state transition is an unconditional, deterministic response to a specific event, so no permitted alternative behavior exists to write as SHOULD/MAY.
 **Approved**: pending
 
-**Decision**: A `window`-level `pointerup`/`pointercancel` listener pair is attached only while an active press is in progress, and torn down as soon as the press resolves (via an element-level release or an earlier window-level release).
-**Rationale**: `pointerleave` alone does not end an active press (by design, to support re-entry), so a release or cancel landing outside the element would otherwise leave the press stuck forever; the `useEffect` in `button-pressable.tsx` attaches the `window` listeners only while `held` is `true` and removes them the moment it becomes `false`, so no listener is left attached once the press has resolved. This implementation is what satisfies `#requirements/pressed-cleared-on-window-release-during-active-press` and `#requirements/window-release-no-effect-outside-active-press`.
+**Decision**: A `window`-level `pointerup`/`pointercancel` listener pair is attached only while an active press is in progress, and torn down as soon as the press resolves (via an element-level release, an earlier window-level release, or unmount).
+**Rationale**: `pointerleave` alone does not end an active press (by design, to support re-entry), so a release or cancel landing outside the element would otherwise leave the press stuck forever; the `useEffect` in `button-pressable.tsx` attaches the `window` listeners only while `held` is `true` and removes them the moment it becomes `false` or the component unmounts, so no listener is left attached once the press has resolved. This implementation is what satisfies `#requirements/pressed-cleared-on-window-release-during-active-press`, `#requirements/window-release-no-effect-outside-active-press` and `#requirements/no-window-listener-after-unmount`.
 **Approved**: pending
 
 **Decision**: `button-pressable.tsx` never calls `setPointerCapture`.
-**Rationale**: `button-pressable.tsx`'s doc comment on `PressableButton` states this explicitly ("No `setPointerCapture`") — capture would re-target subsequent pointer events to the button and defeat the leave/re-enter detection that the `pointerleave`/`pointerenter` handlers depend on.
+**Rationale**: Capture would re-target subsequent pointer events to the button and defeat the leave/re-enter detection that the `pointerleave`/`pointerenter` handlers depend on. The doc comment on `PressableButton` states this explicitly ("No `setPointerCapture`").
 **Approved**: pending
 
 **Decision**: Keyboard activation (Space/Enter) never changes the pressed visual.
-**Rationale**: `button-pressable.tsx`'s doc comment on `PressableButton` states the pressed visual is "intentionally pointer-only" — Space/Enter activation is left entirely to the underlying Base UI `Button` primitive and never touches `pressed`.
+**Rationale**: The pressed visual is intentionally pointer-only; Space/Enter activation is left entirely to the underlying Base UI `Button` primitive and never touches `pressed`. The doc comment on `PressableButton` states this explicitly.
 **Approved**: pending
 
-**Decision**: `button-pressable.tsx`'s `compose()` helper invokes the caller-supplied handler (`theirs?.(event)`) before the component's own state update (`ours(event)`) for every intercepted pointer event, but this ordering is not a standalone Behavioral Requirement.
-**Rationale**: Both calls happen synchronously within the same event-handler tick, and React defers the actual `data-pressed` DOM mutation regardless of which call ran first, so no outside-observable side effect distinguishes "handler ran first" from "handler ran second" — a black-box Conformance Test Vector cannot prove the ordering (the prior vector 022 read `data-pressed` synchronously inside the spy and passed under both orderings). The ordering is documented here as an implementation fact grounded in `compose()`'s source, not asserted as a testable contract.
+**Decision**: Consumer-supplied pointer handlers are composed with the component's own tracking, never replaced, and the order in which the two run is not a contract.
+**Rationale**: `compose()` in `button-pressable.tsx` calls both the caller's handler and the component's own tracking logic, so passing e.g. `onPointerUp` does not silently disable press tracking and the component does not silently disable a caller's handler. Today `compose()` calls the caller's handler first, but both calls happen synchronously within the same event-handler tick and React defers the actual `data-pressed` DOM mutation regardless of which ran first, so no outside-observable effect distinguishes the two orders and a black-box Conformance Test Vector cannot prove one. A port may run them in either order.
 **Approved**: pending
 
-**Decision**: Consumer-supplied pointer handlers are composed, never replaced.
-**Rationale**: `compose()` in `button-pressable.tsx` always calls the caller's handler before the component's own tracking logic, so passing e.g. `onPointerUp` does not silently disable this component's press tracking, and the component does not silently disable a caller's handler.
+**Decision**: This ingredient is the single owner of the press-tracking behavioral contract for `button-pressable.tsx`; [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0) depends on it.
+**Rationale**: Two independent decompositions of the same source drift as the source changes, so one document owns the contract and the other points to it. The decomposition here is deliberately atomic and independently testable.
 **Approved**: pending
 
-**Decision**: This recipe is the single owner of the press-tracking behavioral contract for `button-pressable.tsx`; its atomic, independently-testable requirement decomposition (14 requirements after this pass) is more granular than the sibling [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0) recipe's compound description of the same source (12 requirements), and `button.md` SHOULD cite this file's `#requirements/...` fragments for press-tracking behavior instead of restating them in its own words.
-**Rationale**: Both recipes describe the same underlying source file's pointer-tracking logic independently; the higher count here reflects the behavioral-requirements guideline's prohibition on compound statements, not a completeness gap. Two independent decompositions of the same source drift as the source changes — designating this file as the single owner and having `button.md` reference these fragments removes that duplicate source of truth. (This file cannot edit `button.md` directly; that citation change is `button.md`'s to make.)
+**Decision**: `platforms` is `[typescript, web]`, matching [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0) and `copy-button`.
+**Rationale**: The component is written in TypeScript and runs in the browser, so both platform tags apply, and keeping the same pair across the button family lets tooling group them.
 **Approved**: pending
 
-**Decision**: `platforms: [web]`, not `[typescript, web]` like sibling recipes.
-**Rationale**: [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0) and `copy-button` list both `typescript` and `web`. This recipe was generated from a single specified source-platform set of `web` only, so `platforms` reflects exactly that input rather than inferring `typescript` from the source file's extension.
-**Approved**: pending
-
-**Decision**: Add the new tags `pointer-events` and `pressable`.
-**Rationale**: The established family vocabulary (`component`, `button`, `ui`) is kept, and these two tags are added because this recipe's scope — the interaction layer alone, apart from `Button`'s visual variants — is not covered by any existing tag in the family.
+**Decision**: Add the tags `pointer-events` and `pressable`.
+**Rationale**: The established family vocabulary (`component`, `button`, `ui`) is kept, and these two tags are added because this ingredient's scope — the interaction layer alone, apart from `Button`'s visual variants — is not covered by any existing tag in the family.
 **Approved**: pending
 
 **Decision**: Appearance, Accessibility (role/label/announce/tap-target), States (Disabled/Focused/Loading), Deep Linking, Localization, Accessibility Options, Feature Flags, and Analytics are marked not applicable, not incomplete.
-**Rationale**: `button-pressable.tsx` is purely a pointer-tracking behavior layer; it owns no styling, no ARIA semantics, no routing, no strings, no flags, and no telemetry. Those concerns belong to `button.tsx` (styling) and the Base UI `Button` primitive (semantics), neither of which was provided as source for this recipe.
+**Rationale**: `button-pressable.tsx` is purely a pointer-tracking behavior layer; it owns no styling, no ARIA semantics, no routing, no strings, no flags, and no telemetry. Those concerns belong to `button.tsx` (styling) and the Base UI `Button` primitive (semantics).
 **Approved**: pending
 
 **Decision**: Keep `title: PressableButton` — the exported symbol name — even though the file is `button-pressable.md`.
-**Rationale**: Cookbook file-naming convention requires a kebab-case filename derived from what the component is, while `title` is documented as a human-readable label; sibling recipes (e.g. `Button`/`button.md`) already let the two diverge in case. Noting the export name here avoids ambiguity for a reader who sees only the frontmatter.
+**Rationale**: Cookbook file-naming convention requires a kebab-case filename derived from what the component is, while `title` is documented as a human-readable label; sibling ingredients (e.g. `Button`/`button.md`) already let the two diverge in case. Noting the export name here avoids ambiguity for a reader who sees only the frontmatter.
 **Approved**: pending
-
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
-| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | partial | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-All three statuses rest on `button-pressable.tsx` forwarding every prop other
-than the five intercepted pointer handlers unchanged (so any `aria-*`/label
-props a caller supplies reach the rendered element untouched), never
-registering its own keyboard handling (Space/Enter activation stays with the
-underlying Base UI `Button` primitive), and reflecting press state via the
-plain `data-pressed` data attribute rather than any ARIA role or state.
+The three accessibility statuses are `partial` because this component adds no semantics of its own and none were verified here: `button-pressable.tsx` forwards every prop other than the five intercepted pointer handlers unchanged (so any `aria-*`/label props a caller supplies reach the rendered element untouched), registers no keyboard handling (Space/Enter activation stays with the underlying Base UI `Button` primitive), and reflects press state via the plain `data-pressed` data attribute rather than any ARIA role or state. Role, label and keyboard behavior belong to the primitive and `button.tsx`; see the Compliance results in [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0).
 Best-practices statuses reflect that the held/pressed pointer state machine
 is inlined in this component's own render rather than separated apart from
 it — splitting the file from `button.tsx` keeps interactivity apart from the
 plain module, but not apart from this file's own rendering
 (separation-of-concerns: partial) — and that no test in the suite exercises
 `PressableButton` (unit-test-coverage: failed).
-
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -282,3 +273,4 @@ plain module, but not apart from this file's own rendering
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: restated requirements over the observable `data-pressed`/active-press contract instead of the internal `held` state, renamed all requirements to subject-only kebab-case, replaced the ad hoc Compliance table with real accessibility checks, reformatted Design Decisions to the three-line form, cited `button-pressable.tsx` directly instead of "the source comment", softened unreferenced cross-platform API claims to "typically", dropped the untestable handler-ordering requirement in favor of a Design Decision, fixed the invalid `setPointerCapture` test vector, added a States row and two edge cases for multi-pointer overlap and post-release re-entry, declared this recipe the single owner of the press-tracking contract, and linked the Accessibility Options reference |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: failed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Lint fixes: re-rated the three accessibility checks partial and pointed to Button, removed the handler-ordering claim from Configuration, merged the compose decisions, rewrote Design Decision rationales to describe the design rather than the authoring passes, reconciled the platforms decision, said ingredient instead of recipe, removed template residue, typed handlers as React.PointerEvent, and added an unmount requirement, a disabled-primitive edge case and vectors for the other four forwarded handlers. |

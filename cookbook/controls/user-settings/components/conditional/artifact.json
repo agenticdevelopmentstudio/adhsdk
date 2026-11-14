@@ -4,11 +4,11 @@
     "id": "f361ebe1-69b9-4089-8079-94f4b26a37d3",
     "title": "Conditional",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a0b8ada448ecab0a",
+  "synced": "e392d40445c6c639",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

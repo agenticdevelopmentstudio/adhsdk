@@ -8,14 +8,14 @@
 | editable-list-005 | render-facet-menus | list.facets contains one facet with id="role", label="Role", options ["Admin", "User"] | Dropdown menu visible with label "Role" and options shown on click |
 | editable-list-006 | update-facet-selection | User selects "Admin" in role facet | `list.setFacetSelection("role", new Set(["Admin"]))` called |
 | editable-list-007 | render-table | list.rows contains 3 rows; list.columns defined | Data table renders with 3 rows |
-| editable-list-008 | render-column-headers | Column has header="Name" and value=(row) => row.name | Table header shows "Name"; cells show row.name values |
+| editable-list-008 | render-columns | Column has header="Name" and value=(row) => row.name | Table header shows "Name"; cells show row.name values |
 | editable-list-009 | support-sorting | Column key="name", sortable=true, list.sort=null; user clicks the "Name" header once | `list.setSort({ key: "name", dir: "asc" })` called |
-| editable-list-010 | preserve-sort-state | list.sort = { key: "name", direction: "asc" } | Table header shows sort indicator on "Name" column pointing up |
-| editable-list-011 | support-column-resizing | columnWidthsKey="users_table"; column key="email" dragged to 220px | Column resizes to (at least) the 48px minimum; `localStorage.setItem("data-table-cols:users_table", JSON.stringify({ email: 220 }))` called — widths are stored as a column-key-to-pixel-integer map under the `data-table-cols:<key>` prefix |
+| editable-list-010 | show-sort-indicator | list.sort = { key: "name", dir: "asc" } | Table header shows sort indicator on "Name" column pointing up |
+| editable-list-011 | support-column-resizing | columnWidthsKey="users_table"; column key="email" dragged to 220px | Column width becomes 220px; `localStorage.setItem("data-table-cols:users_table", JSON.stringify({ email: 220 }))` called — widths are stored as a column-key-to-pixel-integer map under the `data-table-cols:<key>` prefix |
 | editable-list-012 | render-selection-checkboxes | selectable=true; list.rows contains 2 rows | Checkbox in header and checkbox in each of 2 rows visible |
 | editable-list-013 | update-selection | User checks checkbox on row 1 | `list.setSelectedIds(new Set([row1_id]))` called; row1 highlighted |
 | editable-list-014 | show-selection-count | selectable=true; 2 rows selected | Count button shows "2 selected" |
-| editable-list-015 | show-hidden-selected-count | selectable=true; 3 rows selected but filter hides 1 | Count button shows "3 selected (1 not shown)" with hidden count in gold |
+| editable-list-015 | show-hidden-selected-count | selectable=true; 3 rows selected but filter hides 1 | Count button shows "3 selected (1 not shown)" with the hidden count in the accent color |
 | editable-list-016 | provide-clear-selection-button | Count button displayed with 2 rows selected; user clicks button | `list.clearSelection()` called; all rows deselected; count button hidden |
 | editable-list-017 | render-actions | actions=`<button>Delete</button>` | Delete button visible in bar to right of filters |
 | editable-list-018 | support-row-activation | onRowActivate=(id) => {...}; user double-clicks row with id="row123" | `onRowActivate("row123")` called |
@@ -42,4 +42,10 @@
 | editable-list-039 | error-with-rows-suffix | error={new Error("Refetch failed")}, list.allRows contains 2 rows | Error alert text reads "Refetch failed — showing the last rows that loaded." |
 | editable-list-040 | default-error-title | error={new Error("x")}, errorTitle omitted, ariaLabel="Users" | Alert title reads "Couldn't load users" (ariaLabel lowercased) |
 | editable-list-041 | support-sorting | Column key="name", sortable=true, list.sort={key:"name",dir:"asc"}; user clicks the "Name" header again | `list.setSort({ key: "name", dir: "desc" })` called — the toggle is asc↔desc only; there is no third click that clears the sort |
-
+| editable-list-042 | support-column-resizing | Column key="email" dragged to 20px | Column width clamps to the 48px minimum |
+| editable-list-043 | grid-role-and-focus | selectable=true; row 2 is focused; user presses Space | Row 2's selection toggles; `list.setSelectedIds()` called |
+| editable-list-044 | support-row-activation, grid-role-and-focus | selectable=true; onRowActivate provided; row "row123" is focused; user presses Enter | `onRowActivate("row123")` called |
+| editable-list-045 | grid-role-and-focus, support-row-activation | selectable=false; onRowActivate provided; focused element is the table; user presses Space, Enter and ArrowDown | Table has `role="table"`; none of the keys is claimed or acted on; double-click on a row still calls `onRowActivate` |
+| editable-list-046 | update-selection | selectable=true; row 1 is selected; user unchecks row 1's checkbox | `list.setSelectedIds()` called with a set without row 1's id |
+| editable-list-047 | update-selection, select-all-scope | selectable=true; all visible rows selected; user clicks the header checkbox | `list.setSelectedIds()` called with the visible rows' ids removed; nothing else changes |
+| editable-list-048 | describe-rows-for-accessibility | describeRow omitted; row has id "r1" and fields {id:"r1", name:"Alice"} | Checkbox's label names the row from its first non-empty string field that is not the id, "Alice" |

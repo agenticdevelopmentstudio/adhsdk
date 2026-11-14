@@ -2,7 +2,7 @@
 id: fd1f8d3c-6110-4687-a715-c8fa7c7caa5b
 title: "Built-In Themes Native Adjustments"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -19,8 +19,13 @@ tags:
   - theme
   - color
   - logic
-depends-on: []
-related: []
+depends-on:
+  - 4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d
+related:
+  - 359491fd-36ee-4e07-9971-76260183f243
+  - 932449c9-b57f-4e2c-992a-1e27584742b6
+  - 794a60b5-7833-4dc3-a7b9-8280333cde8b
+  - ad5bae6b-0172-4cd4-a4b7-297eb58eb28d
 references: []
 approved-by: ""
 approved-date: ""
@@ -49,11 +54,11 @@ The file exposes `webPortedNative`, the generated `webPorted` list with each the
 - **fishlamp-project-replaced**: The Fishlamp adjustment MUST replace the theme's whole `project` value, discarding any `highlightActivePane` or `paneOutline` already present.
 - **fishlamp-overrides-merged**: The Fishlamp adjustment MUST add or replace only the `card` and `selectionEdge` keys of `roleOverrides` and MUST leave every other key (for example the chat roles the generator emitted) as generated.
 - **fishlamp-untouched-fields**: The Fishlamp adjustment MUST NOT change `id`, `name`, `appearance`, `foreground`, `background`, `cursor`, `ansi` or `typography`.
-- **ember-shared**: The Fishlamp adjustment MUST use one value, named `ember` (`#17130fff`, the theme's own ANSI slot 8), for both the card colour and the pane backdrop.
-- **hex-literals**: The adjustment parses its colours with `RGBAColor(hexString:)` and force-unwraps the result; the three literals are valid 8-digit `RRGGBBAA` strings, so the parse does not fail at runtime.
-- **access**: `webPortedNative` and `nativeAdjusted` are internal to the SDK module (no `public`), and `fishlampNative` is `private`; consumers read the result only through `BuiltInThemes.all` and `BuiltInThemes.theme(withID:)`.
-- **concurrency**: Both members are pure and synchronous. `webPortedNative` is a `static let`, initialised once, lazily and thread-safely, by the language runtime on first access; the file declares no actor, lock or queue.
-- **side-effects**: The file performs no file, network, process or notification side effects and writes no logs.
+- **ember-shared**: The Fishlamp adjustment MUST make the card colour and the pane backdrop equal, both `#17130fff` (the theme's own ANSI slot 8).
+- **hex-literals**: Every colour literal in the adjustment MUST be a valid 8-digit `RRGGBBAA` string, because the Swift implementation parses it with `RGBAColor(hexString:)` and force-unwraps the result.
+- **access**: `webPortedNative` and `nativeAdjusted` MUST NOT be `public` (they are internal to the SDK module), and `fishlampNative` MUST be `private`; consumers MUST read the result only through `BuiltInThemes.all` and `BuiltInThemes.theme(withID:)`.
+- **concurrency**: `webPortedNative` and `nativeAdjusted` MUST be pure and synchronous, and MUST be safe to call from any thread. In Swift `webPortedNative` is a `static let`, initialised once, lazily and thread-safely, by the language runtime on first access; the file declares no actor, lock or queue.
+- **side-effects**: The adjustment MUST NOT perform file, network, process or notification side effects and MUST NOT write logs.
 
 ## Appearance
 
@@ -69,18 +74,18 @@ Not applicable — this is theme-data code, not a visual component.
 
 ## Conformance Test Vectors
 
-The source ships no test that asserts the adjustments directly. Vector native-002 follows the `BuiltInThemesTests` assertion of 36 themes in `all`, and native-001 is consistent with the `PortedThemeTests` assertions (the `webPorted` name set, unique ids across `all`); the rest are derived from the source itself.
+The source ships no test that asserts the adjustments directly. Vector native-002 follows the `BuiltInThemesTests` assertion on the size of `all`, and native-001 is consistent with the `PortedThemeTests` assertions (the `webPorted` name set, unique ids across `all`); the rest are derived from the source itself.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | native-001 | native-list, native-map | `BuiltInThemes.webPortedNative.map(\.id)` against `BuiltInThemes.webPorted.map(\.id)` | The two id arrays are equal, element by element (consistent with the `PortedThemeTests` ported-name set and unique-id assertions; no test compares the two lists directly) |
-| native-002 | native-map | `BuiltInThemes.all.count` | 36, the hand-authored set plus `webPortedNative` (`BuiltInThemesTests`) |
+| native-002 | native-map | `BuiltInThemes.all.count` | Equals the hand-authored count plus `webPorted.count` (`BuiltInThemesTests` asserts the current total, 36; the sum, not the literal, is the requirement) |
 | native-003 | dispatch-default | `nativeAdjusted` on the first `webPorted` theme whose id is not `BuiltInThemes.fishlamp.id` | The returned theme is equal to the input |
 | native-004 | dispatch-fishlamp, fishlamp-selection | `nativeAdjusted(BuiltInThemes.fishlamp).selection.hexString` | `#232831FF` |
 | native-005 | fishlamp-card, ember-shared | `nativeAdjusted(BuiltInThemes.fishlamp).roleOverrides[ThemeRole.card.rawValue]?.hexString` | `#17130FFF` |
 | native-006 | fishlamp-selection-edge | `nativeAdjusted(BuiltInThemes.fishlamp).roleOverrides[ThemeRole.selectionEdge.rawValue]?.hexString` | `#E8A33DFF` |
 | native-007 | fishlamp-pane-backdrop, fishlamp-project-replaced, ember-shared | `nativeAdjusted(BuiltInThemes.fishlamp).project` | `ThemeProjectOptions(paneBackdrop: #17130FFF)` with `highlightActivePane` and `paneOutline` nil |
-| native-008 | fishlamp-overrides-merged | `nativeAdjusted(BuiltInThemes.fishlamp).roleOverrides[ThemeRole.chatSurface.rawValue]?.hexString` | `#17130FF0`, as generated |
+| native-008 | fishlamp-overrides-merged | `nativeAdjusted(BuiltInThemes.fishlamp).roleOverrides[ThemeRole.chatSurface.rawValue]?.hexString` | Equal to `BuiltInThemes.fishlamp.roleOverrides[ThemeRole.chatSurface.rawValue]`, the input theme's own value (currently `#17130FF0`) |
 | native-009 | fishlamp-untouched-fields | Compare `id`, `name`, `appearance`, `foreground`, `background`, `cursor`, `ansi` and `typography` of `nativeAdjusted(BuiltInThemes.fishlamp)` with `BuiltInThemes.fishlamp` | All equal |
 | native-010 | input-preserved | Read `BuiltInThemes.fishlamp.selection.hexString` after calling `nativeAdjusted(BuiltInThemes.fishlamp)` | `#E8A33D4D`, the generated value |
 | native-011 | dispatch-by-id | A copy of `BuiltInThemes.fishlamp` with `name` changed to "Other" | The Fishlamp adjustment is still applied (`selection` is `#232831FF`) |
@@ -102,10 +107,12 @@ The source ships no test that asserts the adjustments directly. Vector native-00
 
 ## Configuration
 
-| Option | Type | Default | Description |
+**Constants.** This file has no configuration: the rows below are inputs and hard-coded constants, not options, and an implementation MUST NOT turn them into parameters.
+
+| Constant | Type | Value | Description |
 |--------|------|---------|-------------|
 | `BuiltInThemes.webPorted` | `[ColorTheme]` | the generated list | The input list, read from `BuiltInThemes+Web.swift`; the only dependency this file takes |
-| `theme.id` | `String` | per theme | The key `nativeAdjusted` switches on |
+| `theme.id` | `String` | per theme | The key `nativeAdjusted` switches on (an input, not a setting) |
 | `ember` | `RGBAColor` | `#17130fff` | Fishlamp's card colour and pane backdrop |
 | Fishlamp selection | `RGBAColor` | `#232831ff` | Cool slate selection fill |
 | Fishlamp selection edge | `RGBAColor` | `#e8a33dff` | Amber line marking a selection |
@@ -142,7 +149,7 @@ Not applicable: the file contains no log call; it has no failure path to report.
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform for the model. The file is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Native.swift`, an `extension BuiltInThemes` importing only `Foundation`, so it is shared by macOS and iOS. Colours reach SwiftUI through `SemanticPalette+SwiftUI.swift`, where `selectionEdge` is a `Color`.
+- **SwiftUI**: The source is platform-neutral Swift: an `extension BuiltInThemes` importing only `Foundation`, shared by macOS and iOS, with no SwiftUI dependency. Colours reach SwiftUI through `SemanticPalette+SwiftUI.swift`, where `selectionEdge` is a `Color`.
 - **Compose**: Express the same thing as a function over an immutable theme data class: `webPortedNative = webPorted.map(::nativeAdjusted)`, with a `when (theme.id)` and `theme.copy(...)` for Fishlamp. Kotlin `Map.plus` copies the role-override map instead of mutating it. Colours become `Color(0xFF232831)` and so on; Compose packs alpha first (`AARRGGBB`), where this source writes `RRGGBBAA`.
 - **React/Web**: The web catalogue's CSS is the origin of the generated themes, so a web port needs no adjustment layer; the native-only tokens (`card`, `selectionEdge`, `paneBackdrop`) would be added as CSS custom properties on the Fishlamp theme. In TypeScript, use a pure function returning a spread copy so the generated object is never mutated.
 - **AppKit / UIKit**: Consumers read the adjusted values through the palette, for example `SemanticPalette+NSColor.swift` (`selectionEdgeColor`), `TabPaneView` (outlines a selected card when `selectionEdge` has alpha above zero) and `ThemedViews` (draws a 2-point leading bar in `selectionEdge`, flipped under right-to-left layout). UIKit would read the same palette through `UIColor`.
@@ -152,7 +159,7 @@ Not applicable: the file contains no log call; it has no failure path to report.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Native.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Native.swift` | confirmed (1.0.2) |
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
@@ -174,11 +181,6 @@ Not applicable: the file contains no log call; it has no failure path to report.
 **Decision**: Replace `project` wholesale with a `ThemeProjectOptions` carrying only `paneBackdrop`.
 **Rationale**: `nil` for `highlightActivePane` and `paneOutline` leaves them to the Projects settings panel and the theme's outline tone, as `ThemeProjectOptions` documents; the side effect is that any value already in those two fields would be discarded. The generated Fishlamp theme sets no `project`, so nothing is lost today.
 **Approved**: pending
-
-**Decision**: No unit test asserts the adjusted Fishlamp values; the vectors above are derived from source and from the whole-list tests.
-**Rationale**: The existing tests cover `all` as a whole (size, unique ids, ported membership) but none reads `selection`, `card`, `selectionEdge` or `project` of Fishlamp, so a change to those literals would pass the suite.
-**Approved**: pending
-
 ## Compliance
 
 | Check | Status | Category |
@@ -188,10 +190,11 @@ Not applicable: the file contains no log call; it has no failure path to report.
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 
-Separation of concerns passes: the adjustments are isolated from the generated file and from the hand-authored set, and the file's one job is applying them. Unit test coverage is partial: the suite checks `BuiltInThemes.all` and the ported set as a whole, but nothing asserts the Fishlamp values this file sets. Explicit error handling is partial: the colour literals are force-unwrapped, which is safe for the current valid constants but would trap rather than report if one were mistyped. Data integrity passes: the function copies its input and never mutates the generated theme.
+Separation of concerns passes: the adjustments are isolated from the generated file and from the hand-authored set, and the file's one job is applying them. Unit test coverage is partial: the suite checks `BuiltInThemes.all` and the ported set as a whole, but nothing asserts the Fishlamp values this file sets, so changing one of those literals would pass the suite. This is a known test gap, not a design choice; the payoff for closing it is that vectors native-003 to native-014 become executable, and it should be closed before the next generator re-run changes the Fishlamp theme. Explicit error handling is partial: the colour literals are force-unwrapped, which is safe for the current valid constants but would trap rather than report if one were mistyped. Data integrity passes: the function copies its input and never mutates the generated theme.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Rewrote hex-literals, access, concurrency and side-effects as MUST requirements, rephrased ember-shared as an observable equality, retitled Configuration as constants, replaced the hard-coded 36 and chatSurface literals in the vectors, moved the Fishlamp test gap from Design Decisions to Compliance, added depends-on and related UUIDs, and corrected the SwiftUI note. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |

@@ -1,3 +1,3 @@
 
-Not applicable: The component source contains no feature flag logic or conditional rendering based on configuration flags.
+Not applicable: Bleed MUST NOT read feature flags or vary its rendering by configuration flags.
 

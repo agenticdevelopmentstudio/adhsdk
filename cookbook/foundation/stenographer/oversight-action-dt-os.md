@@ -2,7 +2,7 @@
 id: dc4d1700-f641-4276-8ecd-ec6790a2c894
 title: "Oversight Action DTOs"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,11 @@ tags:
   - dto
   - wire
 depends-on: []
-related: []
+related:
+  - 7d2280c6-ae67-4ecc-9aae-dbee574b1eab
+  - 96f73261-cf32-42cc-92f3-f8b58542382a
+  - 9c7c78d3-23ca-4ca6-a519-9968b440b8c6
+  - e8286557-84ee-4f45-b78c-f1d184c51a37
 references: []
 approved-by: ""
 approved-date: ""
@@ -48,8 +52,8 @@ Two shapes let a client act on an oversight finding. `OversightActionTargetDTO` 
 - **target-blocked-use**: The `blocked` target MUST be used when the finding is missing, resolved, or its session is not at a safe breakpoint.
 - **target-memberwise-init**: `OversightActionTargetDTO.init` MUST take every field with no default.
 - **result-fields**: An `OversightActResultDTO` MUST carry `findingId` (Int), `succeeded` (Bool), `status` (String) and `reason` (String).
-- **result-succeeded**: `succeeded` MUST be true when the finding transitioned to `acted`.
-- **result-status**: `status` MUST be the finding's status after the call: `acted` on success, the current status when it was already resolved, and empty when the finding was not found.
+- **result-succeeded**: `succeeded` MUST be true only when the finding transitioned to `acted`. The HTTP client instead sets it true for any 2xx reply, and reports `status` `acted` when it cannot decode the reply body.
+- **result-status**: On the XPC and daemon path, `status` MUST be the finding's status after the call: `acted` on success, the current status when it was already resolved, and empty when the finding was not found. Two exceptions send an empty `status` for a finding that exists: the daemon's `.failed` outcome, and every failure reply the HTTP client builds (it uses the route's `error` text as `reason`).
 - **result-reason**: `reason` MUST be a human-readable explanation when `succeeded` is false, and MUST be an empty string on success.
 - **result-after-injection**: The app MUST call the act route only after a successful injection, so a failure is a rare race: the finding was already resolved or vanished.
 - **conformance-protocols**: `OversightActionTargetDTO` and `OversightActResultDTO` MUST be `Codable`, `Sendable` and `Equatable`.
@@ -81,6 +85,8 @@ No test beside the source exercises these shapes; the vectors are derived from t
 | oversight-action-dt-os-006 | result-succeeded, result-status | `OversightActResultDTO(findingId: 7, succeeded: true, status: "acted", reason: "")` | each field reads back |
 | oversight-action-dt-os-007 | result-status, result-reason | `OversightActResultDTO(findingId: 7, succeeded: false, status: "resolved", reason: "already resolved")` | `status` is the current status; `reason` is non-empty |
 | oversight-action-dt-os-008 | result-status | `OversightActResultDTO(findingId: 9, succeeded: false, status: "", reason: "not found")` | `status` is empty |
+| oversight-action-dt-os-012 | result-status | `OversightActionService.result(for: .failed("boom"), findingId: 7)` | `succeeded` false, `status` empty, `reason` `boom` |
+| oversight-action-dt-os-013 | result-status | `StenographerHTTPClient.actOnOversightFinding` against a non-2xx reply | `succeeded` false, `status` empty, `reason` the route's `error` text or `HTTP <code>` |
 | oversight-action-dt-os-009 | conformance-protocols | two targets built from identical arguments | they compare equal |
 | oversight-action-dt-os-010 | conformance-protocols | encode then decode a target and a result | the decoded values equal the originals |
 | oversight-action-dt-os-011 | no-validation | `OversightActionTargetDTO(findingId: 1, actionable: true, reason: "x", ...)` | constructs without error |
@@ -98,11 +104,7 @@ No test beside the source exercises these shapes; the vectors are derived from t
 
 ## Configuration
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| injectText | String | none (daemon supplies) | Text to inject, for example `/compact`. |
-| termProgram | String | none (daemon supplies) | Terminal app the client picks a strategy from. |
-
+Not applicable: `injectText` and `termProgram` are wire fields the daemon fills in per finding; nothing configures them.
 ## Deep Linking
 
 Not applicable: the shapes define no URL or deep link; the act route is named only in a doc comment and is the daemon's.
@@ -136,17 +138,17 @@ Not applicable: this code makes no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Not used; a finding row binds its action button's `disabled` to the negation of `actionable` and the injector's terminal support, with `reason` as the help text.
+- **SwiftUI**: Not used (AppKit only).
 - **Compose**: Kotlin data classes with `kotlinx.serialization`; the `blocked` factory is a companion function; the control's enabled state is `target.actionable && injector.supports(target.termProgram)`.
 - **React/Web**: TypeScript interfaces; the act call is a `POST` through `fetch`; a browser cannot inject into a terminal, so a web client only displays `reason` and the target.
-- **AppKit / UIKit**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/OversightActionDTOs.swift`: `Codable`, `Sendable`, `Equatable` structs with a static factory; the injection itself uses the app's Automation grant, which is app-side and not in this file.
+- **AppKit / UIKit**: A finding row binds its action button's `isEnabled` to `actionable` and the injector's terminal support, with `reason` as the tooltip. The structs are `Codable`, `Sendable`, `Equatable` with a static factory; the injection itself uses the app's Automation grant, which is app-side and not in this file.
 - **WinUI 3**: Use C# records with `System.Text.Json` and a static `Blocked(int findingId, string reason)` factory on the target record; a `Button` with `IsEnabled` bound through `x:Bind` to `Actionable` and a terminal-support check; `HttpClient.PostAsync` calls the act route after injection succeeds; the injection itself has no direct Windows equivalent of Apple's Automation, so a port needs a console or terminal input API (for example `SendInput` against a Windows Terminal window, or `WriteConsoleInput`) decided separately.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/OversightActionDTOs.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/OversightActionDTOs.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -163,6 +165,14 @@ Not applicable: this code makes no log calls.
 
 **Decision**: The same `actionable` check gates phase-4 autonomous action.
 **Rationale**: The source states this keeps the safety rule in exactly one place.
+**Approved**: pending
+
+**Decision**: The shapes are flat Strings and Bools, not enums or a blocked/actionable sum type.
+**Rationale**: The source types `status` and `termProgram` as Strings and lets `actionable` and `reason` be set independently, so the wire shape stays simple and a new value decodes without a shape change, at the cost of no compile-time check.
+**Approved**: pending
+
+**Decision**: The shape does not constrain `injectText`.
+**Rationale**: The source carries the daemon's text as a plain String, so whether to allow-list it (for example to known slash commands) before typing it into a terminal is the consuming app's decision.
 **Approved**: pending
 
 **Decision**: The app calls the act route only after a successful injection.
@@ -183,3 +193,4 @@ separation-of-concerns passes: the file holds two shapes and a factory; session 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Narrowed result-status to the XPC path with the HTTP and failed exceptions and two new vectors, tightened result-succeeded, recorded flat-shape and injectText decisions, set Configuration to not applicable, fixed the platform notes, and added related links. |

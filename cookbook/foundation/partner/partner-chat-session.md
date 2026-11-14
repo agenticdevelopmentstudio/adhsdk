@@ -2,7 +2,7 @@
 id: 29db699c-56f4-40da-a8f7-b96a0cf820b0
 title: "Partner Chat Session"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,8 +19,10 @@ tags:
   - chat
   - session
   - stream
-depends-on: []
-related: []
+depends-on:
+  - f333f036-2c23-4a87-8496-bd3616b44786
+related:
+  - d2213cbb-1a6e-452e-98f0-acd2007c8430
 references: []
 approved-by: ""
 approved-date: ""
@@ -30,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`PartnerChatSession` is the `ChatSession` implementation that fronts the partner process (a long-running Claude Code process driven over its stream-json output). It does not own that process. The partner controller feeds it each decoded `ClaudeStreamMessage` through `apply`, feeds it the owner's own lines through `noteUserMessage`, and sets its lifecycle state through `setState`. The session turns those inputs into a single stream of `ChatEvent` values for a chat UI and returns, from `apply`, the assistant `ChatMessage` values the caller should persist. User turns typed into the chat go out through an injected send closure; interruption goes out through an injected interrupt closure. The type holds an in-memory transcript and nothing else about the conversation.
+`PartnerChatSession` is the `ChatSession` implementation that fronts the partner process (a long-running Claude Code process driven over its stream-json output). It does not own that process. The partner controller feeds it each decoded `ClaudeStreamMessage` (see [Claude Stream JSON](cookbook:f333f036-2c23-4a87-8496-bd3616b44786)) through `apply`, feeds it the owner's own lines through `noteUserMessage`, and sets its lifecycle state through `setState`. The session turns those inputs into a single stream of `ChatEvent` values for a chat UI and returns, from `apply`, the assistant `ChatMessage` values the caller should persist. User turns typed into the chat go out through an injected send closure; interruption goes out through an injected interrupt closure. The type holds an in-memory transcript and nothing else about the conversation.
 
 ## Behavioral Requirements
 
@@ -39,10 +41,11 @@ Construction and transcript
 - **transcript-seed**: The session MUST start with the `initial` messages passed to its initializer as its transcript, in the given order.
 - **transcript-grows-by-owner-lines**: The session MUST append each message passed to `noteUserMessage` to the end of its transcript.
 - **transcript-grows-by-assistant-text**: The session MUST append each assistant reply it creates in `apply` to the end of its transcript.
-- **transcript-never-cleared**: The session MUST leave its transcript unchanged when `clear()` is called, because it inherits the protocol's default `clear()`, which does nothing.
+- **transcript-never-cleared**: `clear()` MUST be a no-op: the session MUST leave its transcript unchanged when it is called.
 
 Event stream
 
+- **event-payloads**: The events the session emits MUST carry these payloads: `.transcriptLoaded([ChatMessage])`, `.userMessage(ChatMessage)`, `.stateChanged(ChatSessionState)`, `.responseStarted(messageID)`, `.responseDelta(messageID, text)`, `.toolCall(messageID, name, phase)` with phase `.started` or `.completed`, `.responseFinished(messageID, stopReason)` and `.turnFailed(ChatError)`, where `messageID` is a string id and `ChatError` carries a `message` and an `isRetryable` flag.
 - **events-replay-transcript**: Each stream returned by `events()` MUST yield `.transcriptLoaded` carrying the transcript as it stood at the moment of the call as its first event.
 - **events-single-subscriber**: A call to `events()` MUST finish the stream returned by the previous call, so that only the newest stream receives later events.
 - **events-no-buffer-without-subscriber**: An event emitted while no stream is attached (before the first `events()` call, or after `close()`) MUST NOT be buffered or replayed; only the transcript is replayed to a new stream.
@@ -56,7 +59,8 @@ Outbound and lifecycle operations
 - **interrupt-forwarding**: `interrupt()` MUST call the injected interrupt closure exactly once.
 - **close-signals-closed**: `close()` MUST yield `.stateChanged(.closed)` to the attached stream and then finish that stream.
 - **close-detaches**: After `close()`, the session MUST hold no stream, so later events are dropped until `events()` is called again.
-- **close-idempotent**: `close()` with no attached stream MUST emit nothing.
+- **close-without-stream-silent**: `close()` with no attached stream MUST emit nothing.
+- **use-after-close**: After `close()` the session MUST keep accepting `apply`, `noteUserMessage` and `setState` without failing; their events go to no stream until a new one is attached by `events()`.
 - **close-keeps-transcript**: `close()` MUST NOT modify the transcript.
 - **note-user-message**: `noteUserMessage(_:)` MUST append the message to the transcript and then emit `.userMessage` carrying that message.
 - **set-state-emits**: `setState(_:)` MUST emit `.stateChanged` carrying the given `ChatSessionState` to the attached stream.
@@ -73,19 +77,18 @@ Folding stream messages (`apply`)
 - **assistant-other-blocks-ignored**: `apply` MUST ignore assistant blocks of any kind other than `.text` and `.toolUse` (thinking, tool result, other).
 - **tool-result-completed**: For each block of kind `.toolResult` in a message of kind `.user`, `apply` MUST emit `.toolCall` with phase `.completed`, the name remembered for the block's `toolUseID` (or `"tool"` when the id is nil or unknown), and the current assistant message id.
 - **user-other-blocks-ignored**: `apply` MUST emit nothing for a `.user` message's blocks of any kind other than `.toolResult`, and MUST return an empty array; this is why the owner's replayed line produces no event.
-- **fresh-message-id**: When a tool event is emitted and no current assistant message id exists, the session MUST mint a new identifier from `UUID().uuidString`, keep it as the current id, and reuse it for later tool events in the same turn; no `.responseStarted` is emitted for that id.
+- **fresh-message-id**: When a tool event is emitted and no current assistant message id exists, the session MUST mint a new globally unique string identifier, keep it as the current id, and reuse it for later tool events in the same turn; no `.responseStarted` is emitted for that id.
 - **result-ends-turn**: For a message of kind `.result`, `apply` MUST clear the current assistant message id.
 - **result-failure-text**: When a `.result` has `isError` true, `apply` MUST emit `.turnFailed` carrying a `ChatError` whose message is the first available of `resultText`, `subtype`, and the literal `"error"`.
 - **result-failure-retryable**: The `ChatError` emitted for an error `.result` MUST have `isRetryable` true.
 - **result-ready**: For every `.result`, error or not, `apply` MUST emit `.stateChanged(.ready)` after any `.turnFailed`.
 - **system-init-and-other-ignored**: `apply` MUST emit nothing and return an empty array for messages of kind `.systemInit` and `.other`.
-- **result-errors-array-unused**: `apply` MUST NOT consult `ClaudeStreamMessage.errors` or `numTurns` when building the failure; only `resultText` and `subtype` are read.
 
 Concurrency
 
 - **lock-guarded-state**: The session MUST guard its transcript, attached stream, tool-name registry and current assistant message id with one lock so that any thread may call any operation. The type is `@unchecked Sendable` for this reason, and the send and interrupt closures are `@Sendable`.
 - **yield-outside-lock**: The session MUST deliver events to the stream after releasing the lock, so a consumer's work never runs while the lock is held.
-- **cross-thread-event-order**: The session does not make a state change and its matching event one atomic step: when two threads call it at once, the order of their events on the stream is the order in which each reaches the yield, not necessarily the order in which their changes were applied to the transcript. The partner controller, which is `@MainActor`, is the only caller of `apply`, `noteUserMessage` and `setState` in the source, so in practice those calls are serialised by the main actor.
+- **cross-thread-event-order**: Callers MUST NOT rely on the order of events across threads: the session does not make a state change and its matching event one atomic step, so when two threads call it at once, the order of their events on the stream is the order in which each call reaches its yield, not necessarily the order in which their changes were applied to the transcript. The partner controller, which is `@MainActor`, is the only caller of `apply`, `noteUserMessage` and `setState` in the source, so in practice those calls are serialised by the main actor.
 
 ## Appearance
 
@@ -113,7 +116,7 @@ Vectors 001 to 005 are the cases asserted in `PartnerChatSessionTests` (named in
 | partner-chat-session-006 | send-forwarding, send-no-local-effect | Session with a recording send closure; call `send("go")` | Closure called once with "go"; transcript unchanged; no event after `.transcriptLoaded` |
 | partner-chat-session-007 | interrupt-forwarding | Call `interrupt()` | Interrupt closure called once; no event emitted |
 | partner-chat-session-008 | close-signals-closed, close-detaches, close-keeps-transcript | Subscribe; call `close()`; then `apply` an assistant text block | Stream yields `.stateChanged(.closed)` then ends; the later events reach no stream; the transcript still holds the reply |
-| partner-chat-session-009 | close-idempotent | Call `close()` twice with one stream attached | Second call emits nothing and does not fail |
+| partner-chat-session-009 | close-without-stream-silent | Call `close()` twice with one stream attached | Second call emits nothing and does not fail |
 | partner-chat-session-010 | events-single-subscriber | Call `events()` twice, then `noteUserMessage` | First stream ends; only the second stream receives `.userMessage` |
 | partner-chat-session-011 | events-no-buffer-without-subscriber, state-not-replayed | Call `setState(.responding)` and `noteUserMessage` with no stream attached, then call `events()` | The new stream's first event is `.transcriptLoaded` containing the noted message; no `.stateChanged(.responding)` is delivered |
 | partner-chat-session-012 | assistant-empty-text-skipped | `apply` an assistant message with text blocks "" and nil | Returns empty; transcript and stream unchanged |
@@ -126,26 +129,24 @@ Vectors 001 to 005 are the cases asserted in `PartnerChatSessionTests` (named in
 | partner-chat-session-019 | system-init-and-other-ignored, assistant-other-blocks-ignored | `apply` a `.systemInit` message, an `.other` message and an assistant message holding only a thinking block | All return empty and emit nothing |
 | partner-chat-session-020 | transcript-never-cleared | Add a noted message, call `clear()`, then call `events()` | First event is `.transcriptLoaded` with the message still present |
 | partner-chat-session-021 | set-state-emits | Subscribe, call `setState(.responding)` | Stream yields `.stateChanged(.responding)` |
-| partner-chat-session-022 | lock-guarded-state, yield-outside-lock | Call `noteUserMessage` from many tasks while a consumer reads the stream | No crash or data race; every call yields exactly one `.userMessage` |
-| partner-chat-session-023 | result-errors-array-unused | `apply` an error `.result` with resultText nil, subtype nil and errors ["x"] | Message is "error", not "x" |
+| partner-chat-session-022 | lock-guarded-state, yield-outside-lock | Call `noteUserMessage` from many tasks while a consumer reads the stream | Run under Thread Sanitizer: no data race is reported, and exactly one `.userMessage` per call is delivered |
+| partner-chat-session-023 | result-failure-text | `apply` an error `.result` with resultText nil, subtype nil and errors ["x"] | Message is "error", not "x" |
 | partner-chat-session-024 | events-never-throw | `apply` an error `.result`, then `noteUserMessage` | Stream stays open and delivers the later `.userMessage` |
-| partner-chat-session-025 | transcript-grows-by-owner-lines, transcript-grows-by-assistant-text, cross-thread-event-order | `noteUserMessage` then an assistant text `apply`; open a new stream | `.transcriptLoaded` holds both messages in call order when the calls are made from one thread |
+| partner-chat-session-025 | transcript-grows-by-owner-lines, transcript-grows-by-assistant-text | `noteUserMessage` then an assistant text `apply`; open a new stream | `.transcriptLoaded` holds both messages in call order when the calls are made from one thread |
 
 ## Edge Cases
-
-- **Empty or missing text**: An assistant text block with nil or empty text MUST be skipped entirely (MUST). A tool block without a name MUST be announced as `"tool"` (MUST).
-- **Unknown tool result**: A tool result whose id was never seen, or has no id, MUST still emit a completed event named `"tool"` (MUST); the registry is never pruned, so it grows by one entry per distinct tool id for the life of the session.
-- **Events before a subscriber**: Anything emitted before `events()` is called is lost, apart from the transcript, which `.transcriptLoaded` replays (MUST). Callers that need every event subscribe before applying messages, as the tests do.
-- **Second subscriber**: A second `events()` call MUST end the first stream rather than fan out (MUST).
-- **Use after close**: After `close()` the session MUST keep accepting `apply`, `noteUserMessage` and `setState` without failing; their events go nowhere until a new stream is attached (MUST). `close()` does not make the session reject later calls.
-- **Error result with no text**: `resultText` nil falls back to `subtype`, then to `"error"` (MUST). An error `.result` whose only detail is in `errors` reports `"error"`: that array is deliberately not read, which loses information but still surfaces a failure.
-- **Result without error**: A `.result` never emits `.turnFailed` unless `isError` is true (MUST).
-- **Partial turns**: A tool event before any assistant text uses a minted id with no `.responseStarted`; a consumer that builds one row per `.responseStarted` will not have a row for that id.
-- **Streaming granularity**: Each text block arrives as one start, one delta and one finish; the session never splits text and passes `stopReason` nil (MUST). The `ChatMessage` this type returns and stores always has `isStreaming` false; a consumer folding the events with `ChatTranscriptReducer` sees it true only between the started and finished events, which the session emits back to back.
-- **Concurrent calls**: Calls from several threads are safe for the guarded state (MUST); the relative order of their events is not defined beyond acquisition order (see cross-thread-event-order).
-- **Network, timeouts, retry, offline**: Not applicable — the session performs no I/O. The send and interrupt closures own delivery to the process; this type adds no timeout, retry or cancellation of its own.
-- **Boundary values**: Not applicable beyond the empty cases above — there are no numeric inputs or limits.
-
+- **Empty or missing text**: A skipped empty text block and a nameless tool block follow `assistant-empty-text-skipped` and `tool-use-started`.
+- **Unknown tool result**: A tool result whose id was never seen, or has no id, follows `tool-result-completed`. The tool-name registry is never pruned, so it grows by one entry per distinct tool id for the life of the session; the Design Decision on the registry accepts that.
+- **Events before a subscriber**: Anything emitted before `events()` is called is lost, apart from the transcript (`events-no-buffer-without-subscriber`, `events-replay-transcript`). Callers that need every event subscribe before applying messages, as the tests do.
+- **Second subscriber**: See `events-single-subscriber`.
+- **Use after close**: See `use-after-close`; `close()` does not make the session reject later calls.
+- **Error result with no text**: See `result-failure-text`. An error `.result` whose only detail is in `errors` reports `"error"`: that array is deliberately not read (see the Design Decision on error results), which loses information but still surfaces a failure.
+- **Result without error**: A `.result` with `isError` false emits no `.turnFailed` (`result-failure-text`, `result-ready`).
+- **Partial turns**: A tool event before any assistant text uses a minted id with no `.responseStarted` (`fresh-message-id`); a consumer that builds one row per `.responseStarted` will not have a row for that id.
+- **Streaming granularity**: Each text block arrives as one start, one delta and one finish with `stopReason` nil (`assistant-text-events`). The `ChatMessage` this type returns and stores always has `isStreaming` false; a consumer folding the events with `ChatTranscriptReducer` sees it true only between the started and finished events, which the session emits back to back.
+- **Concurrent calls**: Calls from several threads are safe for the guarded state (`lock-guarded-state`); the relative order of their events is not defined (see `cross-thread-event-order`).
+- **Network, timeouts, retry, offline**: Not applicable: the session performs no I/O. The send and interrupt closures own delivery to the process; this type adds no timeout, retry or cancellation of its own.
+- **Boundary values**: Not applicable beyond the empty cases above: there are no numeric inputs or limits.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -192,8 +193,8 @@ Not applicable: the source makes no log call. A failed turn is reported as a `.t
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerChatSession.swift`, in the `AgenticDeveloperHubSDKCore` framework, importing only `Foundation`. A SwiftUI view model folds `events()` (with `ChatTranscriptReducer`) into `@Published` state; this type is not itself observable. It conforms to `ChatSession` and is `@unchecked Sendable` with an `NSLock`, and `events()` builds an `AsyncStream` whose continuation it swaps under that lock. Tests are `PartnerChatSessionTests` in the Core test target.
-- **Compose**: Expose events as a `SharedFlow` created with `MutableSharedFlow` with `replay = 0` and `extraBufferCapacity` set, which matches "no buffering without a subscriber"; emit the transcript snapshot as the first item of each collection (for example `onSubscription` or a `flow` that starts with it). Keep the transcript in a `mutableStateListOf` or guard it with a `Mutex`. Single-subscriber replacement has no direct flow analogue: hold one `Channel` and close the previous one when a new collector starts.
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerChatSession.swift`, in the `AgenticDeveloperHubSDKCore` framework, importing only `Foundation`. A SwiftUI view model folds `events()` (with `ChatTranscriptReducer`) into `@Published` state; this type is not itself observable. The fresh message id is `UUID().uuidString`. It conforms to `ChatSession` and is `@unchecked Sendable` with an `NSLock`, and `events()` builds an `AsyncStream` whose continuation it swaps under that lock. Tests are `PartnerChatSessionTests` in the Core test target.
+- **Compose**: Hold one `Channel<ChatEvent>` that `events()` replaces on each call: close the previous channel, create a new one, seed it with the transcript snapshot and return it as a `Flow` with `receiveAsFlow()`. Events sent while no channel is attached are dropped, which matches "no buffering without a subscriber". Keep the transcript in a `mutableStateListOf` or guard it with a `Mutex`.
 - **React/Web**: Model it as a small class with an `EventTarget` or a single subscribed callback; `events()` replaces the previous callback and invokes the new one first with the transcript. JavaScript is single-threaded, so the lock and the cross-thread ordering concern disappear; the send and interrupt closures become constructor callbacks. Fold the events with a `useReducer` or an external store read through `useSyncExternalStore`.
 - **AppKit / UIKit**: Identical to the SwiftUI note: the type is UI-framework agnostic. An `NSViewController` subscribes with a `Task` that iterates the stream on the main actor. In the source the owner is the `@MainActor` `PartnerController`, which calls `apply`, `noteUserMessage` and `setState` from the main actor.
 - **WinUI 3**: Implement as a class with a lock (`lock` statement or `SemaphoreSlim`) around the transcript, tool-name `Dictionary<string, string>`, current id and one `System.Threading.Channels.Channel<ChatEvent>`; `events()` completes the previous channel's writer, creates a new unbounded channel, seeds it with the transcript snapshot and returns its `ChannelReader` consumed with `await foreach` (`IAsyncEnumerable`). Events written with no channel attached are dropped, as in the source. Use `Guid.NewGuid().ToString()` for the fresh id. Bind the UI to an `ObservableCollection` updated on the `DispatcherQueue` from the consumer loop. The type has no Windows storage dependency.
@@ -202,7 +203,7 @@ Not applicable: the source makes no log call. A failed turn is reported as a `.t
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerChatSession.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerChatSession.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -222,7 +223,7 @@ Not applicable: the source makes no log call. A failed turn is reported as a `.t
 **Approved**: pending
 
 **Decision**: An error result is always reported as retryable, and only `resultText` or `subtype` becomes the message.
-**Rationale**: The source marks every failed partner turn retryable, since the next turn can run again; the `errors` array and `numTurns` on the stream message are not read. This is a lossy but surfaced projection.
+**Rationale**: The source marks every failed partner turn retryable, since the next turn can run again; the `errors` array and `numTurns` on the stream message are not read. This is a lossy but surfaced projection, and a port that also reads `errors` is a change to this decision, not a conformance failure.
 **Approved**: pending
 
 **Decision**: A tool event with no current assistant message id mints a fresh one rather than being dropped.
@@ -230,9 +231,17 @@ Not applicable: the source makes no log call. A failed turn is reported as a `.t
 **Approved**: pending
 
 **Decision**: `clear()` is not overridden and therefore does nothing; the session is cleared by creating a new instance.
-**Rationale**: The partner transcript is the owner's standing record, and the protocol supplies a no-op default.
+**Rationale**: The partner transcript is the owner's standing record, and the source inherits the protocol's default `clear()`, which does nothing.
 **Approved**: pending
 
+
+**Decision**: The tool-name registry is never pruned, and its growth is accepted.
+**Rationale**: The source adds one entry per distinct tool id and removes none, not even on `.result`. Entries are short strings and a partner session is long-lived but handles a bounded number of tool calls per day, so the growth is small; pruning on `.result` would risk dropping a name that a late tool result still needs.
+**Approved**: pending
+
+**Decision**: The fallback strings `tool` and `error` stay hardcoded English, and the failed `no-hardcoded-strings` check is accepted.
+**Rationale**: They are last-resort labels for a tool event with no name and an error result with no text, in a view for the owner of a developer tool; the source has no string table to localise them through.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -248,4 +257,5 @@ The session separates concerns well: it owns no process, no persistence and no v
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the lossy errors rule out of the requirements, added event payloads and use-after-close, renamed the close requirement, linked claude-stream-json and partner-process, accepted registry growth and the hardcoded fallbacks as decisions, and made the Compose note and event-order wording single-answer. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

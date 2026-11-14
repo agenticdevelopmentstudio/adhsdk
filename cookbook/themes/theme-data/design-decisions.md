@@ -19,3 +19,6 @@
 **Rationale**: Inferred from the script's explicit sort; it makes the output order independent of the directory listing order of the file system.
 **Approved**: pending
 
+**Decision**: Do not detect export-name collisions or relative `@import` text inside comments; accept the risk.
+**Rationale**: Two file names that convert to one export name (`a-b.css` and `aB.css`) produce a duplicate `export const` that fails later as a TypeScript duplicate-declaration error rather than a named generator error, and a relative `@import` inside a comment is inlined as text. No shipped file triggers either, and a collision check would be new generator behavior the source does not have.
+**Approved**: pending

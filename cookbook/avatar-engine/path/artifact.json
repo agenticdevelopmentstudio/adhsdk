@@ -4,15 +4,15 @@
     "id": "81f8c0bd-ce00-43b3-816e-b63e96baeacc",
     "title": "Avatar Engine Path",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Shared SVG path grammar, primitive shape builders, anchor-for-anchor morph, and polyline-to-cubic promotion the avatar engine's Apple and web code both draw from.",
+    "summary": "Shared SVG path grammar, shape builders, morph and polyline promotion for the avatar engine (Swift + web).",
     "platforms": [
       "swift",
       "macos",
@@ -27,12 +27,16 @@
       "morphing"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "c708a65f-4d6c-40e4-b1b8-a24584cd45a1",
+      "a7c91832-4059-4e06-b8c6-e8c727567c66",
+      "39f26055-c002-40fe-81e2-74c0f9c9311d"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "30a207e89366090a",
+  "synced": "494516c4214e7429",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

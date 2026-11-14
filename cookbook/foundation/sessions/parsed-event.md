@@ -2,7 +2,7 @@
 id: 81735174-d7d7-4103-87df-7be5944c78cc
 title: "Parsed Event"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,10 @@ tags:
   - claude-hooks
   - ingestion
 depends-on: []
-related: []
+related:
+  - 7dfeb441-3681-45d3-a11b-049294168607
+  - 67b656ef-78a2-41ae-a910-f87f527360b1
+  - 1c2b7ff7-4d12-4580-94b0-17258d3384e1
 references: []
 approved-by: ""
 approved-date: ""
@@ -30,9 +33,11 @@ approved-date: ""
 
 ## Overview
 
-`ParsedEvent` is a struct holding one Claude Code hook event in the form the daemon ingests: the event type string, a timestamp string, the hook's payload (`hookData`), an optional `context` of facts about the live `claude` process, the `accountEmail` the event was fingerprinted to, and an optional `oauthAccountEmail`. It is produced by the drop-file parser (`ParseResult.parse(envelopeJSON:)`) or the envelope builder (the Unix socket path) and consumed by the daemon's ingestion handler.
+`ParsedEvent` is a struct holding one Claude Code hook event in the form the daemon ingests: the event type string, a timestamp string, the hook's payload (`hookData`), an optional `context` of facts about the live `claude` process, the `accountEmail` the event was fingerprinted to, and an optional `oauthAccountEmail`. The oauth login is resolved when the hook fires and carried on the event, not looked up at write time; that capture-time requirement belongs to the hook-capture producer, and the reasoning is in Design Decisions.
 
-It is `@unchecked Sendable`: the dictionaries are built once and never mutated afterwards, so the value can cross task boundaries even though the compiler cannot prove it. The type has no behavior beyond storing its fields; the envelope encoding and `sessionId` accessor live in an extension in `ParsedEventEnvelope.swift`.
+It is produced by the drop-file parser (`ParseResult.parse(envelopeJSON:)`, [Parse Result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1)) or the envelope builder (the Unix socket path) and consumed by the daemon's ingestion handler.
+
+It is `@unchecked Sendable`: the dictionaries are built once and never mutated afterwards, so the value can cross task boundaries even though the compiler cannot prove it. The type has no behavior beyond storing its fields; the envelope encoding and `sessionId` accessor live in an extension in `ParsedEventEnvelope.swift` ([Parsed Event Envelope](cookbook:7dfeb441-3681-45d3-a11b-049294168607)).
 
 ## Behavioral Requirements
 
@@ -45,7 +50,6 @@ It is `@unchecked Sendable`: the dictionaries are built once and never mutated a
 - **account-email**: `accountEmail` MUST hold the account email string as given; it is empty when no token could be fingerprinted.
 - **oauth-account-email**: `oauthAccountEmail` MUST hold the optional oauth login email as given, and the initializer MUST default it to nil.
 - **oauth-nil-versus-empty**: nil MUST mean "this envelope predates the field" (a drop file written by an older build), the only case where resolving the login at write time is still the best answer; the empty string MUST mean "resolved at capture, and there was no oauth login", a real answer and not a missing one.
-- **oauth-resolved-at-capture**: The oauth login is resolved when the hook fires and carried on the event, not looked up at write time, because an event can wait in the spool through a migration or a reboot and resolving later would attribute the backlog to whoever is logged in at the drain; the sessions upsert is first-oauth-wins, so a wrong attribution sticks.
 
 ### Construction
 
@@ -60,8 +64,8 @@ It is `@unchecked Sendable`: the dictionaries are built once and never mutated a
 
 ### Related behavior in the same module
 
-- **session-id-accessor**: The session an event belongs to is `hookData["session_id"]` read as a string, empty when missing (`ParsedEvent.sessionId`, specified with the envelope encoding).
-- **no-equatable**: The type does not conform to `Equatable` or `Codable`; tests compare fields one by one, and the serialized form is the envelope.
+- **session-id-accessor**: `ParsedEvent.sessionId` is defined by the envelope-encoding spec ([Parsed Event Envelope](cookbook:7dfeb441-3681-45d3-a11b-049294168607)); this type adds no accessor of its own.
+- **no-equatable**: The type MUST NOT conform to `Equatable` or `Codable`; tests compare fields one by one, and the serialized form is the envelope.
 
 ## Appearance
 
@@ -84,18 +88,18 @@ Not applicable — this is a data value type, not a visual component.
 | parsed-event-003 | oauth-nil-versus-empty | `oauthAccountEmail: ""` | `oauthAccountEmail == ""`, which is not nil |
 | parsed-event-004 | oauth-account-email | `oauthAccountEmail: "me@x.y"` | `"me@x.y"` |
 | parsed-event-005 | context | `context: ["cwd": "/tmp/p"]` | `context?["cwd"] as? String == "/tmp/p"` (test `testEnvelopeRoundTripsThroughTheDropFileParser`, after the round trip) |
-| parsed-event-006 | no-validation, event-type | `eventType: ""`, `hookData: ["session_id": "s-u"]` | constructed without error; parsing its envelope later returns `.unparseable` (test `testAnUnparseableEnvelopeIsQuarantinedWithoutReachingTheDatabase`) |
-| parsed-event-007 | no-validation | `hookData: [:]` | constructed without error; its `sessionId` is `""` and its envelope parses to `.skip` |
+| parsed-event-006 | no-validation, event-type | `eventType: ""`, `hookData: ["session_id": "s-u"]` | constructed without error (what parsing does with it is in the [Parse Result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1) vectors) |
+| parsed-event-007 | no-validation | `hookData: [:]` | constructed without error; its `sessionId` is `""` (the parse outcome is in the [Parse Result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1) vectors) |
 | parsed-event-008 | account-email | `accountEmail: ""` | `accountEmail == ""` |
 | parsed-event-009 | session-id-accessor | `hookData: ["session_id": "s-rt"]` | `sessionId == "s-rt"` (test `testEnvelopeRoundTripsThroughTheDropFileParser`) |
-| parsed-event-010 | immutable-fields | assigning to `eventType` on a constant | compile error; the property is `let` |
+| parsed-event-010 | immutable-fields | static check (code review or API-surface inspection, not a runtime test): every stored property is declared `let` | no stored property is `var`; assigning to `eventType` on a constant is a compile error |
 
 ## Edge Cases
 
 - **Empty or missing data** (MUST): empty strings and an empty `hookData` are accepted; the type never rejects its input.
 - **Nil versus empty oauth email** (MUST): the two differ in meaning and MUST NOT be conflated by a port.
 - **Boundary values** (not applicable): no field has a range or length limit in this type.
-- **Non-JSON values in `hookData`** (SHOULD): accepted here, and found when the event is encoded, where `envelopeJSON()` throws `EnvelopeEncodingError.notSerializable`.
+- **Non-JSON values in `hookData`** (SHOULD): a port SHOULD accept them here and leave detection to encoding, where `envelopeJSON()` throws `EnvelopeEncodingError.notSerializable`.
 - **Concurrent access** (MUST): safe only while nothing mutates a reference value held inside `hookData` or `context`; the type itself has no mutable state.
 - **Error states, offline or disconnected** (not applicable): the type does no I/O and raises no errors.
 
@@ -131,9 +135,9 @@ Not applicable: this code reads no feature flag.
 Not applicable: this code emits no analytics events.
 
 ## Privacy
+This type stores no data of its own beyond its in-memory fields and transmits nothing, but it carries personal data (`accountEmail`, `oauthAccountEmail`, and whatever the hook payload and `context` hold). Storage and retention belong to the spool, the quarantine and the ingest store.
 
-Not applicable: this type stores no data of its own beyond its in-memory fields and transmits nothing; it does carry personal data (`accountEmail`, `oauthAccountEmail`, and whatever the hook payload and `context` hold), whose storage and retention belong to the spool, the quarantine and the ingest store.
-
+- **no-logging-of-fields**: A port MUST NOT write `accountEmail`, `oauthAccountEmail`, `hookData` or `context` to a log, and MUST NOT include them in a `description` or other default string representation of the value.
 ## Logging
 
 Not applicable: this code makes no log call.
@@ -141,16 +145,16 @@ Not applicable: this code makes no log call.
 ## Platform Notes
 
 - **SwiftUI**: Not used; the type has no view layer.
-- **Compose**: Port as a Kotlin `data class` with `Map<String, Any?>` for the payload and `String?` for the oauth email; make the maps read-only copies (`toMap()`) to enforce the never-mutated invariant the source only states.
+- **Compose**: Port as a Kotlin `data class` with `Map<String, Any?>` for the payload and `String?` for the oauth email; make the maps read-only copies (`toMap()`) to enforce the never-mutated invariant the source only states. A `data class` synthesizes structural `equals`, `hashCode` and `toString`, which the source deliberately does not have; use a plain `class` with `val` properties, or override those three so they do not compare or print the payload.
 - **React/Web**: Port as a readonly TypeScript interface with `Readonly<Record<string, unknown>>`, `oauthAccountEmail?: string`; keep `undefined` distinct from `""`.
-- **AppKit / UIKit**: `Core/Sessions/ParsedEvent.swift`, a Foundation-only struct; `@unchecked Sendable` is needed because `[String: Any]` is not `Sendable`.
+- **AppKit / UIKit**: Use the Swift struct as is; it is Foundation-only and has no view layer, so macOS and iOS share it. Keep `@unchecked Sendable`, since `[String: Any]` is not `Sendable`, and do not add `Equatable` conformance.
 - **WinUI 3**: Use a C# `sealed record ParsedEvent` with `init` properties, `IReadOnlyDictionary<string, object?>` for `HookData` and `Context` (wrap with `ReadOnlyDictionary` over a copy so the never-mutated invariant is enforced by the type, which the source only promises), and `string?` for `OauthAccountEmail` with nullable reference types enabled so nil and empty stay distinct. A record's synthesized equality compares dictionaries by reference, unlike the source which has no equality at all. Hand it to other tasks as is; an immutable record needs no lock.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParsedEvent.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParsedEvent.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -186,4 +190,5 @@ separation-of-concerns passes: the type only stores one event's fields, while pa
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Linked the envelope, ParseResult and HookEventType specs, moved the capture-time requirement to Design Decisions, added keywords to no-equatable, made Privacy applicable with a no-logging requirement, added platform guidance and an equality caveat, and reworded vectors 006, 007 and 010. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

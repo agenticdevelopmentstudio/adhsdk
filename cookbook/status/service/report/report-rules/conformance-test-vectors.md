@@ -1,5 +1,5 @@
 
-Vectors are derived from `report-rules.test.ts` (test names in parentheses); vectors 033 to 037 are read directly from the source because the tests do not pin them.
+Vectors are derived from `report-rules.test.ts` (test names in parentheses); vectors 033 to 040 are read directly from the source because the tests do not pin them, so they have no test.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -35,9 +35,11 @@ Vectors are derived from `report-rules.test.ts` (test names in parentheses); vec
 | report-rules-030 | deploys-log-fields | Logs for a (`tail`, 9 lines) and b (`error`) (test: `failing deploys carry their log tail or why there is none`) | `a` has `logTail ['x','y']` and `logLines` 9 with no `logError`; `b` has `logError` `no build log` |
 | report-rules-031 | finding-order, counts-rule | Critical http problem, failed integrations read, Shop at 90% (test: `findings sort by severity, then source, then title`) | Order critical `monitor:http`, major `report`, minor `uptime`; counts 1, 1, 1 |
 | report-rules-032 | build-coverage-keys, section-null-rule | Uptime read failed `db` (test: `every source is covered...`) | Coverage keys in the seven-source order; a section is null exactly when its coverage is not ok |
-| report-rules-033 | first-line, first-line-width, finding-shape | `firstLine('  \n')`; `firstLine('a\nb')`; a 200-character line | null; `a`; 159 characters plus `…` |
+| report-rules-033 | first-line, first-line-width | `firstLine('  \n')`; `firstLine('a\nb')`; a 200-character line | null; `a`; 159 characters plus `…` |
 | report-rules-034 | monitor-stale | `stale` true with `lastCycleAt` null | Note `monitor data is stale: no cycle has completed since the loop started` |
 | report-rules-035 | deploys-config-degraded | Feed `configDegraded` with no reason | Note `monitor config fell back to the static list: reason unknown` |
 | report-rules-036 | uptime-findings | Services at 99.5 (exactly), 99.49 and null uptime | Only the 99.49 service is a finding: `<name>: 99.49% up over <days>d` |
 | report-rules-037 | newest-per-target | Two deployments of one target, an older failed and a newer success | `newestPerTarget` returns only the newer one |
-
+| report-rules-038 | finding-shape, monitor-problems | One board problem (`http`, state `down`, name `Shop`, environment `production`) whose `detail`, `since`, `sourceUrl`, `liveUrl` are all empty or null, with no open issue for its target | One finding with exactly the keys `severity`, `source` (`monitor:http`) and `title` (`Shop production: http down`); no `detail`, `since`, `link` or `issueKey` key |
+| report-rules-039 | site-troubled, errors-site-findings | Three PostHog sites with 100 requests and 3 errors plus 2 failures (5.00%), 101 requests and 5 errors plus failures (4.95%), and 20 requests and 1 failure (5.00%) | The first and third are troubled and raise findings; the second is not |
+| report-rules-040 | errors-issue-findings, errors-issue-overflow | Exactly 15 active GlitchTip issues; then 16 | The first gives 15 `glitchtip` findings and no overflow finding; the second gives 15 plus one minor finding titled `1 more active GlitchTip issues not listed` |

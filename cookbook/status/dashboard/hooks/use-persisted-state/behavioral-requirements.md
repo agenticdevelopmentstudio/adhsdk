@@ -27,7 +27,7 @@
 - **set-functional-update**: When given a function, the setter MUST pass it the latest previous value, so several updates in one batch compose instead of overwriting each other.
 - **set-persists-same-value**: The setter MUST write to storage even when the next value equals the previous one; it does no equality check.
 - **set-write-failure**: When writing storage throws (quota exceeded, storage blocked, or `encode` or `JSON.stringify` throwing), the setter MUST ignore the failure, MUST still apply the in-memory value, and MUST NOT throw; the source comment says "the in-memory choice still applies."
-- **set-updater-throws**: When a caller's updater function throws, the hook MUST NOT catch the exception, because the updater runs outside the guarded block; the host state machinery decides where it surfaces.
+- **set-updater-throws**: When a caller's updater function throws, the state MUST NOT catch the exception, because the updater runs outside the guarded block; the host state machinery decides where it surfaces.
 - **set-write-in-updater**: The storage write MUST happen inside the state update function, so it runs once for each application of that update; the environment MAY apply an update more than once for the same input, and each application writes the same string.
 - **set-key-bound**: The setter MUST write to the `key` of the render that produced it; its identity MUST stay stable across renders while `key` is unchanged, and MUST change when `key` changes.
 - **set-encode-captured**: The setter MUST use the `encode` supplied on the render that created it and MUST NOT pick up a new `encode` from later renders while `key` is unchanged.
@@ -35,13 +35,13 @@
 ### Key changes
 
 - **key-change-rehydrates**: When `key` changes, the state MUST read storage again under the new key and apply the hydration rules.
-- **key-change-keeps-value**: When `key` changes to a key with no usable stored value, the state MUST keep the value it held under the old key, not reset to `initial`.
+- **key-change-keeps-value**: When `key` changes to a key with no usable stored value, the state MAY keep the value it held under the old key rather than reset to `initial`; the source keeps it, and no current caller changes its key, so a port may choose either.
 
 ### Ordering, concurrency and scope
 
-- **single-threaded**: All state updates run on the single execution thread and apply in the order issued.
+- **single-threaded**: All updates MUST apply in the order issued, on the single execution thread.
 - **per-instance-state**: Each use MUST hold its own in-memory value; two uses of the same `key` do not observe each other's changes until one of them re-reads storage (a remount or a key change).
 - **no-cross-tab-sync**: The state MUST NOT subscribe to storage change events; a write in another tab does not change the value.
 - **no-network**: The state MUST NOT make network requests, log, or start timers.
-- **client-only**: This module MUST run only in a live client execution context; it has no server-only or universal-rendering variant, and it reads storage only in an effect, which never runs during a server render.
+- **client-only**: The state MUST touch storage only on the client; it reads storage only in an effect, which never runs during a server render, so the state can be rendered on the server at `initial`.
 

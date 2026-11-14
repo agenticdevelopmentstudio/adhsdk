@@ -22,4 +22,5 @@
 | T19 | show-initials-fallback | `avatarUrl` set to a URL whose image fails to load | `AvatarImage` transitions to its error state and `AvatarFallback` renders, resolving through the same initials-then-slug-then-`UserIcon` chain as a null `avatarUrl` |
 | T20 | native-contact-links | DTO with one email | `<a href="mailto:<email>">` rendered with the email as link text |
 | T21 | native-contact-links | DTO with one phone | `<a href="tel:<phone>">` rendered with the phone number as link text |
-
+| T22 | show-initials-fallback | `avatarUrl: null`, `displayName: "Ada King Lovelace"` | AvatarFallback shows "AK" (first two words, uppercased) |
+| T23 | order-gated-sections | DTO with all five collections populated | Sections render in the order Social, Email, Phone, Address, Personas; the only divider is under the identity header |

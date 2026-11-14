@@ -4,11 +4,11 @@
     "id": "b7a4e24c-3dfe-4a33-b5bc-88736e520d90",
     "title": "Hierarchical Document View",
     "type": "ingredient",
-    "version": "1.7.1",
+    "version": "1.7.2",
     "status": "review",
     "language": "en",
     "created": "2026-07-29",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "611a258a169d76a3",
+  "synced": "99e7126c43955223",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -5,8 +5,9 @@
   array/object-content comparison `useDirtyDraft` hand-rolls in TypeScript
   for free). Field descriptors become an enum or protocol-witness list
   (`FieldDescriptor<Value, Context>` as a generic `struct`); layout coverage
-  can be checked at compile time with a `CaseIterable` key enum rather than
-  TypeScript's mapped-type trick. The repair pass and `EditingScope` rollup
+  gets a compile-time check only from an exhaustive `switch` over the key
+  enum; a `CaseIterable` conformance alone checks nothing at compile time, so
+  pair it with a unit test that walks `allCases` against the sections. The repair pass and `EditingScope` rollup
   (an `@Environment`-injected parent reporter) both port directly; the
   navigation guard maps to `.interactiveDismissDisabled` plus a
   confirmation `.alert`.
@@ -47,18 +48,17 @@
   `useDirtyDraft`'s `sameValue` does for plain objects/arrays). Field-level
   errors surface through `INotifyDataErrorInfo` so bound `TextBox`/
   `ComboBox`/`CheckBox` controls show validation state natively instead of
-  through a hand-rolled error prop; `TextBox.MaxLength`/`InputScope` cover
-  `placeholder`/`rows`-equivalent options, and a `ComboBox` bound to an
+  through a hand-rolled error prop; `TextBox.PlaceholderText` covers `placeholder`,
+  and `AcceptsReturn` with `TextWrapping` and a set `Height` covers `rows`; a `ComboBox` bound to an
   `ObservableCollection<SelectOption>` needs an explicit "insert the current
   unlisted value as an extra item" step to match
   `select-shows-unlisted-stored-value`, since WinUI's `ComboBox` has no
   built-in equivalent. The repair pass's non-dismissible prompt maps to a
   `ContentDialog` with `CloseButtonText` unset and `IsPrimaryButtonEnabled`
   bound to the "not yet applying" state, `DefaultButton` set so Enter
-  confirms, and no `system-close` handling — WinUI's `ContentDialog` does
-  not raise Escape as a distinct event the way a web `Escape` keydown does,
-  so the equivalent guard is simply omitting the close (`X`) affordance
-  that `ContentDialog` would otherwise show. Section/field coverage has no
+  confirms. `ContentDialog` still closes on Escape with `Result == None`, so
+  handle `Closing`: when `Result == None` and the repair write has not run,
+  set `args.Cancel = true` so Escape does not confirm the write. Section/field coverage has no
   compile-time equivalent in C#'s type system (no literal-tuple inference);
   the nearest practical equivalent is a source generator or a unit test
   that walks a `[Field(nameof(...))]`-attributed list against the view

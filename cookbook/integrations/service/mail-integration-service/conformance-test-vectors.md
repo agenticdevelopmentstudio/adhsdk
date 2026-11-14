@@ -5,7 +5,7 @@ Vectors are drawn from `MailIntegrationServiceTests` (the test name is given) an
 |----|-------------|-------|----------|
 | mail-service-001 | request-data-decoding, dispatch-listAccounts | `handle(requestData:)` with the encoded `.listAccounts` and no accounts (`requestRoundTripsThroughData`) | Decodes as `.accounts([])` |
 | mail-service-002 | bad-request | `handle(requestData:)` with the bytes `nope` (`undecodableRequestIsBadRequest`) | Decodes as `.failure("bad request")` |
-| mail-service-003 | oauth-config-required, error-to-failure | `.signIn` with no provider imported (`signInWithoutProviderFails`) | `.failure` whose message contains `not configured`; the sign-in flow is called 0 times |
+| mail-service-003 | oauth-config-required, error-to-failure | `.signIn` with no provider imported (`signInWithoutProviderFails`) | `.failure` whose message contains `not configured` (`Gmail is not configured — import an OAuth client JSON first`); the sign-in flow is called 0 times |
 | mail-service-004 | status-configured, secret-never-leaves, secret-suffix-rule | Import a client with secret `GOCSPX-abcdefghij12345`, then `.providerStatus` (`providerStatusShowsOnlyTheLastFiveCharactersOfTheSecret`) | `configured: true`, `clientSecretSuffix: "12345"`; the encoded response does not contain `GOCSPX` |
 | mail-service-005 | secret-suffix-rule | `visibleSuffix(ofSecret:)` with "", 14 characters and 15 characters (`visibleSuffixKeepsAtLeastTwiceAsMuchHidden`) | nil, nil, `12345` |
 | mail-service-006 | sign-in-reuses-account, sign-in-email-key | Sign in, then sign in again with the same email in another case (`reSignInWithDifferentCaseReusesAccount`) | One account, same id, email lowercased |
@@ -54,11 +54,11 @@ Vectors are drawn from `MailIntegrationServiceTests` (the test name is given) an
 | mail-service-049 | sign-in-supersedes, dispatch-cancelSignIn | A second sign-in while one is pending, then `.cancelSignIn` with and without a pending one (`aSecondSignInSupersedesThePendingOneAndCancelSignInEndsIt`) | The first sign-in is cancelled; `.cancelSignIn` answers `.ok` both times |
 | mail-service-050 | keychain-read-failure, record-error | The Keychain is locked and a due sync runs (`aKeychainReadFailureMarksTheAccountErrorNotRevoked`) | Status `error`, `lastError` is `Keychain error: Could not read the Google credential: locked` |
 | mail-service-051 | record-revoked | A token refresh answers invalid grant (`invalidGrantOnRefreshMarksAccountRevoked`) | Status `revoked` |
-| mail-service-052 | stop-bounded-wait | `stop(timeout: .milliseconds(200))` while a sync ignores cancellation (`stopGivesUpOnASyncThatIgnoresCancellation`) | `stop` returns after about 200 milliseconds |
+| mail-service-052 | stop-bounded-wait | `stop(timeout: .milliseconds(200))` while a sync ignores cancellation (`stopGivesUpOnASyncThatIgnoresCancellation`) | `stop` returns within 300 milliseconds (the 200 ms timeout plus 100 ms tolerance) and the stuck sync is still running |
 | mail-service-053 | stop-cancels | `stop()` with syncs running (`stopWaitsForTheCancelledSyncsToEnd`) | Every running sync is cancelled and has ended when `stop` returns |
 | mail-service-054 | start-loop, loop-weak-self | `start(tick:)` then `stop`; and a started service that is released (`schedulerTicksAndStops`, `schedulerDoesNotRetainService`) | The observer sees ticks and the loop ends; the service is deallocated and the loop ends |
 | mail-service-055 | sync-now-joins, one-sync-per-connection | `syncNow` while a scheduled sync runs (`syncNowDuringScheduledSyncRunsOnce`) | The sync runs once; the observer sees `.joinedRunningSync` |
-| mail-service-056 | sync-now-not-syncable | Derived: `syncNow` for a named account whose status is `revoked`, and for one in another non-syncable status | `.failure` with the revoked message; `account <email> is not ready to sync` |
+| mail-service-056 | sync-now-not-syncable | Derived: `syncNow` for a named account whose status is `revoked`, and for one whose status is `pending` | `.failure` with the revoked message; `account <email> is not ready to sync` |
 | mail-service-057 | account-resolution | Derived: `.listLabels` with an account that matches no id or email | `.failure` with `No connected account matches “<account>”` |
 | mail-service-058 | import-keychain-failure | Derived: `.importOAuthClient` when the secret store refuses the write | `.failure("Could not save the OAuth client secret to the Keychain")`; no provider config row |
 | mail-service-059 | cursor-invalid | Derived: `decodeCursor("abc")`, `decodeCursor("|x")`, `decodeCursor("1|")` | Each throws `invalid cursor: <value>` |
@@ -67,4 +67,13 @@ Vectors are drawn from `MailIntegrationServiceTests` (the test name is given) an
 | mail-service-062 | encoding-fallback | Derived: a response that fails to encode in `handle(requestData:)` | The bytes of `{"failure":{"_0":"encoding failed"}}` |
 | mail-service-063 | search-bounds | Derived: `gmailQuery("x", since: "2026-01-01T00:00:00Z", until: "2026-01-02T00:00:00Z")` | `(x) after:1767225600 before:1767312001` |
 | mail-service-064 | sign-in-profile-failure-no-revoke | The Gmail profile call throws `revoked` during `.signIn` (`revokedProfileAtSignInFails`) | `.failure("Google access was revoked — sign in again")`; no connection is stored; the grant is not revoked at Google |
-
+| mail-service-065 | remove-account-dedupe | Derived: `.removeAccount` for an account whose removal is already held at the revoke call | The second request returns at once with `.ok`; the revoke at Google is called once |
+| mail-service-066 | remove-account-keychain-failure | Derived: `.removeAccount` when the secret store refuses to forget the credential | `.failure` with the Keychain error; the connection is still stored with its previous status |
+| mail-service-067 | remove-provider-cancels-sign-in | Derived: `.removeProvider` while a sign-in is pending | The pending sign-in is cancelled and cleared; the sign-in fails with `signInCancelled` |
+| mail-service-068 | sign-in-slot-ownership | Derived: a first sign-in superseded by a second, then the first ends | The first ending does not clear `pendingSignIn`; the second can still be cancelled by `.cancelSignIn` |
+| mail-service-069 | sign-in-rereads-state | Derived: sync state is written for the account while the credential save is held, then sign-in finishes | `lastSyncAt` and `syncCursor` written meanwhile are kept, not rolled back |
+| mail-service-070 | search-revoked | Derived: a Gmail search that fails with `revoked` | The connection status becomes `revoked`; the request fails with the revoked message |
+| mail-service-071 | refetch-concurrency | Derived: `.modifyLabels` for 20 message ids | No more than 8 re-reads are in flight at once; all 20 messages are returned in request order |
+| mail-service-072 | resolve-order | Derived: `.modifyLabels` with three stored message ids given in an order different from the store's (c, a, b) | The resolved and returned messages are in the order c, a, b |
+| mail-service-073 | token-provider-shared-clock | Derived: construct the service with a controlled clock and a token whose expiry falls between two clock readings | Token refresh decisions follow the injected clock, not the system clock |
+| mail-service-074 | label-refresh | Derived: label resolution for an unknown name, with the account removed while the labels are being read | `.failure("account <email> was removed")`; no labels are stored |

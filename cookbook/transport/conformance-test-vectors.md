@@ -3,7 +3,7 @@
 |----|-------------|-------|----------|
 | hct-001 | forced-override-skips-probe, probe-injectable-for-tests | `TransportResolver(override: .forceDirect, port: p, probe: <counting stub returning true>)`; call `resolve()` | Returns `.direct`; the stub probe is invoked 0 times |
 | hct-002 | forced-override-skips-probe, probe-injectable-for-tests | `TransportResolver(override: .forceDaemon, port: p, probe: <counting stub returning false>)`; call `resolve()` | Returns `.daemon`; the stub probe is invoked 0 times |
-| hct-003 | auto-override-probes, probe-issues-single-bounded-get | `TransportResolver(override: .auto, port: p, probe: <stub returning true>)`; call `resolve()` | Returns `.daemon`; the stub is invoked once with `DaemonContract.healthURL(port: p)` |
+| hct-003 | auto-override-probes | `TransportResolver(override: .auto, port: p, probe: <stub returning true>)`; call `resolve()` | Returns `.daemon`; the stub is invoked once with `DaemonContract.healthURL(port: p)` |
 | hct-004 | auto-override-probes | `TransportResolver(override: .auto, port: p, probe: <stub returning false>)`; call `resolve()` | Returns `.direct` |
 | hct-005 | resolve-serves-from-cache | Resolver as in hct-003; call `resolve()` twice in sequence | Both calls return `.daemon`; the stub probe's call count stays at 1 |
 | hct-006 | reresolve-always-recomputes, cached-kind-reflects-last-decision | Continuing hct-005, call `reresolve()` | Returns `.daemon`; stub call count becomes 2; `cachedKind == .daemon` |
@@ -24,3 +24,8 @@
 | hct-021 | resolver-is-an-actor, resolver-nonisolated-config | From a non-actor-isolated context, read `resolver.override` and `resolver.port` on a constructed `TransportResolver` | Both reads compile and return the constructor-supplied values synchronously, without `await` |
 | hct-022 | default-probe-timeout | `TransportResolver(override: .auto, port: <a port with nothing listening>)` constructed with no `probeTimeout` argument; call `resolve()` and measure elapsed time | Returns `.direct`; elapsed time is milliseconds, not close to `2` seconds — a refused loopback connection fails at once and is never bound by `probeTimeout`, so this only confirms the default compiles and resolves, not that it equals `2` (only a non-responding, black-holed target would actually exercise the timeout, and the source has no test for that case) |
 
+
+| hct-023 | reresolve-always-recomputes, cached-kind-reflects-last-decision | `TransportResolver(override: .auto, port: p, probe: <stub returning true on its first call and false on its second>)`; call `resolve()`, then `reresolve()` | `resolve()` returns `.daemon`; `reresolve()` returns `.direct`; `cachedKind == .direct` |
+| hct-024 | probe-success-is-status-200-only, probe-failure-collapses-to-false | `MockDaemonServer(handler:)` answering every request with status `404`, then again with `500`; `TransportResolver(override: .auto, port: <that port>, probeTimeout: 2)`; call `resolve()` | Returns `.direct` in both cases; no error is thrown to the caller |
+| hct-025 | daemon-factory, transport-injectable-for-tests | Call `APITransport.daemon(port: p, transport: nil)` twice | Each call builds its own transport from `makeDaemonURLSessionTransport()`; neither reuses the other's instance |
+| hct-026 | reresolve-last-write-wins | `TransportResolver(override: .auto, port: p, probe: <stub whose first call finishes after its second>)`; start two overlapping `reresolve()` calls | Both run the probe; `cachedKind` is the result of whichever call finished last |

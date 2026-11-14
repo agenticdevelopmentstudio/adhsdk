@@ -3,7 +3,8 @@ Avatar Engine Path is the shared path-data layer under the avatar animation
 engine: a deliberately tiny SVG path grammar (`parsePath`/`emitPath`), a set of
 primitive shape builders (`disc`, `ring`, `arc`, `polyline`, `bezier`), an
 anchor-for-anchor path morph (`morphPath`), and a polyline-to-cubic
-re-expression (`promotePolyline`). Every rig shape the engine draws — mouths,
+re-expression (`promotePolyline`; on Apple it lives in
+`Sources/Anim/Timelines.swift`, not in the Path folder). Every rig shape the engine draws — mouths,
 brows, rings, discs — becomes a `ParsedPath` built or parsed through this
 layer, and every `.shape` channel a pose or timeline animates is a path-data
 string this layer produced, morphed, or promoted. It is a headless, non-visual

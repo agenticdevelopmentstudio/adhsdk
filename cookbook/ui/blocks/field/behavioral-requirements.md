@@ -1,6 +1,7 @@
 
 - **render-caption**: The field MUST render the `label` node as an
-  uppercase-mono caption (the shared `fieldCaptionClass`) above its control.
+  uppercase-mono caption (the shared `fieldCaptionClass`) before its control (above when stacked, beside
+  when inline — see **render-inline-layout**).
 - **associate-label-implicitly**: The field MUST wrap the caption and the
   control in a single shared `Label` so activating the caption focuses the control,
   without the caller supplying `htmlFor`/`id`.
@@ -21,4 +22,10 @@
   caption beside the control instead of above it — a right-aligned label column
   sized by the `--apt-field-label-w` custom property, with the control (and any
   sibling children) in one cell and the supporting line in the second column.
+- **uppercase-caption-locale**: The caption's uppercase transform MUST follow the
+  user's locale, never an invariant or culture-insensitive uppercase call (see
+  Localization).
+- **no-disabled-dimming**: The field MUST NOT add its own disabled dimming. A
+  disabled control's appearance is left to the control's own styling on every
+  platform (see States).
 

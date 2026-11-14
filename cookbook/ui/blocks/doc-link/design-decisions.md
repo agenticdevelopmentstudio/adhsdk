@@ -12,6 +12,9 @@
   **Approved**: pending
 
 - **Decision**: Spread remaining props onto the anchor element.
-  **Rationale**: Lets callers apply arbitrary HTML attributes, event handlers, and styling without modifying the component. Because `{...rest}` spreads after `href={to}` (see **accept-and-spread-attributes**), the `Omit<AnchorHTMLAttributes, "href">` type is what keeps `to` authoritative for `href` in normal, typed usage.
+  **Rationale**: Lets callers apply arbitrary HTML attributes, event handlers, and styling without modifying the component. `{...rest}` is spread after `href={to}` in JSX, so the `Omit<AnchorHTMLAttributes, "href">` type is what keeps `to` authoritative for `href` in normal, typed usage; a caller that bypasses the type system to smuggle `href` into the spread attributes would have that value win over `to` (see test vector doc-link-012).
   **Approved**: pending
 
+- **Decision**: Do not enforce an accessible name on the anchor.
+  **Rationale**: The component renders `children` as provided and adds no warning or fallback label, so the caller is responsible for supplying non-empty `children` or an `aria-label`; this is why screen-reader-support is only partial. Implementers on other platforms should make the same choice.
+  **Approved**: pending

@@ -2,7 +2,7 @@
 id: f3f1af27-6cd7-4b3f-9024-135c6f6e89da
 title: "Work Tracking XPC Client"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,10 @@ tags:
   - foundation
   - client
   - xpc
-depends-on: []
+depends-on:
+  - aa775836-5679-4a22-9ff3-b2bdcb09cc20
+  - 92a9546a-eec1-47ed-8420-7db51e8d0261
+  - 02cfb457-46da-4814-a1de-8962533ad78e
 related:
   - 8055f7c9-d336-4b71-9f95-1bf4bdef7b92
   - 36c76e0f-b41c-4fd6-a349-a0e9241fb489
@@ -37,7 +40,7 @@ Defines `WorkTrackingService`, "everything an app can ask of work tracking", and
 ## Behavioral Requirements
 
 - **service-protocol**: `WorkTrackingService` MUST be `Sendable` and declare `setPreferences(_:)` and `status()` and `recheckPermissions()` (each `async`, each returning `WorkTrackingStatus?`) and `spans(since:limit:)` (`async`, returning `[ActivitySpanDTO]?`).
-- **transport-protocol**: `WorkTrackingXPCTransport` MUST be `Sendable` and declare `callData(timeout:retries:_:)` returning `Data` and `callDecodingArray(_:timeout:retries:_:)` returning `[T]`, both `async throws`, where `timeout` is a double optional (`TimeInterval??`).
+- **transport-protocol**: `WorkTrackingXPCTransport` MUST be `Sendable` and declare `callData(timeout:retries:_:)` returning `Data` and `callDecodingArray(_:timeout:retries:_:)` returning `[T]`, both `async throws`, where `timeout` is a double optional (`TimeInterval??`). The client passes `.none` (written `nil`) for `status()` and `spans(since:limit:)` and a concrete number of seconds for the other two calls; it never passes `.some(nil)`. The transport contract MUST define what `.none` means (the source leaves it to the transport) and what `.some(nil)` means if it accepts it.
 - **client-generic**: `WorkTrackingXPCClient` MUST be generic over a `WorkTrackingXPCTransport`, MUST hold it as the public `transport`, and MUST depend on no daemon framework.
 - **reply-decoder**: `makeReplyDecoder()` MUST return a `JSONDecoder` with `convertFromSnakeCase` keys and `iso8601` dates, and the client MUST use it for every reply.
 - **status-call**: `status()` MUST invoke `workTrackingStatus` with `timeout: nil` and `retries: 0` and return the decoded `WorkTrackingStatus`.
@@ -45,9 +48,9 @@ Defines `WorkTrackingService`, "everything an app can ask of work tracking", and
 - **status-unreadable-nil**: A status reply that does not decode as `WorkTrackingStatus` MUST yield nil.
 - **status-throw-nil**: A transport that throws MUST yield nil from `status()`, `recheckPermissions()` and `setPreferences(_:)`.
 - **recheck-call**: `recheckPermissions()` MUST invoke `workTrackingRecheckPermissions` with `timeout` of `recheckTimeout` and `retries: 0`.
-- **recheck-timeout**: `recheckTimeout` MUST be 15 seconds, longer than the roughly ten-second stall of a missing Accessibility grant, so the daemon's "denied" is not dropped and shown as "Unknown" (review F24).
+- **recheck-timeout**: `recheckTimeout` MUST be 15 seconds, longer than the roughly ten-second stall of a missing Accessibility grant, so the daemon's "denied" is not dropped and shown as "Unknown".
 - **set-preferences-body**: `setPreferences(_:)` MUST encode the preferences with `convertToSnakeCase` keys and send them through `workTrackingSetPreferences`.
-- **set-preferences-timeout**: `setPreferences(_:)` MUST wait `setPreferencesTimeout`, which MUST equal `recheckTimeout` (15 seconds), because a turn-on is answered only after the daemon's live Accessibility check; a shorter wait would time out on a change the daemon applied (review N4).
+- **set-preferences-timeout**: `setPreferences(_:)` MUST wait `setPreferencesTimeout`, which MUST equal `recheckTimeout` (15 seconds), because a turn-on is answered only after the daemon's live Accessibility check; a shorter wait would time out on a change the daemon applied.
 - **set-preferences-no-retry**: `setPreferences(_:)` MUST pass `retries: 0`.
 - **set-preferences-encode-failure**: If the preferences cannot be encoded, `setPreferences(_:)` MUST return nil without calling the transport.
 - **set-preferences-reply**: `setPreferences(_:)` MUST return the status the daemon replies, decoded as in `status()`, with nil for empty or unreadable data.
@@ -75,7 +78,7 @@ Not applicable — this is a non-visual service client, not a visual component. 
 
 ## Conformance Test Vectors
 
-Derived from `WorkTrackingXPCClientTests`, which drives the client through a scripted transport.
+Vectors 001 through 010 are backed by `WorkTrackingXPCClientTests`, which drives the client through a scripted transport. Vectors 011 through 017 are spec-only: derived from the source, with no test yet.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -83,17 +86,19 @@ Derived from `WorkTrackingXPCClientTests`, which drives the client through a scr
 | work-tracking-xpc-client-002 | status-empty-nil | Reply empty `Data` (test `testEmptyReplyIsNil`) | `status()` and `recheckPermissions()` return nil |
 | work-tracking-xpc-client-003 | status-unreadable-nil | Reply `not json` (same test) | `status()` returns nil |
 | work-tracking-xpc-client-004 | set-preferences-body, set-preferences-no-retry | `setPreferences` with added `["com.a"]`, removed `["com.b"]`, 30 days (test `testSetPreferencesSendsSnakeCaseBody`) | body text contains `added_bundle_ids`; body decodes to the same preferences; `retries` is 0 |
-| work-tracking-xpc-client-005 | set-preferences-reply | Reply is an encoded status with `enabled` true | returned status has `enabled` true |
+| work-tracking-xpc-client-005 | set-preferences-reply | Reply is an encoded status with `enabled` true (test `testSetPreferencesSendsSnakeCaseBody`) | returned status has `enabled` true |
 | work-tracking-xpc-client-006 | set-preferences-timeout | Any `setPreferences` (test `testSetPreferencesWaitsLongerThanTheAccessibilityStall`) | timeout is greater than 10 s and `retries` is 0 |
 | work-tracking-xpc-client-007 | recheck-call, recheck-timeout | `recheckPermissions` (test `testRecheckWaitsLongerThanTheAccessibilityStall`) | timeout is greater than 10 s (15 s) and `retries` is 0 |
 | work-tracking-xpc-client-008 | spans-order | Two rows, ids `b` then `a` (test `testSpansDecodeNewestFirstAsSent`) | `spans` ids are `["b","a"]` with `bundleId` "com.x" and `startedAt` as sent |
 | work-tracking-xpc-client-009 | spans-failure-nil | Rows are `[readFailedRow]` (test `testAFailedSpansReadIsNilNotEmpty`) | `spans` returns nil |
 | work-tracking-xpc-client-010 | spans-empty | Rows are `[]` (same test) | `spans` returns an empty array |
-| work-tracking-xpc-client-011 | status-call | `status()` | the call carries `timeout` nil and `retries` 0 |
-| work-tracking-xpc-client-012 | spans-failure-nil | Two good rows and the failure row last | `spans` returns nil, not two spans |
-| work-tracking-xpc-client-013 | status-throw-nil | Transport throws | `status()` returns nil |
-| work-tracking-xpc-client-014 | list-row-sentinel | Element `{"work_tracking_read_failed":false}` decoded as `WorkTrackingListRow` of a span | falls through to decoding a span, and throws because the span keys are missing |
-
+| work-tracking-xpc-client-011 | status-call | `status()` (spec-only) | the call carries `timeout` nil and `retries` 0 |
+| work-tracking-xpc-client-012 | spans-failure-nil | Two good rows and the failure row last (spec-only) | `spans` returns nil, not two spans |
+| work-tracking-xpc-client-013 | status-throw-nil | Transport throws (spec-only) | `status()` returns nil |
+| work-tracking-xpc-client-014 | list-row-sentinel | (spec-only) Element `{"work_tracking_read_failed":false}` decoded as `WorkTrackingListRow` of a span | falls through to decoding a span, and throws because the span keys are missing |
+| work-tracking-xpc-client-015 | set-preferences-encode-failure | Preferences that cannot be encoded (spec-only) | `setPreferences` returns nil and the transport receives no call |
+| work-tracking-xpc-client-016 | spans-throw-nil | Rows contain an element that is neither a span nor the failure row, such as `{"x":1}` (spec-only) | `spans` returns nil |
+| work-tracking-xpc-client-017 | status-throw-nil | Transport throws during `setPreferences` and during `recheckPermissions` (spec-only) | each returns nil |
 ## Edge Cases
 
 - **Empty reply**: Empty `Data` MUST be nil, because the daemon's "failed" and "did not apply" are empty data.
@@ -101,7 +106,7 @@ Derived from `WorkTrackingXPCClientTests`, which drives the client through a scr
 - **Failed list read**: The failure row MUST make the whole read nil; a failed read is never "none".
 - **Empty list**: An empty array MUST be an empty array, which the caller reads as no activity.
 - **Slow Accessibility check**: A recheck, and a turn-on, MUST wait 15 seconds; a daemon that answers later makes both nil even though the daemon applied the change.
-- **Timeouts on status and spans**: Both pass `timeout: nil`; what nil means (the transport's default wait or none) is the transport's, outside this source. The client does not set one.
+- **Timeouts on status and spans**: Both pass `timeout: nil`; the client passes `.none` and sets no wait of its own, so how long it waits is whatever the transport does for `.none`, which is outside this source and may be unbounded.
 - **Body cannot be encoded**: `setPreferences` MUST return nil before any call is made.
 - **Unreachable daemon**: The transport throws, the client returns nil, and the caller cannot tell it from a refusal or a bad reply.
 - **Lost reply after a write**: A `setPreferences` that times out may still have been applied by the daemon; with no retry, the caller sees nil and may re-read `status()`.
@@ -111,13 +116,13 @@ Derived from `WorkTrackingXPCClientTests`, which drives the client through a scr
 
 ## Configuration
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `transport` | `WorkTrackingXPCTransport` | required | Answers `callData` and `callDecodingArray`. |
-| `recheckTimeout` | `TimeInterval` | 15 | Wait for a recheck. |
-| `setPreferencesTimeout` | `TimeInterval` | 15 (equals `recheckTimeout`) | Wait for a preferences push. |
-| status and spans timeout | `TimeInterval??` | nil | Passed through to the transport. |
-| retries | `Int` | 0 | Passed on every call. |
+| Option | Type | Value | Description |
+|--------|------|-------|-------------|
+| `transport` | `WorkTrackingXPCTransport` | required, injected through `init` | Answers `callData` and `callDecodingArray`. |
+| `recheckTimeout` | `TimeInterval` | constant 15 (static, not injectable) | Wait for a recheck. |
+| `setPreferencesTimeout` | `TimeInterval` | constant, equal to `recheckTimeout` (static, not injectable) | Wait for a preferences push. |
+| status and spans timeout | `TimeInterval??` | constant `.none` | Passed through to the transport. |
+| retries | `Int` | constant 0 | Passed on every call. |
 
 No environment variables or settings keys.
 
@@ -154,17 +159,17 @@ Not applicable: this code makes no log calls; failures are returned as nil rathe
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform. The file is `WorkTrackingXPCClient.swift` under `Core/WorkTracking`. A SwiftUI view model holds a `WorkTrackingService` and awaits it in a `Task`, turning nil into "Unknown" or a retry affordance. The class is generic, so a leaf adds a retroactive conformance of its DaemonKit client to `WorkTrackingXPCTransport`.
+- **SwiftUI**: The client is Foundation-only, so there is no SwiftUI surface in it. A SwiftUI view model holds a `WorkTrackingService` and awaits it in a `Task`, turning nil into "Unknown" or a retry affordance. The class is generic, so a leaf adds a retroactive conformance of its DaemonKit client to `WorkTrackingXPCTransport`.
 - **Compose**: A repository class with suspend functions returning nullable values over a bound service; use `withTimeoutOrNull(15_000)` for the recheck and preferences push, `Json { namingStrategy = JsonNamingStrategy.SnakeCase }` (kotlinx.serialization) for bodies and replies, and a sealed row type for the sentinel.
 - **React/Web**: A client over `fetch` with `AbortSignal.timeout(15000)` on the two long calls; each function returns `Promise<T | null>`, mapping non-OK, thrown and unparseable results to null, and the spans function returns null when any row has `work_tracking_read_failed === true`. Convert keys at the boundary or keep the wire type snake case.
-- **AppKit / UIKit**: Same Swift type on macOS; iOS has no general XPC to a daemon, so the transport differs. The daemon connection is the leaf's `XPCClient` from DaemonKit conformed to `WorkTrackingXPCTransport`.
+- **AppKit / UIKit**: The source file is `WorkTrackingXPCClient.swift` under `Core/WorkTracking`, a Swift type used on macOS; iOS has no general XPC to a daemon, so the transport differs. The daemon connection is the leaf's `XPCClient` from DaemonKit conformed to `WorkTrackingXPCTransport`.
 - **WinUI 3**: A class over an injected `IWorkTrackingTransport` using `HttpClient`, a named pipe (`NamedPipeClientStream`) or gRPC. Methods return `Task<WorkTrackingStatus?>` and `Task<IReadOnlyList<ActivitySpan>?>`; wrap each in try/catch returning null, since the Swift version uses `try?`. Use `CancellationTokenSource(TimeSpan.FromSeconds(15))` for the recheck and push, and `System.Text.Json` with `JsonNamingPolicy.SnakeCaseLower` and ISO-8601 `DateTimeOffset`. Model the span row as a `JsonConverter` that reads the sentinel property first. XAML code-behind or a view model awaits on the UI thread through `DispatcherQueue`. A DaemonKit XPC client does not exist on Windows, so the transport is a new component.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingXPCClient.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingXPCClient.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -176,15 +181,15 @@ Not applicable: this code makes no log calls; failures are returned as nil rathe
 **Approved**: pending
 
 **Decision**: A failed spans read is nil, not an empty array.
-**Rationale**: The comment on `spans` says "a failed read is never 'none'" (review F25); a nil reads as unknown while an empty array reads as nothing happened.
+**Rationale**: The comment on `spans` says "a failed read is never 'none'" in the source; a nil reads as unknown while an empty array reads as nothing happened.
 **Approved**: pending
 
 **Decision**: Recheck and preferences push each wait 15 seconds.
-**Rationale**: The comments explain the daemon answers only after a live Accessibility check that stalls about ten seconds on `tccd` without the grant. A shorter wait drops the "denied" about to arrive (review F24) or counts a failure on a change the daemon applied (review N4).
+**Rationale**: The comments explain the daemon answers only after a live Accessibility check that stalls about ten seconds on `tccd` without the grant. A shorter wait drops the "denied" about to arrive (review F24) or counts a failure on a change the daemon applied.
 **Approved**: pending
 
 **Decision**: No retries on any call.
-**Rationale**: Every call passes `retries: 0`, and the source states no reason for it. The effect is that a timed-out preferences push is not repeated by the client, so the caller sees nil and decides whether to read `status()` or push again.
+**Rationale**: Every call passes `retries: 0`, and the source states no reason for it, so the reason is an open question for the maintainer (the approval stays pending until it is answered). The effect is that a timed-out preferences push is not repeated by the client, so the caller sees nil and decides whether to read `status()` or push again.
 **Approved**: pending
 
 **Decision**: The client is generic over a small transport protocol.
@@ -201,12 +206,12 @@ Not applicable: this code makes no log calls; failures are returned as nil rathe
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
-| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | reliability |
-| [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | access-patterns |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 
-Separation of concerns passes: the client only translates the service interface to transport calls and wire coding; rules are the daemon's and the transport is injected. Unit coverage is partial: `WorkTrackingXPCClientTests` covers the snake-case status, empty and unreadable replies, the preferences body, the two long timeouts, span order and the failed-read row, but no test covers a transport that throws, a failure row after good rows, an unencodable body or the `timeout: nil` of status and spans. Timeout handling passes: the two calls whose daemon answer is known to stall carry an explicit 15-second wait with the reason documented, and the others defer to the transport. Retry fails because the client never retries by design (`retries: 0`) and has no backoff, which is a stated choice rather than a defect.
+Separation of concerns passes: the client only translates the service interface to transport calls and wire coding; rules are the daemon's and the transport is injected. Unit coverage is partial: vectors 011 through 017 have no test. `WorkTrackingXPCClientTests` covers the snake-case status, empty and unreadable replies, the preferences body, the two long timeouts, span order and the failed-read row, but no test covers a transport that throws, a failure row after good rows, an unencodable body or the `timeout: nil` of status and spans. Timeout handling is partial: the two calls whose daemon answer is known to stall carry an explicit 15-second wait with the reason documented, but `status()` and `spans(since:limit:)` pass `.none` and leave the wait to the transport, which may be unbounded. Retry with backoff is not checked: the client never retries by design (`retries: 0`), see the no-retry design decision.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Removed the untraceable review tags, defined the nil timeout, marked vectors 011-017 spec-only and added three vectors, changed timeout handling to partial, dropped the retry row, clarified fixed constants and added dependencies. |

@@ -3,15 +3,15 @@
 
 - **exports**: The module MUST export `ThemeDelta`, `splitImports` and `parseRootProps`, and MUST export nothing else.
 - **theme-delta-shape**: `ThemeDelta` MUST be `Record<string, string>`, a map from custom-property name to value; the module attaches no validation to it.
-- **pure**: Both functions MUST be pure: they MUST NOT read or write the DOM, storage, the network or module state, and the same input MUST give the same output.
-- **no-throw**: Neither function MUST throw on any string input; input that does not match yields an empty result, never an error.
+- **pure**: Both functions MUST be pure: they MUST NOT read or write the DOM, storage or the network, MUST NOT depend on or leave observable state, and the same input MUST give the same output.
+- **no-throw**: Both functions MUST NOT throw on any string input; input that does not match yields an empty result, never an error.
 
 ### splitImports
 
 - **imports-pattern**: `splitImports` MUST recognise an import rule as `@import`, whitespace, `url(`, optional whitespace, an optional single or double quote, the href, the same quote again, optional whitespace, `)`, optional whitespace and an optional `;`.
 - **imports-href**: The href captured MUST be the text between the quotes (or between the parentheses when unquoted), up to the first `'`, `"` or `)`; for an unquoted href, any whitespace before the closing parenthesis is part of the captured text.
 - **imports-order**: The returned `imports` array MUST list hrefs in the order the rules appear in the CSS, with duplicates kept.
-- **imports-removed**: Every matched rule, including the whitespace and the `;` that follow its closing parenthesis, MUST be replaced by an empty string in `rest`; all other text, including whitespace before the rule, MUST be left unchanged.
+- **imports-removed**: Every matched rule, including the whitespace between `)` and `;` and the `;` itself (whitespace after the `;` remains), MUST be replaced by an empty string in `rest`; all other text, including whitespace before the rule, MUST be left unchanged.
 - **imports-url-only**: The string form of an import (an `@import` followed by a quoted string rather than `url(`) MUST NOT be matched: it stays in `rest` and adds nothing to `imports`.
 - **imports-none**: When no rule matches, `splitImports` MUST return an empty `imports` array and a `rest` equal to the input.
 - **imports-everywhere**: Matching MUST NOT depend on position or context: a rule is removed wherever it appears in the string, including inside a comment.
@@ -30,15 +30,10 @@
 - **prop-ordered**: The `Map` MUST iterate in order of first appearance.
 - **prop-duplicates**: When a name is declared twice, the later value MUST replace the earlier one, and the entry MUST keep the position of the first declaration.
 - **prop-empty-value-kept**: A declaration whose value is only whitespace MUST still be read and stored as the empty string (the guard skips a match only when a capture is the empty string, and the value pattern cannot capture nothing).
-- **non-custom-ignored**: Declarations that are not custom properties (names not starting with `--`) MUST be ignored.
+- **non-custom-ignored**: Declarations that are not custom properties (names not starting with `--`) MUST be ignored. The match is not anchored, so a name that merely contains `--` (for example `x--y:1;`) is read as the custom property `--y`.
 - **comments-not-parsed**: The parser MUST NOT recognise CSS comments: a custom property written inside a comment within the block is read as if it were live.
 
 ### Ordering and concurrency
 
 - **no-shared-state**: The shared module-level global regular expressions MUST NOT leak a match position between calls; `String.replace` and `matchAll` each start from the beginning of the string, so repeated and re-entrant calls give identical results.
 - **synchronous**: Both functions MUST be synchronous and perform no I/O.
-
-### Consumers
-
-- **consumer-delta**: Consumer behaviour, recorded for orientation: the ADH theme style injector (its theme-switcher assets) parses the default theme's `:root` block, then for each switcher theme splits off the imports; a full-palette theme ships its remaining CSS whole with no delta, while any other theme ships a `:root` block of only the entries whose value differs from the base value. This module does not compute deltas.
-

@@ -9,6 +9,6 @@
 | T6 | reflects-current-selection | `getText` reads a variable mutated between render and click | `writeText` receives the value current at click, not at render |
 | T7 | decorative-icon, labels-from-prop | render `<CopyButton getText={…} label="Copy" />` | rendered svg glyph carries `aria-hidden`; accessible name is `"Copy"` |
 | T8 | forwards-classname | `className="ml-2"` | button element carries the `ml-2` class |
-| T9 | reverts-after-timeout | after a successful copy, click again (also successful) at 1000 ms, before the first timer fires | the check persists until 2200 ms from the second click (timer is cleared and re-armed), not 1200 ms from the first |
+| T9 | reverts-after-timeout | after a successful copy, click again (also successful) at 1000 ms, before the first timer fires | the check reverts 1200 ms after the second click (2200 ms after the first), because the timer is cleared and re-armed |
 | T10 | reverts-after-timeout | unmount the component before the 1200 ms timer fires | the pending timer is cleared on cleanup; no state update occurs after unmount |
-
+| T11 | forwards-classname, classname-overrides-default-size | `className="size-8"` | the button carries `size-8` and does not carry `size-6` (tailwind-merge in `cn()` lets the consumer class win) |

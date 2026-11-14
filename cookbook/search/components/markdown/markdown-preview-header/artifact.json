@@ -4,11 +4,11 @@
     "id": "afb50b48-af7a-4bc1-a13c-ae36759268c8",
     "title": "Markdown Preview Header",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "150c1c285285ec55",
+  "synced": "ea3ca69614127927",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

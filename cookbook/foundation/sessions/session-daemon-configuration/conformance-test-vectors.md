@@ -13,8 +13,8 @@ The test `SessionDaemonRuntimeTests` uses `SessionDaemonConfiguration.test(port:
 | session-daemon-configuration-008 | test-identity, test-port, test-summaries-off | `test()` | `label == "test.session-daemon"`, `daemonVersion == "0.0.0-test"`, `httpPort == 0`, `summariesDefaultEnabled == false` |
 | session-daemon-configuration-009 | test-hook, test-account-file | `test(root: /r)` | `hook.name == "session-daemon-test"`, `hook.marker == "# session-daemon-test-hook"`, `hook.settingsURL.path == "/r/settings.json"`, `claudeJSONPath == "/r/claude.json"` |
 | session-daemon-configuration-010 | test-root | Two calls of `test()` with no `root` | The two `supportDirectory` values differ and each ends with a UUID after `session-daemon-test-` |
-| session-daemon-configuration-011 | test-no-create | `test()` with no `root`, then check the file system | No directory exists at `supportDirectory` |
-| session-daemon-configuration-012 | test-intervals | `test()` | `livenessCheckInterval == 1`, `retentionDays == 7` |
+| session-daemon-configuration-011 | test-no-create | `test()` with no `root`, then check the file system; and `test(root:)` with a root that does not exist yet, then check the file system | No directory exists at either `supportDirectory` |
+| session-daemon-configuration-012 | test-intervals | `test()` | `livenessCheckInterval == 1`, `retentionDays == 7`, `retentionCheckInterval == 86400` |
 | session-daemon-configuration-013 | runtime-reads, test-derived-defaults | Test `testOpenPhaseALeavesTheDatabaseNotReady`: a runtime built from `test(port: 0, root: root)`, then `openPhaseA()` | Files exist at `databasePath` and `spoolPath` |
 | session-daemon-configuration-014 | no-validation | `retentionDays: 0` and `httpPort: 0` | Both stored as given; no error |
 

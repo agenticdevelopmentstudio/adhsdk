@@ -2,11 +2,11 @@
 id: 3828874a-ce76-4e8d-a106-97a867ed583d
 title: "Registry Model"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,6 +32,8 @@ approved-date: ""
 # Registry Model
 
 ## Overview
+This recipe is titled Registry Model; its folder, package (`@adh-sdk/registry-types`) and rdid use the name `registry-types`.
+
 
 The registry model is the framework-free logic package `@adh-sdk/registry-types` (`packages/web/packages/registry-types/src/{types,show-if,validate,visibility}.ts`). It defines the closed catalog of field types a registry owner can put on a form, the shape of a field definition and its values, and four pure computations over that data: whether a field is currently shown (`evaluateShowIf`), whether a submitted value is acceptable (`validateFieldValue`), how an accepted value is normalized for storage and search (`coerceFieldValue`, `searchableText`), and which required fields still block an entry from publishing (`publishBlockers`). A separate module, `visibility.ts`, defines the three-tier audience scale (`public` / `authenticated` / `private`) that gates which of those stored values a given viewer may read.
 
@@ -69,7 +71,7 @@ Every exported function in these four files is a pure, synchronous computation o
 
 ### Validation (`validate.ts`)
 
-- **validate-before-coerce**: Every caller MUST invoke `validateFieldValue` on a submitted value and confirm it returns `null` before invoking `coerceFieldValue` on that same value; `coerceFieldValue` MUST NOT be used as a second validation pass.
+- **validate-before-coerce**: Integration requirement on consumers (this package cannot enforce it): every caller MUST invoke `validateFieldValue` on a submitted value and confirm it returns `null` before invoking `coerceFieldValue` on that same value; `coerceFieldValue` MUST NOT be used as a second validation pass.
 - **unrecognized-type-rejected**: `validateFieldValue` MUST return the string `'Unrecognized field type'` when `def.type` is not one of `FIELD_TYPES`, before any other check runs.
 - **empty-value-required-gate**: Before any type-specific check, `validateFieldValue` MUST classify `null`, `undefined`, an empty or whitespace-only string, an empty array, and an empty plain object as empty, and for an empty value MUST return `'Required'` when `def.required` is `true` and MUST return `null` otherwise; the literal values `false` and `0` MUST NOT be classified as empty.
 - **string-like-type-check**: For the eight string-shaped types (`text`, `textarea`, `markdown`, `url`, `email`, `phone`, `date`, `select`), `validateFieldValue` MUST return `'Must be text'` when a non-empty value is not a string.
@@ -105,8 +107,8 @@ Every exported function in these four files is a pure, synchronous computation o
 - **publish-blocker-hidden-exclusion**: `publishBlockers` MUST exclude a field definition for which `evaluateShowIf` returns `false` against the supplied `values`.
 - **publish-blocker-empty-or-invalid**: For a required, non-deleted, currently-shown field definition, `publishBlockers` MUST report it as a blocker when its value is empty (per **empty-value-required-gate**) OR when `validateFieldValue` returns a non-`null` result for it.
 - **publish-blocker-label-fallback**: Each reported `PublishBlocker` MUST use `def.label` as its `label` when present, and MUST fall back to `def.key` otherwise; its `key` MUST equal `def.key`.
-- **required-gates-publish-not-save**: The model's `required` enforcement (`publishBlockers`) MUST be applied only at publish time, and MUST NOT be applied to reject an independent per-section save, because the owner-defined form's sections are saved independently.
-- **vendored-build-ordering**: In the backend's single-file vendored build, the concatenation MUST place `show-if.ts` after `validate.ts` so that `validate.ts`'s reference to `evaluateShowIf` resolves against `show-if.ts`'s hoisted function declaration regardless of file order.
+- **required-gates-publish-not-save**: Integration requirement on consumers (this package cannot enforce it): the model's `required` enforcement (`publishBlockers`) MUST be applied only at publish time, and MUST NOT be applied to reject an independent per-section save, because the owner-defined form's sections are saved independently.
+- **vendored-build-ordering**: `evaluateShowIf` MUST remain a hoisted function declaration (`export function`), never a `const` or arrow-function binding, so that `validate.ts`'s call to it from `publishBlockers` resolves at call time regardless of file order, including in the backend's single-file vendored build.
 
 ### Visibility tiering (`visibility.ts`)
 
@@ -123,7 +125,7 @@ Every exported function in these four files is a pure, synchronous computation o
 ### Cross-cutting
 
 - **no-io-side-effects**: Every exported function in `types.ts`, `show-if.ts`, `validate.ts`, and `visibility.ts` MUST be a pure computation over its arguments: none of the four files imports or calls a network, filesystem, timer, random-number, or logging API.
-- **no-shared-mutable-state**: None of the four modules MUST hold mutable module-level state; their module-level values (`FIELD_TYPES`, `SHOW_IF_OPS`, the validation regexes, `DEFAULT_MAX_LENGTH`, `RANK`, `CONTACT_FIELD_TYPES`, etc.) MUST be read-only for the lifetime of the process, so concurrent, parallel, or re-entrant calls into any of these functions from multiple callers require no coordination.
+- **no-shared-mutable-state**: Each of the four modules MUST NOT hold mutable module-level state; no function in them may modify their module-level values (`FIELD_TYPES`, `SHOW_IF_OPS`, the validation regexes, `DEFAULT_MAX_LENGTH`, `RANK`, `CONTACT_FIELD_TYPES`, etc.), which are declared read-only by `const` and, for the arrays and set, by `as const` and `ReadonlySet` typing (none is `Object.freeze`d), so concurrent, parallel, or re-entrant calls into any of these functions from multiple callers require no coordination.
 
 ## Appearance
 
@@ -165,8 +167,8 @@ Not applicable — this is a data-model and validation package with no visual su
 | registry-model-022 | coerce-address | `coerceFieldValue(def('address'), {line1:'1 Main St', country:'US', junk:{deep:[1,2,3]}, extra:'nope'})` | `{ line1: '1 Main St', country: 'US' }` |
 | registry-model-023 | string-like-type-check | `validateFieldValue(def(type), { nested: [1,2,3] })` for each of `text, textarea, markdown, url, email, phone, date, select` | `'Must be text'` for every one |
 | registry-model-024 | unrecognized-type-rejected, unrecognized-type-coerce, searchable-text-unrecognized-type | `validateFieldValue`, `coerceFieldValue`, `searchableText` on `def('rating' as FieldType)` with value `'x'` | `'Unrecognized field type'`; `undefined`; `''` |
-| registry-model-025 | validate-before-coerce, coerce-idempotent | For every field type, run the accepted wire forms in the module's own `attemptSave` pattern (validate, then coerce only on `null` error) across all 12 types | Every listed accepted form is accepted and coerces to exactly the value the module documents (e.g. `multi_select` bare string `'a'` → `['a']`); every listed rejected form is rejected and never reaches the coercer |
-| registry-model-026 | searchable-text-scalar, searchable-text-multi-select, searchable-text-address, searchable-text-non-text-types, searchable-text-contact-exclusion | `searchableText` on `text:'hello'`, `multi_select:['a','b']`, `address:{city:'Seattle', country:'US'}`, `image:'att_123'`, `boolean:true`, `email:'a@b.co'`, `phone:'+1 555 123 4567'` | `'hello'`; `'a b'`; a string containing `'Seattle'`; `''`; `''`; `''`; `''` |
+| registry-model-025 | validate-before-coerce, coerce-idempotent | For each case, call `validateFieldValue(d, v)` and, only when it returns `null`, `coerceFieldValue(d, v)`: `multi_select` (options `['a','b']`) with `'a'`; `boolean` with `'on'`; `boolean` with `5`; `image` with `{id:'x'}`; then apply `coerceFieldValue` again to each value it produced | `null`, `['a']`; `null`, `true`; `'Must be true or false'`, coercer not called; `'Must be an uploaded image'`, coercer not called; each second `coerceFieldValue` result equals the first |
+| registry-model-026 | searchable-text-scalar, searchable-text-multi-select, searchable-text-address, searchable-text-non-text-types, searchable-text-contact-exclusion | `searchableText` on `text:'hello'`, `multi_select:['a','b']`, `address:{city:'Seattle', country:'US'}`, `image:'att_123'`, `boolean:true`, `email:'a@b.co'`, `phone:'+1 555 123 4567'` | `'hello'`; `'a b'`; `'Seattle US'`; `''`; `''`; `''`; `''` |
 | registry-model-027 | searchable-text-address | `searchableText(def('address'), { line1: '1 Main St', junk: 'drop me' })` | `''` (no `city`/`region`/`country` survives coercion) |
 | registry-model-028 | searchable-text-visibility-gate | `searchableText({...def('text'), visibility:'private'}, 'secret bio')` vs. `{...def('text'), visibility:'public'}` vs. no `visibility` field at all, each with a non-empty string | `''`; the original string; the original string |
 | registry-model-029 | empty-value-required-gate, coerce-boolean, coerce-address, coerce-multi-select | For every field type, `validateFieldValue(optional, '')` and `coerceFieldValue(optional, '')`; then `validateFieldValue(required, '')` | `null` and the type's empty form (`''` for string types, `false` for `boolean`, `[]` for `multi_select`, `{}` for `address`); `'Required'` |
@@ -186,16 +188,19 @@ Not applicable — this is a data-model and validation package with no visual su
 | registry-model-043 | deep-value-equality | `op:'eq'` with `value: {line1:'1 Main St',city:'Seattle',country:'US'}` against a field-for-field identical but distinct object, then against one with `city:'Portland'` | `true`, then `false` |
 | registry-model-044 | deep-value-equality | `op:'eq'` with a 4-level-nested `value: {a:{b:{c:[1,2,{d:'deep'}]}}}` against a structurally identical distinct object, then one differing only at the deepest key | `true`, then `false` |
 | registry-model-045 | compare-depth-cap | Two distinct object references nested 40 levels deep with identical structure down to level 32 and differing only below it, compared via `op:'eq'` | `false` (levels beyond 32 fall back to `===` on the distinct sub-objects, which is false for two different object references — the cap fails closed: even structurally identical but distinct values nested 33+ levels deep compare unequal) |
-| registry-model-046 | own-property-membership | `op:'eq'` with `value: {}` against `mode: Object.create({ constructor: 'poisoned' })` (an object whose only `constructor` is inherited, not its own) | `true` (both sides have zero own keys — `Object.keys` excludes the inherited `constructor` on either side — so the own-key-set comparison is vacuously equal; `Object.hasOwn` is never reached because the key sets already match) |
+| registry-model-046 | own-property-membership | `op:'eq'` with `value: {}` against `mode: Object.create({ constructor: 'poisoned' })` (an object whose only `constructor` is inherited, not its own) | `true` (both sides have zero own keys, so the own-key-set comparison is vacuously equal and `Object.hasOwn` is never reached; see registry-model-055 for the vector that does reach it) |
 | registry-model-047 | visibility-enum | `[...FIELD_VISIBILITIES]` | `['public', 'authenticated', 'private']` |
 | registry-model-048 | visibility-admits, viewer-scope-excludes-private | `visibilityAdmits('public','public')`, `visibilityAdmits('authenticated','public')`, `visibilityAdmits('private','authenticated')` | `true`, `false`, `false` |
 | registry-model-049 | tightest-visibility | `tightestVisibility('public','authenticated')`, `tightestVisibility('authenticated','public')`, `tightestVisibility('public','public')` | `'authenticated'`, `'authenticated'`, `'public'` |
 | registry-model-050 | visibility-within-ceiling, visibilities-within-list | `isWithinVisibility('public','authenticated')`; `visibilitiesWithin('authenticated')` | `false`; a list containing `authenticated` and `private` but not `public`, and agreeing with `isWithinVisibility` for every pair |
 | registry-model-051 | contact-field-types, default-visibility-by-type | `defaultVisibilityForType('email')`, `('phone')`, `('address')`, `('text')`, `('ssn')`, `('')` | `'private'`, `'private'`, `'private'`, `'public'`, `'private'`, `'private'` |
-| registry-model-052 | no-io-side-effects, no-shared-mutable-state | Static review of `types.ts`, `show-if.ts`, `validate.ts`, `visibility.ts` imports | No import of a network, filesystem, timer, or logging API; every module-level binding is `const` |
-| registry-model-053 | vendored-build-ordering | The backend's single-file vendored bundle with `show-if.ts` concatenated after `validate.ts`, then `publishBlockers` (defined earlier in the file) calling `evaluateShowIf` (defined later) | Resolves correctly at call time because `evaluateShowIf` is a hoisted function declaration |
+| registry-model-052 | no-io-side-effects, no-shared-mutable-state | Static review of `types.ts`, `show-if.ts`, `validate.ts`, `visibility.ts` imports and module-level declarations | No import of a network, filesystem, timer, or logging API; every module-level binding is `const`; `FIELD_TYPES`, `SHOW_IF_OPS` and `FIELD_VISIBILITIES` are `as const` tuples, `CONTACT_FIELD_TYPES` is typed `ReadonlySet`, and no function assigns to `RANK`, `DEFAULT_MAX_LENGTH` or any of these values (read-only is enforced by types and `const`, not by `Object.freeze`) |
+| registry-model-053 | vendored-build-ordering | Static review of how `show-if.ts` declares `evaluateShowIf` | It is declared with `export function evaluateShowIf`, a hoisted function declaration, and not as a `const` or arrow-function binding |
 | registry-model-054 | show-if-data-only | A `ShowIfRule` value round-tripped through `JSON.stringify` then `JSON.parse` and passed to `evaluateShowIf` | Produces the identical result to the pre-round-trip rule, for every op, because the rule carries no function or closure that serialization could drop |
-
+| registry-model-055 | own-property-membership | `op:'eq'` with `value: { constructor: Object }` against `mode: { a: 1 }` (equal key counts; the `in` operator would find an inherited `constructor` equal to `Object`, `Object.hasOwn` does not) | `false` |
+| registry-model-056 | url-format (boundary) | `validateFieldValue(def('url'), 'https://example.com/' + 'a'.repeat(2028))` (2048 characters) then `'https://example.com/' + 'a'.repeat(2029)` (2049) | `null`, then `'Must be 2048 characters or fewer'` |
+| registry-model-057 | email-format (boundary) | `validateFieldValue(def('email'), 'a'.repeat(242) + '@example.com')` (254 characters) then `'a'.repeat(243) + '@example.com'` (255) | `null`, then `'Must be 254 characters or fewer'` |
+| registry-model-058 | phone-format (boundary) | `validateFieldValue(def('phone'), v)` for `'1234567'` (7 digits), `'123456'` (6), `'1'.repeat(20)` (20), `'1'.repeat(21)` (21) | `null`; `'Must be a phone number'`; `null`; `'Must be a phone number'` |
 ## Edge Cases
 
 - **Null and empty input**: `null`, `undefined`, an empty string, whitespace-only string, empty array, and empty plain object MUST all be classified as empty by `isEmpty`'s rule inside `validateFieldValue`; an empty value MUST pass validation on an optional field and MUST fail with `'Required'` on a required one (**empty-value-required-gate**). `false` and `0` MUST NOT be treated as empty.
@@ -248,7 +253,8 @@ Not applicable: none of the four source files emits an analytics or telemetry ev
 
 ## Privacy
 
-- **Data considered sensitive**: `visibility.ts` treats `email`, `phone`, and `address` as contact field types — ways to reach a specific person rather than to describe one (`CONTACT_FIELD_TYPES`) — and this model's own text-extraction path additionally withholds `email` and `phone` from full-text search even when the field is publicly visible (**searchable-text-contact-exclusion**), specifically to keep an anonymous search box from being usable to test whether a given phone number or address is registered.
+- **Data considered sensitive**: `visibility.ts` treats `email`, `phone`, and `address` as contact field types — ways to reach a specific person rather than to describe one (`CONTACT_FIELD_TYPES`) — and this model's own text-extraction path additionally withholds `email` and `phone` from full-text search even when the field is publicly visible (**searchable-text-contact-exclusion**), specifically to keep an anonymous search box from being usable to test whether a given phone number or email address is registered.
+- **Search indexing of addresses**: Unlike `email` and `phone`, an `address` field is indexed, but only its `city`, `region` and `country` (**searchable-text-address**); `line1`, `line2` and `postalCode` never contribute to search text.
 - **Storage**: This module stores nothing itself; it computes values a caller then persists elsewhere. It has no notion of at-rest encryption or database schema.
 - **Transmission / disclosure**: `visibilityAdmits(field, viewer)` is the single rule this model provides for whether a value may reach a given audience — a viewer's entitlement rank must be at or above the field's visibility rank (**visibility-admits**). `private` values are deliberately outside `ViewerScope` altogether (**viewer-scope-excludes-private**): no function in this module ever admits a `private` value to a public-plane read; the docblock in `visibility.ts` records that such values instead reach their owner through a separate authenticated entry API this package does not implement.
 - **Fail-closed default**: A newly created field definition's starting visibility is decided once, by `defaultVisibilityForType`: contact types and any type this build does not recognize start `private`, and every other recognized type starts `public` (**default-visibility-by-type**). An unrecognized type is treated as if it were a contact type specifically so that a type this build cannot characterize never defaults to public exposure.
@@ -270,7 +276,7 @@ Not applicable: none of the four source files calls a logging or diagnostic API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/registry-types/src/` | unverified |
+| web | `packages/web/packages/registry-types/src/` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -299,7 +305,7 @@ Not applicable: none of the four source files calls a logging or diagnostic API.
 **Approved**: pending
 
 **Decision**: `evaluateShowIf` reads the controlling value as `values[rule.field]` — a direct bracket lookup, not an `Object.hasOwn`-guarded one.
-**Rationale**: `rule.field` is owner-authored data from the same untrusted `jsonb` origin the module explicitly reasons about elsewhere (see the decision above), but this particular lookup was not brought under the same guard. See the open question recorded in Behavioral Requirements' cross-cutting notes and the corresponding marker below.
+**Rationale**: `rule.field` is owner-authored data from the same untrusted `jsonb` origin the module explicitly reasons about elsewhere (see the decision above), but this particular lookup was not brought under the same guard. The open question is the NEEDS REVIEW marker on **show-if-field-lookup** in Behavioral Requirements.
 **Approved**: pending
 
 ## Compliance
@@ -314,11 +320,12 @@ This is a non-UI logic package with no network calls, no rendered surface, and n
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`input-sanitization` is partial: `validateFieldValue` gates every value before `coerceFieldValue` or `searchableText` act on it (**validate-before-coerce**), but address sub-fields and the `showIf` field lookup go unchecked (the open questions under **address-subfield-validation** and **show-if-field-lookup**). `fault-tolerance` passes because an unrecognized field type, an unrecognized `show_if` operator, a malformed `in` rule, and a pathologically deep comparison value are all handled with a defined return value rather than a thrown exception (**unrecognized-type-rejected**, **show-if-unknown-op-fails-open**, **show-if-malformed-in-fails-open**, **compare-depth-cap**). `no-hardcoded-strings` fails because every `validateFieldValue` error message is a hardcoded English literal with no localization hook — see Localization above. `show-if.ts`, `types.ts`, `validate.ts`, and `visibility.ts` are non-UI logic with no rendering to entangle (separation-of-concerns passed); the package's own `src/__tests__/show-if.test.ts`, `validate.test.ts`, and `visibility.test.ts` (566 lines across the three files, not the unrelated candidates the evidence search surfaced) directly and thoroughly exercise every one of these source files (unit-test-coverage passed).
+`input-sanitization` is partial: `validateFieldValue` gates every value before `coerceFieldValue` or `searchableText` act on it (**validate-before-coerce**), but address sub-fields and the `showIf` field lookup go unchecked (the open questions under **address-subfield-validation** and **show-if-field-lookup**). `fault-tolerance` passes because an unrecognized field type, an unrecognized `show_if` operator, a malformed `in` rule, and a pathologically deep comparison value are all handled with a defined return value rather than a thrown exception (**unrecognized-type-rejected**, **show-if-unknown-op-fails-open**, **show-if-malformed-in-fails-open**, **compare-depth-cap**). `no-hardcoded-strings` fails because every `validateFieldValue` error message is a hardcoded English literal with no localization hook — see Localization above. `show-if.ts`, `types.ts`, `validate.ts`, and `visibility.ts` are non-UI logic with no rendering to entangle (separation-of-concerns passed); the package's own `src/__tests__/show-if.test.ts`, `validate.test.ts`, and `visibility.test.ts` directly and thoroughly exercise every one of these source files (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Restated the vendored-build and mutable-state requirements as real invariants, marked caller-side rules as integration requirements, removed process text from Compliance, corrected the Privacy search-indexing claim, and added exact-boundary, own-property and concrete validate-then-coerce test vectors. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Corrected compare-depth-cap and own-property-membership test vector expected results to match show-if.ts's actual comparison logic. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |

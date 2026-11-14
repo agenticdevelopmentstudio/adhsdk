@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source (`packages/web/packages/controls/src/user-settings/components/RadioGroup.tsx`) |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and update every citation; reconcile the exactly-one-selected vs. unmatched-value contradiction across Overview/Configuration/Edge Cases; correct the Enter/Space keyboard claim and cite WCAG 2.5.5 by name; rebuild Compliance as a linked, honestly-scoped table instead of blanket `passed`; replace the SwiftUI/Compose/WinUI platform notes' non-native suggestions with the real native radio-group APIs and state the AppKit mutual-exclusivity mechanism explicitly; reformat Design Decisions into Decision/Rationale/Approved form; fix test vector 003's undefined choice and vector 013's implementation-detail assertion, and add vectors for every untested edge case; fill `related` with the sibling form-control recipes and `references` with the cited WCAG/HTML sources; state the Border appearance entry as caller-owned instead of "may". |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Wrapped Choice<T>[] in code span; added best-practices Compliance rows. |

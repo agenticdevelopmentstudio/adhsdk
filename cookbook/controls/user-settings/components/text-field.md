@@ -2,11 +2,11 @@
 id: dc548100-af44-4d93-9cb9-93c35546e08c
 title: "Text Field"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -46,10 +46,10 @@ A text input field component for web that supports single-line text input, multi
 - **support-text-types**: The `TextField` component MUST support `type` values of `'text'`, `'email'`, `'url'`, and `'tel'`, with `'text'` as the default.
 - **handle-multiline**: When `multiline` is `true`, the component MUST render a `<textarea>` element with `rows="4"` instead of an `<input>` element.
 - **apply-autofill-token**: When `autoComplete` is defined and, after trimming and lowercasing, is not `'off'`, the component MUST pass the original `autoComplete` value through unchanged to the input element's `autoComplete` attribute and MUST NOT apply the autofill-prevention attributes. There is no fixed allowlist of tokens — any non-`'off'` value qualifies (e.g. `'email'`, `'tel'`, `'url'`, `'name'`).
-- **prevent-autofill-default**: When `autoComplete` is `undefined`, or trims/lowercases to `'off'`, the component MUST apply autofill-prevention attributes (`autoComplete: 'off'`, `data-form-type: 'other'`, `data-1p-ignore: 'true'`, `data-lpignore: 'true'`, `data-bwignore: 'true'`, `data-protonpass-ignore: 'true'`) via the `noAutofillPropsFor` helper.
-- **always-prevent-password-manager**: The `SecureTextField` component MUST always apply the same six autofill-prevention attributes via `noAutofillProps` and MUST NOT accept an `autoComplete` prop.
+- **prevent-autofill-default**: When `autoComplete` is `undefined`, or trims/lowercases to `'off'`, the component MUST apply autofill-prevention attributes (`autoComplete: 'off'`, `data-form-type: 'other'`, `data-1p-ignore: 'true'`, `data-lpignore: 'true'`, `data-bwignore: 'true'`, `data-protonpass-ignore: 'true'`) via the `noAutofillPropsFor` helper (`packages/web/packages/controls/src/internal/autofill.ts`), which trims and lowercases `autoComplete` before comparing it to `'off'`. This applies to both the `<input>` and the `<textarea>`.
+- **always-prevent-password-manager**: The `SecureTextField` component MUST always apply the same six autofill-prevention attributes via `noAutofillProps` (same file, `internal/autofill.ts`) and MUST NOT accept an `autoComplete` prop.
 - **mask-password-input**: The `SecureTextField` component MUST render an `<input type="password">` to visually mask the input value on screen.
-- **apply-semantic-css-classes**: The component MUST apply CSS classes to structure the component: `'aws-field'` on the root, `'aws-field--text'` for both variants, `'aws-field--secure'` additionally for `SecureTextField`, `'aws-field__label'` on the label, `'aws-field__input'` and `'aws-field__textarea'` on input/textarea respectively, and `'aws-field__hint'` on the hint paragraph.
+- **apply-semantic-css-classes**: The component MUST apply CSS classes to structure the component: `'aws-field'` on the root, `'aws-field--text'` for both variants, `'aws-field--secure'` additionally for `SecureTextField`, `'aws-field__label'` on the label, `'aws-field__input'` on the `<input>`, and both `'aws-field__input'` and `'aws-field__textarea'` on the `<textarea>`, and `'aws-field__hint'` on the hint paragraph.
 
 ## Appearance
 
@@ -80,7 +80,7 @@ A text input field component for web that supports single-line text input, multi
 - **Role/Trait**: The component renders a native HTML `<input>` or `<textarea>` element, which have implicit `textbox` role. When a `<label>` is present, it is associated via `htmlFor` attribute matching the input's `id`.
 - **Label requirements**: A `label` prop MAY be provided and is rendered as a `<label>` element associated to the input via `htmlFor`. No label is rendered if the `label` prop is omitted or falsy. The component's prop interface does not accept `aria-label`, `aria-labelledby`, or any other rest props, so there is no way to attach an accessible name to the input through this component when `label` is omitted.
 - **Announce state changes**: The `disabled` state is communicated to assistive technologies via the `disabled` attribute on the input element; no additional ARIA attributes are set by the component.
-- **Minimum tap target**: Target size is defined by CSS; the component does not enforce a minimum size. WCAG 2.1 Success Criterion 2.5.5 Target Size (Enhanced, Level AAA) recommends interactive targets be at least 44×44 CSS pixels; this spec follows the AAA recommendation (SC 2.5.5) rather than the AA minimum in SC 2.5.8 (24×24px). CSS styling SHOULD ensure this.
+- **Minimum tap target**: Target size is defined by CSS; the component does not enforce a minimum size. WCAG 2.1 Success Criterion 2.5.5 Target Size (Enhanced, Level AAA) recommends interactive targets be at least 44×44 CSS pixels; the AA minimum in SC 2.5.8 is 24×24px. Nothing in this component or its requirements enforces either size.
 - **Hint association**: Hint text is rendered in a `<p>` element but is not explicitly associated to the input via `aria-describedby`; neither the input nor the hint paragraph exposes an id a caller could wire together, so this association cannot currently be added from outside the component (see **Design Decisions**).
 
 ## Conformance Test Vectors
@@ -107,12 +107,18 @@ A text input field component for web that supports single-line text input, multi
 | text-field-018 | prevent-autofill-default | `<TextField value="" onChange={...} autoComplete="off" />` | Component treats `"off"` the same as an omitted `autoComplete`: the same six autofill-prevention attributes as text-field-010 are applied. |
 | text-field-019 | mask-password-input | `<SecureTextField value="" onChange={...} />` | Component renders `<input type="password" />`. |
 | text-field-020 | render-label, render-hint | `<TextField label="Name" value="" onChange={...} hint="Helper text" />` | DOM order is `<label>`, then `<input>`, then the hint `<p>` — the label precedes the input and the hint follows it. |
-
+| text-field-021 | apply-semantic-css-classes, handle-multiline | `<TextField value="" onChange={...} multiline={true} />` | The `<textarea>` element has class list `aws-field__input aws-field__textarea`. |
+| text-field-022 | apply-autofill-token, handle-multiline | `<TextField value="" onChange={...} multiline={true} autoComplete="email" />` | The `<textarea>` has `autoComplete="email"` and none of the five `data-*` ignore attributes. |
+| text-field-023 | prevent-autofill-default, handle-multiline | `<TextField value="" onChange={...} multiline={true} />` | The `<textarea>` has `autoComplete="off"` and the same six autofill-prevention attributes as text-field-010. |
+| text-field-024 | prevent-autofill-default | `<TextField value="" onChange={...} autoComplete=" OFF " />` | After trimming and lowercasing the value equals `'off'`, so the input has the same six autofill-prevention attributes as text-field-010, with `autoComplete="off"`. |
+| text-field-025 | render-label, render-hint | `<TextField label="" hint={false} value="" onChange={...} />` | No `<label>` and no hint `<p>` element is rendered. |
+| text-field-026 | render-label | `<TextField label={0} value="" onChange={...} />` | No `<label>` element is rendered, and the text "0" appears in the root (the falsy `0` is rendered by React rather than suppressed). |
+| text-field-027 | always-prevent-password-manager, mask-password-input | `<SecureTextField value="" onChange={...} multiline={true} />` | A single-line `<input type="password" />` is rendered; `multiline` is ignored and no `<textarea>` appears. |
 ## Edge Cases
 
 - **Empty string input**: When `value` is an empty string, the component MUST render the input element with an empty value and display any provided `placeholder` text.
-- **Null or undefined label**: When `label` is `null`, `undefined`, or falsy, no `<label>` element is rendered.
-- **Null or undefined hint**: When `hint` is `null`, `undefined`, or falsy, no hint `<p>` element is rendered.
+- **Null or undefined label**: When `label` is `null`, `undefined`, `''`, or `false`, no `<label>` element is rendered. A numeric `0` is not suppressed: `label && …` evaluates to `0`, which React renders as the literal text "0" with no `<label>` element.
+- **Null or undefined hint**: When `hint` is `null`, `undefined`, `''`, or `false`, no hint `<p>` element is rendered. A numeric `0` is not suppressed: `hint && …` evaluates to `0`, which React renders as the literal text "0" with no hint `<p>` element.
 - **Large text input**: When `value` contains many characters (e.g., >10,000), the component MUST display all of them without truncation; overflow behavior (scrolling, wrapping) is controlled by CSS.
 - **Multiline with many rows**: When `multiline` is `true` and `value` contains many lines, the textarea MUST display all lines; it has a fixed `rows={4}` and SHOULD scroll vertically if content exceeds visible height (CSS-controlled).
 - **Rapid onChange calls**: When the user types quickly, `onChange` callbacks MUST be invoked in sequence for each keystroke; no debouncing or throttling is performed by the component.
@@ -176,7 +182,7 @@ Not applicable: The component does not emit diagnostic logs. Logging of user inp
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/TextField.tsx` | unverified |
+| web | `packages/web/packages/controls/src/user-settings/components/TextField.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -218,8 +224,6 @@ Not applicable: The component does not emit diagnostic logs. Logging of user inp
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
-| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | failed | Security |
-| [adc.check.user-safety.abuse-prevention](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b5685271-fbb7-5160-aeb5-9884034fc2d4) | failed | User Safety |
 | [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | passed | User Safety |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | passed | Internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
@@ -229,7 +233,7 @@ Not applicable: The component does not emit diagnostic logs. Logging of user inp
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on: the source's native `<input>`/`<textarea>` semantics and keyboard operability (passed); the missing `aria-label`/`aria-labelledby` pass-through and unassociated hint (Accessibility rows marked partial); the CSS-controlled properties (contrast, dynamic type, touch target, RTL, text expansion) living outside this component's source (partial); the component performing no validation, sanitization, or rate limiting on typed input, per its own "Rapid onChange calls" edge case (Security and User Safety rows marked failed); the autofill-prevention default requiring an explicit opt-in token (User Safety `safe-defaults` passed); and all label/hint/placeholder text being caller-supplied with no strings hardcoded in the component (Internationalization rows marked passed); `TextField`/`SecureTextField` are pure presentation over props with no business logic of their own (separation-of-concerns passed), and `components.test.tsx` exercises `onChange`, the multiline-textarea branch, and the password-input rendering directly (unit-test-coverage passed).
+Statuses rest on: the source's native `<input>`/`<textarea>` semantics and keyboard operability (passed); the missing `aria-label`/`aria-labelledby` pass-through and unassociated hint (Accessibility rows marked partial); the CSS-controlled properties (contrast, dynamic type, touch target, RTL, text expansion) living outside this component's source (partial); input sanitization and abuse prevention belong to the consumer of the value, not to a presentational input, so those checks are not listed; the autofill-prevention default requiring an explicit opt-in token (User Safety `safe-defaults` passed); and all label/hint/placeholder text being caller-supplied with no strings hardcoded in the component (Internationalization rows marked passed); `TextField`/`SecureTextField` are pure presentation over props with no business logic of their own (separation-of-concerns passed), and `components.test.tsx` exercises `onChange`, the multiline-textarea branch, and the password-input rendering directly (unit-test-coverage passed).
 
 ## Change History
 
@@ -238,3 +242,4 @@ Statuses rest on: the source's native `<input>`/`<textarea>` semantics and keybo
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case, corrected the `useId` and autofill-token design-decision claims, cited WCAG SC 2.5.5 instead of the document alone, replaced the "Not applicable" Compliance section with a real check table, reformatted Design Decisions into Decision/Rationale/Approved triplets, fixed frontmatter dates, added related sibling-recipe links, corrected and split the CSS-class test vectors, fixed the `text-field-009` requirement citation and the single-onChange claim in `text-field-002`, added test vectors for explicit `id`, `autoComplete="off"`, `SecureTextField` masking alone, and label/hint ordering, narrowed `bind-value` to remove its overlap with `call-on-change`, documented `SecureTextField`'s accepted configuration, corrected the Appearance section with real stylesheet values, and fixed the SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes including password-manager-save prevention for every platform. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Corrected the textarea class list and falsy label/hint edge cases, named the autofill helper path, dropped the unenforced AAA claim and the non-applicable sanitization/abuse rows, and added seven vectors. |

@@ -4,11 +4,11 @@
     "id": "169da1b6-2a22-4fec-9f01-8118e5242bd5",
     "title": "ReactionBar",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-08-08",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f43f0a5ec8a45ecf",
+  "synced": "0b4b231bfc49a5ab",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: 98a0f3de-1489-465d-b1aa-017f4505d05d
 title: "Chat Coordinator Runtime"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-24
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,7 +19,9 @@ tags:
   - messaging
   - runtime
 depends-on: []
-related: []
+related:
+  - 447d0e33-c66e-4bf9-8511-e7823bdbcf9b
+  - 91891cc2-3511-4d00-888a-1ff7585c0b64
 references: []
 approved-by: ""
 approved-date: ""
@@ -32,8 +34,8 @@ approved-date: ""
 The chat coordinator runtime is the headless reference implementation of the
 cross-platform chat contract's `Orchestrator`/`ChatViewModel` surface. It has
 no rendered UI of its own — a host layer (`useChatSession` or a similar hook,
-outside the scope of this recipe) constructs it and lets UI components read
-its state and call its methods. It is three cooperating pieces:
+outside the scope of this ingredient) constructs it and lets UI components read
+its state and call its methods. It is three cooperating pieces, in `packages/web/packages/chat/src/runtime/`; later sections say "this runtime" for all three. It implements the contract that the [persona chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b) and [backends](cookbook:91891cc2-3511-4d00-888a-1ff7585c0b64) recipes build on:
 
 - **`DefaultOrchestrator`** (`DefaultOrchestrator.ts`) — the reference
   `Orchestrator` implementation. It consumes an injected `Backend`'s
@@ -68,14 +70,13 @@ implementation without changing `DefaultOrchestrator`'s contract.
 - **participants-roster-tracks-live-changes**: The top-level `participants` property MUST initialize to `config.initialParticipants` and MUST be the property that reflects subsequent joins and departures (see Participants below) — it is distinct from, and diverges from, `conversation.participants` the moment the roster changes.
 - **construction-copies-config-fields-verbatim**: `displayConfig`, `permissionStore`, `commands`, and `localParticipantID` MUST be taken verbatim from the matching `ChatConfig` fields at construction and MUST NOT be recomputed, validated, or defaulted.
 - **start-begins-consumption**: The first call to `start()` MUST begin consuming `backend.inboundEvents` via an internal, un-awaited event-loop task.
-- **start-is-idempotent**: Every call to `start()` after the first MUST be a no-op — an internal `started` flag is set `true` on the first call and is never reset, so a second concurrent event-loop task MUST NOT be created.
-- **stop-cancels-iterator**: `stop()` MUST set an internal `stopped` flag to `true` and MUST call `return()` on the active async iterator, if one exists, to signal early termination of the inbound stream.
-- **stop-before-start-locks-the-loop**: If `stop()` is called before `start()` has ever been called, a later `start()` call MUST still never consume any event — `runEventLoop`'s `while (!this.stopped)` guard is checked before the first `iterator.next()`, and nothing in this source ever resets `stopped` back to `false`.
-- **event-loop-recovery**: When `this.iterator.next()` rejects inside the internal event loop, the loop's `catch` block notifies an `error` `ChatUpdate` and the loop function then returns — `started` is never reset to `false`, so a later `start()` call is still a no-op (per start-is-idempotent) and consumption never resumes on that instance. `DefaultOrchestrator.ts` implements no retry, backoff, or reconnect policy, and provides no way to restart event consumption on an already-started instance.
+- **start-is-idempotent**: Every call to `start()` after the first MUST be a no-op: at most one inbound event-consumption task ever runs per instance, and a later call MUST NOT create a second one.
+- **stop-cancels-iterator**: `stop()` MUST end inbound consumption: it MUST call `return()` on the active async iterator, if one exists, to signal early termination of the inbound stream, and the event loop MUST NOT begin another iteration afterward.
+- **stop-before-start-locks-the-loop**: If `stop()` is called before `start()` has ever been called, a later `start()` call MUST still never consume any event; nothing in this source ever re-enables consumption once `stop()` has been called.
 
 ### Display Configuration
 
-- **display-config-mutation**: NEEDS REVIEW: Not implemented in source. `ChatUpdate` defines a `displayConfigChanged` kind, implying `displayConfig` can change after construction and observers can be told about it, but `DefaultOrchestrator` assigns `this.displayConfig = config.display` exactly once, in the constructor, and no method in `DefaultOrchestrator.ts` ever reassigns `displayConfig` or calls `this.notify({ kind: 'displayConfigChanged' })`. Missing: a public method (an `updateDisplayConfig`-shaped API or similar) and the trigger(s) that would call it. Whoever adds a runtime way to change `DisplayConfig` — not present in these three files — would resolve this.
+- **display-config-mutation**: NEEDS REVIEW: Not implemented in source. `ChatUpdate` defines a `displayConfigChanged` kind, but `DefaultOrchestrator` assigns `displayConfig` only in its constructor and never emits that update; no public method changes it.
 
 ### Sending Messages & Delivery Status
 
@@ -99,10 +100,10 @@ implementation without changing `DefaultOrchestrator`'s contract.
 
 ### Read Cursors
 
-- **mark-read-sets-local-cursor**: `markRead(messageID)` MUST upsert a `ReadReceipt` for `localParticipantID` with `upToMessageID` set to `messageID` and `at` set to the call's wall-clock time.
+- **mark-read-sets-local-cursor**: `markRead(messageID)` MUST upsert a `ReadReceipt` for `localParticipantID` with `upToMessageID` set to `messageID` and `at` set to the call's wall-clock time, subject to the same regression guards as `readMarkerAdvanced` (see read-marker-regression-guard-by-position and read-marker-regression-guard-by-time).
 - **read-marker-advanced-is-one-per-participant**: A `readMarkerAdvanced` event MUST upsert exactly one `ReadReceipt` per `participantID` — a later event for the same participant MUST replace, not add to, that participant's existing entry.
-- **read-marker-regression-guard-by-position**: When both the existing and incoming `upToMessageID` are found in `messages`, the upsert MUST be rejected (the existing cursor kept unchanged, no notification) if the incoming id's index in `messages` is earlier than the existing cursor's index.
-- **read-marker-regression-guard-by-time**: When either `upToMessageID` cannot be found in `messages`, the upsert MUST instead be rejected only if the incoming event's `at` is earlier than the existing cursor's `at`.
+- **read-marker-regression-guard-by-position**: When both the existing and incoming `upToMessageID` are found in `messages`, an upsert from `readMarkerAdvanced` or `markRead` MUST be rejected (the existing cursor kept unchanged, no notification) if the incoming id's index in `messages` is earlier than the existing cursor's index.
+- **read-marker-regression-guard-by-time**: When either `upToMessageID` cannot be found in `messages`, an upsert from `readMarkerAdvanced` or `markRead` MUST instead be rejected only if the incoming `at` is earlier than the existing cursor's `at`.
 - **read-marker-absence-means-unread**: The absence of a `ReadReceipt` for a participant MUST be interpreted as that participant having read nothing yet; `DefaultOrchestrator` MUST NOT synthesize a default entry for a participant with none.
 
 ### Typing Indicators
@@ -113,18 +114,18 @@ implementation without changing `DefaultOrchestrator`'s contract.
 
 ### Interactive Widgets
 
-- **widget-presented-appends-and-maps**: A `widgetPresented` event MUST append `event.widget` to `pendingWidgets`, MUST record the mapping from `event.widget.id` to `event.messageID` in the internal widget-to-message map, and MUST notify `pendingWidgetsChanged`.
-- **respond-to-widget-removes-optimistically**: `respondToWidget(response)` MUST, before calling the backend, remove any pending widget matching `response.widgetID` from `pendingWidgets` and its entry from the widget-to-message map, notifying `pendingWidgetsChanged` if a removal occurred.
+- **widget-presented-appends-and-maps**: A `widgetPresented` event MUST append `event.widget` to `pendingWidgets`, MUST retain the association between `event.widget.id` and `event.messageID`, and MUST notify `pendingWidgetsChanged`.
+- **respond-to-widget-removes-optimistically**: `respondToWidget(response)` MUST, before calling the backend, remove any pending widget matching `response.widgetID` from `pendingWidgets` and drop its retained message association, notifying `pendingWidgetsChanged` if a removal occurred.
 - **respond-to-widget-unconditional-forward**: `respondToWidget` MUST call `backend.submitWidgetResponse(response)` regardless of whether a matching pending widget was found — an unrecognized or already-resolved `widgetID` is still forwarded, unlike `respondToPermission`'s unknown-id handling (see permission-response-ignores-unknown-prompt).
-- **respond-to-widget-rollback-on-rejection**: If `backend.submitWidgetResponse` rejects and a widget was removed by this call, `respondToWidget` MUST restore `pendingWidgets` and the widget-to-message map to the values they held before this call, notify `pendingWidgetsChanged` again, notify an `error` update carrying the rejection's message, and re-throw the rejection.
-- **widget-response-rollback-ordering**: NEEDS REVIEW: Not implemented in source. The rollback in respond-to-widget-rollback-on-rejection restores `pendingWidgets`/the widget-to-message map to their exact pre-call snapshot, with no check for whether either was mutated by another event (a new `widgetPresented`, a concurrent `respondToWidget` call for a different widget) while the rejected call's `backend.submitWidgetResponse` promise was still pending — any such intervening mutation is silently discarded by the rollback. Missing: an ordering or merge rule for concurrent widget-state mutation. This cannot be settled from `DefaultOrchestrator.ts` alone — no concurrency contract for its public methods is stated anywhere in the given sources.
+- **respond-to-widget-rollback-on-rejection**: If `backend.submitWidgetResponse` rejects and a widget was removed by this call, `respondToWidget` MUST restore `pendingWidgets` and the widget's retained message association to the values they held before this call, notify `pendingWidgetsChanged` again, notify an `error` update carrying the rejection's message, and re-throw the rejection.
+- **widget-response-rollback-ordering**: NEEDS REVIEW: Not implemented in source. The rollback in respond-to-widget-rollback-on-rejection restores the pre-call `pendingWidgets` snapshot without checking for changes made while the rejected call was pending, so a concurrent `widgetPresented` or `respondToWidget` is silently discarded; no concurrency contract for these methods is stated in the given sources.
 
 ### Permissions
 
 - **present-permission-prompt-appends**: `presentPermissionPrompt(prompt)` (a non-portable, TS-runtime-only convenience for hooks/policy gates to surface a decision request) MUST append `prompt` to `pendingPermissions` and notify `pendingPermissionsChanged`.
 - **permission-response-ignores-unknown-prompt**: `respondToPermission(promptID, decision)` MUST return with no state change and no notification if no entry of `pendingPermissions` has that `id` — an unrecognized id is a silent no-op, unlike `respondToWidget`'s unconditional forward.
 - **permission-response-removes-and-remembers**: For a recognized `promptID`, `respondToPermission` MUST call `permissionStore.remember(decision, prompt.permission, prompt.requesterID)`, remove that prompt from `pendingPermissions`, and notify `pendingPermissionsChanged`.
-- **hook-and-permission-enforcement**: NEEDS REVIEW: Not implemented in source. `ChatConfig` accepts `gatingHooks: ReadonlyArray<GatingHook>` and `observingHooks: ReadonlyArray<ObservingHook>`, and `GatingPoint`/`ObservingPoint` enumerate specific lifecycle points (`willSubmitMessage`, `willExecuteCommand`, `willEmitUpdate`, `willRequestPermission`, `willAcceptInboundMessage`, `didComposeMessage`, `messageSent`, `messageReceived`, `messageRead`, `didExecuteCommand`, `didEmitUpdate`, `participantJoined`, `participantDeparted`, `permissionResolved`), but no method in `DefaultOrchestrator.ts` calls a hook's `gate()` or `observe()` at any of these points, and `permissionStore.decision()` is never called anywhere in `DefaultOrchestrator.ts` to decide whether a gated action should be allowed to proceed — the only `PermissionStore` operation this source performs is recording a decision via `remember()`. Missing: what MUST happen when a `GatingHook` denies an action, at which of these points each hook fires, and where (if anywhere in this runtime) a remembered `decision()` is consulted before a gated action runs. This cannot be settled from these three files alone; it would be resolved by the code that wires `gatingHooks`/`observingHooks` for a real deployment, which is not present here.
+- **hook-and-permission-enforcement**: NEEDS REVIEW: Not implemented in source. `ChatConfig` accepts `gatingHooks` and `observingHooks`, but no method in `DefaultOrchestrator.ts` calls a hook's `gate()` or `observe()` or `permissionStore.decision()`; the only `PermissionStore` operation performed is `remember()`. Missing: what happens when a gating hook denies an action and where a remembered decision is consulted.
 
 ### Commands
 
@@ -141,20 +142,19 @@ implementation without changing `DefaultOrchestrator`'s contract.
 ### Observer Notifications
 
 - **notify-fans-out-synchronously**: `notify(update)` MUST call `chatDidUpdate(update)` synchronously, in the observer set's iteration order, on every observer registered at the moment `notify` runs, before `notify` returns.
-- **add-remove-observer-mutate-the-same-set**: `addObserver`/`removeObserver` MUST add to, or delete from, the same internal `Set<ChatStateObserver>` that `notify` iterates; an observer removed before an update fires MUST NOT receive that update.
+- **add-remove-observer-mutate-the-same-set**: `addObserver` MUST register an observer so that it receives every subsequent update, and `removeObserver` MUST unregister it; an observer removed before an update fires MUST NOT receive that update.
 - **transport-error-relayed-verbatim**: A `transportError` event MUST notify an `error` update whose `message` is `event.message`, unmodified — `DefaultOrchestrator` MUST NOT reinterpret, translate, or suppress it.
 
 ### Non-Portable Runtime Extensions
 
 - **deliver-bypasses-backend**: `deliver(event)` MAY be used to apply any `InboundEvent` exactly as if it had arrived from `backend.inboundEvents`, by routing it through the same internal event handler — a TS-runtime convenience for injecting lines (e.g. a scripted persona welcome) that no backend produced; it is not part of the portable `Orchestrator` contract.
-- **caller-should-start-before-relying-on-inbound-state**: A caller SHOULD call `start()` before depending on any inbound-event-driven state (`messages` gained via `messageReceived`, `typingParticipants`, `activeDrafts`, etc.), since none of it updates from the backend until the event loop is running. This is a SHOULD, not a MUST, because `submitMessage`, `markRead`, `setLocalTyping`, `respondToWidget`, and `respondToPermission` all function correctly whether or not `start()` was ever called — the only consequence of deferring `start()` is a delay in observing inbound state, not an error (see Design Decisions).
+- **caller-should-start-before-relying-on-inbound-state**: A caller SHOULD call `start()` before depending on any inbound-event-driven state (`messages` gained via `messageReceived`, `typingParticipants`, `activeDrafts`, etc.), since none of it updates from the backend until the event loop is running. In particular, a message passed to `submitMessage` never receives its `messageAccepted`, `messageDelivered` or `messageFailed` update without a running loop, so it stays `sending` indefinitely. `markRead`, `setLocalTyping`, `respondToWidget`, and `respondToPermission` run without `start()`; the consequence for them is only that inbound state is not observed (see Design Decisions).
 
 ### InMemoryPermissionStore
 
 - **decision-lookup-order**: `decision(permission, requesterID)` MUST return the remembered decision for that exact `(permission.id, requesterID)` pair if one exists, else `permission.defaultDecision` if set, else `undefined`.
 - **remember-persists-always-decisions-only**: `remember(decision, permission, requesterID)` MUST persist the decision only when it is `'allowAlways'` or `'denyAlways'`; `'allowOnce'` and `'denyOnce'` MUST NOT be stored.
 - **store-is-process-local**: The store MUST hold all state in an in-memory `Map` for the lifetime of the instance and MUST NOT read from or write to any external persistence.
-- **store-has-no-revoke-operation**: The store's interface (`decision`/`remember`) provides no method to remove or revoke an already-remembered decision short of discarding the instance — consistent with its documented process-local, non-persistent design (see Design Decisions), not a gap in this source.
 
 ### ScriptedBackend
 
@@ -170,7 +170,7 @@ implementation without changing `DefaultOrchestrator`'s contract.
 
 Not applicable — this is a headless chat state-coordination runtime
 (`DefaultOrchestrator`, `InMemoryPermissionStore`, `ScriptedBackend`), not a
-visual component; none of these three files renders anything.
+visual component; this runtime renders nothing.
 
 ## States
 
@@ -187,6 +187,8 @@ describe.
 
 ## Conformance Test Vectors
 
+Test file: `packages/web/packages/chat/src/runtime/__tests__/scenarios.test.ts` (harness in `harness.ts` beside it); each vector names its test by title. Vectors marked Unverified are derived from the source and no named test exercises them.
+
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | ccr-001 | submit-message-calls-backend-first, submit-message-optimistic-echo, submit-message-returns-local-id | Fresh harness; `submitMessage('hello', [])` | Returns `'local-1'`; `backend.sent` equals `[{ localID: 'local-1', text: 'hello', attachments: [] }]`; `messages` has length 1 with `deliveryStatus` `{ kind: 'sending' }` — `scenarios.test.ts "round-trips a non-streaming exchange and tracks delivery status"` |
@@ -198,7 +200,7 @@ describe.
 | ccr-007 | inbound-message-clears-sender-draft, active-drafts-excluded-from-messages | After ccr-006, `emit({ kind: 'messageReceived', message: <the finalized text> })` for the same participant | `activeDrafts` becomes length 0; `messages` gains exactly one entry with the finalized text — same test |
 | ccr-008 | draft-cleared-removes-without-commit | `draftUpdated` for a participant, then `draftCleared` for the same participant, with no `messageReceived` in between | `activeDrafts` becomes length 0; `messages` stays length 0 — `scenarios.test.ts "discards a draft on draftCleared without committing a message"` |
 | ccr-009 | mark-read-sets-local-cursor | Fresh harness; `await orchestrator.markRead('srv-42')` | `readMarkers` has length 1; its entry has `participantID` equal to the local user's id and `upToMessageID: 'srv-42'` — `scenarios.test.ts "local markRead advances the local cursor only"` |
-| ccr-010 | read-marker-advanced-is-one-per-participant | After ccr-009's local `markRead('srv-1')`, `emit({ kind: 'readMarkerAdvanced', participantID: <persona>, upToMessageID: 'srv-3', at })` | `readMarkers` has length 2; the persona's entry has `upToMessageID: 'srv-3'` — `scenarios.test.ts "inbound readMarkerAdvanced from a peer is recorded as a separate cursor"` |
+| ccr-010 | read-marker-advanced-is-one-per-participant | After a local `markRead('srv-1')`, `emit({ kind: 'readMarkerAdvanced', participantID: <persona>, upToMessageID: 'srv-3', at })` | `readMarkers` has length 2; the persona's entry has `upToMessageID: 'srv-3'` — `scenarios.test.ts "inbound readMarkerAdvanced from a peer is recorded as a separate cursor"` |
 | ccr-011 | read-marker-advanced-is-one-per-participant | Two sequential `readMarkerAdvanced` events for the same persona: `upToMessageID: 'srv-1'` then `'srv-2'` | `readMarkers` stays length 1; its entry's `upToMessageID` is `'srv-2'` (the second overwrites the first, not appends) — `scenarios.test.ts "a second cursor advance from the same participant overwrites the first"` |
 | ccr-012 | typing-added-once, typing-removed-once | `typing` events for one participant: `isTyping: true`, `isTyping: true` again, then `isTyping: false` | `typingParticipants` becomes `[personaID]` after the first event, stays `[personaID]` (no duplicate) after the second, and becomes `[]` after the third — `scenarios.test.ts "adds and removes typing participants on isTyping toggles"` |
 | ccr-013 | set-local-typing-delegates-only | `await orchestrator.setLocalTyping(true)`; `await orchestrator.setLocalTyping(false)` | `backend.typingCalls` equals `[true, false]` — `scenarios.test.ts "local setLocalTyping calls through to the backend"` |
@@ -211,22 +213,36 @@ describe.
 | ccr-020 | transport-error-relayed-verbatim | `emit({ kind: 'transportError', message: 'socket closed' })` | A captured update has `kind: 'error'` and `message: 'socket closed'` — `scenarios.test.ts "emits an error update on transportError events"` |
 | ccr-021 | add-remove-observer-mutate-the-same-set | `addObserver(obs)` then `removeObserver(obs)`, then a `typing` event is emitted | `obs` records zero updates — `scenarios.test.ts "does not notify after removeObserver"` |
 | ccr-022 | list-commands-returns-config-commands | `createHarness({ commands: [cmd] })` | `orchestrator.listCommands()` equals `[cmd]` exactly — `scenarios.test.ts "listCommands returns the commands handed in via ChatConfig"` |
-| ccr-023 | send-mints-sequential-local-ids | Two sequential `backend.send(...)` calls on a fresh `ScriptedBackend` with the default prefix | Resolved ids are `'local-1'` then `'local-2'`, both recorded in `sent` in call order — derived directly from `ScriptedBackend.send`'s counter (no dedicated `ScriptedBackend` test file exists; this is not exercised by a named test) |
-| ccr-024 | close-drains-queue-before-ending | `backend.emit(eventA)` with no consumer awaiting yet; then `backend.close()`; then a consumer's first, then second, `next()` call | The first `next()` still yields `eventA` (`done: false`); the second `next()` resolves `done: true` — derived directly from the `inboundEvents` iterator checking its queue before checking closed state (no dedicated `ScriptedBackend` test file exists) |
-
+| ccr-023 | send-mints-sequential-local-ids | Two sequential `backend.send(...)` calls on a fresh `ScriptedBackend` with the default prefix | Resolved ids are `'local-1'` then `'local-2'`, both recorded in `sent` in call order — derived directly from `ScriptedBackend.send`'s counter (Unverified: no dedicated `ScriptedBackend` test file exists, and no named test exercises it) |
+| ccr-024 | close-drains-queue-before-ending | `backend.emit(eventA)` with no consumer awaiting yet; then `backend.close()`; then a consumer's first, then second, `next()` call | The first `next()` still yields `eventA` (`done: false`); the second `next()` resolves `done: true` — derived directly from the `inboundEvents` iterator checking its queue before checking closed state (Unverified: no dedicated `ScriptedBackend` test file exists, and no named test exercises it) |
+| ccr-025 | start-is-idempotent | `start()` called twice on a fresh orchestrator over a `ScriptedBackend`, then one `messageReceived` emitted | `messages` has length 1 and observers saw one `messagesChanged` (Unverified, derived from source) |
+| ccr-026 | stop-cancels-iterator | `start()`, then `stop()`, then `emit({ kind: 'messageReceived', ... })` | The event is never processed: `messages` stays length 0 (Unverified, derived from source) |
+| ccr-027 | stop-before-start-locks-the-loop | `stop()`, then `start()`, then `emit({ kind: 'messageReceived', ... })` | The event is never processed: `messages` stays length 0 (Unverified, derived from source) |
+| ccr-028 | submit-message-failure-no-echo | `backend.send` rejects with `new Error('offline')`; `submitMessage('hi', [])` | `submitMessage` rejects with the same error; an `error` update with `message: 'offline'` is notified; `messages` stays length 0 (Unverified, derived from source) |
+| ccr-029 | respond-to-widget-rollback-on-rejection | After a `widgetPresented` event, `respondToWidget(...)` against a `Backend` whose `submitWidgetResponse` rejects with `new Error('nope')` | `respondToWidget` rejects with the same error; `pendingWidgets` is length 1 again; `pendingWidgetsChanged` was notified twice and an `error` update with `message: 'nope'` once (Unverified, derived from source) |
+| ccr-030 | respond-to-widget-unconditional-forward | `respondToWidget({ widgetID: 'unknown', ... })` with no pending widgets | `backend.widgetResponses` has length 1; no `pendingWidgetsChanged` update is notified (Unverified, derived from source) |
+| ccr-031 | read-marker-regression-guard-by-position | `messages` holds `srv-1` then `srv-2`; `markRead('srv-2')`, then `markRead('srv-1')` | The local cursor stays `upToMessageID: 'srv-2'` (Unverified, derived from source) |
+| ccr-032 | read-marker-regression-guard-by-time | No matching messages; `readMarkerAdvanced` for the persona with `upToMessageID: 'x'` at time T2, then with `upToMessageID: 'y'` at an earlier time T1 | The persona cursor stays `upToMessageID: 'x'` and no second `readMarkersChanged` is notified (Unverified, derived from source) |
+| ccr-033 | draft-cleared-also-clears-commands | `commandInvoked` and `draftUpdated` for one participant, then `draftCleared` for the same participant | `activeDrafts` and `activeCommands` are both empty (Unverified, derived from source) |
+| ccr-034 | command-invoked-appends-active-entry | `emit({ kind: 'commandInvoked', participantID: 'p', invocation })` | `activeCommands` has one entry with `participantID: 'p'`, that `invocation`, and `result` unset; `activeCommandsChanged` is notified (Unverified, derived from source) |
+| ccr-035 | command-completed-matches-by-invocation-id, command-completed-sets-result | After ccr-034, `emit({ kind: 'commandCompleted', result })` where `result.invocationID` equals `invocation.id` | The entry's `result` equals `result`; its `participantID` and `invocation` are unchanged; `activeCommandsChanged` is notified (Unverified, derived from source) |
+| ccr-036 | command-completed-matches-by-invocation-id | `commandCompleted` whose `result.invocationID` matches no entry | `activeCommands` is unchanged and no update is notified (Unverified, derived from source) |
+| ccr-037 | permission-response-ignores-unknown-prompt | `await respondToPermission('missing', 'allowAlways')` with no matching prompt | `pendingPermissions` is unchanged, no update is notified, and the store remembers nothing (Unverified, derived from source) |
+| ccr-038 | deliver-bypasses-backend | Without calling `start()`, `deliver({ kind: 'messageReceived', message })` | `messages` has length 1 with that message; the backend recorded no call (Unverified, derived from source) |
+| ccr-039 | iterator-return-unparks-exactly-once | One iterator's `next()` is parked on an empty `ScriptedBackend`; call its `return()`; then `emit(event)` and `close()` | The parked `next()` resolved once with `done: true`; neither `emit` nor `close` resolves it again (Unverified, derived from source) |
 ## Edge Cases
 
-- **Empty message text (null/empty input).** `submitMessage('', [])` is accepted with no validation — it produces a message with empty `text` and `deliveryStatus: { kind: 'sending' }` exactly like any other call. MUST (submit-message-optimistic-echo performs no content validation).
-- **Unrecognized permission prompt id (null/empty input).** `respondToPermission` with a `promptID` matching no entry in `pendingPermissions` is a silent no-op — no state change, no notification. MUST (permission-response-ignores-unknown-prompt).
-- **Unrecognized widget id (null/empty input).** `respondToWidget` with a `widgetID` matching no entry in `pendingWidgets` still calls `backend.submitWidgetResponse` — unlike the permission case, it is forwarded, not rejected early. MUST (respond-to-widget-unconditional-forward).
-- **Read cursor to a never-seen message id (boundary value).** `markRead(messageID)` for an id absent from `messages` still upserts a `ReadReceipt` — the regression guard falls back to comparing `at` timestamps when the id cannot be located, and does not require the id to exist. MUST (read-marker-regression-guard-by-time).
-- **Command result with no matching invocation (boundary value).** A `commandCompleted` event whose `invocationID` matches no entry of `activeCommands` — because the invocation was never seen, or its participant's turn already ended via `draftCleared` — is dropped with no state change. MUST (command-completed-matches-by-invocation-id).
-- **Concurrent access — synchronous handlers are safe.** Every event handler and every public method's mutations, up to its first (if any) `await`, run to completion as one JavaScript microtask with nothing else able to interleave; state reads and writes that never straddle an `await` (e.g. `handleEvent`'s branches, `respondToPermission`) cannot race with each other. MUST (a property of the single-threaded JS runtime the source relies on, not a mechanism the source implements itself).
-- **Concurrent access — the one real hazard.** `respondToWidget`'s rollback path is the one place state mutation straddles an `await` (the pending `backend.submitWidgetResponse` call); a concurrent `widgetPresented` or another `respondToWidget` call that completes during that window can have its effect silently discarded on rejection. See the open question on widget-response-rollback-ordering. Callers SHOULD NOT assume `pendingWidgets`/the widget-to-message map are safe from lost updates when responses are in flight concurrently.
-- **Concurrent access — one backend, one consumer.** Driving two `DefaultOrchestrator` instances (or calling the iterator factory twice and consuming both) from the same `ScriptedBackend` instance does not broadcast events to both — they compete for the same shared queue. MUST NOT (inbound-events-shared-across-iterators; matches `Backend.ts`'s documented single-consumer assumption).
-- **Error states — outbound send failure.** `backend.send` rejecting produces an `error` update and a re-thrown rejection, with no local echo ever added. MUST (submit-message-failure-no-echo).
-- **Error states — inbound stream failure.** The `inboundEvents` iterator itself rejecting produces one `error` update, then permanently halts consumption on that instance with no retry. See event-loop-recovery.
-- **Offline / disconnected state.** `DefaultOrchestrator` has no network-awareness of its own; connectivity loss is only observable if the injected `Backend` emits a `transportError` event (relayed verbatim, see transport-error-relayed-verbatim) or lets its `inboundEvents` iterator reject (see event-loop-recovery above). There is no built-in reconnect, backoff, or offline queue in `DefaultOrchestrator.ts`, `InMemoryPermissionStore.ts`, or `ScriptedBackend.ts`.
+- **Empty message text (null/empty input).** `submitMessage('', [])` is accepted with no validation — it produces a message with empty `text` and `deliveryStatus: { kind: 'sending' }` exactly like any other call. See submit-message-optimistic-echo, which performs no content validation.
+- **Unrecognized permission prompt id (null/empty input).** `respondToPermission` with a `promptID` matching no entry in `pendingPermissions` is a silent no-op — no state change, no notification. See permission-response-ignores-unknown-prompt.
+- **Unrecognized widget id (null/empty input).** `respondToWidget` with a `widgetID` matching no entry in `pendingWidgets` still calls `backend.submitWidgetResponse` — unlike the permission case, it is forwarded, not rejected early. See respond-to-widget-unconditional-forward.
+- **Read cursor to a never-seen message id (boundary value).** `markRead(messageID)` for an id absent from `messages` still upserts a `ReadReceipt` unless the regression guard rejects it — the guard, which applies to `markRead` as to `readMarkerAdvanced`, falls back to comparing `at` timestamps when the id cannot be located, and does not require the id to exist. See read-marker-regression-guard-by-time and mark-read-sets-local-cursor.
+- **Command result with no matching invocation (boundary value).** A `commandCompleted` event whose `invocationID` matches no entry of `activeCommands` — because the invocation was never seen, or its participant's turn already ended via `draftCleared` — is dropped with no state change. See command-completed-matches-by-invocation-id.
+- **Concurrent access — synchronous handlers are safe.** Every event handler and every public method's mutations, up to its first (if any) `await`, run to completion as one JavaScript microtask with nothing else able to interleave; state reads and writes that never straddle an `await` (e.g. `handleEvent`'s branches, `respondToPermission`) cannot race with each other. This is a property of the single-threaded JS runtime the source relies on, not a mechanism the source implements itself.
+- **Concurrent access — the one real hazard.** `respondToWidget`'s rollback path is the one place state mutation straddles an `await` (the pending `backend.submitWidgetResponse` call); a concurrent `widgetPresented` or another `respondToWidget` call that completes during that window can have its effect silently discarded on rejection. See the open question on widget-response-rollback-ordering. Callers SHOULD NOT assume `pendingWidgets`/the widgets' message association are safe from lost updates when responses are in flight concurrently.
+- **Concurrent access — one backend, one consumer.** Driving two `DefaultOrchestrator` instances (or calling the iterator factory twice and consuming both) from the same `ScriptedBackend` instance does not broadcast events to both — they compete for the same shared queue. See inbound-events-shared-across-iterators; this matches `Backend.ts`'s documented single-consumer assumption.
+- **Error states — outbound send failure.** `backend.send` rejecting produces an `error` update and a re-thrown rejection, with no local echo ever added. See submit-message-failure-no-echo.
+- **Error states — inbound stream failure.** The `inboundEvents` iterator itself rejecting produces one `error` update, then permanently halts consumption on that instance with no retry. See the event-loop recovery Design Decision.
+- **Offline / disconnected state.** `DefaultOrchestrator` has no network-awareness of its own; connectivity loss is only observable if the injected `Backend` emits a `transportError` event (relayed verbatim, see transport-error-relayed-verbatim) or lets its `inboundEvents` iterator reject (see the event-loop recovery Design Decision). There is no built-in reconnect, backoff, or offline queue in this runtime.
 
 ## Configuration
 
@@ -240,7 +256,7 @@ describe.
 | `ChatConfig.gatingHooks` | `ReadonlyArray<GatingHook>` | required | Accepted but never invoked by `DefaultOrchestrator` — see the open question on hook-and-permission-enforcement. |
 | `ChatConfig.permissionStore` | `PermissionStore` | required | Consulted only via `remember()` inside `respondToPermission`; `decision()` is never called by `DefaultOrchestrator` itself. |
 | `ChatConfig.backend` | `Backend` | required | The sole source of `InboundEvent`s and the sole sink for `send`/`setLocalTyping`/`submitWidgetResponse`. |
-| `ChatConfig.display` | `DisplayConfig` | required | Stored verbatim as `displayConfig`; never read or branched on internally by these three files (see Accessibility Options and Feature Flags below). |
+| `ChatConfig.display` | `DisplayConfig` | required | Stored verbatim as `displayConfig`; never read or branched on internally by this runtime (see Accessibility Options and Feature Flags below). |
 | `ScriptedBackend` constructor option `localIDPrefix` | `string`, optional | `'local'` | Prefix used to format minted local ids as `<prefix>-<n>`. |
 
 ## Deep Linking
@@ -250,7 +266,7 @@ Not applicable: `DefaultOrchestrator.ts`, `InMemoryPermissionStore.ts`, and
 
 ## Localization
 
-These three files carry, but do not author or localize, user-facing text.
+This runtime carries, but does not author or localize, user-facing text.
 `presentPermissionPrompt` stores a caller-supplied `PermissionPrompt`
 (`displayPrompt`/`permission.displayPromptTemplate`) untouched in
 `pendingPermissions`. Error text — `ChatUpdate`'s `error.message`,
@@ -261,7 +277,7 @@ in whatever language the throwing code or the backend produced it. None of
 contains a translation table, a locale lookup, or pluralization logic;
 localizing any of this text is the responsibility of whatever authors it (a
 `GatingHook`/`ObservingHook`, the real `Backend`, or the UI layer), which is
-out of scope for this recipe.
+out of scope for this ingredient.
 
 ## Accessibility Options
 
@@ -278,7 +294,7 @@ Not applicable: no flag, toggle, or config-gated code path exists in
 
 ## Analytics
 
-Not applicable: none of these three files emits an analytics or telemetry
+Not applicable: this runtime emits no analytics or telemetry
 event of any kind.
 
 ## Privacy
@@ -287,22 +303,22 @@ event of any kind.
   backend-supplied content), participant identifiers
   (`Participant.id`/`senderID`/`requesterID`), and permission-grant history
   (a `PermissionDecision` keyed by `permission.id` plus `requesterID` in
-  `InMemoryPermissionStore`). None of these three files treats any of it as a
+  `InMemoryPermissionStore`). None of this runtime's source treats any of it as a
   credential or token, but message text and attachments can carry arbitrary
   content a user chooses to type or attach.
 - **Storage**: Entirely in-memory — plain class fields in `DefaultOrchestrator`
   and a `Map` in `InMemoryPermissionStore` — for the lifetime of the owning
-  instance; nothing in these three files writes to disk, `localStorage`, or a
+  instance; nothing in this runtime writes to disk, `localStorage`, or a
   database.
-- **Transmission**: None directly. These three files perform no network I/O
-  themselves; all transmission is delegated to whichever concrete `Backend`
-  implementation is injected (out of scope for this recipe). `ScriptedBackend`
+- **Transmission**: None directly. This runtime performs no network I/O
+  itself; all transmission is delegated to whichever concrete `Backend`
+  implementation is injected (out of scope for this ingredient). `ScriptedBackend`
   performs no transmission at all — it only records calls in memory.
 - **Retention**: For the lifetime of the instance only. Constructing a new
   `DefaultOrchestrator`/`InMemoryPermissionStore` (or restarting the process)
   discards all of it; there is no expiry or revoke path for an already
-  remembered `allowAlways`/`denyAlways` decision short of that (see
-  store-has-no-revoke-operation).
+  remembered `allowAlways`/`denyAlways` decision short of that (see the
+  `InMemoryPermissionStore` Design Decision).
 
 ## Logging
 
@@ -344,7 +360,7 @@ anywhere in `DefaultOrchestrator.ts`, `InMemoryPermissionStore.ts`, or
   `Orchestrator`-conforming reference type works as a plain reference type
   whose `ChatStateObserver`s are AppKit/UIKit controllers implementing
   `chatDidUpdate`. Source notifies synchronously and inline, with no thread
-  hop of its own, so an AppKit/UIKit host MUST hop to the main queue itself
+  hop of its own, so an AppKit/UIKit host SHOULD hop to the main queue itself
   before touching views — `DefaultOrchestrator.ts` performs no such hop.
 - **WinUI 3**: Model `ChatViewModel`'s mutable array-valued fields
   (`messages`, `participants`, `activeDrafts`, `activeCommands`,
@@ -365,14 +381,14 @@ anywhere in `DefaultOrchestrator.ts`, `InMemoryPermissionStore.ts`, or
   wrapping a `Dictionary<string, PermissionDecision>` guarded by a `lock` (or
   a `ConcurrentDictionary`) — .NET gives no free single-threaded guarantee the
   way the JS runtime does, so the "no internal synchronization" characteristic
-  documented in Design Decisions MUST become an explicit lock on this
+  documented in Design Decisions SHOULD become an explicit lock on this
   platform rather than staying implicit.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/runtime/` | unverified |
+| web | `packages/web/packages/chat/src/runtime/` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -428,21 +444,23 @@ anywhere in `DefaultOrchestrator.ts`, `InMemoryPermissionStore.ts`, or
   **Approved**: pending
 - **Decision**: A caller SHOULD, but is not required to, call `start()`
   before relying on inbound-event-driven state.
-  **Rationale**: Every public method that does not depend on the inbound
-  stream (`submitMessage`, `markRead`, `setLocalTyping`, `respondToWidget`,
-  `respondToPermission`) works identically whether or not `start()` has been
-  called, because none of them read `started`/`stopped`. The only consequence
-  of calling them before `start()` is that no inbound event will yet have
-  been observed — there is no error path or invalid state to guard against,
-  which is why this is a SHOULD (a usage recommendation) rather than a MUST.
+  **Rationale**: `markRead`, `setLocalTyping`, `respondToWidget`, and
+  `respondToPermission` work identically whether or not `start()` has been
+  called, and `submitMessage` still calls the backend and echoes the message
+  locally. The consequence of never starting is that no inbound event is
+  observed: a submitted message is never acknowledged and stays in `sending`
+  forever. That is a stuck state rather than an error, which is why this is a
+  SHOULD (a usage recommendation) rather than a MUST.
   **Approved**: pending
-
+- **Decision**: Event-loop recovery: when the backend's `inboundEvents` iterator rejects, the loop notifies one `error` update and ends, and the instance never resumes consumption or restarts.
+  **Rationale**: `DefaultOrchestrator` implements no retry, backoff, or reconnect policy, and a later `start()` is a no-op (see start-is-idempotent). Reconnecting is the injected `Backend`'s job, or the host's by constructing a new orchestrator. This leaves a stopped instance silently inert, which is recorded here as known debt rather than as a requirement.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | Reliability |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | partial | Reliability |
@@ -450,12 +468,12 @@ anywhere in `DefaultOrchestrator.ts`, `InMemoryPermissionStore.ts`, or
 `explicit-error-handling` is partial: `submitMessage` and `respondToWidget`
 surface backend failures as an `error` update and a re-thrown rejection, but
 an `inboundEvents` iterator rejection is surfaced once and then the event
-loop halts permanently with no further signal (see event-loop-recovery).
-`separation-of-concerns` passes: `DefaultOrchestrator` (view-model state),
+loop halts permanently with no further signal (see the event-loop recovery Design Decision).
+`separation-of-concerns` is partial: `DefaultOrchestrator` (view-model state),
 `InMemoryPermissionStore` (permission memory), and `ScriptedBackend` (test
 transport) each own exactly one responsibility behind the `Backend`/
 `PermissionStore` interfaces, and `DefaultOrchestrator` never reaches into
-either implementation's internals. `unit-test-coverage` is partial:
+either implementation's internals. The gap is that `ChatConfig` accepts hooks and a permission store whose enforcement no component owns (see the open question on hook-and-permission-enforcement). `unit-test-coverage` is partial:
 `scenarios.test.ts` exercises `DefaultOrchestrator` extensively (18 test
 cases) and, through it, `InMemoryPermissionStore` and `ScriptedBackend`
 indirectly, but neither `InMemoryPermissionStore` nor `ScriptedBackend` has a
@@ -475,4 +493,5 @@ or silently missing a whole mechanism.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Restated requirements in observable terms, moved event-loop recovery to a Design Decision, made the markRead regression-guard text consistent, corrected the start() consequence, added fifteen test vectors and a test-file path, marked separation-of-concerns partial, and shortened the open-question markers. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

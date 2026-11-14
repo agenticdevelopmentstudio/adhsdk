@@ -1,0 +1,3 @@
+
+"Not applicable" is incorrect: the toggle's accessible name and tooltip are built from the caller's `label` prop plus the hardcoded English words `"Expand"` and `"Collapse"` (see **set-aria-label-on-toggle** and **provide-title-on-toggle**). Those two words are not externalized into a resource file or otherwise made overridable — every locale sees the same English text regardless of the language of the caller's `label` value. This fails the **string-externalization** and **no-hardcoded-strings** compliance checks (see Compliance). `padding-inline-start` is used for the indent, which is direction-aware and needs no separate RTL handling.
+

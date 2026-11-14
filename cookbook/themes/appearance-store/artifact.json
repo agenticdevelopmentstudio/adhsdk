@@ -4,7 +4,7 @@
     "id": "112f2150-3fcd-416c-bd25-b40f729b8ef2",
     "title": "Appearance Store",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "A client-side external store for appearance preferences: cache, repaint of the document, route scopes, OS colour-scheme following, sign-in adopt and sign-out reset.",
+    "summary": "Client-side store for appearance preferences: cache, repaint, route scopes, OS colour-scheme following, adopt and reset.",
     "platforms": [
       "typescript",
       "web"
@@ -23,13 +23,15 @@
       "preferences",
       "store"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "0f721fc3-0e8f-4a1b-b895-1b1bad370bd0"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4b1f607cf89fa8a8",
+  "synced": "8212efb709806706",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

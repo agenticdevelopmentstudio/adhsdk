@@ -4,8 +4,7 @@
   implementation (`scheduler.ts`) hands the callback the true, unclamped due
   time in every case, and `scheduler.test.ts` has no test exercising this
   path.
-  **Rationale**: Documented in `Scheduler.swift`'s own comments as
-  deliberately closing a real failure mode — a chain of self-re-arming
+  **Rationale**: It deliberately closes a real failure mode — a chain of self-re-arming
   one-shots (any reflex that re-arms itself each time it fires) recovering
   from a long-stopped frame loop would otherwise replay its entire backlog at
   one link per frame, each walking a live channel by one step, which reads as
@@ -35,10 +34,8 @@
   either seeded directly or written there by a previous, already-mapped
   tween); mapping it a second time would double-apply `respond`. An explicit
   `from` is caller-authored data in the same "logical" space as `to`, so it
-  needs the same one-time mapping `to` gets. This asymmetry is not called out
-  in source comments as a rule the way rules 1-5 are numbered elsewhere in
-  `Tweens.swift`, but it is directly observable from where each call site
-  does or omits the `respond`/`.map { respond(...) }` wrapper.
+  needs the same one-time mapping `to` gets. The asymmetry is observable from
+  where `add` does or omits the `respond` mapping.
   **Approved**: pending
 - **Decision**: Neither `Tweens`/`createTweens` nor `Channels`/`createChannels`
   performs any internal synchronization, and on Apple neither class conforms
@@ -47,7 +44,7 @@
   the arbiter (which may call into `tweens`), and `tweens.tick` synchronously
   from a single call to `Engine.tick`, itself driven by one render-loop
   caller; there is no concurrent-access scenario in the shipped usage this
-  recipe's sources cover. A port that drives this runtime from more than one
+  ingredient's sources cover. A port that drives this runtime from more than one
   execution context (e.g., a background thread updating channels while a
   render thread ticks tweens) MUST add its own synchronization — nothing in
   these three files provides it.

@@ -16,7 +16,7 @@
 **Approved**: pending
 
 **Decision**: The memberwise initializer does not validate, and `parse(json:)` does not trim.
-**Rationale**: Validation lives in one place, the import path, and trimming lives in the form model that owns user typing. A config built by the service from stored values is rebuilt as is. A consequence is that a whitespace-only value passes `parse(json:)`.
+**Rationale**: Validation lives in one place, the import path, and trimming lives in the form model that owns user typing. The initializer is for rebuilding a config from stored values, which `MailIntegrationService` does as is; callers building a config from a form MUST go through `installedJSON()` and `parse(json:)` so the same checks apply. A consequence is that a whitespace-only value passes `parse(json:)` and fails later at Google's token endpoint, which is accepted because the form model trims before building a config and the type does not guess what a credential looks like.
 **Approved**: pending
 
 **Decision**: `parse(json:)` collapses every decoding failure into one fixed message.
@@ -24,6 +24,6 @@
 **Approved**: pending
 
 **Decision**: The type holds the secret as a plain `String` and leaves storage to the caller.
-**Rationale**: The type is a transient carrier between import and the token calls. `MailIntegrationService` keeps the secret in the Keychain through its secret store and only the id in the database. The type itself offers no redaction (no `CustomStringConvertible` mask), so the synthesized `description` and `dump`, and any caller printing a config, would print the secret. This is a known gap, not a requirement.
+**Rationale**: The type is a transient carrier between import and the token calls. `MailIntegrationService` keeps the secret in the Keychain through its secret store and only the id in the database. The redaction gap is described once, at #edge-cases/secret-printed-by-description.
 **Approved**: pending
 

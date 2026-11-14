@@ -12,4 +12,5 @@
 | T9 | renders-one-chip-per-tally | `reactions=[]` | no chip; the palette trigger alone |
 | T10 | glyph-is-decorative | inspect a chip's glyph | the emoji `<span>` carries `aria-hidden` |
 | T11 | names-the-subject (Playwright) | two bars with different `subjectLabel` | each bar's chips are addressable by name without ambiguity |
-
+| T12 | palette-offers-choices, palette-offers-everything | `choices=["🔥","🚀"]`; open the palette | exactly those two emoji are offered, in that order |
+| T13 | busy-goes-inert, disabled-hides-the-way-in | click a chip under `busy`, then under `disabled` | `onToggle` is not called in either case |

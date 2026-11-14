@@ -1,5 +1,5 @@
 
-- **SwiftUI**: Source is `Core/Partner/PartnerTurnQueue.swift`, importing only `Foundation`; it is a `public struct` conforming to `Sendable` with a private `[PartnerInbound]` array. A SwiftUI host reads `count` from an observable owner rather than observing the struct. The `PartnerInbound` enum it holds is a sibling type in `Core/Partner/PartnerInbound.swift`.
+- **SwiftUI**: A SwiftUI host reads `count` from an observable owner, copying it into published state after each change, rather than observing the struct, which is not observable.
 - **Compose**: A small class around an `ArrayDeque`; replacement is `indexOfFirst` plus assignment, front insertion is `addFirst`, `next()` is `removeFirstOrNull`. Hold it in a `ViewModel` and mutate on a single dispatcher (for example `Dispatchers.Main`); expose `count` through `StateFlow` if the UI needs it.
 - **React/Web**: A class over an array with `findIndex`, direct assignment, `unshift` and `shift`; JavaScript is single-threaded so ordering needs no lock. Keep `coalescingKey` as `string or null` on the event type.
 - **AppKit / UIKit**: The same file serves both unchanged; the macOS controller owns it as a stored property of a `@MainActor` class and copies `count` into its own queued count after each change.

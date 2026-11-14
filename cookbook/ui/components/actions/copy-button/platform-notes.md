@@ -6,11 +6,13 @@
   only when *reading* another app's pasteboard content, not when writing. The 1200ms
   flash pattern and glyph swap work identically via `@State` transitions.
 - **Compose (Android)**: Use `IconButton` in Material 3 Compose, paired with
-  `LocalClipboardManager.current.setText(...)` for the write. The lazy text
+  `LocalClipboard.current` and its suspending `setClipEntry(...)` for the write
+  (older Compose versions use the now-deprecated
+  `LocalClipboardManager.current.setText(...)`). The lazy text
   resolution pattern (`getText` thunk) maps cleanly to a lambda. Success state and
   icon swap work via `remember { mutableStateOf() }`. Writing via `ClipboardManager`
   requires no runtime permission on modern Android.
-- **React/Web**: Source files `packages/web/packages/ui/src/components/copy-button.tsx` and hook `packages/web/packages/ui/src/hooks/useClipboard.ts`. The component carries `"use client"` directive (reads `navigator.clipboard` and holds transient `copied` state). Composes the shared `Button` (variant="outline", size="icon", overridden to size-6) and lucide `Copy`/`Check` icons. Demo available in `ui-showcase` Topic "copy-button" under "Composite controls" group (regenerate `sources.generated.ts` via `gen-sources.py` after source changes).
+- **React/Web**: The component carries the `"use client"` directive (it reads `navigator.clipboard` and holds transient `copied` state) and composes the shared `Button` (`variant="outline"`, `size="icon"`, overridden to `size-6`) and lucide `Copy`/`Check` icons. Implementation locations are recorded in the index.
 - **AppKit / UIKit**: `NSButton` (macOS) or `UIButton` (iOS) styled with outline
   appearance and a smaller icon size. Clipboard write via
   `NSPasteboard.general.setString(_:forType:)` (macOS) or `UIPasteboard.general.string`

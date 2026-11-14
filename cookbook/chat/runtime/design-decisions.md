@@ -51,12 +51,14 @@
   **Approved**: pending
 - **Decision**: A caller SHOULD, but is not required to, call `start()`
   before relying on inbound-event-driven state.
-  **Rationale**: Every public method that does not depend on the inbound
-  stream (`submitMessage`, `markRead`, `setLocalTyping`, `respondToWidget`,
-  `respondToPermission`) works identically whether or not `start()` has been
-  called, because none of them read `started`/`stopped`. The only consequence
-  of calling them before `start()` is that no inbound event will yet have
-  been observed — there is no error path or invalid state to guard against,
-  which is why this is a SHOULD (a usage recommendation) rather than a MUST.
+  **Rationale**: `markRead`, `setLocalTyping`, `respondToWidget`, and
+  `respondToPermission` work identically whether or not `start()` has been
+  called, and `submitMessage` still calls the backend and echoes the message
+  locally. The consequence of never starting is that no inbound event is
+  observed: a submitted message is never acknowledged and stays in `sending`
+  forever. That is a stuck state rather than an error, which is why this is a
+  SHOULD (a usage recommendation) rather than a MUST.
   **Approved**: pending
-
+- **Decision**: Event-loop recovery: when the backend's `inboundEvents` iterator rejects, the loop notifies one `error` update and ends, and the instance never resumes consumption or restarts.
+  **Rationale**: `DefaultOrchestrator` implements no retry, backoff, or reconnect policy, and a later `start()` is a no-op (see start-is-idempotent). Reconnecting is the injected `Backend`'s job, or the host's by constructing a new orchestrator. This leaves a stopped instance silently inert, which is recorded here as known debt rather than as a requirement.
+  **Approved**: pending

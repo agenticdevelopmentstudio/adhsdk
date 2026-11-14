@@ -2,7 +2,7 @@
 id: fc622208-1504-421f-8892-c5869820550c
 title: "Claude Hook Installer"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -16,9 +16,12 @@ platforms:
   - macos
 tags:
   - claude-hooks
-  - foundation
+  - status-line
   - settings
-depends-on: []
+depends-on:
+  - 9eb46f78-0ceb-455f-9584-b6b43ddf0871
+  - 517adfce-44e7-404e-8a7b-b1e304da32e7
+  - 9c81ac1c-ee1e-45b1-824c-deee1850037c
 related: []
 references: []
 approved-by: ""
@@ -29,17 +32,16 @@ approved-date: ""
 
 ## Overview
 
-`ClaudeHookInstaller` is a `Sendable` class that edits Claude Code's `settings.json` for one daemon, driven by a `ClaudeHookConfiguration` (name, marker, helper path, drop directory, settings URL, lock name, status-line entry name, hooked events and legacy forms). Each registration is a `command` hook that runs the configuration's helper (`<helper> hook --event <Event>`); the helper writes the payload as a drop file and exits 0, so no socket, port or running daemon is involved and a hook cannot fail because the daemon is down.
+`ClaudeHookInstaller` is a `Sendable` class that edits Claude Code's `settings.json` for one daemon, driven by a `ClaudeHookConfiguration` ([adhsdk.ingredient.foundation.sessions.claude-hook-configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871); name, marker, helper path, drop directory, settings URL, lock name, status-line entry name, hooked events and legacy forms). Each registration is a `command` hook that runs the configuration's helper (`<helper> hook --event <Event>`); the helper writes the payload as a drop file and exits 0, so no socket, port or running daemon is involved and a hook cannot fail because the daemon is down.
 
-Registrations are identified by the configuration's marker, so several daemons coexist in one file and each installs, updates and removes only its own entries. The installer also registers the daemon with the shared status-line dispatcher (`ClaudeStatusLine`), keeps two marker files beside `settings.json` (tracking disabled, status-line display off), replaces every earlier form of its own registrations, and exposes a locked read-modify-write for the daemon's other settings keys.
+Registrations are identified by the configuration's marker, so several daemons coexist in one file and each installs, updates and removes only its own entries. The installer also registers the daemon with the shared status-line dispatcher (`ClaudeStatusLine`, [adhsdk.ingredient.foundation.claude-hooks.claude-status-line](cookbook:517adfce-44e7-404e-8a7b-b1e304da32e7)), keeps two marker files beside `settings.json` (tracking disabled, status-line display off), replaces every earlier form of its own registrations, and exposes a locked read-modify-write for the daemon's other settings keys.
 
+The dispatcher command is the `statusLine.command` that `ClaudeStatusLine` writes: `sh <quoted dispatch.sh path> # claudehelpers-statusline`, where `dispatch.sh` lives at `~/.claude/claudehelpers/statusline/dispatch.sh`. Shell quoting comes from [adhsdk.ingredient.foundation.process.shell-quoting](cookbook:9c81ac1c-ee1e-45b1-824c-deee1850037c). An older Python dispatcher ran as `python3 -m statusline.dispatcher`; the configuration's legacy forms recognise it so install can replace it.
 ## Behavioral Requirements
 
 ### Event types
 
-- **excluded-event-types**: The installer MUST NOT register a hook for any event type in `excludedEventTypes`, the union of `delegationEventTypes` (`WorktreeCreate`, `WorktreeRemove`) and `nonHookEventTypes` (`StatusLine`).
-- **delegation-rationale**: Delegation event types MUST stay excluded because registering any hook under them hands the action to the hook entirely, and a passive hook with no stdout makes the owning tool fail with "no successful output"; those operations stay observable through the `PreToolUse` and `PostToolUse` hooks.
-- **non-hook-rationale**: `StatusLine` MUST stay excluded because Claude Code does not deliver it as a hook and registering it triggers an "Unknown hook event" warning at every session start; it is synthesized by the status-line dispatcher.
+- **excluded-event-types**: The installer MUST NOT register a hook for any event type in `excludedEventTypes`, the union of `delegationEventTypes` (`WorktreeCreate`, `WorktreeRemove`) and `nonHookEventTypes` (`StatusLine`). The delegation types are excluded because registering any hook under them hands the action to the hook entirely, and a passive hook with no stdout makes the owning tool fail with "no successful output"; those operations stay observable through the `PreToolUse` and `PostToolUse` hooks. `StatusLine` is excluded because Claude Code does not deliver it as a hook and registering it triggers an "Unknown hook event" warning at every session start; the status-line dispatcher synthesizes it.
 - **hooked-event-types**: `hookedEventTypes` MUST be the configuration's `hookedEvents` raw values with `excludedEventTypes` removed, in the configuration's order.
 
 ### Hook command
@@ -53,7 +55,7 @@ Registrations are identified by the configuration's marker, so several daemons c
 
 ### Install
 
-- **install-result**: `installHooks()` MUST return `installed` when it changed anything or added a registration, `alreadyInstalled` when nothing needed to change, and `failed(message)` on any thrown error, with the error logged.
+- **install-result**: `installHooks()` MUST return `installed` if and only if it wrote `settings.json`, `alreadyInstalled` when nothing needed to change, and `failed(message)` on any thrown error, with the error logged.
 - **install-locked**: `installHooks()` MUST run its whole read-modify-write under the settings lock.
 - **install-requires-helper**: When `helperIsExecutable` reports the helper is not runnable, install MUST return `failed` with a message naming the helper and its path and MUST leave `settings.json` and every registered hook untouched, because every hook would otherwise fail silently behind its `exit 0`.
 - **helper-executable-default**: The default `helperIsExecutable` MUST be true only for a path that exists, is not a directory and is executable.
@@ -90,7 +92,7 @@ Registrations are identified by the configuration's marker, so several daemons c
 - **set-display-marker**: `setStatusLineDisplay(_:)` MUST create the display-off marker when disabling and remove it when enabling, and MUST do the marker change and the settings reconcile inside one settings lock.
 - **set-display-registers**: When the helper is runnable and tracking is not disabled, `setStatusLineDisplay(_:)` MUST re-register the entry and take the slot if it is not the dispatcher's yet.
 - **set-display-throws-on-enable**: When enabling and Claude Code still does not draw this owner's line afterward, `setStatusLineDisplay(true)` MUST throw the registration failure if one occurred, else `helperNotExecutable` when the helper is not runnable, else `statusLineNotRegistered` carrying the entry name and whether tracking is disabled.
-- **set-display-off-never-throws**: Disabling the display MUST NOT throw for those reasons.
+- **set-display-off-never-throws**: Disabling the display MUST NOT throw `helperNotExecutable`, `statusLineNotRegistered` or a status-line registration failure. It MAY still throw the lock errors (`lockOpenFailed`, `lockAcquireFailed`), a failure writing the marker file and `invalidFormat` from an unreadable `settings.json`.
 
 ### Marker files and settings access
 
@@ -136,30 +138,41 @@ Not applicable — this is a settings-file installer, not a visual component.
 
 ## Conformance Test Vectors
 
-| ID | Requirements | Input | Expected |
-|----|-------------|-------|----------|
-| claude-hook-installer-001 | install-result, install-additive | Empty settings; `testInstallIntoEmptySettings`, `testInstallIdempotent` | First install returns `installed`; a second returns `alreadyInstalled` |
-| claude-hook-installer-002 | hook-command-shape, hook-command-exit-zero, hook-command-absolute-helper | Helper `/Applications/Stenographer.app/Contents/Helpers/steno`, event `Stop`; `testCommandIsThreeLines` | Lines are the marker, `/Applications/Stenographer.app/Contents/Helpers/steno hook --event Stop`, and `exit 0` |
-| claude-hook-installer-003 | hook-command-exit-zero | Every `HookEventType` case; `testCommandAlwaysExitsZero` | Each rendered command contains `exit 0` |
-| claude-hook-installer-004 | hook-registration-shape | After install; `testAllHooksAreAsyncWithTimeout` | Every hooked event has a `command` hook with `async` true and `timeout` 10 |
-| claude-hook-installer-005 | excluded-event-types, install-scrubs-excluded | Settings holding this owner's `WorktreeCreate` hook; `testScrubsStaleDelegationHooksOnInstall`, `testScrubPreservesThirdPartyDelegationHooks` | Own hook removed from the excluded type, a third party's hook kept |
-| claude-hook-installer-006 | install-requires-helper | `helperIsExecutable` returns false; `testAMissingStenoLeavesTheHooksAlone` | Result is `failed`, settings unchanged |
-| claude-hook-installer-007 | install-replaces-legacy | Settings with an `http` or bash-form hook of this owner; `testLegacyHTTPHookIsReplacedByTheCaptureHook`, `testMovedBundleHookCommandIsRewritten`, `testAForeignHookSharingTheGroupSurvivesABundleMove` | Replaced by the current command; the foreign hook in the same group survives |
-| claude-hook-installer-008 | slot-adopts-foreign | Slot holds another tool's command; `testInstallAdoptsAForeignStatusLine` | Command kept as an `adopted` renderer, slot holds the dispatcher command |
-| claude-hook-installer-009 | bundle-command-recognition | Slot holds a wrapper around the bundle's command; `testAWrapperAroundOurStatusLineIsForeign` | Treated as foreign and adopted, not replaced |
-| claude-hook-installer-010 | uninstall-status-line-release | Only an adopted renderer remains after uninstall; `testUninstallHandsTheAdoptedStatusLineBack` | The adopted command is written back into the slot |
-| claude-hook-installer-011 | uninstall-entry-order | Save fails; `testUninstallDeletesNoEntryWhenTheSaveFails` | No status-line entry is deleted |
-| claude-hook-installer-012 | lock-timeout | Shared lock held past the timeout; `testASettingsLockHeldPastTheTimeoutFailsInsteadOfHanging` | `lockAcquireFailed` after the timeout |
-| claude-hook-installer-013 | lock-files | Lock held then released; `testAHeldSettingsLockDelaysTheInstallUntilItIsReleased`, `testTheSharedLockIsTheOneClaudeHelpersTakes` | Install waits for release then succeeds; the shared lock is `.settings.lock` |
-| claude-hook-installer-014 | load-settings | Missing, empty and invalid-JSON files; `testLoadSettingsReturnsEmptyForMissingFile`, `testLoadSettingsReturnsEmptyForEmptyFile`, `testLoadSettingsThrowsForInvalidJSON`, `testInstallReturnsFailedForCorruptSettings` | Empty dictionary, empty dictionary, thrown `invalidFormat`; install returns `failed` |
-| claude-hook-installer-015 | save-settings | Existing mode and symlink; `testSettingsFileModeIsPreserved`, `testANewSettingsFileIsOwnerOnly`, `testASymlinkedSettingsFileStaysALink` | Mode kept, new file `0600`, link kept |
-| claude-hook-installer-016 | modify-settings | Body changes nothing, and body throws; `testModifySettingsWithoutAChangeWritesNothing`, `testModifySettingsThatThrowsWritesNothing` | Nothing written in either case |
-| claude-hook-installer-017 | capture-script-ownership, capture-script-safe-open | Symlink, wrapper mentioning the name on line two, foreign file; `testInstallKeepsASymlinkByThatName`, `testInstallKeepsAWrapperThatOnlyMentionsTheNameOnLineTwo`, `testInstallKeepsAForeignFileByThatName` | Each is left in place |
-| claude-hook-installer-018 | set-display-throws-on-enable | Tracking disabled, nothing registered, then enable the display; `testTurningTheDisplayOnWithNothingRegisteredThrows` | Throws `statusLineNotRegistered` whose description contains "tracking is off"; the `statusLine` slot stays unset |
-| claude-hook-installer-019 | tracking-marker, status-line-off-marker | Config named `adkd`; `testTheMarkerFilesAreNamedAfterTheConfiguration` | Markers are `.adkd-tracking-disabled` and `.adkd-status-line-off` beside `settings.json` |
-| claude-hook-installer-020 | install-preserves-foreign | Two configurations on one file; `testBothMarkerSetsCoexistAndEachUninstallRemovesOnlyItsOwn` | Each uninstall removes only its own entries |
-| claude-hook-installer-021 | registration-kind | Tap-only configuration; `testATapOnlyConfigurationRegistersATapAndNeverARenderer` | Registered as a tap with ` --capture-only` |
-
+| ID | Requirements | Input | Test | Expected |
+|----|-------------|-------|------|----------|
+| claude-hook-installer-001 | install-result, install-additive | Empty settings | `testInstallIntoEmptySettings`, `testInstallIdempotent` | First install returns `installed`; a second returns `alreadyInstalled` |
+| claude-hook-installer-002 | hook-command-shape, hook-command-exit-zero, hook-command-absolute-helper | Helper `/Applications/Stenographer.app/Contents/Helpers/steno`, event `Stop` | `testCommandIsThreeLines` | Lines are the marker, `/Applications/Stenographer.app/Contents/Helpers/steno hook --event Stop`, and `exit 0` |
+| claude-hook-installer-003 | hook-command-exit-zero | Every `HookEventType` case | `testCommandAlwaysExitsZero` | Each rendered command contains `exit 0` |
+| claude-hook-installer-004 | hook-registration-shape | After install | `testAllHooksAreAsyncWithTimeout` | Every hooked event has a `command` hook with `async` true and `timeout` 10 |
+| claude-hook-installer-005 | excluded-event-types, install-scrubs-excluded | Settings holding this owner's `WorktreeCreate` hook | `testScrubsStaleDelegationHooksOnInstall`, `testScrubPreservesThirdPartyDelegationHooks` | Own hook removed from the excluded type, a third party's hook kept |
+| claude-hook-installer-006 | install-requires-helper | `helperIsExecutable` returns false | `testAMissingStenoLeavesTheHooksAlone` | Result is `failed`, settings unchanged |
+| claude-hook-installer-007 | install-replaces-legacy | Settings with an `http` or bash-form hook of this owner | `testLegacyHTTPHookIsReplacedByTheCaptureHook`, `testMovedBundleHookCommandIsRewritten`, `testAForeignHookSharingTheGroupSurvivesABundleMove` | Replaced by the current command; the foreign hook in the same group survives |
+| claude-hook-installer-008 | slot-adopts-foreign | Slot holds another tool's command | `testInstallAdoptsAForeignStatusLine` | Command kept as an `adopted` renderer, slot holds the dispatcher command |
+| claude-hook-installer-009 | bundle-command-recognition | Slot holds a wrapper around the bundle's command | `testAWrapperAroundOurStatusLineIsForeign` | Treated as foreign and adopted, not replaced |
+| claude-hook-installer-010 | uninstall-status-line-release | Only an adopted renderer remains after uninstall | `testUninstallHandsTheAdoptedStatusLineBack` | The adopted command is written back into the slot |
+| claude-hook-installer-011 | uninstall-entry-order | Save fails | `testUninstallDeletesNoEntryWhenTheSaveFails` | No status-line entry is deleted |
+| claude-hook-installer-012 | lock-timeout | Shared lock held past the timeout | `testASettingsLockHeldPastTheTimeoutFailsInsteadOfHanging` | `lockAcquireFailed` after the timeout |
+| claude-hook-installer-013 | lock-files | Lock held then released | `testAHeldSettingsLockDelaysTheInstallUntilItIsReleased`, `testTheSharedLockIsTheOneClaudeHelpersTakes` | Install waits for release then succeeds; the shared lock is `.settings.lock` |
+| claude-hook-installer-014 | load-settings | Missing, empty and invalid-JSON files | `testLoadSettingsReturnsEmptyForMissingFile`, `testLoadSettingsReturnsEmptyForEmptyFile`, `testLoadSettingsThrowsForInvalidJSON`, `testInstallReturnsFailedForCorruptSettings` | Empty dictionary, empty dictionary, thrown `invalidFormat`; install returns `failed` |
+| claude-hook-installer-015 | save-settings | Existing mode and symlink | `testSettingsFileModeIsPreserved`, `testANewSettingsFileIsOwnerOnly`, `testASymlinkedSettingsFileStaysALink` | Mode kept, new file `0600`, link kept |
+| claude-hook-installer-016 | modify-settings | Body changes nothing, and body throws | `testModifySettingsWithoutAChangeWritesNothing`, `testModifySettingsThatThrowsWritesNothing` | Nothing written in either case |
+| claude-hook-installer-017 | capture-script-ownership, capture-script-safe-open | Symlink, wrapper mentioning the name on line two, foreign file | `testInstallKeepsASymlinkByThatName`, `testInstallKeepsAWrapperThatOnlyMentionsTheNameOnLineTwo`, `testInstallKeepsAForeignFileByThatName` | Each is left in place |
+| claude-hook-installer-018 | set-display-throws-on-enable | Tracking disabled, nothing registered, then enable the display | `testTurningTheDisplayOnWithNothingRegisteredThrows` | Throws `statusLineNotRegistered` whose description contains "tracking is off"; the `statusLine` slot stays unset |
+| claude-hook-installer-019 | tracking-marker, status-line-off-marker | Config named `adkd` | `testTheMarkerFilesAreNamedAfterTheConfiguration` | Markers are `.adkd-tracking-disabled` and `.adkd-status-line-off` beside `settings.json` |
+| claude-hook-installer-020 | install-preserves-foreign | Two configurations on one file | `testBothMarkerSetsCoexistAndEachUninstallRemovesOnlyItsOwn` | Each uninstall removes only its own entries |
+| claude-hook-installer-021 | registration-kind | Tap-only configuration | `testATapOnlyConfigurationRegistersATapAndNeverARenderer` | Registered as a tap with ` --capture-only` |
+| claude-hook-installer-022 | uninstall-prunes-empty | Settings whose only hooks are this owner's `Stop` group; run uninstall | | The `Stop` key is gone and so is `hooks` |
+| claude-hook-installer-023 | uninstall-all-forms | This owner's current, `http`, bash and retired groups under an event type not in the hooked list, plus a foreign group; run uninstall | | Every group of this owner is removed and the foreign group stays |
+| claude-hook-installer-024 | slot-replaces-own | The slot holds this owner's earlier command, and an `adopted` renderer holds one of this owner's own commands; run install | | The slot holds the dispatcher command, the earlier command is replaced without adoption, and the `adopted` renderer is removed |
+| claude-hook-installer-025 | slot-takeover | The slot already holds the dispatcher command; run install | | The slot step reports no change and the slot is not rewritten |
+| claude-hook-installer-026 | is-displayed | Display wanted, slot equal to the dispatcher command, dispatcher file present, this owner a renderer; then the same with ` --capture-only` on the renderer's command; then an unreadable `settings.json` | | `true`, then `false`, then `false` without throwing |
+| claude-hook-installer-027 | hook-command-no-pid | `makeCommand(eventType:)` for every event type | | No rendered command carries a parent pid argument |
+| claude-hook-installer-028 | install-status-line-isolated | The bundled dispatcher is missing and none is installed; run install | | Hooks are registered, `statusLine` is as it was, and install does not fail |
+| claude-hook-installer-029 | install-removes-capture-script | A capture script that carries this owner's marker on its first line; run install, then repeat with a save that fails | | The script is deleted after the successful run and kept when the save fails |
+| claude-hook-installer-030 | install-saved-only-on-change | Run install twice with nothing to change the second time | | The second run returns `alreadyInstalled` and leaves `settings.json` byte for byte unchanged |
+| claude-hook-installer-031 | lock-release | Run an operation that returns, one that throws and then another operation at once | | Each locked operation ends with both lock descriptors closed, so the next operation takes the locks without waiting |
+| claude-hook-installer-032 | lock-open-failure | The lock file's path is occupied by something that cannot be opened for reading, such as an unreadable file | | `lockOpenFailed` with the system error text |
+| claude-hook-installer-033 | error-descriptions | `ClaudeHookInstallerError.invalidFormat` | | Describes "settings.json is not a valid JSON object" |
 ## Edge Cases
 
 - Null and empty input: a missing or empty `settings.json` reads as an empty dictionary (MUST); an empty `statusLine` slot is replaced with no adoption (MUST); an empty `hooks` map after removal is dropped from the file (MUST).
@@ -167,7 +180,7 @@ Not applicable — this is a settings-file installer, not a visual component.
 - Boundary values: `lockTimeout` defaults to 5 seconds and the lock is polled every 50 ms; the capture-script check reads at most 4096 bytes (MUST).
 - Concurrent access: two processes editing the file are serialised by the two `flock` locks taken in a fixed order, so two holders cannot deadlock; a holder that is stopped in a debugger makes others fail with `lockAcquireFailed` after the timeout instead of hanging (MUST).
 - Error states: any thrown error in `installHooks()` or `uninstallHooks()` is logged and converted to `failed` or false, never thrown (MUST); `setStatusLineDisplay(_:)` and `modifySettings(_:)` throw to the caller (MUST).
-- Foreign content: a foreign hook sharing a matcher group with a stale hook of this owner survives the rewrite (MUST); a foreign command that merely embeds the marker or `statusline.dispatcher` as a substring is adopted, not dropped (MUST).
+- Foreign content: a foreign hook sharing a matcher group with a stale hook of this owner survives the rewrite (MUST); a foreign command that merely embeds the marker or the legacy `statusline.dispatcher` name as a substring is adopted, not dropped (MUST).
 - Offline or disconnected state: not applicable; the installer touches only local files and makes no network calls.
 - Status-line failure on install (no bundled dispatcher, unwritable `claudehelpers` directory, full disk): hooks are still installed and `statusLine` is left as it was (MUST).
 - The `statusLineNotRegistered` message capitalizes the entry name, so an entry `adkd` reads "Adkd" (MUST, from `entry.capitalized`).
@@ -235,7 +248,7 @@ Subsystem: the main bundle identifier | Category: `ClaudeHookInstaller` (`Loggab
 | Display toggled | info | `Status-line display turned on` and `Status-line display turned off; the capture tap stays` |
 | Capture script removed or not | info or error | `Removed retired capture script at <path>` and `Could not remove capture script: <error>` |
 
-Error text, paths and commands are logged with public privacy, so a command that embeds a secret would appear in the log.
+Error text, paths and commands are logged with public privacy, so a command that embeds a secret would appear in the log; a port MUST log commands and paths with private privacy instead.
 
 ## Platform Notes
 
@@ -243,13 +256,13 @@ Error text, paths and commands are logged with public privacy, so a command that
 - **Compose**: Port with `kotlinx.serialization.json` or Jackson for the JSON object, `java.nio.channels.FileChannel.tryLock` for the cross-process lock (it is advisory per process like `flock`), and a temp-file-then-`Files.move` with `ATOMIC_MOVE` for the save.
 - **React/Web**: Node `fs` with a lock library such as `proper-lockfile`, `JSON.stringify` with a sorted-key replacer, and write-file-atomic; browsers cannot edit this file.
 - **AppKit / UIKit**: `Core/ClaudeHooks/ClaudeHookInstaller.swift`, using `flock(2)` through Darwin, `JSONSerialization` (pretty printed, sorted keys, fragments allowed), `FileManager` and `AtomicFile`; configuration lives in `Core/Sessions/ClaudeHookConfiguration.swift`, quoting in `Core/Process/ShellQuoting.swift`, and logging uses OSLog through `Loggable`. Dictionary comparison uses `NSDictionary.isEqual`, so numeric types compare by value.
-- **WinUI 3**: Use `System.Text.Json` (`JsonNode` or `JsonObject`) with `JsonSerializerOptions` for indentation, and sort keys explicitly because it does not sort them. `flock` has no equivalent; use a named `Mutex` or `FileStream` opened with `FileShare.None` retried every 50 ms until a `CancellationToken` or `Stopwatch` deadline, in the same two-lock order. Save with `File.Replace` over a temp file; there is no POSIX mode, so the `0600` requirement maps to an owner-only ACL on the new file. Resolve the helper with `Windows.ApplicationModel.Package` paths, quote with an argument-escaping helper (cmd or PowerShell rules differ from POSIX single quotes), and drop the `exit 0` trailer in favour of the shell's own always-zero idiom. Hook registration targets Claude Code's Windows settings location, not `~/.claude`. Run the blocking calls on a `Task.Run` thread, never the UI thread.
+- **WinUI 3**: Use `System.Text.Json` (`JsonNode` or `JsonObject`) with `JsonSerializerOptions` for indentation, and sort keys explicitly because it does not sort them. `flock` has no equivalent; use a named `Mutex` or `FileStream` opened with `FileShare.None` retried every 50 ms until a `CancellationToken` or `Stopwatch` deadline, in the same two-lock order. Save with `File.Replace` over a temp file; there is no POSIX mode, so the `0600` requirement maps to an owner-only ACL on the new file. Resolve the helper with `Windows.ApplicationModel.Package` paths, quote with an argument-escaping helper (cmd or PowerShell rules differ from POSIX single quotes), and replace the `exit 0` trailer with the shell's own always-zero line: `exit 0` for PowerShell and `exit /b 0` for cmd. Hook registration targets Claude Code's Windows settings file, `%USERPROFILE%\.claude\settings.json`, not `~/.claude/settings.json`. Run the blocking calls on a `Task.Run` thread, never the UI thread.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/ClaudeHookInstaller.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -283,25 +296,22 @@ Error text, paths and commands are logged with public privacy, so a command that
 **Decision**: A status-line failure never fails the install, and the status line step runs after the legacy scrub and before hook registration.
 **Rationale**: Losing the line is cheaper than losing event capture; turning the display on reports the reason by throwing.
 **Approved**: pending
-
-**Decision**: The tests build an installer through a convenience initializer in `StatusLineTestSupport` that takes a settings URL, drop directory and helper path and fills in a Stenographer configuration.
-**Rationale**: The public initializer takes a `ClaudeHookConfiguration`; the fixture keeps the rendered command independent of the running bundle.
-**Approved**: pending
-
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | Security |
+| [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | failed | Security |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
-separation-of-concerns passes: file-side status-line handling lives in `ClaudeStatusLine`, quoting in `ShellQuoting`, atomic writes in `AtomicFile`, and this type decides what is registered and edits `settings.json`. unit-test-coverage passes: `HookInstallerTests`, `HookInstallerBundleCommandTests` and `ClaudeHookInstallerCoexistenceTests` cover install, uninstall, legacy forms, the lock, the status-line slot and the capture script. explicit-error-handling passes: install and uninstall log and convert errors to a result, the others throw typed `ClaudeHookInstallerError` values. secure-storage passes: a new `settings.json` is created at `0600`, an existing mode is kept and the file is written atomically. no-hardcoded-strings fails: the error descriptions are English literals with no localization table.
+separation-of-concerns is partial: one type also owns hook registration, status-line slot arbitration, two marker files, the cross-process settings lock with `modifySettings`, and deleting the retired capture script, so the lock layer and the slot logic could each become their own ingredient. File-side status-line handling lives in `ClaudeStatusLine`, quoting in `ShellQuoting`, atomic writes in `AtomicFile`, and this type decides what is registered and edits `settings.json`. unit-test-coverage passes: `HookInstallerTests`, `HookInstallerBundleCommandTests` and `ClaudeHookInstallerCoexistenceTests` cover install, uninstall, legacy forms, the lock, the status-line slot and the capture script. explicit-error-handling passes: install and uninstall log and convert errors to a result, the others throw typed `ClaudeHookInstallerError` values. secure-storage passes: a new `settings.json` is created at `0600`, an existing mode is kept and the file is written atomically. secure-log-output fails: the status-line command and the capture-script path are logged with `privacy: .public`, and an adopted command can embed a token. no-hardcoded-strings fails: the error descriptions are English literals with no localization table.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Added depends-on links and a status-line tag, merged the two rationale requirements into excluded-event-types, marked separation-of-concerns partial and secure-log-output failed, defined the dispatcher command, clarified install-result and disabling errors, split test names into their own vector column, added twelve vectors, dropped the test-fixture decision and gave concrete WinUI 3 paths. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

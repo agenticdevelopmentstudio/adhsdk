@@ -19,21 +19,20 @@
   turn ends are not given a defined ordering by the source or its test
   suite; both the single-task `TurnControl` and the reentrant
   `ensureConversation()` check are affected.
-- **Concurrent tool correlation (MUST)**: `openInvocations` is
+- **Concurrent tool correlation (depends on concurrent-turns)**: `openInvocations` is
   coordinator-wide, not per-turn, so if two turns are ever in flight at
-  once (see the open question on concurrent-turns), a `tool_call_completed` block is
+  once, which `concurrent-turns` leaves undefined, a `tool_call_completed` block would be
   matched to the oldest open invocation of that command name regardless of
   which turn opened it — the source's per-command FIFO does not
   distinguish turns.
 - **Conversation creation fails (MUST)**: A non-`2xx` status from
   `/conversations` throws `conversationFailed(status:)`, reported as
   `messageFailed` for the triggering `send`'s `localID`; no `/messages`
-  request is attempted (`pcc-014`).
+  request is attempted (`pcc-017`).
 - **Message request transport failure (MUST)**: If `options.authorize`
   itself throws while posting the message (e.g. no route to host, DNS
   failure), it is caught in `runTurn` and reported as
-  `messageFailed(localID:, reason:)` via `describe(error:,
-  fallback: "The chat request failed.")`. The conversation id already
+  `messageFailed(localID:, reason:)` via `describe(_:fallback: "The chat request failed.")`. The conversation id already
   cached by `ensureConversation()` is NOT cleared, so the next `send` still
   reuses it.
 - **In-band error on HTTP 200 (MUST)**: An `error` SSE block is treated as
@@ -58,7 +57,7 @@
   `draftCleared` is emitted, and `inboundEvents` finishes. Because
   `control.destroyed` becomes `true` before the resulting
   `CancellationError` is caught in `consumeStream`, no `transportError` is
-  emitted for that cancellation (`pcc-015`).
+  emitted for that cancellation (`pcc-014`).
 - **`destroy()` with no turn ever started (MUST)**: `control.destroy()`
   returns `nil` (nothing to cancel); `draftCleared` and the stream finish
   still occur, which is harmless since no consumer has an active draft.

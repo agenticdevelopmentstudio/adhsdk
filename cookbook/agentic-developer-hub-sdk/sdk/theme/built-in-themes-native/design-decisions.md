@@ -14,8 +14,3 @@
 **Decision**: Replace `project` wholesale with a `ThemeProjectOptions` carrying only `paneBackdrop`.
 **Rationale**: `nil` for `highlightActivePane` and `paneOutline` leaves them to the Projects settings panel and the theme's outline tone, as `ThemeProjectOptions` documents; the side effect is that any value already in those two fields would be discarded. The generated Fishlamp theme sets no `project`, so nothing is lost today.
 **Approved**: pending
-
-**Decision**: No unit test asserts the adjusted Fishlamp values; the vectors above are derived from source and from the whole-list tests.
-**Rationale**: The existing tests cover `all` as a whole (size, unique ids, ported membership) but none reads `selection`, `card`, `selectionEdge` or `project` of Fishlamp, so a change to those literals would pass the suite.
-**Approved**: pending
-

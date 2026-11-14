@@ -6,7 +6,7 @@
 | tag-set-003 | accept-exact-match-in-combobox | Precondition `options=["foo", "bar"]`, `value=["foo"]`. The Combobox's text becomes exactly "bar" (typed, or the result of clicking a suggestion — both raise the same `onValueChange` event). | `onChange` is called once with `["foo", "bar"]`. |
 | tag-set-004 | clear-combobox-on-acceptance | Precondition `options=["foo", "bar"]`, `value=["foo"]`. Combobox text reaches the exact match "bar" (as in tag-set-003). | Combobox text field is cleared to empty. |
 | tag-set-005 | no-create-on-enter | Precondition `options=["foo", "bar"]`, `value=[]`. User types "newlabel" (not an exact match to any option) and presses Enter. | `onChange` is NOT called; the Combobox text remains "newlabel". |
-| tag-set-006 | render-chips-from-value | `value=["foo", "bar", "baz"]`. | Three chips render in the chips row, in order: "foo", "bar", "baz". |
+| tag-set-006 | render-chips-row, render-chips-from-value | `value=["foo", "bar", "baz"]`. | Three chips render in a row below the control row, in order: "foo", "bar", "baz". |
 | tag-set-007 | remove-chip-on-delete | `value=["foo", "bar", "baz"]`; user clicks remove on chip "bar". | `onChange` is called with `["foo", "baz"]`; the "bar" chip is removed. |
 | tag-set-008 | empty-chips-row-renders-nothing | `value=[]`. | No chips-row element exists in the DOM at all — `EntitySelectionChips` renders nothing. |
 | tag-set-009 | noun-in-placeholders | `noun="label"`. | Combobox `ariaLabel` is "Add a label" and placeholder is "Add a label…"; EntityChooser `inputLabel` is "Filter or add a label" and placeholder is "Filter or add a label…". |
@@ -22,4 +22,6 @@
 | tag-set-019 | pass-label-to-chips | `label="Field Caption"`, `value=["foo"]`. | `EntitySelectionChips` receives `ariaLabel="Field Caption"`. |
 | tag-set-020 | pass-label-to-chooser | `label="Field Caption"`. | `EntityChooser` receives `ariaLabel="Field Caption"`. |
 | tag-set-021 | accept-classname-prop | `className="custom-class"`. | The `Field` wrapper's root element includes `custom-class` in its class list. |
-
+| tag-set-022 | pass-state-to-chooser | `options=["foo", "bar"]`, `value=["foo"]`. | `EntityChooser` receives `multiple`, `selectionPlacement="host"`, `options=["foo", "bar"]` (unfiltered), `value=["foo"]` and the field's `onChange`; no `allowCreate` prop is passed. |
+| tag-set-023 | chooser-select-adds-to-value | `options=["foo", "bar"]`, `value=["foo"]`. User opens the chooser and accepts "bar". | `onChange` is called with `["foo", "bar"]`. |
+| tag-set-024 | chooser-create-adds-to-value | `options=["foo"]`, `value=[]`. User opens the chooser, types "diffusion" and presses Enter on the create row. | `onChange` is called with `["diffusion"]`. |

@@ -4,11 +4,11 @@
     "id": "17398d3a-df67-44c6-89c5-0edfc09bff7c",
     "title": "Dismissible Hint",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2f20759b70312435",
+  "synced": "dc692d874b5fa701",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

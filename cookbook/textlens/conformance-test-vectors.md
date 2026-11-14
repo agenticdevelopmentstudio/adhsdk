@@ -1,7 +1,8 @@
 
-Vectors 1–10 are traced to `color.test.ts`; vectors 11–20 to `lens.test.ts`.
-Vectors 21–23 are derived directly from the `apply` arithmetic in `lens.ts`
-and have no dedicated assertion in the given test files.
+Vectors 001–011 are traced to `color.test.ts`; vectors 012–021 to `lens.test.ts`.
+Vectors 022–024 are derived directly from the `apply` arithmetic in `lens.ts`
+and have no dedicated assertion in `color.test.ts` or `lens.test.ts`. Vectors
+025 and 026 are read from `useTextLens.ts`, which has no test file.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -16,7 +17,7 @@ and have no dedicated assertion in the given test files.
 | text-lens-009 | custom-property-resolution | element with `--accent: #e8a33d` set; `resolveColor('--accent', el)` | `[232, 163, 61]` (`reads a custom property off the element`) |
 | text-lens-010 | resolve-throws-on-unreadable-color, resolve-error-names-both-forms | `resolveColor('--missing', el)` where `--missing` is unset | throws with message containing `"--missing"` (`throws naming the property when it is not set`) |
 | text-lens-011 | resolve-error-names-both-forms | element with `--accent: rebeccapurple`; `resolveColor('--accent', el)` | throws with message containing `resolved to "rebeccapurple"` (`throws showing what an unreadable property resolved to`) |
-| text-lens-012 | idempotent-character-split, space-preservation | `createLens([element])` where `element.textContent === 'abc'` | 3 child `<span>`s with text `['a', 'b', 'c']` (`splits the text into one span per character`) |
+| text-lens-012 | destructive-split | `createLens([element])` where `element.textContent === 'abc'` | 3 child `<span>`s with text `['a', 'b', 'c']` (`splits the text into one span per character`) |
 | text-lens-013 | space-preservation | `createLens([element])` where `element.textContent === 'a b'` | the middle span's `textContent` is `' '` (`keeps spaces from collapsing`) |
 | text-lens-014 | idempotent-character-split | `createLens([element])` called twice on the same already-split element | still 3 spans; `element.firstChild` is the same node both times (`leaves an already-split element alone`) |
 | text-lens-015 | reduced-motion-gate | `matchMedia` stubbed to `{ matches: true }`; `createLens([el]).start()` | `requestAnimationFrame` is never called (`schedules no frames when the user prefers reduced motion`) |
@@ -29,4 +30,5 @@ and have no dedicated assertion in the given test files.
 | text-lens-022 | radius-cutoff, smoothstep-easing, scale-formula | sweep centre exactly `radius` px from a glyph's centre (`distance === radius`) | `linear = 0`, `t = 0`; `transform` is `scale(1.000)` (no growth), `filter` is cleared (no dedicated test — derived from `apply`'s formula) |
 | text-lens-023 | blur-floor | default `blur: 0.35`, glyph at the sweep centre (`distance = 0`, `t = 1`) | computed `blur = 0.35`; since `0.35 > 0.03`, `filter` is set to `blur(0.35px)` (no dedicated test — derived from `apply`'s formula) |
 | text-lens-024 | leg-direction-alternation, cubic-ease-in-out | `elapsed === duration` exactly (leg boundary) | `leg = 1` (odd), `progress = 0`, `eased = 0`; the sweep centre is exactly `rightEdge` at that instant, having just switched to the return leg (no dedicated test — derived from `apply`/`step`'s formula) |
-
+| text-lens-025 | resweep-is-immediate-after-the-first, deferred-first-sweep | `useTextLens` with `startDelay: 500`, fake timers; the hook runs, 500 ms pass, `enabled` goes `false`, then `true` again | the first run starts the lens after 500 ms; the second run starts it after 0 ms (no delay) |
+| text-lens-026 | cleanup-clears-the-pending-timer-and-destroys | `useTextLens` with `startDelay: 500`; unmount at 100 ms, then advance fake timers past 500 ms | `start()` is never called; `destroy()` is called once |

@@ -4,11 +4,11 @@
     "id": "888b7ba2-61f6-4251-88df-3586c5c86b1f",
     "title": "IntegrationRecords",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,12 +33,12 @@
       "39a27113-5478-468c-8417-a291d587aab6"
     ],
     "references": [
-      "https://swiftpackageindex.com/groue/GRDB.swift/documentation/grdb (GRDB: FetchableRecord, PersistableRecord and column strategies)"
+      "https://swiftpackageindex.com/groue/GRDB.swift/documentation/grdb"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c7410202c43a0dc4",
+  "synced": "e9c4a25fa7c7f47b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

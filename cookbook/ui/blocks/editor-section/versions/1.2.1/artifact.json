@@ -1,0 +1,55 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "5a028319-034c-4852-a1ee-01247a747183",
+    "title": "EditorSection",
+    "type": "recipe",
+    "version": "1.2.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-07-03",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Master/detail editor shell — a pure assembly of the editing ButtonBar, the collapsible topic rail with per-row warn badges, and the shared EmptyState.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "master-detail",
+      "editor",
+      "layout",
+      "toolbar"
+    ],
+    "ingredients": [
+      "81db83fc-b30c-4ba3-b4d5-572dc8b4e335",
+      "8fa7aaae-df62-44ea-b10c-182f3094ed9f",
+      "e86eb195-1ec2-4b12-8a24-79f8c03f65ce"
+    ],
+    "depends-on": [],
+    "related": [
+      "6acd3c5f-7bb5-4d6d-8c8d-141e1909cf73"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "df67d03723645ba5",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "api", "heading": "API"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -1,8 +1,8 @@
 
 | State | Appearance change |
 |-------|------------------|
-| Default (messages, no typing) | All messages visible at full opacity; no typing indicator; scrolled to bottom. |
-| Typing | All messages visible; TypingIndicator rendered below messages; scrolled to bottom. |
+| Default (messages, no typing) | All messages visible at full opacity; no typing indicator; scrolled to bottom (when following). |
+| Typing | All messages visible; TypingIndicator rendered below messages; scrolled to bottom (when following). |
 | Typing suppressed | Messages visible; no typing indicator even though `isTyping` is true (via `suppressTypingIndicator` prop). |
 | Message selected | Corresponding MessageBubble receives `isSelected={true}` and applies its selected-state styling. |
 | Fade mode active | Older messages progressively fade toward top; bottom messages remain opaque; fade is viewport-anchored, not message-relative. |

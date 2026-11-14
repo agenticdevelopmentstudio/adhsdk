@@ -2,11 +2,11 @@
 id: 25de0c8f-b6cb-4e9f-ba30-38afca642232
 title: "Dropdown Menu"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -52,12 +52,20 @@ A dropdown menu is a positioned overlay component that displays a list of action
 - **support-semantic-classes**: All menu elements MUST apply semantic CSS class names prefixed with `adh-dropdown-menu__` to enable consistent theming.
 - **support-inset-items**: Menu items and labels MUST support an `inset` prop that adds the `adh-dropdown-menu__item--inset` class for visual indentation.
 - **support-accent-items**: Menu items MUST support an `accent` prop that applies the theme's accent styling on hover/focus via the `adh-dropdown-menu__item--accent` class.
-- **close-on-click-default**: CheckboxItem, RadioItem, and LinkItem SHOULD default `closeOnClick` to `true`, closing the menu when the item is clicked. MenuItem's `closeOnClick` has no explicit default and inherits Base UI's default of `true` (see close-on-item-select).
-- **keyboard-navigation**: The component MUST support arrow-key navigation of menu items: ArrowDown/ArrowUp move focus between items, and ArrowRight/ArrowLeft open/close submenus.
-- **focus-management**: The component MUST move focus into the menu, onto the first focusable item, when the menu opens via the trigger, and MUST return focus to the trigger when the menu closes.
+- **close-on-click-default**: CheckboxItem, RadioItem, and LinkItem MUST default `closeOnClick` to `true`, closing the menu when the item is clicked. MenuItem's `closeOnClick` has no explicit default and inherits Base UI's default of `true` (see close-on-item-select).
+- **keep-open-when-close-on-click-false**: When `closeOnClick` is `false` on an item, clicking it MUST NOT close the menu.
+- **keyboard-navigation**: The component MUST support arrow-key navigation of menu items: ArrowDown/ArrowUp move focus between items, Home/End move focus to the first/last item, and ArrowRight/ArrowLeft open/close submenus. Under a right-to-left direction (Base UI's direction setting), ArrowLeft opens and ArrowRight closes submenus.
+- **focus-management**: The component MUST move focus onto the first focusable item when the menu opens from the keyboard, and MUST return focus to the trigger when the menu closes.
+- **focus-on-pointer-open**: When the menu opens from a pointer click on the trigger, the component MUST move focus into the menu popup; Base UI focuses the popup itself on pointer open, and no item is focused until the user navigates or hovers one.
 - **checkbox-state-announcement**: Checkbox items MUST announce their checked state to assistive technology via `aria-checked`.
-- **disabled-state-announcement**: Disabled items MUST announce their disabled state via `aria-disabled`. This does not guarantee they are skipped by keyboard navigation; see the **Focus on disabled item** edge case.
+- **radio-state-announcement**: Radio items MUST announce their selected state to assistive technology via `aria-checked`.
+- **disabled-state-announcement**: Disabled items MUST announce their disabled state via `aria-disabled`, and a click on a disabled item MUST be ignored. This does not guarantee they are skipped by keyboard navigation; see the **Focus on disabled item** edge case.
 - **submenu-indication**: Submenu triggers MUST indicate that they open a submenu, via the ChevronRight icon and `aria-haspopup="menu"`.
+- **closed-without-trigger**: A menu rendered without a Trigger child MUST remain closed unless opened programmatically through a controlled `open` prop.
+- **ignore-valueless-radio**: A RadioItem in a RadioGroup without a `value` prop MUST NOT participate in group selection: selecting it MUST NOT change the RadioGroup's value, and it MUST NOT render the selected indicator.
+- **scale-text-with-root-font-size**: Item and label text SHOULD be sized in `rem` so it follows the user's root font size (the item class uses `0.9rem`).
+- **meet-text-contrast**: Item and label text SHOULD meet WCAG AA contrast against the menu surface. The source delegates this to the theme tokens, so it is not verified here.
+- **minimum-target-size**: Menu items SHOULD have a minimum touch/click target size of 44×44px (WCAG 2.5.5 Target Size Enhanced; see references). Known gap: source only grows item rows by a fixed fraction on coarse pointers, which does not reach 44px.
 
 ## Appearance
 
@@ -85,18 +93,16 @@ A dropdown menu is a positioned overlay component that displays a list of action
 | Submenu open | Nested menu appears positioned relative to parent |
 
 ## Accessibility
-
 - **Role**: Menu items MUST have the `menuitem` role (provided by Base UI MenuPrimitive).
 - **Label requirement**: Menu items MUST have accessible text content or an aria-label.
-- **Keyboard navigation**: Menu MUST support arrow key navigation (up/down to move focus, left/right to open/close submenus).
-- **Escape key**: Menu MUST close on Escape, returning focus to the trigger.
-- **Focus management**: Focus MUST return to the trigger when the menu closes.
-- **Checkbox state announcement**: Checkbox items MUST announce checked state to assistive technology via aria-checked.
-- **Radio state announcement**: Radio items MUST announce selected state to assistive technology via aria-checked.
-- **Disabled state announcement**: Disabled items MUST announce disabled state via aria-disabled.
-- **Submenu indication**: Submenu triggers MUST indicate they open a submenu (via ChevronRight icon and aria-haspopup).
-- **Minimum target size**: Menu items SHOULD have a minimum touch/click target size of 44×44px (WCAG 2.5.5 Target Size Enhanced; see references).
-
+- **Keyboard navigation**: see [keyboard-navigation](#requirements/keyboard-navigation).
+- **Escape key**: see [close-on-escape](#requirements/close-on-escape) and [focus-management](#requirements/focus-management).
+- **Focus management**: see [focus-management](#requirements/focus-management) and [focus-on-pointer-open](#requirements/focus-on-pointer-open).
+- **Checkbox state announcement**: see [checkbox-state-announcement](#requirements/checkbox-state-announcement).
+- **Radio state announcement**: see [radio-state-announcement](#requirements/radio-state-announcement).
+- **Disabled state announcement**: see [disabled-state-announcement](#requirements/disabled-state-announcement).
+- **Submenu indication**: see [submenu-indication](#requirements/submenu-indication).
+- **Minimum target size**: see [minimum-target-size](#requirements/minimum-target-size).
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
@@ -120,24 +126,34 @@ A dropdown menu is a positioned overlay component that displays a list of action
 | dropdown-017 | close-on-click-default | Render open menu with RadioItem; click it | Menu closes (closeOnClick defaults to true) |
 | dropdown-018 | close-on-click-default | Render open menu with LinkItem; click it | Menu closes (closeOnClick defaults to true) |
 | dropdown-019 | keyboard-navigation | Open menu; press ArrowDown then ArrowUp | Focus moves to the next item, then back to the previous item |
-| dropdown-020 | focus-management | Open menu via trigger click | Focus moves into the menu, landing on the first focusable item |
+| dropdown-020 | focus-management | Open menu from the keyboard (ArrowDown on the focused trigger) | Focus moves onto the first focusable item |
 | dropdown-021 | checkbox-state-announcement | Render CheckboxItem with checked={true}; inspect DOM | Item exposes aria-checked="true" |
 | dropdown-022 | disabled-state-announcement | Render MenuItem with disabled={true}; attempt to move focus to it via ArrowDown | Focus moves onto the disabled item (Base UI's list navigation does not skip disabled items) and it exposes aria-disabled="true" |
 | dropdown-023 | submenu-indication | Render SubmenuTrigger | Trigger exposes aria-haspopup="menu" and renders the ChevronRight icon |
 | dropdown-024 | support-submenus | Open SubmenuRoot; move focus outside the submenu (e.g. ArrowLeft to the parent item) | Submenu closes while the parent menu remains open |
-
+| dropdown-025 | focus-on-pointer-open | Open menu via trigger click | Focus moves into the menu popup; no item is focused until an arrow key or hover |
+| dropdown-026 | keep-open-when-close-on-click-false | Render open menu with a CheckboxItem `closeOnClick={false}`; click it | Menu stays open; `onCheckedChange` fires |
+| dropdown-027 | keyboard-navigation | Open menu; press End, then Home | Focus moves to the last item, then the first item |
+| dropdown-028 | keyboard-navigation | Render under a right-to-left direction; open a submenu with ArrowLeft, close it with ArrowRight | Submenu opens on ArrowLeft and closes on ArrowRight |
+| dropdown-029 | disabled-state-announcement | Click a disabled MenuItem | Its click handler is not called and the menu stays open |
+| dropdown-030 | radio-state-announcement | Render a selected RadioItem; inspect DOM | Item exposes `aria-checked="true"` |
+| dropdown-031 | closed-without-trigger | Render `DropdownMenu` with no Trigger and no `open` prop | Menu stays closed |
+| dropdown-032 | ignore-valueless-radio | Click a RadioItem with no `value` inside a RadioGroup | RadioGroup value is unchanged; no selected indicator renders |
+| dropdown-033 | scale-text-with-root-font-size | Inspect the computed `font-size` of a MenuItem at root font sizes 16px and 20px | Item text size scales with the root font size |
+| dropdown-034 | meet-text-contrast | Compute item text contrast against the menu surface in the active theme | Contrast ratio is at least 4.5:1; source does not verify this |
+| dropdown-035 | minimum-target-size | Measure a MenuItem hit box on a coarse pointer | Target behavior: at least 44×44px. Source grows rows by a fixed fraction only, so this vector fails today |
 ## Edge Cases
 
 - **Empty menu**: Menu with no items still renders and positions correctly; no minimum height constraint forces item rendering.
 - **Very long item text**: Item text that exceeds the available menu width truncates with an ellipsis rather than wrapping (see the long-item-text-truncates design decision).
 - **Disabled items**: Items with a `disabled` prop render in disabled state and do not respond to click events.
-- **No trigger provided**: `MenuPrimitive.Root` renders without error. Without a Trigger child, the menu has no interactive control that opens it and MUST remain closed unless opened programmatically via a controlled `open` prop; Base UI emits no dev-time warning for this case.
+- **No trigger provided**: `MenuPrimitive.Root` renders without error. Without a Trigger child, the menu has no interactive control that opens it (see [closed-without-trigger](#requirements/closed-without-trigger)); Base UI emits no dev-time warning for this case.
 - **Multiple submenus**: Nested submenus at depth >1 position relative to their parent submenu; no depth limit enforced by component.
 - **Rapid item clicks**: Clicking multiple items rapidly before menu closes closes menu on first click; subsequent clicks do not interact with menu items if menu is already closed.
 - **Focus on disabled item**: Arrow-key navigation (ArrowUp/ArrowDown/Home/End) does NOT skip disabled items — Base UI's list navigation runs with an empty `disabledIndices` set, so a disabled item can still receive focus and is exposed via `aria-disabled="true"`; it is only dimmed visually (`pointer-events: none`, reduced opacity). The one exception: when the menu opens via the keyboard and the first item is disabled, that initial focus placement skips it.
 - **Menu with only separators**: Menu renders separators without error; visually appears as empty menu with dividers.
 - **Checkbox item without checked prop**: CheckboxItem without explicit `checked` prop behaves as unchecked (no indicator icon shown).
-- **Radio item without value**: A RadioItem in a RadioGroup without a `value` prop MUST NOT participate in group selection: it renders and remains clickable, but selecting it does not change the RadioGroup's value and it never renders the selected indicator.
+- **Radio item without value**: A RadioItem in a RadioGroup without a `value` prop renders and remains clickable; see [ignore-valueless-radio](#requirements/ignore-valueless-radio).
 
 ## Configuration
 
@@ -152,7 +168,13 @@ A dropdown menu is a positioned overlay component that displays a list of action
 | `closeOnClick` | boolean | true (for MenuItem, inherited from Base UI's default; explicit true for LinkItem, CheckboxItem, RadioItem) | Close menu when item is clicked |
 | `checked` | boolean | undefined | Checked state for CheckboxItem |
 | `children` | ReactNode | undefined | Content rendered inside component (text, icons, elements) |
-
+| `open` | boolean | undefined (uncontrolled) | Controlled open state on the root `DropdownMenu`. |
+| `onOpenChange` | function | undefined | Called with the next open state when the root menu wants to open or close. |
+| `disabled` | boolean | false | Disables a MenuItem, CheckboxItem, RadioItem, or LinkItem. |
+| `onCheckedChange` | function | undefined | Called with the next checked state when a CheckboxItem is toggled. |
+| `value` (RadioItem) | string | undefined | The value a RadioItem selects; an item without one does not participate in group selection. |
+| `value` (RadioGroup) | string | undefined | The currently selected RadioItem value. |
+| `onValueChange` | function | undefined | Called with the new value when a RadioItem is selected within a RadioGroup. |
 ## Deep Linking
 
 Not applicable: Dropdown menus are overlay components with no document-level or app-level navigation identity. Individual menu items may navigate (via DropdownMenuLinkItem), but the menu itself has no persistent URL state.
@@ -187,8 +209,8 @@ Not applicable: The dropdown menu component does not implement logging. Consumin
 
 ## Platform Notes
 
-- **React/Web**: Implemented using Base UI's `Menu` primitive (`@base-ui/react/menu`) in the `@adh-sdk/ui` package's dropdown-menu component (see the reference-implementation design decision). Trigger, Content, MenuItem, CheckboxItem, RadioItem, SubmenuTrigger, SubmenuRoot, SubmenuContent, Positioner, and Portal are pass-through wrappers around MenuPrimitive components. Icons (Check, ChevronRight, Circle) are from lucide-react. Semantic CSS classes (`adh-dropdown-menu__*`) are applied to support theming via a public surface; consumers may pass an additional `className`, which is merged with the semantic classes rather than replacing them.
-- **SwiftUI**: Use a SwiftUI `Menu`, which already renders native `Toggle` for checkbox items and `Picker(.inline)` for radio-style single-select groups with native checkmarks — custom indicator views are not needed. Differences: SwiftUI Menu does not support arbitrary positioning (side/sideOffset/align); it positions itself relative to its anchor, so a popover-based menu with custom positioning logic is only needed when explicit offset control is required. Semantic class mapping is not applicable; use SwiftUI native styling instead. Support `inset` and `accent` via SwiftUI padding and foreground color/tint modifiers.
+- **React/Web**: Implemented using Base UI's `Menu` primitive (`@base-ui/react/menu`) in the `@adh-sdk/ui` package's dropdown-menu component. Trigger, Content, MenuItem, CheckboxItem, RadioItem, SubmenuTrigger, SubmenuRoot, SubmenuContent, Positioner, and Portal are pass-through wrappers around MenuPrimitive components. Icons (Check, ChevronRight, Circle) are from lucide-react. Semantic CSS classes (`adh-dropdown-menu__*`) are applied to support theming via a public surface; consumers may pass an additional `className`, which is merged with the semantic classes rather than replacing them.
+- **SwiftUI**: Port guidance only: the SwiftUI, Compose, AppKit/UIKit and WinUI 3 bullets below describe how to translate this ingredient to those platforms; the source implements web only, which is why `platforms` lists web. Use a SwiftUI `Menu`, which already renders native `Toggle` for checkbox items and `Picker(.inline)` for radio-style single-select groups with native checkmarks — custom indicator views are not needed. Differences: SwiftUI Menu does not support arbitrary positioning (side/sideOffset/align); it positions itself relative to its anchor, so a popover-based menu with custom positioning logic is only needed when explicit offset control is required. Semantic class mapping is not applicable; use SwiftUI native styling instead. Support `inset` and `accent` via SwiftUI padding and foreground color/tint modifiers.
 - **Compose**: Start from Material Design's DropdownMenu or build a custom menu composition. Differences: Material DropdownMenu has limited positioning control; use a Popup or Dialog for full side/offset control. Checkbox and RadioItem support is available via native Compose components. No semantic CSS classes; use Compose's Material theming system. Map `inset` to padding and `accent` to color overrides.
 - **AppKit / UIKit**: Use NSMenu on macOS or UIMenu on iOS (iOS 13+). Differences: NSMenu and UIMenu do not support custom positioning props (side/sideOffset/align); positioning is determined by the platform. CheckboxItem and RadioItem state is supported via NSMenuItem/UIAction state. No semantic CSS classes; use native platform styling. `inset` and `accent` map to platform menu item attributes and custom appearance if needed.
 - **WinUI 3**: Use the MenuFlyout control with MenuFlyoutItem children. Positioning is controlled via the `Placement` property (equivalent to `side`). MenuFlyout has no `VerticalOffset`/`HorizontalOffset` properties; offset (equivalent to `sideOffset` + `alignOffset`) is set by calling `ShowAt(target, new FlyoutShowOptions { Position = ..., Placement = ... })` instead. Checkbox items use ToggleMenuFlyoutItem; radio items use `RadioMenuFlyoutItem`. Semantic class names do not apply to WinUI; use native visual state customization via ControlTemplate. Implement `inset` via MenuFlyoutItem Padding override; `accent` via Background brush override. Submenu support via nested MenuFlyout and MenuFlyoutSubItem.
@@ -197,7 +219,7 @@ Not applicable: The dropdown menu component does not implement logging. Consumin
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/dropdown-menu.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/dropdown-menu.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -208,7 +230,7 @@ Not applicable: The dropdown menu component does not implement logging. Consumin
 
 **closeOnClick default flips for checkbox, radio, and link items**
 **Decision**: This wrapper inverts Base UI's `closeOnClick` default from `false` to `true` for `CheckboxItem`, `RadioItem`, and `LinkItem`.
-**Rationale**: Base UI's `CheckboxItem` and `RadioItem` default `closeOnClick` to `false` to keep the menu open while toggling state, but this wrapper matches typical dropdown menu behavior where selecting an option closes the menu. `LinkItem` is defaulted to `true` for the same reason: in this codebase, `render={<Link/>}` navigates client-side without unmounting the header, so the menu would remain open after navigation unless explicitly closed. This decision is traced to Base UI's `Menu` documentation and to the code comments on the `DropdownMenuLinkItem` and `DropdownMenuCheckboxItem` wrapper functions.
+**Rationale**: Base UI's `CheckboxItem` and `RadioItem` default `closeOnClick` to `false` to keep the menu open while toggling state, but this wrapper matches typical dropdown menu behavior where selecting an option closes the menu. `LinkItem` is defaulted to `true` for the same reason: when a framework router (`render={<Link/>}`) navigates client-side and keeps the menu mounted across navigation, the menu would remain open after navigation unless explicitly closed. This decision is traced to Base UI's `Menu` documentation and to the code comments on the `DropdownMenuLinkItem` and `DropdownMenuCheckboxItem` wrapper functions.
 **Approved**: pending
 
 **Submenu positioning defaults**
@@ -223,12 +245,7 @@ Not applicable: The dropdown menu component does not implement logging. Consumin
 
 **Label component not bound to Group**
 **Decision**: `DropdownMenuLabel` is a plain styled `<div>`, not Base UI's `MenuPrimitive.GroupLabel`.
-**Rationale**: `MenuPrimitive.GroupLabel` throws when rendered outside a `Menu.Group`, and this label is also used standalone (e.g. as a heading in the DebugMenu). This flexibility comes at the cost of no built-in ARIA relationship to a group.
-**Approved**: pending
-
-**Reference implementation**
-**Decision**: The `@adh-sdk/ui` package's dropdown-menu component — `DropdownMenu`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuLinkItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioItem`, and related exports, built on Base UI's `Menu` primitive — is the reference implementation for this ingredient's behavioral contract.
-**Rationale**: Citing the package and exported symbol names, rather than a file path or line numbers, keeps the reference stable as the file is refactored. See the Base UI `Menu` documentation in references.
+**Rationale**: `MenuPrimitive.GroupLabel` throws when rendered outside a `Menu.Group`, and this label is also used standalone (e.g. as a heading above a set of items, outside any group). This flexibility comes at the cost of no built-in ARIA relationship to a group.
 **Approved**: pending
 
 **Long item text truncates**
@@ -257,6 +274,7 @@ The `partial` statuses reflect that keyboard navigation, focus management, ARIA 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Split focus on keyboard and pointer open, made close-on-click-default a MUST, promoted accessibility and edge-case rules to named requirements with vectors, completed the Configuration table, and replaced Accessibility duplicates with fragments. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added missing keyboard-navigation/focus-management/checkbox-state-announcement/disabled-state-announcement/submenu-indication requirements; fixed dropdown-022 and Focus-on-disabled-item edge case (Base UI does not skip disabled items). Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and merged the three closeOnClick-default requirements into one; fixed the SwiftUI and WinUI 3 platform notes; replaced stale line-number and unsourced touch-target citations with symbol names and WCAG/Base UI references; described accent styling via the theme's accent token instead of a fixed color; resolved the two undefined edge cases; converted Design Decisions to the Decision/Rationale/Approved format and added two new decisions; filled in tags, related, and Compliance; added test vectors for accessibility and submenu-close coverage; fixed the ambiguous closeOnClick default and moved platform-specific paths out of Configuration and Platform Notes. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

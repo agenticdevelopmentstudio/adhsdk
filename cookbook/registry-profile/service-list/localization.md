@@ -6,7 +6,7 @@ The strings below document the intended externalization targets. The current sou
 | services.heading | "Services" | Section heading text; hardcoded literal in `ServiceList.tsx` |
 | pricing.free | "Free" | Displayed when pricingModel is "free" |
 | pricing.barter | "Trade or barter" | Displayed when pricingModel is "barter" |
-| pricing.rate_on_request | "Rate on request" | Displayed when both priceMin and priceMax are null |
+| pricing.rate_on_request | "Rate on request" | Displayed when both priceMin and priceMax are absent (`null` or `undefined`) |
 | pricing.per_hour | "per hour" | Suffix displayed for hourly pricing model |
 | pricing.per_job | "per job" | Suffix displayed for per_job pricing model |
 | pricing.per_deliverable | "per deliverable" | Suffix displayed for per_deliverable pricing model |

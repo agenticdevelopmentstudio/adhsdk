@@ -1,5 +1,5 @@
 
-- Fewer than 3 fence-marker characters MUST NOT be treated as a fence opener regardless of surrounding whitespace **(boundary value)** — fence-marker-recognition.
+- Fewer than 3 fence-marker characters MUST NOT be treated as a fence opener regardless of surrounding whitespace **(boundary value)** — fence-marker-recognition (mdc-059).
 - A closing-fence line shorter than its opener, of the wrong marker, or carrying its own info string MUST be classified `.insideFence`, not treated as a closer **(malformed input)** — closing-fence-matching.
 - An opening fence with no matching closer anywhere in the remaining input MUST run to end of file and yield no fenced block **(unterminated input)** — unterminated-fence-runs-to-eof.
 - A frontmatter-looking `---` block not anchored at position 0 MUST NOT be recognized as frontmatter **(malformed input)** — frontmatter-block-detection.

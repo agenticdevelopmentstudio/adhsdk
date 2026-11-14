@@ -1,9 +1,14 @@
 
 - **own-selection**: The ListWithDetailsPane MUST own the selection state as
   a `Set<string>` and pass it to `DataTable`; selection MUST survive filter
-  changes. Ids removed other than through the component's own Delete flow
-  (see **confirm-delete**) are pruned from the rendered selection only when
-  they leave the `rows` prop.
+  changes. One pruning rule covers render, state and URL: an id that is not in
+  the `rows` prop is never offered — the selection used for the toolbar actions,
+  the Delete callback and the details pane is always the state intersected with
+  `rows`. When `paramKey` is set, `loading` is false and `rows` is non-empty, such
+  an id is also removed from the selection state and the URL
+  (see **clear-stale-deep-link**); without `paramKey` it stays in state but is
+  never offered. Ids removed through the component's own Delete flow
+  (see **confirm-delete**) are cleared at once instead.
 - **filter-rows**: The ListWithDetailsPane MUST filter rows by `filterRow`
   before the table, using the controlled `filterText`/`onFilterTextChange` when
   provided and internal state otherwise. The default `filterRow` is the single
@@ -17,11 +22,16 @@
   ListWithDetailsPane MUST open an `AlertModal` (`destructive`, copy from
   `deleteConfirm`) before calling `onDelete(selectedIds)`, and on confirm MUST
   clear the entire selection immediately and synchronously in the confirm
-  handler — it does not wait for the caller's `rows` prop to update first.
+  handler — it does not wait for the caller's `rows` prop to update first —
+  and, when `paramKey` is set, that same write MUST also clear the URL parameter.
+  Cancelling or dismissing the confirm MUST close it without calling `onDelete`
+  and MUST leave the selection (and the URL parameter) unchanged.
 - **render-detail-states**: The details pane (the `ResizableSplit` bottom)
   MUST render `emptyDetail` (default "Select a row to see details.") when 0 rows
   are selected, `renderDetail(row)` when exactly 1 row is selected, and the hint
-  "Select a single row to see details." when more than 1 row is selected.
+  "Select a single row to see details." when more than 1 row is selected. The row
+  passed to `renderDetail` is looked up by id in the unfiltered `rows`, so a
+  selected row that the current filter hides from the table still shows its details.
 - **render-divider-before-action**: A `ListAction` with `dividerBefore: true`
   MUST render a `Separator` immediately before its button in the toolbar.
 - **use-list-header**: The toolbar MUST be the shared `ListHeader` (filter
@@ -41,7 +51,7 @@
   component MUST persist the user's dragged column widths under that key (via
   `DataTable`); this is distinct from `storageKey` which persists only the
   split-bar position.
-- **support-column-reordering**: When `reorder` is provided (a
+- **support-row-reordering**: When `reorder` is provided (a
   `DataTableReorder` config), the component MUST forward it to `DataTable` to
   allow rows to be dragged into a new order. The component forwards `reorder`
   as given and does not itself gate on the filter; callers SHOULD NOT enable

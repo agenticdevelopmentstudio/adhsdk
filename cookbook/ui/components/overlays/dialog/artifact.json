@@ -4,15 +4,15 @@
     "id": "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
     "title": "Dialog",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Centered modal Dialog (Base UI) themed with apt-* tokens; backdrop dismissal off by default. Composes Trigger/Content/Header/Footer/Title/Description.",
+    "summary": "Centered modal Dialog (Base UI) themed with apt-* tokens; backdrop dismissal off by default.",
     "platforms": [
       "typescript",
       "web"
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b35419b8d6efc037",
+  "synced": "0a7b7bc816a0377f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

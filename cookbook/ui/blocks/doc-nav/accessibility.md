@@ -1,8 +1,9 @@
 
-- **Navigation landmark**: Component renders a `<nav>` element (both desktop aside and mobile drawer use semantic nav)
+- **Navigation landmark**: Component renders a `<nav>` element (both desktop aside and mobile drawer use semantic nav); each MUST carry a distinct `aria-label` (see **label-navigation-landmarks**)
 - **Aria-current**: Selected links MUST carry `aria-current="page"` to announce to assistive technology
 - **Section collapse button**: Collapse control MUST have `aria-expanded={true|false}` and an accessible label (`aria-label="Expand/Collapse [section name]"`)
 - **Scrim not announced**: Scrim overlay carries `aria-hidden="true"` and is not focusable, ensuring screen readers do not announce it as a control
+- **Drawer focus**: The open drawer MUST move focus in, trap Tab inside it, close on Escape, and return focus to the opener (see **drawer-focus-management**)
 - **Drawer dismiss button**: Close button MUST have `aria-label` (e.g., "Close navigation")
 - **Heading links nested under leaf**: Heading links appear in a nested list and inherit semantic structure from the leaf's `<li>` parent
 - **Color not sole indicator**: Selected state uses both bold weight AND accent bar, not color alone

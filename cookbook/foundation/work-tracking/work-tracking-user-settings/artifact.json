@@ -4,7 +4,7 @@
     "id": "ba4dcadb-1225-4bcc-afca-bbb617e6e6c9",
     "title": "Work Tracking User Settings",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -22,7 +22,9 @@
       "foundation",
       "settings"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "aa775836-5679-4a22-9ff3-b2bdcb09cc20"
+    ],
     "related": [
       "c1caa827-f7f1-4e69-b4c6-adbfef22e636",
       "0175f0bb-f4bd-4f72-94c2-57b087ad9df9"
@@ -31,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "25e25158d1620273",
+  "synced": "c15851faa41d79d2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

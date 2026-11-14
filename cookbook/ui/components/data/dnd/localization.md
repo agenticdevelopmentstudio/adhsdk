@@ -6,7 +6,8 @@
 | `dnd.announce.picked-up` | "Picked up {item}." | Drag-start announcement (SortableSurface, DragSurface) |
 | `dnd.announce.over-target` | "{item} is over {target}." | Drag-over announcement when over a zone, item, or target |
 | `dnd.announce.over-none` | "{item} is over no drop target." | Drag-over announcement when over nothing |
-| `dnd.announce.dropped` | "{item} was dropped." / "{item} was dropped on {target}." | Drag-end announcement |
+| `dnd.announce.dropped` | "{item} was dropped." | Drag-end announcement (SortableSurface, or DragSurface with no target) |
+| `dnd.announce.dropped-on-target` | "{item} was dropped on {target}." | DragSurface drag-end announcement when dropped on a target |
 | `dnd.announce.returned` | "{item} was returned to where it started." | SortableSurface drag-end announcement when dropped with no target |
 | `dnd.announce.cancelled` | "Dragging {item} was cancelled." | Drag-cancel announcement |
 

@@ -4,7 +4,7 @@
     "id": "53408483-6ccf-4a69-bc29-3b5b6e16d4a8",
     "title": "Invalid Timestamp",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,12 +24,15 @@
       "timestamps"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "1a8e345f-c602-4ccb-8880-432b1deac6ac",
+      "6a645c72-4525-4b96-9df4-85abecfacd27"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b034ba01e0914680",
+  "synced": "8fc49f6a4e8d1375",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

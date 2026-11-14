@@ -2,7 +2,7 @@
 id: 794a60b5-7833-4dc3-a7b9-8280333cde8b
 title: "ThemeOptions"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -35,7 +35,7 @@ approved-date: ""
 
 `ThemeOptions` is the pair of optional override structs a color theme can carry, plus the caret-shape enum one of them uses. `ThemeTerminalOptions` overrides terminal padding, font and caret. `ThemeProjectOptions` overrides the project window's active-pane outline switch, its outline color and the pane backdrop color. The source file also defines `TerminalCursorShape`.
 
-Every field in both structs is optional, and `nil` means "whatever the settings panel says". A theme starts with no opinion and acquires one only for the fields the user edits, so switching themes does not rewrite settings the user never touched. The source file imports only `Foundation`; it lives in the Core layer because a `ColorTheme` carries one of each (see [ColorTheme](cookbook:932449c9-b57f-4e2c-992a-1e27584742b6)). The mapping of `TerminalCursorShape` onto SwiftTerm's `CursorStyle` stays in the macOS framework, and the resolution of `nil` against a settings panel lives in the consumers, not here. Colors are [RGBAColor](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d) values.
+Every field in both structs is optional, and `nil` means "whatever the settings panel says". A theme starts with no opinion and acquires one only for the fields the user edits, so switching themes does not rewrite settings the user never touched. The source file imports only `Foundation`; it lives in the `AgenticDeveloperHubSDK` module, which `AgenticDeveloperHubSDKCore` re-exports, because a `ColorTheme` carries one of each (see [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.color-theme](cookbook:932449c9-b57f-4e2c-992a-1e27584742b6)). The mapping of `TerminalCursorShape` onto SwiftTerm's `CursorStyle` stays in the macOS framework, and the resolution of `nil` against a settings panel lives in the consumers, not here. Colors are [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d) values.
 
 ## Behavioral Requirements
 
@@ -53,10 +53,9 @@ Terminal options data shape
 - **terminal-fields**: `ThemeTerminalOptions` MUST expose eight mutable optional fields: `paddingTop`, `paddingLeading`, `paddingBottom` and `paddingTrailing` (`Int?`), `fontName` (`String?`), `fontSize` (`Double?`), `cursorShape` (`TerminalCursorShape?`) and `cursorBlinks` (`Bool?`).
 - **terminal-traits**: `ThemeTerminalOptions` MUST be `Codable`, `Equatable` and `Sendable`. Equality is the synthesized field-by-field comparison.
 - **terminal-nil-means-settings**: A `nil` field in `ThemeTerminalOptions` MUST mean the Terminal settings panel value applies. The struct itself performs no resolution.
-- **terminal-init-defaults**: The initializer `init(paddingTop:paddingLeading:paddingBottom:paddingTrailing:fontName:fontSize:cursorShape:cursorBlinks:)` MUST default every argument to `nil`, so `ThemeTerminalOptions()` is the no-opinion value.
-- **terminal-font-name**: `fontName` MUST hold a PostScript font name, not a family name, because the font picker must tell `FiraCode Nerd Font Mono` from `FiraCode Nerd Font Propo`, which a family name cannot.
+- **terminal-init-defaults**: The initializer `init(paddingTop:paddingLeading:paddingBottom:paddingTrailing:fontName:fontSize:cursorShape:cursorBlinks:)` MUST default every argument to `nil`, so `ThemeTerminalOptions()` is the no-opinion value and setting one argument leaves the other seven `nil`; a theme carries an opinion only about fields that were set.
+- **terminal-font-name**: Writers MUST store a PostScript font name in `fontName`, not a family name, because the font picker must tell `FiraCode Nerd Font Mono` from `FiraCode Nerd Font Propo`, which a family name cannot. The type does not check this; it is a caller contract.
 - **terminal-is-empty**: `ThemeTerminalOptions.isEmpty` MUST be true exactly when all eight fields are `nil`. It is the state every theme starts in and the one a "use the defaults" reset returns it to.
-- **terminal-partial-override**: Setting one field MUST leave the other seven `nil`; a theme carries an opinion only about fields that were set.
 
 Project options data shape
 
@@ -64,21 +63,21 @@ Project options data shape
 - **project-traits**: `ThemeProjectOptions` MUST be `Codable`, `Equatable` and `Sendable`.
 - **project-nil-means-settings**: A `nil` field in `ThemeProjectOptions` MUST mean the Projects settings panel (or the theme-derived default described next) applies. The struct performs no resolution.
 - **project-init-defaults**: `init(highlightActivePane:paneOutline:paneBackdrop:)` MUST default every argument to `nil`.
-- **project-highlight-switch**: `highlightActivePane` MUST override `UserSettings.highlightActivePane`, as the source comment states. The switch itself belongs in settings because it is a working preference; the theme overrides it and picks the color because that is an appearance decision.
-- **project-outline-default**: When `paneOutline` is `nil`, the consumer MUST draw the theme's outline tone, which the source comment says is what the app draws when no theme has an opinion. The tone derivation is outside this file.
-- **project-backdrop-default**: When `paneBackdrop` is `nil`, the consumer MUST use the theme's raised-surface tone, one step off the pane backdrop, so panes read as separate objects rather than one field with seams. The tone derivation is outside this file.
+- **project-highlight-switch**: Non-normative note: a consumer applies `highlightActivePane` over `UserSettings.highlightActivePane`, as the source comment states. The switch itself belongs in settings because it is a working preference; the theme overrides it and picks the color because that is an appearance decision. The consumer owns this behavior, and this file only holds the value.
+- **project-outline-default**: Non-normative note: when `paneOutline` is `nil`, the consumer draws the theme's outline tone, which the source comment says is what the app draws when no theme has an opinion. The consumer and the tone derivation are outside this file.
+- **project-backdrop-default**: Non-normative note: when `paneBackdrop` is `nil`, the consumer uses the theme's raised-surface tone, one step off the pane backdrop, so panes read as separate objects rather than one field with seams. The consumer and the tone derivation are outside this file.
 - **project-is-empty**: `ThemeProjectOptions.isEmpty` MUST be true exactly when all three fields are `nil`.
 
 Codable
 
-- **codable-synthesized**: Both structs use compiler-synthesized `Codable`: a keyed container whose keys are the property names, with a `nil` field omitted on encode and an absent or null key decoded as `nil`. The source writes no custom coding, so any JSON object, including `{}`, decodes.
+- **codable-synthesized**: Both structs MUST use compiler-synthesized `Codable`: a keyed container whose keys are the property names, with a `nil` field omitted on encode and an absent or null key decoded as `nil`. The source writes no custom coding, so any JSON object, including `{}`, decodes.
 - **codable-color-format**: `paneOutline` and `paneBackdrop` MUST encode as `"#RRGGBBAA"` strings, via `RGBAColor`'s single-value coding, and an unparseable string MUST fail the decode of the enclosing struct.
 - **codable-type-mismatch**: A present value of the wrong type (for example a string for `paddingTop`) MUST fail the decode with the decoder's standard error. The source does not coerce.
 
 Concurrency and side effects
 
-- **sendable-values**: Both structs and the enum are `Sendable` value types; an instance copied to another thread MUST be independent of the original, and the source adds no locking.
-- **no-side-effects**: No operation in this file MAY perform I/O, logging, notification or persistence. Persistence is the caller's, through `Codable` (the owning `ColorTheme` is stored by its own store).
+- **sendable-values**: Both structs and the enum MUST be `Sendable` value types; an instance copied to another thread MUST be independent of the original, and the source adds no locking.
+- **no-side-effects**: Operations in this file MUST NOT perform I/O, logging, notification or persistence. Persistence is the caller's, through `Codable` (the owning `ColorTheme` is stored by its own store).
 
 ## Appearance
 
@@ -94,14 +93,14 @@ Not applicable — this is a data model, not a visual component. The source carr
 
 ## Conformance Test Vectors
 
-The source has no test file of its own. The only test that names these types is `BubbleTruncationTests` in the macOS test target, which builds `ThemeTerminalOptions(fontName: "Menlo-Bold", fontSize: 21)` as a fixture and asserts nothing about the types. Vectors derive from the source's code and doc comments; the types are otherwise exercised only through `ColorTheme` coding.
+The source has no test file of its own. The only test that names these types is `BubbleTruncationTests` in the macOS test target, which builds `ThemeTerminalOptions(fontName: "Menlo-Bold", fontSize: 21)` as a fixture and asserts nothing about the types. Vectors derive from the source's code and doc comments, and they belong in a new `ThemeOptionsTests` file beside the other theme tests in `Tests/AgenticDeveloperHubSDKMacOSTests/Theme/`; the types are otherwise exercised only through `ColorTheme` coding.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | themeoptions-001 | terminal-init-defaults, terminal-is-empty | `ThemeTerminalOptions()` | all eight fields `nil`; `isEmpty` is true |
 | themeoptions-002 | terminal-is-empty | `ThemeTerminalOptions(paddingTop: 0)` | `isEmpty` is false; zero is a value, not nil |
 | themeoptions-003 | terminal-is-empty | each one of the eight fields set alone | `isEmpty` is false each time |
-| themeoptions-004 | terminal-partial-override | `ThemeTerminalOptions(fontSize: 13)` | `fontSize == 13`; the other seven fields are `nil` |
+| themeoptions-004 | terminal-init-defaults | `ThemeTerminalOptions(fontSize: 13)` | `fontSize == 13`; the other seven fields are `nil` |
 | themeoptions-005 | project-init-defaults, project-is-empty | `ThemeProjectOptions()` | all three fields `nil`; `isEmpty` is true |
 | themeoptions-006 | project-is-empty | `ThemeProjectOptions(highlightActivePane: false)` | `isEmpty` is false; `false` is a value, not nil |
 | themeoptions-007 | codable-synthesized | encode `ThemeTerminalOptions(paddingTop: 4)` to JSON | object containing only the key `paddingTop` with value 4 |
@@ -109,7 +108,7 @@ The source has no test file of its own. The only test that names these types is 
 | themeoptions-009 | cursor-shape-raw-value | encode `TerminalCursorShape.hollowBlock` inside an array | `["hollowBlock"]` |
 | themeoptions-010 | cursor-shape-decode-unknown | decode `["triangle"]` as `[TerminalCursorShape]` | throws a decoding error |
 | themeoptions-011 | cursor-shape-cases, cursor-shape-traits | `TerminalCursorShape.allCases` | `[.block, .hollowBlock, .underline, .bar]` |
-| themeoptions-012 | cursor-shape-label | the four `label` values | `"Block  ▉"`, `"Hollow Block  ▢"`, `"Underline  _"`, `"Bar  |"` |
+| themeoptions-012 | cursor-shape-label | the four `label` values | `"Block  ▉"`, `"Hollow Block  ▢"`, `"Underline  _"`, `"Bar  \|"` |
 | themeoptions-013 | cursor-shape-no-blink, terminal-fields | `ThemeTerminalOptions(cursorShape: .bar, cursorBlinks: true)` | shape and blink stored in separate fields; `cursorBlinks == true` |
 | themeoptions-014 | codable-color-format, project-fields | encode `ThemeProjectOptions(paneOutline: RGBAColor(hexString: "#336699FF")!)` | JSON key `paneOutline` has the string `"#336699FF"`; the other two keys are absent |
 | themeoptions-015 | codable-color-format | decode `{"paneBackdrop":"red"}` as `ThemeProjectOptions` | throws a decoding error |
@@ -119,14 +118,14 @@ The source has no test file of its own. The only test that names these types is 
 
 ## Edge Cases
 
-- **Empty or missing data**: `{}` and a missing key decode as `nil`, and the all-nil struct is the valid no-opinion state. A `null` value also decodes as `nil`. MUST.
-- **Zero and false are overrides**: `paddingTop: 0` and `highlightActivePane: false` are values, not absence; `isEmpty` is false. MUST.
+- **Empty or missing data**: `{}` and a missing key decode as `nil`, and the all-nil struct is the valid no-opinion state. A `null` value also decodes as `nil`.
+- **Zero and false are overrides**: `paddingTop: 0` and `highlightActivePane: false` are values, not absence; `isEmpty` is false.
 - **Unvalidated numbers**: the source performs no range check on padding or font size. Negative, zero, NaN or huge values are stored as given. A caller that renders them owns the check; the source documents no range. Stated as a fact.
 - **Unvalidated font name**: `fontName` is stored as given, with no check that the font is installed. Resolution of a missing font belongs to the terminal appearance consumer, outside these sources. Stated as a fact.
-- **Unknown cursor shape**: a stored raw value outside the four cases fails the decode of the whole struct, and so of the enclosing `ColorTheme`. There is no lenient fallback. MUST.
-- **Malformed color string**: an unparseable `paneOutline` or `paneBackdrop` fails the whole struct decode. MUST.
-- **Unknown extra keys**: the synthesized decoder ignores keys it does not know, so a theme file written by a newer version loses those keys on the next save. SHOULD be treated as expected.
-- **Concurrent access**: all three types are `Sendable` value types with no shared mutable state, so concurrent reads of separate copies cannot race. MUST.
+- **Unknown cursor shape**: a stored raw value outside the four cases fails the decode of the whole struct, and so of the enclosing `ColorTheme`. There is no lenient fallback.
+- **Malformed color string**: an unparseable `paneOutline` or `paneBackdrop` fails the whole struct decode.
+- **Unknown extra keys**: the synthesized decoder ignores keys it does not know, so a theme file written by a newer version loses those keys on the next save; see the Design Decision on dropped unknown keys.
+- **Concurrent access**: all three types are `Sendable` value types with no shared mutable state, so concurrent reads of separate copies cannot race, as `sendable-values` requires.
 - **Error states, offline state, cancellation and timeouts**: not applicable; every operation is synchronous, local and bounded, and the only failure is a thrown decoding error.
 
 ## Configuration
@@ -170,10 +169,10 @@ Not applicable: the source makes no log calls; failure is a thrown decoding erro
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeOptions.swift`, Foundation-only, so it compiles for macOS and iOS. A SwiftUI view reads the override and falls back to its settings value, for example `theme.terminal?.fontSize ?? settings.fontSize`, and builds `Color(.sRGB, red:green:blue:opacity:)` from an `RGBAColor`. The `TerminalCursorShape` to SwiftTerm `CursorStyle` mapping is in `TerminalAppearance.swift` in the macOS framework.
+- **SwiftUI**: The types are Foundation-only, so they compile for macOS and iOS. A SwiftUI view reads the override and falls back to its settings value, for example `theme.terminal?.fontSize ?? settings.fontSize`, and builds `Color(.sRGB, red:green:blue:opacity:)` from an `RGBAColor`. The `TerminalCursorShape` to SwiftTerm `CursorStyle` mapping lives in the macOS framework.
 - **Compose**: Use immutable Kotlin `data class` values with nullable properties and an enum class for the caret shape; `kotlinx.serialization` omits default-null properties when `encodeDefaults` is false, matching the omitted-nil behavior. Resolve with the Elvis operator against the settings value. Padding maps to `PaddingValues(start, top, end, bottom)`, where leading and trailing become start and end for right-to-left layouts.
 - **React/Web**: Port as TypeScript interfaces with optional properties (`paddingTop?: number`) and a string-literal union for the shape. `JSON.stringify` omits `undefined`, and decode must treat both a missing key and `null` as unset. Compare with `== null`, not truthiness, so `0` and `false` stay overrides. `isEmpty` is `Object.values(x).every(v => v == null)`.
-- **AppKit / UIKit**: The macOS panels are `ThemeTerminalTopicPanel.swift` and `ThemeProjectTopicPanel.swift`; `TerminalAppearance.swift` resolves the options against the Terminal settings. On iOS the same structs apply unchanged; padding becomes `NSDirectionalEdgeInsets` (leading and trailing, not left and right) and the font is resolved with `UIFont(name:size:)` from the PostScript name.
+- **AppKit / UIKit**: The macOS settings panels edit the options, and the terminal appearance code resolves them against the Terminal settings. On iOS the same structs apply unchanged; padding becomes `NSDirectionalEdgeInsets` (leading and trailing, not left and right) and the font is resolved with `UIFont(name:size:)` from the PostScript name.
 - **WinUI 3**: Make each struct an immutable `sealed record` (or a class implementing `INotifyPropertyChanged` if a settings page edits it in place) with nullable members: `int?` padding, `string?` `FontName`, `double?` `FontSize`, `bool?` `CursorBlinks`, and an `enum TerminalCursorShape { Block, HollowBlock, Underline, Bar }`. Serialize with `System.Text.Json`: set `JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull` to omit nulls, and add `JsonStringEnumConverter` with `JsonNamingPolicy.CamelCase` so the shape writes as `"hollowBlock"`; an unknown enum string then throws `JsonException`, matching the source. Colors need a `JsonConverter<RGBAColor>` reading one `#RRGGBBAA` string. Map padding to `Microsoft.UI.Xaml.Thickness(left, top, right, bottom)`, passing leading as left (swap for `FlowDirection.RightToLeft`). Resolve overrides with `??` against the settings value, applying to a terminal host's `FontFamily` (a family name, so keep a PostScript-to-family lookup, since WinUI `FontFamily` does not select by PostScript name), `FontSize` and caret. The `label` text belongs in a `.resw` resource; render the picker as a `ComboBox` over `Enum.GetValues`. Persist with `Windows.Storage.ApplicationData.Current.LocalSettings` or a JSON file in `LocalFolder`.
 
 ## Reference Implementations
@@ -183,7 +182,9 @@ Not applicable: the source makes no log calls; failure is a thrown decoding erro
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeOptions.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeOptions.swift` | confirmed (1.0.2) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Theme/Settings/Editor/ThemeTerminalTopicPanel.swift` | confirmed (1.0.2) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/TerminalAppearance.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -195,8 +196,8 @@ Not applicable: the source makes no log calls; failure is a thrown decoding erro
 **Rationale**: The source comment says "block, blinking" is how the user thinks about it and SwiftTerm's six-case `CursorStyle` is an encoding detail.
 **Approved**: pending
 
-**Decision**: `TerminalCursorShape` and both option structs live in Core, with the SwiftTerm mapping in the macOS framework.
-**Rationale**: A `ColorTheme` carries one of each and Core is Foundation-only; the macOS framework is the only place that knows SwiftTerm exists.
+**Decision**: `TerminalCursorShape` and both option structs live in the `AgenticDeveloperHubSDK` module, re-exported through `AgenticDeveloperHubSDKCore`, with the SwiftTerm mapping in the macOS framework.
+**Rationale**: A `ColorTheme` carries one of each and the module is Foundation-only; the macOS framework is the only place that knows SwiftTerm exists.
 **Approved**: pending
 
 **Decision**: `fontName` is a PostScript name.
@@ -212,9 +213,13 @@ Not applicable: the source makes no log calls; failure is a thrown decoding erro
 **Approved**: pending
 
 **Decision**: No value is validated and no decode fallback exists.
-**Rationale**: The source is a plain data holder using synthesized coding; range checks and missing-font handling belong to the consumers. This is technical debt only in that a bad number from a hand-edited theme reaches rendering unchanged.
+**Rationale**: The source is a plain data holder using synthesized coding; range checks and missing-font handling belong to the consumers. This is technical debt only in that a bad number from a hand-edited theme reaches rendering unchanged. A single bad optional override, such as an unknown cursor shape or a malformed color string, also fails the decode of the whole enclosing `ColorTheme`, so the user's entire theme is lost over one field; this is accepted because a lenient fallback would hide a corrupt file and the cost is confined to hand-edited or newer-version theme files.
 **Approved**: pending
 
+
+**Decision**: Keys the decoder does not know are dropped on the next save, and this forward-compatibility loss is accepted.
+**Rationale**: The synthesized decoder ignores unknown keys, so a decode-then-save cycle is not idempotent for a theme file written by a newer version; keeping unknown keys would need custom coding that the source does not have.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -230,5 +235,6 @@ Separation of concerns passes because the file holds only override values, the c
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Fixed module-location wording, merged the duplicate terminal requirements, made project-consumer rules non-normative, added a dropped-unknown-keys decision and whole-theme-loss rationale, rewrote RFC 2119 wording, escaped the vector 012 pipe and named the test file. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

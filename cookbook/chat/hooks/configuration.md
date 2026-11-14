@@ -29,11 +29,21 @@ flags, or persisted files involved anywhere in this source.
 | `useCaretTracker` | `enabled` | `boolean` | — | Whether tracking is active |
 | `useCaretTracker` | `onMeasure` | `(input: HTMLInputElement \| null) => void` | — | Reports the focused input, or `null` |
 | `useCaretTracker` | `selector` | `string` | `CHAT_INPUT_SELECTOR` (`'.pc-input'`) | CSS selector for the input |
+| `useBlockCursor` | `wrapperRef` | `RefObject<HTMLElement>` | — | Container searched for the input via `selector` |
+| `useBlockCursor` | `enabled` | `boolean` | — | Whether the block cursor is active (hides the native caret) |
 | `useBlockCursor` | `resetKey` | `unknown` | — | Value whose change forces a re-measure while focused |
+| `useBlockCursor` | `selector` | `string` | `CHAT_INPUT_SELECTOR` | CSS selector for the input |
+| `useCaretGaze` | `anchorRef` | `RefObject<HTMLElement>` | — | Element whose center is the gaze origin |
+| `useCaretGaze` | `onGaze` | `(gaze: GazeVector \| null) => void` | — | Receives the caret-driven gaze, or `null` |
 | `useCaretGaze` | `downBias` | `number` | `0.9` | Fixed `y` reported for caret-driven gaze |
 | `useCaretGaze` | `selector` | `string` | `CHAT_INPUT_SELECTOR` | CSS selector for the input |
 | `useMouseGaze` | `anchorRef` | `RefObject<HTMLElement>` | — | Element whose center is the gaze origin |
 | `useMouseGaze` | `enabled` | `boolean` | — | Whether the `pointermove` listener is installed |
+| `useMouseGaze` | `onGaze` | `(gaze: GazeVector) => void` | — | Receives the mouse-driven gaze |
+| `usePersonaGaze` | `wrapperRef` | `RefObject<HTMLElement>` | — | Container searched for the input |
+| `usePersonaGaze` | `engaged` | `boolean` | — | While `true`, caret gaze is forwarded and mouse gaze is silenced; while `false`, the reverse |
+| `usePersonaGaze` | `anchorRef` | `RefObject<HTMLElement>` | — | Element whose center is the gaze origin |
+| `usePersonaGaze` | `onGaze` | `(gaze: GazeVector \| null) => void` | — | Receives the arbitrated gaze |
 | `usePersonaMood` | `responding` / `composing` | `boolean` | — | Engagement inputs; `responding` takes priority |
 | `usePersonaMood` | `flightMoods` / `typingMoods` | `E[]` | — | Mood pools rotated while responding/composing |
 | `usePersonaMood` | `answerBeat` | `{mood: E, ms: number}` | none | Optional one-shot mood shown when `responding` ends |

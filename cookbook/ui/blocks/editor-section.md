@@ -2,11 +2,11 @@
 id: 5a028319-034c-4852-a1ee-01247a747183
 title: "EditorSection"
 type: recipe
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -60,13 +60,13 @@ It is the base editor shell behind hub/admin topics that manage a list of record
 
 ## Ingredients
 
-| Name | Domain | Role | Required | Configuration |
+| Name | rdid | Role | Required | Configuration |
 |---|---|---|---|---|
-| ButtonBar | [adhsdk.ingredient.ui.blocks.button-bar](cookbook:81db83fc-b30c-4ba3-b4d5-572dc8b4e335) | The fixed editing toolbar: gold mono title (`leading`) + the New/Delete/Cancel/Save preset | yes | `leading` = title + `titleBadge`; `actions` = `{ onCreate, createLabel, onCancel, canCancel, onSave, canSave, saving, onDelete, canDelete }`; `showDelete` = `!!onDelete` |
+| ButtonBar | [adhsdk.ingredient.ui.blocks.button-bar](cookbook:81db83fc-b30c-4ba3-b4d5-572dc8b4e335) | The fixed editing toolbar: gold mono title (`leading`) + the New/Delete/Cancel/Save preset | yes | `leading` = title + `titleBadge`; `actions` = `{ onCreate: onNew, createLabel, onCancel, canCancel: editing, onSave, canSave: editing && dirty, saving: busy, onDelete, canDelete: (canDelete ?? editing) && !busy }`, where `editing` is `selectedId !== null`; `showDelete` = `!!onDelete`. `ButtonBar` itself disables Cancel and Save, and renders "Saving…", while `saving` is true |
 | TopicDetail | [adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f) | The two-pane rail\|pane primitive: collapsible records rail + detail pane | yes | `items` (mapped from `EditorSectionItem[]`), `selectedId`, `onSelect`, `emptyLabel` = `emptyList`, `railSlot` = `listHeader`, `railWidth`, `panePadding={false}` |
 | EmptyState | [adhsdk.ingredient.ui.components.display.empty-state](cookbook:e86eb195-1ec2-4b12-8a24-79f8c03f65ce) | The "nothing selected" placeholder rendered in the pane when not editing | yes | `title` = `emptyDetail`; fixed standard detail-pane inset (literal classes: see the React/Web platform note) |
 
-Composed shared primitives without their own recipe domains: `Badge`
+Composed shared primitives that have no recipe of their own: `Badge`
 (`variant="accent"`) for the `⚠ N` count badge on warned rows.
 
 ## Integration Requirements
@@ -85,7 +85,8 @@ Composed shared primitives without their own recipe domains: `Badge`
   editing.
 - **default-can-delete-to-editing**: The EditorSection MUST default the Delete
   enablement to "a record is selected" (`canDelete ?? editing`), and MUST honor an
-  explicit `canDelete={false}` so Delete is not offered on an unsaved/new draft.
+  explicit `canDelete={false}` so Delete is not offered on an unsaved/new draft. An
+  explicit `canDelete={true}` is honored as given, even when nothing is selected.
 - **disable-delete-while-busy**: The EditorSection MUST disable Delete while
   `busy` is true.
 - **disable-save-while-busy**: The EditorSection MUST disable Save while `busy`
@@ -114,7 +115,9 @@ Composed shared primitives without their own recipe domains: `Badge`
 - **default-empty-list-label**: The EditorSection MUST render `emptyList` as the
   rail's empty-state label when `items` is empty, defaulting to the hardcoded
   English literal `"Nothing here yet."` when `emptyList` is omitted.
-
+- **forward-row-select**: When the user selects a record row in the rail, the EditorSection MUST call `onSelect` with that record's `id`.
+- **forward-toolbar-intents**: When the user activates New, Delete, Cancel or Save, the EditorSection MUST call `onNew`, `onDelete`, `onCancel` or `onSave` respectively, and MUST call no other callback.
+- **size-rail**: The EditorSection MUST give the rail a natural width of 240px, and MUST give it `railWidth` pixels instead when `railWidth` is set.
 ## Layout
 
 ```
@@ -158,7 +161,7 @@ Composed shared primitives without their own recipe domains: `Badge`
 | `selectedId` (`string \| null`) | Caller | TopicDetail selection + editing/EmptyState choice + can* flags | Down | Prop |
 | `dirty` | Caller | ButtonBar `canSave` | Down | Prop |
 | `busy` | Caller | ButtonBar `saving` + Delete disablement | Down | Prop |
-| `canDelete` | Caller (or derived from `selectedId`) | ButtonBar Delete enablement | Down | Prop, default `?? editing` |
+| `canDelete` | Caller (or derived from `selectedId`) | ButtonBar Delete enablement | Down | Prop, default `?? editing`; an explicit `true` is honored even with nothing selected |
 | `error` | Caller | Error line under the toolbar | Down | Prop |
 | selected id on row click | TopicDetail rail | Caller `onSelect(id)` | Up | Callback |
 | New / Delete / Cancel / Save intents | ButtonBar | Caller `onNew` / `onDelete` / `onCancel` / `onSave` | Up | Callbacks |
@@ -183,7 +186,10 @@ Composed shared primitives without their own recipe domains: `Badge`
 | T14 | collapse-list-header-when-collapsed | `listHeader` set, rail collapsed | `listHeader` hidden while collapsed, shown while expanded |
 | T15 | default-empty-list-label | `items=[]`, `emptyList` omitted | Rail shows "Nothing here yet." (hardcoded default) |
 | T16 | render-warn-badge-per-row | item `{ warn:true, warnCount:5, warnTitle:"5 project sites not yet connected" }` | The rail row's accessible name (its button content) includes `warnTitle`, contributed by the Badge's `aria-label` after the row label |
-
+| T17 | default-can-delete-to-editing | `selectedId=null`, `canDelete={true}`, `onDelete` set | Delete enabled (the explicit value is honored) |
+| T18 | forward-row-select | User selects the row with id "r2" | `onSelect("r2")` called once |
+| T19 | forward-toolbar-intents | Editing, `dirty=true`, `onDelete` set; user activates New, Delete, Cancel, then Save | `onNew`, `onDelete`, `onCancel`, `onSave` each called once, in that order, and no other callback is called |
+| T20 | size-rail | `railWidth={360}`, rail expanded | Rail is 360px wide; with `railWidth` omitted it is 240px |
 ## Edge Cases
 
 - Nothing selected (`selectedId === null`): the pane shows `EmptyState`, Cancel and
@@ -200,15 +206,18 @@ Composed shared primitives without their own recipe domains: `Badge`
   **disable-delete-while-busy**, **keep-new-enabled-while-busy**).
 - A row without `warn` renders no trailing accessory; a row with `warn` but no
   `warnCount` renders a bare `⚠` rather than a count badge.
-- Rows whose labels are long identifiers (URLs): widen the rail via `railWidth`.
+- Rows whose labels are long identifiers (URLs): widen the rail via `railWidth` (see **size-rail**).
 - The rail is always collapsible (a core `TopicDetail` behavior); collapsing hides
   the `listHeader` (see **collapse-list-header-when-collapsed**) and each row's
   warn badge/label, leaving the icon strip — that collapse-time hiding is
   `TopicDetail`'s own behavior (`support-trailing-accessory`,
   `hide-label-when-collapsed`; see
-  behavioral-requirements ([adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f))), not
+  the `support-trailing-accessory` and `hide-label-when-collapsed` requirements of
+  [adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f)), not
   something EditorSection adds.
-
+- `selectedId === null` with an explicit `canDelete={true}`: the default rule is `canDelete ?? editing`, so an explicit `true` turns Delete on even with nothing selected. Consumers MUST NOT pass `canDelete={true}` unless a record is selected; omit it to get the "anything selected" default.
+- Starting a new record while a save is in flight (`keep-new-enabled-while-busy`) can change `selectedId` before the save finishes. The consumer MUST tie the in-flight save to the id of the record it started with, and MUST NOT apply its result to whichever record is selected when it completes.
+- Localization: "Nothing here yet." (when `emptyList` is omitted) and the "Saving…" Save label are fixed English literals; the latter comes from `ButtonBar` and this recipe has no prop to override it. A localized consumer SHOULD always pass `emptyList`.
 ## Platform Notes
 
 - **SwiftUI**: A master/detail editor is a `NavigationSplitView` on every platform, including iPhone — its own compact-width collapse (sidebar to stack) already gives the rail/pane behavior `TopicDetail` needs, so no separate `NavigationStack` + `.sheet` branch is required. The sidebar is the records `List` with a `selection` binding (state-driven, mirrors `selectedId`); rows carry a `.badge(n)` modifier (or a trailing `Label` with an SF Symbol such as `exclamationmark.triangle.fill` for the countless case) for the warn indicator — `Badge(count)` and `FontIcon` are not SwiftUI APIs. The toolbar uses `.toolbar` with `.principal` placement for the title and `.toolbar` items (not `.confirmationDialog`, which is for destructive confirmation prompts, not the primary action row) for New/Delete/Cancel/Save, giving Delete `role: .destructive`. The detail column conditionally renders the form (editing) or an `EmptyState`-equivalent view (nothing selected).
@@ -221,11 +230,54 @@ Composed shared primitives without their own recipe domains: `Badge`
 
 - **WinUI 3**: Root `Grid` with `RowDefinitions` for toolbar (~44px), optional error line (~24px), and content area (`Height="*"`). `CommandBar` holds the title (`TextBlock`/`Run` in a `StackPanel`, left-aligned, `Foreground="{ThemeResource AptGoldBrush}"`) and Button commands (New, Delete, Cancel, Save) right-aligned, bound to `Command`/`IsEnabled` reflecting the editing/dirty/busy conditions (Save additionally swaps its `Content` to "Saving…" while busy, via a converter or a bound property). Error `TextBlock` (`Margin="12,0,12,0"`, `Foreground="{ThemeResource AptRedBrush}"`) is shown or hidden via `Visibility="{x:Bind ErrorVisibility, Mode=OneWay}"`, a bound converter driven by whether the error string is set — not a literal with no binding behind it. The content area uses `NavigationView` with `PaneDisplayMode="Left"` (or a two-column `Grid` whose rail column animates between 240 and 48px), so the rail collapses exactly as `TopicDetail`'s own WinUI 3 note describes; a fixed `Width="240"` column with no toggle would not port the collapse behavior. Records list is a `ListView` (`SelectionMode="Single"`, `ItemsSource="{x:Bind Items}"`, `SelectedValue="{x:Bind SelectedId, Mode=TwoWay}"`, `SelectedValuePath="Id"` — `SelectedItem` would bind an item object, not the id string the shell tracks), and the detail pane is a `ContentPresenter` bound through a method (`Content="{x:Bind GetPaneContent(Editing), Mode=OneWay}"`), since `x:Bind` has no inline ternary expression syntax. Warn badges are `FontIcon` overlays (Unicode ⚠, `Foreground="{ThemeResource AptWarningBrush}"`) or `InfoBadge` controls in the `ListView.ItemTemplate`. All brushes come from `{ThemeResource}` (never `{StaticResource}`), so they follow theme changes, mapped to the `apt-*` tokens; skip `Reveal` — it was retired with UWP and has no WinUI 3 equivalent.
 
+## API
+
+`@adh-sdk/ui/blocks/editor-section`:
+
+```ts
+interface EditorSectionItem {
+  id: string
+  label: string
+  sublabel?: string
+  icon?: React.ReactNode      // 16px leading icon (rail fills a neutral ring if omitted)
+  warn?: boolean              // shows a ⚠ at the row's right edge
+  warnTitle?: string
+  warnCount?: number          // when set (and warn), renders a "⚠ N" count badge
+}
+interface EditorSectionProps {
+  title: React.ReactNode
+  titleBadge?: React.ReactNode
+  createLabel: string
+  items: EditorSectionItem[]
+  selectedId: string | null
+  onSelect: (id: string) => void
+  onNew: () => void
+  onDelete?: () => void        // omit → no Delete button
+  onCancel: () => void
+  onSave: () => void
+  dirty: boolean
+  busy?: boolean               // default false
+  canDelete?: boolean          // default: "anything selected"
+  error?: React.ReactNode      // red line under the toolbar
+  emptyList?: React.ReactNode  // rail empty label; default "Nothing here yet."
+  emptyDetail: React.ReactNode // EmptyState title when nothing selected
+  listHeader?: React.ReactNode // rail leading slot; hidden while collapsed
+  railWidth?: number           // px; default 240; widen for long-identifier rails
+  children: React.ReactNode    // the record editor form, shown while editing
+  className?: string
+}
+export function EditorSection(props: EditorSectionProps): React.ReactElement
+```
+
+Accessibility: the toolbar is `role="toolbar"` (via `ButtonBar`) with labeled
+buttons whose `disabled` reflects the editing/dirty/busy state; each warn badge
+carries `warnTitle` as its title/aria-label; the rail's selection and collapse
+behaviors come from `TopicDetail`.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/editor-section.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/blocks/editor-section.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -283,54 +335,11 @@ delegates all rendering to `ButtonBar`, `TopicDetail`, `Badge`, and
 `EmptyState`. `unit-test-coverage` fails — no test file in the `ui` package
 exercises `EditorSection`.
 
-## API
-
-`@adh-sdk/ui/blocks/editor-section`:
-
-```ts
-interface EditorSectionItem {
-  id: string
-  label: string
-  sublabel?: string
-  icon?: React.ReactNode      // 16px leading icon (rail fills a neutral ring if omitted)
-  warn?: boolean              // shows a ⚠ at the row's right edge
-  warnTitle?: string
-  warnCount?: number          // when set (and warn), renders a "⚠ N" count badge
-}
-interface EditorSectionProps {
-  title: React.ReactNode
-  titleBadge?: React.ReactNode
-  createLabel: string
-  items: EditorSectionItem[]
-  selectedId: string | null
-  onSelect: (id: string) => void
-  onNew: () => void
-  onDelete?: () => void        // omit → no Delete button
-  onCancel: () => void
-  onSave: () => void
-  dirty: boolean
-  busy?: boolean               // default false
-  canDelete?: boolean          // default: "anything selected"
-  error?: React.ReactNode      // red line under the toolbar
-  emptyList?: React.ReactNode  // rail empty label; default "Nothing here yet."
-  emptyDetail: React.ReactNode // EmptyState title when nothing selected
-  listHeader?: React.ReactNode // rail leading slot; hidden while collapsed
-  railWidth?: number           // widen for long-identifier rails
-  children: React.ReactNode    // the record editor form, shown while editing
-  className?: string
-}
-export function EditorSection(props: EditorSectionProps): React.ReactElement
-```
-
-Accessibility: the toolbar is `role="toolbar"` (via `ButtonBar`) with labeled
-buttons whose `disabled` reflects the editing/dirty/busy state; each warn badge
-carries `warnTitle` as its title/aria-label; the rail's selection and collapse
-behaviors come from `TopicDetail`.
-
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Wrote out the ButtonBar prop mapping, renamed the Domain column to rdid, moved API above Design Decisions, fixed the cross-document requirement reference, documented the explicit canDelete, in-flight save and localization edge cases, and added forward-row-select, forward-toolbar-intents and size-rail requirements with four test vectors. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Removed fabricated #localization/empty-list anchor (no Localization section); default-empty-list-label now describes the hardcoded English literal. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case; add disable-save-while-busy, disable-cancel-while-busy, keep-new-enabled-while-busy, and default-empty-list-label requirements with T15/T16 test vectors and updated T9; cite TopicDetail's own collapse-time badge/label-hiding requirements instead of duplicating them; clarify render-warn-badge-per-row's accessible-name composition; fix WinUI 3, SwiftUI, AppKit/UIKit, and Compose platform notes to name real APIs; move literal Tailwind classes out of Layout/Ingredients into the React/Web note; add ButtonBar/EmptyState ingredient domains; extract API and Accessibility into standalone sections; reformat Design Decisions to the three-line convention; rewrite Compliance as linked canonical checks. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Expand Platform Notes with all five platforms; add concrete translation guidance for SwiftUI, Compose, AppKit/UIKit, and WinUI 3. |

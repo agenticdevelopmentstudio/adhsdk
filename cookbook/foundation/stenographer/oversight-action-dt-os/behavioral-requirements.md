@@ -13,8 +13,8 @@
 - **target-blocked-use**: The `blocked` target MUST be used when the finding is missing, resolved, or its session is not at a safe breakpoint.
 - **target-memberwise-init**: `OversightActionTargetDTO.init` MUST take every field with no default.
 - **result-fields**: An `OversightActResultDTO` MUST carry `findingId` (Int), `succeeded` (Bool), `status` (String) and `reason` (String).
-- **result-succeeded**: `succeeded` MUST be true when the finding transitioned to `acted`.
-- **result-status**: `status` MUST be the finding's status after the call: `acted` on success, the current status when it was already resolved, and empty when the finding was not found.
+- **result-succeeded**: `succeeded` MUST be true only when the finding transitioned to `acted`. The HTTP client instead sets it true for any 2xx reply, and reports `status` `acted` when it cannot decode the reply body.
+- **result-status**: On the XPC and daemon path, `status` MUST be the finding's status after the call: `acted` on success, the current status when it was already resolved, and empty when the finding was not found. Two exceptions send an empty `status` for a finding that exists: the daemon's `.failed` outcome, and every failure reply the HTTP client builds (it uses the route's `error` text as `reason`).
 - **result-reason**: `reason` MUST be a human-readable explanation when `succeeded` is false, and MUST be an empty string on success.
 - **result-after-injection**: The app MUST call the act route only after a successful injection, so a failure is a rare race: the finding was already resolved or vanished.
 - **conformance-protocols**: `OversightActionTargetDTO` and `OversightActResultDTO` MUST be `Codable`, `Sendable` and `Equatable`.

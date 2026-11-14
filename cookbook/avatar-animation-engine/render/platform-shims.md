@@ -2,11 +2,11 @@
 id: 39f26055-c002-40fe-81e2-74c0f9c9311d
 title: "Avatar Engine Render"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,11 @@ tags:
   - rendering
   - cross-platform
   - logic
-depends-on: []
+depends-on:
+  - 471eb7b8-6821-4fd3-ab89-022c56757421
+  - c708a65f-4d6c-40e4-b1b8-a24584cd45a1
+  - 81f8c0bd-ce00-43b3-816e-b63e96baeacc
+  - d3e1f776-8ad1-431f-9485-386ac285a039
 related: []
 references: []
 approved-by: ""
@@ -33,17 +37,17 @@ approved-date: ""
 
 ## Overview
 
-This is a non-UI component: a logic seam with no visual surface of its own.
-It converts values the avatar engine already computed (a `Mat`, a hex ink
+This is a non-UI component: a logic seam with no visual surface of its own,
+and the boundary between the avatar engine's per-frame `DisplayList` (composed
+elsewhere, by `Scene.compose`) and each platform's native drawing surface. It
+converts values the avatar engine already computed (a `Mat`, a hex ink
 string, a path-data string, a `DisplayList`) into the vocabulary a
 platform's own drawing API understands (`CGAffineTransform`, `CGColor`,
 `CGPath`, `CGLineCap`/`CGLineJoin` on Apple; `<path>` attributes on the web).
 It never decides what to draw — only how to say it in each platform's own
 primitives.
 
-`avatar-engine-render` is the boundary between the avatar engine's per-frame
-`DisplayList` (composed elsewhere, by `Scene.compose`) and each platform's
-native drawing surface. On Apple it is one file, `PlatformShims.swift`, built
+On Apple it is one file, `PlatformShims.swift`, built
 around a single `#if canImport(AppKit)` block: everything AppKit and UIKit
 disagree about — view-visibility lifecycle hooks, reduce-motion/focus/
 occlusion queries, gesture-recognizer and pointer-location primitives — is
@@ -152,8 +156,9 @@ into each platform's native shape.
   `a→a`, `b→b`, `c→c`, `d→d`, `e→tx`, `f→ty` — converting each `Double` to
   `CGFloat`, with no other transformation.
 - **ink-color-from-hex**: `CGColor.avatarInk(_:)` MUST parse a `#rrggbb` (or
-  `#rgb`) hex string into an sRGB `CGColor` with alpha fixed at `1`, and MUST
-  return `nil` when the string does not parse as a hex color.
+  `#rgb`) hex string into an sRGB `CGColor` with alpha fixed at `1`. The
+  leading `#` is optional and hex digits are case-insensitive (both follow
+  `Color.parseHex`). It MUST return `nil` when the string does not parse as a hex color.
 - **ink-color-excludes-item-alpha**: `CGColor.avatarInk(_:)` MUST NOT
   incorporate a display item's `paint.alpha` into the returned color; alpha
   MUST be applied separately, through the target's own opacity.
@@ -242,15 +247,6 @@ into each platform's native shape.
 - **cap-join-source-shared**: On both platforms, the line cap and line join
   used to stroke an item MUST come from the character's `strokeStyle`, never
   from a per-item value.
-- **cap-join-vocabulary-diverges**: The two platforms MUST diverge in how an
-  unrecognized cap/join value is handled: the Apple bridge maps it to a
-  Core Graphics default (`stroke-cap-mapping`, `stroke-join-mapping`), while
-  the web path writes `strokeStyle.linecap`/`.linejoin` straight through with
-  no mapping and no fallback (`svg-linecap-linejoin-verbatim`) — a
-  consequence of `StrokeStyle.linecap`/`.linejoin` being an unconstrained
-  `String` in the Apple config type versus a `"round" | "butt"` /
-  `"round" | "miter"` union in the web config type.
-
 ## Appearance
 
 Not applicable — this is a rendering bridge, not a visual component.
@@ -268,18 +264,19 @@ Not applicable — this is a rendering bridge, not a visual component.
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | avatar-engine-render-001 | matrix-bridge-field-order | `CGPoint(x:7,y:-3).applying(CGAffineTransform(Mat(a:1.5,b:-0.25,c:0.75,d:2,e:30,f:-12)))` | Equal (to 1e-12) to `Mat.apply(x:7,y:-3)` on the same `Mat` — `RenderTests.swift testTheCGAffineTransformBridgeMapsAPointExactlyAsMatDoes`. |
-| avatar-engine-render-002 | live-environment-reduce-motion-only, live-environment-main-actor-only | `AvatarEnvironment.live().reducedMotion()` called on the main actor | Returns without trapping; `Platform.viewSpaceIsBottomLeft == true` on the macOS-only test bundle — `RenderTests.swift testTheLiveEnvironmentReadsTheHostAccessibilitySetting`. |
-| avatar-engine-render-003 | path-from-display-item, path-from-display-item-throws | `CGPath.avatarItem("M0,0C10,0 20,10 20,20L30,20Z")` vs. `CGPath.avatarItem("Q0,0 1,1")` | First equals `AvatarLayerView.cgPath(parsePath(d))`; second throws — `RenderTests.swift testThePublicPathDoorBuildsTheSamePathAsTheInternalBuilder`. |
+| avatar-engine-render-002 | live-environment-reduce-motion-only, live-environment-main-actor-only, view-space-orientation | `AvatarEnvironment.live().reducedMotion()` called on the main actor | Returns without trapping (the value is the user's setting, so the test cannot assert it); `Platform.viewSpaceIsBottomLeft == true` on the macOS-only test bundle, which pins the AppKit branch of `view-space-orientation` — `RenderTests.swift testTheLiveEnvironmentReadsTheHostAccessibilitySetting`. |
+| avatar-engine-render-003 | path-from-display-item, path-from-display-item-throws | `CGPath.avatarItem("M0,0C10,0 20,10 20,20L30,20Z")` vs. `CGPath.avatarItem("Q0,0 1,1")` | First equals a `CGPath` built by hand as move `(0,0)`, cubic to `(20,20)` with control points `(10,0)` then `(20,10)`, line `(30,20)`, close (the cited test compares against the engine's internal path builder rather than a literal); second throws — `RenderTests.swift testThePublicPathDoorBuildsTheSamePathAsTheInternalBuilder`. |
 | avatar-engine-render-004 | stroke-cap-mapping, stroke-join-mapping, stroke-mapping-never-throws | `StrokeStyle(width:4, linecap:"wobbly", linejoin:"wobbly")` | `.cgLineCap == .butt`, `.cgLineJoin == .miter`, no throw — `RenderTests.swift testTheStrokeStyleVocabularyMapsOntoCoreGraphicsCapsAndJoins`. |
 | avatar-engine-render-005 | svg-attribute-set, render-to-string-structure | `renderToString(config, engine.tick(0))` | Contains `viewBox="0 0 400 400"`; exactly one `<path ` per display item — `svg.test.ts "emits a 400x400 viewBox and one path per display item"`. |
 | avatar-engine-render-006 | svg-attribute-set | `renderToString` over a list whose items carry `m: [1,2,3,4,5,6]` | Output contains `matrix(1,2,3,4,5,6)` — `svg.test.ts "writes matrix() in the a,b,c,d,e,f order"`. |
 | avatar-engine-render-007 | fill-stroke-selection-shared | `renderToString(config, list)` over a mixed fill/stroke list | Count of `stroke="#` matches equals the number of unfilled items; count of `fill="#` matches equals the number of filled items — `svg.test.ts "strokes unfilled shapes and fills filled ones"`. |
 | avatar-engine-render-008 | svg-linecap-linejoin-verbatim | `renderToString` with `strokeStyle.linecap/linejoin == "round"` | Output contains `stroke-linecap="round"` and `stroke-linejoin="round"`; no `<style` tag — `svg.test.ts "carries the config's stroke style, not a stylesheet"`. |
-| avatar-engine-render-009 | render-to-string-purity | `renderToString(config, list)` called twice with the same arguments | Both calls return an identical string — `svg.test.ts "escapes nothing it does not need to and stays stable across renders"`. |
+| avatar-engine-render-009 | render-to-string-purity | `renderToString(config, list)` called twice with the same arguments | Both calls return an identical string — `svg.test.ts "escapes nothing it does not need to and stays stable across renders"`. The test pins stability only; no vector pins attribute escaping, which the source does not do (see Edge Cases). |
 | avatar-engine-render-010 | svg-renderer-node-creation-once, svg-renderer-paint-order-fixed-on-first-appearance | `createSvgRenderer(config, doc)`; `render(tick(0))`; then `render(tick(t))` for `t` from `1/60` to `3` | Exactly `n+1` elements are ever created (n paths plus the `<svg>`); `root.children` after the loop is deep-equal to its value right after the first render — `svg.test.ts "creates one <path> per item on the first frame, and none on any frame after"`. |
 | avatar-engine-render-011 | svg-renderer-destroy-clears-paths, svg-renderer-render-after-destroy | `render(tick(0))`; `destroy()`; `render(tick(0))` | Children count is `0` right after `destroy()`, back to `n` after the second render; total elements ever created is `2n+1` — `svg.test.ts "forgets everything on destroy"`. |
 | avatar-engine-render-012 | svg-attribute-single-source | `renderToString(config, list)`'s per-`<path>` attributes vs. `createSvgRenderer(config, doc).render(list)`'s resulting node attributes, over a list containing both a filled and an unfilled item | The two attribute sets are equal, item for item — `svg.test.ts "paints exactly what renderToString writes, attribute for attribute"`. |
-
+| avatar-engine-render-013 | ink-color-from-hex, ink-color-excludes-item-alpha | `CGColor.avatarInk("abc")`, `CGColor.avatarInk("#ABC")` and `CGColor.avatarInk("#aabbcc")`; then `CGColor.avatarInk("zzz")` | The first three return equal sRGB colors with alpha `1` (`#` optional, case-insensitive, `#rgb` doubled per channel); the last returns `nil` |
+| avatar-engine-render-014 | svg-ink-excludes-alpha, svg-attribute-set | `renderToString` over an item with `paint.alpha = 0.5` and a hex ink | The `<path>` carries `opacity="0.5"`; its `fill`/`stroke` value is the bare ink hex with no alpha component |
 ## Edge Cases
 
 - **Empty or malformed hex string (Apple)**: `CGColor.avatarInk("")` (or any
@@ -307,7 +304,14 @@ Not applicable — this is a rendering bridge, not a visual component.
   from the current one leaves its `<path>` in the DOM with stale attributes,
   since `render` has no code path that removes or hides an element for a
   vanished `id`. `renderToString` has no equivalent gap, since it always
-  rebuilds its output from scratch and so cannot go stale this way.
+  rebuilds its output from scratch and so cannot go stale this way. Design
+  Decisions records this as an accepted limitation.
+- **Attribute values containing `"`, `<` or `&` (Web)**: `attrsOf`/`renderToString`
+  write `d`, `fill`/`stroke` ink, `data-id` and the stroke style verbatim and
+  escape nothing, so a value containing a double quote would end its attribute
+  early in the `renderToString` output. `setAttribute` on the live DOM path
+  takes the value as data and is unaffected. The values come from the engine and
+  the validated character config, not from end users.
 - **Off-main-actor use of `AvatarEnvironment.live()`'s closure (Apple)**:
   calling the returned `reducedMotion` closure off the main actor traps the
   process via `MainActor.assumeIsolated`; this is documented, deliberate
@@ -334,14 +338,11 @@ Not applicable — this is a rendering bridge, not a visual component.
 |--------|------|---------|-------------|
 | `config` (web) | `CharacterConfig` | none — required | Passed to `createSvgRenderer` and `renderToString`; supplies `character.canvas.{w,h}` for the `<svg>` `viewBox` and `character.strokeStyle.{width,linecap,linejoin}` for a stroked item's defaults. |
 | `doc` (web) | `Document` | `document` (the global) | Passed to `createSvgRenderer`; injected so the renderer can run against a fake `Document` in tests or any non-browser host. |
-| `d` (apple) | `String` | none — required | The path-data argument to `CGPath.avatarItem(_:)`. |
-| hex string (apple) | `String` | none — required | The `#rrggbb`/`#rgb` argument to `CGColor.avatarInk(_:)`. |
-| `m` (apple) | `Mat` | none — required | The 2×3 affine argument to `CGAffineTransform.init(_:)`. |
-| `target`/`selector`/`action` (apple) | `AnyObject`/`Selector` | none — required | Arguments to `Platform.displayLink(on:target:selector:)`, `.makeTapRecognizer(target:action:)`, and `.makeDragRecognizers(target:action:)`. |
 
 Neither file reads an environment variable, a `UserDefaults`/settings key, or
-a config file directly; every parameter above is supplied by the caller at
-the call site.
+a config file directly. The remaining inputs (a path-data string, a hex ink
+string, a `Mat`, a target/selector/action) are ordinary function arguments,
+specified in Behavioral Requirements.
 
 ## Deep Linking
 
@@ -408,7 +409,7 @@ Not applicable: neither file calls a logger, `print`, `os_log`, or
   a stable `key` on `item.id` plus an imperative attribute write in a
   `useLayoutEffect`/ref callback — rather than trusting React's virtual-DOM
   diff, which does not guarantee the same node survives frame to frame.
-- **SwiftUI**: There is no SwiftUI layer in this recipe's sources; the
+- **SwiftUI**: There is no SwiftUI layer in this ingredient's sources; the
   consuming renderer drives raw `CAShapeLayer`s directly. A SwiftUI port
   would replace that with a `Canvas`/`GraphicsContext` view (or a custom
   `Shape`) driven by `TimelineView(.animation)` instead of `CADisplayLink`.
@@ -424,7 +425,7 @@ Not applicable: neither file calls a logger, `print`, `os_log`, or
   `Settings.Global.ANIMATOR_DURATION_SCALE` or an
   `AccessibilityManager`-based check. Compose's `Canvas` redraws imperatively
   inside one lambda rather than mutating retained nodes, so the "create once,
-  reuse forever" node cache this recipe relies on (both the Apple layer cache
+  reuse forever" node cache this ingredient relies on (both the Apple layer cache
   and the web `Map`) has no direct analogue; a port would need `remember`ed
   `Path` objects keyed by `item.id` to avoid re-parsing `item.d` every frame.
 - **WinUI 3**: A `Microsoft.UI.Xaml.Shapes.Path` per `DisplayItem`, held in a
@@ -432,7 +433,7 @@ Not applicable: neither file calls a logger, `print`, `os_log`, or
   `Map<string, SVGPathElement>` and the Apple layer cache do — one `Path`
   created the first time an `id` is seen, its `Data` (a `PathGeometry` or
   Win2D `CanvasGeometry`, parsed from the same `M`/`L`/`C`/`Z` string this
-  recipe's path parser reads), `RenderTransform` (a `MatrixTransform` built
+  ingredient's path parser reads), `RenderTransform` (a `MatrixTransform` built
   from the same six fields as `Mat`/`CGAffineTransform` —
   `Matrix(a, b, c, d, e/OffsetX, f/OffsetY)`), `Opacity` (from `paint.alpha`,
   mirroring the alpha-on-opacity-not-color decision below), and `Fill`/
@@ -442,26 +443,24 @@ Not applicable: neither file calls a logger, `print`, `os_log`, or
   driver is `CompositionTarget.Rendering` (the `CADisplayLink`/
   `requestAnimationFrame` equivalent); the update must stay synchronous —
   `CompositionTarget.Rendering` fires on the UI thread, and a `Task`/`async`
-  write would land a frame late. There is no `HttpClient`/`System.Text.Json`/
-  `Windows.Storage` surface to port here, since this component neither talks
-  to the network nor persists anything. Reduce Motion reads
-  `Windows.UI.ViewManagement.UISettings.AnimationsEnabled`, matching
-  `Platform.reduceMotion()`'s AppKit/UIKit calls.
+  write would land a frame late. Reduce Motion reads
+  `Windows.UI.ViewManagement.UISettings.AnimationsEnabled`, whose sense is
+  inverted relative to `Platform.reduceMotion()`: use
+  `reduceMotion = !AnimationsEnabled`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AvatarAnimationEngine/Sources/Render/PlatformShims.swift` | unverified |
-| web | `packages/web/packages/avatar-engine/src/render/svg.ts` | unverified |
+| apple | `packages/apple/AvatarAnimationEngine/Sources/Render/PlatformShims.swift` | confirmed (1.0.3) |
+| web | `packages/web/packages/avatar-engine/src/render/svg.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
 **Decision**: Confine every AppKit/UIKit divergence to one
 `#if canImport(AppKit)` block, behind a single `Platform` enum and a single
 `AvatarHostView` base class.
-**Rationale**: Keeps every platform conditional in one file, per the source's
-own comment, so the rest of the rendering and animation code stays
+**Rationale**: Keeps every platform conditional in one file so the rest of the rendering and animation code stays
 platform-agnostic; a new platform-specific need is added here once instead of
 scattering `#if` blocks across the package.
 **Approved**: pending
@@ -469,10 +468,10 @@ scattering `#if` blocks across the package.
 **Decision**: `Mat` stays a plain `Double`-based struct and is bridged to
 `CGAffineTransform` only at the one point `CGAffineTransform.init(_ m: Mat)`
 needs it.
-**Rationale**: `CGAffineTransform`'s storage is `CGFloat`, which is `Float`
-on some architectures and would silently cost the engine's 1e-6 golden-test
-tolerance; keeping `Mat` as `Double` and converting only at this single seam
-preserves that precision everywhere else.
+**Rationale**: Keeping `Mat` a `Double` struct keeps CoreGraphics out of the
+engine core, so the shared math has one storage type on both platforms and the
+1e-6 golden-test tolerance never depends on `CGFloat`'s width; the conversion
+happens only at this single seam.
 **Approved**: pending
 
 **Decision**: `CGColor.avatarInk`'s result and `attrsOf`'s `fill`/`stroke`
@@ -486,7 +485,7 @@ single-attribute-write economy on the web, on every frame of every fade.
 **Decision**: `CGPath.avatarItem(_:)` is the one public function this file
 exposes for path conversion, rather than making the underlying parser and
 path builder themselves public.
-**Rationale**: Per the source's own comment, the alternative is three types
+**Rationale**: The alternative is three types
 exposed to hide one string, or every external host reproducing the cubic
 control-point-before-endpoint argument order by hand — "a version that
 compiles, runs, and draws every curve wrong."
@@ -495,7 +494,7 @@ compiles, runs, and draws every curve wrong."
 **Decision**: An unrecognized `linecap`/`linejoin` string falls back to
 Core Graphics' own default (`.butt`/`.miter`) inside `StrokeStyle.cgLineCap`/
 `cgLineJoin`, rather than throwing.
-**Rationale**: Per the source's own comment, the config loader is where a bad
+**Rationale**: The config loader is where a bad
 vocabulary should be caught; a renderer that refused to draw would report the
 problem in the least useful place.
 **Approved**: pending
@@ -503,7 +502,7 @@ problem in the least useful place.
 **Decision**: `attrsOf` is the single function both the live-DOM path
 (`applyItem`) and the string path (`renderToString`'s `attrs`) call to
 compute an item's paint attributes.
-**Rationale**: Per the source's own comment, two hand-written serializers
+**Rationale**: Two hand-written serializers
 agreeing today is not the same claim as their still agreeing after someone
 adds a paint attribute to one of them; a shared function makes the two paths
 incapable of drifting apart.
@@ -511,11 +510,29 @@ incapable of drifting apart.
 
 **Decision**: `Platform.makeDragRecognizers` returns an empty array on
 AppKit rather than a click-and-drag gesture recognizer.
-**Rationale**: Per the source's own comment, macOS has a real cursor, which
+**Rationale**: macOS has a real cursor, which
 `pointerLocation` samples every frame instead — closer to how `pointermove`
 behaves than a discrete drag gesture would be.
 **Approved**: pending
 
+**Decision**: The two platforms diverge on an unrecognized cap/join value: the
+Apple bridge maps it to a Core Graphics default (`.butt`/`.miter`), while the
+web path writes `strokeStyle.linecap`/`.linejoin` straight through with no
+mapping and no fallback (`svg-linecap-linejoin-verbatim`).
+**Rationale**: `StrokeStyle.linecap`/`.linejoin` is an unconstrained `String`
+in the Apple config type but a `"round" | "butt"` / `"round" | "miter"` union
+in the web config type. This is a known divergence, not a contract a port must
+reproduce; the config loader is where a bad value should be caught.
+**Approved**: pending
+
+**Decision**: The web renderer never removes or hides a `<path>` for an `id`
+that disappears from the display list.
+**Rationale**: `render` only ever creates and rewrites nodes, which is what
+keeps node identity and paint order stable; a vanished `id` leaves its last
+attributes on screen (see Edge Cases). The engine's display list keeps a stable
+id set for a character, so the gap is accepted rather than paid for with
+removal bookkeeping.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -524,7 +541,7 @@ behaves than a discrete drag gesture would be.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
 | [adc.check.performance.animation-frame-rate](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9eb9b4fc-2e44-5391-9445-d6e78caa874e) | partial | Performance |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Neither file swallows an error: `CGColor.avatarInk` returns `nil` and
 `CGPath.avatarItem` throws, both propagated to the caller rather than
@@ -538,12 +555,15 @@ path for a per-frame, `CADisplayLink`/animation-loop-driven `DisplayList`,
 but neither file measures or enforces a per-frame time budget — the
 node-reuse design (one `<path>`/layer per id, rewritten rather than rebuilt)
 supports a 60fps target without proving it from source alone
-(animation-frame-rate: partial). `unit-test-coverage` is passed:
-`RenderTests.swift` exercises `PlatformShims.swift`'s `AvatarLayerView`/
-`CGColor.avatarInk`/`CGPath.avatarItem` machinery directly, and
-`svg.test.ts` exercises `svg.ts`'s `createSvgRenderer`/`renderToString`
-against real engine output, both with meaningful assertions.
-
+(animation-frame-rate: partial). `unit-test-coverage` is partial:
+`RenderTests.swift` exercises the `CGAffineTransform`/`CGColor.avatarInk`/
+`CGPath.avatarItem`/`StrokeStyle` bridges and `svg.test.ts` exercises
+`svg.ts`'s `createSvgRenderer`/`renderToString` against real engine output,
+but no vector covers the host-view lifecycle (`host-visibility-*`,
+`main-actor-isolation`), `host-layer-access`, `display-link-creation`, the
+recognizer-creation requirements, `pointer-location-*`, `focus-check-*`,
+`occlusion-notification-name`, `on-screen-check-*`, `svg-data-id-write-once`,
+or `svg-renderer-single-svg-element`. Those depend on a live window or an AppKit/UIKit runtime.
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -551,3 +571,4 @@ against real engine output, both with meaningful assertions.
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (unit-test-coverage: passed). |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Downgraded unit-test-coverage to partial and listed the uncovered requirements, added ink and alpha vectors, documented attribute escaping and the stale-path limitation, moved the cap/join divergence into Design Decisions, merged the Overview, trimmed Configuration, and linked depends-on. |

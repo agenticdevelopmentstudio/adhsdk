@@ -4,11 +4,11 @@
     "id": "bd17a89e-aac9-475d-adcd-98b61d24f941",
     "title": "Content Overlay",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2c23da08044d79cd",
+  "synced": "7bf7cd36ca63f0c4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

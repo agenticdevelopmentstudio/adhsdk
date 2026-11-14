@@ -2,7 +2,7 @@
 id: 967a7c54-93e4-4181-bd8e-67bbeb26693d
 title: "Errors Summary"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -36,7 +36,8 @@ many sit in the backlog behind them, how many events every issue carries, and th
 worth listing, loudest first. It exists so no client re-derives these figures. It is a
 synchronous, pure function with no I/O. `GET /telemetry` in `routes/telemetry.ts` is its one
 caller; it attaches the result to the `TelemetrySnapshot` as `errorsSummary` after the rows have
-been judged.
+been judged. `TelemetrySnapshot.errorsSummary` is optional: a snapshot without it makes no claim
+about errors, and a stored row has no verdict, so the summary exists on the live snapshot only.
 
 ## Behavioral Requirements
 
@@ -47,7 +48,7 @@ been judged.
 - **purity**: `errorsSummary` MUST NOT mutate the input array or any of its rows.
 - **no-side-effects**: `errorsSummary` MUST NOT perform I/O, read the clock, or consult any state
   other than its argument; the same input MUST yield an equal result.
-- **no-errors-raised**: `errorsSummary` does not validate its input and has no error path; the
+- **no-errors-raised**: `errorsSummary` MUST NOT validate its input or raise an error; the
   caller MUST pass an array of rows shaped like `ErrorDTO` (the parameter type declares it).
 
 ### Figures
@@ -73,18 +74,13 @@ been judged.
 - **top-cap**: `top` MUST contain at most `ERRORS_TOP_COUNT` rows, the exported constant `5`.
 - **top-rows-unchanged**: Each entry of `top` MUST be the original `ErrorDTO` row, unmodified; the
   summary adds no fields to it.
-- **count-not-guarded-in-sort**: The sort compares `b.count - a.count` without the falsy guard
-  used by `events`; the order of `top` is therefore only defined when every active row has a
-  numeric `count`. `ErrorDTO.count` is typed `number`, which is the documented precondition.
 
 ### Attachment rule (owned by the caller)
 
-- **judged-rows-only**: The doc comment declares that the summary is only attached where every row
-  was judged. `errorsSummary` itself cannot tell a judged row from an unjudged one (both read as
-  backlog); the guarantee is the caller's. `GET /telemetry` passes the rows returned by its
-  `judged` step and always attaches the result.
-- **snapshot-field**: `TelemetrySnapshot.errorsSummary` is optional; a snapshot without it makes no
-  claim about errors. A stored row has no verdict, so the summary exists on the live snapshot only.
+- **judged-rows-only**: The caller MUST pass only rows that have been judged, with each row's
+  `active` verdict stamped. `errorsSummary` itself cannot tell a judged row from an unjudged one
+  (both read as backlog), so the guarantee is the caller's. `GET /telemetry` passes the rows
+  returned by its `judged` step and attaches the result every time.
 
 ## Appearance
 
@@ -113,9 +109,10 @@ source. Rows are written id/count/active.
 | errors-summary-005 | unjudged-is-backlog | one row with `active: false`, count 7 | `active` 0, `backlog` 1, `events` 7, `top` empty |
 | errors-summary-006 | top-tie-order | p/5/true then q/5/true | `top` ids are p, q |
 | errors-summary-007 | top-cap | exactly five active rows | `top` has five rows, none dropped |
-| errors-summary-008 | purity | any array, summarized | the input array order and rows are unchanged afterwards |
+| errors-summary-008 | purity | Rows a/3/true, b/1/false, c/2/true; a deep copy of the array is taken before the call | After the call the array equals the copy: same order, same field values |
 | errors-summary-009 | events-total | an active row with `count` `NaN` and one with count 4 | `events` 4 |
 | errors-summary-010 | top-rows-unchanged | one active row | `top[0]` is the same object as the input row |
+| errors-summary-011 | top-tie-order, top-cap, edge case equal counts at the cap boundary | Six active rows r1 to r6, all with count 5 | `top` ids are r1, r2, r3, r4, r5; `r6` is absent; `active` 6 |
 
 ## Edge Cases
 
@@ -127,8 +124,9 @@ source. Rows are written id/count/active.
   still counted in `active` and `events`.
 - **Equal counts at the cap boundary**: the earlier rows in input order MUST win the last slots of
   `top`, because ties keep input order.
-- **Falsy `count`**: contributes 0 to `events`. Sort order for such an active row is not defined by
-  the source (see `count-not-guarded-in-sort`).
+- **Falsy `count`**: contributes 0 to `events`. The sort compares `b.count - a.count` without the falsy guard used by
+  `events`, so the order of `top` is only defined when every active row has a numeric `count`;
+  `ErrorDTO.count` is typed `number`, which is the documented precondition.
 - **Backlog volume**: backlog rows add to `events` but MUST NOT appear in `top`.
 - **Concurrent access**: not applicable; the function is synchronous and shares no state, so calls
   cannot interleave.
@@ -181,19 +179,19 @@ Not applicable: the source contains no log call.
 ## Platform Notes
 
 - **SwiftUI**: Port as a free function over an array of a `Codable` `ErrorDTO` struct returning an
-  `ErrorsSummary` struct. `filter`, `reduce` and `sorted(by:)` map one to one; sort an enumerated
+  `ErrorsSummary` struct. `filter`, `reduce` and `sorted(by:)` map one to one (read a missing or NaN count as 0 in the `events` sum); sort an enumerated
   array with the index as the tie-break, because Swift's `sorted` is not documented as stable, to
   keep `top-tie-order`.
 - **Compose**: Port as a Kotlin top-level function over `List<ErrorDTO>` returning a data class.
-  `filter`, `sumOf` and `sortedByDescending` (stable) plus `take(5)` give the same result.
-- **React/Web**: The source is `src/telemetry/errors-summary.ts` in `status-server`, with types in
-  `src/telemetry/types.ts`, called from `src/routes/telemetry.ts`. `Array.sort` is stable in current
+  `filter`, `sumOf` (with a missing or NaN count read as 0) and `sortedByDescending` (stable) plus `take(5)` give the same result.
+- **React/Web**: The source is a pure module in `status-server`. `Array.sort` is stable in current
   engines, which `top-tie-order` relies on. Clients render the figures and must not recompute them.
 - **AppKit / UIKit**: No UI. Same port as SwiftUI; the figures feed whatever view the Errors card
   uses.
 - **WinUI 3**: Port as a static method in a C# class library: count with
   `errors.Count(e => e.Active == true)` using `bool? Active` on an `ErrorDto` record, total with
-  `errors.Sum(e => e.Count)` (use `long` if counts can be large), and build `top` with
+  `errors.Sum(e => e.Count)`, treating a missing or NaN count as 0 as `events-total` does (for a
+  nullable field, `e.Count ?? 0`, and for a `double`, map NaN to 0; use `long` if counts can be large), and build `top` with
   `errors.Where(e => e.Active == true).OrderByDescending(e => e.Count).Take(5)`. LINQ
   `OrderByDescending` is stable, matching the source. In an ASP.NET Core minimal API, call it from
   the `/telemetry` handler and serialize with `System.Text.Json` (camelCase naming policy) so the
@@ -204,10 +202,12 @@ Not applicable: the source contains no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/errors-summary.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/telemetry/errors-summary.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| web | `packages/web/packages/status-server/src/routes/telemetry.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/test/telemetry-errors-summary.test.ts` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -236,16 +236,15 @@ inconsistency in the source, recorded here so ports do not silently diverge; `Er
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
-| [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 The function holds one rule and nothing else: it takes no storage, network or clock, so
 `separation-of-concerns` passes. `telemetry-errors-summary.test.ts` covers the split, the ordering and
-cap, the unjudged row and the empty case, so `unit-test-coverage` passes; the falsy-count sort path
-has no test. A pure function returns the same result for the same input, which is
-`idempotent-operations`.
+cap, the unjudged row and the empty case, so `unit-test-coverage` is partial: vectors 5 to 10 are
+read from the source and have no test, and the falsy-count path has none either.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Rewrote no-errors-raised and judged-rows-only as RFC 2119 requirements, moved the sort-guard note and the snapshot-field note to Edge Cases and the Overview, marked unit-test coverage partial, dropped the idempotent-operations check, added the cap-boundary tie vector and a concrete purity vector, and spelled out the falsy-count rule in every port note. |

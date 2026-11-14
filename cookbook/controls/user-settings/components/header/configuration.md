@@ -1,3 +1,3 @@
 
-Not applicable: The Header component does not expose configuration options beyond props. All styling is controlled via CSS classes.
+The Header component has no configuration beyond its props: `className` (see #requirements/class-composition) and `children` (see #requirements/children-content). All styling is controlled via CSS classes.
 

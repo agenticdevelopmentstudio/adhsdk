@@ -1,5 +1,5 @@
 
-The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 10,000, `retryMs` 1,000, sections `a` and `b`, a fake clock starting at 1,000,000.
+The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 10,000, `retryMs` 1,000, sections `a` and `b`, a fake clock starting at 1,000,000. Vectors 001 to 014 are backed by tests in that file; vectors 015 to 020 follow the source and have no test yet.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -22,5 +22,5 @@ The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 1
 | sectioned-017 | retry-clamp | `ttlMs` 500, `retryMs` 1,000, a loader that fails | Next attempt is due at 500 ms, not 1,000 ms |
 | sectioned-018 | failure-keeps-data, success-publish | A section fails after a success, then succeeds again | After the failure `error` is set with old `data` and `updatedAt`; after the success `error` is `null` and `updatedAt` is the new time |
 | sectioned-019 | concurrency-limit | `concurrency` 2 with three due sections and pending loaders | Two loaders start at once; the third starts when one finishes |
-| sectioned-020 | failure-logged | A non-`Error` rejection such as the string `"boom"` | `error` is `"boom"` |
+| sectioned-020 | failure-keeps-data | A non-`Error` rejection such as the string `"boom"` | `error` is `"boom"` |
 

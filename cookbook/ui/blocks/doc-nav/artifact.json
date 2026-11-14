@@ -4,11 +4,11 @@
     "id": "ef7191ff-63a9-442a-b6d0-f8452a0aa1d6",
     "title": "Document Navigation Tree",
     "type": "ingredient",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,11 +24,15 @@
     ],
     "depends-on": [],
     "related": [],
-    "references": [],
+    "references": [
+      "https://www.w3.org/TR/WCAG22/#contrast-minimum",
+      "https://www.w3.org/TR/WCAG22/#target-size-enhanced",
+      "https://www.w3.org/TR/WCAG22/#target-size-minimum"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b4c3a4ea4a3ed867",
+  "synced": "46b0b9e6e2e12b9d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
@@ -40,6 +44,7 @@
     {"part": "edge-cases", "heading": "Edge Cases"},
     {"part": "configuration", "heading": "Configuration"},
     {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "data-model", "heading": "Data Model"},
     {"part": "localization", "heading": "Localization"},
     {"part": "accessibility-options", "heading": "Accessibility Options"},
     {"part": "feature-flags", "heading": "Feature Flags"},
@@ -49,7 +54,6 @@
     {"part": "platform-notes", "heading": "Platform Notes"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
-    {"part": "data-model", "heading": "Data Model"},
     {"part": "history", "heading": "Change History"}
   ]
 }

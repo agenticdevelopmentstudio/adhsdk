@@ -7,7 +7,7 @@
 - **Very long snippet**: Clamped to 2 lines via CSS line-clamp (**limit-snippet-lines**); overflow is truncated with an ellipsis.
 - **Very long author displayName or slug**: Author text may wrap within its footer area; no ellipsis applied (browser wraps).
 - **Missing hit.author.displayName and hit.author.slug**: Component renders "@undefined" or similar; no error handling for missing author fields.
-- **Very long category name**: Category capsule text may overflow; rendering depends on browser and container width (Tailwind's `whitespace-nowrap` is not applied to category, allowing wrap).
+- **Very long category name**: The category capsule does not wrap (`whitespace-nowrap`) and does not shrink (`shrink-0`), so a very long name widens the capsule and can overflow the row; the source applies no truncation.
 - **Future-dated hit.updatedAt**: `formatDate` is called as-is; output depends on the formatter's handling of future dates (no special case defined in component).
 - **Roving tabindex with active = undefined**: This occurs only for standalone rendering outside list context — a list that manages roving tabindex always passes an explicit `active` boolean. The native tab order applies with no overriding tabindex logic.
 

@@ -13,7 +13,7 @@ Hex output
 - **hex-rgb-format**: `hexStringRGB` MUST return `"#"` followed by six lower-case hexadecimal digits in the order red, green, blue, each zero-padded to two digits; it is always 7 characters long.
 - **hex-rgb-no-alpha**: `hexStringRGB` MUST omit alpha; colors that differ only in alpha produce the same string.
 - **hex-rgb-rounding**: Each channel MUST be clamped to 0 to 1, multiplied by 255 and rounded to the nearest integer, with halves rounded away from zero.
-- **hex-rgb-purpose**: The format MUST match the terminal palette's color string, per the doc comment, so that `ColorTheme` can project onto `TerminalSessionColorPalette`. The RGBAColor recipe's `hexString` differs: it is upper-case and carries alpha.
+- **hex-rgb-purpose**: The format MUST match the terminal palette's color string: lower-case, six digits, no alpha. The [RGBAColor](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d) ingredient's `hexString` differs: it is upper-case and carries alpha.
 
 Blending and compositing
 
@@ -25,14 +25,13 @@ Blending and compositing
 - **composite-opaque-source**: When `self.alpha` is 1, `composited(over:)` MUST return a color equal to `self`.
 - **composite-clear-source**: When `self.alpha` is 0 and the backdrop is opaque, `composited(over:)` MUST return a color equal to the backdrop.
 - **composite-transparent-result**: When the output alpha is 0 (both operands fully transparent), `composited(over:)` MUST return `RGBAColor(red: 0, green: 0, blue: 0, alpha: 0)` instead of dividing by zero.
-- **composite-purpose**: A translucent color has no meaningful luminance or contrast alone, so a caller MUST resolve it with `composited(over:)` against its real backdrop before measuring it.
 
 Contrast
 
 - **contrast-formula**: `contrastRatio(against:)` MUST return `(lighter + 0.05) / (darker + 0.05)`, where `lighter` and `darker` are the greater and lesser of the two `relativeLuminance` values.
 - **contrast-range**: The result MUST be 1 for two colors of equal luminance and 21 for opaque black against opaque white.
 - **contrast-symmetric**: `a.contrastRatio(against: b)` MUST equal `b.contrastRatio(against: a)`.
-- **contrast-opaque-precondition**: Callers MUST pass opaque operands. The doc comment states the method "assumes both operands are opaque"; the code does not check alpha, so a translucent operand is measured by its channel values alone.
+- **contrast-opaque-precondition**: Callers MUST pass opaque operands. A translucent color has no meaningful luminance or contrast alone, so a caller MUST resolve it with `composited(over:)` against its real backdrop before measuring it. The doc comment states the method "assumes both operands are opaque"; the code does not check alpha, so a translucent operand is measured by its channel values alone.
 - **best-text-color**: `bestTextColor(black:white:)` MUST return `white` when `contrastRatio(against: white) >= contrastRatio(against: black)`, and `black` otherwise. A tie therefore returns `white`.
 - **best-text-defaults**: The `black` and `white` parameters MUST default to `RGBAColor.opaqueBlack` and `RGBAColor.opaqueWhite`.
 - **best-text-returns-argument**: `bestTextColor` MUST return one of the two supplied colors unchanged; it does not blend or adjust.
@@ -42,7 +41,7 @@ Dimming
 - **dimmed-search**: `dimmed(towards:by:minContrast:)` MUST clamp `fraction` to 0 to 1, then try `blended(withFraction: amount, of: background)` starting at that amount and reducing `amount` by 0.05 after each failed attempt.
 - **dimmed-accept**: It MUST return the first candidate whose `contrastRatio(against: background)` is at least `minContrast`.
 - **dimmed-fallback**: When `amount` falls to 0 or below without a candidate qualifying, or when the clamped fraction is 0, it MUST return `self` unchanged. The result is then below `minContrast` if `self` itself was; the method does not report that.
-- **dimmed-step**: The returned amount is quantized to the starting fraction minus a whole number of 0.05 steps; the method does not search for the exact amount that meets `minContrast`.
+- **dimmed-step**: The returned amount MUST be the starting fraction minus a whole number of 0.05 steps; the method does not search for the exact amount that meets `minContrast`.
 
 Desaturation
 
@@ -55,7 +54,7 @@ Desaturation
 Constants, concurrency and side effects
 
 - **opaque-constants**: `opaqueBlack` MUST be (0, 0, 0, 1) and `opaqueWhite` MUST be (1, 1, 1, 1).
-- **total-functions**: No member MUST throw, trap or return an optional; every color result is built through the `RGBAColor` component initializer, which clamps each component to 0 to 1, so a returned color is always in range.
+- **total-functions**: Members MUST NOT throw, trap or return an optional; every color result is built through the `RGBAColor` component initializer, which clamps each component to 0 to 1, so a returned color is always in range.
 - **concurrency**: Every member is a pure function of immutable values on a `Sendable` type, so any thread MAY call it concurrently without synchronization.
 - **no-side-effects**: Members MUST NOT perform I/O, logging, notification or persistence.
 

@@ -8,4 +8,5 @@
 | partner-paths-005 | skills-directory | Two values with the same `home` and different tokens. | Both `skillsDirectory` values are `<home>/.claude/skills`. |
 | partner-paths-006 | equality | `PartnerPaths(home: /h, token: a)` against `PartnerPaths(home: /h, token: a)` and against `PartnerPaths(home: /h, token: b)`. | The first pair is equal; the second pair is not. |
 | partner-paths-007 | no-file-access | `home` is a directory that does not exist; read every property. | Each returns a URL and nothing is created on disk. |
+| partner-paths-008 | no-validation, skill-file | `home` `/h`; read `skillFile(jobID: "../x").path`. | `/h/.claude/skills/adkitchen-partner-../x/SKILL.md`, pinning the unvalidated result so a later decision to validate shows as a deliberate change. |
 

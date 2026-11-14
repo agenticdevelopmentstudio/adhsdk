@@ -4,7 +4,7 @@
     "id": "ae6b1991-6aed-4d8b-83e1-5d5e02470150",
     "title": "Partner Turn Queue",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,23 +12,26 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "A first-in-first-out queue of inbound partner events that collapses repeats by coalescing key and lets one urgent notice jump the line.",
+    "summary": "A first-in-first-out queue of inbound partner events that collapses repeats by coalescing key and lets urgent notices jump the line (newest first).",
     "platforms": [
       "swift",
-      "macos"
+      "macos",
+      "ios"
     ],
     "tags": [
       "foundation",
       "partner",
       "queue"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "a14bb137-868e-4e8b-827b-4ea0f5e45b81"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c3e4a724710ffffd",
+  "synced": "d11ef358a68c01f0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

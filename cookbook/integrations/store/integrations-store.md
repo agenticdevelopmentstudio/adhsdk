@@ -2,11 +2,11 @@
 id: c19280fd-b80c-46f3-a6a7-0b60a0c90d91
 title: "Integrations Store"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,7 +39,7 @@ approved-date: ""
 
 The store never removes a row. A delete is a tombstone: `deleted_at` is set for connections and provider configs, and `is_deleted` and `deleted_at` are set for messages and labels. "Live" means not tombstoned: `deleted_at IS NULL` for connections and configs, `is_deleted = 0` for messages and labels. Reads return live rows only, except `message(connectionId:idOrExternalId:includingDeleted:)` when asked for a tombstoned row. An upsert reuses the local `id` and `createdAt` of the row it matches and, for a message or label, clears any tombstone on it. A config or connection upsert matches live rows only, so a tombstoned one stays tombstoned and the upsert stores a new row.
 
-Two public value types belong to the contract. `MessageQuery` says which messages of one connection to list, and `MessageKey` is a message's place in the newest-first order, used to resume a page. The record types (`ProviderConfig`, `IntegrationConnection`, `EmailMessage`, `EmailLabel`, `ActionLog`), `ConnectionStatus`, `MailClass`, `IntegrationClock` and `IntegrationError` come from the integrations model (records: cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f, error: cookbook:351e3bf8-b137-4f59-94de-c769aa8b0666) and are used here as given. The component does not talk to the network, hold credentials, decide what to sync, or schedule anything; `GmailSyncWorker` (cookbook:1157bca1-0d27-49e9-a989-d637505ba5f1) and `MailIntegrationService` (cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) call it.
+Two public value types belong to the contract. `MessageQuery` says which messages of one connection to list, and `MessageKey` is a message's place in the newest-first order, used to resume a page. The record types (`ProviderConfig`, `IntegrationConnection`, `EmailMessage`, `EmailLabel`, `ActionLog`), `ConnectionStatus`, `MailClass`, `IntegrationClock` and `IntegrationError` come from the integrations model (records: [adhsdk.ingredient.integrations.model.integration-records](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f), error: [adhsdk.ingredient.integrations.model.integration-error](cookbook:351e3bf8-b137-4f59-94de-c769aa8b0666)) and are used here as given. The component does not talk to the network, hold credentials, decide what to sync, or schedule anything; `GmailSyncWorker` ([adhsdk.ingredient.integrations.gmail.gmail-sync-worker](cookbook:1157bca1-0d27-49e9-a989-d637505ba5f1)) and `MailIntegrationService` ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) call it.
 
 ## Behavioral Requirements
 
@@ -92,6 +92,7 @@ Two public value types belong to the contract. `MessageQuery` says which message
 - **message-upsert-revives**: `upsertMessages(_:)` MUST set `isDeleted` to false and `deletedAt` to nil on every row it stores, so a tombstoned message comes back live.
 - **message-upsert-stamps**: `upsertMessages(_:)` MUST set `updatedAt` to the current time on every row it stores.
 - **message-upsert-batch**: `upsertMessages(_:)` MUST store the whole array in one transaction.
+- **message-upsert-batch-last-wins**: When one `upsertMessages(_:)` call holds two messages with the same `externalId`, the later one MUST be the stored row, and one row remains.
 - **tombstone-ids**: `tombstoneMessages(connectionId:externalIds:)` MUST tombstone the live messages of that connection whose `external_id` is among `externalIds`.
 - **tombstone-ids-dedupe**: `tombstoneMessages(connectionId:externalIds:)` MUST ignore repeated ids in `externalIds`.
 - **tombstone-ids-empty**: `tombstoneMessages(connectionId:externalIds:)` MUST return 0 and touch nothing when `externalIds` is empty.
@@ -117,8 +118,7 @@ Two public value types belong to the contract. `MessageQuery` says which message
 - **query-labels-combine**: `messages(_:)` MUST apply `labelIds` and `anyLabelIds` together, so a message must satisfy both.
 - **query-order**: `messages(_:)` MUST order results by `internal_date` descending, then `id` ascending.
 - **query-after**: When `after` is set, `messages(_:)` MUST return only messages that follow that key in the query order: `internal_date` less than `after.internalDate`, or equal to it with `id` greater than `after.id`.
-- **message-upsert-batch-last-wins**: When one `upsertMessages(_:)` call holds two messages with the same `externalId`, the later one MUST be the stored row, and one row remains.
-- **query-after-stable**: A page resumed with `after` set to the last row of the previous page MUST NOT skip or repeat rows when rows ahead of that key are tombstoned or removed from the filter.
+- **query-after-stable**: A page resumed with `after` set to the last row of the previous page MUST NOT skip or repeat rows when rows ahead of that key are tombstoned, or leave the filter because a label change drops them from `labelIds` or `anyLabelIds` or a re-upsert gives them a new `internal_date`.
 - **query-limit**: `messages(_:)` MUST return at most `max(limit, 0)` rows.
 - **query-offset**: `messages(_:)` MUST skip `max(offset, 0)` rows of the ordered result before it returns any.
 
@@ -138,14 +138,14 @@ Two public value types belong to the contract. `MessageQuery` says which message
 - **log-insert**: `insertActionLog(_:)` MUST insert the given `ActionLog` unchanged as a new row.
 - **log-insert-duplicate**: `insertActionLog(_:)` MUST throw the database's error when a row with that `id` exists.
 - **log-finish**: `finishActionLog(id:status:result:error:)` MUST set `status`, `result`, `error` and `updated_at` on the row with that `id`.
-- **log-finish-unknown**: NEEDS REVIEW: Not implemented in source. `finishActionLog(id:status:result:error:)` changes no row and returns without a signal when no row has that `id`, unlike `updateSyncState`, which throws `IntegrationError.unknownAccount`; a caller cannot tell a finished entry from a lost one, and the call sites in `MailIntegrationService` plus the intended behavior would settle it.
+- **log-finish-unknown**: `finishActionLog(id:status:result:error:)` MUST change no row and MUST return without a signal when no row has that `id`; the statement is an `UPDATE` with no row-count check. Unlike `updateSyncState`, which throws `IntegrationError.unknownAccount`, a caller cannot tell a finished entry from a lost one (see the Design Decision on the silent finish).
 
 ### Concurrency and errors
 
 - **isolation-by-connection**: A message, label or tombstone operation scoped to one `connectionId` MUST NOT change rows of any other connection.
 - **sendable**: `IntegrationsStore` MUST be `Sendable` and MUST hold no mutable state of its own; it MAY be called from any thread.
-- **writes-serialised**: The store MUST route every write through `BoundedDatabase.write`, which runs writes one at a time on the single writer connection.
-- **reads-parallel**: The store MUST route every read through `BoundedDatabase.read`, which runs on a pooled reader connection and does not wait for the writer on a file database.
+- **writes-serialised**: The store MUST route every write through `BoundedDatabase.write`; how writes are serialised is the database wrapper's behavior, not the store's.
+- **reads-parallel**: The store MUST route every read through `BoundedDatabase.read`; which connection serves it is the database wrapper's behavior, not the store's.
 - **errors-unwrapped**: The store MUST let database errors and `BoundedDatabaseError.deadlineExceeded` reach the caller unchanged; it does not wrap, retry or log them.
 
 ## Appearance
@@ -200,8 +200,10 @@ Vectors named for a test come from `IntegrationsStoreTests`, which runs the stor
 | store-032 | errors-unwrapped | Derived: run a store write on a database built with a write deadline shorter than the statement needs | The call throws `BoundedDatabaseError.deadlineExceeded` with lane "write", unwrapped |
 | store-033 | sendable | Derived: compile a use of the store from two tasks | The code compiles without a concurrency diagnostic |
 | store-034 | tombstone-fields | Derived: tombstone a message with the store, then read its `deleted_at` and `updated_at` | `is_deleted` is 1 and the two columns hold the same string |
-| store-035 | writes-serialised, reads-parallel | Derived: open a file database, start a store write that holds the writer, and call a store read from another thread | The read returns the last committed state without waiting for the write; a second write waits for the first |
+| store-035 | writes-serialised, reads-parallel | Derived: run one store write and one store read against a database wrapper that records which of `write` and `read` it was asked to run | The write went through `BoundedDatabase.write` and the read through `BoundedDatabase.read` |
 | store-036 | message-upsert-batch-last-wins | Derived: `upsertMessages` with two messages of external id `e1`, subjects "first" and "second" | One row exists for `e1` and its subject is "second" |
+| store-037 | query-after-stable | Derived: `e1` to `e5`, first page limit 2 returns e5, e4; re-upsert e5 without the filtered label; resume with `after` set to the key of e4, limit 2 | The resumed page is e3, e2 |
+| store-038 | labels-replace-atomic | Derived: `replaceLabels` with more labels than SQLite allows bound variables (over 32,766), on a connection that already has labels | The call throws the database's error and the existing labels are unchanged; the `NOT IN` list is not chunked, and a port should copy this behavior |
 
 ## Edge Cases
 
@@ -214,7 +216,7 @@ Vectors named for a test come from `IntegrationsStoreTests`, which runs the stor
 - **Negative `limit` or `offset`**: both are clamped to 0, so a negative `limit` returns no rows and a negative `offset` skips none (query-limit, query-offset).
 - **`limit` 0**: returns no rows (query-limit).
 - **`after` and `offset` together**: both apply; `offset` skips rows after the `after` filter (query-after, query-offset).
-- **Label id absent from every message**: matches nothing, so `labelIds` containing it returns no rows, and `anyLabelIds` containing only it returns no rows (MUST). The store does not validate label ids.
+- **Label id absent from every message**: matches nothing, so `labelIds` containing it returns no rows, and `anyLabelIds` containing only it returns no rows (MUST; query-labels-all, query-labels-any). The store does not validate label ids.
 - **Dates that are not ISO-8601 UTC strings of the same width**: `since`, `until`, `cutoff` and `after.internalDate` are compared as strings with no validation, so a differently formatted value gives an order that does not follow time (callers SHOULD NOT pass them; the contract is the format `IntegrationClock` writes, and the store rejects nothing).
 - **Missing connection on `updateSyncState`**: throws `IntegrationError.unknownAccount` after the statement runs and finds no row (MUST).
 - **Tombstoned connection on `updateSyncState`**: treated as missing and throws (MUST).
@@ -223,10 +225,10 @@ Vectors named for a test come from `IntegrationsStoreTests`, which runs the stor
 - **Same account signed in again after a delete**: no live row matches, so a new row is stored under the id the caller gave, and the tombstoned row stays (MUST).
 - **Message whose `id` equals another message's `external_id`**: `message(connectionId:idOrExternalId:includingDeleted:)` matches either column and returns the first row the database yields under the live-first ordering (SHOULD NOT be relied on by callers).
 - **Concurrent calls**: writes serialise on the one writer connection; a read on a file database runs on a reader and sees the last committed state; an in-memory database shares one connection, so reads and writes queue together. A call made from inside another `read` or `write` on the same thread runs inline in that transaction (transaction-per-call).
-- **Slow statement**: a read past 10 seconds or a write past 60 seconds (the `BoundedDatabase` defaults) is aborted and surfaces as `BoundedDatabaseError.deadlineExceeded`; a write that throws leaves no partial change (MUST).
+- **Slow statement**: a read past 10 seconds or a write past 60 seconds (the `BoundedDatabase` defaults) is aborted and surfaces as `BoundedDatabaseError.deadlineExceeded`; a write that throws leaves no partial change (MUST; errors-unwrapped, transaction-per-call).
 - **Database busy**: a write waits up to the database's `busyTimeout` (5 seconds by default) and then fails with the database's error; this is `BoundedDatabase` behavior that the store passes through (errors-unwrapped).
 - **Offline or disconnected**: not applicable; the store reads and writes a local SQLite file and makes no network call.
-- **Missing required value**: the store writes the strings it is given without trimming or checking them; a `NOT NULL` column the record leaves unset is rejected with the database's error (MUST).
+- **Missing required value**: the store writes the strings it is given without trimming or checking them; a `NOT NULL` column the record leaves unset is rejected with the database's error (MUST; errors-unwrapped).
 - **Action log `status` text**: not validated; `finishActionLog` stores any `status` string, although `ActionLog.status` documents "pending", "ok" or "error" (SHOULD callers pass one of the three).
 
 ## Configuration
@@ -287,7 +289,7 @@ Not applicable: the source makes no log call; failures reach the caller as throw
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsStore.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsStore.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -354,6 +356,9 @@ Not applicable: the source makes no log call; failures reach the caller as throw
 **Rationale**: Every delete is a tombstone (see the first decision), so message bodies and addresses stay on disk, including after `deleteConnection`. No store method removes them, and the source names no owner for erasure.
 **Approved**: pending
 
+**Decision**: `finishActionLog` returns silently when no row has the id, instead of throwing as `updateSyncState` does.
+**Rationale**: The source runs an `UPDATE` and does not check how many rows it changed, so a lost entry looks like a finished one. Whether it should throw is open: the call sites in `MailIntegrationService` write the log best effort, and the intended behavior would settle it. Until then a port keeps the silent no-op.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -364,9 +369,10 @@ Not applicable: the source makes no log call; failures reach the caller as throw
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 
-The store separates concerns well: it holds only SQL and the keyed-upsert and tombstone rules, takes its database by injection, and leaves fetching, parsing, classification, scheduling and status recording to `GmailSyncWorker`, `MailIntegrationService` and the model types. Unit-test coverage is partial: `IntegrationsStoreTests` has 19 tests covering upserts, revival, query filters, ordering, paging, class and date tombstones, labels, connection lookup and cascade, chunked tombstones and the unknown-account error, but none covers a rollback, the action log error paths, a negative `limit` or `offset`, a delete of an unknown row, `deadlineExceeded` or a migration failure, so vectors store-001, store-002 and store-022 to store-033 are derived from the code. Explicit error handling is partial because every error surfaces and `updateSyncState` raises a typed error, but `finishActionLog` returns silently when no row matches. Idempotent operations pass because upserts are keyed and revive tombstones, and a repeated tombstone changes nothing. Data integrity passes because each public write is one transaction and the schema has unique indexes on the message and label keys.
+The store separates concerns well: it holds only SQL and the keyed-upsert and tombstone rules, takes its database by injection, and leaves fetching, parsing, classification, scheduling and status recording to `GmailSyncWorker`, `MailIntegrationService` and the model types. Unit-test coverage is partial: `IntegrationsStoreTests` has 19 tests covering upserts, revival, query filters, ordering, paging, class and date tombstones, labels, connection lookup and cascade, chunked tombstones and the unknown-account error, but none covers a rollback, the action log error paths, a negative `limit` or `offset`, a delete of an unknown row, `deadlineExceeded` or a migration failure, so vectors store-001, store-002 and store-022 to store-038 are derived from the code. Explicit error handling is partial because every error surfaces and `updateSyncState` raises a typed error, but `finishActionLog` returns silently when no row matches. Idempotent operations pass because upserts are keyed and revive tombstones, and a repeated tombstone changes nothing. Data integrity passes because each public write is one transaction and the schema has unique indexes on the message and label keys.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Rewrote link forms to rdid text, limited the serialisation requirements to routing through the database wrapper, restated log-finish-unknown as fact with a pending Design Decision, moved a requirement under Messages, and added edge-case citations and two derived vectors. |

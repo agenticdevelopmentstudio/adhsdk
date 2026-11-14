@@ -7,5 +7,5 @@
 - **apply-inline-styles**: The component MUST merge provided `style` prop values with layout-specific styles, giving precedence to `style` prop values when both are present.
 - **apply-class-names**: The component MUST apply the base class name `aws-stack` to the root element; MUST apply either `aws-stack--v` for VStack or `aws-stack--h` for HStack; MUST append the `className` prop if provided.
 - **no-rest-prop-forwarding**: The component MUST NOT forward any prop other than `children`, `gap`, `align`, `justify`, `className`, and `style` to the root element; `id`, `role`, `aria-*`, and any other attribute cannot be set through Stack's props.
-- **render-non-semantic-div**: The component SHOULD render a `div` element for flexible, CSS-class-based styling; because a `div` carries no ARIA semantics, this renders a non-semantic element that adds no role or landmark to the accessibility tree.
-
+- **render-non-semantic-div**: The component MUST render a `div` element for flexible, CSS-class-based styling; a `div` has the implicit `generic` role, so it adds no landmark or accessible name, and its children remain exposed to assistive technology.
+- **stack-css-rules**: The package stylesheet `user-settings/styles.css` MUST provide these rules for the layout classes: `.aws-stack { display: flex; min-width: 0; }`, `.aws-stack--v { flex-direction: column; gap: 0.6rem; }` and `.aws-stack--h { flex-direction: row; align-items: center; gap: 0.6rem; }`. The component sets no `display` or `flex-direction` inline, so a rebuild without these rules does no layout.

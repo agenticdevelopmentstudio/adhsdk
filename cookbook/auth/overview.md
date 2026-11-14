@@ -10,7 +10,7 @@ that `ADHClient` attaches to every outgoing request. A thin set of convenience
 wrappers on `ADHClient` (`login`, `createAPIToken`, `adopt`, `logout`, `signIn`,
 `completeMfa`, `sendMfaSms`, passkey and OAuth-exchange flows, `signOut`,
 `currentUser`) drive these stores and surface typed outcomes and errors instead
-of the generated OpenAPI request/response shapes. This recipe covers exactly
+of the generated OpenAPI request/response shapes. This ingredient covers exactly
 the nine files under `Sources/Auth/`; `ADHClient` itself, its transports, and
-`rawJSON` are referenced only where the Auth files call into them.
+`rawJSON` are referenced only where the Auth files call into them. `rawJSON` has no spec here; the vectors that touch it (040 to 043) exist because `signOut()` and `exchangeOAuthCode` route through it.
 

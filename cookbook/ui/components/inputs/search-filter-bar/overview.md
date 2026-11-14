@@ -5,7 +5,5 @@ axis is **fully controlled** by the caller (value + `onChange`), and the option
 sets for each select are supplied by the caller — so narrowing the list (which
 typically refetches the rows) never empties a dropdown of its own options.
 
-It is the single home for the "search + filters above a list" pattern. First
-consumer: the hub `/research` document list (`ResearchFilters` is a thin domain
-adapter that maps its `{ q, category, tag }` state onto this component).
+It is the single home for the "search + filters above a list" pattern. A consuming feature typically adds a thin domain adapter that maps its own filter state onto this component.
 

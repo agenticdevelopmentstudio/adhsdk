@@ -12,6 +12,6 @@
 **Approved**: pending
 
 **Decision**: The three-column layout is declared explicitly (`grid-template-columns: repeat(3, minmax(0, 1fr))`) rather than derived with an `auto-fit`/`auto-fill` minmax floor.
-**Rationale**: Stats lives in the narrow column of a `.lp-split` layout, where a floor wide enough to keep a long caption off four lines only fits two columns, stranding a third entry alone under an empty cell. An explicit three-column count avoids that. A `minmax` floor tuned to produce a specific column count is also arithmetic against a 14px rem that stops holding the moment the base font size changes. See `packages/web/packages/landing/src/css/blocks.css`.
+**Rationale**: Stats lives in the narrow column of a `.lp-split` layout, where a floor wide enough to keep a long caption off four lines only fits two columns, stranding a third entry alone under an empty cell. An explicit three-column count avoids that. A `minmax` floor tuned to produce a specific column count is also arithmetic against an assumed font size that stops holding the moment the base font size changes. The 34rem collapse breakpoint is a media query, so it resolves against the browser's default font size (16px unless the user changed it), not the page's root font size. See `packages/web/packages/landing/src/css/blocks.css`.
 **Approved**: pending
 

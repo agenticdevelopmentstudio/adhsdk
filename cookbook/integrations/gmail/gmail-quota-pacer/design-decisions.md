@@ -24,7 +24,7 @@
 **Approved**: pending
 
 **Decision**: `reserve` takes a signed `Int` and does not validate its sign.
-**Rationale**: A negative reservation shortens the backlog, which is behavior the source does not intend and its callers do not use. The open question on `units-nonnegative` records it so a port either copies or rejects it deliberately. It is settled when the owner decides whether to trap, clamp or accept it.
+**Rationale**: A negative reservation shortens the backlog, which is behavior the source does not intend and its callers do not use. #requirements/units-nonnegative records it so a port either copies or rejects it deliberately. It is settled when the owner decides whether to trap, clamp or accept it.
 **Approved**: pending
 
 **Decision**: The cost table is a set of `Int` constants in the same file, from Google's published table.
@@ -34,3 +34,4 @@
 **Decision**: `shared` and `reserve` are public while `GmailQuotaCost` is internal.
 **Rationale**: In the source only code inside the SDK module reserves quota, and it uses the cost constants. An outside caller of `shared` cannot name the costs and must supply its own unit counts; the source has no public cost table. This is what the code does, not a designed extension point.
 **Approved**: pending
+

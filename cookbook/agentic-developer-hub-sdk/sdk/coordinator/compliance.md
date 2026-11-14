@@ -27,8 +27,7 @@ overlapping `send()` calls can leave a turn `destroy()` cannot cancel, and
 conversations. `separation-of-concerns` passes: the coordinator holds no
 history, no prompt assembly, and no credentials, delegating all three to
 adh and the injected `Authorize` closure. `unit-test-coverage` is partial:
-sixteen `pcc-*` vectors plus four supplementary tests cover the
-SSE-translation and lifecycle contract thoroughly, but nothing in the repo
+twenty of the 33 `pcc-*` vectors are backed by tests, the other thirteen (pcc-021 to pcc-033) are source-traced only (see the Verification column), and nothing in the repo
 exercises `SSEParser` directly or the concurrent-`send()` scenario above.
 `secure-transport` is partial: requests go through the caller's
 `Authorize` closure and whatever `baseURL` scheme the host configures, but

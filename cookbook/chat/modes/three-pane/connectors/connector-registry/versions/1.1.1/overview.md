@@ -1,0 +1,3 @@
+
+The Connector Registry is a React context-based store for managing references to DOM elements within a component tree. It allows any descendant component to register and query element instances by string identifier, with automatic notification of subscribers when the registry changes. This enables coordination between components that need to discover or reference each other's elements at runtime without direct coupling. Its primary consumer is the three-pane chat mode, which uses the registered anchor elements to compute and draw the connector lines between panes without hard-coding references to the components that own those anchors.
+

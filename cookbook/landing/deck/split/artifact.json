@@ -4,11 +4,11 @@
     "id": "8f4c2b7a-9d3e-4c5f-b2e8-7f6a3c1d5e9b",
     "title": "Split",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c2165d818e5fd5d0",
+  "synced": "7623b551981f1f95",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

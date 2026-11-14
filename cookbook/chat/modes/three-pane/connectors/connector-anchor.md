@@ -2,11 +2,11 @@
 id: 8d76adce-493b-4e44-9b15-826c4899d3cd
 title: "ConnectorAnchor"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,8 +21,7 @@ tags:
   - registry
 depends-on:
   - e5b8e26f-2869-4a09-8d8e-0bb68ece805d
-related:
-  - e5b8e26f-2869-4a09-8d8e-0bb68ece805d
+related: []
 references: []
 approved-by: ""
 approved-date: ""
@@ -39,14 +38,15 @@ The connector registry is any object implementing the `ConnectorRegistry` contra
 ## Behavioral Requirements
 
 - **render-as-span**: Component MUST render as an HTML `<span>` element.
-- **accept-id**: Component MUST accept a required string `id` prop that uniquely identifies the anchor point.
+- **accept-id**: Component MUST accept a required string `id` prop that identifies the anchor point. Ids are expected to be unique among mounted anchors; if two mounted anchors share an id, the registry keeps the most recently registered element for it (last-wins, per the registry contract). An empty string is an ordinary id and is registered like any other.
 - **register-with-registry**: Component MUST register its DOM reference with the connector registry using the provided `id` when the component mounts.
 - **return-null-if-no-registry**: Component MUST render nothing (return null) when the connector registry is not available.
 - **set-data-connector-anchor**: Component MUST set a `data-connector-anchor` HTML attribute with the value of the `id` prop.
 - **be-aria-hidden**: Component MUST set `aria-hidden="true"` on the rendered element to hide it from assistive technologies.
 - **accept-classname**: Component SHOULD accept an optional `className` prop to allow consumers to apply additional CSS classes.
-- **support-class-composition**: Component SHOULD concatenate the base class `pc-connector-anchor` with any provided `className` when both are present.
-- **unregister-on-unmount**: Component MUST unregister from the connector registry when the component unmounts or when dependencies change. The registry's `register` call always returns a cleanup function, so unregistration is unconditional.
+- **support-class-composition**: Component SHOULD concatenate the base class `pc-connector-anchor` with any provided `className` when both are present. A `className` that is `undefined` or an empty string adds nothing; any other value, including whitespace, is appended after a single space as given.
+- **unregister-on-unmount**: Component MUST unregister from the connector registry when the component unmounts, when `id` changes, or when the registry instance changes. The registry's `register` call always returns a cleanup function, so unregistration is unconditional.
+- **re-register-on-registry-change**: Component MUST unregister from the previous registry and register with the new one when the registry instance it resolves changes.
 - **re-register-on-id-change**: Component MUST re-register with the connector registry when the `id` prop changes, unregistering the previous `id` before registering the new one.
 
 ## Appearance
@@ -73,27 +73,28 @@ Not applicable: This component is explicitly hidden from assistive technologies 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | connector-anchor-001 | render-as-span | Component rendered with id="point-a", registry available | DOM contains a `<span>` element. |
-| connector-anchor-002 | accept-id | id="my-anchor", registry available | Rendered span has attribute `data-connector-anchor="my-anchor"`. |
+| connector-anchor-002 | accept-id, register-with-registry | id="my-anchor", registry available | Registry's register method is called with "my-anchor" as its first argument. |
 | connector-anchor-003 | register-with-registry | Component mounted with id="test", registry available | Registry's register method called with id="test" and the span's DOM reference. |
 | connector-anchor-004 | return-null-if-no-registry | Component mounted, registry unavailable (hook returns null) | Component renders nothing; no DOM elements created. |
 | connector-anchor-005 | set-data-connector-anchor | id="anchor-1" | Rendered span has attribute `data-connector-anchor="anchor-1"`. |
 | connector-anchor-006 | be-aria-hidden | Component rendered | Rendered span has attribute `aria-hidden="true"`. |
-| connector-anchor-007 | accept-classname | id="x", className="custom-class", registry unavailable | Component renders nothing (returns null); no error is thrown. |
+| connector-anchor-007 | accept-classname | id="x", className="custom-class", registry available | The rendered span's class list contains "custom-class". |
 | connector-anchor-008 | support-class-composition | className="custom-class" | Rendered span's class attribute is "pc-connector-anchor custom-class". |
 | connector-anchor-009 | support-class-composition | className undefined | Rendered span's class attribute is "pc-connector-anchor". |
-| connector-anchor-010 | re-register-on-id-change | id changes from "old-id" to "new-id" | Registry's register method is called with "new-id" when the id prop updates. |
 | connector-anchor-011 | return-null-if-no-registry, register-with-registry | First render, registry unavailable; then registry becomes available | Component renders nothing on the first render; once the registry becomes available, the component re-renders, registers with the registry, and renders the span. |
 | connector-anchor-012 | unregister-on-unmount | Component mounted and registered with id="test", registry available; then unmounted | Registry's returned cleanup function is called; the "test" entry is removed from the registry. |
-| connector-anchor-013 | re-register-on-id-change | id changes from "old-id" to "new-id" | The "old-id" entry is unregistered from the registry before "new-id" is registered. |
-
+| connector-anchor-013 | re-register-on-id-change | id changes from "old-id" to "new-id" | The "old-id" entry is unregistered from the registry before "new-id" is registered, and the registry's register method is called with "new-id". |
+| connector-anchor-014 | re-register-on-registry-change | Anchor mounted with registry A; the provided registry changes to registry B | Registry A's cleanup function is called; registry B's register method is called with the same id and the span. |
+| connector-anchor-015 | support-class-composition | className="" | Rendered span's class attribute is "pc-connector-anchor". |
+| connector-anchor-016 | support-class-composition | className=" " (whitespace) | Rendered span's class attribute is "pc-connector-anchor  " (base class, one separator space, then the whitespace as given). |
 ## Edge Cases
 
 - **No registry available on mount**: Component returns null and renders nothing. No error is thrown.
-- **Registry available but ref is not ready**: The effect checks `!ref.current` and returns early; no registration occurs until ref is available.
+- **Element reference missing at effect time**: A defensive guard. If the element reference is absent when the effect runs, no registration occurs. With a registry present the span always renders, so this does not arise in normal operation.
 - **Registry dependency changes while registry is null**: Component re-evaluates effect but continues returning null.
-- **id prop is empty string**: Component will register with an empty string id. The behavior of duplicate or empty ids is undefined; the source does not validate id uniqueness or non-emptiness.
-- **className is empty string**: Component appends the empty string; class attribute becomes "pc-connector-anchor ".
-- **className is whitespace**: Component concatenates whitespace; multiple spaces may appear in the class string.
+- **id prop is empty string**: Component registers with the empty string as an ordinary id. Ids are not validated for non-emptiness. For duplicate ids among mounted anchors, the registry keeps the most recently registered element (last-wins).
+- **className is empty string**: Component adds nothing; class attribute is "pc-connector-anchor".
+- **className is whitespace**: Component appends the whitespace as given after one separator space; the class string may contain consecutive spaces.
 - **Component unmounts immediately after mount**: If registration provides a cleanup function (via return value of `reg.register()`), that function is called on unmount.
 - **Rapid id changes**: Registration is synchronous inside the effect; each id change runs the previous registration's cleanup (unregistering the old id) before registering the new id, so no overlap between registrations occurs.
 
@@ -136,19 +137,19 @@ Not applicable: The source code contains no logging statements.
 
 - **Web (React)**: Implement using the React `<span>` element. Use `useRef` to capture the DOM reference and `useEffect` with dependency array `[id, reg]` to register when both become available. Use optional chaining or conditional checks to guard against null registry. Render nothing (return null) when registry is unavailable. Apply classes by string concatenation; no CSS-in-JS framework is required. The `useConnectorRegistryOptional` hook is exported by the connector registry provider ingredient ([adhsdk.ingredient.chat.modes.three-pane.connectors.connector-registry](cookbook:e5b8e26f-2869-4a09-8d8e-0bb68ece805d)) — ensure a `ConnectorRegistryProvider` ancestor is mounted so the hook resolves to a registry.
 
-- **SwiftUI**: Implement as a lightweight view (ZStack or plain View) that registers itself with an environment-injected connector registry on appear. Use an `@Environment` property to access the registry; if unavailable, render `EmptyView()`. Store the view's frame using `GeometryReader` and pass it to the registry's register method. Unregister on disappear or when the `id` changes.
+- **SwiftUI**: Implement as a lightweight view (ZStack or plain View) that registers itself with an environment-injected connector registry on appear. Use an `@Environment` property to access the registry; if unavailable, render `EmptyView()`. Register the view itself (or a stable handle to it, such as its anchor or coordinate-space reference) with the registry, which queries the position when it needs it; use `GeometryReader` only to resolve that handle. Unregister on disappear or when the `id` changes.
 
-- **Compose**: Implement as a composable that accepts `id` and optional `Modifier`. Use `DisposableEffect(id, registry) { ...; onDispose { /* unregister */ } }` to register with the registry on composition and unregister whenever `id` or `registry` changes, or when the composable leaves composition. Access the registry via `LocalConnectorRegistry.current`; if unavailable, render nothing. Store the composable's position using `onGloballyPositioned` and pass the coordinates to the registry.
+- **Compose**: Implement as a composable that accepts `id` and optional `Modifier`. Use `DisposableEffect(id, registry) { ...; onDispose { /* unregister */ } }` to register with the registry on composition and unregister whenever `id` or `registry` changes, or when the composable leaves composition. Access the registry via `LocalConnectorRegistry.current`; if unavailable, render nothing. Register the composable's layout coordinates handle (captured with `onGloballyPositioned`) with the registry, which queries positions from it when needed.
 
-- **AppKit / UIKit**: Implement as a view (NSView or UIView subclass) that registers its frame with a shared connector registry in `viewDidMoveToWindow` (NSView) or `didMoveToWindow` (UIView) once the window is non-nil, and unregisters when the window becomes nil. Store the registry as a weak property or access it via a shared singleton. If the registry is unavailable, initialize the view but do not render visibly. Store the view's bounds or center coordinates and pass them to the registry's register method.
+- **AppKit / UIKit**: Implement as a view (NSView or UIView subclass) that registers its frame with a shared connector registry in `viewDidMoveToWindow` (NSView) or `didMoveToWindow` (UIView) once the window is non-nil, and unregisters when the window becomes nil. Receive the registry by injection (a weak property set by the owning view or an ancestor that provides it); do not use a shared singleton. If the registry is unavailable, initialize the view but do not render visibly. Register the view itself with the registry, which queries its bounds when needed.
 
-- **WinUI 3**: Implement as a XAML-less code-behind control (C#) that inherits from `UserControl` or `FrameworkElement`. Accept an `Id` (string) DependencyProperty. In `OnApplyTemplate` or the `Loaded` event, query `ConnectorRegistry.Current` and call its `Register(id, element)` method, passing the control itself. If the registry is unavailable, the control remains loaded but inactive. Unregister in the `Unloaded` event. Size the control to zero (`Width="0" Height="0"`) while keeping `Visibility="Visible"`, since a collapsed element is removed from layout and would have no position to query.
+- **WinUI 3**: Implement as a XAML-less code-behind control (C#) that inherits from `UserControl` or `FrameworkElement`. Accept an `Id` (string) DependencyProperty. In the `Loaded` event (not `OnApplyTemplate`, which does not fire on a bare `FrameworkElement` without a template), obtain the registry from an ancestor-provided or injected property (not a static `Current`) and call its `Register(id, element)` method, passing the control itself. If the registry is unavailable, the control remains loaded but inactive. Unregister in the `Unloaded` event. Size the control to zero (`Width="0" Height="0"`) while keeping `Visibility="Visible"`, since a collapsed element is removed from layout and would have no position to query.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/modes/three-pane/connectors/ConnectorAnchor.tsx` | unverified |
+| web | `packages/web/packages/chat/src/modes/three-pane/connectors/ConnectorAnchor.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -161,7 +162,7 @@ Not applicable: The source code contains no logging statements.
 **Approved**: pending
 
 **Decision**: The effect's dependency array is `[id, reg]`.
-**Rationale**: Causes the previous `id` to be unregistered and the current `id` to be re-registered whenever `id` or the registry instance changes, matching the source implementation.
+**Rationale**: Causes the previous `id` to be unregistered and the current `id` to be re-registered whenever `id` or the registry instance changes, and also re-registers when the registry instance changes (see **re-register-on-registry-change**).
 **Approved**: pending
 
 ## Compliance
@@ -178,6 +179,7 @@ The status rests on the source setting `aria-hidden="true"` on the rendered `<sp
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Defined duplicate and empty id behavior, added re-register-on-registry-change, fixed className edge cases and vectors, removed singleton and OnApplyTemplate guidance, made native platforms register the view itself, and dropped the duplicate related link. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; defined the registry contract and made unregister-on-unmount unconditional; reworded the null-return rationale to optional-provider tolerance; reformatted Design Decisions into Decision/Rationale/Approved blocks; added tags and registry-ingredient cross-references; added a Compliance table; replaced untestable vectors, added missing unregister/re-register vectors, and corrected vector-011's reversed outcome; fixed the Compose, AppKit/UIKit, and WinUI 3 platform notes; rewrote the rapid-id-change edge case to describe synchronous cleanup; generalized the Overview wording away from "three-pane". |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -2,15 +2,15 @@
 id: 335f37a4-cd9e-4575-a78a-8717b34e5a2d
 title: "Code"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A block of literal text in monospace, displaying shell transcripts, invocations, or config fragments with horizontal scrolling and no text wrapping."
+summary: "Monospace literal-text block for shell transcripts and config; scrolls horizontally, never wraps."
 platforms:
   - typescript
   - web
@@ -19,7 +19,10 @@ tags:
   - monospace
   - text-block
 depends-on: []
-related: []
+related:
+  - 688cd8dc-2927-4a8a-9931-807fe283ed01
+  - f98e53f7-ac16-48b0-afa5-544d05bf3f70
+  - 8c5e2f9b-7d3a-4a1c-b8e4-9f2d1c5a7b3e
 references: []
 approved-by: ""
 approved-date: ""
@@ -37,7 +40,7 @@ The Code component displays literal text in a monospace (mono) typeface without 
 - **no-wrap**: The component MUST NOT wrap text to fit the container width; it MUST scroll horizontally when content exceeds the available width.
 - **accept-string-prop**: The component MUST accept a single `text` prop of type `string` containing the literal content to display.
 - **no-markup-interpretation**: The component MUST NOT interpret, parse, or render any markup (HTML, markdown, JSX, or other syntax) within the `text` prop; the entire string MUST be rendered as literal text.
-- **use-monospace-font**: The component MUST render text in a monospace typeface appropriate to the deck's design system.
+- **use-monospace-font**: The component MUST render text in a monospace typeface: the `--lp-font-mono` custom property, falling back to `ui-monospace, "SF Mono", monospace`, as set in Appearance.
 
 ## Appearance
 
@@ -49,7 +52,7 @@ The Code component displays literal text in a monospace (mono) typeface without 
 - **Border**: `1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18))`.
 - **Shadow**: None. No shadow is applied by the source.
 - **Min/Max size**: No enforced constraints; width grows with content (horizontal scroll as needed); height determined by line count and line-height.
-- **Overflow**: Horizontal overflow MUST scroll (`overflow-x: auto`); vertical overflow MUST be visible or scroll as needed.
+- **Overflow**: Horizontal overflow scrolls (`overflow-x: auto`). The block sets no height limit, so it grows with its line count and never scrolls or clips vertically.
 
 These are CSS custom properties supplied by the host page/theme, each with the literal fallback value shown; `lp-code` does not resolve them itself.
 
@@ -57,9 +60,9 @@ These are CSS custom properties supplied by the host page/theme, each with the l
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Content is displayed in monospace with deck-defined colors and spacing |
-| User selects text | Text selection styling follows deck's text selection color and appearance |
-| User scrolls horizontally | Horizontal scrollbar appears (or deck-defined scroll behavior) |
+| Default | Content is displayed in monospace (`--lp-font-mono`) with `--lp-ink` text on a `--lp-card` background, with the spacing set in Appearance |
+| User selects text | The block sets no `::selection` rule, so selection uses the browser's default selection styling |
+| User scrolls horizontally | The native horizontal scrollbar appears when content is wider than the block (`overflow-x: auto`) |
 
 ## Accessibility
 
@@ -78,7 +81,7 @@ These are CSS custom properties supplied by the host page/theme, each with the l
 | code-002 | no-wrap | `text: "a very long command that exceeds container width"` | Computed `white-space: pre` on the `<pre>`; the line does not break into multiple lines |
 | code-003 | accept-string-prop | `text: "$ echo hello"` | Component renders without error; text appears as `$ echo hello` |
 | code-004 | no-markup-interpretation | `text: "# Heading\n**bold** <html>"` | Output renders literally as `# Heading\n**bold** <html>` with no markdown or HTML interpretation |
-| code-005 | use-monospace-font | `text: "code"` | Computed `font-family` on the `<pre>` resolves to the mono token (`var(--lp-font-mono)`), distinct from the deck's body `font-family` |
+| code-005 | use-monospace-font | `text: "code"` | Computed `font-family` on the `<pre>` equals the resolved value of `--lp-font-mono` (or its fallback list `ui-monospace, "SF Mono", monospace` when the property is unset) and differs from the body's computed `font-family` |
 | code-006 | render-as-preformatted (empty-string edge case) | `text: ""` | Renders `<pre><code></code></pre>` with no children; the source sets no `min-height` on `.lp-code` or `.lp-code code`, so the content box collapses to `0` height and only the block's own padding (`1.1rem` top and bottom) and `1px` border remain — visibly shorter than a populated one-line block (`1.48rem`, i.e. `0.8rem × 1.85`), so a layout shift occurs going from empty to non-empty text |
 | code-007 | render-as-preformatted (whitespace-only edge case) | `text: "   \t\n  "` | All spaces, the tab, and the newline are preserved exactly; rendered text length and line count match the input |
 | code-008 | no-wrap (tabs edge case) | `text: "a\tb\tc"` | Tab renders at the CSS default `tab-size: 8` (not overridden by `lp-code`); columns are not collapsed to a single space |
@@ -110,7 +113,7 @@ The `text` prop's content is caller-supplied; translating it is the content prov
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable; the component does not animate |
-| Increase Contrast | The component SHOULD respect the deck's increased-contrast theme if available, rendering text and background with higher contrast ratios. Under `forced-colors: active`, it SHOULD keep the `lp-hairline` border visible and defer to system colors (e.g. `CanvasText` / `Canvas`) rather than the theme's custom background and border tokens, which forced-colors mode overrides. |
+| Increase Contrast | The component SHOULD render text and background with higher contrast ratios when `@media (prefers-contrast: more)` matches, for example by a host overriding `--lp-ink` and `--lp-card`; the component itself has no such rule. Under `forced-colors: active`, it SHOULD keep the `lp-hairline` border visible and defer to system colors (e.g. `CanvasText` / `Canvas`) rather than the theme's custom background and border tokens, which forced-colors mode overrides. |
 | Differentiate Without Color | Not applicable; the component does not rely on color alone to convey information |
 
 ## Feature Flags
@@ -133,30 +136,33 @@ Not applicable: the Code component does not perform any operations that warrant 
 
 - **React/Web**: Implemented as `<pre className="lp-code"><code>{text}</code></pre>`. The `lp-code` class applies the deck's `--lp-font-mono`, `--lp-card`, `--lp-hairline`, `--lp-radius`, and `--lp-ink` custom properties (each with a literal fallback) for font, background, border, corner radius, and text color. The component is a pure presentational component with no state or lifecycle.
 
-- **SwiftUI**: Use `Text(text).font(.system(.body, design: .monospaced)).fixedSize(horizontal: true, vertical: false).textSelection(.enabled)` inside `ScrollView(.horizontal)`, within a container styled with the equivalent of the web `lp-code` tokens (padding, background, corner radius). `.fixedSize(horizontal: true, vertical: false)` is what actually stops wrapping; `.lineLimit(nil)` alone does not.
+- **SwiftUI**: Non-normative guidance. Use `Text(text).font(.system(.body, design: .monospaced)).fixedSize(horizontal: true, vertical: false).textSelection(.enabled)` inside `ScrollView(.horizontal)`, within a container styled with the equivalent of the web `lp-code` tokens (padding, background, corner radius). `.fixedSize(horizontal: true, vertical: false)` is what actually stops wrapping; `.lineLimit(nil)` alone does not.
 
-- **Compose**: Wrap the content in `SelectionContainer` and use `Text(text = text, fontFamily = FontFamily.Monospace, softWrap = false, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(codeBlockBackground).horizontalScroll(rememberScrollState()).padding(12.dp))`. `softWrap = false` disables wrapping (`Arrangement.Start` does not affect wrapping at all); applying `clip` before `background` keeps the background's corners rounded.
+- **Compose**: Non-normative guidance. Wrap the content in `SelectionContainer` and use `Text(text = text, fontFamily = FontFamily.Monospace, softWrap = false, modifier = Modifier.clip(RoundedCornerShape(radius)).background(codeBlockBackground).horizontalScroll(rememberScrollState()).padding(vertical = verticalPadding, horizontal = horizontalPadding))`, where `radius`, `verticalPadding` and `horizontalPadding` come from the Appearance corner radius and padding tokens. `softWrap = false` disables wrapping (`Arrangement.Start` does not affect wrapping at all); applying `clip` before `background` keeps the background's corners rounded.
 
-- **AppKit / UIKit**: On AppKit, host an `NSTextView` inside an `NSScrollView` with `hasHorizontalScroller = true`; set `isEditable = false`, `font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)`, and `textContainer.containerSize.width = .greatestFiniteMagnitude` to stop wrapping (`isRichText = false` alone does not). On UIKit, `UITextView` wraps by default, so place a non-wrapping `UILabel`, or a `UITextView` with `isScrollEnabled = false` and `isEditable = false`, inside a horizontal `UIScrollView`. Apply corner radius via the view's `layer.cornerRadius` (a layer property, not a `cornerRadius` view property) and background via `backgroundColor`.
+- **AppKit / UIKit**: Non-normative guidance. On AppKit, host an `NSTextView` inside an `NSScrollView` with `hasHorizontalScroller = true`; set `isEditable = false`, `font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)` (`fontSize` is the Appearance font size), and `textContainer.containerSize.width = .greatestFiniteMagnitude` to stop wrapping (`isRichText = false` alone does not). On UIKit, `UITextView` wraps by default, so place a `UILabel` with `numberOfLines = 0` and `lineBreakMode = .byClipping`, or a `UITextView` with `isScrollEnabled = false` and `isEditable = false`, inside a horizontal `UIScrollView`, and pin the view's width to its measured content width (`sizeThatFits` with an unbounded width) so it cannot wrap to the scroll view's width. Apply corner radius via the view's `layer.cornerRadius` (a layer property, not a `cornerRadius` view property) and background via `backgroundColor`.
 
-- **WinUI 3**: Use `TextBlock` with `FontFamily="{ThemeResource CodeFontFamily}"` (a theme mono-font resource, not a hard-coded `"Consolas"` or `"Courier New"`), `TextWrapping="NoWrap"`, and `IsTextSelectionEnabled="True"`. Place it in a `ScrollViewer` with `HorizontalScrollBarVisibility="Auto"` for horizontal scrolling. Apply background color via the containing control (e.g., a `Grid` or `Border` with `Background`) and set `Foreground` from the theme.
+- **WinUI 3**: Non-normative guidance. Use `TextBlock` with `FontFamily` bound to a monospace font-family resource that the app defines (WinUI 3 ships no standard one, so declare it, for example `<FontFamily x:Key="CodeFontFamily">Consolas</FontFamily>`, and reference it with `{StaticResource CodeFontFamily}`), `TextWrapping="NoWrap"`, and `IsTextSelectionEnabled="True"`. Place it in a `ScrollViewer` with `HorizontalScrollBarVisibility="Auto"` for horizontal scrolling. Apply background color via the containing control (e.g., a `Grid` or `Border` with `Background`) and set `Foreground` from the theme.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Code.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Code.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 **Decision**: The `text` prop is a plain `string` rather than `children` (`ReactNode`).
-**Rationale**: Every other block in this package accepts `ReactNode` so a host can put emphasis or links inside it; here the whole point is that nothing is interpreted, and a `ReactNode` would invite a host to pass marked-up prose that would then render as code. A host that needs formatted content within code should use a separate component or structure.
+**Rationale**: The sibling blocks ([adhsdk.ingredient.landing.blocks.closer](cookbook:688cd8dc-2927-4a8a-9931-807fe283ed01), [adhsdk.ingredient.landing.blocks.cta](cookbook:f98e53f7-ac16-48b0-afa5-544d05bf3f70) and [adhsdk.ingredient.landing.blocks.contact](cookbook:8c5e2f9b-7d3a-4a1c-b8e4-9f2d1c5a7b3e)) accept `ReactNode` so a host can put emphasis or links inside it; here the whole point is that nothing is interpreted, and a `ReactNode` would invite a host to pass marked-up prose that would then render as code. A host that needs formatted content within code should use a separate component or structure.
 **Approved**: pending
 
 **Decision**: The component does not wrap text; it scrolls horizontally instead.
 **Rationale**: Wrapping hides the real line boundaries, so readers mis-copy or misread multi-line input such as a wrapped shell invocation.
 **Approved**: pending
 
+**Decision**: An empty `text` renders a collapsed block, and the layout shift when `text` goes from empty to non-empty is accepted.
+**Rationale**: The component does not set a `min-height` on `.lp-code`, because an empty transcript is a caller error rather than a state to design for, and reserving a line would add a rule that every port must reproduce for no real use.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -170,12 +176,13 @@ Not applicable: the Code component does not perform any operations that warrant 
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-Statuses rest on the React source: `<pre className="lp-code"><code>{text}</code></pre>` correctly nests semantic markup and React's string rendering preserves the full Unicode range without transformation (passed); the `<pre>` carries no `tabIndex` for keyboard scrolling and no `dir`/`direction` override for right-to-left contexts (partial and failed, respectively); and `font-size`/color are theme tokens (`--lp-font-mono`, `--lp-ink`, `--lp-card`) whose resolved scaling and contrast ratio cannot be verified from this source alone (partial). `separation-of-concerns` passes because `Code.tsx` is a 20-line component with no logic beyond rendering its `text` prop into `<pre><code>`. `unit-test-coverage` fails because no test file exercises `Code` in the `landing` package.
+Statuses rest on the React source: `<pre className="lp-code"><code>{text}</code></pre>` correctly nests semantic markup and React's string rendering preserves the full Unicode range without transformation (passed); the `<pre>` carries no `tabIndex` for keyboard scrolling and no `dir`/`direction` override for right-to-left contexts (partial and failed, respectively); and `font-size`/color are theme tokens (`--lp-font-mono`, `--lp-ink`, `--lp-card`) whose resolved scaling and contrast ratio cannot be verified from this source alone (partial). `separation-of-concerns` passes because `Code.tsx` is a component with no logic beyond rendering its `text` prop into `<pre><code>`. `unit-test-coverage` fails because no test file exercises `Code` in the `landing` package.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Lint pass: named the tokens behind the vague requirements and States rows, fixed code-005, replaced the nonexistent WinUI CodeFontFamily theme resource and gave exact UIKit sizing steps, pointed native notes at Appearance tokens, recorded the empty-block collapse as a Design Decision, linked the sibling blocks, labelled native notes non-normative, shortened the summary and filled related. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Empty-block vector/edge case now describes true 0-height collapse (no min-height in source); Compliance added. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; named the concrete `lp-code` CSS tokens in Appearance; reformatted Design Decisions into Decision/Rationale/Approved form; rebuilt Compliance with real, linked catalog checks; resolved the empty-string RFC 2119 contradiction and downgraded the unenforceable parent-heading and keyboard-focus MUSTs to SHOULD; split and added Conformance Test Vectors (code-006 to code-010); specified tab-size and documented the RTL/localization gap; corrected the SwiftUI, Compose, AppKit, UIKit, and WinUI 3 platform notes; and added forced-colors guidance to Accessibility Options |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation (drafted by Claude Haiku 4.5) |

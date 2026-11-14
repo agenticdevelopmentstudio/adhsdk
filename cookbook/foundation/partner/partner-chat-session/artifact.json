@@ -4,7 +4,7 @@
     "id": "29db699c-56f4-40da-a8f7-b96a0cf820b0",
     "title": "Partner Chat Session",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,14 +23,18 @@
       "session",
       "stream"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "f333f036-2c23-4a87-8496-bd3616b44786"
+    ],
+    "related": [
+      "d2213cbb-1a6e-452e-98f0-acd2007c8430"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "d699e98155c2b6ce",
+  "synced": "24a151ecd587f106",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

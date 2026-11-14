@@ -2,7 +2,7 @@
 id: 9a4dcb9e-5e7e-479b-922c-37d066a8a18a
 title: "HTML Text"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -21,7 +21,6 @@ tags:
   - entities
   - parsing
   - mail
-  - logic
 depends-on: []
 related: []
 references: []
@@ -38,9 +37,9 @@ approved-date: ""
 - `plainText(fromHTML:)` takes a `String` of HTML and returns the text it reads as.
 - `decodeEntities(_:)` takes a `String` and returns it with character references decoded, control characters and invisible padding dropped.
 
-It is deliberately small: there is no layout engine and no WebKit (which wants the main thread). The source's own doc comment states the contract: `style`, `script`, `title`, `noscript` and comments are dropped; block elements and `<br>` become line breaks (a paragraph or heading a blank line); every other tag is removed; entities are decoded; whitespace is collapsed as a browser would, keeping line breaks, except inside `<pre>`, which keeps it. The conversion is one linear pass over the input's Unicode scalars, because the HTML is sender-controlled.
+It is deliberately small: there is no layout engine and no WebKit (which wants the main thread). The contract is: `style`, `script`, `title`, `noscript` and comments are dropped; block elements and `<br>` become line breaks (a paragraph or heading a blank line); every other tag is removed; entities are decoded; whitespace is collapsed as a browser would, keeping line breaks, except inside `<pre>`, which keeps it. The conversion is one linear pass over the input's Unicode scalars, because the HTML is sender-controlled.
 
-`plainText(fromHTML:)` is four stages in a fixed order: `markup` (tags, hidden elements, entities, whitespace collapsing, soft-break markers), `resolveBreaks` (soft-break markers become newlines, list bullets are written), `tidy` (per-line whitespace, blank-line collapsing) and `restorePreformatted` (the spaces and tabs held back inside `<pre>` are put back). The type has no stored state and never throws.
+Informatively, the Swift implementation of `plainText(fromHTML:)` is four stages in a fixed order (ports need not copy this structure; the observable effects are specified in the requirements): `markup` (tags, hidden elements, entities, whitespace collapsing, soft-break markers), `resolveBreaks` (soft-break markers become newlines, list bullets are written), `tidy` (per-line whitespace, blank-line collapsing) and `restorePreformatted` (the spaces and tabs held back inside `<pre>` are put back). The type has no stored state and never throws.
 
 ## Behavioral Requirements
 
@@ -51,7 +50,7 @@ It is deliberately small: there is no layout engine and no WebKit (which wants t
 - **decode-entities-entry**: `HTMLText.decodeEntities(_:)` MUST be public, accept a `String`, return a `String`, and MUST NOT throw.
 - **plain-text-no-ampersand**: `decodeEntities(_:)` MUST return text that has no `&` unchanged, except that control characters and invisible padding are still dropped.
 - **stateless**: Every operation MUST depend only on its arguments and immutable constants, so concurrent calls from any thread do not interact.
-- **stage-order**: `plainText(fromHTML:)` MUST apply, in this order, tag and entity processing, break resolution, whitespace tidying, and restoration of preformatted spaces and tabs.
+- **stage-order**: The order of processing is not itself part of the contract; its observable effects are. Entities MUST be decoded before whitespace is collapsed (**entity-before-whitespace**), and trailing spaces and tabs in `<pre>` MUST be trimmed only after preformatted content is restored (**pre-trailing-trim**). A port MAY use any internal structure that gives these results.
 
 ### Tag recognition
 
@@ -105,11 +104,11 @@ It is deliberately small: there is no layout engine and no WebKit (which wants t
 
 ### Entity decoding
 
-- **entity-named**: A named reference found in the built-in table (`amp`, `lt`, `gt`, `quot`, `apos`, `nbsp`, spacing and joiner entities, typographic punctuation, currency, symbols, arrows, fractions and the listed accented Latin letters) MUST decode to its character; names are case-sensitive.
+- **entity-named**: A named reference found in the built-in table (`amp`, `lt`, `gt`, `quot`, `apos`, `nbsp`, spacing and joiner entities, typographic punctuation, currency, symbols, arrows, fractions and the accented Latin letters) MUST decode to its character; names are case-sensitive. The full table is under Configuration, Entity Tables.
 - **entity-numeric**: A numeric reference, decimal (`&#39;`) or hexadecimal with `x` or `X` (`&#x27;`, `&#X2014;`), MUST decode to its Unicode scalar.
 - **entity-numeric-digits**: A numeric reference MUST have 1 to 8 ASCII digits (hex digits for hexadecimal), no sign and no space, and a non-zero value; otherwise it MUST be left as written.
 - **entity-invalid-scalar**: A numeric reference whose value is not a valid Unicode scalar MUST be left as written.
-- **entity-windows-1252**: A numeric reference from 128 to 159 MUST decode as windows-1252 for the 27 codes that map (for example 146 to a right single quote); the five undefined codes (129, 141, 143, 144, 157) MUST decode to nothing.
+- **entity-windows-1252**: A numeric reference from 128 to 159 MUST decode as windows-1252 for the 27 codes that map under Configuration, Entity Tables (for example 146 to a right single quote); the five undefined codes (129, 141, 143, 144, 157) MUST decode to nothing.
 - **entity-lookahead**: A reference MUST end at a `;` within 12 scalars after the `&` (so a name or number is at most 11 scalars); an `&` with no `;` in that window MUST be left as written.
 - **entity-unknown**: An unknown name, an empty name and any malformed reference MUST be left exactly as written, including the `&` and `;`.
 - **entity-single-pass**: Decoding MUST happen once, so `&amp;lt;` yields `&lt;`.
@@ -127,7 +126,7 @@ It is deliberately small: there is no layout engine and no WebKit (which wants t
 
 ### Resource safety
 
-- **linear-time**: Conversion MUST make a single forward pass in which an unclosed construct ends processing instead of being rescanned; the test suite bounds five hostile 50,000 to 100,000 repetition inputs to under 5 seconds in total.
+- **linear-time**: Conversion MUST take time linear in the number of input Unicode scalars: a single forward pass in which an unclosed construct ends processing instead of being rescanned. The wall-clock budget used by vector html-text-027 is a detail of that test, not part of the requirement.
 - **no-feedback**: The function MUST NOT perform network, file or process access; the output is a pure function of the input string.
 
 ## Appearance
@@ -182,23 +181,30 @@ Tests are in `HTMLTextTests` (`packages/apple/AgenticDeveloperHubSDK/SDK/Tests/A
 | html-text-032 | declaration, bogus-close | `<p>A</p><!DOCTYPE html><?xml version="1.0"?></ x><p>B</p>` (derived from `tag(in:at:)`; no test) | `A\n\nB` |
 | html-text-033 | pre-depth | `<pre>a</pre></pre><p>b</p>` and `<pre>a  b` (derived from `TextWriter.write(tag:)`; no test) | `a\n\nb`; `a  b` |
 | html-text-034 | pre-private-use | `plainText("a" U+E000 "b")` (derived from `TextWriter.write(text:)`; no test) | `ab` |
-| html-text-035 | stateless, no-feedback, stage-order | Two concurrent calls on different strings (derived from the type declaration; no test) | Each returns the result it returns alone |
-
+| html-text-035 | stateless | Two concurrent calls on different strings (derived from the type declaration; no test, unverified) | Each returns the result it returns alone |
+| html-text-036 | comment | `a<!--x-->b` (derived from the comment rule; no test) | `a b` |
+| html-text-037 | hidden-open-space, hidden-elements | `a<script>x</script>b` (derived; no test) | `a b` |
+| html-text-038 | hidden-stray-close | `a</style>b` (derived; no test) | `ab` |
+| html-text-039 | list-bullet-empty | `<ul><li></li><li>x</li></ul>` (derived; no test) | `- x` |
+| html-text-040 | comment | `a<!-->b-->c` (the comment edge; derived; no test) | `a c` |
+| html-text-041 | control-dropped | `a` U+000C `b` (the form feed edge case; derived; no test) | `ab` |
+| html-text-042 | entity-scalar-based, entity-unknown | `&am<b>p;` (an entity split by a tag; derived; no test) | `&amp;` as literal text, not decoded |
+| html-text-043 | blank-line-collapse | `<pre>a` LF LF LF `b</pre>` (blank lines inside `pre`; derived; no test) | `a\n\nb` |
 ## Edge Cases
 
 - **Empty and null input** (MUST): `""` returns `""`; a `String` is never nil. An input of only whitespace, comments or hidden elements returns `""` (vectors html-text-001, html-text-014).
 - **Bare angle brackets** (MUST): `<` followed by a digit, a space or the end of input is text, and a `>` outside a tag is text (vectors html-text-022, html-text-023).
 - **Unclosed constructs** (MUST): An unclosed comment, declaration, tag, quoted attribute or hidden element ends processing; the text before it is kept, the rest is dropped, as in a browser (vector html-text-025).
-- **Comment edge** (MUST): The search for `-->` starts after the `<!--` opener, so `<!-->` does not close itself and runs on to a later `-->` or to the end.
+- **Comment edge** (MUST): The search for `-->` starts after the `<!--` opener, so `<!-->` does not close itself and runs on to a later `-->` or to the end (vector html-text-040).
 - **Quote handling** (MUST): A quote only opens a value right after `=`; a quote elsewhere in a tag is ignored, and an unmatched value quote drops the rest of the input.
-- **Form feed** (MUST): U+000C is a control, so decoding drops it from text before whitespace collapsing sees it; it never becomes a space in text, although the attribute scanner treats it as whitespace.
+- **Form feed** (MUST): U+000C is a control, so decoding drops it from text before whitespace collapsing sees it; it never becomes a space in text, although the attribute scanner treats it as whitespace (vector html-text-041).
 - **Hostile input size** (MUST): Inputs of 50,000 to 100,000 repeated openers convert in under 5 seconds (vector html-text-027). There is no explicit input-size limit.
-- **Entity boundaries** (MUST): Decoding works one text run at a time, so a reference split by a tag (`&am<b>p;`) is not decoded.
-- **Entity at the lookahead limit** (MUST): A name or number needing more than 11 scalars before `;` is left as written, as is any numeric reference of 9 or more digits.
+- **Entity boundaries** (MUST): Decoding works one text run at a time, so a reference split by a tag (`&am<b>p;`) is not decoded (vector html-text-042).
+- **Entity at the lookahead limit** (MUST): A name or number needing more than 11 scalars before `;` is left as written, as is any numeric reference of 9 or more digits (vector html-text-005 covers the 9-digit case; no vector isolates the 11-scalar limit for names).
 - **Out-of-range numerics** (MUST): `&#0;`, surrogate code points and values above U+10FFFF are left as written; `&#128;` to `&#159;` map as windows-1252; other controls decode to nothing.
 - **Lists without text** (MUST): An `li` with no text writes no bullet, and an `li` whose first child is a block element still gets one bullet before the text.
 - **Nested `pre`** (MUST): Depth is counted, so the content stays preformatted until the outer `</pre>`; a stray `</pre>` does nothing.
-- **Blank lines in `pre`** (MUST): The tidy stage collapses consecutive empty lines everywhere, including inside `<pre>`.
+- **Blank lines in `pre`** (MUST): The tidy stage collapses consecutive empty lines everywhere, including inside `<pre>` (vector html-text-043).
 - **Concurrent access**: Not applicable — every function is a static function over its arguments and `let` constants, with no shared mutable state, so there is nothing to interleave.
 - **Offline or disconnected state**: Not applicable — the conversion does no I/O.
 - **Error states** (MUST): There are none to raise; the functions are total. Malformed markup degrades by being kept as text, left as written or truncated, as listed above.
@@ -206,21 +212,142 @@ Tests are in `HTMLTextTests` (`packages/apple/AgenticDeveloperHubSDK/SDK/Tests/A
 
 ## Configuration
 
-Nothing is supplied by the caller or the environment: both operations take only their string, and there are no environment variables, settings keys or injected dependencies. The behavior is set by built-in constants.
+Nothing is supplied by the caller or the environment: both operations take only their string, and there are no environment variables, settings keys or injected dependencies. The behavior is set by built-in constants, listed below. They are private and are not settings a caller can change.
 
-| Option | Type | Default | Description |
+**Built-in constants**
+
+| Constant | Type | Default | Description |
 |--------|------|---------|-------------|
 | `hidden` | `Set<String>` | `style`, `script`, `title`, `noscript` | Elements whose content is dropped |
 | `paragraphElements` | `Set<String>` | `p`, `h1`-`h6`, `blockquote`, `table`, `ul`, `ol`, `dl`, `pre`, `hr` | Elements that produce a blank-line break |
 | `lineElements` | `Set<String>` | `div`, `tr`, `li`, `dt`, `dd`, `section`, `article`, `header`, `footer`, `nav`, `aside`, `main`, `address`, `figure`, `figcaption`, `center`, `form`, `fieldset` | Elements that produce a single line break |
-| `named` | `[String: String]` | 77 entries | Named references that decode |
-| `windows1252` | `[UInt32: Character]` | 27 entries | Characters shown for `&#128;` to `&#159;` |
+| `named` | `[String: String]` | 77 entries (listed under Entity Tables in this section) | Named references that decode |
+| `windows1252` | `[UInt32: Character]` | 27 entries (listed under Entity Tables in this section) | Characters shown for `&#128;` to `&#159;` |
 | `invisible` | `Set<Unicode.Scalar>` | U+200B, U+2060, U+FEFF, U+00AD, U+034F | Scalars always dropped |
 | `joiners` | `Set<Unicode.Scalar>` | U+200C, U+200D | Scalars kept only between two visible scalars |
 | marker scalars | `Unicode.Scalar` | U+0001, U+0002, U+0003; U+E000, U+E001 | Internal soft-break, paragraph-break and bullet markers; stand-ins for preformatted space and tab |
 | reference window | `Int` | 12 scalars after `&` | How far to look for the `;` |
 | numeric digits | `ClosedRange<Int>` | 1 to 8 | Digits allowed in a numeric reference |
 
+### Entity Tables
+
+Both tables are built-in and complete: a reference not listed here is unknown and is left as written. Names are case-sensitive.
+
+#### Named references (77)
+
+| Name | Decodes to | Scalar |
+|------|-----------|--------|
+| `amp` | `&` | U+0026 |
+| `lt` | `<` | U+003C |
+| `gt` | `>` | U+003E |
+| `quot` | `"` | U+0022 |
+| `apos` | `'` | U+0027 |
+| `nbsp` | (space or invisible) | U+00A0 |
+| `ensp` | (space or invisible) | U+2002 |
+| `emsp` | (space or invisible) | U+2003 |
+| `thinsp` | (space or invisible) | U+2009 |
+| `zwnj` | (space or invisible) | U+200C |
+| `zwj` | (space or invisible) | U+200D |
+| `shy` | (space or invisible) | U+00AD |
+| `ndash` | – | U+2013 |
+| `mdash` | — | U+2014 |
+| `hellip` | … | U+2026 |
+| `bull` | • | U+2022 |
+| `middot` | · | U+00B7 |
+| `lsquo` | ‘ | U+2018 |
+| `rsquo` | ’ | U+2019 |
+| `sbquo` | ‚ | U+201A |
+| `ldquo` | “ | U+201C |
+| `rdquo` | ” | U+201D |
+| `bdquo` | „ | U+201E |
+| `laquo` | « | U+00AB |
+| `raquo` | » | U+00BB |
+| `lsaquo` | ‹ | U+2039 |
+| `rsaquo` | › | U+203A |
+| `copy` | © | U+00A9 |
+| `reg` | ® | U+00AE |
+| `trade` | ™ | U+2122 |
+| `deg` | ° | U+00B0 |
+| `plusmn` | ± | U+00B1 |
+| `times` | × | U+00D7 |
+| `divide` | ÷ | U+00F7 |
+| `euro` | € | U+20AC |
+| `pound` | £ | U+00A3 |
+| `cent` | ¢ | U+00A2 |
+| `yen` | ¥ | U+00A5 |
+| `sect` | § | U+00A7 |
+| `para` | ¶ | U+00B6 |
+| `dagger` | † | U+2020 |
+| `Dagger` | ‡ | U+2021 |
+| `prime` | ′ | U+2032 |
+| `Prime` | ″ | U+2033 |
+| `larr` | ← | U+2190 |
+| `rarr` | → | U+2192 |
+| `uarr` | ↑ | U+2191 |
+| `darr` | ↓ | U+2193 |
+| `frac12` | ½ | U+00BD |
+| `frac14` | ¼ | U+00BC |
+| `frac34` | ¾ | U+00BE |
+| `iexcl` | ¡ | U+00A1 |
+| `iquest` | ¿ | U+00BF |
+| `aacute` | á | U+00E1 |
+| `eacute` | é | U+00E9 |
+| `iacute` | í | U+00ED |
+| `oacute` | ó | U+00F3 |
+| `uacute` | ú | U+00FA |
+| `Aacute` | Á | U+00C1 |
+| `Eacute` | É | U+00C9 |
+| `Iacute` | Í | U+00CD |
+| `Oacute` | Ó | U+00D3 |
+| `Uacute` | Ú | U+00DA |
+| `agrave` | à | U+00E0 |
+| `egrave` | è | U+00E8 |
+| `ograve` | ò | U+00F2 |
+| `auml` | ä | U+00E4 |
+| `euml` | ë | U+00EB |
+| `ouml` | ö | U+00F6 |
+| `uuml` | ü | U+00FC |
+| `Auml` | Ä | U+00C4 |
+| `Ouml` | Ö | U+00D6 |
+| `Uuml` | Ü | U+00DC |
+| `ntilde` | ñ | U+00F1 |
+| `Ntilde` | Ñ | U+00D1 |
+| `ccedil` | ç | U+00E7 |
+| `szlig` | ß | U+00DF |
+
+#### windows-1252 numeric references 128 to 159 (27)
+
+The five codes 129, 141, 143, 144 and 157 are undefined and decode to nothing.
+
+| Code | Decodes to | Scalar |
+|------|-----------|--------|
+| 128 (0x80) | € | U+20AC |
+| 130 (0x82) | ‚ | U+201A |
+| 131 (0x83) | ƒ | U+0192 |
+| 132 (0x84) | „ | U+201E |
+| 133 (0x85) | … | U+2026 |
+| 134 (0x86) | † | U+2020 |
+| 135 (0x87) | ‡ | U+2021 |
+| 136 (0x88) | ˆ | U+02C6 |
+| 137 (0x89) | ‰ | U+2030 |
+| 138 (0x8A) | Š | U+0160 |
+| 139 (0x8B) | ‹ | U+2039 |
+| 140 (0x8C) | Œ | U+0152 |
+| 142 (0x8E) | Ž | U+017D |
+| 145 (0x91) | ‘ | U+2018 |
+| 146 (0x92) | ’ | U+2019 |
+| 147 (0x93) | “ | U+201C |
+| 148 (0x94) | ” | U+201D |
+| 149 (0x95) | • | U+2022 |
+| 150 (0x96) | – | U+2013 |
+| 151 (0x97) | — | U+2014 |
+| 152 (0x98) | ˜ | U+02DC |
+| 153 (0x99) | ™ | U+2122 |
+| 154 (0x9A) | š | U+0161 |
+| 155 (0x9B) | › | U+203A |
+| 156 (0x9C) | œ | U+0153 |
+| 158 (0x9E) | ž | U+017E |
+| 159 (0x9F) | Ÿ | U+0178 |
 ## Deep Linking
 
 Not applicable: `HTMLText` reads strings and has no URL scheme or route; links in the HTML are removed with their tags and only the link text is kept.
@@ -251,9 +378,9 @@ Not applicable: the source contains no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Source is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Text/HTMLText.swift`, a Foundation-only file with no UI import, so SwiftUI code calls it directly and shows the result in `Text`. Run it off the main thread for large bodies; it needs no actor. Use it instead of `AttributedString(html:)` or `NSAttributedString` HTML import, which go through WebKit and want the main thread.
+- **SwiftUI**: The Swift implementation is a Foundation-only file with no UI import, so SwiftUI code calls it directly and shows the result in `Text`. Run it off the main thread for large bodies; it needs no actor. Use it instead of `AttributedString(html:)` or `NSAttributedString` HTML import, which go through WebKit and want the main thread.
 - **Compose**: Port as a Kotlin `object` with pure functions over `String`. Walk code points (`String.codePointAt`, `Character.charCount`), not UTF-16 chars, because the source works on Unicode scalars and the 12-scalar entity window counts scalars. Use `StringBuilder` for output and `Set<String>` constants. Avoid `Html.fromHtml`, which builds a styled span tree and keeps links and layout. Display with a `Text` composable.
-- **React/Web**: Port as a TypeScript module of two functions. Iterate with `for...of` or `codePointAt` so astral characters (emoji with joiners) count as one scalar. Do not use `DOMParser` or `innerHTML`: they parse more than this contract does, and running them on mail HTML is the risk this file avoids. The hand-written pass is single-threaded, so there is no ordering concern. Browser `String.prototype.normalize` is not needed.
+- **React/Web**: Port as a TypeScript module of two functions. Iterate with `for...of` or `codePointAt` so astral characters (emoji with joiners) count as one scalar. Do not use `DOMParser` or `innerHTML`: they parse more than this contract does, and running them on mail HTML is the risk this file avoids. The hand-written pass is single-threaded, so there is no ordering concern.
 - **AppKit / UIKit**: Same Swift file on macOS and iOS; it uses `Unicode.Scalar`, `String.UnicodeScalarView`, `CharacterSet.whitespaces` and `components(separatedBy:)` from Foundation. `CharacterSet.whitespaces` is what turns non-breaking and other Unicode spaces into plain ones in the tidy stage, so a port needs an equivalent Zs-category and tab test. Bridge to `NSTextField` or `UITextView` as plain text, not as attributed text.
 - **WinUI 3**: Port as a `static class HtmlText` with `PlainText(string html)` and `DecodeEntities(string text)`. Enumerate scalars with `string.EnumerateRunes()` (`System.Text.Rune`), not `char`, to match Unicode scalar semantics; `Rune.IsWhiteSpace` and `System.Globalization.UnicodeCategory.SpaceSeparator` stand in for `CharacterSet.whitespaces`. Build output with `StringBuilder`, and hold the tables as `HashSet<string>`, `FrozenDictionary<string, string>` and `Dictionary<uint, string>`. Replace the private-use and control-character markers (U+E000, U+E001, U+0001 to U+0003) with the same scalars, since `StringBuilder` accepts them. Parse numeric references with `uint.TryParse(…, NumberStyles.HexNumber, CultureInfo.InvariantCulture, …)` after checking digits yourself; `uint.TryParse` accepts signs and spaces that the contract rejects. The functions need no `Task` or `async` (they are CPU-bound and pure), so call from `Task.Run` in a view-model for large bodies. Show the result in a `TextBlock` with `IsTextSelectionEnabled="True"`; do not use `RichTextBlock` or a `WebView2` to read the HTML.
 
@@ -261,16 +388,16 @@ Not applicable: the source contains no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Text/HTMLText.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Text/HTMLText.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
 **Decision**: Convert with a hand-written single pass over Unicode scalars, with no layout engine, no WebKit and no regular expressions.
-**Rationale**: The source's doc comment says the HTML is sender-controlled, so the conversion must be linear and nothing is rescanned; WebKit wants the main thread. A test bounds hostile inputs to 5 seconds.
+**Rationale**: The HTML is sender-controlled, so the conversion must be linear in the input and nothing may be rescanned; WebKit wants the main thread. A test bounds hostile inputs to 5 seconds.
 **Approved**: pending
 
 **Decision**: An unclosed comment, tag, quoted value or hidden element drops the rest of the input.
-**Rationale**: The source's doc comment says it "runs to the end of the input, as in a browser"; stopping also avoids rescanning, which keeps the pass linear.
+**Rationale**: A browser treats an unclosed construct as running to the end of the input; stopping also avoids rescanning, which keeps the pass linear.
 **Approved**: pending
 
 **Decision**: Breaks are carried as control-character markers (U+0001 line, U+0002 paragraph, U+0003 bullet) and resolved after the whole text is read.
@@ -282,19 +409,19 @@ Not applicable: the source contains no log calls.
 **Approved**: pending
 
 **Decision**: `decodeEntities` decodes only a built-in list of named references plus all numeric ones, looks 12 scalars ahead for the `;`, and leaves anything else as written.
-**Rationale**: The source comment says names and numbers are short and looking further only finds the next sentence's `;`; leaving unknown references untouched keeps text such as `AT&T;` intact.
+**Rationale**: Names and numbers are short, and looking further only finds the next sentence's `;`; leaving unknown references untouched keeps text such as `AT&T;` intact.
 **Approved**: pending
 
 **Decision**: Numeric references 128 to 159 decode as windows-1252.
-**Rationale**: The source comment says this is what browsers show and what Word and Outlook meant; the five undefined codes stay controls and are dropped.
+**Rationale**: Browsers show these characters, and Word and Outlook meant them; the five undefined codes stay controls and are dropped.
 **Approved**: pending
 
 **Decision**: Control characters are dropped from decoded text and from raw text.
-**Rationale**: The source comment says this stops mail writing terminal escape sequences; tab and line breaks are kept because they are whitespace.
+**Rationale**: Dropping them stops mail writing terminal escape sequences; tab and line breaks are kept because they are whitespace.
 **Approved**: pending
 
 **Decision**: Zero-width non-joiner and joiner are kept only between two visible, non-joiner scalars; the other invisible characters are always dropped.
-**Rationale**: The source comment says joiners shape emoji sequences and Persian and Indic words, while marketing mail fills preview text with them.
+**Rationale**: Joiners shape emoji sequences and Persian and Indic words, while marketing mail fills preview text with them.
 **Approved**: pending
 
 **Decision**: Entities are decoded on each text run before whitespace is collapsed, and decoded text is not reparsed.
@@ -305,6 +432,9 @@ Not applicable: the source contains no log calls.
 **Rationale**: Keeps a row on one line in a terminal; the source has no numbering, so ordered lists read as bullets (test `listItemsWithBlockChildrenKeepTheirBullets`).
 **Approved**: pending
 
+**Decision**: Truncated or malformed markup degrades silently: the caller gets the text read so far, or the reference left as written, and no error or flag.
+**Rationale**: Mail bodies are routinely malformed, and a browser shows them anyway; the output is read by a person or a model, which can use partial text, and an error channel would force every caller to handle a case that has no better answer than the partial text. The cost is that a caller cannot tell truncation happened, which is why `explicit-error-handling` is `partial` in Compliance.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -316,9 +446,10 @@ Not applicable: the source contains no log calls.
 | [adc.check.performance.resource-efficiency](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d5fe7b8e-1051-5581-b2c5-1adae8fdd5fc) | passed | performance |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 
-`HTMLText` is one pure type with two entry points and private helpers per stage (tags, writer, breaks, entities, whitespace), no I/O and no state, which is separation of concerns. `HTMLTextTests` covers entity decoding, control and invisible characters, every tag family, `pre`, unterminated constructs and hostile-input timing; a few behaviors (declarations, bogus close tags, unbalanced `pre`, private-use input) have no test, so coverage is strong but not complete. The input is sanitized for terminal use by dropping control characters and for resource use by the single pass. The result is partial for explicit error handling because the functions have no error channel: malformed markup is silently truncated or left as written, by the contract's own wording, and the caller cannot tell it happened.
+`HTMLText` is one pure type with two entry points and private helpers per stage (tags, writer, breaks, entities, whitespace), no I/O and no state, which is separation of concerns. `HTMLTextTests` covers entity decoding, control and invisible characters, every tag family, `pre`, unterminated constructs and hostile-input timing; a few behaviors (declarations, bogus close tags, unbalanced `pre`, private-use input, stray hidden close tags, empty list items, the comment edge, form feed, entities split by a tag, blank lines inside `pre`) have no test, so coverage is strong but not complete. The input is sanitized for terminal use by dropping control characters and for resource use by the single pass. The result is partial for explicit error handling because the functions have no error channel: malformed markup is silently truncated or left as written, and the caller cannot tell it happened (an accepted trade-off; see Design Decisions).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Listed the 77 named entities and 27 windows-1252 mappings, recast stage-order and linear-time as observable requirements, removed source-comment citations, added a silent-degradation Design Decision, added vectors html-text-036 to 043, and dropped the logic tag and the source path. |

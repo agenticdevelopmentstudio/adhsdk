@@ -4,7 +4,7 @@
 - **Failed list read**: The failure row MUST make the whole read nil; a failed read is never "none".
 - **Empty list**: An empty array MUST be an empty array, which the caller reads as no activity.
 - **Slow Accessibility check**: A recheck, and a turn-on, MUST wait 15 seconds; a daemon that answers later makes both nil even though the daemon applied the change.
-- **Timeouts on status and spans**: Both pass `timeout: nil`; what nil means (the transport's default wait or none) is the transport's, outside this source. The client does not set one.
+- **Timeouts on status and spans**: Both pass `timeout: nil`; the client passes `.none` and sets no wait of its own, so how long it waits is whatever the transport does for `.none`, which is outside this source and may be unbounded.
 - **Body cannot be encoded**: `setPreferences` MUST return nil before any call is made.
 - **Unreachable daemon**: The transport throws, the client returns nil, and the caller cannot tell it from a refusal or a bad reply.
 - **Lost reply after a write**: A `setPreferences` that times out may still have been applied by the daemon; with no retry, the caller sees nil and may re-read `status()`.

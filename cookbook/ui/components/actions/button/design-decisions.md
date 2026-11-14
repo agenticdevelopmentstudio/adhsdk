@@ -20,7 +20,7 @@
 **Approved**: pending
 
 **Decision**: Make the minimum size ancestor-settable instead of prop-drilled.
-**Rationale**: `--adh-button-min-height` and `--adh-button-min-width` default to `0px`, so nothing changes anywhere until an ancestor sets them; a surface that needs a bigger hit target (`button.tsx`'s own comments cite shipr's dialogs, where the buttons were reported as too small) sets the pair once on itself and every descendant button grows, whatever its `size` — including buttons nested components render that the surface never names. The alternative was passing `size="lg"` down through every dialog and button bar, which is the same decision made in a hundred places and is why it drifted in the first place. The tradeoff, documented honestly in Accessibility above: the default floor is `0px`, so none of the fixed size variants meet the 44×44pt/48×48dp guidance on their own — a surface MUST opt in.
+**Rationale**: `--adh-button-min-height` and `--adh-button-min-width` default to `0px`, so nothing changes anywhere until an ancestor sets them; a surface that needs a bigger hit target (the motivating case was dialogs whose buttons were reported as too small) sets the pair once on itself and every descendant button grows, whatever its `size` — including buttons nested components render that the surface never names. The alternative was passing `size="lg"` down through every dialog and button bar, which is the same decision made in a hundred places and is why it drifted in the first place. The tradeoff, documented honestly in Accessibility above: the default floor is `0px`, so none of the fixed size variants meet the 44×44pt/48×48dp guidance on their own — a surface MUST opt in.
 **Approved**: pending
 
 **Decision**: `icon*` sizes redefine `--adh-button-min-width` rather than emitting a second utility.
@@ -32,6 +32,6 @@
 **Approved**: pending
 
 **Decision**: Document the `--adh-button-min-*` / `apt-orange` prefix mismatch as-is rather than normalizing it.
-**Rationale**: `--adh-button-min-height`/`--adh-button-min-width` and the `apt-orange` warning-role token both belong to the `@adh-sdk` package family, but use different abbreviated prefixes (`adh` vs `apt`). Reconciling the two is a source-code naming change outside the scope of this recipe pass, so the recipe records the tokens exactly as `button.tsx` and the theme package expose them.
+**Rationale**: `--adh-button-min-height`/`--adh-button-min-width` and the `apt-orange` warning-role token both belong to the `@adh-sdk` package family, but use different abbreviated prefixes (`adh` vs `apt`). Reconciling the two is a source-code naming change outside the scope of this ingredient pass, so the ingredient records the tokens exactly as `button.tsx` and the theme package expose them.
 **Approved**: pending
 

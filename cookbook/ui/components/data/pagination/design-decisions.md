@@ -18,4 +18,10 @@
 **Decision**: Compose the shared `Button` (outline/sm) for both controls rather than building bespoke buttons.
 **Rationale**: The pager inherits the family focus ring, disabled treatment, and press feel for free.
 **Approved**: pending
+**Decision**: The `"Prev"`, `"Next"` and `"Page {page} of {totalPages}"` strings stay hard-coded English, with no `labels` or formatter prop, as accepted debt.
+**Rationale**: Adding a label or formatter prop is a public API change that is better made together with the host application's localization approach; until then the host owns localization, and the string-externalization checks stay `failed` in Compliance.
+**Approved**: pending
 
+**Decision**: The component performs no validation of `page` or `totalPages`; the host owns well-formedness.
+**Rationale**: A pager that second-guessed its inputs would fork the truth the host already tracks (see the controlled-pager decision), so `NaN`, negative and non-integer values are compared and displayed exactly as given (see Edge Cases).
+**Approved**: pending

@@ -21,5 +21,5 @@
 | `canSave` | `boolean` | Yes | — | Enables the Save button when `true` (and `saving` is `false`); also drives the `ghost`-variant/muted-text swap when disabled. |
 | `saving` | `boolean` | No | `false` | While `true`, disables Delete/Cancel/Save and changes the Save label to `"Saving…"`; Create is not disabled by this flag (see **create-not-disabled-while-saving**). |
 | `onDelete` | `() => void` | No | `undefined` | Called when the Delete button is clicked. Omit together with `showDelete={false}` for panes that don't delete here; the Delete button does not render without it. |
-| `canDelete` | `boolean` | No | `undefined` (falsy) | Enables the Delete button when `true` (and `saving` is `false`); an omitted value renders Delete as disabled whenever it is shown. |
+| `canDelete` | `boolean` | No | `undefined` (not `true`) | Enables the Delete button when `true` (and `saving` is `false`); an omitted value renders Delete as disabled whenever it is shown. |
 

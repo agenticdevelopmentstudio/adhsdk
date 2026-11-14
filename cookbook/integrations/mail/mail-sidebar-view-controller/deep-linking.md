@@ -6,4 +6,5 @@ Not applicable: the controller registers no URL scheme and handles no link; the 
 | Apple | none |
 | Android | none |
 | Web | none |
+| Windows | none |
 

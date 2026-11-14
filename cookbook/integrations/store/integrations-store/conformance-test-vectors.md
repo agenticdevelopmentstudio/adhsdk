@@ -37,6 +37,8 @@ Vectors named for a test come from `IntegrationsStoreTests`, which runs the stor
 | store-032 | errors-unwrapped | Derived: run a store write on a database built with a write deadline shorter than the statement needs | The call throws `BoundedDatabaseError.deadlineExceeded` with lane "write", unwrapped |
 | store-033 | sendable | Derived: compile a use of the store from two tasks | The code compiles without a concurrency diagnostic |
 | store-034 | tombstone-fields | Derived: tombstone a message with the store, then read its `deleted_at` and `updated_at` | `is_deleted` is 1 and the two columns hold the same string |
-| store-035 | writes-serialised, reads-parallel | Derived: open a file database, start a store write that holds the writer, and call a store read from another thread | The read returns the last committed state without waiting for the write; a second write waits for the first |
+| store-035 | writes-serialised, reads-parallel | Derived: run one store write and one store read against a database wrapper that records which of `write` and `read` it was asked to run | The write went through `BoundedDatabase.write` and the read through `BoundedDatabase.read` |
 | store-036 | message-upsert-batch-last-wins | Derived: `upsertMessages` with two messages of external id `e1`, subjects "first" and "second" | One row exists for `e1` and its subject is "second" |
+| store-037 | query-after-stable | Derived: `e1` to `e5`, first page limit 2 returns e5, e4; re-upsert e5 without the filtered label; resume with `after` set to the key of e4, limit 2 | The resumed page is e3, e2 |
+| store-038 | labels-replace-atomic | Derived: `replaceLabels` with more labels than SQLite allows bound variables (over 32,766), on a connection that already has labels | The call throws the database's error and the existing labels are unchanged; the `NOT IN` list is not chunked, and a port should copy this behavior |
 

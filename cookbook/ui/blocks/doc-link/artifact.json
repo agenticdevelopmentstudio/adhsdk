@@ -4,15 +4,15 @@
     "id": "0fe9833b-2a5c-47d5-a455-87e00d3797cf",
     "title": "DefaultDocLink",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Injectable link component that renders an anchor element with customizable destination path.",
+    "summary": "Router-free default implementation of the DocLinkComponent injection seam that renders an anchor element with a customizable destination path.",
     "platforms": [
       "typescript",
       "web"
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a633191115a01f96",
+  "synced": "c54b303dd720ca6a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

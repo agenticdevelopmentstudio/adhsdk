@@ -4,11 +4,11 @@
     "id": "e268fe4f-8e83-4189-b1d2-105cd177308c",
     "title": "Clip",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "46376b3cc453b88c",
+  "synced": "2721c4134100cd1b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

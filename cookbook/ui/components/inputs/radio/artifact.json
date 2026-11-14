@@ -4,11 +4,11 @@
     "id": "3b509297-83b2-4a5b-a331-56d0d4be548d",
     "title": "Radio",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cd9676484f77c2b8",
+  "synced": "cb43e05e5c17a44b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

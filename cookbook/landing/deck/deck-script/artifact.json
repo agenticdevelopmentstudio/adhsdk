@@ -4,11 +4,11 @@
     "id": "e16d896e-9318-48ac-bf1e-b48ef648d73c",
     "title": "DeckScript",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,12 +24,18 @@
       "viewport"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "05930e64-fa82-49ef-b50d-22d87fa7d182",
+      "07c437af-a291-4356-bd83-c896bd4facde",
+      "b341dd02-fbcb-4da8-b2b6-897807b4ebbc",
+      "51d3b1ba-ced7-4c08-8a63-c83094d91299",
+      "8f4c2b7a-9d3e-4c5f-b2e8-7f6a3c1d5e9b"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "461ad52698370d4f",
+  "synced": "cd1d1829334071d1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

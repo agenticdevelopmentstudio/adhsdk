@@ -4,15 +4,15 @@
     "id": "811cc18f-e33a-42bb-bd2d-dfc3dc21bc77",
     "title": "Lede",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Introductory paragraph component that renders semantic text content under headings.",
+    "summary": "Introductory paragraph component that with a constrained measure, used after headings or other content blocks.",
     "platforms": [
       "typescript",
       "web"
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ee283f410d675f15",
+  "synced": "706d939a117db042",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

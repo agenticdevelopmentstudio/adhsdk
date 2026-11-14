@@ -19,9 +19,13 @@
 | resource-card-016 | optional-meta | No meta prop | No meta row is rendered |
 | resource-card-017 | interactive-styling | `href` or `onClick` provided | Class contains `cursor-pointer`, a hover border and background change, and a focus-visible border |
 | resource-card-018 | classname-support, classname-overrides-defaults (test: "lets the host override geometry through className — twMerge, not append") | `href="/x"`, `className="rounded-lg p-4"` | Class contains `rounded-lg` and `p-4` and contains neither `rounded-xl` nor `p-5` |
-| resource-card-019 | left-aligned-text | Any props | Class contains `text-left` |
+| resource-card-019 | left-aligned-text | Any props | Text is aligned to the start edge of the reading direction; the web source currently applies the physical `text-left` class, which is the recorded `rtl-layout-support` gap |
 | resource-card-020 | meta-no-nested-interactive | `href="/app"` and `meta={<a href="/x">link</a>}` | The caller has broken the requirement; the card does not prevent it, so a conforming caller passes no link or button inside `meta` |
-| resource-card-021 | optional-identifier | `identifier={0}` | Failure mode: the numeral `0` is falsy-guarded by `&&`, so React renders the text "0" instead of nothing; callers MUST NOT pass a numeric identifier |
+| resource-card-021 | optional-identifier | `identifier={0}` | Failure mode: the numeral `0` is falsy-guarded by `&&`, so React renders the text "0" instead of nothing; callers MUST NOT pass a numeric identifier (see **optional-identifier**) |
+| resource-card-022 | optional-description | `description={0}` | Failure mode: renders the text "0" instead of nothing; callers MUST NOT pass a numeric description |
+| resource-card-023 | optional-meta | `meta={0}` | Failure mode: renders the text "0" in the meta row instead of nothing; callers MUST NOT pass a numeric meta |
+| resource-card-024 | touch-target-size | `title="My App"` only, with `href="/x"`, rendered at default padding | The measured card height is at least 44 CSS px and its width fills the container |
+| resource-card-025 | focus-indicator-contrast | Interactive card receives keyboard focus | Border changes to `apt-gold` at 60% opacity and the default outline is removed; the 3:1 contrast is unverified (see **focus-border-contrast**) |
 
 The tests beside the source are `resourceCard.test.tsx`; vectors that name a test come from its assertions and the others derive from the source.
 

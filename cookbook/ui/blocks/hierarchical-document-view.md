@@ -2,11 +2,11 @@
 id: b7a4e24c-3dfe-4a33-b5bc-88736e520d90
 title: "Hierarchical Document View"
 type: ingredient
-version: 1.7.1
+version: 1.7.2
 status: review
 language: en
 created: 2026-07-29
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -45,7 +45,7 @@ tree; and HTDV stacks *panes* horizontally where HDV nests *one* tree vertically
 arbitrary depth with per-branch collapse. They are different shapes that happen to
 share the word "hierarchical".
 
-**The reader landed in stages**, completed in 1.4.0, then hardened in 1.5.x:
+**The reader landed in stages**, completed in 1.4.0, hardened in 1.5.x, then given its lint-pass and section additions in 1.7.x (Change History has no 1.6.0 entry):
 
 | Component | Status |
 |---|---|
@@ -56,14 +56,20 @@ share the word "hierarchical".
 | `HierarchicalDocumentView` + `DocPage` (the frame) | 1.4.0 |
 | Hardening: shared drawer collapse state, one announced dismiss control, ordered scrollspy, no dangling `aria-controls` | 1.5.0 |
 | Platform Notes restructured per platform | 1.5.1 |
+| Requirements renamed subject-only (1.7.0); Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics and Privacy sections added (1.7.1) | 1.7.x |
 
 The governing constraint for the whole extraction is that **it is a move, not a
 redesign**: every default here byte-matches what the cookbook site rendered before
 it, so a visual delta is a bug rather than a judgement call. Redesign happens later,
 on a green base.
 
-There are exactly **two** recorded exceptions to that byte-match, recorded
-precisely so they are not drift — and only one of the two is visible.
+There are exactly **two** recorded exceptions to that byte-match *in how the page
+looks or lays out*, recorded precisely so they are not drift — and only one of the
+two is visible. The extraction also made a few non-visual markup changes, which
+are named where they occur below and in Change History: the nav's dropped
+`data-autoscroll` attribute and its toggle's added `type="button"` and
+`aria-expanded`, and the view-source disclosure's added `aria-expanded` and
+`aria-controls`. None of them changes a pixel.
 
 **The chevrons.** Every one is lucide's `ChevronRight` rather than the site's
 hand-rolled inline `<svg>` — `ViewSourceDisclosure`'s and the nav section's
@@ -143,7 +149,9 @@ Three seams keep site vocabulary out of the toolkit:
 - **cap-the-measure**: `DocPage` MUST cap the document at the reader's measure and MUST allow that column to shrink below its content, so a wide code block cannot push the rail off the page.
 - **render-no-landmark**: Each frame MUST NOT render a `main` or any other landmark element. The host's app shell owns its landmarks; HDV owns the columns.
 - **spread-host-attributes**: `DocBreadcrumbs`, `DocArticle`, `DocMetadata`, `DocTableOfContents`, `ViewSourceDisclosure`, `DocNavTree`, `DocNav`, `HierarchicalDocumentView`, and `DocPage` MUST all spread remaining host attributes (`data-*`, `id`, handlers) onto their root element.
-
+- **honour-trigger-label**: `ViewSourceDisclosure` MUST render its trigger with the host's `label` when given, and with "View source" otherwise.
+- **export-class-contracts**: `ViewSourceDisclosure` MUST apply its exported class constants (`VIEW_SOURCE_DISCLOSURE_CLASS`, `VIEW_SOURCE_TRIGGER_CLASS`, `VIEW_SOURCE_PRE_CLASS`) to its row, trigger and panel exactly, so a host can reuse the same chrome.
+- **merge-host-classname**: `DocNav`, `HierarchicalDocumentView` and `DocPage` MUST merge a host `className` onto their root element without dropping the root's own classes.
 ## Appearance
 
 The centre column is a `max-w-3xl` prose measure. Every colour is a flat
@@ -172,7 +180,7 @@ the host's palette without a per-site restyle.
   top-[var(--adh-header-height,3.5rem)]
   h-[calc(100vh-var(--adh-header-height,3.5rem))]` — sticky under the family's header
   and scrolling on its own, so a 466-page tree never pushes the document down. The
-  offset **reads** `--adh-header-height` rather than restating it: that header is a
+  sticky offset **reads** `--adh-header-height` rather than restating it: that header is a
   bar plus a full-width preview strip above it, so any literal is a copy that goes
   stale the next time it grows. The `3.5rem` fallback is the bar alone, for the
   consumers of this package that mount no adh header at all. The `nav` inside is
@@ -214,8 +222,9 @@ the host's palette without a per-site restyle.
   links hover to `text-[var(--color-text-secondary)]`.
 - Article: `prose max-w-none prose-headings:scroll-mt-20
   prose-code:before:content-none prose-code:after:content-none`. The
-  `scroll-mt-20` is load-bearing — it keeps a heading clear of the sticky header
-  when the ToC scrolls to it.
+  `scroll-mt-20` (80px) is load-bearing — it keeps a heading clear of the sticky header
+  when the ToC scrolls to it. It is a literal, not derived from `--adh-header-height`,
+  and matches `useScrollSpy`'s `-80px` band: see the header-offset Design Decision.
 - Metadata: `dl.flex.flex-col.items-end.gap-0.5 font-mono text-[11px] mb-6`; rows
   `flex gap-2`; `dt` dim, `dd` secondary; a list value wraps in
   `flex flex-wrap justify-end gap-x-3`.
@@ -390,8 +399,8 @@ because the control that opens it does.
 | T27 | announce-its-state | before and after activation | `aria-expanded` flips `false`→`true`; `aria-controls` equals the panel's non-empty `id` |
 | T27b | announce-its-state | collapsed, expanded, collapsed again | `aria-controls` is ABSENT both times the panel is — no dangling IDREF |
 | T28 | toggle-both-ways | activate | the chevron gains `rotate-90` only while open |
-| T29 | spread-host-attributes | default, then `label` | the trigger reads "View source", then the host's label |
-| T30 | spread-host-attributes | `data-testid`, `defaultOpen` | row, trigger, and panel `className`s equal their exported contracts EXACTLY |
+| T29 | honour-trigger-label | default, then `label` | the trigger reads "View source", then the host's label |
+| T30 | export-class-contracts | `data-testid`, `defaultOpen` | row, trigger, and panel `className`s equal their exported contracts EXACTLY |
 | T31 | toggle-both-ways | `source=""` with `defaultOpen` | the panel renders and is empty — not absent |
 | T32 | collapse-only-the-top-level, open-the-active-section | `activePath="/"` | the section's children are absent; its control reads `aria-expanded="false"` and is named "Expand Principles" |
 | T33 | open-the-active-section | `activePath` = a depth-3 page | that section's pages are present; the sibling section's are not |
@@ -415,18 +424,18 @@ because the control that opens it does.
 | T51 | share-one-nav | `open` | two `aside`s in order [aside, drawer], and two `nav`s |
 | T52 | control-the-drawer, announce-one-dismiss-control | click the scrim, then the close control | exactly ONE announced control named "Close navigation"; the scrim is an `aria-hidden` `div` with no `tabindex`; `onClose` fires twice |
 | T53 | control-the-drawer | `title="Contents" closeLabel="Dismiss"` | the drawer reads "Contents" and there is exactly ONE control named "Dismiss" |
-| T54 | spread-host-attributes | `className="w-96"` + `data-testid` | the column keeps `sticky`, carries `w-96`, has no `w-80`, and the attribute lands on it |
+| T54 | merge-host-classname, spread-host-attributes | `className="w-96"` + `data-testid` | the column keeps `sticky`, carries `w-96`, has no `w-80`, and the attribute lands on it |
 | T55 | place-the-nav-before-the-document | `nav` + children | 2 children: the nav node itself, then a region whose class equals `HIERARCHICAL_DOCUMENT_VIEW_CONTENT_CLASS` and which holds the document |
 | T56 | slot-columns-unwrapped | `nav` | the nav's `parentElement` is the frame itself, so its `sticky` resolves against the frame |
 | T57 | drop-an-omitted-column | no `nav` | exactly 1 child, the content region |
 | T58 | render-no-landmark | `nav` + children | no `main` element and no `main` role anywhere in the output |
-| T59 | spread-host-attributes | `className="gap-4"` | the frame keeps `flex-1` and gains `gap-4` |
+| T59 | merge-host-classname | `className="gap-4"` | the frame keeps `flex-1` and gains `gap-4` |
 | T60 | spread-host-attributes | `id` + `data-*` | both land on the frame |
 | T61 | place-the-nav-before-the-document, cap-the-measure | `toc` + children | 2 children: the measure column holding the document, then the rail node |
 | T62 | cap-the-measure | `<DocPage>{doc}</DocPage>` | `DOC_PAGE_ARTICLE_CLASS` contains both `max-w-3xl` and `min-w-0` |
 | T63 | drop-an-omitted-column | no `toc` | exactly 1 child, the measure column |
 | T64 | slot-columns-unwrapped | `toc` | the rail's `parentElement` is the row itself |
-| T65 | spread-host-attributes | `className="items-start"` + `id` | the row keeps `flex`, gains `items-start`, and carries the `id` |
+| T65 | merge-host-classname, spread-host-attributes | `className="items-start"` + `id` | the row keeps `flex`, gains `items-start`, and carries the `id` |
 | T66 | slot-columns-unwrapped | a `DocPage` inside a `HierarchicalDocumentView` | nav → content region → row → measure → document, with the rail on the row and the nav on the frame — neither frame reaches into the other |
 | T67 | mark-the-current-heading, carry-visibility-across-callbacks | ONE callback reporting `c`, `a`, `b` as entering together | `a` is marked — the first in `ids` order, not the last reported |
 | T68 | carry-visibility-across-callbacks | `a` enters; `b` enters in a SECOND callback; then `a` leaves | `a`, still `a`, then `b` — `b`'s visibility survived a callback that never mentioned it |
@@ -434,7 +443,7 @@ because the control that opens it does.
 | T70 | carry-visibility-across-callbacks | DOM order `b`, `a` with `ids = ['a','b']` | `a` is marked — document order comes from `ids`, not from the DOM |
 | T71 | share-one-nav | expand a section in the drawer, then close the drawer | the desktop column's section is still expanded |
 | T72 | route-through-injected-link | a leaf's inlined `headings` with a `LinkComponent` | the heading anchors carry the adapter's marker too — a heading link is a route, not a document load |
-
+| T73 | render-no-landmark | `toc` + children in a `DocPage` | no `main` element and no `main` role anywhere in the output |
 ## Edge Cases
 
 - **A tree 466 documents deep in places.** Only the top level latches. Cookbook's
@@ -586,13 +595,10 @@ hash-linked position on mount.
 None applicable for the reader's data — `crumbs`, `fields`, `html`, `source`,
 and nav node `label`s are all host-supplied. The chrome around them carries
 hardcoded English defaults that are not run through any i18n mechanism, though
-each is overridable via a prop: `DocNav`'s `title` (`"Navigation"`) and
-`closeLabel` (`"Close navigation"`), and its section toggle's
-`aria-label` (`` `${expanded ? "Collapse" : "Expand"} ${node.label}` ``);
-`DocBreadcrumbs`'s `homeLabel` (`"Home"`) and `homeHref` (`"/"`), plus its
-`aria-label="Breadcrumb"`, which has no prop at all; `DocTableOfContents`'s
+most are overridable via a prop: `DocNav`'s `title` (`"Navigation"`) and
+`closeLabel` (`"Close navigation"`); `DocBreadcrumbs`'s `homeLabel` (`"Home"`); `DocTableOfContents`'s
 `title` (`"On this page"`); and `ViewSourceDisclosure`'s `label`
-(`"View source"`).
+(`"View source"`). Two strings are fixed English with no label prop: the nav section toggle's `aria-label` (`` `${expanded ? "Collapse" : "Expand"} ${node.label}` ``) and `DocBreadcrumbs`'s `aria-label="Breadcrumb"` (the latter can only be replaced through the spread host attributes). `homeHref` (`"/"`) is a destination, not a localized string.
 
 ## Accessibility Options
 
@@ -600,7 +606,7 @@ each is overridable via a prop: `DocNav`'s `title` (`"Navigation"`) and
 |--------|----------|
 | Reduce Motion | Not handled: `DocNav`'s section chevron and `ViewSourceDisclosure`'s chevron both use `transition-transform` unconditionally, and the smooth-scrolling in `NavHeadings` and `DocTableOfContents` (`scrollIntoView({ behavior: "smooth" })`) runs regardless of `prefers-reduced-motion`; the source contains no such check. |
 | Increase Contrast | Depends on the `--color-*` design tokens; the components themselves do no `prefers-contrast` handling. |
-| Differentiate Without Color | `aria-current="page"` on the active nav link and breadcrumb, `aria-expanded` on the section/disclosure toggles, and the chevron's rotation all carry state independent of color, alongside the color-only accent bar and highlight. |
+| Differentiate Without Color | `aria-current="page"` on the active nav link (the breadcrumb's current page is plain text, not marked), `aria-expanded` on the section/disclosure toggles, and the chevron's rotation all carry state independent of color, alongside the color-only accent bar and highlight. |
 
 ## Feature Flags
 
@@ -611,9 +617,9 @@ section on or off is the host's decision — made by omitting the prop (e.g. no
 ## Analytics
 
 None: no component in this family calls out to an analytics or telemetry API.
-`DocNav` and `DocTableOfContents` only invoke the callbacks the host itself
-supplies (`onToggleSection`, `onClose`), which the host may use to emit its own
-events.
+`DocNavTree` and `DocNav` only invoke the callbacks the host itself supplies
+(`onToggleSection` on `DocNavTree`, `onClose` on `DocNav`), which the host may use
+to emit its own events. `DocTableOfContents` takes no callbacks.
 
 ## Privacy
 
@@ -658,6 +664,7 @@ render tracing would not already show.
   mobile widths, present the nav tree in a `ModalNavigationDrawer` or
   `ModalBottomSheet`, request focus into it on open, and close it on back-press
   or a visible close action in addition to a scrim tap.
+- **React/Web**: `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx`, `doc-article.tsx`, `doc-metadata.tsx`, `doc-table-of-contents.tsx`, `view-source-disclosure.tsx`, `doc-nav.tsx`, `hierarchical-document-view.tsx`, `doc-link.tsx`, and the shared types in `doc-types.ts`. Exported from `@adh-sdk/ui/blocks`. `useScrollSpy` lives at `src/hooks/useScrollSpy.ts` and needed its own `./hooks/useScrollSpy` key in the package's `exports` map: unlike `./components/*` and `./blocks/*`, `./hooks/*` is not a wildcard, so a new hook is unreachable until its key exists. `doc-types.ts` is a `.ts` file, so the package's `./blocks/*` export wildcard (which resolves `.tsx` only) does not reach it; the `./blocks` barrel is its one public import path. No `transpilePackages` needed — a Next consumer resolves the package's `development` condition to raw `src/` under `next dev` and `import` to `dist/` in a production build. Tailwind classes are self-registered by `src/styles/components.css` (`@source "../blocks/**/*.{ts,tsx}"`). First consumer: an internal docs site's entry view and layout chrome. Implementation details: the two frames go in different files on purpose — `HierarchicalDocumentView` belongs in the host's layout and `DocPage` in its page; putting the nav in the page remounts the tree on every navigation. Demo: `ui-showcase` Topic `hierarchical-document-view`. Responsive: verify at 375 / 768 / 1440px that breadcrumbs wrap and metadata stays right-aligned.
 - **AppKit / UIKit**: On macOS, an `NSSplitViewController` with an
   `NSOutlineView` sidebar (top-level rows collapse/expand via
   `NSOutlineView` disclosure triangles; deeper rows stay flat once their
@@ -700,13 +707,11 @@ render tracing would not already show.
   rendering. XAML pattern: compose the layout as a nested `Grid` with
   row/column definitions for the three-column structure, with a
   `ScrollViewer` wrapping the document content to handle long articles.
-- **React/Web**: `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx`, `doc-article.tsx`, `doc-metadata.tsx`, `doc-table-of-contents.tsx`, `view-source-disclosure.tsx`, `doc-nav.tsx`, `hierarchical-document-view.tsx`, `doc-link.tsx`, and the shared types in `doc-types.ts`. Exported from `@adh-sdk/ui/blocks`. `useScrollSpy` lives at `src/hooks/useScrollSpy.ts` and needed its own `./hooks/useScrollSpy` key in the package's `exports` map: unlike `./components/*` and `./blocks/*`, `./hooks/*` is not a wildcard, so a new hook is unreachable until its key exists. `doc-types.ts` is a `.ts` file, so the package's `./blocks/*` export wildcard (which resolves `.tsx` only) does not reach it; the `./blocks` barrel is its one public import path. No `transpilePackages` needed — a Next consumer resolves the package's `development` condition to raw `src/` under `next dev` and `import` to `dist/` in a production build. Tailwind classes are self-registered by `src/styles/components.css` (`@source "../blocks/**/*.{ts,tsx}"`). First consumer: an internal docs site's entry view and layout chrome. Implementation details: the two frames go in different files on purpose — `HierarchicalDocumentView` belongs in the host's layout and `DocPage` in its page; putting the nav in the page remounts the tree on every navigation. Demo: `ui-showcase` Topic `hierarchical-document-view`. Responsive: verify at 375 / 768 / 1440px that breadcrumbs wrap and metadata stays right-aligned.
-
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/hierarchical-document-view.tsx` | confirmed (1.7.1) |
+| web | `packages/web/packages/ui/src/blocks/hierarchical-document-view.tsx` | confirmed (1.7.2) |
 
 ## Design Decisions
 
@@ -946,15 +951,20 @@ render tracing would not already show.
   how far the column can stick to the wrapper's own bounds, and both columns would
   stop holding position with no error to explain it (`explicit-over-implicit`).
   **Approved**: pending
-
+- **Decision**: `scroll-mt-20` and `useScrollSpy`'s `rootMargin` (`-80px 0px -60% 0px`) stay as literals rather than reading `--adh-header-height`.
+  **Rationale**: They are a recorded exception to the "never restate the header height" rule the sticky columns follow: the extraction is a move, not a redesign, and both numbers carry over from the cookbook site unchanged. They agree with each other (80px) but not with the `3.5rem` (56px) fallback of the sticky offsets. A host whose header height differs MUST pass its own `rootMargin` to `useScrollSpy` and a `scroll-mt` override through the prose `className`; deriving both from the custom property is later work on a green base (`dry`).
+  **Approved**: pending
+- **Decision**: Reduced motion is not honoured: the chevron transitions and the smooth `scrollIntoView` calls run regardless of `prefers-reduced-motion`.
+  **Rationale**: The source contains no such check and the extraction is a move, not a redesign, so adding one would be a behavior change the byte-match rule forbids. It is recorded here, and in Accessibility Options, so it reads as a known gap rather than an oversight.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
 | [adc.check.artifact-formatting.ingredient-formatting.if-frontmatter-complete](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/083aeeb8-a2fa-5fbc-a3e6-82df9a653872) | passed | Artifact Formatting |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
@@ -967,8 +977,11 @@ non-duplicated landmark ground `semantic-markup` as passed; `aria-expanded` /
 `aria-controls` on the view-source and collapse controls, `aria-hidden` on the
 chevron and scrim, the IDREF that only exists while its referent does, and the
 drawer's removal from the DOM when closed ground `screen-reader-support` as
-passed; native buttons, links and anchors throughout ground `keyboard-navigable`
-as passed; the flat `--color-*` token family grounds `contrast-ratio` as
+partial; native buttons, links and anchors throughout ground `keyboard-navigable`
+as partial — both stop short of passed because the web drawer has no rule for
+moving focus into it, trapping focus, or closing on Escape (the host's trigger owns
+Escape), although the SwiftUI, Compose and UIKit notes expect focus to move into
+the modal; the flat `--color-*` token family grounds `contrast-ratio` as
 partial, since the source cannot show computed contrast values; the view-source
 panel renders raw text while `DocArticle`'s HTML path is documented as
 trusted-input only rather than type-enforced, grounding `input-sanitization` as
@@ -984,6 +997,7 @@ grounds `unit-test-coverage` as passed.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.7.2 | 2026-11-14 | Mike Fullerton | Recorded the header-offset and reduced-motion exceptions as Design Decisions, downgraded screen-reader-support and keyboard-navigable to partial for the missing drawer focus rules, reordered platform notes, scoped the byte-match exceptions to visual deltas, fixed analytics, localization and accessibility-options claims, added honour-trigger-label, export-class-contracts and merge-host-classname with remapped vectors, and added T73. |
 | 1.7.1 | 2026-09-25 | Mike Fullerton | Removed the stray unpaired trailing ``` fence after the Change History table (D_7). Added the Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics and Privacy sections, and reshaped Design Decisions into `**Decision**`/`**Rationale**`/`**Approved**` line triples. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.7.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case with no `must-`/`should-` prefix everywhere it is cited; corrected the unwrapped-slot rationale to name the sticky containing block rather than the scrolling ancestor; reworded the `render-no-landmark` requirement from an ambiguous "neither... MUST" to "each frame MUST NOT", and named the components `spread-host-attributes` covers; added an `**Approved**: pending` line to every Design Decision; reformatted Compliance into a linked table of real catalog checks with `passed`/`partial` statuses and a grounding sentence; rewrote Platform Notes to the convention's five bullets (SwiftUI, Compose, React/Web, AppKit / UIKit, WinUI 3) with real SwiftUI/Compose guidance and an added AppKit/UIKit bullet, and fixed WinUI 3's top-level-only expander control, `Visibility` binding, `{ThemeResource ...}` syntax, and back-button/breadcrumb coordination; shortened the frontmatter summary to one line; gave T62 and T31 their missing/corrected inputs and requirement mapping. |
 | 1.5.1 | 2026-09-22 | Mike Fullerton | Restructured Platform Notes section with platform-specific bullets for each supported platform (iOS, macOS, Android, Windows, Web), improving recipe clarity and following cookbook guidelines for platform translation guidance. |

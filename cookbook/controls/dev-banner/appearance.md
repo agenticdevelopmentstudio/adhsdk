@@ -1,8 +1,8 @@
 
-- **Container**: Non-interactive, block-level element with base class `awt-dev-banner`; the container does not intercept pointer/click events.
+- **Container**: Non-interactive element with base class `awt-dev-banner`; the container does not intercept pointer/click events. The `fixed` variant is positioned relative to the viewport; the `static` variant is `display: inline-block`.
 - **Background**: Dark, semi-transparent (near-black at roughly 40% opacity).
-- **Border**: ~2pt solid, warm gold/tan, the same hue as the text.
-- **Corner radius**: ~6pt.
+- **Border**: `2px` solid, warm gold/tan, the same hue as the text.
+- **Corner radius**: `6px`.
 - **Shadow/glow**: Soft two-layer gold-tinted glow around the container's edge.
 - **Text**: Monospace family, ~0.85rem (relative to the root font size), medium weight, wide letter-spacing, uppercase transform, single line with no wrapping — long text overflows rather than wraps.
 - **Foreground/Text color**: Warm gold/tan, matching the border.

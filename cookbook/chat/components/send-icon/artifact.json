@@ -4,11 +4,11 @@
     "id": "4a2dcdee-4d2a-4f3f-a3a5-d243ec2b799b",
     "title": "SendIcon",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a51cda1f8b9c6607",
+  "synced": "959b595590827a65",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

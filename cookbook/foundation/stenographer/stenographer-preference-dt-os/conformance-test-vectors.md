@@ -10,5 +10,8 @@
 | stenographer-preference-dt-os-007 | oversight-request-fields, wire-spelling | Encode `OversightPreferenceRequest(enabled: true, contextThresholdPct: 75)`. | Keys `enabled` true and `context_threshold_pct` 75 only (derived from the source; no test). |
 | stenographer-preference-dt-os-008 | other-fields-required | Decode an oversight reply missing `model`. | Throws a `DecodingError` (derived from the source; no test). |
 | stenographer-preference-dt-os-009 | summary-request-fields | Build `SummaryPreferenceRequest()` and read each property. | All nine properties are nil (derived from the source; no test). |
-| stenographer-preference-dt-os-010 | wire-spelling, older-daemon-tolerance | The HTTP client posts a summary request and the daemon replies with a snake_case body. | The client returns true only when the reply decodes (test: testSetSummaryPreferencesPostsSnakeCase in the HTTP client's tests). |
-
+| stenographer-preference-dt-os-010 | wire-spelling | Decode a snake_case oversight reply with an extra key `future_field`. | Decodes; the unknown key is ignored (derived from the source; no test). |
+| stenographer-preference-dt-os-011 | codable-sendable | Encode and decode each of the four types, and compare two equal responses. | All four round-trip; the two responses compare equal and a differing field makes them unequal (derived from the source; no test). |
+| stenographer-preference-dt-os-012 | public-initializers | From another module, build each of the four types with its initializer. | Each compiles and sets its fields (derived from the source; no test). |
+| stenographer-preference-dt-os-013 | tuning-not-clamped | `SummaryPreferenceRequest(maxWords: 1000)` encoded, and a reply body with `max_words` 1000 decoded. | `max_words` 1000 is encoded, and `maxWords` is 1000 after decoding (derived from the source; no test). |
+| stenographer-preference-dt-os-014 | other-fields-required | Decode a summary reply missing `prompt`. | Throws a `DecodingError` (derived from the source; no test). |

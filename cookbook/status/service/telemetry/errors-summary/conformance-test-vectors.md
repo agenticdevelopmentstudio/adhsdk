@@ -11,7 +11,8 @@ source. Rows are written id/count/active.
 | errors-summary-005 | unjudged-is-backlog | one row with `active: false`, count 7 | `active` 0, `backlog` 1, `events` 7, `top` empty |
 | errors-summary-006 | top-tie-order | p/5/true then q/5/true | `top` ids are p, q |
 | errors-summary-007 | top-cap | exactly five active rows | `top` has five rows, none dropped |
-| errors-summary-008 | purity | any array, summarized | the input array order and rows are unchanged afterwards |
+| errors-summary-008 | purity | Rows a/3/true, b/1/false, c/2/true; a deep copy of the array is taken before the call | After the call the array equals the copy: same order, same field values |
 | errors-summary-009 | events-total | an active row with `count` `NaN` and one with count 4 | `events` 4 |
 | errors-summary-010 | top-rows-unchanged | one active row | `top[0]` is the same object as the input row |
+| errors-summary-011 | top-tie-order, top-cap, edge case equal counts at the cap boundary | Six active rows r1 to r6, all with count 5 | `top` ids are r1, r2, r3, r4, r5; `r6` is absent; `active` 6 |
 

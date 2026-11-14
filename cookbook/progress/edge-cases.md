@@ -31,5 +31,5 @@
   `role="progressbar"` element (no `aria-labelledby`/`id` pairing) — see Accessibility.
 - The Controls `Progress`'s indeterminate animation (`aws-progress-indeterminate`) is a
   plain CSS `@keyframes` rule with no `prefers-reduced-motion`/reduce-motion guard in
-  `user-settings/styles.css`, unlike the UI bar's **honors-shared-reduce-motion**.
-
+  `user-settings/styles.css`, unlike the UI bar's **honors-shared-reduce-motion**. The shared `accessibility.css` reduce-motion rule matches every element (`*`) and sets `animation-duration`, `animation-iteration-count` and `transition-duration`, so it still reduces this animation and the 120ms width transition.
+- A Controls `Progress` given `value={NaN}` computes a fill width of `NaN%`, which is not a valid CSS width, so the browser drops the declaration; `aria-valuenow` reports `NaN`. Like the UI bar's T10, `NaN` is not clamped. (Controls)

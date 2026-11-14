@@ -66,3 +66,20 @@
   **morph-point-count-validation** and **pose-shape-validation**.
   **Approved**: pending
 
+- **Decision**: Record the absence of reduced-motion handling as accepted
+  debt for now rather than adding a `prefers-reduced-motion` gate
+  (**idle-fidget-breath-loop**, **idle-fidget-sway-loop**).
+  **Rationale**: The source has no `matchMedia`/`prefers` check anywhere and
+  no config field to dampen idle motion (see Accessibility Options); the gap
+  is a documented failed check in Compliance, and whether to gate it in the
+  engine or leave it to the driver is not yet settled.
+  **Approved**: pending
+
+- **Decision**: Record the absence of runtime error handling as accepted
+  debt for now rather than adding validation or `try`/`catch`
+  (**morph-point-count-validation**, **pose-shape-validation**).
+  **Rationale**: The source has no `try`/`catch` and no runtime check of
+  `Pose`/`Tuning` shape or MorphSVG point counts; the gap is a documented
+  failed check in Compliance, and whether to enforce at runtime or keep these
+  as authoring preconditions is not yet settled.
+  **Approved**: pending

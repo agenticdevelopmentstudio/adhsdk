@@ -16,4 +16,9 @@ The only test beside the source that exercises the provider is `AppearanceModeTo
 | color-mode-011 | changed-event | provider mounts, then `setMode('light')` | `awt:appearance-changed` is dispatched once on mount and once after the change |
 | color-mode-012 | storage-failure-silent | `localStorage.getItem` and `setItem` throw | provider renders with `defaultMode`, `setMode` still updates state and the document, no exception reaches the caller |
 | color-mode-013 | no-window-initial-mode, no-document-effects | server render with `window` undefined | mode is `defaultMode`, `systemDark` is false, no document access occurs |
-
+| color-mode-014 | persist-on-first-render | only `localStorage['agentic-toolkit:color-mode']` is `light`, default `storageKey`; mount and make no other call | after the first render `localStorage['adh-sdk:color-mode']` is `light` |
+| color-mode-015 | system-listener-cleanup | mount a provider, then unmount it | the `change` listener added to the `(prefers-color-scheme: dark)` query is removed |
+| color-mode-016 | cycle-event-cleanup | mount a provider, unmount it, then dispatch `awt:appearance-cycle` | no `cycle()` call happens and no state changes |
+| color-mode-017 | stable-callbacks | render a consumer, force a parent re-render with no `mode` or `resolved` change | `cycle` is the same function and the context value is the same object (`Object.is`) |
+| color-mode-018 | no-attribute-removal | mode `dark`, then unmount the provider | the `dark` class and `data-appearance-mode="dark"` are still on `document.documentElement` (observed behavior, a port MAY clear them) |
+| color-mode-019 | set-mode | `setMode('light')` while mode is `dark` | `mode` is `light` and `resolved` is `light` |

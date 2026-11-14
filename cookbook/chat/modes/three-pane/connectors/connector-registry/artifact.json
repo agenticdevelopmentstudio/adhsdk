@@ -4,15 +4,15 @@
     "id": "e5b8e26f-2869-4a09-8d8e-0bb68ece805d",
     "title": "Connector Registry",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Registry for tracking and querying HTML element instances by unique identifier within a React application.",
+    "summary": "Scoped registry for tracking and querying platform view handles by unique identifier within a subtree.",
     "platforms": [
       "typescript",
       "web"
@@ -23,12 +23,14 @@
       "react"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "d7a1229c-cf03-436f-8287-d99b52747510"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "17a6f62ef585e290",
+  "synced": "10e75662b39ed8f8",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

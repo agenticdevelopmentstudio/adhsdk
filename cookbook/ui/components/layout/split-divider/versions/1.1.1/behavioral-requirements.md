@@ -1,0 +1,31 @@
+
+- **separator-role**: Component MUST render an element with `role="separator"`.
+- **ratio-change-callback**: Component MUST call `onRatioChange` with a new ratio when the user drags or operates keyboard/step controls.
+- **ratio-clamp**: Component MUST clamp the reported ratio to the range `[minRatio, maxRatio]` before calling `onRatioChange`.
+- **horizontal-orientation**: Component MUST support `orientation="horizontal"` (default), splitting vertical space with a horizontal line and responding to vertical drags and up/down arrow keys.
+- **vertical-orientation**: Component MUST support `orientation="vertical"`, splitting horizontal space with a vertical line and responding to horizontal drags and left/right arrow keys.
+- **ratio-prop**: Component MUST accept a `ratio` prop (0–1) and use it to set `aria-valuenow` as a percentage (rounded to nearest integer).
+- **minmax-ratio-props**: Component MUST accept `minRatio` (default 0.2) and `maxRatio` (default 0.8) props and expose them as `aria-valuemin` and `aria-valuemax` (as percentages).
+- **container-ref**: Component MUST accept a `containerRef` prop (React.RefObject) pointing to the layout container and use it to measure pointer drag offsets.
+- **drag-resize**: Component MUST support pointer drag to resize; on `pointerdown`, capture the pointer; on `pointermove`, calculate the new ratio as the pointer coordinate minus the container's leading edge (via `getBoundingClientRect`), divided by the container's extent; on `pointerup` or `pointercancel`, release capture and end the drag.
+- **drag-end-on-release**: Component MUST end the drag if the primary pointer button is released mid-drag (checked via `(event.buttons & 1) === 0`).
+- **step-button-pointerdown-guard**: A `pointerdown` on a step button MUST NOT start a drag on the separator; the buttons are siblings of the `role="separator"` element, outside its pointer-capture area.
+- **zero-extent-guard**: Component MUST not apply a drag resize if the container extent (height for horizontal, width for vertical) is zero.
+- **keyboard-shrink**: Component MUST decrement the ratio by `step` (default 0.03) on the shrink arrow (up for horizontal, left for vertical) and call `onRatioChange`.
+- **keyboard-grow**: Component MUST increment the ratio by `step` on the grow arrow (down for horizontal, right for vertical) and call `onRatioChange`.
+- **home-key**: Component MUST set the ratio to `minRatio` on Home key press.
+- **end-key**: Component MUST set the ratio to `maxRatio` on End key press.
+- **keyboard-default-prevention**: Component MUST call `preventDefault()` for every handled key (shrink/grow arrows, Home, End) so the page does not scroll while the separator is operated via keyboard.
+- **visual-line**: Component MUST render a thin visual divider line (3px) centered in the 24px grab row/column, colored with `apt-border` and changing to `apt-border-strong` on hover and focus.
+- **step-buttons**: Component MUST render two step buttons (24px × 24px, fully contained within the 24px grab row/column) for incrementing and decrementing the ratio, with aria-labels describing the resize direction.
+- **step-button-mapping**: Component MUST render the two step buttons in a fixed order — a shrink button (decrements the ratio by `step` on click) followed by a grow button (increments the ratio by `step` on click) — each showing a directional glyph (▲/▼ for horizontal, shrink/grow respectively; ◀/▶ for vertical, shrink/grow respectively), positioned together near the trailing end of the grab strip (right edge for horizontal, bottom edge for vertical).
+- **grab-cursor**: Component MUST apply `cursor-row-resize` for horizontal orientation and `cursor-col-resize` for vertical orientation.
+- **grab-area-size**: Component MUST size the root row/column to 24px width (vertical) or height (horizontal) and full length on the opposite axis.
+- **grab-area-focusable**: Component MUST set `tabIndex={0}` on the separator to make it keyboard-operable.
+- **default-label**: Component MUST set `aria-label` to "Resize split" by default (overridable via the `label` prop).
+- **step-button-labels**: Component MUST accept `growBottomLabel` and `growTopLabel` props for accessible step button labels; if not provided, MUST default to labels like "Grow bottom pane" (horizontal) or "Grow left pane" (vertical).
+- **focus-ring**: Component MUST show a focus-visible ring (2px, `apt-gold/40`) when the separator receives keyboard focus, not on pointer focus.
+- **classname-prop**: Component MUST accept a `className` prop for additional CSS classes on the root element.
+- **touch-none**: Component MUST apply `touch-none` CSS class to prevent the default touch-drag behavior and allow the pointer handler to control resize.
+- **select-none**: Component MUST apply `select-none` CSS class to prevent text selection during drag.
+

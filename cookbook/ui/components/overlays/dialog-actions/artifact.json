@@ -4,11 +4,11 @@
     "id": "f679a77e-04f7-4e43-b898-6d78a637a760",
     "title": "DialogActions",
     "type": "ingredient",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "status": "review",
     "language": "en",
     "created": "2026-07-03",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ff25e70b07011586",
+  "synced": "ac500d746b829af5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

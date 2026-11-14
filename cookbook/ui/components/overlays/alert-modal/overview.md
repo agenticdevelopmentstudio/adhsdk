@@ -7,7 +7,7 @@ primitive. It renders one primary button (**alert mode**) when no
 controlled by the parent through the `open` prop. A leading tone icon
 (`info`/`success`/`error`) can be shown in the title, the footer can be
 replaced by a busy spinner, dismissal (Escape/✕ — backdrop/outside clicks never
-dismiss the modal at all; see Edge Cases) can be disabled entirely, and the
+dismiss the modal at all; see **ignore-pointer-dismissal**) can be disabled entirely, and the
 keyboard shortcut policy (`Enter`/`Escape`) is configurable
 per instance, including a `destructive` mode that forces the error tone and
 disables keyboard shortcuts.

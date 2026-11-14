@@ -4,7 +4,7 @@
     "id": "f46b9323-7954-4f66-a476-970fcc9db372",
     "title": "MobileAccountViewController",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -21,13 +21,16 @@
       "accounts",
       "ui"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "86eccc6f-cd1b-4ac7-bb98-851eb7c54324",
+      "9cf9784d-48c9-4b29-b553-c72ffdfce7b9"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c28abcea3d2ae8ab",
+  "synced": "10f063be0a856530",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

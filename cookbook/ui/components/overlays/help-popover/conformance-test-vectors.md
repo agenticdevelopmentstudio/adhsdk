@@ -24,5 +24,5 @@
 | help-021 | optional-title | `entry={ flavor: "info", body: "Body only" }` (title omitted entirely) | No title element is rendered; only body text appears — same outcome as an empty-string title |
 | help-022 | flavor-icon | `entry={ flavor: null, title: "", body: "Text" }` | The "info" flavor icon renders (default flavor) |
 | help-023 | body-text | `entry={ flavor: "info", title: "", body: "" }` | An empty paragraph is rendered for the body; no error occurs |
-| help-024 | flavor-icon | `entry={ flavor: "urgent", title: "", body: "Text" }` (a value outside the `HelpFlavor` union) | Component throws while looking up the icon and label; callers MUST NOT pass a flavor outside `"help" \| "info" \| "new"` |
+| help-024 | flavor-icon | `entry={ flavor: "urgent", title: "", body: "Text" }` (a value outside the `HelpFlavor` union) | Component throws a `TypeError` from the `FLAVORS` lookup (it neither renders nor falls back to `"info"`); callers MUST NOT pass a flavor outside `"help" \| "info" \| "new"` |
 

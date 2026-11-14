@@ -4,11 +4,11 @@
     "id": "46e0a509-8eac-460a-b24a-d39a8b71b02c",
     "title": "Message Bubble",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2e9db200abb53374",
+  "synced": "de832463a10e0fda",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

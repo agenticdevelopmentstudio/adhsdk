@@ -1,7 +1,7 @@
 
 `DialogActions` (`@adh-sdk/ui`) is the standard footer for a dialog or alert:
 a cancel button (optional) and a confirm button, laid out per the rule in
-**alert-and-dialog §Layout**, which resolves to one of two shapes according to how
+the Layout section of [adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500), which resolves to one of two shapes according to how
 much room the container gives them:
 
 - **equal-width** — each button takes half the row and the row fills the container

@@ -33,6 +33,18 @@
 - **Decision**: Override the icon size to `size-6` instead of `Button`'s default.
   **Rationale**: The button overrides `Button`'s `size-8` icon square down to
   `size-6` (24px) so the control sits inline beside text or a label without
-  dominating the row.
+  dominating the row. The trade-off: a 24px hit area is below the 44x44pt/48x48dp
+  touch-target guidance, which is why the `touch-target-size` compliance check fails.
   **Approved**: pending
 
+- **Decision**: Accept the 24px touch target as known debt.
+  **Rationale**: The inline fit beside text matters more here than a larger hit area, and `className` can enlarge it per call site. It would be fixed if the button ships on a touch-first surface, by enlarging the hit area beyond the 24px visual.
+  **Approved**: pending
+
+- **Decision**: Accept the hard-coded `"Copied!"` title as known debt.
+  **Rationale**: Only one locale is shipped today, and adding an optional prop is a public API change. It would be fixed when the first localized deployment needs it, by externalizing the string or exposing an optional prop.
+  **Approved**: pending
+
+- **Decision**: Accept the missing `aria-live` announcement as known debt.
+  **Rationale**: The glyph swap and title change reach sighted users, and the accessible name stays stable by design. It would be fixed when screen reader users are reported to miss the confirmation, by adding a polite live region that announces the success.
+  **Approved**: pending

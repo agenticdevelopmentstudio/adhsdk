@@ -5,7 +5,7 @@
 
 - **SwiftUI**: Render the fetched HTML in a `WebView` (SwiftUI, iOS/macOS 26+) with the `adh-mv-prose` CSS injected — the option with full parity (tables, task-list checkboxes, shiki-highlighted code). For markdown simple enough to skip code blocks/tables/images, `Text(AttributedString(markdown:))` is a lighter-weight native alternative, but it does not reproduce this pipeline's syntax highlighting or table rendering.
 
-- **Compose**: Render the fetched HTML in an `AndroidView` wrapping a `WebView`, with the `adh-mv-prose` CSS (or its Android-equivalent spacing and typography) injected. There is no Compose-native markdown-to-Composable library that reproduces GFM tables, task-list checkboxes, and shiki-highlighted code with parity to the web output; treat native-Composable rendering as a separate, lower-fidelity capability outside this recipe's scope.
+- **Compose**: Render the fetched HTML in an `AndroidView` wrapping a `WebView`, with the `adh-mv-prose` CSS (or its Android-equivalent spacing and typography) injected. There is no Compose-native markdown-to-Composable library that reproduces GFM tables, task-list checkboxes, and shiki-highlighted code with parity to the web output; treat native-Composable rendering as a separate, lower-fidelity capability outside this ingredient's scope.
 
 - **AppKit / UIKit**: On macOS, use `WKWebView` with the injected CSS. On iOS, use `WKWebView` as well — there is no first-party native markdown/attributed-text API that reproduces GFM tables, task lists, and syntax-highlighted code. Reserve a native-text fallback (translating `adh-mv-prose` typography — font size, line height, paragraph spacing) for content simple enough not to need `WKWebView`.
 

@@ -6,7 +6,6 @@
 - **http-daemon-cwd-guards**: The daemon-directory check MUST NOT apply when the daemon directory is the empty string or `/`, and MUST NOT apply when the payload has no `cwd` string.
 - **http-env-recovery**: When the payload has a `cwd`, the build MUST locate the `claude` pid through the injected `claudePid` resolver for that `cwd`, read that pid's environment through the injected `environment` resolver, and pass the pid on as the `ppid`.
 - **http-env-degrades**: When no `cwd`, no pid or no environment can be found, the build MUST continue with an empty environment and a `ppid` of 0, so the event is still built when the payload carries a `session_id`; token and terminal fields are then simply absent.
-- **http-payload-parsed-once**: The payload MUST be parsed once, and when it parsed as an object that object MUST be handed to the inner build so it is not parsed twice (a payload that is not an object is parsed again by the inner build and yields an empty `hookData`).
 
 ### Full build (socket or recovered environment)
 
@@ -33,7 +32,6 @@
 - **context-process-subset**: `context.process` MUST carry only `ppid`, `uid`, `euid` and `gid`, and MUST NOT carry `argv`, `cwd` or `pid`, because the hook-firing process has exited by ingest time and a hook script's argv is only its name and the event.
 - **context-system**: `context.system` MUST be the capture command's system information: `hostname`, `os` and `arch`, or an empty object when the system call fails.
 - **context-shell-session-terminal**: `context.shell` MUST carry `shell`, `shlvl` (only when an integer), `lang` and `path`; `context.session` MUST carry `user`, `home`, `logname`, `tmpdir` and `pwd`; `context.terminal` MUST carry `term`, `term_program`, `term_version`, `term_session_id` and `lc_terminal`, each only when set in `env`.
-- **context-event-unused**: The `event` parameter of `buildContext` has no effect on the result.
 
 ### Wire parsing
 

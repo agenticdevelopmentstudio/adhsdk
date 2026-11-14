@@ -2,7 +2,7 @@
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | hub-mail-bridge-001 | provider-configured | `providerStatus` | configured, no client id |
-| hub-mail-bridge-002 | admin-refused | `signIn`, `removeAccount`, `updateSettings`, `importOAuthClient` | each `.failure`; the mirror is unchanged |
+| hub-mail-bridge-002 | admin-refused | `signIn`, `cancelSignIn`, `removeProvider`, `removeAccount`, `updateSettings`, `importOAuthClient` | each `.failure`; the mirror is unchanged |
 | hub-mail-bridge-003 | accounts-from-connections, account-address | Connection `c1` with a SENT message from `Me <Me@X.com>`, connection `c2` with none | accounts `c1` (`me@x.com`) and `c2` (`c2`), active |
 | hub-mail-bridge-004 | account-lookup | `listLabels` for `ME@x.com`, then for `nobody` | the labels of `c1`; then not found |
 | hub-mail-bridge-005 | labels-mapped | Labels `INBOX` (system) and `Label_1` "Work" | `INBOX`, then `Label_1` named "Work" |
@@ -30,6 +30,12 @@
 | hub-mail-bridge-027 | service-sign-in, service-sign-out | `connect` throws | status `.failed`; requests refused; `signedOut()` returns to `.signedOut` |
 | hub-mail-bridge-028 | service-follows-session | `follow(.restoring)`, sign in, `follow(.error)`, `follow(.signedOut)` | `.signedOut`, `.connected`, still `.connected` with accounts readable, `.signedOut` |
 | hub-mail-bridge-029 | routed-client | A routed client over a direct stub and a connected service, switched between requests | the stub's empty accounts, then `c1` |
-| hub-mail-bridge-030 | location-app-file | `HubMailLocation.app("Temporal", defaults: suite)` | file name `hub-mail.db`, in a folder named `Temporal`, directly under the user's Application Support directory |
-| hub-mail-bridge-031 | location-device-id | `deviceId(defaults:)` twice on an empty suite, then `app("Temporal", defaults:)` | one non-empty id, stored under `hub_mail_device_id`, returned each time and by `app` |
+| hub-mail-bridge-030 | location-app-file | `HubMailLocation.app("AppName", defaults: suite)` | file name `hub-mail.db`, in a folder named `AppName`, directly under the user's Application Support directory |
+| hub-mail-bridge-031 | location-device-id | `deviceId(defaults:)` twice on an empty suite, then `app("AppName", defaults:)` | one non-empty id, stored under `hub_mail_device_id`, returned each time and by `app` |
 | hub-mail-bridge-032 | location-device-id | `""` stored under `custom`, then `deviceId(defaults:key: "custom")` | a new non-empty id, now stored under `custom` |
+| hub-mail-bridge-033 | one-entry-point | Derived: a request whose handling throws inside the bridge (the writer throws), and a request for an unknown message | `respond(to:)` returns `.failure` for the first and `.notFound` for the second; neither throws |
+| hub-mail-bridge-034 | message-lookup | Derived: `getMessage` by hub row id, then by provider id, then by `"zzz"` | the same message twice; then `.notFound("unknown message: zzz")` |
+| hub-mail-bridge-035 | live-shares-session | Derived: `HubMailService.live` over a fake session store | the returned `HubAccount` and the service follow one `SessionController`; the database file does not exist until the first sign-in, then its folder is created and it stays open |
+| hub-mail-bridge-036 | live-at-location | Derived: `live(at: location)` and `live(databaseURL:deviceId:)` with the location's two values | both build the same session; `syncInterval` is 300 when not passed |
+| hub-mail-bridge-037 | location-value | Derived: two `HubMailLocation` values with the same `databaseURL` and `deviceId`, then one with a different `deviceId` | the first two compare equal; the third does not |
+

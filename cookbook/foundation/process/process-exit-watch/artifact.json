@@ -4,7 +4,7 @@
     "id": "cfe3d3d4-1149-4fb6-8d77-47554026f389",
     "title": "Process Exit Watch",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1b2c4ceb0b55dae7",
+  "synced": "c335e4675e2247a9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

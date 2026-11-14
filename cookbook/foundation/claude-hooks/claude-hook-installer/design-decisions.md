@@ -26,8 +26,3 @@
 **Decision**: A status-line failure never fails the install, and the status line step runs after the legacy scrub and before hook registration.
 **Rationale**: Losing the line is cheaper than losing event capture; turning the display on reports the reason by throwing.
 **Approved**: pending
-
-**Decision**: The tests build an installer through a convenience initializer in `StatusLineTestSupport` that takes a settings URL, drop directory and helper path and fills in a Stenographer configuration.
-**Rationale**: The public initializer takes a `ClaudeHookConfiguration`; the fixture keeps the rendered command independent of the running bundle.
-**Approved**: pending
-

@@ -1,6 +1,6 @@
 
 **Decision**: Keep every JSON value and timestamp as TEXT rather than using a native JSON or date type.
-**Rationale**: The doc comment states "JSON columns are TEXT, timestamps are ISO-8601 UTC strings", and says names and columns follow adhbackend; SQLite has no date type and ISO-8601 UTC strings sort as text.
+**Rationale**: SQLite has no date type, and ISO-8601 UTC strings sort in time order as text. TEXT columns keep the file readable by any SQLite build and leave the encoding of structured values to the record layer. The cost is that the database cannot check types or query inside the JSON.
 **Approved**: pending
 
 **Decision**: Declare `integration_email_messages_external` and `integration_email_labels_external` as UNIQUE on `(connection_id, external_id)`, but leave `integration_connections_account` non-unique.
@@ -12,10 +12,10 @@
 **Approved**: pending
 
 **Decision**: Declare no foreign keys, CHECK constraints or enum constraints.
-**Rationale**: The DDL contains none. Referential and value rules live in the record and store layers, so a port must enforce them there. This is deliberate, prudent technical debt: the store owns integrity, matching adhbackend, so the local mirror stays a plain copy of the hub tables. The cost is that orphaned rows and unknown `status` values are accepted. Constraints belong in a later migration with a new name, added once the record and store layers no longer need to write rows that violate them.
+**Rationale**: Referential and value rules live in the record and store layers, so a port must enforce them there. This is deliberate, prudent technical debt: the store owns integrity, so the schema stays plain tables. The cost is that orphaned rows and unknown `status` values are accepted. Constraints belong in a later migration with a new name, added once the record and store layers no longer need to write rows that violate them.
 **Approved**: pending
 
 **Decision**: Use a single migration, `integrations-v1`, whose DDL uses plain `CREATE TABLE` without `IF NOT EXISTS`.
-**Rationale**: GRDB's migrator skips a migration it has recorded, so the DDL never reruns on a migrated database. A database that has the tables but no record makes `migrate` throw.
+**Rationale**: GRDB owns idempotency: its migrator skips a migration it has recorded, so the DDL never reruns on a migrated database and needs no guard of its own. Leaving out `IF NOT EXISTS` also makes a database that has the tables but no record fail loudly, rather than silently adopting tables of unknown shape.
 **Approved**: pending
 

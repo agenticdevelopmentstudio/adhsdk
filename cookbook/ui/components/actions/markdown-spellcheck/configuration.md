@@ -42,7 +42,7 @@ export function MarkdownSpellCheck(props: {
 ```
 
 The default `createHarperLinter` dynamically imports `harper.js` +
-`harper.js/binary`, constructs a `WorkerLinter` (American dialect), and lints with
+`harper.js/binaryInlined`, constructs a `WorkerLinter` (American dialect), and lints with
 `{ language: 'markdown', dedup: true }`. The exported types never reference
 harper, so consumers do not need harper resolvable to type-check.
 

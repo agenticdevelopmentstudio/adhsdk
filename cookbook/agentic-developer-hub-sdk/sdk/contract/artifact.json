@@ -4,15 +4,15 @@
     "id": "1f14e4d7-07ea-4f59-8365-5a15eb162def",
     "title": "Chat Contract",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "The shared attachments, backend, chat-state, command, configuration, hook, message, and permission protocols the Swift and TypeScript chat UIs are both built against.",
+    "summary": "Shared Swift/TypeScript chat protocols: backend, inbound events, view model, commands, hooks, messages, permissions.",
     "platforms": [
       "swift",
       "macos",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c87eedac4f6f3c34",
+  "synced": "746924cca57ac1b4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

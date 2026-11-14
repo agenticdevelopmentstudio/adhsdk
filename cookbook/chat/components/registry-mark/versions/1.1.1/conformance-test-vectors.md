@@ -1,0 +1,18 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| registry-mark-001 | render-link | `profileUrl="https://registry.example.com/user/alice"` | Link href is `https://registry.example.com/user/alice`, target is `_blank`, rel includes `noopener noreferrer` |
+| registry-mark-002 | accessible-name | `label="Visit Alice's profile"` | Link's `aria-label` attribute equals `"Visit Alice's profile"` |
+| registry-mark-003 | render-at-glyph | Default render | The `<path class="pc-rm-glyph">` inside the SVG has `d="M12.49 22Q10.64 22 9.27 21.23Q7.9 20.46 7.15 19.03Q6.4 17.61 6.4 15.7V8.3Q6.4 6.35 7.11 4.93Q7.82 3.52 9.13 2.76Q10.45 2 12.27 2Q13.92 2 15.12 2.64Q16.32 3.28 16.96 4.48Q17.6 5.67 17.6 7.33V16.67H16.05V15.48H15.45L15.86 15.04Q15.86 15.87 15.23 16.38Q14.6 16.89 13.55 16.89Q12.14 16.89 11.39 16.03Q10.64 15.17 10.64 13.52V10.91Q10.64 9.26 11.39 8.4Q12.14 7.54 13.55 7.54Q14.6 7.54 15.23 8.05Q15.86 8.57 15.86 9.41L15.55 8.96H16.08L15.86 7.43V7.33Q15.86 6.09 15.45 5.24Q15.03 4.39 14.24 3.96Q13.45 3.52 12.27 3.52Q10.32 3.52 9.23 4.78Q8.14 6.04 8.14 8.3V15.7Q8.14 17.87 9.3 19.12Q10.47 20.37 12.49 20.37H14.01V22ZM14.12 15.52Q15.01 15.52 15.43 14.98Q15.86 14.43 15.86 13.3V10.89Q15.86 9.87 15.43 9.39Q15.01 8.91 14.12 8.91Q13.25 8.91 12.82 9.4Q12.38 9.89 12.38 10.91V13.52Q12.38 14.54 12.82 15.03Q13.25 15.52 14.12 15.52Z"` — the exact JetBrains Mono weight-400 "@" outline from `RegistryMark.tsx` |
+| registry-mark-004 | render-star | Default render | The `<path class="pc-rm-gold">` has `d="M14.10,5.60 Q15.22,10.35 18.10,12.20 Q15.22,14.05 14.10,18.80 Q12.98,14.05 10.10,12.20 Q12.98,10.35 14.10,5.60 Z"` and `fill="#c4a35a"` |
+| registry-mark-005 | tint-glyph-with-currentcolor | Ancestor has `style="color: #ff0000"` | `.pc-rm-glyph` path has `fill="currentColor"`, renders red |
+| registry-mark-006 | preserve-anchor-geometry | Default render | The root `<span class="pc-registry-mark">` carries inline style `--pc-rm-anchor-x: 50%; --pc-rm-anchor-y: -50%` and computed `transform: translate(50%, -50%)`; combined with the artwork's own center (viewBox point 12,12), this places the @ glyph's center exactly on the top-right corner of the span's border box |
+| registry-mark-007 | render-optional-popover | `tip="Bio text here"` | Span with class `pc-rm-tip` containing the tip content is in DOM |
+| registry-mark-008 | render-optional-popover | `tip={undefined}` | No `pc-rm-tip` span in DOM |
+| registry-mark-009 | hide-svg-from-accessibility-tree | Default render | SVG has `aria-hidden="true"` |
+| registry-mark-010 | support-classname | `className="custom-class"` | Root span has both `pc-registry-mark` and `custom-class` classes |
+| registry-mark-011 | memoize-rendering | Parent re-renders with referentially-identical props (including a stable `tip`) | A render-count spy (e.g. a ref incremented inside a thin non-memoized wrapper around `RegistryMark`) shows no additional render |
+| registry-mark-012 | popover-visible-on-focus-or-hover | Tab moves focus onto a link rendered inside `tip` | `.pc-rm-tip` computed style shows `visibility: visible` and `opacity: 1` (via the companion CSS `:has(:focus-visible)` rule) |
+| registry-mark-013 | stable-tip-reference | Parent re-renders passing the same `tip` object reference and otherwise-identical props | A render-count spy shows no additional render (same mechanism as **memoize-rendering**, exercised with a `tip` present) |
+| registry-mark-014 | clip-safe-placement | Mark rendered as a sibling of the chat frame inside a `position: relative` ancestor, with no intervening `overflow: hidden` | The mark's `getBoundingClientRect()` extends outside the sibling chat frame's border box at the top-right corner, unclipped |
+

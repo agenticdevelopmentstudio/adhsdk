@@ -19,3 +19,6 @@
 **Rationale**: Naming the benefit of proceeding, or returning, reduces the reader's hesitation when deciding whether to follow the link.
 **Approved**: pending
 
+**Decision**: The English-only `Step {step} of {total} · ` prefix and the fixed `←`/`→` arrows are accepted as-is for now, so no-hardcoded-strings and rtl-layout-support stay `failed`.
+**Rationale**: The only consumers are English-language sites with left-to-right layout; revisit when any consuming site ships a non-English or right-to-left locale, at which point the prefix becomes a localizable string and the arrows mirror.
+**Approved**: pending

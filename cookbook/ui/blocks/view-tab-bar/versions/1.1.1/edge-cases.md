@@ -1,0 +1,8 @@
+
+- **Empty tabs and empty links**: When both `tabs` and `links` arrays are empty, the component renders only the outer container with the specified `className` and `px-4` padding; no tablist or nav is rendered. This is valid but produces an empty visual bar (see view-tab-bar-016).
+- **Single tab or link**: A single-item array renders correctly. As with any size array, whether the item is active is a controlled matter — it renders active only when the caller's `value` (for a tab) or the item's `active` prop (for a link) says so; the component does not choose an initial active item itself.
+- **Icon-only labels without title**: If a tab's `label` is an icon and no `title` prop is provided, the tab will not have an accessible aria-label; this is a conformance gap that testing MUST catch. The component does not validate or warn about this condition.
+- **No tab matches the current value**: If `value` does not equal any `tabs[].value`, no tab is marked active (`data-active` absent, `aria-selected="false"` on every tab); this is a valid but likely-unintended caller state (see view-tab-bar-009).
+- **Duplicate tab values**: If the `tabs` array contains two items with the same `value`, both are marked active simultaneously when that value equals the current `value` prop (`aria-selected="true"` and `data-active=""` on each) — the component does not deduplicate or pick a single active match. React also emits a duplicate-key warning in development, since the source uses `t.value` as the React `key`.
+- **Very long labels**: Labels that exceed the flex row width will cause the row to overflow horizontally unless the parent container has overflow handling or responsive truncation. The component does not constrain label width.
+

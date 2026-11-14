@@ -23,3 +23,11 @@
 **Rationale**: This ensures consistency with the application's color scheme and supports light/dark mode switching via token overrides.
 **Approved**: pending
 
+
+**Decision**: The three flavor labels ("Help", "Information", "What's new") stay hardcoded English in the `FLAVORS` table, with no localization option.
+**Rationale**: The labels reach users only through the panel's accessible name, and the consuming sites are English-only today, so a localization hook would have no caller yet. The `no-hardcoded-strings` Compliance check records the debt as failed; the fix is to accept the three labels as a caller-supplied option when a second locale is needed.
+**Approved**: pending
+
+**Decision**: An out-of-union flavor throws rather than falling back to `"info"`.
+**Rationale**: The type system already forbids the value, so reaching it means a caller bug, and a thrown error is easier to notice than a quietly wrong icon. The error is a plain `TypeError` from the table lookup and does not name the flavor.
+**Approved**: pending

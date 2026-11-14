@@ -19,4 +19,14 @@
 | doc-id-016 | render-title-label, render-slug-label | titleLabel="Document Name" slugLabel="URL Slug" | Title caption reads "Document Name"; slug caption reads "URL Slug" |
 | doc-id-017 | display-status-message | verdict left at default ({status:"idle", reason:null}) | Status message renders no text (null) in the slug row |
 | doc-id-018 | announce-status-changes | verdict={{status:"unavailable", reason:"Already taken"}} | Slug input's aria-describedby references the status element's id; the status element's text is "Already taken" |
-
+| doc-id-019 | display-verdict-reason | verdict={{status:"idle", reason:"Already taken"}} | Status region is mounted but empty; the reason is ignored |
+| doc-id-020 | display-status-message | verdict={{status:"unavailable", reason:null}} | Status message displays "Unavailable" |
+| doc-id-021 | display-status-message | verdict={{status:"checking", reason:null}} | Status message displays "Checking…" |
+| doc-id-022 | accept-disabled-prop | `disabled` not passed | Both inputs are enabled |
+| doc-id-023 | stop-auto-slugify-after-manual-edit | User edits the slug, then the component is remounted with a new `key`, then the title changes | Slug follows the title again |
+| doc-id-024 | debounce-availability-check | Hook with `check` and the default debounce; slug changes, then 349ms pass | Verdict is checking and `check` has not been called; after 350ms `check` is called once |
+| doc-id-025 | skip-check-without-slug | Hook with `check` and `slug=""` | `check` is not called; verdict is idle |
+| doc-id-026 | map-checker-answer-to-verdict | `check` resolves `{available:false, reason:"Taken"}` | Verdict is `{status:"unavailable", reason:"Taken"}` |
+| doc-id-027 | discard-stale-answers | Slug changes from "a" to "b" before the answer for "a" arrives, then "a" resolves unavailable | The answer for "a" is dropped; verdict reflects "b" |
+| doc-id-028 | discard-stale-answers | `subject` changes while an answer for the same slug string is pending | The pending answer is dropped |
+| doc-id-029 | revert-to-idle-on-failure | `check` rejects | Verdict is idle |

@@ -2,11 +2,11 @@
 id: ccfd0128-374c-4cca-a83f-71efd3c02176
 title: "Avatar Behavior"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,7 +32,7 @@ approved-date: ""
 
 Avatar Behavior is the headless behavior-and-animation engine behind any SVG
 persona in `@adh-sdk/avatar`. Its headline export,
-`useAvatarEngine` (`engine.ts`), composes seven pieces — mood arbitration
+`useAvatarEngine` (`engine.ts`), composes six pieces — mood arbitration
 (`arbitration.ts`), involuntary reflexes (`reflexes.ts`: blink, an inactivity
 ladder, speech), cursor/gaze steering (`gaze.ts`), a baseline idle fidget
 (`idleLife.ts`), a spoken-utterance popup (`speechBubble.ts`), and the
@@ -169,7 +169,7 @@ different personas without a fork.
   if the list is empty or absent it MUST set speech to `null`.
 - **speech-looping-while-asleep**: While the `looping` flag passed to
   `useSpeech` is true (the engine passes `eyesShut`), a new random line from
-  the same mood's list MUST be emitted every `mutterMs` milliseconds, and
+  the same mood's list MUST be emitted every `tuning.sleepMutterMs` milliseconds (the `mutterMs` parameter of `useSpeech`), and
   this loop MUST stop the instant `effective` changes again.
 - **speech-mute**: While `config.mute` is true, the value of `speech`
   returned by `useAvatarEngine` MUST be `null` regardless of what the
@@ -184,8 +184,10 @@ different personas without a fork.
 - **gaze-eyes-shut-still**: While `eyesShut` is true, gaze MUST hold the
   iris centered `(0, 0)`, the head tilt at `0`, and the lean at `(0, 0)`, and
   MUST NOT install cursor tracking or wander.
-- **gaze-forced-priority**: When both `forcedX` and `forcedY` are non-null,
-  gaze MUST aim the iris at `(forcedX * gazeMax, forcedY * gazeMax)`, tilt
+- **gaze-forced-priority**: `useAvatarEngine` MUST clamp a forced
+  `config.gaze` to `[-1, 1]` on each axis before passing it on as
+  `forcedX`/`forcedY` (`engine.ts`). When both `forcedX` and `forcedY` are
+  non-null, gaze MUST aim the iris at `(forcedX * gazeMax, forcedY * gazeMax)`, tilt
   the head to `-forcedX * tiltMax` degrees, and lean to
   `(forcedX, forcedY) * leanMax`, and MUST ignore the cursor and the wander
   scheduler while it does.
@@ -263,8 +265,8 @@ different personas without a fork.
   `applyPose` MUST tween each antenna to its per-pose `lLeft`/`lRight`
   rotation/offset (when given) regardless of `eyesShut`. Additionally, when
   `eyesShut` is false, `applyPose` MUST run a continuous, out-of-phase bend
-  loop whose amplitude is `sway.lively` (default `18`) when `pose.wiggle > 0`
-  and `sway.calm` (default `8`) otherwise; while `eyesShut` is true, both
+  loop whose amplitude is `tuning.swayLively` (default `18`, passed to `applyPose` as `sway.lively`)
+  when `pose.wiggle > 0` and `tuning.swayCalm` (default `8`, `sway.calm`) otherwise; while `eyesShut` is true, both
   antennae MUST instead settle their bend to a neutral, still value (on top
   of, not instead of, the per-pose rotation/offset tween).
 - **brows-per-pose**: When `rig.brows` is wired and `pose.browLeft`/
@@ -346,8 +348,8 @@ different personas without a fork.
 
 **Unvalidated input — genuine gaps**
 
-- **morph-point-count-validation**: Matching point counts between morph targets on the same channel is an authoring precondition (see **morph-path-point-count-consistency**); nothing in `pose.ts` checks it before calling `gsap.to(..., { morphSVG: ... })`, so a mismatched pair is handed to MorphSVGPlugin as-is and its outcome is whatever the pinned `gsap`/`MorphSVGPlugin` version does.
-- **pose-shape-validation**: `Pose` and `Tuning` shapes are enforced only by TypeScript's compile-time types in `types.ts`; there is no runtime schema check, and every pose table in this source is authored in TypeScript, so a well-typed value is a caller precondition. A value that bypasses the type checker (e.g. a JSON- or CMS-authored table) is passed through unchecked.
+- **morph-point-count-validation**: The engine MAY hand a mismatched pair of morph targets to MorphSVGPlugin as-is. Matching point counts between morph targets on the same channel is an authoring precondition (see **morph-path-point-count-consistency**); nothing in `pose.ts` checks it before calling `gsap.to(..., { morphSVG: ... })`, so a mismatched pair is handed to MorphSVGPlugin as-is and its outcome is whatever the pinned `gsap`/`MorphSVGPlugin` version does.
+- **pose-shape-validation**: The engine MAY receive a `Pose` or `Tuning` that bypasses the type checker, and a caller MUST NOT assume it is rejected. `Pose` and `Tuning` shapes are enforced only by TypeScript's compile-time types in `types.ts`; there is no runtime schema check, and every pose table in this source is authored in TypeScript, so a well-typed value is a caller precondition. A value that bypasses the type checker (e.g. a JSON- or CMS-authored table) is passed through unchecked.
 
 ## Appearance
 
@@ -373,7 +375,7 @@ the avatar component that renders the SVG this engine animates.
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | avatar-behavior-001 | public-api-surface | Import `* as Avatar from "./index"`; check `useAvatarEngine`, `useBlink`, `useIdleLadder`, `useSpeech`, `useArbitration`, `useGaze`, `useIdleFidget`, `useSpeechBubble`, `applyPose`. | `typeof` each is `"function"` (per `engine.test.ts`'s existing smoke test). |
-| avatar-behavior-002 | tuning-merge | `config.tuning` omitted. | The engine's effective tuning equals `DEFAULT_TUNING` exactly (every field of `DEFAULT_TUNING` is a `number`, per `engine.test.ts`). |
+| avatar-behavior-002 | tuning-merge | `config.tuning` omitted. | The engine's effective tuning equals `DEFAULT_TUNING` exactly (all 15 fields of `Tuning` in `types.ts` are numbers; `engine.test.ts` asserts this for only 13 of them, omitting `swayCalm` and `swayLively`). |
 | avatar-behavior-003 | tuning-merge | `config.tuning = { boredAfterMs: 1000 }`. | Effective tuning has `boredAfterMs: 1000` and every other field equal to `DEFAULT_TUNING`'s value (e.g. `gazeMax: 7`). |
 | avatar-behavior-004 | resting-mood-priority | `expression` unset, `ladder = "active"`, `moods = { idle: "calm" }`. | `resting === "calm"`. |
 | avatar-behavior-005 | resting-mood-priority, mood-map-fallback | `expression` unset, `ladder = "bored"`, `moods = { idle: "calm" }` (no `bored` entry). | `resting === "calm"` (falls back to idle). |
@@ -391,7 +393,7 @@ the avatar component that renders the SVG this engine animates.
 | avatar-behavior-017 | waking-trigger-condition | Prior `resting === "calm"`, current `resting === "sleepy"` (the reverse direction of `waking.from`/`to`). | No waking one-shot starts; `effective === "sleepy"`. |
 | avatar-behavior-018 | curious-flag, eyes-shut-flag | `moods = { idle: "calm", asleep: "sleepy" }`, `effective === "sleepy"`. | `curious === false`, `eyesShut === true`. |
 | avatar-behavior-019 | curious-flag, eyes-shut-flag | `effective === moods.idle`. | `curious === true`, `eyesShut === false`. |
-| avatar-behavior-020 | blink-scheduling | `enabled = true`, `tuning = { minBlinkMs: 100, maxBlinkMs: 200, blinkDurationMs: 50, ... }`. | Within any 300ms window, `useBlink` reports `true` for exactly one contiguous `50`ms stretch, preceded by a gap between `100` and `200`ms. |
+| avatar-behavior-020 | blink-scheduling | `enabled = true`, `tuning = { minBlinkMs: 100, maxBlinkMs: 200, blinkDurationMs: 50, ... }`. | Each blink cycle is a gap between `100` and `200`ms with `useBlink` reporting `false`, then a contiguous `50`ms stretch reporting `true`; a 300ms window may therefore contain two blinks. |
 | avatar-behavior-021 | blink-disabled-no-schedule | `enabled = false`. | `useBlink` returns `false` and schedules nothing (no timer fires later even if `enabled` never flips true). |
 | avatar-behavior-022 | blink-enable-condition | `eyesShut = true`. | Blink is disabled regardless of `blinkSuppressed`. |
 | avatar-behavior-023 | blink-enable-condition | `eyesShut = false`, `blinkSuppressed = ["laughing"]`, `effective === "laughing"`. | Blink is disabled. |
@@ -434,7 +436,7 @@ the avatar component that renders the SVG this engine animates.
 | avatar-behavior-060 | speech-bubble-pop-and-drift | `speechRef.current` mounted; `speech = { text: "hi", id: 1 }`. | The bubble's timeline runs: opacity `0→0.7`/scale `0.7→1` over `0.22`s, then a `0.5`s hold, then a `1.3`s drift to `0` opacity along a computed `(driftX, driftY)` within `±55°` of straight up. |
 | avatar-behavior-061 | speech-bubble-noop-without-ref-or-speech | `speech = null`. | `useSpeechBubble` starts no timeline. |
 | avatar-behavior-062 | morph-point-count-validation | Two poses for the same mouth channel whose `pose.mouth` path strings have a different point count. | The engine passes both paths to MorphSVGPlugin unchecked; the outcome is the plugin's, so the test asserts only that no engine-side validation or fallback runs. |
-
+| avatar-behavior-063 | gaze-forced-priority | `config.gaze = { x: 2, y: -2 }`, `gazeMax = 7`, `tiltMax = 9`, `leanMax = 6`. | The gaze is clamped to `(1, -1)` before use; iris targets `(7, -7)`; tilt targets `-9`°; lean targets `(6, -6)`. |
 ## Edge Cases
 
 - **Empty/omitted `moods.bored`/`moods.asleep`**: The idle ladder still
@@ -443,7 +445,9 @@ the avatar component that renders the SVG this engine animates.
   only defined behavior for a partial `MoodMap`.
 - **`effective` has no entry in `poses` and no `choreography`**: `applyPose`
   is never called for that render; the rig keeps whatever pose it last
-  applied rather than resetting to a neutral pose. This MUST hold
+  applied rather than resetting to a neutral pose. `poses` is typed
+  `Record<E, Pose>`, so this case can only be reached by bypassing the type
+  (the engine reads `poses[e]?.sayings` and guards `if (pose)`). This MUST hold
   (**pose-application-on-mood-change**) — it is a real, if surprising,
   consequence of the `if (pose)` guard in `engine.ts`.
 - **`poke` omitted, or configured but returns `null`**: `poke()` is a
@@ -548,7 +552,7 @@ only text it ever surfaces is `speech.text`, and that text always comes from
 the caller's own `Pose.sayings` list (looked up via `poses[e]?.sayings` in
 `engine.ts`) — the engine only picks which already-authored line to show and
 when, via `useSpeech` in `reflexes.ts`. There is nothing here for this
-recipe to externalize.
+ingredient to externalize.
 
 ## Accessibility Options
 
@@ -640,8 +644,7 @@ API; failures are silent (guarded no-ops), not logged.
   (`body`, `tiltLayer`, `leanLayer`, `idleLayer`) map to distinct
   `CALayer`s so their transforms compose the same way `svgOrigin`-scoped
   GSAP tweens do here.
-- **WinUI 3**: This is the reason this recipe exists — there is no existing
-  Windows port. Model `AvatarEngineConfig`/`AvatarEngine` as a class
+- **WinUI 3**: Model `AvatarEngineConfig`/`AvatarEngine` as a class
   implementing `INotifyPropertyChanged` (or a `CommunityToolkit.Mvvm`
   `ObservableObject`) exposing `Effective`, `Resting`, `Speech` properties
   and a `Poke()` method, in place of the hook's return value. Use
@@ -654,14 +657,15 @@ API; failures are silent (guarded no-ops), not logged.
   `quickTo` equivalent for scale, rotation, and translate tweens on
   `Visual`/`CompositionVisual` layers standing in for `AvatarRig`'s
   `body`/`tiltLayer`/`leanLayer`/`idleLayer`. There is no MorphSVGPlugin
-  equivalent in WinUI 3: animate between two `CanvasGeometry` path strings
-  (Win2D) with a custom point-interpolating `ICompositionAnimationBase`, or
-  swap discrete `PathIcon`/`Path` `Data` values if true point-for-point
-  morphing is not required. Handle `PointerMoved`/`PointerExited` on the
-  root `Grid`/`Canvas` for cursor-follow gaze — a plain `PointerMoved` on
-  `Window.Content` fires far more often than GSAP's rAF throttle, so debounce
-  it to one recomputation per `CompositionTarget.Rendering` tick to match
-  **gaze-cursor-follow**'s cadence. Model `Record<E, Pose>` as
+  equivalent in WinUI 3. Unverified port guidance, not drawn from this
+  source: animate between two `CanvasGeometry` path strings (Win2D) with a
+  custom point-interpolating animation, or swap discrete `PathIcon`/`Path`
+  `Data` values if true point-for-point morphing is not required. Handle `PointerMoved`/`PointerExited` on the
+  root `Grid`/`Canvas` for cursor-follow gaze — to match
+  **gaze-cursor-follow**'s one-recomputation-per-frame cadence, throttle it
+  to one recomputation per `CompositionTarget.Rendering` tick (unverified
+  port guidance; the source only shows the `requestAnimationFrame` throttle
+  on the web side). Model `Record<E, Pose>` as
   `IReadOnlyDictionary<TExpression, Pose>` and `Tuning` as a plain record
   type with the same 15 fields.
 
@@ -669,7 +673,7 @@ API; failures are silent (guarded no-ops), not logged.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/avatar/src/` | unverified |
+| web | `packages/web/packages/avatar/src/` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -740,6 +744,23 @@ API; failures are silent (guarded no-ops), not logged.
   **morph-point-count-validation** and **pose-shape-validation**.
   **Approved**: pending
 
+- **Decision**: Record the absence of reduced-motion handling as accepted
+  debt for now rather than adding a `prefers-reduced-motion` gate
+  (**idle-fidget-breath-loop**, **idle-fidget-sway-loop**).
+  **Rationale**: The source has no `matchMedia`/`prefers` check anywhere and
+  no config field to dampen idle motion (see Accessibility Options); the gap
+  is a documented failed check in Compliance, and whether to gate it in the
+  engine or leave it to the driver is not yet settled.
+  **Approved**: pending
+
+- **Decision**: Record the absence of runtime error handling as accepted
+  debt for now rather than adding validation or `try`/`catch`
+  (**morph-point-count-validation**, **pose-shape-validation**).
+  **Rationale**: The source has no `try`/`catch` and no runtime check of
+  `Pose`/`Tuning` shape or MorphSVG point counts; the gap is a documented
+  failed check in Compliance, and whether to enforce at runtime or keep these
+  as authoring preconditions is not yet settled.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -787,3 +808,4 @@ sections above).
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation from the `@adh-sdk/avatar` web source (engine, arbitration, gaze, idleLife, pose, reflexes, speechBubble, types); flagged three genuine gaps — unvalidated MorphSVG point-count matching, unvalidated Pose/Tuning shape at runtime, and no reduced-motion accommodation for the engine's continuous idle loops — with the open question and evidence needed for each recorded in place. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Antennae per-pose rotation/offset tween now runs regardless of eyesShut; neutral bend applies on top, not instead. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Lint fixes: forced-gaze clamp added to gaze-forced-priority with a new vector, Tuning field names and sleepMutterMs used consistently, blink and tuning vectors made precise, validation gaps restated with RFC keywords, two debt Decisions added, and unverified WinUI 3 guidance flagged. |

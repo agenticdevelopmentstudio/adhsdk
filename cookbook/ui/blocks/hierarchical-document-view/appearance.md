@@ -25,7 +25,7 @@ the host's palette without a per-site restyle.
   top-[var(--adh-header-height,3.5rem)]
   h-[calc(100vh-var(--adh-header-height,3.5rem))]` — sticky under the family's header
   and scrolling on its own, so a 466-page tree never pushes the document down. The
-  offset **reads** `--adh-header-height` rather than restating it: that header is a
+  sticky offset **reads** `--adh-header-height` rather than restating it: that header is a
   bar plus a full-width preview strip above it, so any literal is a copy that goes
   stale the next time it grows. The `3.5rem` fallback is the bar alone, for the
   consumers of this package that mount no adh header at all. The `nav` inside is
@@ -67,8 +67,9 @@ the host's palette without a per-site restyle.
   links hover to `text-[var(--color-text-secondary)]`.
 - Article: `prose max-w-none prose-headings:scroll-mt-20
   prose-code:before:content-none prose-code:after:content-none`. The
-  `scroll-mt-20` is load-bearing — it keeps a heading clear of the sticky header
-  when the ToC scrolls to it.
+  `scroll-mt-20` (80px) is load-bearing — it keeps a heading clear of the sticky header
+  when the ToC scrolls to it. It is a literal, not derived from `--adh-header-height`,
+  and matches `useScrollSpy`'s `-80px` band: see the header-offset Design Decision.
 - Metadata: `dl.flex.flex-col.items-end.gap-0.5 font-mono text-[11px] mb-6`; rows
   `flex gap-2`; `dt` dim, `dd` secondary; a list value wraps in
   `flex flex-wrap justify-end gap-x-3`.

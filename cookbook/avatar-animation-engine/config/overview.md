@@ -26,7 +26,7 @@ every input. They are not required to agree on exact error message text —
 several messages differ deliberately between platforms, and each divergence
 called out below is intentional, not a defect.
 
-Because this recipe documents a validation contract rather than a widget, the
+Because this ingredient documents a validation contract rather than a widget, the
 Appearance, States, and Accessibility sections below each collapse to one
 line: the loader draws nothing, has no interaction state, and exposes nothing
 to assistive technology.

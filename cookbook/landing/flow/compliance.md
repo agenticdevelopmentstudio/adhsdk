@@ -6,5 +6,5 @@
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Both statuses rest on the source rendering a semantic `<main>` element and setting `tabIndex={-1}` on it to keep it out of the tab order while still allowing programmatic focus (`packages/web/packages/landing/src/flow/Flow.tsx`). `separation-of-concerns` is `passed` because the component is pure layout over `children` with no business logic; `unit-test-coverage` is `passed` because `flow.test.tsx` renders `Flow` directly and asserts its `<main>`/`tabIndex` behavior.
+`semantic-markup` and `focus-management` are `passed` because the source renders a semantic `<main>` element and sets `tabIndex={-1}` on it to keep it out of the tab order while still allowing programmatic focus. `separation-of-concerns` is `passed` because the component is pure layout over `children` with no business logic; `unit-test-coverage` is `passed` because `flow.test.tsx` renders `Flow` directly and asserts its `<main>`, `lp-flow` class and `tabIndex` behavior. The remaining vectors, including flow-008, are not covered by that file.
 

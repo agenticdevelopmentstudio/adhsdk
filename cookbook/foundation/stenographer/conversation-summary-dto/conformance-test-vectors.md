@@ -26,4 +26,11 @@ Vectors come from `ConversationSummaryDTOTests` (Core test target) and the sourc
 | conversation-summary-dto-021 | refusal-sharer-unknown | a probe that always returns nil, same sessions | refusal for parent is non-nil |
 | conversation-summary-dto-022 | refusal-ended | `refusal` for an ended session `s1` | `conversation s1 has ended.` |
 | conversation-summary-dto-023 | summary-last-activity | `lastActivityAt` of `not a date` | `lastActivity` equals `not a date` |
-
+| conversation-summary-dto-024 | refusal-order | an ended session in an unsupported terminal (`vscode`) | the refusal is `conversation <id> has ended.`, not the terminal sentence (derived from the source order; no test) |
+| conversation-summary-dto-025 | refusal-terminal | a live session with `termProgram` `` | `typing into a conversation needs iTerm2 or Terminal.app; <id> runs in an unknown terminal.` (derived from the source; no test) |
+| conversation-summary-dto-026 | refusal-no-pane | two live sessions whose pane does not resolve | neither is refused for sharing a pane (derived from the source; no test) |
+| conversation-summary-dto-027 | terminal-name, summary-terminal | `termProgram` `iTerm.app`, then `ghostty` | `iTerm2`, then `ghostty` (derived from `KnownTerminals`; no test) |
+| conversation-summary-dto-028 | matches-ignores-empty-names | app `x` against a session with an empty `termProgram` | the empty name does not match (derived from the source; no test) |
+| conversation-summary-dto-029 | info-raw-fields, info-project-root, info-started-at | an info built from a session with `projectRoot` `/Users/me/src/app`, `startedAt` `2026-11-10 10:00:00`, home `/Users/me` | `projectRoot` `~/src/app`, `startedAt` equals `UTCTimestamp.canonical("2026-11-10 10:00:00")`, and `termProgram`, `model`, `lastTool`, `summary`, `pid` equal the session's (derived from the source; no test) |
+| conversation-summary-dto-030 | process-attachment | a session whose recorded `pid` exceeds the `pid_t` range | the probe is asked about the clamped value (derived from `pid_t(clamping:)`; no test) |
+| conversation-summary-dto-031 | summary-home-default | a summary built without `homeDirectory` | paths are rewritten against `NSHomeDirectory()` (derived from the source default; no test) |

@@ -4,11 +4,11 @@
     "id": "cebee4d7-3d01-440d-a35e-6220957c1603",
     "title": "Gear Menu Trigger",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "81ac360eff9daea5",
+  "synced": "64335a56fc482c93",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

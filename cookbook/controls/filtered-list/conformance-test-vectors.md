@@ -11,7 +11,7 @@
 | filtered-list-008 | enter-selection | Item highlighted + Enter pressed | onSelect callback is called with highlighted item |
 | filtered-list-009 | escape-clears-highlight | Item highlighted + Escape pressed | Highlight is cleared |
 | filtered-list-010 | reset-highlight-on-input-change | Item highlighted + user types in input | Highlight is reset to -1 |
-| filtered-list-011 | clamp-highlight-when-visible-shrinks | Highlight on item 5, query changes to show 3 items | Highlight moves to item 3 (last visible) |
+| filtered-list-011 | clamp-highlight-when-visible-shrinks | Highlight on item 5, then the `items` prop is replaced with 3 items | Highlight moves to item 3 (last visible) |
 | filtered-list-012 | render-item-list | Items provided via props | The `<ul>` renders with role="listbox" and all visible items render as `<li>` children |
 | filtered-list-013 | render-item-title | Item with getTitle callback, renderItem not provided | Title is rendered in fl-title element |
 | filtered-list-014 | render-item-subtitle | Item with getSubtitle callback, renderItem not provided | Subtitle is rendered in fl-subtitle element |
@@ -36,8 +36,16 @@
 | filtered-list-033 | escape-clears-highlight | Escape pressed with no item highlighted | No highlight change occurs; default action is not prevented (edge case) |
 | filtered-list-034 | render-item-details | Item with getDetails callback, renderItem not provided | Details are rendered in fl-details element |
 | filtered-list-035 | custom-item-render | renderItem provided | `renderItem(item)` return value is rendered instead of the default title/subtitle/details layout |
-| filtered-list-036 | arrow-keys-noop-when-no-items | No visible items, ArrowDown pressed | Default browser behavior is not prevented (no e.preventDefault call); no highlight change occurs |
+| filtered-list-036 | arrow-keys-noop-when-no-items | No visible items, ArrowDown, ArrowUp, Enter or Escape pressed | Default browser behavior is not prevented (no e.preventDefault call); no highlight change occurs; onSelect is not called |
 | filtered-list-037 | default-no-matches-message | Query yields zero visible items, total > 0, no emptyContent | List's only item is the literal text `No matches for "{query}".` |
 | filtered-list-038 | item-role-option | Items rendered | Each `<li>` has role="option" |
 | filtered-list-039 | enter-selection | Enter pressed with no item highlighted | onSelect is not called; form submission is still prevented by the form wrapper (see prevent-form-submission) |
-
+| filtered-list-040 | initial-query | `initialQuery="app"` | Input value is "app" and only items matching "app" are visible on first render |
+| filtered-list-041 | root-class-name | `className="extra"` | Root element has classes `fl-root` and `extra` |
+| filtered-list-042 | custom-match | `match` returns true only for items with id "b" | Only item "b" is visible; `match` was called with the lower-cased, trimmed query |
+| filtered-list-043 | escape-restores-query | Query "ap" typed, item highlighted, Escape pressed | Highlight cleared and the input shows "ap" |
+| filtered-list-044 | selection-keeps-state | Item highlighted, Enter pressed | onSelect called once; the input still shows the item's title and it stays highlighted |
+| filtered-list-045 | footer-visibility | `footer` provided, total === 0 | Footer is not rendered |
+| filtered-list-046 | footer-visibility | `footer` provided, total > 0, query matches nothing | No-matches message and footer are both rendered, footer last |
+| filtered-list-047 | clickable-items-when-onselect-provided | onSelect provided, user clicks an item's button | onSelect is called with that item |
+| filtered-list-048 | clickable-items-when-onselect-provided | onSelect provided | Each item button has `tabIndex=-1` |

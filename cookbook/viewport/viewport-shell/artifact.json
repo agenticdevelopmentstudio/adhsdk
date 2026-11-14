@@ -4,15 +4,15 @@
     "id": "960a1577-bf48-4d56-a93f-aa690853f64f",
     "title": "ViewportShell",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Page-level shell that locks viewport and manages keyboard inset for the page.",
+    "summary": "Page-level shell that mounts the keyboard-inset hook and provides a flex container; the page lock comes from base.css.",
     "platforms": [
       "typescript",
       "web"
@@ -26,11 +26,18 @@
       "c10a6fd9-470a-45a1-a025-3c75554c2a41",
       "556f7dbf-2a14-4e97-aaa2-0954c7488e6f"
     ],
-    "references": [],
+    "references": [
+      "https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport",
+      "https://developer.mozilla.org/en-US/docs/Web/CSS/length#dynamic",
+      "https://developer.apple.com/documentation/uikit/uiview/keyboardlayoutguide",
+      "https://developer.android.com/develop/ui/compose/system/insets",
+      "https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-iinputpaneinterop",
+      "https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.uielement.clip"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "59eb8eb80e6129b0",
+  "synced": "187274dbcc41ca6f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -15,17 +15,17 @@ Parsing (`parse(json:)`)
 - **parse-success**: `parse(json:)` MUST return a config whose `clientId` is `installed.client_id` and whose `clientSecret` is `installed.client_secret`, exactly as written in the file.
 - **parse-extra-keys-ignored**: `parse(json:)` MUST ignore every other key in the file, in the root object and inside `installed` (for example `auth_uri`).
 - **parse-installed-wins**: `parse(json:)` MUST read `installed` and ignore `web` when both keys are present, because the Web-client rejection applies only when `installed` is absent.
-- **parse-no-trimming**: `parse(json:)` MUST NOT trim or otherwise alter the id or secret; a value of only whitespace is accepted because it is non-empty.
+- **parse-no-trimming**: `parse(json:)` MUST NOT trim or otherwise alter the id or secret; a value of only whitespace is accepted because it is non-empty (see Design Decisions for why that late failure is accepted).
 - **parse-error-type**: Every failure of `parse(json:)` MUST be an `IntegrationError.invalidSettings` whose associated string is the reason.
 - **parse-is-pure**: `parse(json:)` MUST have no side effect and MUST NOT perform I/O.
 
 Serialising (`installedJSON()`)
 
 - **installed-json-shape**: `installedJSON()` MUST return JSON of exactly the form `{"installed":{"client_id":<id>,"client_secret":<secret>}}`, with no other keys.
-- **installed-json-key-order**: `installedJSON()` MUST emit keys in sorted order, so equal configs produce identical output on one platform. Escaping of characters such as `/` is platform-specific, so byte equality across platforms is not required; every output MUST still decode to the same values. The Swift source uses `.sortedKeys`.
+- **installed-json-key-order**: `installedJSON()` MUST emit keys in sorted order, so equal configs produce identical output on one platform. Escaping of characters such as `/` is platform-specific, so byte equality across platforms is not required; every output MUST still decode to the same values.
 - **installed-json-round-trip**: The output of `installedJSON()` MUST be accepted by `parse(json:)` and MUST yield an equal config whenever both fields are non-empty.
 - **installed-json-no-validation**: `installedJSON()` MUST NOT validate the fields. A config with an empty field serialises, and its output is then rejected by `parse(json:)`.
-- **installed-json-throws**: `installedJSON()` MUST surface any serialisation failure to the caller as a typed error rather than swallowing it. With two string values the Swift source has no path that raises one (it is declared `throws` and propagates any `JSONSerialization` error).
+- **installed-json-throws**: `installedJSON()` MUST be able to report a serialisation failure to the caller as a typed error rather than swallowing it. With two string values no input raises one, so no test vector applies to this requirement.
 
 Ordering and concurrency
 
@@ -35,5 +35,5 @@ Security of the secret
 
 - **secret-sensitivity**: `clientSecret` is sensitive credential material. The type itself MUST NOT persist, log or transmit it; it exists only as a field value held by its owner.
 - **secret-not-in-errors**: The error strings thrown by `parse(json:)` MUST NOT contain the file's contents, the client id or the client secret.
-- **secret-no-redaction-gap**: The Swift source has no redaction: the synthesized `description` and `dump` of the struct print `clientSecret`. This is a known gap, stated here as fact; no requirement or test covers it (see Design Decisions and Compliance).
+- **secret-masked-in-descriptions**: The textual descriptions of a config (`description`, `debugDescription` and a `dump`-style mirror dump) SHOULD mask `clientSecret`. The source does not yet conform; see #edge-cases/secret-printed-by-description.
 

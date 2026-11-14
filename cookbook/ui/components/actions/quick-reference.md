@@ -2,11 +2,11 @@
 id: 40a6b717-cbdb-4d49-9f98-b318668b396c
 title: "Syntax Quick Reference"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -37,7 +37,7 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 
 - **trigger-button-style**: The trigger MUST render as a subdued (non-primary) button at a small size, so it reads as a toolbar utility rather than a call to action. (Web: `variant="outline" size="sm"` — see React/Web platform note.)
 - **trigger-book-icon**: The trigger MUST display a book icon positioned at the inline start of any visible label. (Web: lucide-react `BookText` — see React/Web platform note.)
-- **trigger-accessible-name**: The trigger MUST have an `aria-label` set to the `ariaLabel` prop, and `ariaLabel` MUST be a non-empty string describing the cheatsheet's purpose (e.g., "Markdown quick reference"). When `triggerLabel` is also provided, `ariaLabel` MUST contain the visible `triggerLabel` text (WCAG 2.5.3 Label in Name), since the component does not derive one from the other — see #edge-cases and quick-ref-002.
+- **trigger-accessible-name**: The trigger MUST have an `aria-label` set to the `ariaLabel` prop. The component does not validate or derive it. Consumer integration notes: the consumer supplies a non-empty `ariaLabel` describing the cheatsheet's purpose (e.g., "Markdown quick reference"), and when `triggerLabel` is also provided, `ariaLabel` contains the visible text that `triggerLabel` renders (WCAG 2.5.3 Label in Name; for a non-string node, that is the text the node renders) — see #edge-cases/empty-aria-label, #edge-cases/label-in-name-mismatch and #test-vectors/quick-ref-002.
 - **trigger-disclosure-state**: The trigger MUST expose `aria-expanded` reflecting whether the popover is open, and MUST expose `aria-haspopup` identifying it as a popup trigger (both inherited from the Popover primitive's Base UI `Trigger`; see accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))). On web, `aria-expanded="true"` additionally switches the trigger's own background/foreground color (the outline variant's `aria-expanded:` styling).
 - **popover-opens-on-click**: The component MUST open the popover when the trigger button is clicked, or activated via keyboard (the trigger is a native `button`, so Enter/Space also activate it).
 - **popover-title-display**: The popover MUST display the provided title using field-caption typography styling. (Web: `fieldCaptionClass` — see React/Web platform note.)
@@ -48,26 +48,26 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 - **outside-click-dismissal**: The popover MUST close when the user clicks outside the popover bounds (inherited from Popover primitive).
 - **focus-restoration**: The component MUST restore focus to the trigger button after the popover is dismissed (inherited from Popover primitive).
 - **optional-trigger-label**: The component MUST accept an optional `triggerLabel` prop to display visible text on the trigger button.
-- **customizable-width**: The component MAY accept a `contentClassName` prop to customize the popover's rendered width; the default renders at 20rem (see React/Web platform note for the literal class).
-- **customizable-columns**: The component MAY accept a `columnsClassName` prop to customize the entries grid's column split; the default makes the label column narrower than the code column (see React/Web platform note for the literal class).
-- **customizable-position**: The component MAY accept `side` and `align` props to position the popover relative to the trigger — `side` picks which edge of the trigger it opens from (default `bottom`), and `align` positions it along that edge (default `end`).
-- **customizable-trigger-classes**: The component MAY accept a `className` prop to apply additional CSS classes to the trigger button.
+- **customizable-width**: The component MUST accept an optional `contentClassName` prop to customize the popover's rendered width; the default renders at 20rem (see React/Web platform note for the literal class).
+- **customizable-columns**: The component MUST accept an optional `columnsClassName` prop to customize the entries grid's column split; the default makes the label column narrower than the code column (see React/Web platform note for the literal class).
+- **customizable-position**: The component MUST accept optional `side` and `align` props to position the popover relative to the trigger — `side` picks which edge of the trigger it opens from (default `bottom`), and `align` positions it along that edge (default `end`).
+- **isolate-code-direction**: The component SHOULD isolate the direction of the syntax examples (`dir="ltr"` or `unicode-bidi: isolate` on the code cells), so syntax such as `**text**` does not reorder under an RTL ancestor. It does not today (see Compliance).
+- **customizable-trigger-classes**: The component MUST accept an optional `className` prop to apply additional CSS classes to the trigger button.
 
 ## Appearance
 
-- **Trigger button**: Outline variant, small size, with BookText icon positioned at inline-start and optional text label.
-- **Title**: Uses field-caption typography class with vertical spacing (space-y-3 in grid container).
-- **Entry label (dt)**: Small font size, muted foreground color (text-apt-text-muted).
-- **Code block (dd)**: 
-  - Font: monospace (font-mono)
-  - Size: extra-small (text-xs)
-  - Whitespace: pre-wrap (preserves formatting)
-  - Line height: snug (leading-snug)
-  - Foreground: default text color (text-apt-text)
-  - Width constraint: min-w-0 to prevent overflow in grid
-- **Grid layout**: Two-column definition list with horizontal gap of 3 units (gap-x-3) and vertical gap of 2 units (gap-y-2).
-- **Popover container**: Default width of 20rem (w-80), vertical spacing of 3 units (space-y-3).
-
+- **Trigger button**: Subdued outline variant, small size, with a book icon positioned at inline-start and an optional text label.
+- **Title**: Field-caption typography, with vertical spacing between the title and the entries.
+- **Entry label (dt)**: Small font size, muted foreground color.
+- **Code block (dd)**:
+  - Font: monospace
+  - Size: extra-small
+  - Whitespace: preserved, wrapping within the cell
+  - Line height: snug
+  - Foreground: default text color
+  - Width constraint: may shrink below its natural width so it cannot overflow the grid
+- **Grid layout**: Two-column definition list with a moderate horizontal gap and a smaller vertical gap.
+- **Popover container**: Default width of 20rem, with vertical spacing between the title and the list.
 ## States
 
 | State | Appearance change |
@@ -81,8 +81,8 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 ## Accessibility
 
 - **Button role**: The trigger is a native `button` element with semantic button role.
-- **Accessible name**: See #requirements (trigger-accessible-name). The trigger's `aria-label` MUST be non-empty and, when `triggerLabel` is present, MUST contain its text (WCAG 2.5.3 Label in Name).
-- **Disclosure state**: See #requirements (trigger-disclosure-state). `aria-expanded` and `aria-haspopup` are set on the trigger by the Popover primitive, not by this component's own code.
+- **Accessible name**: See #requirements/trigger-accessible-name. The trigger's `aria-label` is the `ariaLabel` prop. The consumer is responsible for a non-empty value that contains the visible `triggerLabel` text (WCAG 2.5.3 Label in Name); the component does not check either.
+- **Disclosure state**: See #requirements/trigger-disclosure-state. `aria-expanded` and `aria-haspopup` are set on the trigger by the Popover primitive, not by this component's own code.
 - **Popover accessible name**: The popover panel itself sets no `aria-labelledby` linking it to the title text (the `<p>` element). Popover's own spec only recommends, but does not require, this association (`label-association`; see accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))), and this component does not add it. Screen readers get the panel's content without an explicit accessible name tied to the title.
 - **Definition list structure**: Entries are marked up as `dl`, `dt`, and `dd` elements, providing semantic structure for assistive technology.
 - **Focus management**: The popover is non-modal and does not contain focus while open; restoring focus to the trigger on dismiss is handled by the Popover primitive (see accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))), not reimplemented here.
@@ -111,7 +111,9 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 | quick-ref-016 | popover-opens-on-click | Trigger button is focused; user presses Enter or Space | Popover becomes visible (native `button` keyboard activation) |
 | quick-ref-017 | trigger-disclosure-state | Popover transitions from closed to open | Trigger's `aria-expanded` changes from "false" to "true"; trigger carries `aria-haspopup` in both states |
 | quick-ref-018 | entries-definition-list | entries=[] | Popover renders the title and an empty `dl` with no `dt`/`dd` rows |
-
+| quick-ref-019 | trigger-accessible-name | triggerLabel="Syntax", ariaLabel="Syntax reference" | Trigger has aria-label="Syntax reference", which contains the visible text "Syntax" |
+| quick-ref-020 | trigger-accessible-name | triggerLabel="Syntax", ariaLabel="Reference panel" | Trigger has aria-label="Reference panel" exactly as given; the component neither reconciles it with `triggerLabel` nor warns (the consumer owns label-in-name) |
+| quick-ref-021 | isolate-code-direction | Render inside a `dir="rtl"` ancestor with syntax "**text**" | The code cell keeps left-to-right direction (fails today; see Compliance) |
 ## Edge Cases
 
 - **Empty entries array**: If no entries are provided, the popover still renders the title and a definition list with no rows (see quick-ref-018). Result: a popover with only the title text is shown.
@@ -119,8 +121,8 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 - **Very long syntax text**: The `dd` element has `min-w-0` to allow its content to shrink below its grid column's default size, preventing overflow. If syntax text is exceptionally long, the `whitespace-pre-wrap` class breaks lines within the code block. Result: text wraps instead of overflowing.
 - **Narrow customized width**: If `contentClassName` is set to a very narrow width, the popover may be too small to display entries clearly. Responsibility rests with the consumer to provide appropriate width. Result: entries may be cramped or wrap unexpectedly.
 - **Custom className conflicts**: If `className` prop contains classes that conflict with outline/size styling, the merged classes follow Tailwind's conflict resolution (later classes override). Result: unexpected styling if conflicting classes are intentional.
-- **Empty aria-label**: If `ariaLabel` is an empty string or omitted, the trigger button has no accessible name. The component performs no runtime validation: it does not fail fast with a dev-time assertion, and it does not fall back to `title`. Result: screen readers cannot announce the button's purpose. Consumers MUST supply a non-empty, descriptive `ariaLabel` (see trigger-accessible-name).
-- **Label-in-name mismatch**: `ariaLabel` and `triggerLabel` are independent props — the component does not derive one from the other or reconcile them. If `triggerLabel` shows visible text (e.g., "Syntax") and `ariaLabel` is unrelated text (e.g., "Reference panel"), the accessible name will not contain the visible label, which can fail WCAG 2.5.3 Label in Name. Result: consumers MUST choose an `ariaLabel` that contains the visible `triggerLabel` text (see trigger-accessible-name).
+- **Empty aria-label**: If `ariaLabel` is an empty string or omitted, the trigger button has no accessible name. The component performs no runtime validation: it does not fail fast with a dev-time assertion, and it does not fall back to `title`. Result: screen readers cannot announce the button's purpose. Consumers MUST supply a non-empty, descriptive `ariaLabel` (see #requirements/trigger-accessible-name).
+- **Label-in-name mismatch**: `ariaLabel` and `triggerLabel` are independent props — the component does not derive one from the other or reconcile them. If `triggerLabel` shows visible text (e.g., "Syntax") and `ariaLabel` is unrelated text (e.g., "Reference panel"), the accessible name will not contain the visible label, which can fail WCAG 2.5.3 Label in Name. Result: consumers MUST choose an `ariaLabel` that contains the visible `triggerLabel` text (see #requirements/trigger-accessible-name). `triggerLabel` is a `ReactNode`, so for a non-string node the visible text is whatever the node renders, which the component cannot inspect.
 
 ## Configuration
 
@@ -146,8 +148,7 @@ String content (title, triggerLabel, ariaLabel, entry labels, syntax) is provide
 
 ## Accessibility Options
 
-Not applicable: the component inherits focus management and popover behavior from the shared Popover primitive. It does not respond to system accessibility display options such as Reduce Motion, Increase Contrast, or Differentiate Without Color. Applications using this component SHOULD implement motion and contrast handling at the Popover level if needed.
-
+Known limitation: the component inherits focus management and popover behavior from the shared Popover primitive. It adds no handling of its own for system accessibility display options such as Reduce Motion, Increase Contrast, or Differentiate Without Color. The contrast result in Compliance is `partial` for the same reason: it depends on how the `apt-*` tokens resolve, which this component does not check.
 ## Feature Flags
 
 Not applicable: no feature flags are present in the source code. The component is always enabled.
@@ -166,8 +167,8 @@ Not applicable: no logging is implemented in the source code.
 
 ## Platform Notes
 
-- **React/Web**: Source files are in `packages/web/packages/ui/src/components/quick-reference.tsx`. Uses React hooks, the shared Popover primitive (PopoverTrigger, PopoverContent), button variants from the component library, and Tailwind CSS for styling. Trigger: `buttonVariants({ variant: "outline", size: "sm" })`; the book icon is lucide-react's `BookText`. Title: `fieldCaptionClass`. Code: `font-mono text-xs leading-snug whitespace-pre-wrap`. Defaults: `contentClassName="w-80"` (20rem), `columnsClassName="grid-cols-[7rem_1fr]"`.
-- **SwiftUI**: Use the `.popover(isPresented:)` modifier on the trigger `Button`, whose label is the SF Symbol `book.closed` (or `book.closed.fill`) plus optional text. The popover content is a `VStack` with a `Text` title and a `Grid` of `GridRow`s — one row per entry, label in the first column and code in the second using `.monospaced()`. Restore focus to the trigger on dismiss via the `.popover`'s `onDismiss` closure and `@FocusState`.
+- **React/Web**: Source files are in `packages/web/packages/ui/src/components/quick-reference.tsx`. Uses React hooks, the shared Popover primitive (PopoverTrigger, PopoverContent), button variants from the component library, and Tailwind CSS for styling. Trigger: `buttonVariants({ variant: "outline", size: "sm" })`; the book icon is lucide-react's `BookText`. Title: `fieldCaptionClass`. Code: `font-mono text-xs leading-snug whitespace-pre-wrap text-apt-text`, with `min-w-0` on the `dd`. Entry label: `text-sm text-apt-text-muted`. Layout: `space-y-3` around the title and list, `gap-x-3 gap-y-2` on the grid. Defaults: `contentClassName="w-80"` (20rem), `columnsClassName="grid-cols-[7rem_1fr]"`.
+- **SwiftUI**: Use the `.popover(isPresented:)` modifier on the trigger `Button`, whose label is the SF Symbol `book.closed` (or `book.closed.fill`) plus optional text. The popover content is a `VStack` with a `Text` title and a `Grid` of `GridRow`s — one row per entry, label in the first column and code in the second using `.monospaced()`. `.popover(isPresented:)` has no `onDismiss` parameter, so restore focus to the trigger by watching the `isPresented` binding with `.onChange` and resetting `@FocusState` when it becomes false.
 - **Compose**: Use a Button composable as the trigger with an Icon from Material Icons. Wrap the popover content in a Popup or Dialog composable. Entries can be rendered as a LazyColumn with rows displaying label and code. Use Material's color tokens and typography.
 - **AppKit / UIKit**: 
   - **macOS (AppKit)**: Create an NSButton with an icon image and optional label. Use NSPopover for the content, positioning it with NSRectEdge. Display entries in an NSTableView with two columns (label and code) or a custom stack view. Restore responder chain focus on close.
@@ -178,7 +179,7 @@ Not applicable: no logging is implemented in the source code.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/quick-reference.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/quick-reference.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -224,7 +225,7 @@ Not applicable: no logging is implemented in the source code.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-label` (semantic-markup, keyboard-navigable); Popover's own focus-trap and focus-restore, inherited rather than reimplemented (focus-management); the `sm` button's 28px height meeting WCAG 2.5.8 (touch-target-size); rem-based Tailwind text sizing whose actual scaling behavior isn't verified in source (dynamic-type-support: partial); the absence of runtime `aria-label` validation and of `aria-labelledby` on the popover panel (screen-reader-support: partial); `apt-*` design tokens whose resolved contrast can't be checked from source alone (contrast-ratio: partial); consumer-supplied-only text with no hardcoded strings in the component (string-externalization, no-hardcoded-strings); plain JS string rendering, which is Unicode-transparent (unicode-support); and the missing `dir`/bidi isolation on code cells (rtl-layout-support: failed). `SyntaxQuickReference` is the shell only — entries belong to whoever owns the language, with no business logic in the component (separation-of-concerns passed); it has no test file of its own and is exercised only through its consumer `MarkdownQuickReference` in `markdownQuickReference.test.tsx` (unit-test-coverage partial).
+Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-label` (semantic-markup, keyboard-navigable); Popover's own focus-restore, inherited rather than reimplemented (the popover is non-modal and traps no focus) (focus-management); the `sm` button's 28px height meeting WCAG 2.5.8 (touch-target-size); rem-based Tailwind text sizing whose actual scaling behavior isn't verified in source (dynamic-type-support: partial); the absence of runtime `aria-label` validation and of `aria-labelledby` on the popover panel (screen-reader-support: partial); `apt-*` design tokens whose resolved contrast can't be checked from source alone (contrast-ratio: partial); consumer-supplied-only text with no hardcoded strings in the component (string-externalization, no-hardcoded-strings); plain JS string rendering, which is Unicode-transparent (unicode-support); and the missing `dir`/bidi isolation on code cells (rtl-layout-support: failed). `SyntaxQuickReference` is the shell only — entries belong to whoever owns the language, with no business logic in the component (separation-of-concerns passed); it has no test file of its own and is exercised only through its consumer `MarkdownQuickReference` in `markdownQuickReference.test.tsx` (unit-test-coverage partial).
 
 ## Change History
 
@@ -233,3 +234,4 @@ Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; moved web-specific requirement details to Platform Notes; added Popover to depends-on; reformatted Design Decisions to Decision/Rationale/Approved; replaced Compliance with canonical linked checks; fixed the touch-target contradiction and the focus-containment overclaim; corrected align-axis wording; added non-empty-aria-label and WCAG 2.5.3 label-in-name requirements and edge cases; corrected WinUI 3 and SwiftUI platform notes; added missing test vectors; corrected the Localization bidi note |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed entry-label-style/quick-ref-006 to stop contradicting entry-code-style/quick-ref-007 (code is smaller, not the label); renamed stale should-associate-label ref to popover's label-association. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Restated consumer label obligations as integration notes, fixed fragment references, made customizable props MUST, neutralized Appearance, added RTL and label-in-name requirement and vectors, and corrected SwiftUI focus note. |

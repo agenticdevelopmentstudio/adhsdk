@@ -23,7 +23,7 @@
 - **Option Checkboxes**:
   - Checkbox: 16×16px
   - Label text: 14px (small body text style), rendered inline with checkbox
-  - Row gap: 8px between checkbox and label
-  - Row padding: 2px vertical (0.125rem) per row
+  - Inline gap: 8px between checkbox and label
+  - Row padding: 2px vertical (0.125rem) per row, giving a row about 20px tall; on touch platforms each row MUST have a minimum height of 44px (the web reference implementation does not set one, see the touch-target check in Compliance)
   - Cursor: pointer on label (entire row is clickable)
 

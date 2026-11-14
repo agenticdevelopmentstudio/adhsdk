@@ -22,3 +22,14 @@ track or produce a nonsensical `aria-valuenow`.
 without a variant explosion.
 **Approved**: pending
 
+**Decision**: The Controls bar reports `value` verbatim as `aria-valuenow` and clamps only the fill's width.
+**Rationale**: The reported value stays identical to what the caller supplied while the visual fill stays inside the track. The cost is that an out-of-range or fractional value reaches assistive technology unchanged (see Edge Cases).
+**Approved**: pending
+
+**Decision**: The Controls indeterminate mode is a fixed 35%-wide fill moved by the `aws-progress-indeterminate` keyframe, not a resizing width.
+**Rationale**: The fill's geometry stays constant and only a transform animates, so no value is needed in indeterminate mode.
+**Approved**: pending
+
+**Decision**: The Controls bar does not forward arbitrary props.
+**Rationale**: Its props are the fixed set `label`, `hint`, `value`, `max`, `indeterminate` and `className`, matching the other `aws-field` controls. The cost is that a consumer cannot name the progressbar (see Accessibility).
+**Approved**: pending

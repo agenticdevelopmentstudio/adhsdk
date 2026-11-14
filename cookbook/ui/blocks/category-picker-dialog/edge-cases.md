@@ -17,7 +17,7 @@
   what the tree shows; see the tree-fold's own contract for `buildCategoryTree`.
   The dialog adds no cycle handling of its own — it only walks what the
   fold hands back.
-- **The `MAX_TREE_NODES` cap (4000).** A forest at the cap still renders and is
+- **The `MAX_TREE_NODES` cap (the constant exported by `category-tree.ts`).** A forest at the cap still renders and is
   still fully keyboard-navigable — the fold stops MATERIALISING nodes, not the
   dialog from walking whatever it received; a picker over a capped forest simply
   cannot offer the nodes that were never drawn.

@@ -1,3 +1,4 @@
+Nothing here is configurable at run time. The rows are fixed exported constants, plus the parameters of `applyAppearance` and `clearAppearance`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|

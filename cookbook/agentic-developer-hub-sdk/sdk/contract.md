@@ -2,15 +2,15 @@
 id: 1f14e4d7-07ea-4f59-8365-5a15eb162def
 title: "Chat Contract"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The shared attachments, backend, chat-state, command, configuration, hook, message, and permission protocols the Swift and TypeScript chat UIs are both built against."
+summary: "Shared Swift/TypeScript chat protocols: backend, inbound events, view model, commands, hooks, messages, permissions."
 platforms:
   - swift
   - macos
@@ -46,13 +46,13 @@ forms — Swift protocols/enums/structs under
 interfaces/discriminated unions under
 `packages/web/packages/chat/src/contract/` — that agree on shape wherever the
 languages allow, and diverge in a small, named set of places (see Cross-Platform
-Divergences below). `ScriptedBackend` (Swift) is the one concrete conformer
-given as source here; it is the toolkit's own scripted/mock `Backend`, shipped
+Divergences below). `ScriptedBackend` (Swift, `Sources/Backend/ScriptedBackend.swift`) is the one
+concrete conformer this ingredient specifies; it is the toolkit's own scripted/mock `Backend`, shipped
 so a consumer can exercise the contract with no live endpoint configured. The
 contract carries no message history and no credentials: `Backend.send`
 receives only the new message and its attachments, never a transcript.
-`persona-chat` builds a real, network-backed `Backend` on top of this same
-contract; `chat-input` and `chat-window-controller` are UI components a host
+[persona-chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b) builds a real, network-backed `Backend` on top of this same
+contract; [chat-input-field](cookbook:0ae70642-28e7-436a-b934-0b445652ac09) and [chat-window-controller](cookbook:91114bf5-ad41-4cbd-b91b-c49bba9625d5) are UI components a host
 assembles around a `ChatViewModel` this contract defines.
 
 ## Behavioral Requirements
@@ -115,7 +115,7 @@ assembles around a `ChatViewModel` this contract defines.
   catch the mistake.
 - **draft-commit-or-abort**: `draftCleared` MUST end a participant's draft. If
   the draft finalized, a `messageReceived` for the same content MUST follow;
-  if it was aborted, no `messageReceived` MUST arrive for it.
+  if it was aborted, a `messageReceived` MUST NOT arrive for it.
 - **draft-never-in-messages**: An active draft MUST NOT appear in
   `ChatViewModel.messages` before it commits as a `Message` via
   `messageReceived`.
@@ -189,6 +189,11 @@ assembles around a `ChatViewModel` this contract defines.
 - **command-activity-in-place-update** (apple): A `commandCompleted` event
   MUST fill the matching `CommandActivity`'s `result` in place, at the same
   `id` and index, rather than appending a second entry.
+- **command-activity-is-a-struct-not-a-protocol** (apple): `CommandActivity`
+  MUST be a concrete `struct`, unlike its sibling `[any Protocol]`-typed
+  properties on `ChatViewModel`, because it only pairs two protocols
+  (`CommandInvocation`, `CommandResult`) the host already supplies, with
+  nothing left for a conformer to vary.
 
 ### Configuration & Hooks
 
@@ -249,6 +254,33 @@ assembles around a `ChatViewModel` this contract defines.
   that needs to serialize concurrent access MUST do so itself (see Edge
   Cases), since the protocol grants no actor isolation.
 
+### Optional Fields
+
+- **optional-fields-may-be-absent**: Every optional field in this contract
+  (`Message.id`, `Message.timestamp`, `Attachment.displayName`,
+  `Attachment.byteSize`, `DisplayConfig.maxParticipants`,
+  `DisplayConfig.themeIdentifier`, `Permission.defaultDecision`,
+  `CommandResult.resultJSON`, `CommandResult.errorMessage`,
+  `Conversation.title`) MUST be treated as legitimately absent, never as an
+  error state, including when all of them are absent at once.
+
+### Status Vocabulary (apple)
+
+- **chat-status-kind-mapping**: `ChatStatusKind.init(_:)` MUST map
+  `TurnStatus.thinking`, `.responding` and `.retrying` to `.think`,
+  `.respond` and `.retry` respectively, exhaustively.
+- **shufflebag-no-back-to-back**: `ShuffleBag.next()` MUST NOT return the same
+  element twice in a row when the source holds more than one element, even
+  across the boundary where the bag refills and reshuffles.
+- **shufflebag-exhaust-before-repeat**: `ShuffleBag.next()` MUST return every
+  element of the source exactly once before any element repeats.
+- **shufflebag-single-element**: A `ShuffleBag` over a one-element source MUST
+  return that element on every `next()` call; the no-repeat rule does not
+  apply because a one-element bag cannot satisfy it.
+- **shufflebag-empty-returns-nil**: A `ShuffleBag` over an empty source MUST
+  return `nil` from `next()` rather than trap (see Cross-Platform
+  Divergences for web's differing behavior).
+
 ### ScriptedBackend (reference conformer, apple)
 
 - **scripted-backend-two-modes**: `ScriptedBackend` MUST support exactly two
@@ -278,7 +310,7 @@ assembles around a `ChatViewModel` this contract defines.
   `statusChanged(participantID:status:)` and `ChatViewModel` adds
   `statuses: [String: ChatStatus]`, matched by
   `ChatUpdate.statusChanged(participantID:)`; the web `InboundEvent`,
-  `ChatUpdate`, and `ChatViewModel` given here have no equivalent case or
+  `ChatUpdate`, and `ChatViewModel` (under `packages/web/packages/chat/src/contract/`) have no equivalent case or
   property. `ChatStatus.swift`'s own documentation places web's equivalent
   signal on a separate `onStatus`-style callback the consuming component
   subscribes to, not on this union — a port targeting web parity MUST NOT
@@ -301,16 +333,16 @@ assembles around a `ChatViewModel` this contract defines.
   choose one lifecycle deliberately per platform rather than assuming parity
   (see Design Decisions).
 - **shufflebag-empty-behavior-divergence**: apple's `ShuffleBag.next()` MUST
-  return `nil` for an empty source and MUST NOT trap; the given source states
-  that web's `ShuffleBag` throws in the same situation. A port MUST choose
+  return `nil` for an empty source and MUST NOT trap; web's `ShuffleBag`
+  (`packages/web/packages/chat/src/backends/ShuffleBag.ts`) throws in the same situation. A port MUST choose
   its own failure mode deliberately here rather than copying the other
   platform's.
-- **command-activity-is-a-struct-not-a-protocol** (apple): `CommandActivity`
-  MUST be a concrete `struct`, unlike its sibling `[any Protocol]`-typed
-  properties on `ChatViewModel`, because it only pairs two protocols
-  (`CommandInvocation`, `CommandResult`) the host already supplies, with
-  nothing left for a conformer to vary.
-
+- **participants-changed-departure-divergence**: A `participantDeparted` for an
+  id that was never in the roster removes nothing. apple's
+  `ObservableChatViewModel` still emits `ChatUpdate.participantsChanged`
+  in that case; web's `DefaultOrchestrator` emits `participantsChanged` only
+  when an entry was actually removed. A port MUST choose one of these
+  deliberately rather than assuming parity.
 ## Appearance
 
 Not applicable — this is a chat protocol contract (the shared attachments,
@@ -329,41 +361,42 @@ Not applicable — this is a chat protocol contract, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| chat-contract-001 | scripted-backend-start-timing | `ScriptedBackend(script: [...], start: .immediately)` at `init`, no `send` call | Replay begins immediately; `ScriptedBackendTests` exercises this as the `.immediately` case |
+| chat-contract-001 | scripted-backend-start-timing | `ScriptedBackend(script: [...], start: .immediately)` at `init`, no `send` call | Replay begins immediately; `ScriptedBackendTests` (`SDK/Tests/AgenticDeveloperHubSDKTests/Chat/ScriptedBackendTests.swift`) exercises this as the `.immediately` case |
 | chat-contract-002 | scripted-backend-start-timing | `ScriptedBackend(script: [...], start: .onFirstSend)`, then one `send` | Stream stays silent until the first `send`; that `send` triggers the one-time replay, and a second `send` does not replay again |
 | chat-contract-003 | scripted-backend-local-id-sequence | `send(text: "a", attachments: [])` then `send(text: "b", attachments: [])` on a fresh `ScriptedBackend(localIDPrefix: "local")` | First call returns `"local-1"` and appends `("local-1", "a", [])` to `sent`; second returns `"local-2"` and appends `("local-2", "b", [])` |
-| chat-contract-004 | scripted-backend-serial-replay-chain | Two `send` calls issued back to back against an `opening`/`turn` `ScriptedBackend` | The second turn's beats do not interleave with the first turn's; `ScriptedBackendTests` pins this as the two turns' events arriving in-order, never interspersed |
+| chat-contract-004 | scripted-backend-serial-replay-chain | Two `send` calls issued back to back against an `opening`/`turn` `ScriptedBackend` | The second turn's beats do not interleave with the first turn's; `ScriptedBackendTests` (same file) pins this as the two turns' events arriving in-order, never interspersed |
 | chat-contract-005 | scripted-backend-beat-delay-leads | `Beat(.messageReceived(...), after: .milliseconds(50))` as the first beat of a script | The 50ms delay elapses before the event is yielded, not after |
-| chat-contract-006 | draft-replaces-not-appends | `draftUpdated(participantID: "p1", text: "Hel")` then `draftUpdated(participantID: "p1", text: "Hello")` | The observed draft text for `"p1"` becomes `"Hello"`, not `"HelHello"`; `ObservableChatViewModelTests` pins replace-not-append |
+| chat-contract-006 | draft-replaces-not-appends | `draftUpdated(participantID: "p1", text: "Hel")` then `draftUpdated(participantID: "p1", text: "Hello")` | The observed draft text for `"p1"` becomes `"Hello"`, not `"HelHello"`; `ObservableChatViewModelTests` (`SDK/TestsUI/AgenticDeveloperHubSDKUITests/Chat/ObservableChatViewModelTests.swift`) pins replace-not-append |
 | chat-contract-007 | draft-commit-or-abort, draft-never-in-messages | `draftUpdated(participantID: "p1", text: "Hi")` followed by `draftCleared(participantID: "p1")` with no matching `messageReceived` | The draft for `"p1"` disappears from `activeDrafts`, and no `Message` for "Hi" appears in `messages` — an aborted draft |
 | chat-contract-008 | read-marker-single-cursor | `readMarkerAdvanced(participantID: "p1", upToMessageID: "m1")` then `readMarkerAdvanced(participantID: "p1", upToMessageID: "m5")` | `readMarkers` holds exactly one `ReadReceipt` for `"p1"`, now pointing at `"m5"` — the first entry is replaced, not duplicated |
 | chat-contract-009 | command-invocation-id-uniqueness, command-activity-in-place-update | `commandInvoked` for invocation `"inv-1"` and `"inv-2"` of the same `commandName`, then `commandCompleted` for `"inv-2"` | Two distinct `CommandActivity` entries exist (`"inv-1"`, `"inv-2"`); only `"inv-2"`'s `result` is filled in place, `"inv-1"` remains `isRunning == true` |
 | chat-contract-010 | orphan-result-dropped | `commandCompleted` whose `result.invocationID` is `"inv-unknown"`, with no prior `commandInvoked` for that id | No new `CommandActivity` entry is created; the event is dropped |
-| chat-contract-011 | status-channel-separation | `statusChanged(participantID: "p1", status: ChatStatus(kind: .think))` | `statuses["p1"]` updates and observers receive `ChatUpdate.statusChanged(participantID: "p1")`, but `messages` and `activeDrafts` are unchanged — `ObservableChatViewModelTests.statusChangedIsOutOfBand`, referenced directly in `ChatUpdate.swift`'s own documentation, pins this |
-| chat-contract-012 | chat-update-is-invalidation-not-payload | `ChatUpdate.messagesChanged` delivered to an observer | The observer re-reads `messages` from the view model; the update case itself carries no message data |
-| chat-contract-013 | ShuffleBag (`ChatStatus.swift`) — closed-source-behavior, no requirement id (see Design Decisions) | `ShuffleBag(["a","b","c","d"])`, `next()` called repeatedly across a full refill | No two consecutive draws are equal, even across the boundary where the bag reshuffles — `ChatStatusTests` "the shuffle bag never repeats back to back, including across a refill" |
-| chat-contract-014 | ShuffleBag — see Design Decisions | `ShuffleBag(["a","b","c","d"])`, `next()` called 4 times | All 4 elements are drawn exactly once before any repeats — `ChatStatusTests` "the shuffle bag exhausts every element before repeating one" |
-| chat-contract-015 | ShuffleBag — see Design Decisions | `ShuffleBag(["only"])`, `next()` called twice in a row | Both calls return `"only"` — the single-element case is exempt from the no-repeat rule, matching `guard source.count > 1 else { return source[0] }` |
-| chat-contract-016 | ShuffleBag — see Cross-Platform Divergences | `ShuffleBag<String>([])`, `next()` called | Returns `nil`; does not trap |
-| chat-contract-017 | ChatStatusKind mapping | `ChatStatusKind(TurnStatus.thinking)`, `.responding`, `.retrying` | Map exhaustively to `.think`, `.respond`, `.retry` respectively, per the switch in `ChatStatusKind.init(_:)` |
+| chat-contract-011 | status-channel-separation | `statusChanged(participantID: "p1", status: ChatStatus(kind: .think))` | `statuses["p1"]` updates and observers receive `ChatUpdate.statusChanged(participantID: "p1")`, but `messages` and `activeDrafts` are unchanged — `ObservableChatViewModelTests.statusChangedIsOutOfBand` (same file), referenced directly in `ChatUpdate.swift`'s own documentation, pins this |
+| chat-contract-012 | chat-update-is-invalidation-not-payload | Compile-time check on `ChatUpdate.messagesChanged` | The case has no associated value, so an observer can only learn of the change by re-reading `messages` from the view model |
+| chat-contract-013 | shufflebag-no-back-to-back | `ShuffleBag(["a","b","c","d"])`, `next()` called repeatedly across a full refill | No two consecutive draws are equal, even across the boundary where the bag reshuffles — `ChatStatusTests` (`SDK/Tests/AgenticDeveloperHubSDKTests/Chat/ChatStatusTests.swift`) "the shuffle bag never repeats back to back, including across a refill" |
+| chat-contract-014 | shufflebag-exhaust-before-repeat | `ShuffleBag(["a","b","c","d"])`, `next()` called 4 times | All 4 elements are drawn exactly once before any repeats — `ChatStatusTests` "the shuffle bag exhausts every element before repeating one" |
+| chat-contract-015 | shufflebag-single-element | `ShuffleBag(["only"])`, `next()` called twice in a row | Both calls return `"only"` — the single-element case is exempt from the no-repeat rule, matching `guard source.count > 1 else { return source[0] }` |
+| chat-contract-016 | shufflebag-empty-returns-nil, shufflebag-empty-behavior-divergence | `ShuffleBag<String>([])`, `next()` called | Returns `nil`; does not trap |
+| chat-contract-017 | chat-status-kind-mapping | `ChatStatusKind(TurnStatus.thinking)`, `.responding`, `.retrying` | Map exhaustively to `.think`, `.respond`, `.retry` respectively, per the switch in `ChatStatusKind.init(_:)` |
 | chat-contract-018 | command-activity-lifecycle-divergence | The same `CommandActivity`/`ActiveCommand` entry, long after its `result` is filled, on each platform | apple: the entry remains in `commandActivity` indefinitely. web: the entry is removed from `activeCommands` once the participant's turn ends |
 | chat-contract-019 | scripted-backend-typing-and-widget-recording-only | `setLocalTyping(true)` on a fixed-script `ScriptedBackend` in `.onFirstSend` mode, before any `send` | `typingCalls == [true]`; the script does not begin replaying |
 | chat-contract-020 | mark-read-implicit-range | `markRead(messageID: "m3")` where messages `m1...m5` exist and none were previously read | The local participant's read cursor advances to `"m3"`; `m1`, `m2`, `m3` are treated as read without a separate call per message |
-
+| chat-contract-021 | participants-changed-departure-divergence | `participantDeparted` for an id never in the roster | apple: observers receive `ChatUpdate.participantsChanged` though the roster is unchanged. web: no `participantsChanged` is emitted |
+| chat-contract-022 | optional-fields-may-be-absent | A `Message` with `id == nil` and `timestamp == nil`, and an `Attachment` with no `displayName`/`byteSize` | The values are accepted and handled as legitimately absent; no error is raised |
 ## Edge Cases
 
 - **empty-send**: The contract sets no minimum content: `Backend.send(text:attachments:)` and `submitMessage` accept any string, including empty with no attachments, and neither reference implementation (`ObservableChatViewModel.submitMessage`, `DefaultOrchestrator.submitMessage`) rejects it, so an empty submission reaches the backend as-is.
-- **Concurrent overlapping `send` calls on a generic `Backend` conformer** — `Backend` is a class-bound, `Sendable` protocol whose `send` is a plain `async throws` method with no actor isolation of its own; the protocol grants no ordering guarantee for concurrent calls, leaving serialization to each conformer, the way `ScriptedBackend` provides it through its own actor isolation and `replayChain`.
-- **A `commandInvoked` with no matching `commandCompleted`, ever** — the activity's `result` stays `nil` and `isRunning` stays `true` indefinitely; the contract defines no timeout or cancellation policy for a command invocation that never completes, leaving that policy to a conformer or host.
-- **Cancelling consumption of `inboundEvents` mid-`ScriptedBackend` replay** — `Self.replay` awaits `try? await Task.sleep(for: beat.delay)`; the `try?` silently discards a `CancellationError` and proceeds to yield the next beat rather than stopping the replay task. This is implemented behavior, not a gap, but it is a swallowed error: a cancelled consumer does not necessarily stop a `ScriptedBackend`'s in-flight replay promptly.
-- **`transportError`/`messageFailed` with no retry** — the contract communicates failure (transport-error-is-a-signal-not-a-policy) but defines no backoff, retry count, or reconnection sequence; each `Backend` conformer owns that policy on its own (see Design Decisions).
+- **concurrent-overlapping-send**: Concurrent overlapping `send` calls on a generic `Backend` conformer: `Backend` is a class-bound, `Sendable` protocol whose `send` is a plain `async throws` method with no actor isolation of its own; the protocol grants no ordering guarantee for concurrent calls, leaving serialization to each conformer, the way `ScriptedBackend` provides it through its own actor isolation and `replayChain`.
+- **command-never-completes**: A `commandInvoked` with no matching `commandCompleted`, ever: the activity's `result` stays `nil` and `isRunning` stays `true` indefinitely; the contract defines no timeout or cancellation policy for a command invocation that never completes, leaving that policy to a conformer or host.
+- **replay-cancellation-swallowed**: Cancelling consumption of `inboundEvents` mid-`ScriptedBackend` replay: `Self.replay` awaits `try? await Task.sleep(for: beat.delay)`; the `try?` silently discards a `CancellationError` and proceeds to yield the next beat rather than stopping the replay task. This is implemented behavior, not a gap, but it is a swallowed error: a cancelled consumer does not necessarily stop a `ScriptedBackend`'s in-flight replay promptly (see Design Decisions).
+- **no-retry-after-failure**: `transportError`/`messageFailed` with no retry: the contract communicates failure (transport-error-is-a-signal-not-a-policy) but defines no backoff, retry count, or reconnection sequence; each `Backend` conformer owns that policy on its own (see Design Decisions).
 - **max-participants-enforcement**: NEEDS REVIEW: Not implemented in source. `DisplayConfig.maxParticipants` is declared as a plain optional `Int`/`number`, but no code in either package reads it to enforce a limit — `ObservableChatViewModel` only stores and copies it, and `DefaultOrchestrator` never consults it — so what happens when the roster exceeds it, or when it is `0`, is undefined.
-- **duplicate-join-unknown-departure**: The reference implementations upsert: a `participantJoined` for an id already in the roster replaces that entry (`ObservableChatViewModel.upsertParticipant`, `DefaultOrchestrator`'s `findIndex` replace), and a `participantDeparted` for an id never joined removes nothing. The platforms differ on the notification: Swift still emits `participantsChanged`, while the web emits it only when an entry was actually removed.
-- **Concurrent access to a `PermissionStore` conformer** — the protocol's methods are synchronous and non-actor-isolated by design (permission-store-is-synchronous); a conformer used from multiple threads MUST provide its own synchronization, since the protocol grants none.
-- **Malformed or empty opaque payload strings** (`payloadJSON`, `argumentSchema`, `resultJSON`, `errorMessage`) — these are plain strings with no schema validation defined by the contract itself; parsing and validity are the caller's responsibility, not something a conformer of these protocols is required to check.
-- **All optional fields absent at once** (`Message.id`/`timestamp`, `Attachment.displayName`/`byteSize`, `DisplayConfig.maxParticipants`/`themeIdentifier`, `Permission.defaultDecision`, `CommandResult.resultJSON`/`errorMessage`, `Conversation.title`) — each MUST be treated as legitimately absent, not as an error state; none of these fields is required for the shape to be valid.
-- **A single-element `ShuffleBag`** — `next()` MUST return that one element on every call rather than trying to enforce a no-repeat rule that a one-element bag cannot satisfy (chat-contract-015).
-- **An empty `ShuffleBag`** — `next()` MUST return `nil` (apple) rather than trap; a port choosing to throw instead (matching web) MUST do so deliberately, not by omission (see Cross-Platform Divergences).
+- **duplicate-join-unknown-departure**: The reference implementations upsert: a `participantJoined` for an id already in the roster replaces that entry (`ObservableChatViewModel.upsertParticipant`, `DefaultOrchestrator`'s `findIndex` replace), and a `participantDeparted` for an id never joined removes nothing. The platforms differ on the notification; see `participants-changed-departure-divergence`.
+- **permission-store-concurrent-access**: Concurrent access to a `PermissionStore` conformer: see `permission-store-is-synchronous` for the synchronization a conformer owes, since the protocol grants none.
+- **opaque-payload-strings**: Malformed or empty opaque payload strings (`payloadJSON`, `argumentSchema`, `resultJSON`, `errorMessage`): these are plain strings with no schema validation defined by the contract itself; parsing and validity are the caller's responsibility, not something a conformer of these protocols is required to check.
+- **all-optional-fields-absent**: All optional fields absent at once: see `optional-fields-may-be-absent`.
+- **single-element-shufflebag**: A single-element `ShuffleBag`: see `shufflebag-single-element` (chat-contract-015).
+- **empty-shufflebag**: An empty `ShuffleBag`: see `shufflebag-empty-returns-nil` and `shufflebag-empty-behavior-divergence`.
 
 ## Configuration
 
@@ -381,7 +414,7 @@ Not applicable — this is a chat protocol contract, not a visual component.
 | `DisplayConfig.showAvatars` | `Bool` | none (caller-supplied) | Whether a UI should render participant avatars |
 | `DisplayConfig.showReadReceipts` | `Bool` | none (caller-supplied) | Whether a UI should render read receipts |
 | `DisplayConfig.showTypingIndicators` | `Bool` | none (caller-supplied) | Whether a UI should render typing indicators |
-| `DisplayConfig.maxParticipants` | `Int?` | `nil` | An optional roster cap; enforcement point is not given (see Edge Cases) |
+| `DisplayConfig.maxParticipants` | `Int?` | `nil` | An optional roster cap; no enforcement point exists in source (see Edge Cases) |
 | `DisplayConfig.allowJoining` | `Bool` | none (caller-supplied) | Whether new participants may join |
 | `DisplayConfig.allowDeparting` | `Bool` | none (caller-supplied) | Whether participants may leave |
 | `DisplayConfig.themeIdentifier` | `String?` | `nil` | An opaque theme selector, uninterpreted by this contract |
@@ -414,18 +447,18 @@ documentation that both words are authored, never derived.
 | Option | Behavior |
 |---|---|
 | Reduce Motion | `DisplayConfig.reducedMotion` carries this setting through to a UI; the contract itself performs no animation and defines no specific behavior change, only the flag a consumer reads |
-| Increase Contrast | Not applicable: no field or type in these sources carries a contrast setting |
-| Differentiate Without Color | Not applicable: no field or type in these sources carries a color-differentiation setting |
+| Increase Contrast | Not applicable: no field or type in the apple or web chat contract packages carries a contrast setting |
+| Differentiate Without Color | Not applicable: no field or type in the apple or web chat contract packages carries a color-differentiation setting |
 
 ## Feature Flags
 
 Not applicable: no flag-key type, feature-toggle field, or conditional
-capability switch appears anywhere in these sources.
+capability switch appears anywhere in the apple or web chat contract packages.
 
 ## Analytics
 
 Not applicable: no analytics event type, tracking call, or telemetry hook
-appears anywhere in these sources.
+appears anywhere in the apple or web chat contract packages.
 
 ## Privacy
 
@@ -433,7 +466,7 @@ appears anywhere in these sources.
   `attachments` only — never a transcript or prior history, matching the
   toolkit's stated design that a coordinator holds no history. `PermissionStore`
   persists `PermissionDecision` values keyed by `(permission, requesterID)`.
-- **Storage**: `PermissionStore` is the one type in these sources responsible
+- **Storage**: `PermissionStore` is the one type in the apple or web chat contract packages responsible
   for retaining anything past a single call (`remember(decision:for:requesterID:)`);
   everything else — messages, drafts, read markers, command activity — lives
   only in the in-memory `ChatViewModel`/`Orchestrator` state these protocols
@@ -446,7 +479,7 @@ appears anywhere in these sources.
 - **Retention**: Not specified by this contract for messages, drafts, or read
   markers — no expiry, TTL, or deletion method exists on any type here;
   `PermissionStore` decisions persist until a conformer's own storage says
-  otherwise, which these sources do not define.
+  otherwise, which neither the apple nor the web contract defines.
 
 ## Logging
 
@@ -458,7 +491,7 @@ communicate failure to the caller directly rather than through a log.
 
 - **SwiftUI**: Sources live under
   `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/{Attachments,Backend,Chat,Commands,Configuration,Hooks,Media,Messages,Orchestrator,Participants,Permissions}/`.
-  `ChatViewModel` is `@MainActor, AnyObject, Sendable`; the two given actor
+  `ChatViewModel` is `@MainActor, AnyObject, Sendable`; the two actor
   conformers (`ScriptedBackend`, and `PersonaChatCoordinator` referenced from
   its doc comments) hold `inboundEvents`/its continuation as `nonisolated
   let`, so a `SwiftUI` view can start consuming the stream without waiting on
@@ -509,126 +542,129 @@ communicate failure to the caller directly rather than through a log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments/Attachment.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments/InlineDocument.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments/InteractiveWidget.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments/WidgetResponse.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Backend/Backend.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Backend/InboundEvent.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Backend/ScriptedBackend.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ActiveDraft.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ChatStateObserver.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ChatStatus.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ChatUpdate.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ChatViewModel.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/Command.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/CommandActivity.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/CommandInvocation.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/CommandInvoker.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/CommandResult.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/Skill.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/Tool.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Configuration/ChatConfig.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Configuration/DisplayConfig.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/GatingHook.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/GatingPoint.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/HookContext.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/HookDecision.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/ObservingHook.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/ObservingPoint.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Media/AttachmentPresentation.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Media/AttachmentSource.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Media/MediaType.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages/Conversation.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages/Message.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages/MessageDeliveryStatus.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages/ReadReceipt.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Orchestrator/Orchestrator.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Participants/Participant.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Participants/ParticipantConversationState.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Participants/ParticipantKind.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions/Permission.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions/PermissionDecision.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions/PermissionPrompt.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions/PermissionStore.swift` | unverified |
-| web | `packages/web/packages/chat/src/contract/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments/Attachment.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments/InlineDocument.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments/InteractiveWidget.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Attachments/WidgetResponse.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Backend/Backend.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Backend/InboundEvent.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Backend/ScriptedBackend.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ActiveDraft.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ChatStateObserver.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ChatStatus.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ChatUpdate.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Chat/ChatViewModel.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/Command.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/CommandActivity.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/CommandInvocation.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/CommandInvoker.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/CommandResult.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/Skill.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Commands/Tool.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Configuration/ChatConfig.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Configuration/DisplayConfig.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/GatingHook.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/GatingPoint.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/HookContext.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/HookDecision.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/ObservingHook.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Hooks/ObservingPoint.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Media/AttachmentPresentation.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Media/AttachmentSource.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Media/MediaType.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages/Conversation.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages/Message.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages/MessageDeliveryStatus.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Messages/ReadReceipt.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Orchestrator/Orchestrator.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Participants/Participant.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Participants/ParticipantConversationState.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Participants/ParticipantKind.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions/Permission.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions/PermissionDecision.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions/PermissionPrompt.swift` | confirmed (1.0.3) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Permissions/PermissionStore.swift` | confirmed (1.0.3) |
+| web | `packages/web/packages/chat/src/contract/` | confirmed (1.0.3) |
 
 ## Design Decisions
 
-- **Decision**: `ScriptedBackend` supports two separate construction modes
-  (fixed `script` vs. `opening` + `turn`) instead of one general-purpose
-  scripting API.
-  **Rationale**: A one-shot demo script and an ongoing scripted conversation
-  have different lifecycles — one finishes the stream, the other never does —
-  and collapsing them into a single shape would force every fixed-script
-  caller to also handle the turn-based case's open-endedness.
-  **Approved**: pending
+**Decision**: `ScriptedBackend` supports two separate construction modes
+(fixed `script` vs. `opening` + `turn`) instead of one general-purpose
+scripting API.
+**Rationale**: A one-shot demo script and an ongoing scripted conversation
+have different lifecycles — one finishes the stream, the other never does —
+and collapsing them into a single shape would force every fixed-script
+caller to also handle the turn-based case's open-endedness.
+**Approved**: pending
 
-- **Decision**: `Beat.delay` is applied before yielding its event, not after.
-  **Rationale**: A script reads top-to-bottom as a timeline ("wait, then act")
-  only if the first beat's delay can also produce a pause before anything
-  happens; trailing delay would make the very first beat unable to open with
-  silence.
-  **Approved**: pending
+**Decision**: `Beat.delay` is applied before yielding its event, not after.
+**Rationale**: A script reads top-to-bottom as a timeline ("wait, then act")
+only if the first beat's delay can also produce a pause before anything
+happens; trailing delay would make the very first beat unable to open with
+silence.
+**Approved**: pending
 
-- **Decision**: `draftUpdated.text` is always the whole draft, never a
-  fragment to append.
-  **Rationale**: A fragment-based design has no way to signal "this is a
-  correction, not a continuation," and a dropped or reordered fragment
-  silently corrupts the transcript with no error to catch it; replacing the
-  whole string every time removes that failure mode entirely.
-  **Approved**: pending
+**Decision**: `draftUpdated.text` is always the whole draft, never a
+fragment to append.
+**Rationale**: A fragment-based design has no way to signal "this is a
+correction, not a continuation," and a dropped or reordered fragment
+silently corrupts the transcript with no error to catch it; replacing the
+whole string every time removes that failure mode entirely.
+**Approved**: pending
 
-- **Decision**: `statusChanged` is a distinct, out-of-band `InboundEvent`
-  and `ChatUpdate` case on apple, rather than being folded into
-  `draftUpdated` or omitted from `ChatUpdate` entirely.
-  **Rationale**: Folding a "thinking" spinner's text into `draftUpdated` would
-  commit it into a user-visible `Message` once the draft finalizes; omitting
-  a case from `ChatUpdate` would leave a `@MainActor` view with no signal to
-  observe at all, since nothing else in the union fires for a status change.
-  **Approved**: pending
+**Decision**: `statusChanged` is a distinct, out-of-band `InboundEvent`
+and `ChatUpdate` case on apple, rather than being folded into
+`draftUpdated` or omitted from `ChatUpdate` entirely.
+**Rationale**: Folding a "thinking" spinner's text into `draftUpdated` would
+commit it into a user-visible `Message` once the draft finalizes; omitting
+a case from `ChatUpdate` would leave a `@MainActor` view with no signal to
+observe at all, since nothing else in the union fires for a status change.
+**Approved**: pending
 
-- **Decision**: Command activity (`commandInvoked`/`commandCompleted`) is its
-  own channel, never folded into `draftUpdated`.
-  **Rationale**: `CommandInvocation.id` is deliberately independent of
-  `commandName` so that two parallel invocations of the same command do not
-  collide; a shared channel with drafts would force command activity through
-  the same replace-the-whole-string semantics that drafts use, which does not
-  fit a command's start/complete lifecycle.
-  **Approved**: pending
+**Decision**: Command activity (`commandInvoked`/`commandCompleted`) is its
+own channel, never folded into `draftUpdated`.
+**Rationale**: `CommandInvocation.id` is deliberately independent of
+`commandName` so that two parallel invocations of the same command do not
+collide; a shared channel with drafts would force command activity through
+the same replace-the-whole-string semantics that drafts use, which does not
+fit a command's start/complete lifecycle.
+**Approved**: pending
 
-- **Decision**: apple's `ShuffleBag` returns `nil` on an empty source and
-  never repeats an element back-to-back, even across a refill; web's
-  `ShuffleBag` throws on empty and can repeat once across the seam between
-  refills.
-  **Rationale**: Each platform's given source states its own choice
-  independently rather than one being a bug relative to the other — apple's
-  own documentation frames the stronger no-repeat guarantee as intentional
-  ("closing that seam is the whole point at a [status] cadence"), and returning
-  `nil` instead of throwing on empty reflects that a toolkit should not trap a
-  host that configured no vocabulary, while web's looser guarantee and
-  throw-on-empty behavior is its own considered choice, not left to chance.
-  **Approved**: pending
+**Decision**: apple's `ShuffleBag` returns `nil` on an empty source and
+never repeats an element back-to-back, even across a refill; web's
+`ShuffleBag` throws on empty and can repeat once across the seam between
+refills.
+**Rationale**: Each platform's own source states its own choice
+independently rather than one being a bug relative to the other — apple's
+own documentation frames the stronger no-repeat guarantee as intentional
+("closing that seam is the whole point at a [status] cadence"), and returning
+`nil` instead of throwing on empty reflects that a toolkit should not trap a
+host that configured no vocabulary, while web's looser guarantee and
+throw-on-empty behavior is its own considered choice, not left to chance.
+**Approved**: pending
 
-- **Decision**: `CommandActivity` (apple) keeps every entry in place
-  indefinitely, while the equivalent `ActiveCommand` (web) is cleared when the
-  producing participant's turn ends.
-  **Rationale**: Both are documented, deliberate choices in their own given
-  sources, not an accidental mismatch — apple's transcript keeps a command's
-  pill exactly where the user last saw it, while web's model treats command
-  activity as scoped to the turn that produced it. A port MUST pick one
-  lifecycle per platform on purpose (see Cross-Platform Divergences) rather
-  than assume the two are interchangeable.
-  **Approved**: pending
+**Decision**: `CommandActivity` (apple) keeps every entry in place
+indefinitely, while the equivalent `ActiveCommand` (web) is cleared when the
+producing participant's turn ends.
+**Rationale**: Both are documented, deliberate choices in their own
+sources, not an accidental mismatch — apple's transcript keeps a command's
+pill exactly where the user last saw it, while web's model treats command
+activity as scoped to the turn that produced it. A port MUST pick one
+lifecycle per platform on purpose (see Cross-Platform Divergences) rather
+than assume the two are interchangeable.
+**Approved**: pending
 
-- **Decision**: `ChatViewModel` is declared `@MainActor, AnyObject, Sendable`
-  rather than `@unchecked Sendable`.
-  **Rationale**: `@unchecked Sendable` would silence the compiler without
-  proving isolation; `@MainActor` isolation is what actually guarantees
-  `ChatViewModel`'s mutable state is only ever touched from one execution
-  context, matching how a view's own layout and action handlers run.
-  **Approved**: pending
+**Decision**: `ChatViewModel` is declared `@MainActor, AnyObject, Sendable`
+rather than `@unchecked Sendable`.
+**Rationale**: `@unchecked Sendable` would silence the compiler without
+proving isolation; `@MainActor` isolation is what actually guarantees
+`ChatViewModel`'s mutable state is only ever touched from one execution
+context, matching how a view's own layout and action handlers run.
+**Approved**: pending
 
+**Decision**: `ScriptedBackend.replay` discards a `CancellationError` from `Task.sleep` (`try?`) and keeps yielding beats, rather than stopping the replay task when its consumer cancels.
+**Rationale**: `ScriptedBackend` is a demo and test conformer whose replay is a short, finite script (`ScriptedBackend.swift`, `replay`); the swallowed cancellation costs at most the remaining beats' delays, and propagating it would make the stream's end depend on the consumer's task lifetime. A production `Backend` conformer owns its own cancellation policy (see Edge Cases, replay-cancellation-swallowed).
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -649,14 +685,14 @@ communicate failure to the caller directly rather than through a log.
 
 `unit-test-coverage` is `partial`: most types here are pure protocols/interfaces
 with nothing to unit-test directly; only `ScriptedBackend`, the one concrete
-conformer given as source, has direct tests (`ScriptedBackendTests`), while
+conformer specified here, has direct tests (`ScriptedBackendTests`, `SDK/Tests/AgenticDeveloperHubSDKTests/Chat/ScriptedBackendTests.swift`), while
 several of the contract's other invariants (draft replace, status
 out-of-band, command in-place update, orphan-result drop) are corroborated
-only through tests of a conformer not included among the given sources.
+only through `ObservableChatViewModelTests` (`SDK/TestsUI/AgenticDeveloperHubSDKUITests/Chat/ObservableChatViewModelTests.swift`), which tests the `ObservableChatViewModel` conformer.
 `explicit-error-handling` is `partial`: `Backend`/hook/permission methods are
 either fallible or answer with an explicit `HookDecision.block(reason:)`, but
 `ScriptedBackend.replay` swallows a `Task.sleep` cancellation error via
-`try?` rather than propagating or logging it. `fault-tolerance` is `partial`:
+`try?` rather than propagating or logging it (accepted in Design Decisions). `fault-tolerance` is `partial`:
 failures are always signaled (`transportError`, `messageFailed`,
 `HookDecision.block`), but no retry, backoff, or reconnection policy is
 defined at this layer — each `Backend` conformer owns that decision.
@@ -668,3 +704,4 @@ defined at this layer — each `Backend` conformer owns that decision.
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Split merged chat-contract-003 cell; fixed 7 if-* compliance URLs missing ingredient-formatting. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Named every edge case, added requirements for ShuffleBag, status mapping, optional fields and the departure divergence, cited test file paths, linked related recipes and shortened the summary. |

@@ -2,15 +2,15 @@
 id: e5b8e26f-2869-4a09-8d8e-0bb68ece805d
 title: "Connector Registry"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Registry for tracking and querying HTML element instances by unique identifier within a React application."
+summary: "Scoped registry for tracking and querying platform view handles by unique identifier within a subtree."
 platforms:
   - typescript
   - web
@@ -19,7 +19,8 @@ tags:
   - registry
   - react
 depends-on: []
-related: []
+related:
+  - d7a1229c-cf03-436f-8287-d99b52747510
 references: []
 approved-by: ""
 approved-date: ""
@@ -35,13 +36,16 @@ The Connector Registry is a React context-based store for managing references to
 
 - **provide-context**: The registry MUST be established by a scoped provider that exposes it to descendant views in a subtree, so independent registries can coexist without global state. On the source platform this is `ConnectorRegistryProvider`, backed by React Context (see Platform Notes).
 - **register-elements**: The registry MUST accept registration of a platform view handle (an `HTMLElement` on the source web platform) under a unique string identifier via a `register(id, element)` operation.
-- **unregister-function**: `register()` MUST return a function that unregisters the element when called.
+- **unregister-function**: `register()` MUST return a function that unregisters the element when called. The returned function MUST be idempotent: a second and later call removes nothing and notifies no subscriber.
+- **stale-unregister-noop**: A function returned by `register(id, element)` MUST remove the entry only if `id` is still held by that same `element`. If the id has since been replaced by a different element, calling it MUST remove nothing and notify no subscriber.
 - **idempotent-reregister**: If an element is registered again under an id it already holds, with the identical element reference, `register()` MUST return a no-op unregister function and MUST NOT notify subscribers.
 - **replace-on-conflict**: If an element is registered again under an id it already holds, but with a *different* element reference, the registry MUST replace the stored element and notify subscribers as an ordinary change.
 - **update-registry-on-change**: Registering or unregistering an element MUST notify all active subscribers immediately (synchronously, before the call returns).
-- **provide-snapshot**: The registry MUST provide a `snapshot()` operation that returns a current `RegistrySnapshot` object containing the full registry state.
+- **provide-snapshot**: The registry MUST provide a `snapshot()` operation that returns a current `RegistrySnapshot` object containing the registry state, with the live/frozen split defined by **snapshot-liveness**.
 - **stable-snapshot-identity**: `snapshot()` MUST return the same `RegistrySnapshot` object reference on repeated calls as long as no registration or unregistration has occurred in between, so a reactive binding (e.g. `useSyncExternalStore` on the source platform) can treat an unchanged snapshot as identical and skip re-rendering.
 - **implement-subscription**: The registry MUST support subscription to changes via a `subscribe(listener)` operation, which MUST return an unsubscribe function.
+- **unsubscribe-during-notify**: Removal of a listener takes effect immediately, including while a notification pass is running: a listener removed before it has been called in the current pass MUST NOT be called in that pass, and a listener that has already been called is unaffected.
+- **snapshot-liveness**: A `RegistrySnapshot`'s `has(id)` and `get(id)` MUST answer from the registry's current contents at the time they are called, while `ids()` MUST return the identifiers as they were when that snapshot was built. A snapshot held across a change therefore keeps its old `ids()` but sees the change through `has` and `get`; consumers needing the new identifier list obtain a new snapshot.
 - **expose-has-method**: A `RegistrySnapshot` MUST provide a `has(id)` method that returns a boolean indicating whether an id exists in the registry.
 - **expose-get-method**: A `RegistrySnapshot` MUST provide a `get(id)` method that returns the registered element or `undefined` if the id is not present.
 - **expose-ids-method**: A `RegistrySnapshot` MUST provide an `ids()` method that returns an array of all registered identifiers in the registry.
@@ -69,7 +73,7 @@ Not applicable: The registry is a programmatic utility layer with no direct user
 | registry-002 | unregister-function | Call `register("btn1", el)`; invoke the returned function | Element is removed from the registry; `snapshot().get("btn1")` returns `undefined` |
 | registry-003 | idempotent-reregister | Call `register("btn1", el)`; call `register("btn1", el)` again with the same reference | Second call returns a function that performs no action when invoked; registry state and snapshot are unchanged; no notification occurs |
 | registry-004 | replace-on-conflict | Call `register("btn1", elA)`; call `register("btn1", elB)` with a different element reference | `register` proceeds as an ordinary change (not a no-op); subscribers are notified; `snapshot().get("btn1")` returns `elB` |
-| registry-005 | update-registry-on-change, implement-subscription | Subscribe a listener; call `register("btn1", el)`; invoke the returned unregister function | Listener is called exactly twice: once synchronously after `register`, once synchronously after unregister; an idempotent re-register or an already-stale unregister call adds zero further calls |
+| registry-005 | update-registry-on-change, implement-subscription, unregister-function | Subscribe a listener; call `register("btn1", el)`; invoke the returned unregister function | Listener is called exactly twice: once synchronously after `register`, once synchronously after unregister; an idempotent re-register or a second call to the same unregister function adds zero further calls |
 | registry-006 | provide-snapshot, expose-has-method, expose-get-method | Call `snapshot()` immediately after registering an element with id `"btn1"` | `snapshot.has("btn1")` returns `true`; `snapshot.get("btn1")` returns the element |
 | registry-007 | stable-snapshot-identity | Call `snapshot()` twice with no `register`/`unregister` call in between | Both calls return the identical (`===`) `RegistrySnapshot` object |
 | registry-008 | expose-ids-method | Register elements with ids `"btn1"` and `"btn2"`; call `snapshot().ids()` | Returns an array containing both `"btn1"` and `"btn2"` |
@@ -77,16 +81,16 @@ Not applicable: The registry is a programmatic utility layer with no direct user
 | registry-010 | provide-optional-hook | Call `useConnectorRegistryOptional()` outside a provider; call it again inside one | First call returns `null`; second call returns the registry handle |
 | registry-011 | provide-snapshot-hook, throw-without-provider | Call `useRegistrySnapshot()` outside a provider; then, inside a provider, render it, register an element, and unregister it | Outside a provider it throws the same error as `useConnectorRegistry()`; inside a provider it returns the current snapshot and the component re-renders once for the register and once for the unregister |
 | registry-012 | provide-snapshot, expose-has-method, expose-get-method, expose-ids-method | Call `snapshot()` on a freshly mounted `ConnectorRegistryProvider` with no elements registered | `snapshot().ids()` returns `[]`; `snapshot().has(id)` returns `false` for any id; `snapshot().get(id)` returns `undefined` for any id |
-| registry-013 | unregister-function, replace-on-conflict | Call `register("btn1", elA)` and keep its returned function `unregA`; call `register("btn1", elB)`; invoke `unregA` | `elB` remains registered; `snapshot().get("btn1")` still returns `elB`; `unregA` performs no action |
-| registry-014 | implement-subscription, update-registry-on-change | Subscribe listener A, which unsubscribes listener B when called, then subscribe listener B; trigger a change via `register()` | Listener B is not called during this notification pass; a later change calls only listener A |
-
+| registry-013 | stale-unregister-noop, replace-on-conflict | Call `register("btn1", elA)` and keep its returned function `unregA`; call `register("btn1", elB)`; invoke `unregA` | `elB` remains registered; `snapshot().get("btn1")` still returns `elB`; `unregA` performs no action |
+| registry-014 | unsubscribe-during-notify, implement-subscription | Subscribe listener A, which unsubscribes listener B when called, then subscribe listener B; trigger a change via `register()` | Listener B is not called during this notification pass; a later change calls only listener A |
+| registry-015 | snapshot-liveness | Register `"btn1"`; take snapshot S; register `"btn2"` | `S.ids()` still returns only `["btn1"]`; `S.has("btn2")` returns `true` and `S.get("btn2")` returns the element; a fresh `snapshot()` returns an `ids()` containing both |
 ## Edge Cases
 
 - **Empty registry**: An initial `snapshot().ids()` on a fresh provider MUST return an empty array; `has(id)` and `get(id)` MUST return false and undefined respectively.
-- **Unregister with mismatched reference**: If `register("btn1", elA)` is called, then the returned function is stored and later invoked after `register("btn1", elB)` is called with a different element, the function MUST NOT unregister elB (it should only unregister if the current element still matches elA).
+- **Unregister with mismatched reference**: See **stale-unregister-noop**. If `register("btn1", elA)` is called, then the returned function is stored and later invoked after `register("btn1", elB)` is called with a different element, the function MUST NOT unregister elB (it should only unregister if the current element still matches elA).
 - **Subscribe after registry populated**: `subscribe()` only adds the listener to the internal set — it does not call the listener to sync current state. A subscriber added after elements are already registered is called only on subsequent `register()`/`unregister()` calls, never on subscription itself.
-- **Unsubscribe during notification**: Listeners are iterated with `Set.forEach`. A listener that unsubscribes itself, or another listener, during a notification pass takes effect immediately: a target listener not yet called in the current pass is skipped for that pass, while a listener already called is unaffected.
-- **Null/undefined id or element**: Excluded by the TypeScript signature (`register(id: string, el: HTMLElement)`); these values are not assignable and are not part of the runtime contract.
+- **Unsubscribe during notification**: See **unsubscribe-during-notify**. A listener that unsubscribes itself, or another listener, during a notification pass takes effect immediately: a target listener not yet called in the current pass is skipped for that pass, while a listener already called is unaffected.
+- **Null/undefined id or element**: Not part of the runtime contract; callers MUST supply a string id and a view handle, and the registry does not guard against missing values.
 
 ## Configuration
 
@@ -122,9 +126,9 @@ Not applicable: The source code contains no logging statements or diagnostic out
 
 ## Platform Notes
 
-- **Source platform (web, React)**: Implemented in `packages/web/packages/chat/src/modes/three-pane/connectors/ConnectorRegistry.tsx`. `ConnectorRegistryProvider` scopes one registry instance per mounted subtree (a `useRef`-held `Map`/`Set`, via React Context), not a global singleton. `register()`, `snapshot()`, and `subscribe()` are exposed through the context value; `useConnectorRegistry()` reads it and throws when there is no provider, `useConnectorRegistryOptional()` returns `null` instead, and `useRegistrySnapshot()` wraps `useSyncExternalStore` around `subscribe`/`snapshot` for reactive re-rendering.
-- **SwiftUI**: Model the registry as an `@Observable` class instantiated by whichever view owns the subtree (e.g. the three-pane container) and injected into descendants via `.environment(_:)` — one instance per owning subtree, not an app-wide singleton. `register`/`unregister` mutate an internal dictionary and the `@Observable` machinery notifies observing views automatically; `snapshot()` returns a lightweight read-only view over that state.
-- **Compose**: Provide the registry through a `CompositionLocal` created per subtree (`compositionLocalOf`), backed by a class holding a `mutableStateMapOf<String, LayoutCoordinates>` (or similar) so Compose's snapshot state system drives recomposition automatically when entries change — no manual `SnapshotMutationPolicy` is needed.
+- **Source platform (web, React)**: Implemented in `packages/web/packages/chat/src/modes/three-pane/connectors/ConnectorRegistry.tsx`. Listeners are held in a `Set` and iterated with `Set.forEach`, which is what gives **unsubscribe-during-notify** its behavior. The TypeScript signature `register(id: string, el: HTMLElement)` excludes null and undefined arguments at compile time. `ConnectorRegistryProvider` scopes one registry instance per mounted subtree (a `useRef`-held `Map`/`Set`, via React Context), not a global singleton. `register()`, `snapshot()`, and `subscribe()` are exposed through the context value; `useConnectorRegistry()` reads it and throws when there is no provider, `useConnectorRegistryOptional()` returns `null` instead, and `useRegistrySnapshot()` wraps `useSyncExternalStore` around `subscribe`/`snapshot` for reactive re-rendering.
+- **SwiftUI**: Model the registry as an `@Observable` class instantiated by whichever view owns the subtree (e.g. the three-pane container) and injected into descendants via `.environment(_:)` — one instance per owning subtree, not an app-wide singleton. `register`/`unregister` mutate an internal dictionary and `snapshot()` returns a lightweight read-only view over that state. Automatic `@Observable` tracking alone does not satisfy the contract: notify subscribers explicitly and synchronously inside `register`/unregister before returning (**update-registry-on-change**), skip both mutation and notification when the identical element is re-registered (**idempotent-reregister**), and cache the snapshot object, rebuilding it only on a real change (**stable-snapshot-identity**).
+- **Compose**: Provide the registry through a `CompositionLocal` created per subtree (`compositionLocalOf`), backed by a class holding a `mutableStateMapOf<String, LayoutCoordinates>` (or similar) so Compose's snapshot state system drives recomposition when entries change. State writes alone are not enough: invoke subscriber callbacks synchronously inside `register`/unregister before returning (**update-registry-on-change**), compare the incoming layout-coordinates handle with the stored one and return without writing when identical (**idempotent-reregister**), and keep one cached snapshot object that is replaced only on a real change (**stable-snapshot-identity**).
 - **AppKit / UIKit**: Give each owning view controller (e.g. the three-pane container) its own registry instance — not a singleton — using an `NSMapTable`/`Dictionary` for id-to-view storage and a delegate or closure-based listener list; pass the instance down to descendants that need it (e.g. via initializer injection) rather than reaching it through shared global state.
 - **WinUI 3**: Give each owning control (e.g. the three-pane container) its own registry instance — not a static class — backed by a `Dictionary<string, UIElement>`; expose `Register(id, element)` returning an unregister action, `GetSnapshot()` returning a read-only snapshot, and an event (e.g. `RegistryChanged`) for subscriber notification; pass the instance down via constructor injection or an attached property scoped to the subtree.
 
@@ -132,12 +136,12 @@ Not applicable: The source code contains no logging statements or diagnostic out
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/modes/three-pane/connectors/ConnectorRegistry.tsx` | unverified |
+| web | `packages/web/packages/chat/src/modes/three-pane/connectors/ConnectorRegistry.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 **Decision**: `snapshot()` returns the same `RegistrySnapshot` object reference between changes, but that snapshot's `has()`/`get()` methods close over the live underlying `Map` rather than a frozen copy — only `ids()` is captured as a fixed array at the time the snapshot was built.
-**Rationale**: A stable object reference lets `useSyncExternalStore`-style consumers treat an unchanged snapshot as identical (`===`) and skip re-rendering, while avoiding the cost of deep-copying the `Map` on every change; `ids()` is copied because callers commonly iterate or diff it.
+**Rationale**: This is the behavior defined by **snapshot-liveness**. A stable object reference lets `useSyncExternalStore`-style consumers treat an unchanged snapshot as identical (`===`) and skip re-rendering, while avoiding the cost of deep-copying the `Map` on every change; `ids()` is copied because callers commonly iterate or diff it.
 **Approved**: pending
 
 **Decision**: Re-registering the same id with the identical element reference is a no-op: `register()` returns an empty unregister function and does not notify subscribers.
@@ -169,3 +173,4 @@ Not applicable: The source code contains no logging statements or diagnostic out
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added stable-snapshot-identity and replace-on-conflict requirements with test vectors, corrected the snapshot-immutability and subscribe-on-add claims, made requirements platform-neutral and moved hook names into Platform Notes, corrected the SwiftUI/Compose/AppKit/WinUI notes to match per-subtree scoping, reformatted Design Decisions, dropped the inapplicable Compliance section, tightened test-vector precision and added edge-case vectors, and expanded the Overview |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Restored a genuine Compliance section (separation-of-concerns/explicit-error-handling passed, unit-test-coverage failed: only one shallow test exists). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Made stale-unregister-noop, unsubscribe-during-notify and snapshot-liveness named requirements, made unregister idempotent, added vector 015, moved web details into Platform Notes, explained how SwiftUI and Compose meet the sync requirements, reworded the summary and linked connector-svg as related. |

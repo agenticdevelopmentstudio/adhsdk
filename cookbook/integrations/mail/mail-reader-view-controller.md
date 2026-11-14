@@ -2,11 +2,11 @@
 id: ac5b0100-ea5d-4abf-a9aa-11a477878514
 title: "MailReaderViewController"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -54,7 +54,7 @@ The body is shown in a web view with JavaScript off and every remote load blocke
 - **date-line**: The date line MUST show the model's full-date formatting of the message date, which returns the original string when the date cannot be parsed.
 - **same-message-no-reload**: When the model republishes the message already on screen (same `id`, for example after marking it read), the component MUST update the header lines and MUST NOT reload the body.
 - **new-message-resets-remote**: When a different message becomes open, the component MUST reset remote content to blocked for it.
-- **remote-bar-shown-for-html**: When a different message becomes open, the component MUST show the remote-content bar if and only if the message has a non-nil HTML body.
+- **remote-bar-shown-for-html**: When a different message becomes open, the component MUST show the remote-content bar if and only if the message has a non-nil, non-empty HTML body, the same test as **html-as-sent**. The source tests only for a non-nil HTML body; see the known gap in Edge Cases.
 - **remote-bar-copy**: The remote-content bar MUST show the note "Remote images are blocked to protect your privacy." and a button titled "Load Remote Images".
 - **load-remote-action**: Activating "Load Remote Images" MUST allow remote content for the open message, hide the remote-content bar and reload the body without the blocking policy and without the content rule list.
 - **load-remote-scoped**: Allowing remote content MUST apply only to the message on screen; opening a different message MUST block remote content again.
@@ -82,6 +82,8 @@ The body is shown in a web view with JavaScript off and every remote load blocke
 - **body-accessibility-id**: The body view MUST carry the accessibility identifier "mail.reader.body".
 - **header-selectable**: The subject, sender, recipients and date text MUST be selectable.
 - **header-truncation**: The sender, recipients and date lines MUST truncate at the tail when too long. They MUST yield width first: each sets a low horizontal content compression resistance priority (`defaultLow`), so they compress before the subject and the remote-content bar.
+- **fixed-constants**: The external link schemes (`http`, `https`, `mailto`), the blocking policy text from **blocking-policy-prefix** and the rule list identifier "mail-reader-block-remote" are fixed constants. An implementation MUST NOT expose them as settings.
+- **localized-strings**: A port MUST take every user-visible string from the keys in Localization and MUST NOT use literals. The source uses literals today.
 
 ## Appearance
 
@@ -121,44 +123,50 @@ Layout from top to bottom: header, separator, body. The remote-content bar is th
 
 ## Conformance Test Vectors
 
-| ID | Requirements | Input | Expected |
-|----|-------------|-------|----------|
-| mail-reader-view-controller-001 | blocking-policy-prefix | MailReaderDocumentTests `aBlockedDocumentOpensWithAPolicyThatAllowsNothingRemote`: HTML body with an `img` pointing at `https://t.example.com/open.gif`, blocking on | The document starts with `<meta http-equiv="Content-Security-Policy"`, contains `default-src 'none'`, and contains neither `https:;` nor `img-src *` |
-| mail-reader-view-controller-002 | allowed-no-policy, html-as-sent | MailReaderDocumentTests `loadingRemoteImagesDropsThePolicy`: HTML body `<html><body>hi</body></html>`, blocking off | The document equals the body exactly |
-| mail-reader-view-controller-003 | text-escaped, text-fallback-source | MailReaderDocumentTests `aTextBodyIsEscaped`: no HTML, text body `<script>alert(1)</script> & co`, blocking on | The document contains `&lt;script&gt;alert(1)&lt;/script&gt; &amp; co` and does not contain `<script>` |
-| mail-reader-view-controller-004 | text-fallback-source | Source behavior: no HTML, no text body, snippet "Lunch at noon" | The page shows "Lunch at noon" inside the `pre` element |
-| mail-reader-view-controller-005 | html-as-sent, text-fallback-source | Source behavior: empty-string HTML, text body "plain" | The text fallback page with "plain" is shown, not the empty HTML |
-| mail-reader-view-controller-006 | blocking-policy-prefix | Source behavior: blocking on, any body | The prefix is exactly the policy text `default-src 'none'; img-src data: cid:; media-src data:; font-src data:; style-src 'unsafe-inline'` inside the meta tag |
-| mail-reader-view-controller-007 | link-opens-externally | Source behavior: user clicks a link to `https://example.com/a` | The URL opens in the default browser and the reader's navigation is cancelled |
-| mail-reader-view-controller-008 | link-opens-externally | Source behavior: a link to `MAILTO:a@example.com` | The URL is opened by the system and the reader's navigation is cancelled |
-| mail-reader-view-controller-009 | link-other-schemes-dropped, link-never-in-reader | Source behavior: a link to `smb://host/share` | The navigation is cancelled and nothing is opened |
-| mail-reader-view-controller-010 | fragment-in-place | Source behavior: in-frame link to `about:blank#section` | The navigation is allowed and the message scrolls in place; nothing opens externally |
-| mail-reader-view-controller-011 | own-page-only | Source behavior: a meta refresh or form submit to `https://evil.example/` that is not a link activation | The navigation is cancelled |
-| mail-reader-view-controller-012 | own-page-only | Source behavior: the reader's own `loadHTMLString` navigation to an `about:` URL, not a link | The navigation is allowed |
-| mail-reader-view-controller-013 | navigation-without-url | Source behavior: a navigation request whose URL is nil | The navigation is cancelled |
-| mail-reader-view-controller-014 | none-hides-message-views, none-placeholder-text, none-clears-body | Source behavior: the model's open message becomes nil | Header, separator and body are hidden; "No message selected" is shown; an empty HTML string is loaded |
-| mail-reader-view-controller-015 | subject-line | Source behavior: message with subject "" | The subject line reads "(no subject)" |
-| mail-reader-view-controller-016 | recipients-line, cc-suffix | Source behavior: to `a@x.com`, `b@x.com`; cc empty | The recipients line reads "To: a@x.com, b@x.com" |
-| mail-reader-view-controller-017 | cc-suffix | Source behavior: to `a@x.com`; cc `c@x.com`, `d@x.com` | The recipients line reads "To: a@x.com   Cc: c@x.com, d@x.com" |
-| mail-reader-view-controller-018 | same-message-no-reload | Source behavior: the model republishes message `m1` with the UNREAD label removed while `m1` is shown | The header lines update and the body is not reloaded |
-| mail-reader-view-controller-019 | new-message-resets-remote, load-remote-scoped | Source behavior: remote allowed for `m1`, then `m2` opens | `m2` loads with the blocking policy and the remote-content bar shown when `m2` has HTML |
-| mail-reader-view-controller-020 | remote-bar-shown-for-html | Source behavior: a message with a nil HTML body opens | The remote-content bar is hidden |
-| mail-reader-view-controller-021 | load-remote-action | Source behavior: activate "Load Remote Images" on a message with HTML | The bar hides and the body reloads without the policy prefix and without the rule list |
-| mail-reader-view-controller-022 | load-remote-no-message | Source behavior: activate "Load Remote Images" with the model's open message nil | Nothing changes |
-| mail-reader-view-controller-023 | stale-load-guard | Source behavior: message `m1` opens, and `m2` opens before the rule list finishes compiling | Only `m2`'s body is loaded |
-| mail-reader-view-controller-024 | rule-list-failure-tolerated | Source behavior: rule-list compilation returns nil | The body loads with the blocking policy prefix and no rule list |
-| mail-reader-view-controller-025 | no-coder-init | Source behavior: construct from an archive | `init(coder:)` traps |
-| mail-reader-view-controller-026 | scripts-off | Source behavior: a message whose HTML body contains a script that writes to the page | The script does not run |
-| mail-reader-view-controller-027 | rule-list-applied | Source behavior: blocking on, rule list compiled, HTML with `<img src="http://t.example/p.gif">` | The image request is blocked by the rule list |
-| mail-reader-view-controller-028 | date-line | Source behavior: message date "not-a-date" | The date line shows "not-a-date" |
-| mail-reader-view-controller-029 | observe-open-message | Source behavior: a message is already open when the view loads | The reader shows it as soon as the view has loaded |
+Rows whose Test column names no test are derived from the source and have no test behind them; an implementer writes the test.
+
+| ID | Requirements | Test | Input | Expected |
+|----|-------------|------|-------|----------|
+| mail-reader-view-controller-001 | blocking-policy-prefix | `MailReaderDocumentTests.aBlockedDocumentOpensWithAPolicyThatAllowsNothingRemote` | HTML body with an `img` pointing at `https://t.example.com/open.gif`, blocking on | The document starts with `<meta http-equiv="Content-Security-Policy"`, contains `default-src 'none'`, and contains neither `https:;` nor `img-src *` |
+| mail-reader-view-controller-002 | allowed-no-policy, html-as-sent | `MailReaderDocumentTests.loadingRemoteImagesDropsThePolicy` | HTML body `<html><body>hi</body></html>`, blocking off | The document equals the body exactly |
+| mail-reader-view-controller-003 | text-escaped, text-fallback-source | `MailReaderDocumentTests.aTextBodyIsEscaped` | no HTML, text body `<script>alert(1)</script> & co`, blocking on | The document contains `&lt;script&gt;alert(1)&lt;/script&gt; &amp; co` and does not contain `<script>` |
+| mail-reader-view-controller-004 | text-fallback-source | none: derived from source | no HTML, no text body, snippet "Lunch at noon" | The page shows "Lunch at noon" inside the `pre` element |
+| mail-reader-view-controller-005 | html-as-sent, text-fallback-source | none: derived from source | empty-string HTML, text body "plain" | The text fallback page with "plain" is shown, not the empty HTML |
+| mail-reader-view-controller-006 | blocking-policy-prefix | none: derived from source | blocking on, any body | The prefix is exactly the policy text `default-src 'none'; img-src data: cid:; media-src data:; font-src data:; style-src 'unsafe-inline'` inside the meta tag |
+| mail-reader-view-controller-007 | link-opens-externally | none: derived from source | user clicks a link to `https://example.com/a` | The URL opens in the default browser and the reader's navigation is cancelled |
+| mail-reader-view-controller-008 | link-opens-externally | none: derived from source | a link to `MAILTO:a@example.com` | The URL is opened by the system and the reader's navigation is cancelled |
+| mail-reader-view-controller-009 | link-other-schemes-dropped, link-never-in-reader | none: derived from source | a link to `smb://host/share` | The navigation is cancelled and nothing is opened |
+| mail-reader-view-controller-010 | fragment-in-place | none: derived from source | in-frame link to `about:blank#section` | The navigation is allowed and the message scrolls in place; nothing opens externally |
+| mail-reader-view-controller-011 | own-page-only | none: derived from source | a meta refresh or form submit to `https://evil.example/` that is not a link activation | The navigation is cancelled |
+| mail-reader-view-controller-012 | own-page-only | none: derived from source | the reader's own `loadHTMLString` navigation to an `about:` URL, not a link | The navigation is allowed |
+| mail-reader-view-controller-013 | navigation-without-url | none: derived from source | a navigation request whose URL is nil | The navigation is cancelled |
+| mail-reader-view-controller-014 | none-hides-message-views, none-placeholder-text, none-clears-body | none: derived from source | the model's open message becomes nil | Header, separator and body are hidden; "No message selected" is shown; an empty HTML string is loaded |
+| mail-reader-view-controller-015 | subject-line | none: derived from source | message with subject "" | The subject line reads "(no subject)" |
+| mail-reader-view-controller-016 | recipients-line, cc-suffix | none: derived from source | to `a@x.com`, `b@x.com`; cc empty | The recipients line reads "To: a@x.com, b@x.com" |
+| mail-reader-view-controller-017 | cc-suffix | none: derived from source | to `a@x.com`; cc `c@x.com`, `d@x.com` | The recipients line reads "To: a@x.com   Cc: c@x.com, d@x.com" |
+| mail-reader-view-controller-018 | same-message-no-reload | none: derived from source | the model republishes message `m1` with the UNREAD label removed while `m1` is shown | The header lines update and the body is not reloaded |
+| mail-reader-view-controller-019 | new-message-resets-remote, load-remote-scoped | none: derived from source | remote allowed for `m1`, then `m2` opens | `m2` loads with the blocking policy and the remote-content bar shown when `m2` has HTML |
+| mail-reader-view-controller-020 | remote-bar-shown-for-html | none: derived from source | a message with a nil HTML body opens | The remote-content bar is hidden |
+| mail-reader-view-controller-021 | load-remote-action | none: derived from source | activate "Load Remote Images" on a message with HTML | The bar hides and the body reloads without the policy prefix and without the rule list |
+| mail-reader-view-controller-022 | load-remote-no-message | none: derived from source | activate "Load Remote Images" with the model's open message nil | Nothing changes |
+| mail-reader-view-controller-023 | stale-load-guard | none: derived from source | message `m1` opens, and `m2` opens before the rule list finishes compiling | Only `m2`'s body is loaded |
+| mail-reader-view-controller-024 | rule-list-failure-tolerated | none: derived from source | rule-list compilation returns nil | The body loads with the blocking policy prefix and no rule list |
+| mail-reader-view-controller-025 | no-coder-init | none: derived from source | construct from an archive | `init(coder:)` traps |
+| mail-reader-view-controller-026 | scripts-off | none: derived from source | a message whose HTML body contains a script that writes to the page | The script does not run |
+| mail-reader-view-controller-027 | rule-list-applied | none: derived from source | blocking on, rule list compiled, HTML with `<img src="http://t.example/p.gif">` | The image request is blocked by the rule list |
+| mail-reader-view-controller-028 | date-line | none: derived from source | message date "not-a-date" | The date line shows "not-a-date" |
+| mail-reader-view-controller-029 | observe-open-message | none: derived from source | a message is already open when the view loads | The reader shows it as soon as the view has loaded |
+| mail-reader-view-controller-030 | own-page-only | none: derived from source | a meta refresh to `about:blank` that is not a link activation | The source allows the navigation; whether it should is undecided |
+| mail-reader-view-controller-031 | remote-bar-shown-for-html | none: derived from source | a message with an empty-string HTML body opens | The remote-content bar is hidden (the source shows it; known gap) |
+| mail-reader-view-controller-032 | small-button-target | none: derived from source | Measure the rendered "Load Remote Images" button against the Apple Human Interface Guidelines minimum target | The size is recorded and the review item settled |
+| mail-reader-view-controller-033 | state-announcement | none: derived from source | With VoiceOver on, open a message, activate "Load Remote Images" and let the body finish loading | Whether VoiceOver announces each change is recorded and the review item settled |
 
 ## Edge Cases
 
 - **Empty subject**: MUST show "(no subject)" (#requirements/subject-line).
 - **Empty `to` list**: the recipients line reads "To: " with nothing after it; the source adds no fallback text.
 - **Empty `cc` list**: MUST append nothing to the recipients line (#requirements/cc-suffix).
-- **Empty-string HTML body**: the remote-content bar is shown for it because the check is only whether the HTML is nil, yet the text fallback page is what loads, so the button then reloads the same text page. The source does not special-case it.
+- **Empty-string HTML body**: the remote-content bar MUST be hidden, because the text fallback page loads and there is nothing remote to allow (#requirements/remote-bar-shown-for-html). Known gap: the source shows the bar, because its check is only whether the HTML is nil, so the button then reloads the same text page.
 - **Nil HTML and nil text**: the snippet is used (#requirements/text-fallback-source). An empty snippet gives an empty page.
 - **Very long headers**: the sender, recipients and date lines MUST truncate at the tail; the subject wraps and is at most the header width minus 32 points.
 - **Unparseable date**: MUST show the original string unchanged (#requirements/date-line).
@@ -167,6 +175,7 @@ Layout from top to bottom: header, separator, body. The remote-content bar is th
 - **Concurrent access**: the controller is main-actor isolated, and each model value starts its own task. The header always reflects the latest value, and the stale-load-guard drops a body load whose message is no longer shown. Two quick publishes of the same new message reload the body once: the first records the id before any await, so the second is not new.
 - **Error, rule list compile fails**: MUST load with the policy prefix alone (#requirements/rule-list-failure-tolerated). The failure is swallowed with no log or user message, and the next load tries to compile again. The source does not say whether that silence is intended.
 - **Error, body load fails**: the controller sets no failure handler on the web view, so a failed load shows no message and no error state.
+- **Meta refresh to `about:blank`**: a navigation the message starts by itself to an `about:` URL passes the own-page test, so the source allows it and the message is replaced by a blank page under the real headers. Whether only the reader's own `loadHTMLString` navigation should pass is undecided (mail-reader-view-controller-030).
 - **Remote content allowed**: the policy and the rule list are both gone, so only the navigation rules stop a page's own navigations (#requirements/own-page-only).
 - **Offline or disconnected**: not applicable to the reader itself; it makes no network requests while blocked, and once remote content is allowed the web view's loads fail silently when the network is down. The message comes from the model, which reads local state.
 - **Dropped link scheme**: a link whose scheme is not `http`, `https` or `mailto` MUST do nothing and show no confirmation.
@@ -178,7 +187,8 @@ Layout from top to bottom: header, separator, body. The remote-content bar is th
 |--------|------|---------|-------------|
 | model | MailBrowserModel | required | The shared model whose open message the reader shows; given at construction. |
 
-Internal constants, not configurable: the external link schemes (`http`, `https`, `mailto`), the blocking policy text from blocking-policy-prefix, and the rule list identifier "mail-reader-block-remote" are fixed in the source (`externalSchemes` is a static constant); an implementation MUST NOT expose them as settings.
+Internal constants, not configurable: the external link schemes, the blocking policy text and the rule list identifier are fixed in the source (`externalSchemes` is a static constant); see **fixed-constants**.
+
 ## Deep Linking
 
 Not applicable: the reader opens no deep links and has no address of its own; it opens only the links inside a message in the system's default handler.
@@ -187,14 +197,14 @@ Not applicable: the reader opens no deep links and has no address of its own; it
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| none (literal) | No message selected | Placeholder when no message is open |
-| none (literal) | (no subject) | Subject line for an empty subject |
-| none (literal) | To: | Prefix of the recipients line |
-| none (literal) | Cc: | Cc part of the recipients line |
-| none (literal) | Remote images are blocked to protect your privacy. | Note in the remote-content bar |
-| none (literal) | Load Remote Images | Button title |
+| mail.reader.placeholder | No message selected | Placeholder when no message is open |
+| mail.reader.noSubject | (no subject) | Subject line for an empty subject |
+| mail.reader.toPrefix | To: | Prefix of the recipients line |
+| mail.reader.ccPrefix | Cc: | Cc part of the recipients line |
+| mail.reader.remoteNote | Remote images are blocked to protect your privacy. | Note in the remote-content bar |
+| mail.reader.loadRemote | Load Remote Images | Button title |
 
-The strings are literals in source, not localization keys. The date line is formatted by the model's locale-aware date formatting.
+The keys are the contract for ports (see **localized-strings**); the source uses the English text as literals, not keys. The date line is formatted by the model's locale-aware date formatting.
 
 ## Accessibility Options
 
@@ -235,7 +245,7 @@ Not applicable: the source writes no log; the swallowed rule list failure produc
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailReaderViewController.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailReaderViewController.swift` | confirmed (1.0.1) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -244,51 +254,51 @@ Not applicable: the source writes no log; the swallowed rule list failure produc
 ## Design Decisions
 
 **Decision**: The body is shown with JavaScript off, a non-persistent data store and every remote load blocked until the user asks for them.
-**Rationale**: The class comment says opening a message must never tell its sender it was read through tracking pixels, and must never run its scripts.
+**Rationale**: Opening a message must never tell its sender it was read through tracking pixels, and must never run its scripts.
 **Approved**: pending
 
 **Decision**: Remote blocking is done twice: a Content-Security-Policy meta tag at the start of the document and a content rule list.
-**Rationale**: The comment on the policy says it "is the block itself, not a backup: it holds even if the content rule list fails to compile". The rule list is compiled once per process and the policy needs none.
+**Rationale**: The policy is the block itself, not a backup: it holds even if the content rule list fails to compile. The rule list is compiled once per process and the policy needs none.
 **Approved**: pending
 
 **Decision**: The policy is placed first in the document, and the document is the sender's HTML as sent.
-**Rationale**: The comment on `document` states the HTML parser places a leading meta tag in the head, and a policy the message brings can only narrow this one.
+**Rationale**: The HTML parser places a leading meta tag in the head, and a policy the message brings can only narrow this one.
 **Approved**: pending
 
 **Decision**: The rule list uses three rules, one per scheme family, not one rule with alternation.
-**Rationale**: The source comment records that WebKit's content-blocker regular expression has no alternation.
+**Rationale**: WebKit's content-blocker regular expression has no alternation.
 **Approved**: pending
 
 **Decision**: "Load Remote Images" applies to the message on screen only and is cleared when a different message opens.
-**Rationale**: The class comment says the block is lifted "for the message on screen only", so one trusted message never makes the next one load trackers.
+**Rationale**: The block is lifted for the message on screen only, so one trusted message never makes the next one load trackers.
 **Approved**: pending
 
 **Decision**: Only a different message id reloads the body; a republished message with the same id updates the header alone.
-**Rationale**: The source comment explains a label change (marking read) republishes the message and only a different one reloads the body, which keeps the scroll position and avoids a flash.
+**Rationale**: A label change (marking read) republishes the message, and reloading only for a different one keeps the scroll position and avoids a flash.
 **Approved**: pending
 
 **Decision**: Links open in the system's default handler only for `http`, `https` and `mailto`, and every other scheme is dropped.
-**Rationale**: The source comment says any other scheme (smb, vnc, ssh, an app's own) would launch its handler from one click with none of the confirmation a browser shows.
+**Rationale**: Any other scheme (smb, vnc, ssh, an app's own) would launch its handler from one click with none of the confirmation a browser shows.
 **Approved**: pending
 
 **Decision**: Every navigation the message starts by itself (meta refresh, form submit, frame) is cancelled; only the reader's own `about:` page loads.
-**Rationale**: The source comment says such a navigation would put a sender-chosen page under the real message headers with no address bar, and that the policy and rule list block loads, not navigations, and are gone once remote content is allowed.
+**Rationale**: Such a navigation would put a sender-chosen page under the real message headers with no address bar, and the policy and rule list block loads, not navigations, and are gone once remote content is allowed.
 **Approved**: pending
 
 **Decision**: An in-frame `#section` link to the reader's own page is allowed.
-**Rationale**: The source comment says it scrolls the message in place; it is the one link the reader keeps.
+**Rationale**: It scrolls the message in place; it is the one link the reader keeps.
 **Approved**: pending
 
 **Decision**: A stale body load is dropped after the rule list compiles.
-**Rationale**: The source comment says the message may have changed while the rules compiled, and an earlier message's body must not replace the later one.
+**Rationale**: The message may have changed while the rules compiled, and an earlier message's body must not replace the later one.
 **Approved**: pending
 
-**Decision**: The empty-HTML case still shows the remote-content bar, and a failed rule list compile or body load shows no message.
-**Rationale**: Technical debt that affects behavior: the bar tests only for a nil HTML body, and no failure handler or log exists; the recipe records what the code does.
+**Decision**: Known gap: the source shows the remote-content bar for an empty-string HTML body, and a failed rule list compile or body load shows no message.
+**Rationale**: Technical debt: the source tests only for a nil HTML body (the requirement **remote-bar-shown-for-html** asks for non-empty), and it has no failure handler or log. Pay it down when the reader next changes: fix the bar test first, and add a failure state once the product decides what a failed body load shows.
 **Approved**: pending
 
-**Decision**: The strings are literals and `init(coder:)` traps.
-**Rationale**: Technical debt that affects behavior: the strings cannot be localized without a code change, and the controller cannot be loaded from a nib or storyboard.
+**Decision**: Known gap: the source's strings are literals, and `init(coder:)` traps.
+**Rationale**: Technical debt: the strings cannot be localized without a code change, and the controller cannot be loaded from a nib or storyboard. Pay down the strings when a second locale ships, by moving them to the keys in Localization; the trap stays until a nib-built reader is wanted.
 **Approved**: pending
 
 ## Compliance
@@ -308,3 +318,4 @@ The reader keeps all mail state in the model and only maps its open message to l
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Required the remote-content bar only for a non-empty HTML body (source deviation recorded as a known gap), added fixed-constants and localized-strings requirements with localization keys, gave the known-gap decisions payoff conditions, dropped source-comment attribution from rationales, split test names into their own vector column, and added vectors for meta refresh to about:blank, empty HTML and the two review items. |

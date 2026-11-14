@@ -2,11 +2,11 @@
 id: 447d0e33-c66e-4bf9-8511-e7823bdbcf9b
 title: "Persona Chat"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-PersonaChat is a routing container component that dispatches to one of three chat interface modes based on the `mode` prop: `inline` (embedded chat box with adaptive sizing), `three-pane` (side-by-side conversation and details), or `mobile` (full-screen overlay). It manages communication with a chat backend, displays a persona participant, optionally includes a user participant, and renders an optional welcome message. The component is the entry point for integrating different chat UI layouts into applications.
+PersonaChat is a routing container component that dispatches to one of three chat interface modes based on the `mode` prop: `inline` (embedded chat box with adaptive sizing), `three-pane` (side-by-side conversation and details), or `mobile` (full-screen overlay). It only forwards its props (`backend`, `persona`, an optional `user`, an optional `welcomeMessage`, and the mode-specific props) to the selected layout; the layout owns the backend communication, the persona display and the welcome message. The component is the entry point for integrating different chat UI layouts into applications.
 
 ## Behavioral Requirements
 
@@ -40,13 +40,15 @@ PersonaChat is a routing container component that dispatches to one of three cha
 - **route-by-mode**: Component MUST render `InlineChat` when `mode` is `'inline'`, `ThreePaneChat` when `mode` is `'three-pane'`, and `MobileChat` when `mode` is `'mobile'`.
 - **accept-backend**: Component MUST accept and forward a `backend` prop (type `ChatBackend`) to the rendered chat layout.
 - **accept-persona**: Component MUST accept and forward a `persona` prop (type `ChatParticipant`) to the rendered chat layout.
-- **accept-user**: Component SHOULD accept an optional `user` prop (type `ChatParticipant`) and forward it to the rendered chat layout when provided.
-- **accept-welcome-message**: Component SHOULD accept an optional `welcomeMessage` prop (type `string`) and forward it to the rendered chat layout when provided.
-- **accept-class-name**: Component SHOULD accept an optional `className` prop (type `string`) and forward it to the rendered chat layout when `mode` is `'inline'` or `'three-pane'`. `MobileChat` does not accept a `className` prop, so it is not forwarded in `'mobile'` mode.
-- **accept-sizing-inline**: Component SHOULD accept an optional `sizing` prop (type `InlineChatSizing`) for `inline` mode, forwarding it only when `mode` is `'inline'`, controlling active/inactive sizing behavior and transitions.
-- **handle-mobile-open**: Component SHOULD accept an optional `open` prop (type `boolean`, default `false`) for `mobile` mode, forwarding it to control overlay visibility.
-- **handle-mobile-close**: Component SHOULD accept an optional `onClose` callback (type `() => void`, default no-op) for `mobile` mode, forwarding it to handle overlay dismissal.
-
+- **accept-user**: Component MUST accept an optional `user` prop (type `ChatParticipant`) and forward it to the rendered chat layout when provided.
+- **accept-welcome-message**: Component MUST accept an optional `welcomeMessage` prop (type `string`) and forward it to the rendered chat layout when provided.
+- **accept-class-name**: Component MUST accept an optional `className` prop (type `string`) and forward it to the rendered chat layout when `mode` is `'inline'` or `'three-pane'`. `MobileChat` does not accept a `className` prop, so it is not forwarded in `'mobile'` mode.
+- **accept-sizing-inline**: Component MUST accept an optional `sizing` prop (type `InlineChatSizing`) for `inline` mode, forwarding it only when `mode` is `'inline'`, controlling active/inactive sizing behavior and transitions.
+- **handle-mobile-open**: Component MUST accept an optional `open` prop (type `boolean`, default `false`) for `mobile` mode, forwarding it to control overlay visibility.
+- **handle-mobile-close**: Component MUST accept an optional `onClose` callback (type `() => void`, default no-op) for `mobile` mode, forwarding it to handle overlay dismissal.
+- **drop-mobile-only-props**: When `mode` is not `'mobile'`, component MUST NOT forward `open` or `onClose`, because `InlineChat` and `ThreePaneChat` do not accept them; the values are silently dropped.
+- **no-prop-validation**: Component MUST NOT validate `backend` or `persona` itself; an omitted value is forwarded as `undefined` and the child layout is responsible for handling it.
+- **mode-change-remounts**: When `mode` changes after mount, component MUST unmount the previously rendered layout and mount the new one; conversation state held by the old layout is not carried over.
 ## Appearance
 
 Not applicable: PersonaChat is a routing component without direct visual presentation; appearance is delegated entirely to the selected layout component (`InlineChat`, `ThreePaneChat`, or `MobileChat`).
@@ -81,19 +83,20 @@ Not applicable: PersonaChat has no interactive elements or labels of its own; ac
 | persona-chat-016 | handle-mobile-close | `mode='mobile'`, onClose prop omitted | Default no-op callback forwarded to MobileChat |
 | persona-chat-017 | accept-class-name | `mode='mobile'`, className prop provided | className not forwarded to MobileChat |
 | persona-chat-018 | accept-sizing-inline | `mode='mobile'`, sizing prop provided | sizing prop ignored; not forwarded to MobileChat |
-| persona-chat-019 | handle-mobile-close | `mode='inline'`, onClose callback provided | onClose not forwarded to InlineChat |
-| persona-chat-020 | handle-mobile-open | `mode='inline'`, open prop provided | open not forwarded to InlineChat |
+| persona-chat-019 | drop-mobile-only-props | `mode='inline'`, onClose callback provided | onClose not forwarded to InlineChat |
+| persona-chat-020 | drop-mobile-only-props | `mode='inline'`, open prop provided | open not forwarded to InlineChat |
 | persona-chat-021 | route-by-mode | `mode` set to a value outside `ChatMode` (untyped caller) | No switch case matches; component renders nothing (`undefined`) |
-
+| persona-chat-022 | no-prop-validation | `mode='inline'`, `backend` and `persona` omitted (untyped caller) | No error is thrown by PersonaChat; `undefined` is forwarded to `InlineChat` |
+| persona-chat-023 | mode-change-remounts | Render with `mode='inline'`, then re-render with `mode='three-pane'` | The `InlineChat` instance is unmounted and a new `ThreePaneChat` is mounted; no state carries over |
 ## Edge Cases
 
 - **Invalid mode (untyped callers only)**: `mode` is typed as `ChatMode` (`'inline' | 'three-pane' | 'mobile'`), so a typed caller cannot pass any other value — this case is unreachable under the declared type (**route-by-mode**). An untyped JS caller, or a `mode as any` cast, that passes an unrecognized value falls through the `switch` with no matching case; PersonaChat returns `undefined` and renders nothing, with no warning or error.
-- **Missing required props (untyped callers only)**: `backend` and `persona` are typed as required (non-optional) on `PersonaChatProps`, so a typed caller cannot omit them. An untyped JS caller that omits them causes PersonaChat to forward `undefined` to the child component, which is responsible for handling or signaling the error; PersonaChat MUST NOT validate these props itself (**accept-backend**, **accept-persona**).
+- **Missing required props (untyped callers only)**: `backend` and `persona` are typed as required (non-optional) on `PersonaChatProps`, so a typed caller cannot omit them. An untyped JS caller that omits them causes PersonaChat to forward `undefined` to the child component, which is responsible for handling or signaling the error; PersonaChat MUST NOT validate these props itself (**no-prop-validation**, persona-chat-022).
 - **Null/undefined participants**: If `user` is explicitly null or undefined, the component forwards it as-is to the child component, which determines whether this is acceptable (**accept-user**).
 - **Sizing prop on non-inline modes**: When `mode` is `'three-pane'` or `'mobile'` and `sizing` is provided, PersonaChat MUST NOT forward the `sizing` prop; the child component does not accept it (**accept-sizing-inline**).
-- **`open`/`onClose` on non-mobile modes**: When `mode` is not `'mobile'` and `open` or `onClose` are provided, PersonaChat MUST NOT forward them; `InlineChat` and `ThreePaneChat` do not accept these props. The values are silently dropped (**handle-mobile-open**, **handle-mobile-close**).
+- **`open`/`onClose` on non-mobile modes**: When `mode` is not `'mobile'` and `open` or `onClose` are provided, PersonaChat MUST NOT forward them; `InlineChat` and `ThreePaneChat` do not accept these props. The values are silently dropped (**drop-mobile-only-props**).
 - **`className` on mobile mode**: `MobileChat` does not accept a `className` prop. When `mode` is `'mobile'`, PersonaChat MUST NOT forward `className` (**accept-class-name**).
-
+- **Mode change after mount**: Because each mode renders a different layout component, changing `mode` on a mounted PersonaChat unmounts the old layout and mounts the new one, so the old layout's conversation state is lost (**mode-change-remounts**, persona-chat-023). A host that needs to keep a conversation across a mode switch keeps it in the backend, not in the layout.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -138,7 +141,7 @@ Not applicable: The source code contains no logging; debugging and diagnostic ou
 
 ## Platform Notes
 
-- **Web**: `PersonaChat.tsx` is a React component in `packages/web/packages/chat/src/modes/` that uses a switch statement to dispatch to one of three layout components. Props are passed conditionally based on mode; `sizing`, `open`, and `onClose` are mode-specific, and `className` is forwarded to `InlineChat`/`ThreePaneChat` but not to `MobileChat`.
+- **React/Web**: `PersonaChat.tsx` is a React component in `packages/web/packages/chat/src/modes/` that uses a switch statement to dispatch to one of three layout components. Props are passed conditionally based on mode; `sizing`, `open`, and `onClose` are mode-specific, and `className` is forwarded to `InlineChat`/`ThreePaneChat` but not to `MobileChat`.
 - **SwiftUI**: Implement as a view that receives `mode: ChatMode` as an input (an `enum` parameter or binding supplied by the caller, not internal `@State`, since mode selection is caller-determined) and uses a `switch`/`@ViewBuilder` to dispatch between three distinct chat UI compositions. Pass `backend` and `persona` as parameters, or via `@Environment`/a custom environment key, to the selected composition.
 - **Compose**: Implement as a composable function using `when` to branch on `mode`, passing `backend` and `persona` through `CompositionLocal` or function parameters to the selected layout composable.
 - **AppKit / UIKit**: Implement as a view controller that holds a reference to the currently active child view controller (one of three, selected by `mode`) and forwards mode-specific props (`sizing`, `open`, `onClose`) only to the child that accepts them. Perform the initial selection and prop forwarding in `init`; if `mode` can change after creation, remove the current child (`removeFromParent`, view removed from hierarchy) and install the replacement using standard child-view-controller containment (`addChild` plus adding its view) rather than mutating the existing child in place.
@@ -148,7 +151,7 @@ Not applicable: The source code contains no logging; debugging and diagnostic ou
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/modes/PersonaChat.tsx` | unverified |
+| web | `packages/web/packages/chat/src/modes/PersonaChat.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -168,11 +171,10 @@ Not applicable: The source code contains no logging; debugging and diagnostic ou
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-The `passed` status rests on the `switch` returning the selected child component (`InlineChat`, `ThreePaneChat`, or `MobileChat`) directly with no wrapper element, so whatever ARIA roles and semantic structure the chosen child renders pass through unchanged; `PersonaChat.tsx` is a pure mode-keyed dispatch switch with no business logic (separation-of-concerns: passed), while `personaChatRecipe.test.ts`, `personaChatConformance.test.ts`, and `PersonaChatCoordinatorTests.swift` extensively exercise the underlying session/backend/coordinator behavior the recipe composes but no test renders `PersonaChat` itself to verify the mode-based dispatch (unit-test-coverage: partial).
+`PersonaChat.tsx` is a pure mode-keyed dispatch switch with no business logic and renders no markup of its own (separation-of-concerns: passed); accessibility checks are not listed because they belong to the routed child layouts. No test renders `PersonaChat` itself to verify the mode-based dispatch (unit-test-coverage: partial).
 
 ## Change History
 
@@ -181,3 +183,4 @@ The `passed` status rests on the `switch` returning the selected child component
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; scope className/sizing/open/onClose forwarding rules to the modes that actually accept them and add the missing conformance vectors (mobile className, mobile sizing, non-mobile open/onClose, invalid mode); reword the invalid-mode edge case and Design Decision to state what the type system already enforces instead of an unverified "signals a configuration error" claim; replace the Compliance table's non-catalog rows with a real accessibility check; reformat Design Decisions into the three-line Decision/Rationale/Approved form; correct the SwiftUI, WinUI 3, and AppKit/UIKit platform notes; populate depends-on/related with the three composed layout recipes and the persona-chat coordinator ingredient; and align modified-date quoting with the other recipes |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Described PersonaChat as forwarding only, trimmed the compliance evidence to PersonaChat itself and dropped the accessibility row, promoted the SHOULD forwarding rules to MUST, added named drop-mobile-only-props, no-prop-validation and mode-change-remounts requirements with vectors and an edge case, and renamed the Web platform note to React/Web. |

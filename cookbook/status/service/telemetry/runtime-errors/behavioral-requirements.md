@@ -20,18 +20,18 @@
 
 ### Normalization and shape
 
-- **id-segment**: A path segment MUST read as an id when it is all digits, a UUID, a hex run of 12 or more characters containing a digit, or a token of 20 or more characters of letters, digits, `_` and `-` mixing letters and digits.
+- **id-segment**: A path segment MUST read as an id when it is all digits, a UUID, a hex run of 12 or more characters containing a digit, or a token of 20 or more characters of letters, digits, `_` and `-` containing at least one letter and at least one digit. The UUID and hex tests MUST ignore case (`3F2504E0-...` and `3f2504e0-...` both match).
 - **normalize-path**: `normalizePath` MUST replace each non-empty id segment with `:id`, keep every other segment, keep the slashes, and return null for null.
-- **message-head**: `messageHead` MUST return the first line (split on a line break), trimmed, cut to at most 200 characters.
-- **message-shape**: `messageShape` MUST replace every id-like token (letters, digits, `_`, `-`) that is not all digits with `:id`, then replace every run of digits with `#`.
+- **message-head**: `messageHead` MUST return the first line, trimmed, cut to at most 200 characters. A line break is `\n` or `\r\n`; a lone `\r` is not a break.
+- **message-shape**: `messageShape` MUST replace every id-like token with `:id`, then replace every run of digits with `#`. A token is a maximal run of letters, digits, `_` and `-`; it is id-like when it is not all digits and passes the `id-segment` test (a UUID, a hex run of 12 or more characters containing a digit, or a token of 20 or more characters containing a letter and a digit).
 - **shape-before-cut**: `groupIdentity` MUST compute the shape from the whole first line and only then cut it to 200 characters, never from the cut head.
-- **group-key**: `groupIdentity` MUST return a `key` that is the first 32 hex characters of a SHA-256 over a JSON array of `project`, `source`, `method`, normalized `path`, `status` and the cut message shape. Deployment, domain, level and request id MUST NOT enter the key.
+- **group-key**: `groupIdentity` MUST return a `key` that is the first 32 characters of the lower-case hex SHA-256 of the UTF-8 bytes of a JSON array of `project`, `source`, `method`, normalized `path`, `status` and the cut message shape, in that order. The array is serialized as JSON: strings quoted and escaped, a null as `null`, `status` as a bare number. Deployment, domain, level and request id MUST NOT enter the key.
 - **group-identity-fields**: `groupIdentity` MUST also return the normalized `path` and the message head as written, for a group to show as its sample.
 
 ### Grouping a read
 
 - **group-fold**: `groupRuntimeEntries` MUST produce one group per distinct key, with `count` the number of entries in it.
-- **group-level**: A group's `level` MUST be the worst level of its entries by `worseLevel`.
+- **group-level**: A group's `level` MUST be the worst level of its entries by `worseLevel`. A group made only of unknown levels keeps its first entry's level, because `worseLevel` keeps `a` unless `b` ranks strictly higher.
 - **group-times**: `firstSeen` MUST be the earliest entry timestamp and `lastSeen` the latest, both as ISO strings.
 - **group-newest-event**: The group's `deploymentId` MUST come from its newest entry; an entry with a timestamp equal to or later than the current `lastSeen` replaces it, so on a tie the later entry in input order wins.
 - **group-fallbacks**: When the newest entry has a null `domain` or `requestId`, the group MUST keep the earlier non-null `domain` and `sampleRequestId`. `deploymentId` has no such fallback.
@@ -40,7 +40,7 @@
 
 ### Report
 
-- **report-order**: `compareRuntimeGroups` MUST order worst level first, then higher `count`, then later `lastSeen`, then ascending `key`.
+- **report-order**: `compareRuntimeGroups` MUST order worst level first, then higher `count`, then later `lastSeen`, then ascending `key`. `lastSeen` (a fixed-format ISO string) and `key` (lower-case hex) MUST be compared as plain strings, ordinally; the source's `localeCompare` gives the same order for strings of these shapes.
 - **report-cap**: `runtimeErrorsReport` MUST return at most `RUNTIME_ERROR_REPORT_CAP` (200) groups while `total` counts all of them.
 - **report-fields**: The report MUST carry `generatedAt` (from `nowMs`), `window` `24h`, `readAt`, `complete` and `total`.
 - **report-read-dating**: `readAt` MUST be the ISO time of `read.readAtMs`, or null when there is no read. `complete` MUST be `read.complete`, or true when there is no read.
@@ -48,7 +48,6 @@
 - **report-input-untouched**: `runtimeErrorsReport` MUST sort a copy and leave the given groups array unchanged.
 - **report-load**: `loadRuntimeErrorsReport` MUST call `store.load()` and `store.lastRead()` concurrently and build the report from both, with `nowMs` defaulting to `Date.now()`.
 - **report-load-errors**: A rejection from either store call MUST propagate to the caller unchanged; the function has no catch.
-- **report-load-consistency**: NEEDS REVIEW: Not implemented in source. `loadRuntimeErrorsReport` reads the groups and the last read in two separate store calls, while `save` replaces both in one transaction, so a save landing between them can pair groups with another read's `readAt` and `complete`. Evidence needed: whether the libsql store serializes `load`, `lastRead` and `save` on one connection, or a single transactional read method.
 
 ### Scope notes
 

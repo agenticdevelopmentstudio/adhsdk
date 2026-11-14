@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: `summarize` throws while every other operation answers nil or false.
-**Rationale**: A refusal has a reason the list can show (a memory guard, a provider error), so `SummarizeDaemonFailure` is distinct from a transport error. The act operation instead answers a result value carrying the reason.
+**Rationale**: A refusal has a reason the list can show (a memory guard, a provider error), so `SummarizeDaemonFailure` is distinct from a transport error. The act operation instead answers a result value carrying the reason. Examples of a reason from the source documentation are a memory guard or a provider error.
 **Approved**: pending
 
 **Decision**: `setAIPreferences` is sent with camelCase keys while all other bodies are snake_case.
@@ -23,3 +23,6 @@
 **Rationale**: Conforming types implement only the full operations; the convenience forms (200-row limits, `includeCounts` true, nil status) stay identical everywhere and a stub cannot drift from the defaults.
 **Approved**: pending
 
+**Decision**: The implementation discards decode errors and non-2xx statuses and writes no log or signpost when it maps them to nil or false.
+**Rationale**: The source has no logging in the protocol or the HTTP implementation, and the type comment documents the collapse to "unreachable" as deliberate. The cost is that schema drift between client and daemon looks exactly like a daemon that is down, with no trace anywhere; only `summarize` and `actOnOversightFinding` surface a reason. A port that wants diagnosability can log at debug level without changing any contract here.
+**Approved**: pending

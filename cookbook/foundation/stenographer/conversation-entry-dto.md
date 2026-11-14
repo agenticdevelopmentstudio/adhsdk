@@ -2,7 +2,7 @@
 id: 08d59319-de4b-438a-a144-dcf3912aa2e5
 title: "Conversation Entry DTO"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -151,7 +151,7 @@ Not applicable: the type calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationEntryDTO.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationEntryDTO.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -200,3 +200,4 @@ Not applicable: the type calls no logging API.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Softened unmeasured claims, named the source symbols in rationales, added empty-not-missing, fixed the WinUI null and Compose notes, and set Configuration to not applicable. |

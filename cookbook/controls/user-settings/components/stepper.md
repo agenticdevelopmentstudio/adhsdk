@@ -2,11 +2,11 @@
 id: 0eaf03a3-c00b-4f3a-81d7-5bd0560a5274
 title: "Stepper"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,8 +19,7 @@ tags:
   - numeric-control
 depends-on: []
 related: []
-references:
-  - packages/web/packages/controls/src/user-settings/components/Stepper.tsx
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -33,15 +32,15 @@ A stepper is a numeric input component that allows users to adjust a number by i
 
 ## Behavioral Requirements
 
-- **accept-numeric-value**: Component MUST accept an initial numeric value via the `value` prop.
+- **accept-numeric-value**: Component MUST accept the current numeric value via the `value` prop; the component is fully controlled and keeps no value state of its own.
 - **call-onchange-handler**: Component MUST invoke the provided `onChange` handler with the new numeric value when the user increments, decrements, or directly edits the input.
-- **clamp-to-bounds**: Component MUST clamp all values to the specified `min` and `max` bounds; values outside the range MUST be automatically adjusted to the nearest boundary.
+- **clamp-to-bounds**: Component MUST clamp all values to the specified `min` and `max` bounds; values outside the range MUST be automatically adjusted to the nearest boundary (see Edge Cases for the per-keystroke timing defect).
 - **respect-step-size**: Component MUST increment and decrement by the specified `step` amount (default 1).
 - **keyboard-arrow-step**: While the input has focus, ArrowUp and ArrowDown MUST adjust the value by `step`, via the native `<input type="number">` spin behavior; the component adds no custom key handling beyond what the browser provides for numeric inputs.
 - **disable-decrement-at-min**: Decrement button MUST be disabled when the current value is less than or equal to `min`.
 - **disable-increment-at-max**: Increment button MUST be disabled when the current value is greater than or equal to `max`.
 - **disable-all-controls-when-disabled**: When the `disabled` prop is `true`, all interactive elements (buttons and input) MUST be disabled and MUST NOT respond to user interaction.
-- **support-direct-input**: Component MUST accept direct numeric input via an input field; non-numeric entries MUST be rejected or ignored.
+- **support-direct-input**: Component MUST accept direct numeric input via an input field; non-numeric entries MUST be ignored (no `onChange` call for a `NaN` parse; see stepper-012).
 - **support-optional-label**: Component MUST render an optional label element associated with the input field via `htmlFor` attribute when `label` prop is provided.
 - **support-optional-hint**: Component MUST render an optional hint or help text below the control when `hint` prop is provided.
 - **custom-classname**: Component MAY accept a custom CSS class name via the `className` prop for styling overrides.
@@ -49,10 +48,10 @@ A stepper is a numeric input component that allows users to adjust a number by i
 
 ## Appearance
 
-- **Corner radius**: 4px (control-specific border radius; varies by platform design system)
-- **Padding**: Buttons and input inherit field padding from the `{{app_prefix}}` field styling (reference implementation: 8px vertical × 12px horizontal)
-- **Font**: 14px regular weight for input value (reference implementation; scale with the app's type tokens)
-- **Background**: Input background uses the theme's surface/background color token; button backgrounds inherit from `{{app_prefix}}` field styling
+- **Corner radius**: 4px (unverified: the stylesheet is not in the source file; varies by platform design system)
+- **Padding**: Buttons and input inherit field padding from the app's field class namespace styling (unverified: 8px vertical × 12px horizontal; the stylesheet is not in the source file)
+- **Font**: 14px regular weight for input value (unverified: not in the source file; scale with the app's type tokens)
+- **Background**: Input background uses the theme's surface/background color token; button backgrounds inherit from the app's field class namespace styling
 - **Foreground/Text**: Theme text color token (reference implementation: dark text on light backgrounds)
 - **Border**: 1px solid, theme border color token; focus state applies the theme's focus outline
 - **Shadow**: None (flat design)
@@ -66,13 +65,13 @@ A stepper is a numeric input component that allows users to adjust a number by i
 | Value at min | Decrement button appears disabled (opacity/color change); increment button enabled |
 | Value at max | Increment button appears disabled (opacity/color change); decrement button enabled |
 | Disabled | All controls (input, both buttons) appear disabled; text color dimmed; interaction disabled |
-| Focused (input) | Blue outline or focus ring applied to input field per platform standards |
-| Focused (button) | Blue outline or focus ring applied to focused button |
+| Focused (input) | The theme's focus-ring token applied to the input field per platform standards |
+| Focused (button) | The theme's focus-ring token applied to the focused button |
 
 ## Accessibility
 
 - **Role**: The input MUST have `role="spinbutton"` or be a native `<input type="number">` element (preferred). Buttons MUST be implemented as native `<button type="button">` elements; `role="button"` MUST NOT be reasserted via ARIA since it is already implicit on `<button>`.
-- **Label**: When a label is provided, the input MUST be associated via `<label htmlFor>` attribute. If no label is provided but hint or context exists, the input SHOULD have an `aria-label` or `aria-labelledby`.
+- **Label**: When a label is provided, the input MUST be associated via `<label htmlFor>` attribute. If no label is provided but hint or context exists, the input SHOULD have an `aria-label` or `aria-labelledby`; the component currently has no prop to supply either, and does not link the hint to the input through `aria-describedby`.
 - **Button labels**: Decrement and increment buttons MUST have clear, descriptive `aria-label` attributes, sourced from the localized strings ("Decrement", "Increment"; see Localization). These labels are generic and do not incorporate the field's `label` (see Edge Cases).
 - **Announce disabled state**: When a button is disabled, its `disabled` attribute MUST be set; screen readers announce this state automatically.
 - **Minimum tap target**: Buttons MUST be at least 44×44pt on iOS and 48×48dp on Android; web buttons SHOULD be at least 44×44px.
@@ -93,7 +92,7 @@ A stepper is a numeric input component that allows users to adjust a number by i
 | stepper-009 | disable-increment-at-max | value=10, max=10 | Increment button disabled |
 | stepper-010 | disable-all-controls-when-disabled | disabled=true | Input, decrement button, increment button all disabled |
 | stepper-011 | support-direct-input | User types "42" in input, min=0, max=100 | onChange called with 42 |
-| stepper-012 | support-direct-input | User types "abc" in input | Input ignores non-numeric input; value unchanged |
+| stepper-012 | support-direct-input | User types "abc" in input | In a browser, unparseable text reports `value === ""`, so the result matches stepper-020: onChange called with clamp(0); a parse to `NaN` is ignored with no onChange call |
 | stepper-013 | support-optional-label | label="Quantity" | Label element rendered and associated with input |
 | stepper-014 | support-optional-hint | hint="Enter a value between 1 and 10" | Hint text displayed below stepper |
 | stepper-015 | custom-classname | className="my-stepper" | Custom class applied to wrapper element |
@@ -106,15 +105,15 @@ A stepper is a numeric input component that allows users to adjust a number by i
 
 ## Edge Cases
 
-- **Null or undefined min/max**: When `min` or `max` is not provided, the component treats them as -Infinity and +Infinity respectively. Clamping with infinite bounds works correctly.
-- **Step smaller than 1**: The component supports fractional steps (e.g., step=0.5). Values MUST be clamped correctly; direct input MUST accept decimals matching the step size. The component performs no rounding to the step's precision, so repeated fractional increments can accumulate ordinary IEEE-754 floating-point drift (for example, incrementing from `0.2` by `step=0.1` yields `0.30000000000000004`, not `0.3`; see stepper-019).
+- **Undefined min/max**: When `min` or `max` is `undefined` (not provided), the component treats them as -Infinity and +Infinity respectively. Clamping with infinite bounds works correctly. `null` is not supported: destructuring defaults apply only to `undefined`, and `Math.min`/`Math.max` coerce `null` to `0`.
+- **Step smaller than 1**: The component supports fractional steps (e.g., step=0.5). Values MUST be clamped correctly. The component performs no rounding to the step's precision, so repeated fractional increments can accumulate ordinary IEEE-754 floating-point drift (for example, incrementing from `0.2` by `step=0.1` yields `0.30000000000000004`, not `0.3`; see stepper-019).
 - **Step larger than range**: If step size is larger than (max - min), incrementing from min jumps to or beyond max, triggering the max-bounds behavior. This is correct per clamping logic.
 - **Direct input of boundary values**: User enters exactly min or max value. Component MUST accept it and MUST NOT reject valid boundary entries.
 - **Direct input while at boundary**: User is at max value, types a new number below max, and increments. The new value MUST respect the typed entry and the subsequent increment — each call to the increment/decrement/direct-input handler clamps independently, so the most recently applied value takes precedence over any prior one (see **clamp-to-bounds**).
 - **Disabled state with valid/invalid values**: When disabled=true, the component MUST NOT respond to button clicks or input changes regardless of the current value or bounds.
-- **Empty or whitespace input**: `Number('')` evaluates to `0` (not `NaN`), so clearing the field is treated as entering `0` and is clamped like any other value (to `min` when `min > 0`); it is not preserved as blank or left unchanged (see stepper-020).
-- **Clamping happens per keystroke, not on commit**: Clamping is applied immediately after every change, including each keystroke during direct text entry — not only on blur or Enter. Typing toward a multi-digit value that starts outside the current range (for example typing "5" then "0" to reach "50" when `min=10`) clamps the intermediate "5" up to `10` before the second digit is entered (see stepper-021).
-- **Invalid configuration (`min > max`, `step <= 0`, non-finite `value`)**: The component performs no validation on these inputs. When `min > max`, clamping always resolves to `min` regardless of the requested value (`Math.max(min, Math.min(max, n))` collapses to `min` whenever `max < min`). When `step <= 0`, incrementing/decrementing with `step=0` calls `onChange` with the value unchanged, and a negative `step` inverts the buttons' effect (increment decreases the value, decrement increases it). When `value` is `NaN`, the `<= min` / `>= max` comparisons are always false, so neither button is disabled regardless of bounds. No warning is raised in any of these cases.
+- **Empty or whitespace input**: `Number('')` evaluates to `0` (not `NaN`), and a browser reports `value === ""` for both a cleared field and unparseable text in an `<input type="number">`, so clearing the field is treated as entering `0` and is clamped like any other value (to `min` when `min > 0`); it is not preserved as blank or left unchanged (see stepper-020).
+- **Clamping happens per keystroke, not on commit**: Clamping is applied immediately after every change, including each keystroke during direct text entry — not only on blur or Enter. Typing toward a multi-digit value that starts outside the current range (for example typing "5" then "0" to reach "50" when `min=10`) clamps the intermediate "5" up to `10` before the second digit is entered (see stepper-021). This is a known usability defect of the current implementation, not intended behavior: a conforming implementation SHOULD defer clamping of direct text entry to blur or commit.
+- **Invalid configuration (`min > max`, `step <= 0`, non-finite `value`)**: These configurations are unsupported; callers MUST NOT pass them. The component performs no validation, and the observed results below are not a contract. When `min > max`, clamping always resolves to `min` regardless of the requested value (`Math.max(min, Math.min(max, n))` collapses to `min` whenever `max < min`). When `step <= 0`, incrementing/decrementing with `step=0` calls `onChange` with the value unchanged, and a negative `step` inverts the buttons' effect (increment decreases the value, decrement increases it). When `value` is `NaN`, the `<= min` / `>= max` comparisons are always false, so neither button is disabled regardless of bounds. No warning is raised in any of these cases.
 - **Multiple steppers per page**: Button accessible names are the generic localized strings ("Decrement" / "Increment") and do not include the field's `label`; a screen with more than one stepper has no built-in way to distinguish them by button label alone.
 
 ## Configuration
@@ -149,7 +148,7 @@ Not applicable: Stepper is a form control component with no standalone URL routi
 |--------|----------|
 | Reduce Motion | No motion or transitions applied in the component; button and input state changes occur instantly |
 | Increase Contrast | Border color and text color SHOULD increase to meet AAA contrast requirements (7:1 minimum); disabled state text SHOULD remain distinguishable |
-| Differentiate Without Color | Disabled buttons MUST indicate disabled state via the native `disabled` attribute (browsers render it with reduced opacity and a non-interactive cursor) rather than color alone; the −/+ glyph itself remains visible in both states. Screen readers announce the disabled state independently through the `disabled` attribute (see **screen-reader-support**) — `aria-label` is not a visible cue and MUST NOT be relied on to satisfy this option. |
+| Differentiate Without Color | Disabled buttons MUST indicate disabled state via the native `disabled` attribute (browsers render it with reduced opacity and a non-interactive cursor) rather than color alone; the −/+ glyph itself remains visible in both states. Screen readers announce the disabled state independently through the `disabled` attribute (see [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43)) — `aria-label` is not a visible cue and MUST NOT be relied on to satisfy this option. |
 
 ## Feature Flags
 
@@ -162,7 +161,7 @@ Not applicable: The source emits no analytics events. Instrumentation is the con
 ## Privacy
 
 - **Data collected**: The current numeric value only (no sensitive metadata).
-- **Storage**: Value is maintained in component state during the session; not persisted by the component itself.
+- **Storage**: The component keeps no state of its own; the controlled `value` prop is owned by the consumer and is not persisted by the component itself.
 - **Transmission**: No data is transmitted by the component; the consumer (`onChange` handler) determines what is done with the value.
 - **Retention**: Value is ephemeral within the component lifecycle; retention depends on the consuming application.
 
@@ -176,7 +175,7 @@ Not applicable: The source contains no logging calls. Any logging of value chang
 
 - **Compose**: Implement using `Row` with `IconButton` (decrement/increment) flanking a `TextField`. Use `value` state and `onValueChange` callback. Apply bounds checking with `coerceIn(min, max)`. Set button enabled state conditionally based on current value vs. min/max. Use `BasicTextField` or `OutlinedTextField` for the value display.
 
-- **React/Web**: The reference implementation (`packages/web/packages/controls/src/user-settings/components/Stepper.tsx`) uses a native `<input type="number">` with `<button type="button">` elements flanking it in a flex container. Its own CSS classes are named `aws-field` / `aws-stepper`; a consuming app SHOULD follow the `{{app_prefix}}-field` / `{{app_prefix}}-stepper` naming pattern instead. A `noAutofillProps` helper prevents browser autofill on the input field. Treat the reference implementation as the behavioral contract for this recipe.
+- **React/Web**: The reference implementation (`packages/web/packages/controls/src/user-settings/components/Stepper.tsx`) uses a native `<input type="number">` with `<button type="button">` elements flanking it in a flex container. Its own CSS classes are named `aws-field` / `aws-stepper`; a consuming app SHOULD follow its own field class namespace (for example `<namespace>-field` / `<namespace>-stepper`) instead. A `noAutofillProps` helper prevents browser autofill on the input field.
 
 - **AppKit / UIKit**: Use `NSStepper` on macOS or `UIStepper` on iOS. Both provide increment/decrement buttons and value management. `UIStepper` does not display the numeric value by default—pair it with a UITextField or UILabel to show the current value. Configure `minimumValue`, `maximumValue`, and `stepValue` properties. Bind target-action or delegation to capture value changes.
 
@@ -186,7 +185,7 @@ Not applicable: The source contains no logging calls. Any logging of value chang
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/Stepper.tsx` | unverified |
+| web | `packages/web/packages/controls/src/user-settings/components/Stepper.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -202,7 +201,7 @@ Not applicable: The source contains no logging calls. Any logging of value chang
   **Rationale**: This prevents repeated clicks from attempting invalid operations and provides clear affordance to users.
   **Approved**: pending
 
-- **Decision**: Non-numeric input is silently ignored via a `Number.isNaN()` check; an empty or whitespace input parses to `0` and is committed like any other value (see Edge Cases).
+- **Decision**: Non-numeric input is silently ignored via a `Number.isNaN()` check (in a browser, unparseable text in `<input type="number">` reports `""`, so it takes the empty-input path instead; see stepper-012); an empty or whitespace input parses to `0` and is committed like any other value (see Edge Cases).
   **Rationale**: This provides lenient error handling without introducing error states, though it means blank input is treated as zero rather than as "no value."
   **Approved**: pending
 
@@ -227,14 +226,15 @@ Not applicable: The source contains no logging calls. Any logging of value chang
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-The source uses a native `<button type="button">` and `<input type="number">` with correct `aria-label`/`disabled` attributes, so screen-reader-support, keyboard-navigable, and semantic-markup pass; it hardcodes the "Decrement"/"Increment" strings directly in JSX rather than resolving them through the localization keys in this recipe's Localization section, so string-externalization and no-hardcoded-strings fail; and it defines colors, font size, and control dimensions only through CSS classes not shown in the source file, so contrast, type scaling, and tap-target size cannot be confirmed and are marked partial; the only logic is the trivial pure `clamp` helper, kept apart from the render function (separation-of-concerns passed), and `components.test.tsx` exercises increment/decrement and the disabled-at-min bound directly (unit-test-coverage passed).
+The source uses a native `<button type="button">` and `<input type="number">` with correct `aria-label`/`disabled` attributes, so screen-reader-support, keyboard-navigable, and semantic-markup pass; it hardcodes the "Decrement"/"Increment" strings directly in JSX rather than resolving them through the localization keys in this ingredient's Localization section, so string-externalization and no-hardcoded-strings fail; and it defines colors, font size, and control dimensions only through CSS classes not shown in the source file, so contrast, type scaling, and tap-target size cannot be confirmed and are marked partial; the only logic is the trivial pure `clamp` helper, kept apart from the render function (separation-of-concerns passed), and `components.test.tsx` exercises increment/decrement and the disabled-at-min bound directly (unit-test-coverage partial: those tests cover about 3 of the 21 vectors; the clamp, direct-input, empty-input and label/id vectors have no tests).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Corrected the stepper spec against Stepper.tsx: removed the reference-implementation path and contract wording, marked unverified CSS values, marked unit-test-coverage partial, flagged per-keystroke clamping as a known defect, fixed vector 012, controlled-value wording, undefined-only min/max, and accessibility gaps. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; removed unverified Analytics/Logging content (marked Not applicable) and documented that instrumentation is the consumer's responsibility; replaced AWS-specific class names and hex colors with `{{app_prefix}}`/theme-token guidance; reformatted Design Decisions to the Decision/Rationale/Approved form; rebuilt Compliance as a table of cookbook compliance-catalog checks with accurate passed/partial/failed statuses; corrected the button role and Differentiate Without Color claims; cited the reference implementation by path in place of an unidentified source reference; clarified the out-of-range test vectors as typed input rather than an onChange input; and documented native ArrowUp/Down stepping, fractional-step floating-point drift, empty-input-as-zero, per-keystroke clamping, and invalid-configuration (`min > max`, `step <= 0`, NaN) behavior as built. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from React/Web source |

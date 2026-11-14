@@ -12,10 +12,10 @@ The source has no test file of its own. Vectors derive from the source's documen
 | rgbacolor-007 | hex-length, hex-no-shorthand | `"#FFF"`, `"#FF0000"`, `""`, `"#"` | nil each |
 | rgbacolor-008 | hex-length | `"##FF000080"` | nil |
 | rgbacolor-009 | hex-non-hex | `"#GG000080"` | nil |
-| rgbacolor-010 | hex-sign-leniency | `"+FFFFFFF"` | non-nil; red is 0x0F/255 |
+| rgbacolor-010 | hex-sign-leniency | `"+FFFFFFF"` (source behavior only; a port MAY reject it) | non-nil; red is 0x0F/255 |
 | rgbacolor-011 | hex-format, hex-rounding | `RGBAColor(red: 0.2, green: 0.4, blue: 0.6, alpha: 1).hexString` | `"#336699FF"` |
 | rgbacolor-012 | hex-format | `RGBAColor.clear.hexString` | `"#00000000"` |
-| rgbacolor-013 | hex-clamp-again | `RGBAColor(red: 9, green: -9, blue: 0, alpha: 1).hexString` | `"#FF0000FF"` |
+| rgbacolor-013 | clamp-range, hex-format | `RGBAColor(red: 9, green: -9, blue: 0, alpha: 1).hexString` (the initializer has already clamped; `hex-clamp-again` is defensive and has no vector) | `"#FF0000FF"` |
 | rgbacolor-014 | encode-single-string | `JSONEncoder` on `RGBAColor.white` wrapped in an array | `["#FFFFFFFF"]` |
 | rgbacolor-015 | decode-single-string, roundtrip-byte-exact | decode `["#336699FF"]` then read `hexString` | `"#336699FF"` |
 | rgbacolor-016 | decode-error | decode `["red"]` as `RGBAColor` | throws `DecodingError.dataCorrupted` with the message `Expected #RRGGBBAA hex color string.` |
@@ -23,4 +23,6 @@ The source has no test file of its own. Vectors derive from the source's documen
 | rgbacolor-018 | constants | `black`, `white`, `clear` | (0,0,0,1), (1,1,1,1), (0,0,0,0) |
 | rgbacolor-019 | value-semantics | two colors built from identical components | `==` is true |
 | rgbacolor-020 | hex-no-whitespace | `" #FF000080"` and `"FF00008 "` | nil each |
-
+| rgbacolor-021 | hex-no-shorthand, hex-length | `"#FFFF"` (4 digits) and `"#FF00008"` (7 digits) | nil each |
+| rgbacolor-022 | hex-sign-leniency | `"-0000000"` (source behavior only; a port MAY reject it) | non-nil; red, green, blue and alpha all 0 |
+| rgbacolor-023 | hex-rounding, roundtrip-byte-exact | `RGBAColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1).hexString`, then `RGBAColor(hexString:)` on the result | `"#808080FF"`; the decoded red is 128/255 and is not equal to 0.5 |

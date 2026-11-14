@@ -4,5 +4,5 @@
 - **Concurrent access**: Not applicable: every member is an immutable constant or a pure computed property over an immutable `home`, and `ADKDPaths` is `Sendable`.
 - **Error states**: Not applicable: no member throws, returns an optional or touches the file system.
 - **Offline / disconnected state**: Not applicable: the type performs no network access; `httpBaseURL` is only a string naming the loopback address.
-- **Drift between the two storage-token spellings**: `storageToken` is a hand-written copy of a value the database layer derives from the display name. The source comment says a test in the app's own target checks the two agree; that test is outside the sources given here, so a port MUST carry an equivalent check.
+- **Drift between the two storage-token spellings**: `storageToken` is a hand-written copy of a value the database layer derives from the display name. The doc comment on `ADKDPaths.storageToken` in `ADKDIdentifiers.swift` says a test in the app's own target checks the two agree; that test is outside the sources given here, so a port carries its own check (see `storage-token-agreement-test`).
 

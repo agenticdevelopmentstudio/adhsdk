@@ -14,4 +14,5 @@
 | tour-011 | render-pillars-when-provided | `pillars: []` | Pillars section (`lp-tour__pillars` div) does not render |
 | tour-012 | render-pillars-when-provided | `pillars: undefined` | Pillars section does not render; no `lp-tour__pillars` div in output |
 | tour-013 | omit-navigation-when-absent | `back: { href: "/tour/prev", label: "Previous" }`, `next: undefined` | Only the back link renders inside `lp-tour__steps`; no next link is present (Last step state) |
-
+| tour-014 | omit-navigation-when-absent | `back: undefined`, `next: { href: "/tour/next", label: "Next" }` | Only the next link renders inside `lp-tour__steps`; no back link is present (First step state) |
+| tour-015 | render-order | `pillars` with one entry, `back` and `next` provided | DOM order is eyebrow, `lp-tour__promise`, `lp-tour__pillars`, `lp-tour__steps` |

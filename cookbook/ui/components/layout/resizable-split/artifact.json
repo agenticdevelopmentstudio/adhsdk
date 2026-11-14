@@ -4,11 +4,11 @@
     "id": "c21473ee-a075-4800-96db-ff3de0888515",
     "title": "ResizableSplit",
     "type": "ingredient",
-    "version": "2.2.1",
+    "version": "2.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1c1441e9f4331e65",
+  "synced": "3f480f3ebe83e6c3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

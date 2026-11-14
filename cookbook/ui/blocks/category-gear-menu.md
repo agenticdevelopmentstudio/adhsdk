@@ -39,9 +39,9 @@ A dropdown menu triggered by a gear icon that presents five actions for managing
 - **render-five-items**: Component MUST render five dropdown items corresponding to the actions: "Add {noun}…", "Rename…", "Move…", "Also file in…", and "Delete…" (the bare verb forms shown when no target name is applied; see **show-target-in-labels**).
 - **show-target-in-labels**: Component MUST include the target name in menu item labels when `targetName` is not null and `canEditTarget` is true. Label format is `Rename “{targetName}”…`, `Move “{targetName}”…` and `Delete “{targetName}”…` for rename, move and delete, and `Also file “{targetName}” in…` for the file action.
 - **omit-target-when-not-editable**: Component MUST omit the target name from item labels when `canEditTarget` is false, even if `targetName` is not null; labels use the bare verb form ("Rename…", "Also file in…") in that case.
-- **disable-target-actions-when-no-target**: Component MUST disable "Rename", "Move", "File", and "Delete" menu items when `canEditTarget` is false.
-- **enable-add-always**: Component MUST keep the "Add {noun}…" item enabled regardless of `canEditTarget`.
-- **render-separators**: Component MUST render a visual separator (DropdownMenuSeparator) between "Add" and the target actions, and another separator between "File" and "Delete".
+- **disable-target-actions-when-not-editable**: Component MUST disable the `rename`, `move`, `file` and `delete` items when `canEditTarget` is false.
+- **enable-add-always**: Component MUST keep the `add` item ("Add {noun}…") enabled regardless of `canEditTarget`.
+- **render-separators**: Component MUST render a visual separator (DropdownMenuSeparator) between the `add` item and the target actions, and another separator between the `file` item and the `delete` item.
 - **invoke-callback-on-action**: Component MUST invoke the `onAction` callback with the action type ("add", "rename", "move", "file", or "delete" — the `CategoryGearAction` union) when a menu item is clicked.
 - **respect-disabled-prop**: Component MUST render the trigger as disabled when the `disabled` prop is true.
 - **style-delete-destructive**: Component MUST style the "Delete" menu item using the platform's destructive/error styling.
@@ -49,7 +49,7 @@ A dropdown menu triggered by a gear icon that presents five actions for managing
 
 ## Appearance
 
-- **Trigger**: Uses `GearMenuTrigger` component (styling is delegated to that component; source shows only className pass-through and disabled flag).
+- **Trigger**: Uses `GearMenuTrigger` component (its appearance is owned by the [adhsdk.ingredient.ui.blocks.gear-menu-trigger](cookbook:cebee4d7-3d01-440d-a35e-6220957c1603) ingredient; this component passes through only `className` and the disabled flag).
 - **Menu items**: Standard dropdown menu item appearance, inherited from `DropdownMenuItem` component.
 - **Delete item**: Styled with the platform's destructive/error treatment (see Platform Notes; `text-apt-red` on web).
 - **Separators**: Visual dividers rendered by `DropdownMenuSeparator` component.
@@ -58,18 +58,18 @@ A dropdown menu triggered by a gear icon that presents five actions for managing
 
 | State | Appearance change | Trigger behavior |
 |-------|------------------|------------------|
-| Default (`canEditTarget=false`) | "Rename", "Move", "File", "Delete" visually disabled (grayed); "Add" enabled | Only Add is functional; the other items do not respond to click |
+| Not editable (`canEditTarget=false`) | `rename`, `move`, `file` and `delete` items visually disabled (grayed); `add` enabled | Only `add` is functional; the other items do not respond to click |
 | Target selected (`canEditTarget=true`) | All five items visible and enabled | User can click any item |
 | Disabled | Trigger appears disabled (visual state depends on GearMenuTrigger) | Trigger does not respond to click |
-| Menu open | Dropdown content displays below or adjacent to trigger | User can click any enabled item |
+| Menu open | Dropdown content displays aligned per **align-to-end** | User can click any enabled item |
 
 ## Accessibility
 
-- **Role**: Trigger element MUST have a button role; menu MUST have a menu role and menu items MUST have menuitem role (provided by DropdownMenu and DropdownMenuItem components).
-- **Label**: Trigger MUST be labeled "{Noun} actions" to describe its purpose to assistive technology users.
-- **Disabled state announcement**: Disabled menu items MUST be announced as disabled to assistive technology.
+- **role**: Trigger element MUST have a button role; menu MUST have a menu role and menu items MUST have menuitem role (provided by DropdownMenu and DropdownMenuItem components).
+- **trigger-label**: Trigger MUST be labeled "{Noun} actions" to describe its purpose to assistive technology users.
+- **disabled-state-announcement**: Disabled menu items MUST be announced as disabled to assistive technology.
 - **touch-target-size**: NEEDS REVIEW: Not implemented in source. `GearMenuTrigger` is 24×24 CSS px (`size-6`) with a 14px icon, below the 44×44 CSS px, 44×44pt and 48×48dp platform minimums; settling it needs a decision on whether this dense header control is held to those minimums (WCAG 2.2 sets 24×24 CSS px as its floor) or the trigger is enlarged.
-- **Keyboard navigation**: Menu MUST support arrow keys and Enter/Space to select items (delegated to DropdownMenu component).
+- **keyboard-navigation**: Menu MUST support arrow keys and Enter/Space to select items (delegated to DropdownMenu component).
 
 ## Conformance Test Vectors
 
@@ -79,7 +79,7 @@ A dropdown menu triggered by a gear icon that presents five actions for managing
 | cgm-002 | render-five-items | Menu opened, canEditTarget=false | Five items are visible: "Add category…", "Rename…", "Move…", "Also file in…", "Delete…" |
 | cgm-003 | show-target-in-labels | targetName="Q3", canEditTarget=true | `Rename “Q3”…`, `Move “Q3”…`, `Also file “Q3” in…`, `Delete “Q3”…` |
 | cgm-004 | omit-target-when-not-editable | targetName="Q3", canEditTarget=false | "Rename…", "Move…", "Also file in…", "Delete…" (target name omitted); "Add category…" unaffected |
-| cgm-005 | disable-target-actions-when-no-target | canEditTarget=false | "Rename", "Move", "File", "Delete" items are disabled; "Add" is enabled |
+| cgm-005 | disable-target-actions-when-not-editable | canEditTarget=false | `rename`, `move`, `file` and `delete` items are disabled; `add` is enabled |
 | cgm-006 | enable-add-always | canEditTarget=false, no target | "Add category…" is enabled and clickable |
 | cgm-007 | render-separators | Menu opened | Two visual separators present: one after "Add", one before "Delete" |
 | cgm-008 | invoke-callback-on-action | Click "Add category…" | onAction("add") is called |
@@ -89,7 +89,10 @@ A dropdown menu triggered by a gear icon that presents five actions for managing
 | cgm-012 | align-to-end | Menu opened, LTR locale | Menu content aligns to the right edge of the trigger |
 | cgm-013 | align-to-end | Menu opened, RTL locale | Menu content aligns to the left edge of the trigger (its trailing edge under RTL) |
 | cgm-014 | render-trigger | noun="item" | Trigger displays "Item actions"; the "Add item…" item is present |
-
+| cgm-015 | show-target-in-labels | targetName=null, canEditTarget=true | Bare verb labels: "Rename…", "Move…", "Also file in…", "Delete…"; the four items are enabled |
+| cgm-016 | respect-disabled-prop, disable-target-actions-when-not-editable | disabled=true, canEditTarget=false | Trigger is disabled and does not open the menu |
+| cgm-017 | show-target-in-labels | Menu open, targetName changes from "Q3" to "Q4", canEditTarget=true | Labels update to `Rename “Q4”…`, `Move “Q4”…`, `Also file “Q4” in…`, `Delete “Q4”…` without closing the menu |
+| cgm-018 | render-trigger | noun="" | Trigger label reads " actions" (leading space) and the add item reads "Add …" (see Edge Cases, Empty string noun) |
 ## Edge Cases
 
 - **Null targetName**: When targetName is null (no selection), labels use the bare verb form without a target name reference (e.g., "Rename…" instead of `Rename “{name}”…`).
@@ -157,7 +160,7 @@ Not applicable: No logging is implemented in the component.
 ## Platform Notes
 
 - **React/Web**: Use the `DropdownMenu`, `DropdownMenuContent`, `DropdownMenuItem`, and `DropdownMenuSeparator` primitives, which provide ARIA menu semantics (roles, keyboard navigation) out of the box; `GearMenuTrigger` provides the icon trigger. Render the menu content with `align="end"` so it tracks the trigger's trailing edge under both LTR and RTL. Apply the platform's destructive/error text class (`text-apt-red`) to the delete item.
-- **SwiftUI**: Start with SwiftUI's `Menu` control, using a gear icon from `Image(systemName: "gearshape.fill")` as the trigger. Render all five items unconditionally and apply `.disabled(!canEditTarget)` to the four target actions — never omit them conditionally, since omitting rather than disabling contradicts **disable-target-actions-when-no-target**. Use `Button(role: .destructive)` for the delete item so the platform applies its own destructive styling. Include the target name in action labels using string interpolation when available.
+- **SwiftUI**: Start with SwiftUI's `Menu` control, using a gear icon from `Image(systemName: "gearshape.fill")` as the trigger. Render all five items unconditionally and apply `.disabled(!canEditTarget)` to the four target actions — never omit them conditionally, since omitting rather than disabling contradicts **disable-target-actions-when-not-editable**. Use `Button(role: .destructive)` for the delete item so the platform applies its own destructive styling. Include the target name in action labels using string interpolation when available.
 - **Compose**: Build from Compose's `DropdownMenu` and `DropdownMenuItem` composables. Use Material Design 3 Menu specs for spacing and elevation. Apply conditional *enabled* states based on `canEditTarget` — disable, never omit, the four target items. Use the app's error color token (e.g. `MaterialTheme.colorScheme.error`) for the delete item text. Icon rendering uses Compose Material Icons (gear icon).
 - **AppKit / UIKit**: On macOS (AppKit), use `NSMenu` with `NSMenuItem` for each action; set the menu's `autoenablesItems = false` and set each item's `isEnabled` explicitly so the four target items can be disabled, and style the delete item's destructive state with an attributed title using `NSColor.systemRed` (AppKit has no destructive-role menu attribute). On iOS (UIKit), use `UIMenu` and `UIAction`; set `.attributes = .disabled` on the four target actions when `canEditTarget` is false, and `.attributes = .destructive` on the delete action so the system applies its own destructive styling. The gear icon comes from `UIImage(systemName: "gearshape.fill")`.
 - **WinUI 3**: Use `MenuFlyout` with `MenuFlyoutItem` controls. Bind the `IsEnabled` of "Rename", "Move", "File", and "Delete" items to the `canEditTarget` property. Use a `MenuFlyoutSeparator` between logical groups. Set `Foreground` to the app's error color resource (e.g. `{ThemeResource SystemFillColorCriticalBrush}`) for the delete item. Position the menu with `Placement="BottomEdgeAlignedRight"`, which anchors to the trigger's trailing edge and mirrors correctly under RTL layouts.

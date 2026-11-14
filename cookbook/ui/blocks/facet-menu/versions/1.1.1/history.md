@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | All-button disables when every option selected; stale-selection, facet-023, edge case fixed. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; rewrote Overview, Popover Accessibility, and Platform Notes to describe a non-dismissing popover instead of a native menu; added trigger-expanded-state, empty-selection-semantics, stale-selection-values, and synchronous-selection-update requirements grounded in the source's controlled-Set behavior; filled Configuration with the prop types; reformatted Design Decisions into Decision/Rationale/Approved form and added two new decisions; replaced the "Not applicable" Compliance section with a check table and supporting sentence; fixed the Tailwind-class and self-contradictory padding value in Appearance; added a localization key and casing-transform note for the trigger count; added conformance vectors for All/None payloads, unchecking, the disabled-menu case, keyboard toggling, Escape, and stale selections; replaced facet-003's nondeterministic assertion with a `disabled`-attribute check |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

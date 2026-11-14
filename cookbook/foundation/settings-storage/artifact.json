@@ -12,10 +12,11 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Typed key/value settings contract with in-memory, plain persistent, secure persistent, embedded-database, and cloud-synced backends.",
+    "summary": "Typed key/value settings contract with six backends: in-memory, in-memory secure, plain persistent, secure persistent, embedded-database, and cloud-synced.",
     "platforms": [
       "swift",
-      "macos"
+      "macos",
+      "ios"
     ],
     "tags": [
       "settings",
@@ -24,12 +25,16 @@
       "logic"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "432e8d4b-43c3-49fd-b481-036a759e7c55",
+      "62abe97d-75f7-48c0-83cd-6df02a48515e",
+      "846ec786-5b96-4ee0-b7db-d6ae4bd6e333"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "71fab1eb4f603203",
+  "synced": "7ecb247b0eac60d7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

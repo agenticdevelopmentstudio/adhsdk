@@ -10,4 +10,7 @@
 - **set-title-attribute**: Component MUST set the `title` attribute to the same value as `aria-label`.
 - **accept-classname-prop**: Component MUST accept an optional `className` prop and merge it with the component's base class name 'awt-appearance-mode-toggle'.
 - **render-hydration-safe**: Component MUST render without throwing when `document` is unavailable (server-side rendering), defaulting to 'auto' mode and 'light' resolved appearance in that case. The read happens via a `useState` lazy initializer that runs synchronously during render — including the client's first (hydrating) render — so it is not deferred until after mount; the client's hydrating render re-reads the live `document.documentElement` immediately, which can differ from the server's deterministic auto/light output (see Design Decisions: Hydration safety).
-
+- **remove-listener-on-unmount**: Component MUST remove its `awt:appearance-changed` listener from `window` when it unmounts.
+- **instances-update-independently**: When several instances are mounted, each MUST listen for `awt:appearance-changed` and update from its own state, so one event updates all of them.
+- **skip-dispatch-without-window**: Component MUST return early from the click handler, without dispatching and without throwing, when `window` is undefined.
+- **update-only-on-changed-event**: Component MUST re-read `document.documentElement` only when `awt:appearance-changed` fires; external code that changes the mode or the `dark` class MUST fire that event for the component to update.

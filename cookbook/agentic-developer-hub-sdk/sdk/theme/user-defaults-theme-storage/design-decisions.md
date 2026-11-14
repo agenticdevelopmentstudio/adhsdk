@@ -24,6 +24,10 @@
 **Approved**: pending
 
 **Decision**: The `observer` field is `nonisolated(unsafe)`.
-**Rationale**: The source comment says it is written once in `init` and read once in `deinit`, so the nonisolated `deinit` cannot race it; `isolated deinit` would express this safely but needs macOS 15.4 or iOS 18.4.
+**Rationale**: The source comment says it is written once in `init` and read once in `deinit` and never touched between, so the nonisolated `deinit` cannot race it; `isolated deinit` would express this safely but needs macOS 15.4 or iOS 18.4. A project at that deployment floor can use the isolated form instead.
 **Approved**: pending
 
+
+**Decision**: One element missing a required field makes the whole stored catalog read as empty (known debt, accepted for now).
+**Rationale**: The decoder throws on the first bad element and the class treats any throw as no themes, so one bad element hides every other stored theme. The source accepts this because there is nothing useful to do with a blob of an incompatible shape; a port SHOULD copy the behavior until a per-element decode is specified, and the blob is left in place so nothing is lost until the next write.
+**Approved**: pending

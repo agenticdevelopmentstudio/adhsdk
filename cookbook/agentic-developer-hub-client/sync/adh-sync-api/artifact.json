@@ -2,13 +2,13 @@
   "format": 2,
   "meta": {
     "id": "e7262e09-e6f7-4152-acff-7fa09c242088",
-    "title": "Hub Client Sync",
+    "title": "ADH Sync API Client",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-23",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7c97dd26d0cec087",
+  "synced": "c5681ae71c4d5549",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

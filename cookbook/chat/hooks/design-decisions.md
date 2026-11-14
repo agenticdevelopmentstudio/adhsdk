@@ -31,3 +31,6 @@
 **Rationale**: keeps `useMouseGaze` a single-source, independently reusable and testable hook; the mutual-exclusion policy (mouse silenced while engaged, caret gated while disengaged) only makes sense to a caller that already knows about both sources.
 **Approved**: pending
 
+**Decision**: `sendMessage` swallows any rejection from `orchestrator.submitMessage` and returns no failure signal.
+**Rationale**: the orchestrator projects its own failure state into the transcript, so the hook adds no second channel; the cost is that a caller cannot tell "sent" from "silently failed to submit" from the hook's return value alone, which is why explicit-error-handling is partial.
+**Approved**: pending

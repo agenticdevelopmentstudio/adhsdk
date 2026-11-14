@@ -2,11 +2,11 @@
 id: d9b07d1e-b53c-4efa-86f1-82a31ad9f02f
 title: "Progress Modal"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -50,21 +50,39 @@ A modal dialog that displays the real-time progress of a batch operation. It sho
 | `okLabel` | `React.ReactNode` | optional | `"done"` |
 | `failedLabel` | `React.ReactNode` | optional | `"failed"` |
 
+### Types
+
+`ProgressError` (the `error` prop):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `message` | `string` | required | The failure message shown in the error block. |
+| `itemLabel` | `React.ReactNode` | optional | The item that failed, shown above the message. |
+
+`ProgressResult` (each entry of `results`):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | `string` | required | Stable key for the log row. |
+| `label` | `React.ReactNode` | required | How the operator refers to the item (an email, a name), not a uuid. |
+| `status` | `"ok" \| "failed"` | required | Selects the muted or `apt-red` rendering. |
+| `message` | `string` | optional | Replaces `okLabel` or `failedLabel` for this row. |
+
 ## Behavioral Requirements
 
 - **render-as-dialog**: Component MUST render as a modal dialog that can be opened and closed via the `open` prop.
-- **show-progress-bar**: Component MUST display a progress bar whose value is calculated as `(done / total) * 100` when total is greater than zero, or zero when total is zero.
-- **display-completion-count**: Component MUST display the count as "done of total" in monospace font.
+- **show-progress-bar**: Component MUST display a progress bar whose value is calculated as `(done / total) * 100`, rounded to the nearest integer, when total is greater than zero, or zero when total is zero. The bar clamps the value to 0–100, so `done` greater than `total` shows a full bar and a negative `done` shows an empty one; the count text still shows the raw numbers.
+- **display-completion-count**: Component MUST display the count as "done of total" (typography is in Appearance).
 - **display-status-or-current-label**: Component MUST display `currentLabel` when provided. When `currentLabel` is omitted and the run is finished, MUST display "Finished". When omitted and the run is halted (error set and not finished), MUST display "Paused". When omitted and the run is in progress (no error, not finished), MUST display "Working…".
 - **halt-on-error**: When `error` is set and `finished` is false (halted), the component MUST render the error block and, instead of the in-progress button state, show the Continue/Stop buttons (see **show-continue-and-stop-when-halted**). The progress bar continues to reflect `done`/`total` exactly as supplied by the host — the component does not itself pause any operation.
 - **show-error-block-when-halted**: When halted, component MUST render an error block containing the error message. If `error.itemLabel` is present, it MUST appear above the error message.
 - **show-results-log-when-provided**: When `results` array has items, component MUST render them as a scrollable list with maximum height constraint, regardless of whether the run is running, halted, or finished.
-- **render-result-label-and-status**: Each result item MUST display the result's label followed by a status indicator. For failed results, MUST display the result message or `failedLabel` in red. For successful results, MUST display the result message or `okLabel` in muted text.
-- **show-continue-and-stop-when-halted**: When halted (error set and not finished), component MUST display Continue and Stop buttons if their respective callbacks are provided.
-- **show-close-when-finished**: When finished is true, component MUST display a Close button if `onClose` callback is provided.
+- **render-result-label-and-status**: Each result item MUST display the result's label followed by a status indicator. For failed results, MUST display the result message or `failedLabel` in the `apt-red` color token. For successful results, MUST display the result message or `okLabel` in the muted text token (`apt-text-muted`).
+- **show-continue-and-stop-when-halted**: When halted (error set and not finished), component MUST display Continue and Stop buttons if their respective callbacks are provided; clicking each MUST call its callback.
+- **show-close-when-finished**: When finished is true, component MUST display a footer Close button if `onClose` callback is provided; clicking it MUST call `onClose`. Without `onClose` no Close button renders (see Edge Cases).
 - **finished-overrides-halt**: When `finished` is true, the component MUST NOT render the error block or the Continue/Stop buttons, even if `error` is still set; only the Close button (per **show-close-when-finished**) may render.
-- **hide-buttons-during-progress**: When the run is in progress (no error and not finished), component MUST not display any action buttons.
-- **prevent-dismiss-mid-run**: When `finished` is false, the component MUST swallow Escape and close-button dismiss requests internally and MUST NOT call `onClose`. When `finished` is true, the component MUST call `onClose` in response to Escape or the close button.
+- **hide-buttons-during-progress**: When the run is in progress (no error and not finished), component MUST NOT display any action buttons.
+- **prevent-dismiss-mid-run**: When `finished` is false, the component MUST swallow Escape and the Dialog's × button dismiss requests internally and MUST NOT call `onClose` (the × is not shown while `finished` is false, and the footer Close button renders only when `finished` is true). When `finished` is true, the component MUST call `onClose` in response to Escape or the Dialog's ×; the footer Close button also calls `onClose` (see **show-close-when-finished**).
 - **calculate-percentage-safely**: Component MUST handle zero total by setting percentage to zero instead of NaN.
 
 ## Appearance
@@ -75,7 +93,7 @@ Spacing values below use the Tailwind spacing scale (1 unit = 0.25rem).
 - **Progress bar**: Full width, default height per Progress component spec.
 - **Status section**: Flex row with baseline alignment, gap of 3 units (0.75rem).
 - **Status text**: Extra-small font size, muted text color. Item label truncated on overflow.
-- **Count text**: Monospace font, extra-small size, muted text color, no shrink.
+- **Count text**: Monospace font (`font-mono`), extra-small size, muted text color, no shrink.
 - **Error box**: Rounded border, `apt-red` border color at 40% opacity, `apt-red` background at 5% opacity, padding 2 units (0.5rem), text extra-small.
 - **Error item label**: Medium font weight, normal text color.
 - **Error message**: `apt-red` text color.
@@ -91,7 +109,7 @@ Spacing values below use the Tailwind spacing scale (1 unit = 0.25rem).
 | State | Appearance change | Behavior |
 |-------|-------------------|----------|
 | Running | Progress bar reflects `done`/`total`; status shows `currentLabel` if provided, otherwise "Working…"; no action buttons visible | Modal is open; Escape/× dismiss requests are swallowed internally (no `onClose` call); `done` updates as the host advances the batch |
-| Halted | Progress bar unchanged from the last render; status shows `currentLabel` if provided, otherwise "Paused"; error block visible; Continue and Stop buttons visible | Modal remains open; Escape/× dismiss requests are swallowed internally (no `onClose` call); awaiting a Continue/Stop decision |
+| Halted | Progress bar reflects `done`/`total` exactly as supplied by the host (see **halt-on-error**); status shows `currentLabel` if provided, otherwise "Paused"; error block visible; Continue and Stop buttons visible | Modal remains open; Escape/× dismiss requests are swallowed internally (no `onClose` call); awaiting a Continue/Stop decision |
 | Finished | Progress bar reflects `done`/`total` as provided — not necessarily 100%, since a Stop can finish the run early; status shows `currentLabel` if provided, otherwise "Finished"; error block and halted buttons are hidden even if `error` is still set; Close button visible if `onClose` is provided | Modal is open; Escape, ×, or the Close button all call `onClose` |
 | Closed | — | Modal is not rendered (`open` prop is false) |
 
@@ -107,7 +125,7 @@ Accessibility is delegated to the composed `Dialog` and `Progress` components. `
 |----|-------------|-------|----------|
 | progress-001 | show-progress-bar | `open={true}, done={3}, total={10}` | Progress bar shows 30% width |
 | progress-002 | calculate-percentage-safely | `open={true}, done={0}, total={0}` | Progress bar shows 0%, no NaN displayed |
-| progress-003 | display-completion-count | `open={true}, done={5}, total={20}` | Text displays "5 of 20" in monospace |
+| progress-003 | display-completion-count | `open={true}, done={5}, total={20}` | Text displays "5 of 20" |
 | progress-004 | display-status-or-current-label | `open={true}, currentLabel={"Uploading file.txt"}, finished={false}, error={null}` | Status text shows "Uploading file.txt" |
 | progress-005 | display-status-or-current-label | `open={true}, currentLabel={undefined}, finished={true}` | Status text shows "Finished" |
 | progress-006 | display-status-or-current-label | `open={true}, currentLabel={undefined}, finished={false}, error={…}` | Status text shows "Paused" |
@@ -124,7 +142,15 @@ Accessibility is delegated to the composed `Dialog` and `Progress` components. `
 | progress-017 | prevent-dismiss-mid-run | `open={true}, finished={false}` triggered by Escape | `onClose` is NOT called; modal remains open |
 | progress-018 | prevent-dismiss-mid-run | `open={true}, finished={true}, onClose={fn}` triggered by Escape | `onClose` IS called |
 | progress-019 | finished-overrides-halt | `open={true}, error={message: "Upload failed"}, finished={true}, onClose={fn}` | Error block and Continue/Stop buttons are NOT rendered; only Close is visible |
-
+| progress-020 | show-progress-bar | `open={true}, done={1}, total={3}` | Progress bar shows 33% (rounded to the nearest integer) |
+| progress-021 | show-progress-bar | `open={true}, done={12}, total={10}` | Progress bar is full; count text shows "12 of 10" |
+| progress-022 | show-progress-bar | `open={true}, done={-2}, total={10}` | Progress bar is empty; count text shows "-2 of 10" |
+| progress-023 | render-as-dialog | `open={false}` | No dialog content is rendered |
+| progress-024 | render-result-label-and-status | `open={true}, results=[{id: "1", label: "file.txt", status: "failed"}]`, no `failedLabel` | Result shows "file.txt — failed" (default `failedLabel`) |
+| progress-025 | prevent-dismiss-mid-run | `open={true}, error={…}, finished={false}, onClose={fn}` triggered by Escape | `onClose` is NOT called; modal remains open |
+| progress-026 | show-close-when-finished | `open={true}, finished={true}`, no `onClose` | No Close button is rendered |
+| progress-027 | show-continue-and-stop-when-halted | `open={true}, error={…}, onContinue={fn}, onStop={fn}`, user clicks Continue, then Stop | `onContinue` is called once, then `onStop` is called once |
+| progress-028 | show-close-when-finished | `open={true}, finished={true}, onClose={fn}`, user clicks Close | `onClose` is called once |
 ## Edge Cases
 
 - **Empty batch**: When `total` is zero, percentage calculation produces zero instead of NaN. Progress bar renders at 0%.
@@ -136,7 +162,9 @@ Accessibility is delegated to the composed `Dialog` and `Progress` components. `
 - **Stop action while processing**: When `onStop` is invoked, the host owns the batch loop and decides when to set `finished={true}`. The modal does not stop the underlying operation.
 - **Continue after error**: When `onContinue` is invoked, the host resumes the batch loop. The `error` prop is expected to be cleared by the host in the next render.
 - **Dismiss attempt mid-run**: Pressing Escape or clicking the close button while `finished={false}` is swallowed internally — the component does not call `onClose` and the modal remains open. `ProgressModal` has no host-facing `onOpenChange` prop; the swallowing happens inside the component's own wiring to the underlying `Dialog`.
-
+- **Halted with neither `onContinue` nor `onStop`**: The error block renders but the footer is empty, so the user has no way out; the dialog also swallows Escape. This is an allowed dead end the host MUST avoid by supplying at least one of the two callbacks.
+- **Finished without `onClose`**: No Close button renders, the Dialog's × is shown but does nothing, and Escape does nothing, so nothing can dismiss the modal. This is an allowed dead end the host MUST avoid by supplying `onClose`, or by setting `open` to false itself.
+- **`done` outside 0 to `total`**: The percentage is not clamped by this component but the `Progress` bar clamps what it draws to 0–100; the count text shows the raw `done` and `total`.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -159,8 +187,8 @@ Not applicable: This component is a modal overlay managed by its host and is not
 | `action.stop` | "Stop" | Button label when halted. Hardcoded; not exposed as a prop. |
 | `action.close` | "Close" | Button label when finished. Hardcoded; not exposed as a prop. |
 | `progress.count` | "{done} of {total}" | Count text. Word order is locale-dependent — a translation MUST be able to reorder the `{done}`/`{total}` placeholders, not just substitute the numbers. Hardcoded; not exposed as a prop. |
-| `result.ok` | "done" | Default status text when result status is "ok" and no message provided (overridable via `okLabel` prop). |
-| `result.failed` | "failed" | Default status text when result status is "failed" and no message provided (overridable via `failedLabel` prop). |
+| `result.ok` | "done" | Default status text for an "ok" result with no message; see `okLabel` in Configuration. |
+| `result.failed` | "failed" | Default status text for a "failed" result with no message; see `failedLabel` in Configuration. |
 
 Only `result.ok` and `result.failed` are host-overridable (`okLabel`/`failedLabel`); every other string above is a hardcoded JSX literal in the component.
 
@@ -186,9 +214,9 @@ Not applicable: This component does not perform logging. Debug information about
 
 ## Platform Notes
 
-- **React/Web**: Implemented using the shared `Dialog` (Base UI primitives, [adhsdk.ingredient.ui.components.overlays.dialog](cookbook:972be0d0-a9f5-45cd-a23b-c8329410b3d1)) and `Progress` (self-contained `role="progressbar"` element, [adhsdk.ingredient.progress](cookbook:b3a92adc-a28e-4a33-8120-c33f8f0abdf6)) components. `Dialog`'s `onOpenChange` swallows Escape/× internally and only calls `onClose` once `finished` is true. Progress percentage is calculated client-side (`Math.round((done / total) * 100)`, or `0` when `total` is `0`). Results are rendered as a flex column with overflow constraints.
-- **SwiftUI**: Present with `.sheet()` or `.fullScreenCover()` bound to the `open` state. Use the determinate initializer `ProgressView(value: Double(done), total: Double(total))` — the bare `ProgressView()` initializer is indeterminate and would not reflect `done`/`total`. Block mid-run dismissal with `.interactiveDismissDisabled(!finished)`. Render the error block conditionally on `error != nil && !finished`. Use a `List` or `ScrollView` with a frame height constraint for the results log.
-- **Compose**: Build on `AlertDialog` or `Dialog`. Use `LinearProgressIndicator(progress = { done / total.toFloat() })` for a determinate bar. Set `onDismissRequest` to a callback that only closes if `finished` is true. Render the error and results sections conditionally on the same `error`/`finished` state used on other platforms. Use `LazyColumn` for the scrollable results list.
+- **React/Web**: Implemented using the shared `Dialog` (Base UI primitives, [adhsdk.ingredient.ui.components.overlays.dialog](cookbook:972be0d0-a9f5-45cd-a23b-c8329410b3d1)) and `Progress` (self-contained `role="progressbar"` element, [adhsdk.ingredient.progress](cookbook:b3a92adc-a28e-4a33-8120-c33f8f0abdf6)) components. `Dialog`'s `onOpenChange` swallows Escape/× internally and only calls `onClose` once `finished` is true. Progress percentage is calculated client-side (`Math.round((done / total) * 100)`, or `0` when `total` is `0`); the `Progress` component clamps the drawn value to 0–100. The count text uses the `font-mono` class. Results are rendered as a flex column with overflow constraints.
+- **SwiftUI**: Present with `.sheet()` or `.fullScreenCover()` bound to the `open` state. Use the determinate initializer `ProgressView(value: Double(done), total: Double(max(total, 1)))` (guarding a zero `total` so the bar stays empty, per **calculate-percentage-safely**) — the bare `ProgressView()` initializer is indeterminate and would not reflect `done`/`total`. Block mid-run dismissal with `.interactiveDismissDisabled(!finished)`. Render the error block conditionally on `error != nil && !finished`. Use a `List` or `ScrollView` with a frame height constraint for the results log.
+- **Compose**: Build on `AlertDialog` or `Dialog`. Use `LinearProgressIndicator(progress = { if (total > 0) (done / total.toFloat()).coerceIn(0f, 1f) else 0f })` for a determinate bar (the guard satisfies **calculate-percentage-safely**). Set `onDismissRequest` to a callback that only closes if `finished` is true. Render the error and results sections conditionally on the same `error`/`finished` state used on other platforms. Use `LazyColumn` for the scrollable results list.
 - **AppKit / UIKit**: `NSAlert` (macOS) and `UIAlertController` (iOS) cannot host a progress bar plus a scrollable results list, so use a custom window or view controller instead. Add `NSProgressIndicator` (style `.bar`, `isIndeterminate = false`) on macOS or `UIProgressView` on iOS as a subview, driven by `done`/`total`. Prevent dismissal by disabling or intercepting the window/controller's close action until `finished` is true. Render the error and results sections in custom subviews.
 - **WinUI 3**: Use `ContentDialog` as the container and a `ProgressBar` for the progress display. To *hide* the action buttons during progress (not merely disable them), leave `PrimaryButtonText`/`SecondaryButtonText` empty — an empty button text hides that button — and set them only once halted or finished. Use a `ScrollViewer` containing an `ItemsControl` or `ListView` for the results log. Prevent dismissal by handling the `Closing` event and only letting the close proceed once `finished` is true.
 
@@ -196,7 +224,7 @@ Not applicable: This component does not perform logging. Debug information about
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/progress-modal.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/blocks/progress-modal.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -228,7 +256,7 @@ Not applicable: This component does not perform logging. Debug information about
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
@@ -244,12 +272,13 @@ Not applicable: This component does not perform logging. Debug information about
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on the source: `Progress` sets an explicit `role="progressbar"` with `aria-valuemin`/`max`/`now`, `Dialog` (Base UI) renders native ARIA dialog semantics and traps focus, and Continue/Stop/Close buttons carry their own text as their accessible name — but nothing in the source moves focus on halt/finish, defines `apt-*` token contrast values, or sizes the `sm` buttons, and every visible string except `okLabel`/`failedLabel` is a hardcoded English JSX literal with no locale-aware formatting or confirmed RTL handling. `ProgressModal` is transport-agnostic — it renders state and emits decisions, and the host owns the batch loop and any network calls (separation-of-concerns passed); `progressModal.test.tsx` exercises the percentage calculation, the halted/finished/healthy button states, Continue/Stop/Close handlers, and the running log directly (unit-test-coverage passed).
+Statuses rest on the source (screen-reader-support is partial because nothing announces a halt, an error or a finish: there is no `aria-live` region, no `role="alert"` and no focus move): `Progress` sets an explicit `role="progressbar"` with `aria-valuemin`/`max`/`now`, `Dialog` (Base UI) renders native ARIA dialog semantics and traps focus, and Continue/Stop/Close buttons carry their own text as their accessible name — but nothing in the source moves focus on halt/finish, defines `apt-*` token contrast values, or sizes the `sm` buttons, and every visible string except `okLabel`/`failedLabel` is a hardcoded English JSX literal with no locale-aware formatting or confirmed RTL handling. `ProgressModal` is transport-agnostic — it renders state and emits decisions, and the host owns the batch loop and any network calls (separation-of-concerns passed); `progressModal.test.tsx` exercises the percentage calculation, the halted/finished/healthy button states, Continue/Stop/Close handlers, and the running log directly (unit-test-coverage passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Marked screen-reader-support partial, added a Types section for ProgressError and ProgressResult, specified rounding and clamping, zero-total guards, halted and finished dead ends and nine new test vectors, and fixed MUST NOT, token names, the Halted state row and the monospace and dismiss wording. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to drop `must-` prefix; correct the Accessibility section's false live-region claim to match Base UI Dialog/self-contained Progress; add a props table; unify the dismiss contract across the requirement, vectors, and edge case (no host-facing `onOpenChange`); add the finished-overrides-halted-error requirement and vector; fix the Finished/Halted rows in States and the results-log condition; reword halt-on-error as an observable outcome; replace literal "red"/"units" with token names and a spacing-scale note; add a `progress.count` localization key and mark which strings are hardcoded vs. overridable; fill in Configuration and Compliance tables; correct Platform Notes for AppKit/UIKit, SwiftUI, and WinUI 3; reframe design decision 1 as an assumption; add `depends-on` for Dialog and Progress; note the Change History author discrepancy is a generator attribution, not a frontmatter conflict. |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Revise accessibility section: document delegation to composed components rather than mark as unimplemented |

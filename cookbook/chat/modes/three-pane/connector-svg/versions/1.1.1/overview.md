@@ -1,0 +1,3 @@
+
+ConnectorSVG renders decorative SVG connector lines between pairs of DOM elements identified by reference. Elements are resolved by identifier through a registry supplied via an implicit context dependency rather than a prop (see **element-resolution** and the [adhsdk.ingredient.chat.modes.three-pane.connectors.connector-registry](cookbook:e5b8e26f-2869-4a09-8d8e-0bb68ece805d) ingredient this component depends on: a snapshot mapping id &rarr; element). The component automatically tracks element positions and recomputes connections when elements resize, the viewport scrolls, or the window resizes, batching recomputation to at most once per frame. Connections are visual-only and hidden from accessibility trees.
+

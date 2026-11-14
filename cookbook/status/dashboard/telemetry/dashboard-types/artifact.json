@@ -4,7 +4,7 @@
     "id": "e8f3cd4d-e208-49db-a500-24d6f7b978f9",
     "title": "Dashboard Wire Types",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -17,16 +17,22 @@
       "typescript",
       "web"
     ],
-    "tags": [],
+    "tags": [
+      "dashboard",
+      "telemetry",
+      "wire-types",
+      "analytics"
+    ],
     "depends-on": [],
     "related": [
-      "564c6102-e100-41ad-9c92-14606a33c394"
+      "564c6102-e100-41ad-9c92-14606a33c394",
+      "c861465b-50c8-49d1-93cc-00d9e062ad5f"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9f9d71d2f77f20ad",
+  "synced": "1803656ebc1035f6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

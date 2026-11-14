@@ -2,7 +2,7 @@
 id: 844fde57-2231-4516-bcc9-a93c56d74a2d
 title: "Summary Preference Constants"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -31,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-This file holds the numbers and names both sides of the AI-summaries feature read, so the app's settings panel and the daemon's summarizer cannot drift. `SummaryDefaults` carries the prompt template, the `{maxWords}` placeholder and the default value of each knob, plus the one derived function `characterCap(maxWords:)`. `SummaryLimits` carries the accepted range of each numeric knob and `clamp(_:to:)`. `SummarySettingsKeys` names the daemon settings-table keys the values persist under. The app owns the values (they live in `UserSettings` and are pushed to the daemon; the source comment says over XPC, and `StenographerHTTPClient.setSummaryPreferences` posts the same values over HTTP); the daemon persists them and falls back to these defaults for anything never pushed, so the panel's "Reset to Defaults" lands where a never-configured daemon already sits. The code holds constants and two pure functions; reading the settings table, pushing over XPC and cleaning a reply live in `SummaryPrefs`, `StenographerSummaryPrefsPush` and `DaemonSessionSummarizer`, outside these sources.
+This file holds the numbers and names both sides of the AI-summaries feature read, so the app's settings panel and the daemon's summarizer cannot drift. `SummaryDefaults` carries the prompt template, the `{maxWords}` placeholder and the default value of each knob, plus the one derived function `characterCap(maxWords:)`. `SummaryLimits` carries the accepted range of each numeric knob and `clamp(_:to:)`. `SummarySettingsKeys` names the daemon settings-table keys the values persist under. The app owns the values (they live in `UserSettings` and are pushed to the daemon over HTTP: `StenographerHTTPClient.setSummaryPreferences` is the current push path, and the "over XPC" wording in the source's doc comment is stale); the daemon persists them and falls back to these defaults for anything never pushed, so the panel's "Reset to Defaults" lands where a never-configured daemon already sits. The code holds constants and two pure functions; reading the settings table, pushing the values and cleaning a reply live in `SummaryPrefs`, `StenographerSummaryPrefsPush` and `DaemonSessionSummarizer`, outside these sources.
 
 ## Behavioral Requirements
 
@@ -41,6 +41,11 @@ This file holds the numbers and names both sides of the AI-summaries feature rea
 - **default-prompt**: `SummaryDefaults.prompt` MUST be the system prompt template that opens `You write a title of at most {maxWords} words for a coding session.` and carries the placeholder once, in that first sentence.
 - **default-prompt-instructions**: The default prompt MUST tell the model to start with a verb ending in -ing, to be brief and plain, never to ask questions, explain or say it lacks context, to guess from what is there when the activity is unclear, and to output only the short phrase.
 - **default-prompt-examples**: The default prompt MUST give four examples: `fixing the sessions window UI`, `adding keyboard shortcuts`, `cleaning up old code` and `exploring the codebase`.
+- **default-prompt-verbatim**: `SummaryDefaults.prompt` MUST be exactly this text, with `{maxWords}` as the placeholder and no newline:
+
+  ```text
+  You write a title of at most {maxWords} words for a coding session. Start with a verb ending in -ing. Be brief and plain — no jargon, no technical detail, no explanation. NEVER ask questions. NEVER explain. NEVER say you lack context. If the activity is unclear, make your best guess from what is there. Output ONLY the short phrase and nothing else. Examples: "fixing the sessions window UI", "adding keyboard shortcuts", "cleaning up old code", "exploring the codebase".
+  ```
 - **default-prompt-single-line**: The default prompt MUST be one logical line: each source line break is a line continuation, so the string holds no newline.
 - **default-max-words**: `SummaryDefaults.maxWords` MUST be 8.
 - **default-activity-lines**: `SummaryDefaults.activityLines` MUST be 60, the count of the session's most recent events that go into the prompt.
@@ -108,7 +113,7 @@ No test sits beside the source file. Vectors 004 to 009 come from the tests that
 - **Out-of-range input**: a value below or above its range MUST clamp to the nearest bound, never be rejected; `Int.max` clamps to the upper bound without overflow because `clamp` only compares.
 - **Unparseable stored value**: a stored number that is not an integer MUST fall back to the default, not to a bound; the clamp is not reached. The parse step is in `RawSetting`, outside this file.
 - **Prompt without the placeholder**: a prompt that drops `{maxWords}` MUST be sent verbatim; the reply is still trimmed to the cap.
-- **Purge threshold drift**: a purge threshold below `characterCap(maxWords:)` would wipe titles just written and re-queue them forever; the purge MUST take its number from this function. `clearOverlongSummaries` (in `SessionRecords`) defaults its `maxCharacters` to the cap at the default max words plus 10 and also blanks any summary containing a newline; its doc comment tells a caller to pass `SummaryDefaults.characterCap(maxWords:)` for the configured limit, and no caller in the repository passes one.
+- **Purge threshold drift (known non-conformance with character-cap-shared-with-purge)**: a purge threshold below `characterCap(maxWords:)` would wipe titles just written and re-queue them forever; the purge MUST take its number from this function. The current source does not meet that: `clearOverlongSummaries` (in `SessionRecords`) defaults its `maxCharacters` to the cap at the default max words plus 10 (90) and also blanks any summary containing a newline, and no caller in the repository passes the configured cap. With `maxWords` at 20 the cap is 200, so the purge wipes and re-queues every ended session's title longer than 90 characters at each daemon start. An implementation MUST pass `SummaryDefaults.characterCap(maxWords:)` for the configured limit and MUST NOT copy the `+ 10` default.
 - **Inverted or empty range**: `clamp` does not check the range it is given; the six ranges in this file are fixed and valid, and a caller passing another range owns it.
 - **Concurrent access**: every member is an immutable `static let` or a pure function, so concurrent reads are safe with no ordering rule.
 - **Error and offline states**: this code makes no network, file or database call and has no error path; a failed settings read is `SummaryPrefs`'s fallback to the default.
@@ -149,7 +154,7 @@ Not applicable: this code emits no analytics events.
 
 - **Data collected**: none by this code; the source describes `detailChars` as data minimization, capping how much of each event's detail goes into the prompt.
 - **Storage**: none here; the daemon persists the values in its settings table under the `SummarySettingsKeys` names.
-- **Transmission**: none here; the app pushes the values to the daemon (the source comment says over XPC; the HTTP client posts them to the daemon's loopback address), and this code opens no connection.
+- **Transmission**: none here; the app pushes the values to the daemon (the HTTP client posts them to the daemon's loopback address; the source's "over XPC" comment is stale), and this code opens no connection.
 - **Retention**: none defined by this code.
 
 ## Logging
@@ -158,17 +163,17 @@ Not applicable: this code makes no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Not used here; the settings panel (`AISummariesSettingsPanel`) binds a text area for the prompt, pop-up menus for the word limit, activity lines, detail, interval and timeout, and a stepper for sessions per pass to `UserSettings` values, with `SummaryLimits` giving the choices and stepper bounds. The `UserSettings` entries take their defaults from `SummaryDefaults`, and "Reset to Defaults" removes the stored values so they read back as the current defaults.
+- **SwiftUI**: Not used here; the constants are plain Swift enums. A SwiftUI port would bind `SummaryLimits` ranges to `Picker` and `Stepper` controls and take initial values from `SummaryDefaults`.
 - **Compose**: Kotlin `object` declarations with `const val` for the numbers and `IntRange` for each range; `coerceIn` replaces `clamp`; Kotlin has no line-continuation escape, so build the prompt by concatenation or `trimIndent` plus replacing newlines with spaces.
 - **React/Web**: TypeScript `as const` objects, each range a pair of numbers, and `Math.min(max, Math.max(min, value))` for the clamp; build the prompt as one string with no newlines.
-- **AppKit / UIKit**: The source is Swift in `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummaryPreferenceDTOs.swift`: caseless `public enum` namespaces, `ClosedRange<Int>` ranges, and a multi-line string literal whose trailing backslashes join the lines.
+- **AppKit / UIKit**: The settings panel (`AISummariesSettingsPanel`, AppKit) binds a text area for the prompt, pop-up menus for the word limit, activity lines, detail, interval and timeout, and a stepper for sessions per pass to `UserSettings` values, with `SummaryLimits` giving the choices and stepper bounds. The `UserSettings` entries take their defaults from `SummaryDefaults`, and "Reset to Defaults" removes the stored values so they read back as the current defaults. The source is Swift in `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummaryPreferenceDTOs.swift`: caseless `public enum` namespaces, `ClosedRange<Int>` ranges, and a multi-line string literal whose trailing backslashes join the lines.
 - **WinUI 3**: Use `static class` types with `public const int` for the numbers and a small `readonly record struct IntRange(int Min, int Max)` for each range (C# has no closed-range type); `Math.Clamp(value, min, max)` replaces `clamp`, and `Math.Max(80, maxWords * 10)` models `characterCap`; keep the prompt as a C# raw string literal or concatenation with no newline; bind the settings page `NumberBox` controls with `Minimum` and `Maximum` set from the ranges and a `TextBox` with `AcceptsReturn` for the prompt; persist under `Windows.Storage.ApplicationData` or the daemon equivalent using the same seven key names.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummaryPreferenceDTOs.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummaryPreferenceDTOs.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -176,27 +181,27 @@ Not applicable: this code makes no log calls.
 ## Design Decisions
 
 **Decision**: The app and the daemon read one file for defaults, ranges and keys.
-**Rationale**: The source states this keeps the settings panel and the summarizer from drifting, so "Reset to Defaults" lands where a never-configured daemon already sits.
+**Rationale**: Both sides compile against the same constants, so the settings panel and the summarizer cannot drift and "Reset to Defaults" lands where a never-configured daemon already sits.
 **Approved**: pending
 
 **Decision**: A prompt that drops `{maxWords}` is sent as written, with no sentence appended.
-**Rationale**: The source says explicit beats a hidden sentence appended behind the user's back; the cost is that the model is not told the cap, which still trims the reply.
+**Rationale**: An explicit prompt is more predictable than a hidden sentence appended behind the user's back (the doc comment on `maxWordsPlaceholder` makes this choice); the cost is that the model is not told the cap, which still trims the reply.
 **Approved**: pending
 
 **Decision**: The word cap is told to the model and enforced on the reply.
-**Rationale**: The source states a small local model routinely overruns the cap, so asking is not enough.
+**Rationale**: A small local model routinely overruns the cap (the doc comment on `SummaryDefaults.maxWords` says so), so asking is not enough.
 **Approved**: pending
 
 **Decision**: `characterCap(maxWords:)` is `max(80, maxWords * 10)` and lives with the defaults.
-**Rationale**: The source explains the startup purge must use the same number; two literals could drift and a purge below the cap wipes fresh titles and re-queues them forever.
+**Rationale**: The startup purge must use the same number (the doc comment on `characterCap(maxWords:)` says so); two literals could drift and a purge below the cap wipes fresh titles and re-queues them forever.
 **Approved**: pending
 
 **Decision**: Out-of-range values clamp to the nearest bound instead of being rejected.
-**Rationale**: The source says an out-of-range value from an older app or a hand-rolled HTTP POST should land on a sane number rather than wedge the summarizer.
+**Rationale**: An out-of-range value (the doc comment on `SummaryLimits` names both cases) from an older app or a hand-rolled HTTP POST should land on a sane number rather than wedge the summarizer.
 **Approved**: pending
 
 **Decision**: The per-run and timeout defaults are gentle: 5 sessions per pass and 60 seconds per completion.
-**Rationale**: The source says a backlog should drain gently instead of bursting model calls, and a local model on a cold load needs more time than a cloud API.
+**Rationale**: A backlog should drain gently instead of bursting model calls, and a local model on a cold load needs more time than a cloud API.
 **Approved**: pending
 
 ## Compliance
@@ -213,3 +218,4 @@ separation-of-concerns passes: the file holds constants, the range bounds, one c
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Named HTTP as the current push transport, added the verbatim default prompt, restated the purge threshold drift as a known non-conformance, rewrote the decision rationales and moved the panel description to the AppKit note. |

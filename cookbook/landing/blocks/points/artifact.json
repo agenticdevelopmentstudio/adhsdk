@@ -4,11 +4,11 @@
     "id": "91db9191-1ab2-4d09-a9a8-b0dc23669066",
     "title": "Points",
     "type": "ingredient",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ec156157fb4a15d5",
+  "synced": "38361d7920e25f13",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

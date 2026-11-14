@@ -1,3 +1,2 @@
 
-Not applicable: Component is display-only with no user interaction. Optional interactive elements (detail arrow, container click) are left to the caller to track.
-
+No analytics events are emitted by the component itself. It does accept interactions, the container `onClick` and the detail-indicator callback, and tracking them is the caller's job.

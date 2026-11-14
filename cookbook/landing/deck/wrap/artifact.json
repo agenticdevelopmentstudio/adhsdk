@@ -4,11 +4,11 @@
     "id": "51d3b1ba-ced7-4c08-8a63-c83094d91299",
     "title": "Wrap",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a4d1b0332cf77f1f",
+  "synced": "8ca1abb3ca7ada8e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

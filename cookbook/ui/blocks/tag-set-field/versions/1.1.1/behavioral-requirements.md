@@ -1,0 +1,23 @@
+
+- **display-label**: Component MUST display the `label` prop as the field's caption, via the shared `Field` component.
+- **hint-prop**: Component MUST display the optional `hint` prop if provided, via the shared `Field` component.
+- **render-combobox**: Component MUST render a `Combobox` control in the top row for autocomplete search.
+- **render-entity-chooser**: Component MUST render an `EntityChooser` control in the top row to the right of the Combobox for browsing and creating labels.
+- **show-filtered-suggestions**: Component MUST filter the `options` list to exclude any item already present in the `value` array and pass the filtered list to the Combobox.
+- **accept-exact-match-in-combobox**: Component MUST add an item to `value` and call `onChange` with the updated array when the Combobox's `onValueChange` fires with text that exactly matches an item in `options` and is not already in `value`. This is the sole acceptance path — there is no separate "confirm" step; the event fires identically whether the match came from clicking a suggestion, pressing Enter on a highlight, or the typed text simply reaching an exact match mid-keystroke (see **case-sensitive-exact-match** and the "typing a prefix of a longer option" edge case).
+- **case-sensitive-exact-match**: The exact-match check (`options.includes(next)`) MUST be case-sensitive and MUST NOT trim whitespace; `"Foo"` or `" foo "` do not match an option `"foo"`.
+- **clear-combobox-on-acceptance**: Component MUST clear the Combobox text field after adding an item via exact match.
+- **no-create-on-enter**: Component MUST NOT add an item to `value` when the Combobox receives text that does not exactly match any item in `options`, even if the user presses Enter; only the EntityChooser's `allowCreate` row creates new labels.
+- **render-chips-row**: Component MUST render selected items as removable chips below the control row using `EntitySelectionChips`.
+- **render-chips-from-value**: Component MUST render all items in the `value` array as chips, maintaining their order.
+- **remove-chip-on-delete**: Component MUST remove an item from `value` and call `onChange` with the updated array when the user clicks the remove action on a chip.
+- **empty-chips-row-renders-nothing**: When `value` is empty, `EntitySelectionChips` (given no `emptySelectionLabel`) MUST render nothing at all — no chips-row element in the DOM, not an empty one — so a field with no selection yet costs no height; there is no "No tags yet" label or placeholder row.
+- **pass-label-to-chips**: Component MUST pass the `label` prop as the `ariaLabel` to `EntitySelectionChips`.
+- **pass-label-to-chooser**: Component MUST pass the `label` prop as the `ariaLabel` to `EntityChooser`.
+- **noun-in-placeholders**: Component MUST build every piece of microcopy from the singular `noun` prop: the Combobox's `ariaLabel` (`Add a ${noun}`) and `placeholder` (`Add a ${noun}…`), and the EntityChooser's `inputLabel` (`Filter or add a ${noun}`) and `placeholder` (`Filter or add a ${noun}…`).
+- **pass-disabled-to-controls**: Component MUST propagate the `disabled` prop to the Combobox, the EntityChooser, and `EntitySelectionChips`.
+- **accept-layout-prop**: Component MUST pass the optional `layout` prop (`"stacked"` or `"inline"`, default `"stacked"`) to the shared `Field` component.
+- **accept-classname-prop**: Component MUST pass the optional `className` prop to the shared `Field` component.
+- **options-as-suggestion**: Component MUST treat the `options` list as a suggestion list, not a closed set; items in `value` may exist outside `options` (newly created labels or additions from other surfaces).
+- **maintain-value-order**: Component MUST preserve the order of items in the `value` array; no sorting or reordering is applied.
+

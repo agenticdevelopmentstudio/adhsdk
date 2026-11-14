@@ -4,11 +4,11 @@
     "id": "9041d819-d6bf-405a-9129-9730bb2c8a6b",
     "title": "Hub Client",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-23",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -25,11 +25,15 @@
     ],
     "depends-on": [],
     "related": [],
-    "references": [],
+    "references": [
+      "https://github.com/apple/swift-openapi-runtime",
+      "https://github.com/apple/swift-openapi-urlsession",
+      "https://github.com/apple/swift-http-types"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "64aa5c1afce1b33b",
+  "synced": "d62972b594942437",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

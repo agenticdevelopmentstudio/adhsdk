@@ -2,7 +2,7 @@
 id: f333f036-2c23-4a87-8496-bd3616b44786
 title: "Claude Stream JSON"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -188,7 +188,7 @@ Not applicable: The source calls no logging API; a bad line is reported to the c
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/ClaudeStreamJSON.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/ClaudeStreamJSON.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -234,4 +234,5 @@ Not applicable: The source calls no logging API; a bad line is reported to the c
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Narrowed the wrong-type edge case to the NSNumber bridging, fixed the not-object requirement, added a mixed-content decision, a non-text tool_result requirement, links, new tags and vectors 022-027. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

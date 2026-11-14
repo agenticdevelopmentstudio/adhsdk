@@ -2,7 +2,8 @@
 - **Null/empty field values** (MUST): `null`, `undefined`, a blank
   (whitespace-only) string, and an empty array all count as "empty" via
   `isEmptyValue`; `false` and `0` do NOT, so a deliberately unticked
-  required checkbox is a valid answer, never a missing one
+  checkbox is a valid answer, never a missing one (`required` does not
+  compile on a `checkbox`)
   (`validation.ts` `isEmptyValue`; `validation.test.ts` "treats false and
   zero as entered values, not as absence").
 - **Structurally-identical replacement values** (MUST): setting a field to
@@ -45,9 +46,9 @@
   path (`save-failure-preserves-draft-and-shows-reason` /
   `repair-write-failure-keeps-draft-editable` above); the container itself
   does not detect connectivity, retry or queue a write.
-- **A required field validator and a repair function both declared** (MUST
-  NOT, structurally): the type system makes `required` and the repair pass
-  independent concerns — `required` never enters `planRepairs`, so an empty
-  required field is never "fixed" on the caller's behalf
-  (`descriptors.ts` `RequirableFieldOptions.required` docblock).
+- **A required field with a `validate`/`repair` pair** (MUST NOT, at
+  runtime): `planRepairs` skips every empty value, so an empty required
+  field is never "fixed" on the caller's behalf; the rule is the runtime
+  check in **repair-skips-empty-values** and **repair-skips-required-empty-fields**,
+  not a type-system property (`repair.ts` `planRepairs`).
 

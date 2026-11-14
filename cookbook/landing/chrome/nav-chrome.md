@@ -2,11 +2,11 @@
 id: 4d2b7231-1235-49e9-8b7d-1e7507c6eba7
 title: "Navigation Chrome (Bar + Drawer)"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,16 +36,16 @@ NavChrome is a mobile-first navigation chrome consisting of a fixed bar with a b
 ## Behavioral Requirements
 
 - **render-bar**: Component MUST render a fixed bar containing a burger menu button and an optional brand container.
-- **render-burger**: Component MUST render a button that opens the drawer, labeled via `openLabel` prop (default: 'Open menu'). The button only ever opens the drawer; it does not close it (see **drawer-toggle-controls**).
+- **render-burger**: Component MUST render a button that opens the drawer, labeled via `openLabel` prop (default: 'Open menu'). The button only ever opens the drawer; it does not close it (see #requirements/drawer-toggle-controls).
 - **render-drawer**: Component MUST render a navigation drawer containing an array of anchor links passed via the `links` prop.
 - **render-close-button**: Component MUST render a close button inside the drawer, labeled via `closeLabel` prop (default: 'Close menu').
 - **render-scrim**: Component MUST render a scrim overlay that covers the page when the drawer is open.
 - **render-optional-brand**: Component MUST render the `brand` prop content in the bar if provided; MUST NOT render a brand container if `brand` is undefined.
 - **render-optional-footer**: Component MUST render the `footer` prop content in the drawer if provided; MUST NOT render a footer container if `footer` is undefined.
 - **set-nav-label**: Component MUST set `aria-label` on the `<nav>` element to the `navLabel` prop (default: 'Site').
-- **drawer-toggle-controls**: The burger button MUST only open the drawer (clicking it while the drawer is already open MUST have no effect — it does not close the drawer). The scrim, the drawer's close button, Escape, and clicking a navigation link MUST close the drawer when clicked/pressed while it is open. The close button sits in the same visual position the burger occupied, so closing reads as if the control itself changed, even though no single control both opens and closes.
+- **drawer-toggle-controls**: The burger button MUST only open the drawer (clicking it while the drawer is already open MUST have no effect — it does not close the drawer). The scrim and the drawer's close button MUST close the drawer when clicked while it is open. Escape and navigation links also close it (see #requirements/close-on-escape and #requirements/close-on-link-click).
 - **close-on-link-click**: Component MUST close the drawer when any navigation link is clicked, regardless of whether the link resolves to a same-page fragment, an off-page URL, or no target at all.
-- **trap-tab-inside-drawer**: While the drawer is open, Tab focus MUST stay inside it: pressing Tab on the last focusable element wraps focus to the first; pressing Shift+Tab on the first wraps focus to the last; and if focus is ever outside the drawer while it is open (for example, on the scrim), pressing Tab MUST bring focus back inside, to the first focusable element.
+- **trap-tab-inside-drawer**: While the drawer is open, Tab focus MUST stay inside it: pressing Tab on the last focusable element wraps focus to the first; pressing Shift+Tab on the first wraps focus to the last; and if focus is ever outside the drawer while it is open (for example, on `body` after a programmatic blur), pressing Tab MUST bring focus back inside, to the first focusable element.
 - **close-on-escape**: Component MUST close the drawer when the Escape key is pressed while the drawer is open.
 - **return-focus-to-burger**: Component MUST return focus to the burger button when the drawer is closed, provided the drawer was previously open (not on initial render).
 - **move-focus-to-close-button**: Component MUST move focus to the close button inside the drawer immediately after the drawer opens.
@@ -60,7 +60,7 @@ NavChrome is a mobile-first navigation chrome consisting of a fixed bar with a b
 - **aria-expand-burger**: Component MUST set `aria-expanded` on the burger button to `true` when the drawer is open, `false` when closed.
 - **aria-hide-scrim**: Component MUST set `aria-hidden="true"` on the scrim.
 - **use-button-type**: Component MUST render burger and close buttons with `type="button"` to prevent form submission.
-- **support-custom-labels**: Component MUST accept `openLabel`, `closeLabel`, and `navLabel` props; MUST use default values ('Open menu', 'Close menu', 'Site') when props are undefined.
+- **support-custom-labels**: Component MUST accept `openLabel`, `closeLabel`, and `navLabel` props and use them as the accessible names of the burger, the close button and the drawer; the defaults when a prop is undefined are those given in #requirements/render-burger, #requirements/render-close-button and #requirements/set-nav-label.
 - **prevent-focus-steal-on-load**: Component MUST NOT move focus on the initial render.
 
 ## Appearance
@@ -79,29 +79,31 @@ NavChrome provides semantic structure and class names for styling; visual appear
   - `.lp-nav`: Navigation anchor links inside the drawer
   - `.lp-foot`: Optional footer content container
 
+- **Close button position (host guidance)**: The host is advised to place the close button where the burger sits, so closing reads as if the control itself changed; the component does not guarantee this position.
+
 - **CSS Custom Properties**:
   - `--lp-chrome-top`: Allows the host to offset the entire chrome (bar, scrim, drawer) below a site header; the component references this but does not set it
 
 ## States
 
-| State | Appearance change | aria-expanded | inert |
+| State | Appearance change | aria-expanded | inert attribute |
 |-------|------------------|---|---|
-| Drawer closed | `.lp-drawer` has no `.lp-drawer--open` class; `.lp-scrim` has no `.lp-scrim--show` class | `false` | `true` (drawer) |
-| Drawer open | `.lp-drawer` has `.lp-drawer--open` class; `.lp-scrim` has `.lp-scrim--show` class | `true` | `false` (drawer) |
+| Drawer closed | `.lp-drawer` has no `.lp-drawer--open` class; `.lp-scrim` has no `.lp-scrim--show` class | `false` | `inert` attribute present on the drawer |
+| Drawer open | `.lp-drawer` has `.lp-drawer--open` class; `.lp-scrim` has `.lp-scrim--show` class | `true` | `inert` attribute absent from the drawer |
 
 ## Accessibility
 
 - **Role**: The navigation bar is a `<div>` (not a `<header>` to avoid creating an unintended banner landmark when a host header already exists). The drawer is a `<nav>` with `aria-label={navLabel}`.
 - **Labels**: Burger button labeled via `aria-label={openLabel}`. Close button labeled via `aria-label={closeLabel}`. Nav drawer labeled via `aria-label={navLabel}`.
 - **Focus management**: Focus moves to the close button when the drawer opens. Focus returns to the burger button when the drawer closes (if it was previously open). Fragment link clicks move focus to the target element with `tabindex="-1"`.
-- **Inert**: Drawer is `inert={true}` when closed, preventing keyboard and assistive technology access.
-- **Tab trap**: Tab key is trapped inside the drawer when open; focus wraps from last to first and first to last, and is pulled back inside if it ever lands outside the drawer while open. See **trap-tab-inside-drawer**.
+- **Inert**: Drawer carries the `inert` attribute when closed (absent when open), preventing keyboard and assistive technology access.
+- **Tab trap**: Tab key is trapped inside the drawer when open; focus wraps from last to first and first to last, and is pulled back inside if it ever lands outside the drawer while open. See #requirements/trap-tab-inside-drawer.
 - **Escape key**: Escape closes the drawer, the standard dismissal gesture.
 - **Scrim**: Scrim has `aria-hidden="true"` and is not focusable; it is a visual overlay for pointer users only.
 - **Keyboard accessibility**: All navigation is keyboard-accessible: Escape exits the drawer, Tab and Shift+Tab wrap focus within it, and all links are reachable.
 - **Link semantics**: Links are standard `<a>` elements with real `href` attributes, so they degrade gracefully without JavaScript.
-- **Minimum touch target**: Component does not define a minimum tap target size; host CSS MUST ensure burger and close buttons meet platform requirements (44×44pt iOS, 48×48dp Android, etc.).
-- **Modal pattern departure**: The drawer is modal to pointer and keyboard (tab-trapped, `inert` when closed), but it does not implement the full WAI-ARIA dialog-modal pattern this recipe cites for reference: there is no `role="dialog"`/`aria-modal="true"` on the drawer and no `aria-controls` on the burger button. Modality here is enforced procedurally (the tab trap plus `inert`) rather than declared through dialog semantics, which keeps the drawer a `<nav>` landmark rather than an unlabeled dialog; the cited pattern is followed for its focus-trap and Escape-to-dismiss behavior, not adopted as a literal `role="dialog"` implementation.
+- **Minimum touch target**: Component does not define a minimum tap target size; host CSS MUST ensure the burger and close buttons meet WCAG 2.5.8 (24×24 CSS px minimum) and SHOULD meet 2.5.5 (44×44 CSS px).
+- **Modal pattern departure**: The drawer is modal to pointer and keyboard (tab-trapped, `inert` when closed), but it does not implement the full WAI-ARIA dialog-modal pattern this ingredient cites for reference: there is no `role="dialog"`/`aria-modal="true"` on the drawer and no `aria-controls` on the burger button. Modality here is enforced procedurally (the tab trap plus `inert`) rather than declared through dialog semantics, and only the drawer is made `inert`: page content behind the open drawer stays in the accessibility tree, so a screen reader's virtual cursor can leave the drawer (see Compliance), which keeps the drawer a `<nav>` landmark rather than an unlabeled dialog; the cited pattern is followed for its focus-trap and Escape-to-dismiss behavior, not adopted as a literal `role="dialog"` implementation.
 
 ## Conformance Test Vectors
 
@@ -119,17 +121,17 @@ NavChrome provides semantic structure and class names for styling; visual appear
 | nav-010 | close-on-link-click | Drawer open, click a navigation link with off-page href | Drawer closes |
 | nav-011 | navigate-to-fragment-target, prevent-default-navigation-on-fragment-match | Render with link href='#section1', click link | Browser default anchor navigation is prevented; target element is located by id |
 | nav-012 | move-focus-to-fragment-target | Click link href='#section1' where section1 exists | Target element receives focus; tabindex="-1" is set on target |
-| nav-013 | navigate-to-fragment-target | Render with link href='#section%20one' | fragmentId() correctly decodes percent-encoding and locates element by decoded id |
-| nav-014 | handle-encoded-fragments | Render with link href='#%XX' (malformed percent) | fragmentId() catches decodeURIComponent error and uses raw fragment |
+| nav-013 | navigate-to-fragment-target | Render with link href='#section%20one' | The element whose id is `section one` receives focus |
+| nav-014 | handle-encoded-fragments | Render with link href='#%XX' (malformed percent) | No error is thrown; the element whose id is the raw text `%XX` (if present) receives focus |
 | nav-015 | trap-tab-inside-drawer | Drawer open with 3 focusable elements, Tab from last element | Focus wraps to first element |
 | nav-016 | trap-tab-inside-drawer | Drawer open, Shift+Tab from first element | Focus wraps to last element |
-| nav-017 | trap-tab-inside-drawer | Drawer open, focus moved to the scrim (outside the drawer), press Tab | preventDefault() is called and focus moves to the first focusable element inside the drawer |
+| nav-017 | trap-tab-inside-drawer | Drawer open, focus moved to `body` (outside the drawer) by a programmatic blur, press Tab | Focus moves to the first focusable element inside the drawer |
 | nav-018 | close-on-escape | Drawer open, press Escape key | Drawer closes |
 | nav-019 | move-focus-to-close-button | Drawer closed, click burger to open | Close button has focus immediately after open |
-| nav-020 | return-focus-to-burger, drawer-toggle-controls | Drawer open, click close button or Escape to close | Focus returns to burger button |
+| nav-020 | return-focus-to-burger, drawer-toggle-controls | Drawer open, click close button | Drawer closes and focus returns to burger button |
 | nav-021 | prevent-focus-steal-on-load | Render page with NavChrome | No element receives unwanted focus on initial render |
-| nav-022 | set-inert-when-closed | Drawer closed | Drawer has inert={true} |
-| nav-023 | set-inert-when-closed | Drawer open | Drawer has inert={false} |
+| nav-022 | set-inert-when-closed | Drawer closed | Drawer has the `inert` attribute |
+| nav-023 | set-inert-when-closed | Drawer open | Drawer has no `inert` attribute |
 | nav-024 | render-optional-footer | Render with footer prop | Footer content appears in drawer with className 'lp-foot' |
 | nav-025 | render-optional-footer | Render with footer undefined | No 'lp-foot' div is rendered |
 | nav-026 | set-nav-label | Render with navLabel='Main Navigation' | Nav has aria-label='Main Navigation' |
@@ -139,20 +141,27 @@ NavChrome provides semantic structure and class names for styling; visual appear
 | nav-030 | aria-hide-scrim | Drawer open | Scrim has aria-hidden="true" |
 | nav-031 | fragment-focus-not-overridden-by-close-return | Drawer open, click link href='#section1' (section1 exists) | Focus moves to and stays on #section1; it is not subsequently returned to the burger button by the close→burger focus-return behavior |
 | nav-032 | render-drawer | Render with links=[{ href: '#a', label: 'A' }] | Drawer (`.lp-drawer`) contains an `<a>` with text 'A' and href '#a' |
-
+| nav-033 | return-focus-to-burger, close-on-escape | Drawer open, press Escape | Drawer closes and focus returns to burger button |
+| nav-034 | render-close-button | Render with drawer open | Drawer contains a button labeled 'Close menu' (the default `closeLabel`) |
+| nav-035 | use-button-type | Render NavChrome | Burger and close buttons both have `type="button"` |
+| nav-036 | support-custom-labels | Render with no `openLabel`, `closeLabel` or `navLabel` | Burger is labeled 'Open menu', close button 'Close menu', nav 'Site' |
+| nav-037 | support-custom-labels | Render with `openLabel='Menu'`, `closeLabel='Dismiss'` | Burger is labeled 'Menu' and close button 'Dismiss' |
+| nav-038 | prevent-focus-steal-on-load | Render NavChrome with a focusable element elsewhere on the page already focused | The previously focused element keeps focus after render |
+| nav-039 | prevent-default-navigation-on-fragment-match | Drawer open, click link href='#missing-section' where no element has that id | Default navigation proceeds (the click is not default-prevented) and the drawer closes |
 ## Edge Cases
 
-- **Bare fragment (#)**: A link with href='#' or an empty href. fragmentId() returns null, and go() allows the browser to handle it (scroll to top). The drawer still closes.
-- **Non-existent fragment**: A link with href='#missing-section' where no element has id='missing-section'. fragmentId() returns 'missing-section', getElementById() returns null, go() does not navigate but still closes the drawer and allows the browser to attempt the navigation.
-- **Off-page link**: A link with href='/other-page' or 'https://example.com'. fragmentId() returns null (does not start with '#'), go() closes the drawer unconditionally, and allows the browser to navigate.
-- **Malformed percent-encoding**: A link with href='#bad%ZZ'. decodeURIComponent() throws, fragmentId() catches and returns the raw fragment 'bad%ZZ'.
+- **Bare fragment (#)**: A link with href='#' or an empty href. No target is resolved, so the browser handles the link by default (scrolls to top). The drawer still closes.
+- **Non-existent fragment**: A link with href='#missing-section' where no element has id='missing-section'. No element resolves, so default navigation proceeds and the drawer closes.
+- **Off-page link**: A link with href='/other-page' or 'https://example.com'. The link is not a same-page fragment, so the drawer closes unconditionally and the browser navigates.
+- **Malformed percent-encoding**: A link with href='#bad%ZZ'. Decoding fails, so the raw fragment `bad%ZZ` is used as the id to look up; no error is thrown.
 - **Empty links array**: No navigation links provided. Drawer renders with only the close button and optional footer. Tab trap works correctly with remaining focusables.
 - **No footer**: Footer prop is undefined. Footer container is not rendered.
 - **No brand**: Brand prop is undefined. Brand container is not rendered.
-- **Focus outside drawer while open**: A click on the scrim or elsewhere that moves focus outside the drawer; the next Tab press pulls focus back into the drawer via the trap.
-- **Escape key on page with no drawer**: Escape listener is only attached when drawer is open (useEffect dependency), so no interference with other page Escape handlers.
+- **Focus outside drawer while open**: Focus ends up outside the drawer (for example, on `body` after a programmatic blur or a browser restoring focus); the next Tab press pulls focus back into the drawer via the trap.
+- **Escape key on page with no drawer**: The Escape listener is only active while the drawer is open, so no interference with other page Escape handlers.
 - **Tab press with no focusable elements**: If focusable array is empty (e.g., no links, no footer, close button is somehow hidden), Tab does nothing and focus does not move.
 - **Browser autofocus behavior**: The drawer is rendered off-screen with a transform (delegated to host CSS) and `inert={true}` when closed, preventing browser autofocus from reaching elements inside.
+- **Untrusted link href**: `links[].href` is rendered verbatim as the anchor's `href`; the component does not filter schemes, so a `javascript:` URL in host data would run when clicked. Validating or neutralizing non-http(s)/fragment schemes is the host's responsibility.
 - **Very long page with many focusable elements**: All focusables are queried from the DOM every Tab press, not cached, so new or removed focusables are reflected immediately.
 
 ## Configuration
@@ -214,13 +223,13 @@ Not applicable: Logging is not implemented in source. The component provides no 
 
 ## Platform Notes
 
-- **TypeScript/React**: NavChrome is a React functional component in `packages/web/packages/landing/src/chrome/NavChrome.tsx`. It uses `useState` for drawer open state, `useRef` for element references to manage focus, and `useEffect` hooks for focus management and keyboard event listeners. The component returns JSX with semantic HTML (`<nav>`, `<button>`, `<a>`) and relies on host CSS for all styling via class names (`.lp-bar`, `.lp-burger`, `.lp-drawer`, `.lp-scrim`, etc.).
+- **React/Web**: NavChrome is a React functional component in `packages/web/packages/landing/src/chrome/NavChrome.tsx`. It uses `useState` for drawer open state, `useRef` for element references to manage focus, and `useEffect` hooks for focus management and keyboard event listeners. The component returns JSX with semantic HTML (`<nav>`, `<button>`, `<a>`) and relies on host CSS for all styling via class names (`.lp-bar`, `.lp-burger`, `.lp-drawer`, `.lp-scrim`, etc.).
 
-- **SwiftUI**: SwiftUI has no drawer/scrim primitive to reach for directly, but `NavigationSplitView` gives a comparable off-canvas panel (its sidebar column) and should be preferred over a hand-rolled overlay when that layout fits. Where a true overlay-style drawer is required, use a `ZStack` with a semi-transparent `Color` as the scrim (dismissible via `.onTapGesture`) and a sliding panel driven by `@State`, transitioning with `.transition(.move(edge: .leading))`. Keyboard handling (for keyboard-attached iPad/Mac use) uses `.onKeyPress(.tab)` and `.onKeyPress(.escape)` — not `.onReceive(publisher)`, which observes Combine publishers rather than key events, and `NavigationView` is deprecated in favor of `NavigationStack`/`NavigationSplitView`. Focus uses `@FocusState` and `.focusable()`; the Tab trap is expressed as a computed `@FocusState` binding that resets to the first/last focusable identifier, mirroring the explicit focus restoration this recipe requires.
+- **SwiftUI**: SwiftUI has no drawer/scrim primitive to reach for directly, but `NavigationSplitView` gives a comparable off-canvas panel (its sidebar column) and should be preferred over a hand-rolled overlay when that layout fits. Where a true overlay-style drawer is required, use a `ZStack` with a semi-transparent `Color` as the scrim (dismissible via `.onTapGesture`) and a sliding panel driven by `@State`, transitioning with `.transition(.move(edge: .leading))`. Keyboard handling (for keyboard-attached iPad/Mac use) uses `.onKeyPress(.tab)` and `.onKeyPress(.escape)` — not `.onReceive(publisher)`, which observes Combine publishers rather than key events, and `NavigationView` is deprecated in favor of `NavigationStack`/`NavigationSplitView`. Focus uses `@FocusState` and `.focusable()`; the Tab trap is expressed as a computed `@FocusState` binding that resets to the first/last focusable identifier, mirroring the explicit focus restoration this ingredient requires.
 
 - **Compose**: Material 3's `ModalNavigationDrawer` (with `DrawerState`/`rememberDrawerState`) is the native fit for this pattern — it already provides the scrim, dismiss-on-scrim-tap, and slide animation, so prefer it over `ModalDrawer`, which is Material 2 and deprecated. State is tracked via `DrawerState`/`mutableStateOf()`. Keyboard handling uses `Modifier.onPreviewKeyEvent { }` intercepting `Key.Escape` and `Key.Tab` — not `KeyboardOptions`, which configures software-keyboard behavior for text input rather than handling key events. Focus management uses `FocusRequester` to move focus to the close affordance on open and back to the burger on close; Tab trapping queries the focusable descendants of the drawer content and wraps focus manually, since Compose has no built-in trap.
 
-- **AppKit / UIKit**: `UIButton` for the burger and close buttons, a scroll view or `UITableViewController` for the drawer content, and a `UIView` with a tap gesture recognizer for the scrim. State is tracked via a property. On iPadOS (and any environment with `UIFocusSystem`, i.e. keyboard/trackpad input or Apple TV remote), Tab focus cycling is real and governed by `UIFocusEnvironment`/`UIFocusGuide` — a focus guide can constrain Tab to the drawer while it is open, mirroring the trap. `setNeedsFocus()` is tvOS-only for retriggering the focus engine; to move focus programmatically elsewhere, use `becomeFirstResponder()` (UIKit) or update `preferredFocusEnvironments` (tvOS/iPadOS focus engine). Dismiss is typically by gesture (swipe) or the close button; VoiceOver users reach it via the accessibility rotor and standard swipe navigation.
+- **AppKit / UIKit**: On macOS, use an `NSSplitViewController` with a collapsible sidebar item for the drawer, or an overlay `NSPanel` for a true overlay; trap Tab by setting the panel's key-view loop to the drawer's controls only while it is open, and close on `cancelOperation(_:)` (Escape). On iOS, `UIButton` for the burger and close buttons, a scroll view or `UITableViewController` for the drawer content, and a `UIView` with a tap gesture recognizer for the scrim. State is tracked via a property. On iPadOS (and any environment with `UIFocusSystem`, i.e. keyboard/trackpad input or Apple TV remote), Tab focus cycling is real and governed by `UIFocusEnvironment`/`UIFocusGuide` — a focus guide can constrain Tab to the drawer while it is open, mirroring the trap. `setNeedsFocus()` is tvOS-only for retriggering the focus engine; to move focus programmatically elsewhere, use `becomeFirstResponder()` (UIKit) or update `preferredFocusEnvironments` (tvOS/iPadOS focus engine). Dismiss is typically by gesture (swipe) or the close button; VoiceOver users reach it via the accessibility rotor and standard swipe navigation.
 
 - **WinUI 3**: `NavigationView` with `PaneDisplayMode="LeftMinimal"` is the native fit — it already renders the hamburger button, the off-canvas pane, and light-dismiss behavior, so prefer it over assembling a `SplitView` by hand. If finer control is needed, `SplitView` with `DisplayMode="Overlay"` and `SplitView.IsPaneOpen` (not a plain `IsOpen` property) is the lower-level building block; its `Pane` is the drawer and its own light-dismiss covers the scrim. Escape and Tab are handled via a `KeyDown` handler on the pane content; Tab trapping cycles focus among the pane's focusable children via `FocusManager.TryMoveFocus` within the pane's `XamlRoot`. Transitions use the control's built-in animation rather than manual `Storyboard`/`Composition` work.
 
@@ -228,7 +237,7 @@ Not applicable: Logging is not implemented in source. The component provides no 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/chrome/NavChrome.tsx` | unverified |
+| web | `packages/web/packages/landing/src/chrome/NavChrome.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -278,7 +287,7 @@ Not applicable: Logging is not implemented in source. The component provides no 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 | [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | partial | Accessibility |
@@ -295,7 +304,7 @@ Not applicable: Logging is not implemented in source. The component provides no 
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Passed statuses rest on the source's explicit `aria-label`/`aria-expanded`/`aria-hidden`/`inert` attributes, its Tab-trap/Escape/focus-management effects, its `decodeURIComponent`-based fragment decoding, and its prop-driven default labels (documented in Localization above, so callers can override them); partial statuses reflect that visual styling (color, spacing, font, motion easing), RTL layout, and href content validation are left entirely to host CSS and host-supplied data, which the source neither constrains nor can attest to on its own. `separation-of-concerns` is partial: the fragment-id parser (`fragmentId`) is extracted as a standalone pure function, but the open/close state, focus trap, and Escape/link-close handling all live inline in the one `NavChrome` component (a deliberate choice — see the Overview's "share one `open` boolean" note — not an extraction into hooks). `unit-test-coverage` is partial: `nav-chrome.test.tsx` covers open/close-on-link, focus movement, and off-page-link focus return, but has no case for clicking the burger while the drawer is already open, which is exactly the behavior this revision corrects (**drawer-toggle-controls**, nav-005).
+`screen-reader-support` is partial because only the drawer is made `inert`; page content behind the open drawer stays in the accessibility tree (see the Modal pattern departure note under Accessibility). Passed statuses rest on the source's explicit `aria-label`/`aria-expanded`/`aria-hidden`/`inert` attributes, its Tab-trap/Escape/focus-management effects, its `decodeURIComponent`-based fragment decoding, and its prop-driven default labels (documented in Localization above, so callers can override them); partial statuses reflect that visual styling (color, spacing, font, motion easing), RTL layout, and href content validation are left entirely to host CSS and host-supplied data, which the source neither constrains nor can attest to on its own. `separation-of-concerns` is partial: the fragment-id parser (`fragmentId`) is extracted as a standalone pure function, but the open/close state, focus trap, and Escape/link-close handling all live inline in the one `NavChrome` component (a deliberate choice, not an extraction into hooks). `unit-test-coverage` is partial: `nav-chrome.test.tsx` covers open/close-on-link, focus movement, and off-page-link focus return, but has no case for clicking the burger while the drawer is already open (#requirements/drawer-toggle-controls, nav-005).
 
 ## Change History
 
@@ -304,3 +313,4 @@ Passed statuses rest on the source's explicit `aria-label`/`aria-expanded`/`aria
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: merged duplicate requirements into drawer-toggle-controls, close-on-link-click, and trap-tab-inside-drawer; rewrote implementation-coupled requirements as observable, platform-neutral behavior; renamed all requirements to subject-only kebab-case; fixed the toggle/close ambiguity and three contradictions (fragment default-navigation, scroll-behavior ownership, Shift+Tab exit claim); reformatted Design Decisions to Decision/Rationale/Approved and corrected two decisions' rationale; added a Compliance table; corrected Platform Notes APIs and pointed each port at its native drawer control; fixed dangling and mis-scoped test-vector references and added two missing vectors; retitled the recipe; documented the drawer's intentional departure from the full ARIA dialog-modal pattern |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Burger only opens the drawer (never closes); nav-005 corrected to no-op. |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Trimmed duplicated requirements, downgraded screen-reader-support to partial with the inert-background caveat, rewrote implementation-named vectors and edge cases as observable results, added vectors nav-033 to nav-039, a link-scheme edge case, AppKit guidance, WCAG touch-target citation and requirement fragment links. |

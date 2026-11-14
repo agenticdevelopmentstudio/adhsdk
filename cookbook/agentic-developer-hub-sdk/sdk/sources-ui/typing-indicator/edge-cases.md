@@ -1,7 +1,7 @@
 
 - **Null or empty status words**: See **handle-empty-word-bag**. This fallback requires no phase machine to be running.
 
-- **Rapid configuration changes**: If the status word vocabulary is swapped (e.g., persona changes mid-turn), the component MUST rebuild the draw-without-replacement bag immediately and reset the word index. The phase MUST remain unchanged if the active status does not change. Keying on the content of the words array (not its object identity) MUST prevent unnecessary bag rebuilds when the vocabulary is semantically identical but newly created.
+- **Rapid configuration changes**: See **rebuild-bag-on-vocabulary-change**. If the status word vocabulary is swapped (e.g., persona changes mid-turn), the component MUST rebuild the draw-without-replacement bag immediately and reset the word index. The phase MUST remain unchanged if the active status does not change. Keying on the content of the words array (not its object identity) MUST prevent unnecessary bag rebuilds when the vocabulary is semantically identical but newly created.
 
 - **Concurrent phase machine operations**: The component's phase machine is actor-isolated (Swift) or main-thread-only (UIKit/AppKit/web). Concurrent writes from multiple threads/tasks are not applicable; all operations on the phase machine MUST serialize through the UI thread.
 
@@ -13,9 +13,9 @@
 
 - **Empty frame array**: See **handle-empty-frame-array**. The word text (if any) continues to display normally.
 
-- **Idle phrase with no words configured**: If idlePhrase is set but no words are configured, the idle phrase MUST NOT render. The three-dot fallback path does not support idle phrases.
+- **Idle phrase with no words configured**: See **suppress-idle-phrase-without-words**. If idlePhrase is set but no words are configured, the idle phrase MUST NOT render. The three-dot fallback path does not support idle phrases.
 
-- **Theme palette unavailable**: If the semantic palette cannot be resolved, the component MUST use safe fallback colors (system text colors). The component MUST NOT crash due to missing theme.
+- **Theme palette unavailable**: See **fallback-colors-without-theme**. If the semantic palette cannot be resolved, the component MUST use safe fallback colors (system text colors). The component MUST NOT crash due to missing theme.
 
-- **Elapsed time calculation at edge**: When the turn settles, elapsed time MUST be calculated as `max(1, round((now - startTime) / 1000))`, ensuring the minimum reported time is 1 second and the result is rounded to the nearest whole second.
+- **Elapsed time calculation at edge**: See **elapsed-seconds-minimum-one**. When the turn settles, elapsed time MUST be calculated as `max(1, round((now - startTime) / 1000))`, ensuring the minimum reported time is 1 second and the result is rounded to the nearest whole second.
 

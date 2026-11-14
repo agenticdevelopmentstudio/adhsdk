@@ -8,6 +8,9 @@
 **Approved**: pending
 
 **Decision**: The component performs no runtime validation of the orientation value; callers are expected to pass only `"horizontal"` or `"vertical"` (enforced only by the TypeScript type on web).
-**Rationale**: Keeps the primitive minimal and avoids runtime overhead for a value that is statically typed at the call site. See **orientation-sync** and the Edge Cases section for the defined appearance when an unsupported value is passed anyway.
+**Rationale**: Keeps the primitive minimal and avoids runtime overhead for a value that is statically typed at the call site. See `#requirements/orientation-values` for the caller's obligation; the Edge Cases section describes what renders when an unsupported value is passed anyway, and that the component neither falls back nor warns.
 **Approved**: pending
 
+**Decision**: Accept the missing unit test for now: no test exercises `separator.tsx`, so `unit-test-coverage` stays `failed` in Compliance.
+**Rationale**: The component is a stateless one-element primitive; the five Conformance Test Vectors (`separator-001` to `separator-005`) already define the cases a test would run. The debt is repaid by adding a test that runs those vectors against `separator.tsx`, due the next time the component changes or gains a second consumer.
+**Approved**: pending

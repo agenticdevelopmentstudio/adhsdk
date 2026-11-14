@@ -13,8 +13,8 @@
 
 **classname-layout-flexibility**
 
-**Decision**: The `className` prop lets callers add padding/margin and, per **default-text-size**, adjust text size in dense layouts (e.g., `text-xs` in the DM composer and notification inbox) without requiring a new component variant.
-**Rationale**: `cn()` merges caller classes with the defaults, so metric overrides are possible while the core treatment defined in **apply-error-color** is preserved by convention.
+**Decision**: The `className` prop lets callers add padding/margin and, per [default-text-size](#requirements/default-text-size), adjust text size in dense layouts (e.g., `text-xs` in the DM composer and notification inbox) without requiring a new component variant.
+**Rationale**: `cn()` merges caller classes with the defaults, so metric overrides are possible while the core treatment defined in [apply-error-color](#requirements/apply-error-color) is preserved by convention.
 **Approved**: pending
 
 **color-and-role-non-negotiable**
@@ -32,12 +32,17 @@
 **span-variant-for-dialogs**
 
 **Decision**: `DialogErrorText` renders a `<span>` with block display instead of a second `<p>`-based treatment.
-**Rationale**: Dialog descriptions render as `<p>` tags (per Base UI convention), and HTML forbids nesting `<p>` inside `<p>` — the browser would auto-close the outer paragraph. A block-displayed `<span>` preserves the same line-by-line layout while respecting that structural rule; the top-margin token (see **dialog-error-text-top-margin**) separates it from the description text.
+**Rationale**: Dialog descriptions render as `<p>` tags (per [Base UI's Dialog](https://base-ui.com/react/components/dialog) convention), and HTML forbids nesting `<p>` inside `<p>` — the browser would auto-close the outer paragraph. A block-displayed `<span>` preserves the same line-by-line layout while respecting that structural rule; the top-margin token (see [dialog-error-text-top-margin](#requirements/dialog-error-text-top-margin)) separates it from the description text.
 **Approved**: pending
 
 **alert-role-for-screen-reader-announcement**
 
 **Decision**: Both variants set `role="alert"` so screen readers are notified when the error text appears.
-**Rationale**: In dialogs particularly, the error text changes dynamically under a focus trap with no other visual affordance calling attention to it, making the alert role the most reliable notification available — though see the **render-when-error-present** edge case on hidden containers for the one sequence where that reliability doesn't hold.
+**Rationale**: In dialogs particularly, the error text changes dynamically under a focus trap with no other visual affordance calling attention to it, making the alert role the most reliable notification available — though see the [hidden container edge case](#edge-cases/zero-width-or-hidden-parent-container) on hidden containers for the one sequence where that reliability doesn't hold.
 **Approved**: pending
 
+**whitespace-rendered-as-is**
+
+**Decision**: A whitespace-only `error` string renders as an alert containing only whitespace; the component does not trim it or treat it as absent.
+**Rationale**: The component's guard is a plain truthiness check on the string, and trimming is the caller's data-validation job. This leaves a visually empty alert for such input, which is why callers SHOULD trim at the call site; a port may treat `error.trim() === ""` as absent without breaking **render-nothing-when-error-absent**.
+**Approved**: pending

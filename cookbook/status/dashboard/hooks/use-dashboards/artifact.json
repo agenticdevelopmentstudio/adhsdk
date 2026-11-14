@@ -4,7 +4,7 @@
     "id": "033e89fb-48b3-424d-984d-e4f29e9a6708",
     "title": "Dashboard Queries",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -17,9 +17,15 @@
       "typescript",
       "web"
     ],
-    "tags": [],
+    "tags": [
+      "dashboard",
+      "polling",
+      "tanstack-query",
+      "data-fetching"
+    ],
     "depends-on": [
-      "eb7e9eeb-86f3-4053-827a-ea259833c6ad"
+      "eb7e9eeb-86f3-4053-827a-ea259833c6ad",
+      "e8f3cd4d-e208-49db-a500-24d6f7b978f9"
     ],
     "related": [
       "e322fd0c-1552-4bd9-b129-3c809af3a972"
@@ -28,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b91824118cbf2a22",
+  "synced": "4da0d3dbdec0afb7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

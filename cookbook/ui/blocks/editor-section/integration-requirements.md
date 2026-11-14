@@ -13,7 +13,8 @@
   editing.
 - **default-can-delete-to-editing**: The EditorSection MUST default the Delete
   enablement to "a record is selected" (`canDelete ?? editing`), and MUST honor an
-  explicit `canDelete={false}` so Delete is not offered on an unsaved/new draft.
+  explicit `canDelete={false}` so Delete is not offered on an unsaved/new draft. An
+  explicit `canDelete={true}` is honored as given, even when nothing is selected.
 - **disable-delete-while-busy**: The EditorSection MUST disable Delete while
   `busy` is true.
 - **disable-save-while-busy**: The EditorSection MUST disable Save while `busy`
@@ -42,4 +43,6 @@
 - **default-empty-list-label**: The EditorSection MUST render `emptyList` as the
   rail's empty-state label when `items` is empty, defaulting to the hardcoded
   English literal `"Nothing here yet."` when `emptyList` is omitted.
-
+- **forward-row-select**: When the user selects a record row in the rail, the EditorSection MUST call `onSelect` with that record's `id`.
+- **forward-toolbar-intents**: When the user activates New, Delete, Cancel or Save, the EditorSection MUST call `onNew`, `onDelete`, `onCancel` or `onSave` respectively, and MUST call no other callback.
+- **size-rail**: The EditorSection MUST give the rail a natural width of 240px, and MUST give it `railWidth` pixels instead when `railWidth` is set.

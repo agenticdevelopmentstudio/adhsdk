@@ -8,6 +8,6 @@
 **Approved**: pending
 
 **Decision**: Selection handling calls `navigate(entry.slug)` before calling `onClose()`.
-**Rationale**: Ensures navigation state updates before the dialog disappears, avoiding a moment where the dialog closes but the route has not yet changed.
+**Rationale**: The observable contract is that the route change is requested before the close is signalled, so `navigate` is called first and `onClose` second. The source does not show a visible gap that the other order would cause, so no stronger claim is made.
 **Approved**: pending
 

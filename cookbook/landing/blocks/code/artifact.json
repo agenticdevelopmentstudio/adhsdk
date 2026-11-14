@@ -4,15 +4,15 @@
     "id": "335f37a4-cd9e-4575-a78a-8717b34e5a2d",
     "title": "Code",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "A block of literal text in monospace, displaying shell transcripts, invocations, or config fragments with horizontal scrolling and no text wrapping.",
+    "summary": "Monospace literal-text block for shell transcripts and config; scrolls horizontally, never wraps.",
     "platforms": [
       "typescript",
       "web"
@@ -23,12 +23,16 @@
       "text-block"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "688cd8dc-2927-4a8a-9931-807fe283ed01",
+      "f98e53f7-ac16-48b0-afa5-544d05bf3f70",
+      "8c5e2f9b-7d3a-4a1c-b8e4-9f2d1c5a7b3e"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "702486706e8e1b3d",
+  "synced": "2b52121b69e5c577",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

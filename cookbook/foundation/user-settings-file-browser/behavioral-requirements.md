@@ -12,15 +12,11 @@
 - **entry-gitignore-syntax**: Each entry MUST be interpreted as one `.gitignore`-style pattern, matched against a path relative to a browser root, with the syntax defined by `GitIgnoreMatcher`.
 - **entry-order-significant**: The list MUST preserve entry order, because `GitIgnoreMatcher` lets the last matching pattern decide, so a later `!` pattern re-includes what an earlier pattern excluded.
 - **entry-no-validation**: The setting MUST NOT validate, trim, deduplicate or reject entries; it stores whatever list it is given, and blank lines and `#` comment lines are ignored later by `GitIgnoreMatcher`, not by the setting.
-- **entry-duplicates-allowed**: The setting MUST accept duplicate entries, because it stores the list as given; the excluded-files panel relies on this by giving each row its own identity instead of using the pattern text.
+- **entry-duplicates-allowed**: The setting MUST accept duplicate entries, because it stores the list exactly as given.
 
 ### Inherited behavior
-
-- **inherits-read-default**: Reading the setting MUST return the empty list when no value has been stored, or when the stored value cannot be decoded as a list of strings, per the get-fallback contract in settings-storage.
-- **inherits-write-publishes**: Writing the setting MUST publish its key name on the settings change stream after the new value is readable, per settings-storage, so a subscriber such as a file browser can re-apply its exclusions.
-- **inherits-main-actor**: The setting MUST be read and written on the main actor, because `UserSetting` is declared `@MainActor`.
-- **inherits-lazy-construction**: The setting MUST be created on first access of `UserSettings.fileBrowserExcludedPatterns`, and at that point it MUST read its current value from `UserSettings.shared`, because `fileBrowserExcludedPatterns` is a `static var` initialised from `UserSetting.init`.
-- **inherits-live-mirror**: The setting's `currentValue` MUST follow the store: whenever the store publishes this key's name, `currentValue` MUST be re-read from `UserSettings.shared`.
+- **inherits-settings-storage**: The setting MUST inherit the get, set, publish and isolation behavior of the generic `UserSetting` and the settings store, unchanged, as specified in [adhsdk.ingredient.foundation.settings-storage](cookbook:6363b5ff-f511-4e21-9ba7-6850787dba62). The only values specific to this setting are the key name, the value type and the empty-list fallback, so a read that finds nothing stored, or a value that cannot be decoded as a list of strings, MUST return the empty list.
+- **inherits-lazy-construction**: The setting MUST read its current value from the shared store when it is first accessed, not before. (The Swift source achieves this with a `static var` initialised on first access.)
 
 ### Persistence and side effects
 

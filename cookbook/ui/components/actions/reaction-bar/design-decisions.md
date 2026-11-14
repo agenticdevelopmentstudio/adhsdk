@@ -32,3 +32,6 @@ short because a long grid is a picker, and a picker is a different component.
 result.
 **Approved**: pending
 
+**Decision**: Ship the accessible-name phrasing and the count text as hardcoded English, and accept that as known debt.
+**Rationale**: The strings are built around `subjectLabel` inside the component, so a non-English UI cannot change them without forking. The remedy is to expose the name builders and a count formatter as optional props (defaulting to today's English and a plain number) or to route them through the package's i18n seam. Adding either later is not a breaking change.
+**Approved**: pending

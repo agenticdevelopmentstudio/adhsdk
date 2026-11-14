@@ -1,7 +1,7 @@
 
 Avatar Behavior is the headless behavior-and-animation engine behind any SVG
 persona in `@adh-sdk/avatar`. Its headline export,
-`useAvatarEngine` (`engine.ts`), composes seven pieces — mood arbitration
+`useAvatarEngine` (`engine.ts`), composes six pieces — mood arbitration
 (`arbitration.ts`), involuntary reflexes (`reflexes.ts`: blink, an inactivity
 ladder, speech), cursor/gaze steering (`gaze.ts`), a baseline idle fidget
 (`idleLife.ts`), a spoken-utterance popup (`speechBubble.ts`), and the

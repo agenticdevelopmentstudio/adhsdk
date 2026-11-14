@@ -4,7 +4,7 @@
     "id": "b71b349b-5c60-41f4-b664-49085ac5d988",
     "title": "Terminal Chat Control",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -18,19 +18,22 @@
       "macos"
     ],
     "tags": [
-      "foundation",
+      "unix-socket",
       "terminal",
       "protocol",
       "wire"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "80fecda2-6440-497a-ba28-c77eb05cc996",
+      "00ef3e01-de2f-4f48-bd3c-86f15fb4f72b"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "8fc1393155c6f62f",
+  "synced": "23cf3adbd2791d38",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

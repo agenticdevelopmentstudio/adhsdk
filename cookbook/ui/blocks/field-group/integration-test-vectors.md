@@ -7,4 +7,4 @@
 | T4 | stack-children | two `Field` children | Both Fields render stacked below the title row with the group's `gap-3` |
 | T5 | bordered-card | any props | The root `section` has the bordered rounded recessed-surface treatment |
 | T6 | merge-classname | `className="mt-6"` | Root keeps `flex flex-col … border …` and adds `mt-6` |
-
+| T7 | render-title, render-trailing-when-set | Viewport 375px wide, a long `title` and a `trailing` Button | The title wraps within the title row, the trailing Button stays in the row beside it, and nothing overflows the card horizontally |

@@ -1,5 +1,6 @@
+
 **Decision**: No local database in the browser.
-**Rationale**: The plan settles that the web app reads through the hub API and keeps no local store, so there is no second sync engine. An in-memory snapshot built from `/v1/sync/pull` is that read: it lasts as long as the page and is never persisted.
+**Rationale**: The web app reads through the hub API and keeps no local store, so there is no second sync engine. An in-memory snapshot built from `/v1/sync/pull` is that read: it lasts as long as the page and is never persisted.
 **Approved**: pending
 
 **Decision**: `/v1/sync/pull` rather than a per-connection listing.
@@ -14,6 +15,11 @@
 **Rationale**: The client takes `fetchJson` rather than importing an auth package, so it sits in the lowest tier with no dependencies and works in any host's auth (dependency injection).
 **Approved**: pending
 
-**Decision**: The `/v1` surface, snake_case on the wire.
-**Rationale**: The hub's `/v1` routes are its stable public API (the signup form in `@adh-sdk/ui` moved to them too). They answer snake_case envelopes (`has_more`, `sync_version`, `service_type`) and a list envelope (`object: "list"`, `data`, `has_more`) for connections; the package's wire types say so, and the mapping to the camelCase `HubMail*` types happens once, in the client. A row's `data` keeps the backend's snake_case column names, exactly as the native projection reads them. With a customer token, `/v1/integrations/connections` is served by the end-user `/integrations/me/connections` route: the gateway tries the operator `/integrations` route first, which refuses a customer token with 403, and falls through.
+**Decision**: Use the hub's `/v1` surface.
+**Rationale**: The hub's `/v1` routes are its stable public API (the signup form in `@adh-sdk/ui` moved to them too). With a customer token, `/v1/integrations/connections` returns the caller's own connections; how the hub routes that request is the hub's concern, not the client's.
 **Approved**: pending
+
+**Decision**: Snake_case wire types, mapped once to camelCase.
+**Rationale**: The `/v1` routes answer snake_case envelopes (`has_more`, `sync_version`, `service_type`) and a list envelope (`object: "list"`, `data`, `has_more`) for connections. The package's wire types say so, and the mapping to the camelCase `HubMail*` types happens once, in the client. A row's `data` keeps the backend's snake_case column names, exactly as the native projection reads them.
+**Approved**: pending
+

@@ -12,3 +12,11 @@
 | `disabled` | boolean | false | If true, both inputs are disabled |
 | `className` | string | undefined | Additional CSS class applied to container element |
 
+The `useSlugAvailability(slug, check?, opts?)` hook takes these arguments:
+
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `slug` | string | (required) | The slug to ask about |
+| `check` | (slug: string) => Promise<{ available: boolean; reason?: string }> | undefined | The availability checker; without one the verdict stays idle |
+| `opts.debounceMs` | number | 350 | Quiet time before the checker is called |
+| `opts.subject` | string \| null | null | What the answer belongs to (for example a document id); part of the stale-answer stamp |

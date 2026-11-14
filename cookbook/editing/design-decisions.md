@@ -64,3 +64,6 @@ Server-Component-safe entry into a client-only one with no compiler error
 (`server.ts` module docblock).
 **Approved**: pending
 
+**Decision**: the package's user-facing English strings stay hardcoded for now, with no localization key or i18n library, and are externalized when the first localized surface adopts `EditingContainer`.
+**Rationale**: no host surface is localized yet, so a key scheme designed now would be guessed; the strings are all listed under Localization, which makes the later extraction mechanical, and the `string-externalization` check is recorded as failed until then (`validation.ts`, `container.tsx`).
+**Approved**: pending

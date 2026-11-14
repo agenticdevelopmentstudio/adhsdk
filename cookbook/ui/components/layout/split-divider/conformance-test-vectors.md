@@ -2,7 +2,7 @@
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | split-divider-001 | separator-role | Component rendered | Element with `role="separator"` is in the DOM |
-| split-divider-002 | ratio-change-callback | Pointer at `clientY` = the container's top edge + 50 (per `getBoundingClientRect`); container is 200px tall | `onRatioChange` is called with ratio ≈ 0.25 (50/200) |
+| split-divider-002 | drag-resize | Pointer at `clientY` = the container's top edge + 50 (per `getBoundingClientRect`); container is 200px tall | `onRatioChange` is called with ratio ≈ 0.25 (50/200) |
 | split-divider-003 | ratio-clamp | `minRatio=0.2, maxRatio=0.8`; user drags to ratio 0.05 | `onRatioChange` is called with 0.2 (clamped to minRatio) |
 | split-divider-004 | ratio-clamp | `minRatio=0.2, maxRatio=0.8`; user drags to ratio 0.95 | `onRatioChange` is called with 0.8 (clamped to maxRatio) |
 | split-divider-005 | horizontal-orientation | `orientation="horizontal"` (default); component rendered | Separator renders as a horizontal line; `aria-orientation="horizontal"` is set; vertical drag is tracked |
@@ -27,8 +27,8 @@
 | split-divider-024 | grab-area-focusable | Component rendered | Separator is focusable via Tab key |
 | split-divider-025 | default-label | Component rendered without `label` prop | `aria-label="Resize split"` is set |
 | split-divider-026 | default-label | `label="Custom Resize"`; component rendered | `aria-label="Custom Resize"` is set |
-| split-divider-027 | step-button-labels | Component rendered with `orientation="horizontal"` and no custom labels | Step button labels are "Grow top pane" and "Grow bottom pane" (defaults) |
-| split-divider-028 | step-button-labels | `orientation="vertical"`, `growTopLabel="Expand left"`, `growBottomLabel="Expand right"`; component rendered | Step buttons have the custom labels |
+| split-divider-027 | step-button-labels | Component rendered with `orientation="horizontal"` and no custom labels | The shrink button (▲) is labelled "Grow bottom pane" and the grow button (▼) "Grow top pane" |
+| split-divider-028 | step-button-labels | `orientation="vertical"`, `growTopLabel="Expand left"`, `growBottomLabel="Expand right"`; component rendered | The grow button (▶) is labelled "Expand left" and the shrink button (◀) "Expand right" |
 | split-divider-029 | focus-ring | Component is focused via keyboard; component rendered | A 2px `apt-gold/40` focus ring is visible around the separator |
 | split-divider-030 | classname-prop | `className="custom-class"`; component rendered | Root element has class `custom-class` applied |
 | split-divider-031 | keyboard-default-prevention | Component is focused; user presses ArrowDown (horizontal) | `event.preventDefault()` is called; the page does not scroll |
@@ -50,4 +50,7 @@
 | split-divider-047 | keyboard-grow | Component is focused; user presses ArrowDown twice in quick succession | `onRatioChange` is called twice, once per keypress, each computed from the `ratio` prop value current at that event |
 | split-divider-048 | drag-resize, keyboard-grow | User is dragging (a `pointermove` fires) while also pressing ArrowDown | `onRatioChange` is called for both the pointermove and the keydown; the ratio reflects whichever fired last |
 | split-divider-049 | step-button-pointerdown-guard | A drag is in progress from pointer A; pointer B (a second touch) taps a step button | The step button's `onClick` fires immediately, independent of pointer A's drag |
-
+| split-divider-050 | step-button-labels | Component rendered with `orientation="vertical"` and no custom labels | The shrink button (◀) is labelled "Grow right pane" and the grow button (▶) "Grow left pane" |
+| split-divider-051 | ratio-prop, ratio-clamp | `ratio=0.95`, `maxRatio=0.8`; component rendered, then the shrink arrow pressed | `aria-valuenow="95"`; `onRatioChange` is called with 0.8 (0.92 clamped) |
+| split-divider-052 | ratio-prop, ratio-clamp | `ratio=0.05`, `minRatio=0.2`; the grow arrow pressed | `aria-valuenow` is "5" before the press; `onRatioChange` is called with 0.2 (0.08 clamped) |
+| split-divider-053 | ratio-clamp | `minRatio=0.8`, `maxRatio=0.2` (inverted); user presses the grow arrow | `onRatioChange` is called with 0.2 (`maxRatio`) |

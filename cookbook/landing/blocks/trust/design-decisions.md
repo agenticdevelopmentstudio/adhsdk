@@ -1,6 +1,6 @@
 
 **Decision**: The component is deliberately unstyled beyond `.lp-trust`/`.lp-trust li` (a wrapping flex row with small dot markers), and is not built from `Cards`.
-**Rationale**: These are trust claims a visitor wants settled, not product features; boxing them like `Cards` would give them the same visual weight as the product's actual capabilities, which the source comment explicitly rejects.
+**Rationale**: These are trust claims a visitor wants settled, not product features; boxing them like `Cards` would give them the same visual weight as the product's actual capabilities, which the JSDoc on `Trust.tsx` and the `/* ---- trust strip ---- */` comment in `blocks.css` both explicitly reject.
 **Approved**: pending
 
 **Decision**: Items are keyed by array index (`key={i}`) rather than a caller-supplied stable key.

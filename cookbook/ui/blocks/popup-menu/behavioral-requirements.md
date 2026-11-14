@@ -16,9 +16,9 @@
 - **accept-trigger-class-name**: The component MUST accept a `className` prop and merge it with the trigger's built-in classes such that consumer-supplied classes override the defaults.
 - **warn-on-sentinel-collision**: If any item in the `items` array has an id equal to the value reserved internally to represent the "All" state, the component MUST log a warning identifying the collision.
 - **new-row-icon**: The "New…" row MUST show a plus icon before its label, and that icon MUST be excluded from assistive-technology announcements.
-- **close-on-select**: Choosing any row ("All", an item or "New…") MUST close the dropdown; the radio rows set `closeOnClick` true explicitly and the "New…" row relies on the menu's default for plain items.
+- **close-on-select**: Choosing any row ("All", an item or "New…") MUST close the dropdown; the dropdown closes after the selection callback fires.
 - **menu-align-start**: The open dropdown MUST align to the start edge of the trigger.
-- **accent-rows**: The "All" row, each item row and the "New…" row MUST be drawn with the dropdown's accent treatment, the selector style used by the focused-item rail picker.
-- **trigger-fills-width**: The trigger MUST fill the width of its container by default (`w-full`), inside a wrapper that lays out as a column.
-- **focus-indicator-contrast**: When the trigger receives keyboard focus, the component MUST replace the default browser focus outline with a visible border-color change meeting WCAG 2.4.7 (focus visible) and 1.4.11 (non-text contrast, 3:1 minimum) against the adjacent surface.
+- **accent-rows**: The "All" row, each item row and the "New…" row MUST be drawn with the dropdown's accent treatment, a highlighted row fills with the accent highlight described in States (15% of the highlight color, falling back to the primary color).
+- **trigger-fills-width**: The trigger MUST fill the width of its container by default, inside a wrapper that lays out as a column; a caller can override this to size the trigger to its content.
+- **focus-indicator-contrast**: When the trigger receives keyboard focus, the component MUST show a visible focus indicator meeting WCAG 2.4.7 (focus visible) and 1.4.11 (non-text contrast, 3:1 minimum) against the adjacent surface. The web implementation replaces the default browser focus outline with a border-color change.
 

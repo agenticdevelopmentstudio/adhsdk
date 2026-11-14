@@ -11,4 +11,7 @@
 | topics-008 | render-connector-anchor | topics=[{title: "Topic", messageIndex: 5}] | ConnectorAnchor component rendered with id="topic-5" and className="pc-connector-anchor-out" |
 | topics-009 | indicate-active-topic | topics=[{title: "First", messageIndex: 1}], activeIndex=0 | Button contains "active" class |
 | topics-010 | topic-selection-callback | topics=[{title: "A", messageIndex: 1}, {title: "B", messageIndex: 2}, {title: "C", messageIndex: 3}], user clicks second button | onSelectTopic callback invoked with index 1 |
-
+| topics-011 | indicate-active-topic | topics=[{title: "A", messageIndex: 1}], activeIndex=-1 | No button has "active" class |
+| topics-012 | indicate-active-topic | topics=[{title: "A", messageIndex: 1}], activeIndex=5 | No button has "active" class |
+| topics-013 | render-topic-list | topics=[], visible=true | No `<li>` elements rendered; header still present |
+| topics-014 | respect-visibility-state | topics=[{title: "A", messageIndex: 1}], visible=false | Root div has "pc-pane-hidden" class; the button remains in the DOM and is neither inert nor aria-hidden |

@@ -1,5 +1,5 @@
 
-| Name | Domain | Role | Required | Configuration |
+| Name | rdid | Role | Required | Configuration |
 |---|---|---|---|---|
 | Field | [adhsdk.ingredient.ui.blocks.field](cookbook:0c199036-81c3-47c3-9e79-e4b8187ca69a) | The grouped rows — each caption+control+hint/error that the group stacks | yes | Passed as `children`; the group applies `gap-3` between them |
 

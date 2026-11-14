@@ -32,7 +32,7 @@
 **Approved**: pending
 
 **Decision**: A decode failure, a non-HTTP response and a URL failure are not retried. Technical debt: a decode failure is thrown as a `DecodingError` rather than an `IntegrationError`.
-**Rationale**: Only a failure that a later attempt could change is retried. The inconsistent error type is what the code does, so a caller catching only `IntegrationError` misses a malformed success body. A port should wrap it as `IntegrationError.gmail(status: <code>, ...)` so one catch covers every failure.
+**Rationale**: Only a failure that a later attempt could change is retried. The inconsistent error type is what the code does, so a caller catching only `IntegrationError` misses a malformed success body. A port follows `decode-failure` and passes the error through unchanged.
 **Approved**: pending
 
 **Decision**: The client sets no timeout and has no cancellation handling beyond `Task.sleep` and the `URLSession` default.
@@ -50,3 +50,4 @@
 **Decision**: The client never logs and offers no retry or backoff hook.
 **Rationale**: The source has no log call and no callback, so a stalled call of up to about 63 seconds of backoff shows nothing to an observer, and the token and query cannot leak into a log. Anyone who needs visibility injects a `sleep` closure that records each wait, which is how the tests observe retries. A port that adds a retry event must leave out the token and the query.
 **Approved**: pending
+

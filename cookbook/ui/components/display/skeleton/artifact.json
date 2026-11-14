@@ -4,11 +4,11 @@
     "id": "4a3761c5-5809-43c9-9a45-6f91fe82ae97",
     "title": "Skeleton",
     "type": "ingredient",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "15319aba4773a4f5",
+  "synced": "d66b9d40d2df02a6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

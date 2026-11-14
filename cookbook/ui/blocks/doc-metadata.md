@@ -2,11 +2,11 @@
 id: 26c4eb3c-9af9-4092-9546-bb5c5532b59c
 title: "DocMetadata"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -37,7 +37,7 @@ interface DocMetadataField {
 }
 ```
 
-The component detects `Array.isArray(value)`: array values wrap as a flex group, scalar values render inline. The component renders nothing when the fields array is empty.
+`value` is typed `ReactNode`, which already admits arrays. The component detects `Array.isArray(value)`: only an actual array triggers the wrapping flex group; every other value, including a non-array iterable, renders inline as-is. The component renders nothing when the fields array is empty.
 
 ## Behavioral Requirements
 
@@ -46,7 +46,8 @@ The component detects `Array.isArray(value)`: array values wrap as a flex group,
 - **empty-renders-nothing**: Component MUST return `null` when the `fields` prop is an empty array.
 - **array-values-wrap**: Component MUST detect when a field value is an array and render array items wrapped in a `<span>` element with flex layout properties.
 - **scalar-values-direct**: Component MUST render non-array field values as-is without additional wrapping.
-- **style-override-merge**: Component MUST merge a host-supplied style override with its defaults.
+- **field-order**: Component MUST render rows in the order of the `fields` array, one row per field.
+- **style-override-merge**: Component MUST merge the host-supplied `className` prop with its default classes using `cn()` (tailwind-merge); when a host class conflicts with a default class (for example `mb-0` against `mb-6`), the host class wins.
 - **attribute-passthrough**: Component MUST accept and apply additional HTML `<dl>` attributes via the `...rest` spread parameter.
 
 ## Appearance
@@ -58,7 +59,7 @@ The component detects `Array.isArray(value)`: array values wrap as a flex group,
 - **Foreground/Text**: Labels use `--color-text-dim` CSS variable; values use `--color-text-secondary` CSS variable
 - **Spacing**: 0.5 (4px) vertical gap between rows; 2 (8px) horizontal gap between label and value within a row; 3 (12px) horizontal gap between wrapped array items
 - **Layout**: Each field is its own row — a flex container (`gap-2`) pairing one `<dt>` with its `<dd>`, right-aligned; rows stack vertically inside the outer flex column (`flex-col`, `items-end`, `gap-0.5`). Array values wrap inside their `<dd>` as a separate flex group with end justification.
-- **Margin**: 24px (mb-6) below the component
+- **Margin**: 24px (mb-6) below the component. The margin is a default the host can override through `className` (see **style-override-merge**).
 
 ## States
 
@@ -78,11 +79,15 @@ The component uses semantic HTML (`<dl>`, `<dt>`, `<dd>` elements) to represent 
 | doc-metadata-001 | empty-renders-nothing | `{ fields: [] }` | Component returns `null` and renders no DOM element |
 | doc-metadata-002 | dl-root | `{ fields: [{ label: "Status", value: "active" }] }` | Renders `<dl>` element in the DOM |
 | doc-metadata-003 | label-value-pairs | `{ fields: [{ label: "Version", value: "1.0.0" }] }` | Renders `<dt>` containing "Version" and `<dd>` containing "1.0.0" |
-| doc-metadata-004 | array-values-wrap | `{ fields: [{ label: "Tags", value: ["ui", "form"] }] }` | Renders `<span>` with flex layout containing two items right-aligned with 3 (12px) horizontal gap |
+| doc-metadata-004 | array-values-wrap | `{ fields: [{ label: "Tags", value: ["ui", "form"] }] }` | Renders a `<span>` whose class list includes `flex flex-wrap justify-end gap-x-3` and which has two child items |
 | doc-metadata-005 | scalar-values-direct | `{ fields: [{ label: "Author", value: "Jane Doe" }] }` | Value "Jane Doe" renders directly in `<dd>` without additional wrapper |
 | doc-metadata-006 | style-override-merge | `{ fields: [{ label: "Status", value: "active" }], className: "custom-class" }` | `<dl>` element includes both default classes and "custom-class" |
 | doc-metadata-007 | attribute-passthrough | `{ fields: [{ label: "Status", value: "active" }], "data-testid": "metadata", id: "doc-meta" }` | `<dl>` element has `data-testid="metadata"` and `id="doc-meta"` attributes |
-
+| doc-metadata-008 | field-order | `{ fields: [{ label: "A", value: "1" }, { label: "B", value: "2" }, { label: "C", value: "3" }] }` | Three rows render in the order A, B, C |
+| doc-metadata-009 | style-override-merge | `{ fields: [{ label: "Status", value: "active" }], className: "mb-0" }` | `<dl>` class list contains `mb-0` and not `mb-6` |
+| doc-metadata-010 | scalar-values-direct | `{ fields: [{ label: "Owner", value: null }] }` | Renders a `<dt>` "Owner" and an empty `<dd>`; no error is thrown |
+| doc-metadata-011 | label-value-pairs | `{ fields: [{ label: <em>Status</em>, value: "active" }] }` | The `<dt>` contains an `<em>` element with "Status" |
+| doc-metadata-012 | array-values-wrap | `{ fields: [{ label: "Tags", value: ["ui", "form"] }] }` | Rendering produces no React key warning on the console |
 ## Edge Cases
 
 - **Empty fields array**: Component returns `null`; no DOM render occurs.
@@ -106,7 +111,7 @@ Not applicable: DocMetadata is a non-interactive display component with no deep-
 
 ## Localization
 
-Not applicable: The component does not render any text strings. All labels and values are provided by the host application, which is responsible for localization.
+Not applicable: The component does not render any text strings. All labels and values are provided by the host application, which is responsible for localization. Alignment is end-aligned, not physically right-aligned: `items-end` and `justify-end` are logical, so under `dir="rtl"` the rows and array groups align to the left edge.
 
 ## Accessibility Options
 
@@ -130,21 +135,21 @@ Not applicable: The component performs no logging or error reporting.
 
 ## Platform Notes
 
-- **SwiftUI**: Start with a `VStack` containing `HStack` rows for each field pair. Each row pairs a `Text` label in `.tertiary` foreground (mapping `--color-text-dim`) with a `Text` value in `.secondary` foreground (mapping `--color-text-secondary`). For array values, nest the value's items in an `HStack` with right alignment. Use `.font(.system(size: 11, design: .monospaced))` for the 11px monospace effect, with full wrapping based on layout needs.
+- **SwiftUI**: Start with a `VStack` containing `HStack` rows for each field pair. Each row pairs a `Text` label in `.tertiary` foreground (mapping `--color-text-dim`) with a `Text` value in `.secondary` foreground (mapping `--color-text-secondary`). For array values, place the value's items in a flow layout (a custom SwiftUI `Layout` that wraps) with trailing alignment, since `HStack` does not wrap. Align the outer `VStack(alignment: .trailing)` and keep each row trailing-aligned. Use `.font(.system(size: 11, design: .monospaced))` for the 11px monospace effect, with full wrapping based on layout needs.
 
-- **Compose**: Use a `Column` with right alignment (`Modifier.align(Alignment.End)`). For each field, create a `Row` containing two `Text` composables — the label styled with `MaterialTheme.colorScheme.onSurfaceVariant` (mapping `--color-text-dim`) and the value with `MaterialTheme.colorScheme.onSurface` (mapping `--color-text-secondary`). For array values, place the items in `FlowRow(horizontalArrangement = Arrangement.End)`, right-aligned. Apply `fontFamily = FontFamily.Monospace` and `fontSize = 11.sp`.
+- **Compose**: Use a `Column(horizontalAlignment = Alignment.End)`. For each field, create a `Row` containing two `Text` composables — the label styled with `MaterialTheme.colorScheme.outline` (mapping `--color-text-dim`) and the value with `MaterialTheme.colorScheme.onSurfaceVariant` (mapping `--color-text-secondary`). For array values, place the items in `FlowRow(horizontalArrangement = Arrangement.End)`, right-aligned. Apply `fontFamily = FontFamily.Monospace` and `fontSize = 11.sp`.
 
-- **React/Web**: Uses semantic `<dl>` and `<dd>` elements with Tailwind utility classes. The layout is a flex column with right alignment and 4px row gaps. The `style-override-merge` requirement is implemented via the `cn()` utility, which merges the optional `className` prop with the component's default Tailwind classes. Leverages CSS custom properties (`--color-text-dim`, `--color-text-secondary`) for colors, allowing theme injection at the document root. Array values wrap in a `<span>` with `flex flex-wrap justify-end gap-x-3` for right-aligned flow layout.
+- **React/Web**: Uses semantic `<dl>`, `<dt>` and `<dd>` elements, with a flex `<div>` wrapping each dt/dd row, with Tailwind utility classes. The layout is a flex column with right alignment and 4px row gaps. The `style-override-merge` requirement is implemented via the `cn()` utility, which merges the optional `className` prop with the component's default Tailwind classes. Leverages CSS custom properties (`--color-text-dim`, `--color-text-secondary`) for colors, allowing theme injection at the document root. Array values wrap in a `<span>` with `flex flex-wrap justify-end gap-x-3` for right-aligned flow layout.
 
-- **AppKit / UIKit**: Use `NSStackView` (macOS) or `UIStackView` (iOS) with vertical distribution and right alignment. For each field, create a horizontal stack containing a label `NSTextField`/`UILabel` in `NSColor.tertiaryLabelColor`/`UIColor.tertiaryLabel` (mapping `--color-text-dim`) and a value field in `NSColor.secondaryLabelColor`/`UIColor.secondaryLabel` (mapping `--color-text-secondary`). Monospace styling uses `NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)` on macOS or `UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)` on iOS. Array values nest in a separate horizontal stack with right alignment and adequate spacing.
+- **AppKit / UIKit**: Use `NSStackView` (macOS) or `UIStackView` (iOS) with vertical distribution and right alignment. For each field, create a horizontal stack containing a label `NSTextField`/`UILabel` in `NSColor.tertiaryLabelColor`/`UIColor.tertiaryLabel` (mapping `--color-text-dim`) and a value field in `NSColor.secondaryLabelColor`/`UIColor.secondaryLabel` (mapping `--color-text-secondary`). Monospace styling uses `NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)` on macOS or `UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)` on iOS. Stack views do not wrap, so array values use a flow layout (`NSCollectionView` or `UICollectionView` with a flow layout) with trailing alignment and adequate spacing.
 
-- **WinUI 3**: Use a `StackPanel` with `Orientation="Vertical"` and `HorizontalAlignment="Right"`. Each field row is a horizontal `StackPanel` pairing a `TextBlock` label styled with `TextFillColorTertiaryBrush` (mapping `--color-text-dim`) and a `TextBlock` value styled with `TextFillColorSecondaryBrush` (mapping `--color-text-secondary`). Apply `FontFamily="Cascadia Mono"` (or a theme resource) and `FontSize="11"` for monospace. For array values, use an `ItemsRepeater` with its `ItemsPanel` set to a wrap layout, right-aligned.
+- **WinUI 3**: Use a `StackPanel` with `Orientation="Vertical"` and `HorizontalAlignment="Right"`. Each field row is a horizontal `StackPanel` pairing a `TextBlock` label styled with `TextFillColorTertiaryBrush` (mapping `--color-text-dim`) and a `TextBlock` value styled with `TextFillColorSecondaryBrush` (mapping `--color-text-secondary`). Apply `FontFamily="Cascadia Mono"` (or a theme resource) and `FontSize="11"` for monospace. For array values, use an `ItemsRepeater` whose `Layout` property is the Community Toolkit `WrapLayout` (or a `WrapPanel`), right-aligned.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/doc-metadata.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/doc-metadata.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -168,6 +173,18 @@ Not applicable: The component performs no logging or error reporting.
 **Rationale**: Allows the component to handle multi-valued fields (tags, references, platforms) cleanly within the row.
 **Approved**: pending
 
+**Decision**: Keep the built-in 24px bottom margin (`mb-6`) as an overridable default.
+**Rationale**: The block sits between prose and the change history and needs that gap in its main use; a host that lays it out differently overrides it through `className`, where the merge lets the host class win.
+**Approved**: pending
+
+**Decision**: Accept the dynamic-type-support failure for the fixed 11px font size.
+**Rationale**: The block shows metadata annotations rather than primary content, and a relative font size would break the compact frontmatter look; a host that needs scaling overrides the size through `className`.
+**Approved**: pending
+
+**Decision**: When a host class conflicts with a default class, the host class wins (`cn()` with tailwind-merge).
+**Rationale**: The host knows its own layout, and the component's defaults are only a starting point.
+**Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -184,6 +201,7 @@ Semantic-markup passes because the source renders proper `<dl>`/`<dt>`/`<dd>` el
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added field-order requirement, clarified array wrapping and className merge rule, added margin/font/merge decisions, five test vectors, an RTL note and corrected platform notes. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; added the `DocMetadataField` type before requirements; converted Compliance to a table; split Design Decisions into Decision/Rationale/Approved entries; corrected the Appearance margin, added the array-item gap, and clarified per-field row layout; fixed Platform Notes APIs (SwiftUI font size, Compose FlowRow, WinUI ItemsRepeater, native monospace fonts, color-token mappings); fixed test-vector syntax; clarified null/undefined value passthrough as deterministic, not unguarded. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

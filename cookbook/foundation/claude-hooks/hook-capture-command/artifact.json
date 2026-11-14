@@ -4,7 +4,7 @@
     "id": "826153e3-cae8-4917-a1d3-c298a54ab558",
     "title": "Hook Capture Command",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,17 +23,20 @@
       "envelope",
       "drop-file"
     ],
-    "depends-on": [],
-    "related": [],
-    "references": [
-      "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookCaptureCommand.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookCaptureTests.swift (adhsdk)"
+    "depends-on": [
+      "f3326f3a-cccd-4ac5-8dc1-84d660ed4581"
     ],
+    "related": [
+      "9e4aba28-ae2b-4733-b6a5-62e9ad5c7a19",
+      "704d4ae9-e344-44d4-b19c-eadfec082077",
+      "9eb46f78-0ceb-455f-9584-b6b43ddf0871"
+    ],
+    "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "ff650731a182c03d",
+  "synced": "1b2f3bc15e29fc42",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

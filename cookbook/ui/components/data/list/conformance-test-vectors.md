@@ -7,5 +7,4 @@
 | list-004 | classname-merge | Render `<ListItem className="custom-item" />` | Output element has both base classes and `custom-item` applied |
 | list-005 | prop-forwarding | Render `<List id="test-list" role="region" />` | Output `<ul>` contains `id="test-list"` and `role="region"` attributes |
 | list-006 | prop-forwarding | Render `<ListItem id="item-1" data-test="value" />` | Output `<li>` contains `id="item-1"` and `data-test="value"` attributes |
-| list-007 | classname-merge | Render `<ListItem className="px-6" />` | Output `<li>` class list contains `px-6` and does not contain the conflicting base class `px-3` |
-
+| list-007 | classname-merge | Render `<ListItem className="px-6" />` | Output `<li>` class list contains `px-6` and does not contain the conflicting base class `px-3` || list-008 | data-slot, prop-forwarding | Render `<List data-slot="custom" />` | Output `<ul>` has `data-slot="custom"`, not `list` |

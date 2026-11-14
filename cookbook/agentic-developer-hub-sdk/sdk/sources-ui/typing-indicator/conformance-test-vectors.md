@@ -4,7 +4,7 @@
 | ti-001 | render-dots-pulse-when-inactive | isTyping=false, no words configured | Web: no visual indicator rendered. macOS/iOS: the three dots remain visible at 30% alpha; only the pulse timer is stopped |
 | ti-002 | render-dots-pulse-when-active | isTyping=true, no words configured | Three dots animating, cycling through opacity 0.3 → 1.0 on 0.35s cycle |
 | ti-003 | show-active-line-while-typing | isTyping=true, words=[{present: "thinking", past: "thought"}] | Glyph animates on 260ms cycle, word "thinking" displays, ellipsis appended |
-| ti-004 | cycle-through-status-words | words=[{present: "a", past: "a"}, {present: "b", past: "b"}], labelMs=100 | First render shows word "a"; after 100ms word "b" appears; after 200ms word "a" appears again (no duplicates in between) |
+| ti-004 | cycle-through-status-words | words=[{present: "a", past: "a"}, {present: "b", past: "b"}], labelMs=100 | The first render shows the first configured word. Over each full pass of the bag (two draws) both "a" and "b" appear exactly once; no word repeats within a pass. The order within a pass is random, so assert on the set per pass rather than a fixed sequence |
 | ti-005 | show-settled-line-when-done | Turn begins and ends, words=[{present: "thinking", past: "thought"}], elapsed=8s | Final render shows "✱ thought for 8s" in `.thinkingDoneText` color, no animation |
 | ti-006 | show-idle-phrase-when-configured | idlePhrase="waiting", phase before first turn | Idle phrase renders as "✱ waiting…" in `.thinkingIdleText` color |
 | ti-007 | reset-idle-on-first-turn | idlePhrase configured, first isTyping→true transition | Idle phrase disappears and thinking state displays |
@@ -21,7 +21,8 @@
 | ti-018 | support-tint-configuration | words configured, tint={color: "#ff0000", applies: "words"}, phase=thinking | Word text renders in the tint color; glyph stays in the default `.personaName` color; once done, the settled line ignores the tint |
 | ti-019 | support-frame-interval-configuration | frameMs=100 (web) / frameInterval=.milliseconds(100) (Apple), phase=thinking | Glyph advances to the next frame every 100ms rather than the 260ms default |
 | ti-020 | support-word-interval-configuration | labelMs=500 (web) / wordInterval=.milliseconds(500) (Apple), words=[{present: "a", past: "a"}, {present: "b", past: "b"}] | Status word rotates every 500ms rather than the 1800ms default |
-| ti-021 | Rapid configuration changes (edge case) | Vocabulary content unchanged but a new array instance is passed mid-turn (same words, new object identity) | The draw-without-replacement bag is NOT rebuilt and the word index is not reset; the current draw order continues uninterrupted |
-| ti-022 | Theme palette unavailable (edge case) | Semantic palette cannot be resolved at render time | Component renders using safe fallback (system text) colors and does not crash |
-| ti-023 | Idle phrase with no words configured (edge case) | idlePhrase="waiting" configured, words=[] (no vocabulary) | Idle phrase does NOT render; component shows the three-dot fallback path instead |
-
+| ti-021 | rebuild-bag-on-vocabulary-change | Vocabulary content unchanged but a new array instance is passed mid-turn (same words, new object identity) | The draw-without-replacement bag is NOT rebuilt and the word index is not reset; the current draw order continues uninterrupted |
+| ti-022 | fallback-colors-without-theme | Semantic palette cannot be resolved at render time | Component renders using safe fallback (system text) colors and does not crash |
+| ti-023 | suppress-idle-phrase-without-words | idlePhrase="waiting" configured, words=[] (no vocabulary) | Idle phrase does NOT render; component shows the three-dot fallback path instead |
+| ti-024 | rebuild-bag-on-vocabulary-change | Mid-turn, the vocabulary is swapped for different words (e.g. [{present: "a", past: "a"}] becomes [{present: "c", past: "c"}]) | The bag is rebuilt from the new words and the word index resets; the phase stays `thinking` and the clock is not restarted |
+| ti-025 | elapsed-seconds-minimum-one | Turn begins and ends 300ms later | The settled line reports "for 1s" |

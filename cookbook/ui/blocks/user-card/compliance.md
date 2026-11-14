@@ -16,18 +16,16 @@
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-These statuses rest on the source's native `<a>`/`<address>` elements and
-rem-based Tailwind text sizes for the passed accessibility checks, the
-`apt-*` design tokens whose actual color values live outside this file for
-the partial `contrast-ratio`, the total absence of any logging call for the
-passed `no-pii-in-logs`, the hardcoded `Social`/`Email`/`Phone`/`Address`/
-`Personas`/`Member since` strings and the `PLATFORM_LABELS` map for the
-failed internationalization checks, `formatMemberSince`'s use of
-`toLocaleDateString` plus the non-truncating wrapping layout for the passed
-internationalization checks, and the untested RTL flex ordering together
-with `initialsOf`'s single-UTF-16-code-unit character slicing for the
-partial internationalization checks. `separation-of-concerns` passes because
-`initialsOf`, `platformLabel`, `formatMemberSince`, and `addressLines` are
-pure helper functions kept apart from the render body; `unit-test-coverage`
-fails because no test exercises `UserCard`.
+Each status rests on the source as follows:
 
+- **screen-reader-support, keyboard-navigable, semantic-markup** (passed): the card uses native `<a>` and `<address>` elements.
+- **dynamic-type-support** (passed): text sizes are rem-based Tailwind classes.
+- **contrast-ratio** (partial): the `apt-*` design tokens' color values live outside this file.
+- **no-pii-in-logs** (passed): the component makes no logging call.
+- **string-externalization, no-hardcoded-strings** (failed): the `Social`, `Email`, `Phone`, `Address`, `Personas` and `Member since` strings and the `PLATFORM_LABELS` map are hardcoded.
+- **locale-aware-formatting** (passed): `formatMemberSince` uses `toLocaleDateString`.
+- **text-expansion-tolerance** (passed): the layout wraps and never truncates.
+- **rtl-layout-support** (partial): the RTL flex ordering is untested.
+- **unicode-support** (partial): `initialsOf` slices a single UTF-16 code unit per word.
+- **separation-of-concerns** (passed): `initialsOf`, `platformLabel`, `formatMemberSince`, and `addressLines` are pure helper functions kept apart from the render body.
+- **unit-test-coverage** (failed): no test exercises `UserCard`.

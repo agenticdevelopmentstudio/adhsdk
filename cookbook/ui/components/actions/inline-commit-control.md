@@ -2,11 +2,11 @@
 id: 26df832c-a7f7-4cf6-b3f5-240c61e8bd68
 title: "InlineCommitControl"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-07-07
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,9 +44,11 @@ discarded. It also owns the inline delete grammar: the trash arms a *pending*
 delete — the consumer dims and strikes the content — and the same ✓ then
 commits the removal.
 
-Five cooperating exports form the pattern, all from
-`@adh-sdk/ui/components/inline-commit-control` (plus the sibling
-`unsaved-changes-guard`):
+Five cooperating exports form the pattern. `InlineCommitControl`,
+`InlineEditableText` and `inlineCommitDeletingClass` come from
+`@adh-sdk/ui/components/inline-commit-control`, `UnsavedChangesGuard` from
+`@adh-sdk/ui/components/unsaved-changes-guard`, and `useInlineDrafts` from
+`@adh-sdk/ui/hooks/useInlineDrafts`:
 
 - `InlineCommitControl` — the stateless control itself.
 - `InlineEditableText` — click-to-edit text (the shared `Input` with its field
@@ -60,7 +62,7 @@ Five cooperating exports form the pattern, all from
   AlertModal, hard navigation via `beforeunload`, Back/Forward via a
   history sentinel, and opted-in programmatic navigation via the
   navigation-guard registry).
-- `useInlineDrafts` (`@adh-sdk/ui/hooks/useInlineDrafts`) — the
+- `useInlineDrafts` — the
   optional per-row state machine consumers were copy-pasting: PATCH-based
   drafts (only touched fields, so a commit never clobbers a field a
   background refetch changed), per-row in-flight gating, per-row errors, and
@@ -110,6 +112,17 @@ requirement (any data layer plugs in).
   raises the AlertModal (via a same-URL history sentinel); and chrome that
   navigates programmatically (menus, choosers, logout) raises it too when it
   awaits `confirmNavigation()` from the navigation-guard registry.
+- **patch-only-drafts**: `useInlineDrafts` MUST store a row's draft as only
+  the fields the user touched, so `changesOf` returns only those fields.
+- **settle-preserves-typing**: `useInlineDrafts` `settle` MUST drop only the
+  committed keys, so a value typed while a commit was in flight stays as a
+  dirty draft.
+- **gate-in-flight-commit**: `useInlineDrafts` `runCommit` MUST no-op on
+  re-entry for a row already in flight, and MUST store a failure as that
+  row's error while keeping the draft.
+- **respect-reduced-motion**: The trash reveal SHOULD carry a `motion-reduce:`
+  variant (or the platform equivalent) so it does not fade when the user has
+  asked for reduced motion. It does not today (see Compliance).
 - **route-keyboard**: `InlineEditableText` SHOULD route Enter to the
   row's commit action and Escape to its cancel action; a consumer-supplied
   `onKeyDown` runs FIRST and may `preventDefault()` to suppress that routing.
@@ -122,14 +135,14 @@ requirement (any data layer plugs in).
 - The control is trailing-aligned in the row/element it annotates, composed
   entirely from the shared `Button` (`ghost` / `destructive-ghost`,
   `icon-sm`) — no bespoke buttons.
-- ✓ uses the gold primary accent (`apt-gold`), ✕ the muted text tone
-  (`apt-text-muted`), the armed trash the destructive red tone.
+- ✓ uses the primary accent color, ✕ the muted text tone, the armed trash the
+  destructive tone. The web tokens are named in the React/Web Platform Note.
 - The idle trash is invisible (`opacity-0`) until the hover scope is hovered
   or the button is focused; the reveal is an opacity transition.
 - Armed-delete content is dimmed to 50% opacity with a strikethrough
   (`inlineCommitDeletingClass = "opacity-50 line-through"`).
 - `InlineEditableText` renders as plain text (transparent field shell) that
-  regains the field border on hover and the standard gold focus ring while
+  regains the field border on hover and the standard accent focus ring while
   editing.
 
 ## States
@@ -138,7 +151,7 @@ requirement (any data layer plugs in).
 |---|---|
 | clean, not deletable | Nothing rendered |
 | clean, deletable | Trash button, hidden until row hover / focus |
-| dirty | ✓ (gold) + ✕ (muted) pair, always visible |
+| dirty | ✓ (primary accent) + ✕ (muted) pair, always visible |
 | delete armed | ✓ ✕ + red trash (right-most, `aria-pressed`); content dimmed + struck |
 | busy | Pair soft-disabled (`aria-disabled`, clicks ignored, focus kept); ✓ replaced by a spinner; group `aria-busy` |
 
@@ -173,24 +186,25 @@ requirement (any data layer plugs in).
 | T2c | reveal-trash-on-hover | `dirty=false`, `deletable`, trash receives keyboard focus (no hover) | Trash button `focus-visible:opacity-100`, `pointer-events-auto` |
 | T3 | show-pair-when-dirty, commit-on-ok, cancel-on-x | `dirty`, click ✓ then ✕ | `onCommit` ×1, `onCancel` ×1 |
 | T4 | render-armed-delete, commit-armed-delete | `deleting`, click ✓ | Red trash rendered `aria-pressed`; `onCommit` ×1 |
-| T4b | disarm-delete | `deleting`, click ✕ | `onCancel` ×1; delete disarmed without deleting |
-| T4c | disarm-delete | `deleting`, click the armed red trash | `onDelete` ×1; delete disarmed without deleting |
+| T4b | disarm-delete | `deleting`, click ✕ | `onCancel` ×1 (the consumer then clears `deleting`) |
+| T4c | disarm-delete | `deleting`, click the armed red trash | `onDelete` ×1 (the consumer then clears `deleting`) |
 | T5 | disable-while-busy | `dirty`, `busy`, click ✓/✕ | ✓/✕ `aria-disabled`, still focusable; clicks ignored (`onCommit`/`onCancel` not called); group `aria-busy` |
 | T6 | edit-in-place, route-keyboard | type in `InlineEditableText`, press Enter, press Escape | `onChange` per edit; `onCommitEdit` ×1; `onCancelEdit` ×1 |
 | T6b | route-keyboard | consumer `onKeyDown` calls `preventDefault`, press Enter | `onKeyDown` ×1; `onCommitEdit` NOT called (suppressed) |
 | T7 | guard-navigation-when-dirty | guard `when`, click same-origin link | Click default-prevented; confirm dialog shown; Discard navigates (via `onNavigate`), Stay does not |
 | T7b | guard-navigation-when-dirty | guard mounted, `confirmNavigation()` called | Confirm dialog shown; Discard resolves `true`, Stay resolves `false`; with no guard mounted it resolves `true` |
 | T7c | guard-navigation-when-dirty | guard `when`, dispatch `popstate` | Confirm dialog shown |
-| T8 | (useInlineDrafts) patch drafts | `edit(id,{enabled:true})`, base `description` changes | `changesOf` = `{enabled:true}` only (untouched `description` never sent) |
-| T9 | (useInlineDrafts) settle | commit `{description:"a"}` while a newer `"ab"` is typed | after `settle(id,{description:"a"})` the row stays dirty with `"ab"` |
-| T10 | (useInlineDrafts) runCommit gate + errors | re-enter `runCommit` for an in-flight row; a rejecting commit | second call no-ops; failure stores the row's error, keeps the draft |
+| T8 | patch-only-drafts | `edit(id,{enabled:true})`, base `description` changes | `changesOf` = `{enabled:true}` only (untouched `description` never sent) |
+| T9 | settle-preserves-typing | commit `{description:"a"}` while a newer `"ab"` is typed | after `settle(id,{description:"a"})` the row stays dirty with `"ab"` |
+| T10 | gate-in-flight-commit | re-enter `runCommit` for an in-flight row; a rejecting commit | second call no-ops; failure stores the row's error, keeps the draft |
 | T11 | preserve-focus | `dirty=false`, `deletable`, click idle trash (arms delete) | The ✓ (commit) button receives focus |
 | T12 | preserve-focus | pending group has focus, click ✓ (or ✕) to collapse the pair | The idle trash button regains focus |
 | T13 | render-armed-delete | apply `inlineCommitDeletingClass` to the affected content while `deleting` | Content class list includes `opacity-50` and `line-through` |
 
-`@adh-sdk/ui` `src/__tests__/inlineCommitControl.test.tsx`,
-`src/__tests__/unsavedChangesGuard.test.tsx`, and
-`src/__tests__/useInlineDrafts.test.tsx` implement these vectors.
+`packages/web/packages/ui/src/__tests__/inlineCommitControl.test.tsx`,
+`packages/web/packages/ui/src/__tests__/unsavedChangesGuard.test.tsx`, and
+`packages/web/packages/ui/src/__tests__/useInlineDrafts.test.tsx` implement
+these vectors.
 
 ## Edge Cases
 
@@ -262,6 +276,8 @@ fixed English strings plus the consumer-supplied `subject`; none are
 externalized today. The `subject` value itself is the consumer's data and is
 out of scope here.
 
+Proposed keys (not yet externalized; the strings are hardcoded in the component today):
+
 | String Key | Default (en) | Context |
 |---|---|---|
 | `inlineCommitControl.delete` | "Delete{subject}" | Idle trash `aria-label`/`title` |
@@ -277,16 +293,16 @@ out of scope here.
 | `unsavedChangesGuard.stay` | "Stay" | Navigation-guard cancel action |
 
 Layout is trailing-aligned (logical, following the writing direction), not
-literally right-aligned, so it flips correctly under `dir="rtl"`; the
-control's own flex-row markup carries no `right`-specific CSS, but the
-recipe's earlier "right-justified" phrasing described the LTR case only.
+literally right-aligned. The control's own flex-row markup carries no
+`right`-specific CSS, but no test renders it under `dir="rtl"`, so
+`rtl-layout-support` stays failed in Compliance until one does.
 
 ## Accessibility Options
 
 | Option | Behavior |
 |---|---|
 | Reduce Motion | Not honored: the idle-trash reveal is the control's own `transition-opacity` on its `Button` classes (not something `Button` itself handles), and it carries no `motion-reduce:` variant, so the fade plays regardless of the system preference. |
-| Increase Contrast | Not handled directly: foreground/background pairs come from `apt-gold` / `apt-text-muted` / destructive-red design tokens; any high-contrast adaptation is whatever those tokens resolve to, not logic in this control. |
+| Increase Contrast | Not handled directly: foreground/background pairs come from the primary-accent, muted-text and destructive design tokens; any high-contrast adaptation is whatever those tokens resolve to, not logic in this control. |
 | Differentiate Without Color | Handled: the armed state is also carried by icon shape (trash vs. ✓/✕) and `aria-pressed`, and armed-delete content is also struck through, not color-coded alone. |
 
 ## Feature Flags
@@ -308,7 +324,7 @@ mutation layer.
 
 ## Platform Notes
 
-- **React/Web**: The component ships in `@adh-sdk/ui` from `components/inline-commit-control` and `components/unsaved-changes-guard` (TypeScript, React 19, Base UI components, Tailwind v4). DataTable rows already carry the hover scope; other containers opt in with `inlineCommitHoverScopeClass`. The guard intercepts document-capture clicks before Next.js `<Link>` handlers run; programmatic navigation is covered by a registry callback.
+- **React/Web**: The component ships in `@adh-sdk/ui` from `components/inline-commit-control` and `components/unsaved-changes-guard` (TypeScript, React 19, Base UI components, Tailwind v4). Color tokens are `apt-gold` (✓), `apt-text-muted` (✕, idle trash) and the `destructive-ghost` Button variant (armed trash). DataTable rows already carry the hover scope; other containers opt in with `inlineCommitHoverScopeClass`. The guard intercepts document-capture clicks before Next.js `<Link>` handlers run; programmatic navigation is covered by a registry callback.
 - **SwiftUI**: Start from an `HStack` of icon buttons composed from the shared `Button` component. Drive `dirty`/`deleting`/`busy` from an `@Observable` model (or plain `@State` in the row view); focus uses `@FocusState` to move focus onto the ✓ button when arming a delete and back onto the idle trash when the pair collapses. The optional `useInlineDrafts` equivalent is an `@Observable` store, keyed by row id, holding each row's PATCH draft.
 - **Compose**: Start from a `Row` of `IconButton` composables. State uses Compose `State`/`MutableState`; focus uses `FocusRequester` (`requestFocus()` on arm/collapse) together with `Modifier.hoverable`/`onFocusChanged` for the hover-or-focus trash reveal — Compose has no `keyboardInteractionModifier`. The PATCH draft pattern maps to a ViewModel holding the row's draft map.
 - **AppKit / UIKit**: Use `NSStackView` / `UIStackView` with `NSButton` / `UIButton` (icon style). State is held in the owning view controller (or an observable object it references), not a SwiftUI view. Focus navigation uses the responder chain and `becomeFirstResponder()`. The draft state machine maps to `@Published` properties in an observable object.
@@ -318,55 +334,61 @@ mutation layer.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/inline-commit-control.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/components/inline-commit-control.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
-- **Decision**: The control renders `dirty`/`deleting`/`busy` and reports
-  intent via callbacks; it never holds draft data itself (ButtonBar
-  precedent).
-  **Rationale**: Any data layer (react-query, local state) plugs in. The
-  optional `useInlineDrafts` hook is the shared implementation of that state.
-  **Approved**: pending
-- **Decision**: `useInlineDrafts` stores a draft as only the fields the user
-  touched, and `settle` drops only the committed keys.
-  **Rationale**: A commit then sends — and can clobber — nothing else, even
-  after a background refetch changes a sibling field, and keystrokes typed
-  mid-flight survive.
-  **Approved**: pending
-- **Decision**: Busy buttons use `aria-disabled` rather than `disabled`.
-  **Rationale**: The buttons stay in the tab order and keep focus across the
-  in-flight transition (a `disabled` button loses focus to `<body>`), so
-  keyboard commit → busy → done is seamless.
-  **Approved**: pending
-- **Decision**: Programmatic navigators opt in to the guard through a
-  registry callback (`await confirmNavigation()`) instead of an anchor-click
-  interceptor.
-  **Rationale**: A click interceptor can't see a `router.push`; a tiny
-  registry lets every menu/logout share one confirm instead of
-  reimplementing it.
-  **Approved**: pending
-- **Decision**: A delete is staged (armed) and confirmed by the same ✓
-  grammar as edits, rather than deleted instantly.
-  **Rationale**: One commit vocabulary covers the whole row instead of a
-  separate modal per delete.
-  **Approved**: pending
-- **Decision**: Clicking the armed red trash disarms it.
-  **Rationale**: A small reversible action doesn't need a second
-  confirmation.
-  **Approved**: pending
-- **Decision**: `InlineEditableText` is a transparent `Input`, not a
-  text-node/edit-mode swap.
-  **Rationale**: One fewer state machine — the field is always the real
-  input (simplicity, native-controls).
-  **Approved**: pending
-- **Decision**: The navigation guard raises the platform `AlertModal` for
-  in-app links instead of the native `confirm()`; native `beforeunload`
-  remains for hard unloads.
-  **Rationale**: Consistent with the platform's dialog policy; `beforeunload`
-  is kept because custom UI can't intercept a hard unload.
-  **Approved**: pending
+**Decision**: The control renders `dirty`/`deleting`/`busy` and reports
+intent via callbacks; it never holds draft data itself (ButtonBar
+precedent).
+**Rationale**: Any data layer (react-query, local state) plugs in. The
+optional `useInlineDrafts` hook is the shared implementation of that state.
+**Approved**: pending
 
+**Decision**: `useInlineDrafts` stores a draft as only the fields the user
+touched, and `settle` drops only the committed keys.
+**Rationale**: A commit then sends — and can clobber — nothing else, even
+after a background refetch changes a sibling field, and keystrokes typed
+mid-flight survive.
+**Approved**: pending
+
+**Decision**: Busy buttons use `aria-disabled` rather than `disabled`.
+**Rationale**: The buttons stay in the tab order and keep focus across the
+in-flight transition (a `disabled` button loses focus to `<body>`), so
+keyboard commit → busy → done is seamless.
+**Approved**: pending
+
+**Decision**: Programmatic navigators opt in to the guard through a
+registry callback (`await confirmNavigation()`) instead of an anchor-click
+interceptor.
+**Rationale**: A click interceptor can't see a `router.push`; a tiny
+registry lets every menu/logout share one confirm instead of
+reimplementing it.
+**Approved**: pending
+
+**Decision**: A delete is staged (armed) and confirmed by the same ✓
+grammar as edits, rather than deleted instantly.
+**Rationale**: One commit vocabulary covers the whole row instead of a
+separate modal per delete.
+**Approved**: pending
+
+**Decision**: Clicking the armed red trash disarms it.
+**Rationale**: A small reversible action doesn't need a second
+confirmation.
+**Approved**: pending
+
+**Decision**: `InlineEditableText` is a transparent `Input`, not a
+text-node/edit-mode swap.
+**Rationale**: One fewer state machine — the field is always the real
+input (simplicity, native-controls).
+**Approved**: pending
+
+**Decision**: The navigation guard raises the platform `AlertModal` for
+in-app links instead of the native `confirm()`; native `beforeunload`
+remains for hard unloads.
+**Rationale**: Consistent with the platform's dialog policy; `beforeunload`
+is kept because custom UI can't intercept a hard unload.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -383,25 +405,21 @@ mutation layer.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 
-Statuses rest on `inline-commit-control.tsx`: Button-only composition and
-`apt-*`/token-only classNames (native-controls-preference, platform-theming);
-the documented `aria-label`/`role="group"`/focus-management logic
-(keyboard-navigable, focus-management); the unconditional
-`transition-opacity` reveal with no `motion-reduce:` variant
-(reduced-motion); the hardcoded English button/group labels with no
-resource-file indirection and no `dir`-aware positioning (no-hardcoded-strings,
-string-externalization, rtl-layout-support); `InlineEditableText`'s passthrough
-of the raw input value with no validation of its own (input-sanitization); and
-the vector-to-test mapping across the three `__tests__` files cited above
-(unit-test-coverage, vectors T1–T13); and the source's own note that "the
-consumer owns all state — draft values, dirty computation, the armed set … —
-the control just renders it," with no data access or business rule of its own
-beyond the focus-management effect (separation-of-concerns).
+Statuses rest on `packages/web/packages/ui/src/components/inline-commit-control.tsx`:
 
+- native-controls-preference, platform-theming: Button-only composition and token-only classNames.
+- keyboard-navigable, focus-management: the documented `aria-label`, `role="group"` and focus-management logic.
+- reduced-motion: the unconditional `transition-opacity` reveal has no `motion-reduce:` variant.
+- no-hardcoded-strings, string-externalization: the English button and group labels are hardcoded, with no resource-file indirection.
+- rtl-layout-support: no test renders the control under `dir="rtl"`.
+- input-sanitization: `InlineEditableText` passes the raw input value through with no validation of its own.
+- unit-test-coverage: the vectors T1–T13 map onto the three `__tests__` files cited in Conformance Test Vectors.
+- separation-of-concerns: the source's own note says "the consumer owns all state — draft values, dirty computation, the armed set … — the control just renders it", with no data access or business rule beyond the focus-management effect.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Added named requirements for the draft hook and reduced motion, described token colors as roles, reconciled RTL and export-module wording, labelled string keys as proposed, and reformatted Design Decisions and Compliance. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; correct Platform Notes to real native APIs; fix Overview export count and trailing-alignment phrasing; reformat Design Decisions and Compliance to convention; fill Localization and Accessibility Options with real content; fix `related` and `tags`; fix `onDelete` type; split/add Conformance Test Vectors for hover/focus reveal, disarm-via-✕, focus preservation, and armed-delete content styling. |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Promote to review; add missing sections and cross-platform Platform Notes |

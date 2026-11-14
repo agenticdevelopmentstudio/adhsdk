@@ -1,0 +1,5 @@
+
+- **Reduce Motion**: The component applies a `transition-colors` animation when border, background, and text colors change. See Design Decision "Unconditional color transition". No `prefers-reduced-motion` handling exists in source; the transition runs unconditionally and is never suppressed for this preference.
+- **Increase Contrast**: The default and enabled state colors (`apt-text-muted`, `apt-text`, `apt-gold`, `apt-gold-bright`) are defined by the design system's color tokens. If the design system provides high-contrast variants, the component inherits them via token substitution. The component itself does not implement contrast overrides.
+- **Differentiate Without Color**: Enabled vs. disabled state is distinguished by color, opacity, cursor, and text content. Reliance on color alone is mitigated by opacity change and cursor style, but not fully eliminated. An audit of the `apt-gold` vs. neutral color difference is recommended to confirm sufficient contrast and differentiation for users with color blindness.
+

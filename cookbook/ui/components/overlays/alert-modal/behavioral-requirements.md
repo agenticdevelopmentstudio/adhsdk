@@ -11,9 +11,10 @@
 - **render-confirm-mode-when-cancel-label-set**: The component MUST render `DialogActions`, with both a cancel and a confirm button, whenever `cancelLabel` is not `null`/`undefined`.
 - **invoke-onconfirm-on-confirm-click**: Activating the confirm button MUST call `onConfirm` exactly once.
 - **invoke-oncancel-on-cancel-click**: In confirm mode, activating the cancel button MUST call `onCancel` exactly once.
-- **tolerate-missing-oncancel**: In confirm mode, when `onCancel` is not provided, any action that would otherwise invoke it (cancel-button activation, a dismissed Escape, or pointer dismissal) MUST be a no-op — no error is thrown.
+- **tolerate-missing-oncancel**: In confirm mode, when `onCancel` is not provided, any action that would otherwise invoke it (cancel-button activation or a dismissed Escape) MUST be a no-op — no error is thrown.
+- **default-tone-info**: The component MUST use the `"info"` tone's icon and color when `tone` is not provided.
 - **default-confirm-label-ok**: The component MUST default the confirm button's label to `"OK"` when `confirmLabel` is not provided.
-- **default-busy-label-working**: The component MUST label the alert-mode busy spinner with `aria-label="Working…"`.
+- **label-busy-spinner-working**: The component MUST label the alert-mode busy spinner with `aria-label="Working…"`.
 - **style-confirm-destructive-in-alert-mode**: In alert mode, the component MUST render the confirm button with the `"destructive"` variant when `destructive` is `true`.
 - **apply-confirm-variant-in-alert-mode**: In alert mode, when `destructive` is `false`, the component MUST render the confirm button with `confirmVariant` if provided, and with the `"default"` variant otherwise.
 - **show-busy-spinner-in-alert-mode**: In alert mode, when `busy` is `true`, the component MUST replace the confirm button with a spinner element exposing `role="status"` and `aria-label="Working…"`.
@@ -22,12 +23,13 @@
 - **set-initial-focus-by-destructiveness**: In confirm mode, the component MUST set `DialogActions`' `initialFocus` to `"cancel"` when `destructive` is `true`, and to `"confirm"` otherwise.
 - **hide-close-affordance-when-busy-or-non-dismissible**: The component MUST hide `DialogContent`'s `×` close affordance (`showClose`) whenever `busy` is `true` or `dismissible` is `false`.
 - **default-dismissible-true**: The component MUST treat the dialog as dismissible by default (`dismissible` defaults to `true`).
-- **block-dismissal-when-busy**: The component MUST block every dismissal path that can reach `handleOpenChange` (Escape, ✕, programmatic close) while `busy` is `true`; backdrop/outside clicks are already unreachable regardless of `busy` (see Edge Cases).
-- **block-dismissal-when-non-dismissible**: The component MUST block every dismissal path while `dismissible` is `false`.
+- **block-dismissal-when-busy**: The component MUST block every dismissal path that can close the dialog (Escape, ✕, programmatic close) while `busy` is `true`, calling neither `onConfirm` nor `onCancel`; backdrop/outside clicks are already unreachable regardless of `busy` (see **ignore-pointer-dismissal**).
+- **block-dismissal-when-non-dismissible**: The component MUST block every dismissal path while `dismissible` is `false`, calling neither `onConfirm` nor `onCancel`.
 - **route-escape-to-cancel-in-confirm-mode**: When keyboard shortcuts are enabled and the dialog is not blocked from closing, an Escape-driven close (Base UI close reason `"escape-key"`) MUST call `onCancel` in confirm mode.
 - **route-escape-to-confirm-in-alert-mode**: When keyboard shortcuts are enabled and the dialog is not blocked from closing, an Escape-driven close MUST call `onConfirm` in alert mode.
 - **block-escape-when-keyboard-disabled**: The component MUST NOT call `onConfirm` or `onCancel` for an Escape-driven close when `keyboard` is `"none"` or `destructive` is `true`.
-- **route-close-button-regardless-of-keyboard-policy**: A non-Escape close reason that reaches `handleOpenChange` (in practice only the ✕ affordance's `close-press`, or a programmatic close — backdrop/outside clicks never reach it at all, since the underlying `Dialog` hard-disables pointer dismissal and `AlertModal` never overrides that; see Edge Cases) MUST call `onCancel` in confirm mode or `onConfirm` in alert mode whenever the dialog is not busy and is dismissible, regardless of the `keyboard` policy's value.
+- **route-close-button-regardless-of-keyboard-policy**: A non-Escape close reason (in practice the ✕ affordance, or a programmatic close) MUST call `onCancel` in confirm mode or `onConfirm` in alert mode whenever the dialog is not busy and is dismissible, regardless of the `keyboard` policy's value.
+- **ignore-pointer-dismissal**: A backdrop or outside click MUST NOT call `onConfirm` or `onCancel` and MUST leave the dialog open, under any combination of props.
 - **invoke-confirm-on-enter-under-default-keyboard**: Under `keyboard="default"` (and `destructive` `false`), pressing `Enter` MUST call `onConfirm` exactly once and MUST call `preventDefault` on the triggering event.
 - **ignore-all-keys-when-keyboard-none**: When `keyboard` is `"none"`, the window keydown listener MUST NOT invoke `onConfirm` or `onCancel` for any key.
 - **force-keyboard-none-when-destructive**: The component MUST treat keyboard shortcuts as disabled whenever `destructive` is `true`, regardless of the value of the `keyboard` prop.

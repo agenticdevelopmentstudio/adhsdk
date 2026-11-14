@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: The terminal step opens Claude with `--dangerously-skip-permissions`.
-**Rationale**: A review session is driven unattended by the partner, which would otherwise stall on every permission prompt. The risk is contained by the fix step, which commits only on the fix branch and never pushes. This is a deliberate trust trade and an owner can edit the step.
+**Rationale**: A review session is driven unattended by the partner, which would otherwise stall on every permission prompt. The "commit only, never push" wording of the fix step is advisory prompt text, not a control: a session with prompts off could still push or write outside its worktree. What limits the damage is that the session starts in its own review worktree and the owner merges the fix branch. The residual risk is accepted, and an owner can edit the step.
 **Approved**: pending
 
 **Decision**: The guidelines tell the partner to retry `/code-review` with the range `{sha}^..{sha}` when the bare sha is rejected.
@@ -19,7 +19,7 @@
 **Rationale**: A review runs against one commit but fixes land at the tip of the branch, so a finding may already be obsolete; saying which were skipped keeps the owner able to audit the result.
 **Approved**: pending
 
-**Decision**: The test named `defaultsHaveTheTwoBuiltInJobs` asserts one job.
-**Rationale**: The test name is stale from before the general job was retired; its assertion (one id, `code-reviews`) is the current contract, and this recipe follows the assertion.
+**Decision**: The unattended review session reads untrusted repository content (commit text, code and files) with permission prompts off, and the risk of prompt injection from it is accepted.
+**Rationale**: A review has to read the repository it reviews, and the session is driven without a person at the prompt. The mitigations are the review worktree, the fix branch the owner merges, and the job being disabled until the owner turns it on; nothing in the guidelines or steps screens the content Claude reads.
 **Approved**: pending
 

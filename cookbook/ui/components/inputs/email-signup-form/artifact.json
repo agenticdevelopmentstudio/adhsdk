@@ -4,11 +4,11 @@
     "id": "46b0cb5d-bd0c-45d0-ab14-95054e1c59ab",
     "title": "Email Signup Form",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c31f71e612f6cbb9",
+  "synced": "642ef6404f43a6ab",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

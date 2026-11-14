@@ -13,7 +13,7 @@
   (narrower → leftmost lists COVER/slide OFF-SCREEN; hover a peek to open every on-screen list — parents and children alike)
 ```
 
-**Narrow mode** (only a detail fits, or a phone) — the same stack as a navigation controller:
+**Narrow mode** (the wide shrink sequence is exhausted, or a phone) — the same stack as a navigation controller:
 
 ```
 ┌────────────────────┐   select    ┌────────────────────┐   select    ┌────────────────────┐
@@ -33,8 +33,8 @@
   a disclosure/cover `«`/`»` control (left) + a left-aligned `title` + a right-justified New **`+`**
   (`onNew`) and a divider beneath. Undisclosed/covered = an icon strip (32px covered peek / 48px `minimized` strip); in the stack
   selection is the **marker** (root dash + parent→child connectors), not a per-rail bar. Hovering a
-  covered rail reveals the whole BRANCH — that rail AND its children, full rows + headers, chained side
-  by side above the detail. In **narrow** mode a rail is instead the full-width pane (bar selection, a
+  covered rail reveals EVERY on-screen list — parents and children alike, full rows + headers, chained side
+  by side and pushing the detail aside. In **narrow** mode a rail is instead the full-width pane (bar selection, a
   top-left Back, no cover/resize affordances).
 - **Detail pane**: `bg-apt-surface`, flexible width with a minimum (horizontal scroll
   below it), fills height; its leaf's action bar (Save/Cancel/Delete, and Back when drilled) renders at the top of the

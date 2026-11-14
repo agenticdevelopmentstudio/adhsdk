@@ -1,0 +1,7 @@
+
+- **Role**: The toast root renders `role="dialog"` by default (Base UI `ToastPrimitive.Root`); it only escalates to `role="alertdialog"` when a toast is added with `priority: 'high'`, which this source's `useToast().add({ title, description })` calls do not set. The viewport (`ToastPrimitive.Viewport`) renders `role="region"`, `aria-live="polite"`, and `aria-label="Notifications"`.
+- **Close button label**: MUST be localized (see **localize-close-label**); the source hard-codes `aria-label="Close"` in English, which does not yet satisfy this requirement.
+- **Focus management**: Close button MUST be keyboard-focusable and dismissible via the Enter or Space key (it is a native `<button>` element per Base UI's `ToastPrimitive.Close`). The source also inherits Base UI's default Escape-to-dismiss behavior: pressing Escape while focus is inside the toast closes it, the same as activating Close (see the Design Decision on dismissal below). The viewport is reachable via the F6 landmark shortcut or Tab, and focus is redirected to the frontmost dismissible toast when the viewport receives focus.
+- **Minimum tap target**: See **enlarge-close-hit-area**. The source renders the Close control as an absolutely-positioned button containing only a 16px icon, with no additional padding shown that would extend the hit area to 44×44pt.
+- **Announcement**: Toast entry and exit is announced through the viewport's `aria-live="polite"` region (see Role above); Base UI's `aria-relevant="additions text"` announces newly added toasts and their text content.
+

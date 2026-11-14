@@ -4,11 +4,11 @@
     "id": "c130d5d5-2ac4-4a15-a13a-9127ddad6ca1",
     "title": "Popover Anchor",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -26,13 +26,11 @@
     "related": [
       "c61a220c-b63e-4dcd-a12b-715de20f7b5d"
     ],
-    "references": [
-      "packages/web/packages/popover/src/PopoverAnchor.tsx"
-    ],
+    "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a49d40f2abe870da",
+  "synced": "9c28a1a5f07486c0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

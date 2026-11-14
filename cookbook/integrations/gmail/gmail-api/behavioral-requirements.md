@@ -14,19 +14,18 @@
 - **part-tree**: `GmailPart` MUST be a recursive tree: every field (`partId`, `mimeType`, `filename`, `headers`, `body`, `parts`) is optional and `parts` holds child `GmailPart` values.
 - **body-encoding**: `GmailBody.data` MUST carry the body as base64url text, left undecoded; `attachmentId` and `size` MUST be optional.
 - **header-shape**: `GmailHeader` MUST carry a required `name` and `value`.
-- **history-page**: `history(startHistoryId:pageToken:)` MUST return a `GmailHistoryPage` with `changedIds`, `deletedIds`, the `historyId` and an optional `nextPageToken`.
+- **history-page**: `history(startHistoryId:pageToken:)` MUST return a `GmailHistoryPage` with `changedIds`, `deletedIds`, the `historyId` and an optional `nextPageToken`. `changedIds` MUST hold the message ids from `messagesAdded`, `labelsAdded` and `labelsRemoved` history records and `deletedIds` those from `messagesDeleted` records. Each list MUST hold an id once (de-duplicated, first occurrence kept), and an id that appears in both lists MUST appear only in `deletedIds`.
 - **cursor-expired**: `history` MUST throw `GmailCursorExpired` when Gmail answers HTTP 404, meaning the cursor "is older than Gmail keeps"; the caller then needs a full sync.
 - **cursor-expired-shape**: `GmailCursorExpired` MUST be an `Error`, `Equatable` and `Sendable` with a no-argument initializer and no payload.
 - **labels-list**: `labels()` MUST return the account's labels as `[GmailLabelDTO]`.
 - **label-shape**: `GmailLabelDTO` MUST require `id`, `name` and `type` and MUST treat `messagesTotal`, `messagesUnread` and `color` (a `LabelColor` from the integration model) as optional.
 - **batch-modify**: `batchModify(ids:add:remove:)` MUST apply the `add` and `remove` label ids to every id in `ids` and return nothing on success.
-- **batch-modify-limits**: A conforming REST client MUST reject an empty `ids` list and a list longer than `GmailRESTClient.batchModifyLimit` (1000) with an `IntegrationError`, without calling Gmail. The protocol does not state this limit; `GmailRESTClient` enforces it and its tests assert it.
+- **batch-modify-limits**: A conforming REST client MUST reject an empty `ids` list and a list longer than `GmailRESTClient.batchModifyLimit` (1000) with an `IntegrationError` (see [adhsdk.ingredient.integrations.model.integration-error](cookbook:351e3bf8-b137-4f59-94de-c769aa8b0666)), without calling Gmail. The protocol does not state this limit; `GmailRESTClient` enforces it and its tests assert it.
 - **full-sync-after**: `GmailQuery.fullSync(settings:now:)` MUST start the query with `after:` followed by the whole-second epoch of `now` minus `settings.windowDays` days (86,400 seconds each).
 - **full-sync-class-filter**: When `settings.includeArchived` is false, `fullSync` MUST append the space-joined terms `in:inbox in:sent in:drafts is:starred has:userlabels` inside braces, which Gmail reads as OR.
 - **full-sync-spam-trash-terms**: When `includeArchived` is false, `fullSync` MUST add `in:spam` inside the braces, after `has:userlabels`, when `includeSpam` is true and `in:trash` after that when `includeTrash` is true.
 - **full-sync-archived**: When `settings.includeArchived` is true, `fullSync` MUST return only the `after:` term, with no class filter and no `in:spam` or `in:trash` terms.
 - **full-sync-include-flag**: `fullSync` MUST return `includeSpamTrash` equal to `settings.includeSpam || settings.includeTrash`, whether or not `includeArchived` is set.
-- **query-narrows-only**: `GmailQuery` output MUST be treated as a fetch narrowing only; `MailClassifier` stays the authority on what is mirrored (the type's own comment).
 - **no-error-translation-here**: The protocol MUST NOT define errors other than `GmailCursorExpired`; other failures surface as the throwing implementation's own errors (for `GmailRESTClient`, `IntegrationError.gmail(status:message:)`).
 
 ### Security

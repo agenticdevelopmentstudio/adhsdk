@@ -10,4 +10,3 @@
 - **Concurrent access**: See #requirements/classify-pure; no ordering rule is needed.
 - **Error states, network and offline**: Not applicable. The function does no I/O, takes no dependency that can fail, and never throws.
 - **Stale classification**: The class is computed from the label ids at the moment of the call. This file does not recompute it when labels change; a caller that re-fetches a message gets a new result by calling again.
-- **Test gap**: `MailClassificationTests` covers vectors 001-010 only. Cases for `CHAT`, `inbox`, `category_updates`, `""`, `["INBOX", "TRASH"]` and `MailClass` coding and `allCases` do not exist yet.

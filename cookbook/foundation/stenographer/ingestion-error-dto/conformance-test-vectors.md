@@ -12,9 +12,10 @@
 | ingestion-error-dto-007 | progress-polling | a progress value with `running` false, `total` 10, `processed` 10 | the poller stops |
 | ingestion-error-dto-008 | error-last-retried | encode an `IngestionErrorDTO` with `lastRetriedAt` nil | the synthesized encoding omits the key; decode gives nil |
 | ingestion-error-dto-009 | no-validation | `IngestionErrorLogDTO` with `status: "mystery"` | constructs; `status` reads `mystery` |
-| ingestion-error-dto-010 | log-no-defaults | construct an `IngestionErrorLogDTO` | every argument must be written, nil included |
+| ingestion-error-dto-010 | log-no-defaults | construct an `IngestionErrorLogDTO` | every argument must be written, nil included (a compile-time check, not a runtime vector) |
 | ingestion-error-dto-011 | log-status-values, log-sqlite-code, log-resolved-at | record a failure twice for `a.json`, then once with `exhausted` true (`testAnUpsertKeepsTheFirstQuarantineTimeAndTracksTheLatestAttempt`) | one row; `quarantinedAt` stays the first time; `retryCount` 3; `status` `exhausted` |
 | ingestion-error-dto-012 | log-status-values, log-resolved-at | resolve `a.json` (`testResolveMarksTheRowRecoveredAndStampsResolvedAt`) | `status` `recovered`; `resolvedAt` non-nil, where it was nil before |
 | ingestion-error-dto-013 | log-status-values, log-resolved-at | clear the active rows with one failing, one exhausted and one recovered row (`testClearTouchesOnlyTheStillActiveRows`) | the failing and exhausted rows read `cleared` with `resolvedAt` set; the recovered row stays `recovered` |
 | ingestion-error-dto-014 | log-status-lost | record a lost event for `empty.json`, then clear (`testALostEventIsATerminalResolvedRowThatClearLeavesAlone`) | `status` `lost`, `retryCount` 0, `resolvedAt` non-nil, `quarantinedAt` the detection time; clear leaves it `lost` |
 | ingestion-error-dto-015 | log-resolved-at | record a failure for a recovered filename again (`testAResolvedFilenameQuarantinedAgainTakesAFreshQuarantineTime`) | `status` `failing`, `quarantinedAt` the new time, `resolvedAt` nil |
+

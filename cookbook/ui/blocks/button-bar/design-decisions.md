@@ -11,3 +11,6 @@
 **Rationale**: The toolbar stays accessible and labeled even if a consumer forgets to set `ariaLabel`; the `saving` default reduces boilerplate for panes with no async save logic; and the `canDelete` default lets consumers omit it entirely when delete is never available.
 **Approved**: pending
 
+**Decision**: Leave the Create button enabled while `actions.saving` is `true`.
+**Rationale**: The source applies the busy term only to Delete, Cancel and Save, and Create does not depend on the draft state that `canSave` describes. Because Create can still act while a save is in flight, the consumer is responsible for deciding what `onCreate` does then (for example, ignoring it until the save settles).
+**Approved**: pending

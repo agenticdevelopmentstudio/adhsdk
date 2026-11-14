@@ -1,5 +1,5 @@
 
-- **Layout**: Centered vertical stack composition, with child elements constrained within a `Wrap` container (see **render-order**)
+- **Layout**: Centered vertical stack composition, with child elements constrained within a `Wrap` container (see **child-order**)
 - **Background**: `var(--lp-hero-wash, var(--lp-ground, #101010))` on `.lp-hero-flow` — a hero wash is the single most site-specific surface on the page, so the component sets no default beyond the page ground token
 - **Typography**:
   - Headline: `<h1>` semantic heading

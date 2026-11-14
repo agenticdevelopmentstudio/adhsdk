@@ -7,5 +7,7 @@
 - **side-offset** (full-featured): `PopoverContent` MUST accept a `sideOffset` prop to control the gap, in pixels, between the panel and the trigger element (default `8`). The lightweight variant has no equivalent prop; its gap is a CSS custom property on `.hover-popover`.
 - **alignment** (full-featured): `PopoverContent` MUST accept an `align` prop to control alignment along the axis perpendicular to `side` (`'start' | 'center' | 'end'`, default `'center'`). The lightweight variant has no equivalent prop.
 - **custom-styling** (full-featured, lightweight): The component MUST accept a `className` prop, concatenated after its own default classes, to allow custom styling.
+- **arrow-orientation** (full-featured): When `arrow={true}`, the arrow MUST be rotated per the active `side`: 45deg for top, 225deg for bottom, 315deg for left, 135deg for right.
 - **arrow** (full-featured): `PopoverContent` MAY render an optional pointer indicator, controlled by the `arrow` prop (default `false`). The lightweight variant always renders its arrow as a fixed part of the panel; it has no prop to disable it.
-
+- **outside-press-closes** (full-featured): A press outside the panel and the trigger MUST request close by calling `onOpenChange(false, ...)` (Base UI Popover's default dismissal).
+- **trigger-toggles** (full-featured): Pressing `PopoverTrigger` while the popover is open MUST request close, and pressing it while closed MUST request open, through `onOpenChange` (Base UI `Popover.Trigger`'s default).

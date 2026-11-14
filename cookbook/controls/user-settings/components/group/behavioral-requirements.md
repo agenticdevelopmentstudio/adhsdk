@@ -1,9 +1,9 @@
 
 - **grouping-container**: Component MUST render a semantic grouping container as its root.
 - **title-when-provided**: When a `title` is provided, component MUST render it as a heading scoped to the group.
-- **title-when-omitted**: When `title` is not provided or is falsy, component MUST NOT render a title element.
-- **hint-when-provided**: When a `hint` is provided, component MUST render it as descriptive text associated with the group.
-- **hint-when-omitted**: When `hint` is not provided or is falsy, component MUST NOT render a hint element (see **Edge Cases** for the literal-zero case, which is falsy but still visible).
+- **title-when-omitted**: When `title` is not provided or is falsy (including the number `0`), component MUST NOT render a title element or any stray text in its place.
+- **hint-when-provided**: When a `hint` is provided, component MUST render it as descriptive text within the group, adjacent to the title and body. Programmatic association with the group is platform-specific (see Accessibility and Platform Notes).
+- **hint-when-omitted**: When `hint` is not provided or is falsy (including the number `0`), component MUST NOT render a hint element or any stray text in its place (see **Edge Cases**).
 - **children-in-body**: Children content MUST be rendered inside a body container, distinct from the title and hint.
 - **base-style-applied**: Component MUST apply its base styling identity to the root element.
 - **custom-style-accepted**: Component MUST accept a caller-supplied style/class extension and combine it with the base styling identity.

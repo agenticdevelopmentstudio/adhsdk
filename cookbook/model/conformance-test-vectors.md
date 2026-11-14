@@ -23,11 +23,18 @@ inspection of the five sources where no test asserts the behavior.
 | site-model-015 | search-index-fields | `createSearchIndex(entries).query('auth flows')` where only `/api/auth`'s `frontmatter.summary` is `'API auth flows'` | First result's `entry.slug` is `'/api/auth'` |
 | site-model-016 | empty-query-short-circuit | `createSearchIndex(entries).query('')` | Returns `[]` |
 | site-model-017 | initial-search-state | `renderHook(() => useSearchState(idx))`, no interaction | `query === ''`, `results` equals `[]`, `selectedIndex === 0` |
-| site-model-018 | results-track-query, set-query-resets-selection | Call `setQuery('alph')` against entries `Alpha`, `Alphabet`, `Beta` | `results.length > 0` |
+| site-model-018 | results-track-query, set-query-resets-selection | Call `setSelectedIndex(1)`, then `setQuery('alph')`, against entries `Alpha`, `Alphabet`, `Beta` | `results.length > 0` and `selectedIndex === 0` |
 | site-model-019 | arrow-down-advances-selection | After `setQuery('alph')`, call `handleKey({key:'ArrowDown'})` | `selectedIndex === Math.min(1, results.length - 1)` |
 | site-model-020 | arrow-up-retreats-selection | Continuing from site-model-019, call `handleKey({key:'ArrowUp'})` | `selectedIndex === 0` |
-| site-model-021 | escape-resets | After `setQuery('alph')`, call `handleKey({key:'Escape'})` | `query === ''` and `results` equals `[]` |
+| site-model-021 | escape-resets | After `setQuery('alph')`, call `handleKey({key:'Escape'})` | `query === ''`, `results` equals `[]` and `selectedIndex === 0` |
 | site-model-022 | unhandled-key-no-op | With `query` already `'alph'` and `results` non-empty, call `handleKey({key:'Enter'})` | `query`, `results`, and `selectedIndex` are unchanged from immediately before the call |
 | site-model-023 | arrow-down-advances-selection | Call `handleKey({key:'ArrowDown'})` when `results.length === 0` | `selectedIndex` stays `0` |
 | site-model-024 | selected-index-direct-set-unclamped | Call `setSelectedIndex(99)` when `results.length === 1` | `selectedIndex === 99` (not clamped) |
+| site-model-025 | reset-clears-state | After `setQuery('alph')` and `setSelectedIndex(1)`, call `reset()` | `query === ''`, `results` equals `[]`, `selectedIndex === 0` |
+| site-model-026 | empty-query-short-circuit | `createSearchIndex(entries).query('   ')` | Returns `[]` |
+| site-model-027 | intermediate-segment-nodes | `buildNavTree` on `{slug:'/guides/install', section:'guides', frontmatter:{title:'Install'}}` then `{slug:'/guides/install/linux', section:'guides', frontmatter:{title:'Linux'}}`, with `sections` declaring `guides` | `guides` has two children labeled `Install`: a folder (path `/guides/install`, one child `Linux`) sorted first, and the leaf (path `/guides/install`, no children); the leaf is not merged into the folder |
+| site-model-028 | empty-entries-search-index | `createSearchIndex([]).query('anything')` | Returns `[]` and does not throw |
+| site-model-029 | whitespace-only-query | `createSearchIndex(entries).query('\t  ')` | Returns `[]` |
+| site-model-030 | search-result-order | `createSearchIndex(entries).query('alph')` against entries `Alpha`, `Alphabet`, `Beta` | Every result's `score` is at least the previous result's `score`, and `Alpha` precedes `Beta` if `Beta` appears |
+| site-model-031 | breadcrumb-path-accumulation, intermediate-segment-nodes | `buildNavTree` on `{slug:'/guides/install/linux/x', section:'guides', frontmatter:{title:'X'}}` with `sections` declaring `guides` | The `install` node has path `/guides/install`; its child `linux` has path `/guides/install/linux`; the leaf `X` has path `/guides/install/linux/x` |
 

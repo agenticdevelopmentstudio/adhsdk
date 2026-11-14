@@ -13,7 +13,7 @@
 - **date-line**: The date line MUST show the model's full-date formatting of the message date, which returns the original string when the date cannot be parsed.
 - **same-message-no-reload**: When the model republishes the message already on screen (same `id`, for example after marking it read), the component MUST update the header lines and MUST NOT reload the body.
 - **new-message-resets-remote**: When a different message becomes open, the component MUST reset remote content to blocked for it.
-- **remote-bar-shown-for-html**: When a different message becomes open, the component MUST show the remote-content bar if and only if the message has a non-nil HTML body.
+- **remote-bar-shown-for-html**: When a different message becomes open, the component MUST show the remote-content bar if and only if the message has a non-nil, non-empty HTML body, the same test as **html-as-sent**. The source tests only for a non-nil HTML body; see the known gap in Edge Cases.
 - **remote-bar-copy**: The remote-content bar MUST show the note "Remote images are blocked to protect your privacy." and a button titled "Load Remote Images".
 - **load-remote-action**: Activating "Load Remote Images" MUST allow remote content for the open message, hide the remote-content bar and reload the body without the blocking policy and without the content rule list.
 - **load-remote-scoped**: Allowing remote content MUST apply only to the message on screen; opening a different message MUST block remote content again.
@@ -41,4 +41,6 @@
 - **body-accessibility-id**: The body view MUST carry the accessibility identifier "mail.reader.body".
 - **header-selectable**: The subject, sender, recipients and date text MUST be selectable.
 - **header-truncation**: The sender, recipients and date lines MUST truncate at the tail when too long. They MUST yield width first: each sets a low horizontal content compression resistance priority (`defaultLow`), so they compress before the subject and the remote-content bar.
+- **fixed-constants**: The external link schemes (`http`, `https`, `mailto`), the blocking policy text from **blocking-policy-prefix** and the rule list identifier "mail-reader-block-remote" are fixed constants. An implementation MUST NOT expose them as settings.
+- **localized-strings**: A port MUST take every user-visible string from the keys in Localization and MUST NOT use literals. The source uses literals today.
 

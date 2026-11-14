@@ -16,7 +16,15 @@
 **Approved**: pending
 
 **Decision**: Cap project listing at 20 pages with no signal when it truncates.
-**Rationale**: The source gives no reason for the number 20 and no signal when the cap is hit; it only bounds the page loop.
+**Rationale**: Known debt: the cap bounds the page loop, so one read cannot spend an unbounded share of the shared token's quota. The source states no reason for the number 20, and nothing tells a caller that the list was cut short. Revisit when an account passes 2,000 projects.
+**Approved**: pending
+
+**Decision**: Send the request even when `env.VERCEL_API_TOKEN` is undefined, and let Vercel's 401 surface as `VercelHttpError`.
+**Rationale**: The source leaves the missing-token check to the callers, which skip the call when there is no token; the client sends `Bearer undefined` rather than failing before `fetch`. This is recorded as the observed behavior and has not been chosen over a typed error thrown before the call.
+**Approved**: pending
+
+**Decision**: Drop the `-staging` and `-testing` projects before anything is counted or queried.
+**Rationale**: Every site is three Vercel projects (`x-production`, `x-staging`, `x-testing`) and analytics runs only on the first, so the other two are not sites to report on.
 **Approved**: pending
 
 **Decision**: Match the staging and testing suffix only at the end of the name.

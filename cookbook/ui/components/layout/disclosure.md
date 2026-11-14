@@ -2,11 +2,11 @@
 id: c99e2822-f5a9-4e84-8740-9341880bb82a
 title: "Disclosure"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,8 +19,10 @@ tags:
   - collapsible
   - expander
 depends-on: []
-related: []
-references: []
+related:
+  - 16e99364-8af3-40cb-beaf-d5a66a2fa2c0
+references:
+  - https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/
 approved-by: ""
 approved-date: ""
 ---
@@ -45,8 +47,15 @@ a section's own danger-zone action).
 - **actions-exempt-from-toggle**: Interacting with the header `actions` slot MUST NOT toggle the disclosure.
 - **mount-children-only-when-open**: Children MUST be mounted only when open (and unmounted when closed), not merely visually hidden.
 - **expose-expanded-state**: The toggle button MUST carry `aria-expanded` reflecting the current open state.
-
+- **on-open-change-uncontrolled**: In uncontrolled mode the component MUST call `onOpenChange` with the next open value on every toggle, as well as managing its own state.
+- **link-toggle-to-body**: The toggle button SHOULD carry `aria-controls` referencing the id of the body it shows and hides. Known gap: the source sets none.
+- **title-in-heading**: For a section-style disclosure, the title SHOULD sit inside a heading element so it appears in the heading outline. Known gap: the source renders the title in a plain `span`.
+- **respect-reduced-motion**: The chevron rotation MUST NOT animate when the user prefers reduced motion. Known gap: the source has no `motion-reduce:` variant (see Compliance, reduced-motion failed).
+- **keep-truncated-text-available**: A truncated title or subtitle MUST stay fully available to assistive technology and SHOULD stay fully available to sighted users (for example through a tooltip). Known gap: the full text is in the DOM, but sighted users cannot read the truncated part.
+- **rtl-chevron**: In a right-to-left layout the collapsed chevron MUST point toward the inline-start edge, and the open chevron MUST point down, so the rotation stays logical. Known gap: the source does not mirror the chevron.
 ## Appearance
+
+Token roles: a bordered, rounded container on the design system's surface background; a single-row header with small padding and a gap between the chevron, text and actions; a medium-weight primary title in the text color and a smaller subtitle in the muted text color, both truncating; a muted chevron; a divider line between header and open body; a gold focus ring at reduced opacity. On web these map to the Tailwind classes below.
 
 Container: `rounded-lg border border-apt-border bg-apt-surface`. Header:
 `flex items-center gap-2 px-3 py-2`; the toggle is a `<button>` showing a
@@ -68,7 +77,7 @@ the reduced-motion preference (see Compliance).
 
 ## Accessibility
 
-The header toggle is a real `<button>` carrying `aria-expanded` that reflects the
+The pattern follows the [WAI-ARIA APG Disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/). The header toggle is a real `<button>` carrying `aria-expanded` that reflects the
 open state (**expose-expanded-state**), with a visible `focus-visible` ring. As a
 native `<button>`, the toggle is reachable via Tab and activatable via Enter or
 Space without extra wiring (**toggle-on-header-click**). The `actions` slot sits
@@ -80,14 +89,19 @@ trigger the toggle.
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
 | T1 | toggle-on-header-click | click the header | children show, then hide |
-| T2 | support-uncontrolled | `defaultOpen` only | manages its own state |
-| T3 | support-controlled | `open={false}` and an `onOpenChange` that ignores the call; click the header | callback fires once; children stay unmounted |
+| T2 | support-uncontrolled | `defaultOpen` only, no `onOpenChange`; click the header twice | children show after the first click and hide after the second |
+| T3 | support-controlled | `open={false}` and an `onOpenChange` that ignores the call; click the header | callback fires once; children stay unmounted and `aria-expanded` stays `"false"` |
 | T4 | rotate-chevron | open it | chevron gains `rotate-90` |
 | T5 | actions-exempt-from-toggle | click a button in `actions` | disclosure state unchanged |
 | T6 | mount-children-only-when-open | collapsed | children absent from the DOM |
 | T7 | toggle-on-header-click | Enter/Space on the focused header | children show, then hide |
 | T8 | expose-expanded-state | inspect the toggle button after opening and closing | `aria-expanded` matches the current open state |
-
+| T9 | support-uncontrolled | `defaultOpen={true}` | children are mounted on first render and `aria-expanded` is `"true"` |
+| T10 | support-controlled | `open={true}` with an `onOpenChange` that ignores the call | children are mounted and `aria-expanded` is `"true"` |
+| T11 | on-open-change-uncontrolled | uncontrolled with an `onOpenChange` spy; click the header twice | spy is called with `true`, then `false`; children follow |
+| T12 | link-toggle-to-body | open the disclosure | the toggle's `aria-controls` equals the body's `id` (fails on the current source) |
+| T13 | rtl-chevron | render under `dir="rtl"`, collapsed | the chevron points left; open, it points down (fails on the current source) |
+| T14 | respect-reduced-motion | emulate `prefers-reduced-motion: reduce`, toggle | the chevron's computed `transition-duration` is `0s` (fails on the current source) |
 ## Edge Cases
 
 - In controlled mode the component never writes internal state — the caller owns `open`.
@@ -96,11 +110,19 @@ trigger the toggle.
 - Because children unmount when collapsed (**mount-children-only-when-open**), any uncommitted state inside them — e.g. a half-filled form — is discarded when the section closes, and they start fresh when it reopens.
 
 ## Configuration
+| Prop | Type | Default | Slot |
+|---|---|---|---|
+| `title` | `React.ReactNode` | required | Primary text in the toggle, truncated |
+| `subtitle` | `React.ReactNode` | none | Secondary muted text under the title, truncated |
+| `actions` | `React.ReactNode` | none | Trailing header controls, outside the toggle |
+| `defaultOpen` | `boolean` | `false` | Initial state in uncontrolled mode |
+| `open` | `boolean` | none | Controlled open state; when provided, the component never writes its own |
+| `onOpenChange` | `(open: boolean) => void` | none | Called with the next value on every toggle |
+| `className` | `string` | none | Extra classes on the container |
+| `headerClassName` | `string` | none | Extra classes on the header row |
+| `children` | `React.ReactNode` | required | Body, mounted only when open |
 
-Props: `title`, `subtitle?`, `actions?`, `defaultOpen?` (false), `open?`,
-`onOpenChange?`, `className?`, `headerClassName?`, `children`. Export:
-`Disclosure`.
-
+Export: `Disclosure`.
 ## Deep Linking
 
 None: the source subscribes to no router and reads/writes no URL. Open/closed
@@ -128,7 +150,7 @@ consumer wraps it or omits it via its own app-level flag logic.
 ## Analytics
 
 None: the source emits no analytics or telemetry. A consumer can attach one via
-`onOpenChange`, which already fires on every toggle.
+`onOpenChange`, which fires on every toggle in both controlled and uncontrolled mode (**on-open-change-uncontrolled**).
 
 ## Privacy
 
@@ -151,7 +173,7 @@ None — a presentational primitive. Callers own any open/close telemetry.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/disclosure.tsx` | confirmed (1.3.1) |
+| web | `packages/web/packages/ui/src/components/disclosure.tsx` | confirmed (1.3.2) |
 
 ## Design Decisions
 
@@ -186,15 +208,15 @@ None — a presentational primitive. Callers own any open/close telemetry.
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
 | [adc.check.internationalization.text-expansion-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8007859b-a974-5b8a-88f7-162624b0c056) | failed | Internationalization |
 | [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | partial | Internationalization |
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-Statuses rest on `packages/web/packages/ui/src/components/disclosure.tsx`: the real `<button>` with `aria-expanded` and native keyboard semantics ground the passed and partial accessibility checks, the unconditional `transition-transform` with no `motion-reduce:` variant grounds the failed reduced-motion check, the consumer-supplied `title`/`subtitle`/`children` props ground the passed internationalization checks, and the `truncate` classes with no leading-chevron RTL mirroring ground the failed and partial internationalization checks. `separation-of-concerns` is partial because `Disclosure`'s open/controlled toggle state and its `toggle()` handler are implemented inline in the component rather than extracted; `unit-test-coverage` fails because the only name-matching test, `viewSourceDisclosure.test.tsx`, actually exercises a different component (`ViewSourceDisclosure`), so no test exercises `disclosure.tsx`.
-
+Statuses rest on `packages/web/packages/ui/src/components/disclosure.tsx`. Passed: screen-reader-support and keyboard-navigable, because the toggle is a real `<button>` with `aria-expanded` and native keyboard semantics. Partial: dynamic-type-support, because the `text-sm`/`text-xs` sizes scale but the header is a single truncating row; contrast-ratio, because the `apt-*` token values are not defined here; touch-target-size, because the toggle button's height comes from its text line only (the `py-2` padding is on the header row, not the button); semantic-markup, because there is no `aria-controls` linking toggle to body and the title is not in a heading element; rtl-layout-support, because the leading chevron is not mirrored. Failed: reduced-motion, because the unconditional `transition-transform` has no `motion-reduce:` variant; text-expansion-tolerance, because `truncate` clips long titles and subtitles with no way for sighted users to read the rest. The passed internationalization checks rest on the consumer-supplied `title`/`subtitle`/`children` props. `separation-of-concerns` passes because a local `useState` with a toggle handler is the expected shape for a single-component primitive. `unit-test-coverage` fails because the only name-matching test, `viewSourceDisclosure.test.tsx`, exercises a different component (`ViewSourceDisclosure`, [adhsdk.ingredient.ui.blocks.view-source-disclosure](cookbook:16e99364-8af3-40cb-beaf-d5a66a2fa2c0)), so no test exercises `disclosure.tsx`.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.2 | 2026-11-14 | Mike Fullerton | Added requirements and vectors for uncontrolled onOpenChange, reduced motion, RTL chevron, truncated-text availability, aria-controls and heading semantics, made T2/T3 concrete with new T9-T14, typed the props, added token roles and the APG reference, grounded each partial compliance row, and marked separation-of-concerns passed. |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Added the Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics and Privacy sections. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: failed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and add expose-expanded-state; rewrite Compliance as linked catalog checks (Accessibility, Internationalization); fix SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes; reformat Design Decisions and add native-controls and unmount-state-loss entries; add keyboard-toggle and aria-expanded test vectors and rephrase the controlled-mode vector; add child-state-loss edge case; document the chevron's transition and its reduced-motion gap in Appearance; drop the unobservable "no internal mutation" clause from the controlled-mode test vector; credit v1.1.0/v1.2.0 to the human author with AI assistance noted in each Summary |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Revise Platform Notes: remove "Not applicable" phrasing from non-web bullets; sharpen guidance with concrete control names, properties, and XAML patterns (AI-assisted, Claude Haiku 4.5) |

@@ -2,11 +2,11 @@
 id: 91891cc2-3511-4d00-888a-1ff7585c0b64
 title: "Chat Coordinator Backends"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -50,9 +50,9 @@ concrete classes that implement them.
   demos and tests, respectively.
 - **`ShuffleBag.ts`** exports `ShuffleBag`, a general-purpose shuffle-bag
   utility, and `streamTokens`, a token-by-token text-streaming generator —
-  both exported from the package for building custom `ChatBackend`s (in
-  practice, `MockBackend`-style implementations that want to look like they
-  are typing).
+  both exported from the package for building custom `ChatBackend`s and
+  UI that wants to look like it is typing (in practice, `TypingIndicator`
+  uses `ShuffleBag`, and the bitbag feature's backend uses both).
 - **`ChatBackendAdapter.ts`** implements `Backend` by wrapping any
   `ChatBackend`, translating its `ChatStreamEvent`s (or its unary
   `ChatResponse`) into `InboundEvent`s.
@@ -104,8 +104,9 @@ the rest of the package deals with is, in the end, a `Backend`.
   (`closed` is checked and the method returns immediately).
 - **event-queue-push-after-close-noop**: `push(value)` MUST silently discard
   `value` once the queue is closed, rather than buffering it or throwing.
-- **event-queue-single-consumer**: `EventQueue` is documented and designed as
-  single-consumer: `drain()` returns a fresh `AsyncGenerator` each call, but
+- **event-queue-single-consumer**: A caller MUST NOT rely on `EventQueue`
+  for multiple concurrent consumers: it is documented and designed as
+  single-consumer. `drain()` returns a fresh `AsyncGenerator` each call, but
   nothing in `push`/`close` fans a value out to more than one waiter, so a
   second concurrent `drain()` iterator competes with the first for buffered
   values and pushes rather than receiving its own copy.
@@ -434,12 +435,12 @@ exposes no interactive control.
 | ccb-004 | fetchbackend-http-error | `FetchBackend({ url: '/api/chat' }).sendMessage('hi', [])`, mocked `fetch` resolving `{ ok: false, status: 500 }` | Rejects with `Error('Chat backend error: 500')`. (`__tests__/FetchBackend.test.ts`, "throws on non-ok response") |
 | ccb-005 | fetchbackend-destroy-aborts, fetchbackend-single-controller-field | Call `sendMessage('hi', [])` (never-resolving `fetch`), then `destroy()` | The `AbortSignal` passed to `fetch` has `aborted === true`. (`__tests__/FetchBackend.test.ts`, "aborts in-flight request on destroy") |
 | ccb-006 | mockbackend-key-normalization | `new MockBackend({ delayMs: 0 }).sendMessage('text', [])` | Returns `'Just a plain text reply with no panels or extras.'`. (`__tests__/MockBackend.test.ts`, "returns canned response for known commands") |
-| ccb-007 | mockbackend-key-normalization | `sendMessage('HELLO', [])` | Result contains `'Try:'`. (`__tests__/MockBackend.test.ts`, "is case-insensitive") |
+| ccb-007 | mockbackend-key-normalization | `sendMessage('HELLO', [])` | Result equals the `hello` response from `DEFAULT_RESPONSES` (`'Hey there! Try: small panel, big panel, small image, big image, links, or text.'`), not the fallback response. (`__tests__/MockBackend.test.ts`, "is case-insensitive" only asserts the result contains `'Try:'`, which the fallback also satisfies.) |
 | ccb-008 | mockbackend-key-normalization | `sendMessage('  text  ', [])` | Returns `'Just a plain text reply with no panels or extras.'`. (`__tests__/MockBackend.test.ts`, "trims whitespace") |
 | ccb-009 | mockbackend-fallback-response | `sendMessage('unknown command', [])` | Result contains `"I don't know that one"` and `'hello'`. (`__tests__/MockBackend.test.ts`, "returns fallback for unknown messages") |
 | ccb-010 | mockbackend-default-response-table | `sendMessage('small panel', [])` | Returns an object with `text: 'Here are some quick links for you.'`, `popover.title: 'Quick Reference'`, `content` of length 1. (`__tests__/MockBackend.test.ts`, "returns rich response objects") |
 | ccb-011 | mockbackend-custom-responses-merge | `new MockBackend({ delayMs: 0, responses: { greet: 'Hi there!' } })`, then `sendMessage('greet', [])` and `sendMessage('text', [])` | `'greet'` returns `'Hi there!'`; `'text'` still returns the default text reply. (`__tests__/MockBackend.test.ts`, "custom responses merge with defaults") |
-| ccb-012 | mockbackend-simulated-delay | `new MockBackend({ delayMs: [50, 100] }).sendMessage('text', [])`, timed | Elapsed time is at least ~45ms (tolerance). (`__tests__/MockBackend.test.ts`, "respects delay range") |
+| ccb-012 | mockbackend-simulated-delay | `new MockBackend({ delayMs: [50, 100] }).sendMessage('text', [])`, with `Math.random` stubbed to `0` and then to just under `1`, under fake timers | The call resolves after `50`ms in the first case and `100`ms (never more) in the second, covering both ends of the range. (`__tests__/MockBackend.test.ts`, "respects delay range" only asserts a real elapsed time of at least ~45ms.) |
 | ccb-013 | shufflebag-exhaust-before-repeat | `new ShuffleBag(['a','b','c','d'])`, call `next()` four times | The four results, sorted, equal `['a','b','c','d']`. (`__tests__/ShuffleBag.test.ts`, "exhausts every item before repeating any") |
 | ccb-014 | shufflebag-reshuffle-on-empty | `new ShuffleBag(['a','b'])`, call `next()` four times | `'a'` appears exactly twice and `'b'` appears exactly twice. (`__tests__/ShuffleBag.test.ts`, "refills after exhaustion") |
 | ccb-015 | shufflebag-exhaust-before-repeat | `new ShuffleBag(['only'])`, call `next()` twice | Returns `['only', 'only']`. (`__tests__/ShuffleBag.test.ts`, "repeats the sole item of a one-item bag") |
@@ -509,10 +510,6 @@ exposes no interactive control.
   only the prior reply's in-progress partial draft for a streaming backend
   — not the prior turn's committed outcome, despite running strictly after
   it.
-- **Concurrent `sendMessage`/`sendMessageStream` calls directly on a bare
-  `ChatBackend` implementation (concurrent access)**: `ChatBackend`
-  (`types.ts`) states no concurrency contract for overlapping calls on the
-  same instance; see the open question on **chatbackend-no-concurrency-contract**.
 - **chatbackend-no-concurrency-contract**: NEEDS REVIEW: Not implemented in source. `ChatBackend` (`types.ts`) states no concurrency contract for overlapping calls to `sendMessage` and/or `sendMessageStream` on the same instance. `FetchBackend` makes this concrete: its `AbortController` lives in a single instance field (**fetchbackend-single-controller-field**), so a second `sendMessage` call issued before the first resolves silently overwrites that field, and a subsequent `destroy()` aborts only the newer request — the older one runs to completion (or hangs) uncancellable. `useChatSession.ts` always reaches a `ChatBackend` through `ChatBackendAdapter`, which serializes turns and so never produces this overlap in practice, but `FetchBackend` and `MockBackend` are also exported standalone from the package's `index.ts` and can be called directly without that serialization. Resolving this requires either a documented "one call at a time" invariant on `ChatBackend` itself, or `FetchBackend` widening its cancellation state to one `AbortController` per call — a decision for whoever owns the `ChatBackend` interface, not something the given source states.
 - **Error states (dependency unavailable/error)**: `FetchBackend.sendMessage`
   throws on a non-`ok` HTTP status but does not itself catch a `fetch()`
@@ -587,7 +584,7 @@ call):
 
 - `ChatBackendAdapter`'s catch-all apology: `"Sorry, something went wrong.
   Let's try again."`
-- `ChatBackend`'s `sendMessage`/`submitWidgetResponse` error messages:
+- `ChatBackendAdapter`'s `send`/`submitWidgetResponse` error messages:
   `'ChatBackend has no attachment channel; send text only.'`, `'ChatBackend
   does not support interactive widgets.'`, `'ChatBackendAdapter has been
   destroyed.'`.
@@ -705,7 +702,7 @@ logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/backends/` | unverified |
+| web | `packages/web/packages/chat/src/backends/` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -813,8 +810,9 @@ fully predictable from its `ResponseMap`, at the cost of not recognizing
 
 **Decision**: `ShuffleBag` reshuffles lazily, on the draw that empties the
 pile, rather than precomputing a long shuffled sequence up front.
-**Rationale**: The bag's caller (`MockBackend`-style canned replies driven by
-`streamTokens`) draws indefinitely over an unbounded session; reshuffling
+**Rationale**: The bag's callers (`TypingIndicator`'s rotating labels and the bitbag
+feature's fallback replies, streamed through `streamTokens`) draw
+indefinitely over an unbounded session; reshuffling
 on demand keeps memory bounded to one copy of the item set regardless of how
 many draws have happened.
 **Approved**: pending
@@ -878,3 +876,4 @@ handled.
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial recipe covering `types.ts`, `EventQueue.ts`, `FetchBackend.ts`, `MockBackend.ts`, `ShuffleBag.ts`, `ChatBackendAdapter.ts`, and `PersonaChatBackend.ts`; documents the cross-implementation divergences between `ChatBackendAdapter` and `PersonaChatBackend` and the open question around concurrent direct use of a bare `ChatBackend`.
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Fixed ccb-044 pipe escape, history/transport-failure/SSE edge cases; kebab-cased 4 req names. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Lint fixes: attributed the attachment, widget and destroyed errors to ChatBackendAdapter, corrected the ShuffleBag callers in the overview and a decision, gave event-queue-single-consumer an RFC keyword, merged the duplicate concurrency edge case into its marker, and made vectors ccb-007 and ccb-012 discriminating. |

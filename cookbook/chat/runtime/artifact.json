@@ -4,11 +4,11 @@
     "id": "98a0f3de-1489-465d-b1aa-017f4505d05d",
     "title": "Chat Coordinator Runtime",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-24",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -23,12 +23,15 @@
       "runtime"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "447d0e33-c66e-4bf9-8511-e7823bdbcf9b",
+      "91891cc2-3511-4d00-888a-1ff7585c0b64"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2029d9badddf60e6",
+  "synced": "d5d5eda7fa13c9b7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

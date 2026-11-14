@@ -4,11 +4,11 @@
     "id": "88dc87c9-8058-446d-9513-acfa618c950f",
     "title": "Search Dialog",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7c3221f0fd26eabf",
+  "synced": "c0535d5eb3affb9a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

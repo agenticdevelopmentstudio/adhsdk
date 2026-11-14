@@ -5,7 +5,7 @@ engine, shared verbatim in contract between the Swift implementation
 `Timelines.swift`) and its TypeScript mirror (`arbiter.ts`, `params.ts`,
 `pose.ts`, `reflexes.ts`, `timeline.ts`). It has no visual surface of its
 own: it reads a loaded `CharacterConfig` and writes channel values and
-tweens through the `avatar-engine-runtime` primitives (`Channels`,
+tweens through the `avatar-engine-runtime` ([avatar-engine-runtime](cookbook:74ba9dde-4963-42cb-aa03-bf1ee4dcc794)) primitives (`Channels`,
 `Scheduler`, `Tweens`), which a host `Engine` then renders. Five
 cooperating pieces make up the contract:
 

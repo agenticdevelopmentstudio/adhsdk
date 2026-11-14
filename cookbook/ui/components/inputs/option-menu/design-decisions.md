@@ -7,3 +7,6 @@
 **Rationale**: Lets users browse the list with arrow keys (including into and out of the Other input) without side effects, so only a deliberate action commits a value.
 **Approved**: pending
 
+**Decision**: Hard-code the OK button label ("OK") rather than expose an `okLabel` option.
+**Rationale**: The source has no `okLabel` prop, so the label cannot be localized today; this is recorded as known debt (the failed `no-hardcoded-strings` check) until an `okLabel` option is added.
+**Approved**: pending

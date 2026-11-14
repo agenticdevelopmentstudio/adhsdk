@@ -1,3 +1,3 @@
 
-Not applicable: Component does not collect, store, or transmit user data beyond standard navigation tracking inherited from link semantics.
+Not applicable: Component does not collect, store, or transmit user data at all: it collects, stores and sends nothing.
 

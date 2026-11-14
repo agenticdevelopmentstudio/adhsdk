@@ -5,7 +5,9 @@
   only defined behavior for a partial `MoodMap`.
 - **`effective` has no entry in `poses` and no `choreography`**: `applyPose`
   is never called for that render; the rig keeps whatever pose it last
-  applied rather than resetting to a neutral pose. This MUST hold
+  applied rather than resetting to a neutral pose. `poses` is typed
+  `Record<E, Pose>`, so this case can only be reached by bypassing the type
+  (the engine reads `poses[e]?.sayings` and guards `if (pose)`). This MUST hold
   (**pose-application-on-mood-change**) — it is a real, if surprising,
   consequence of the `if (pose)` guard in `engine.ts`.
 - **`poke` omitted, or configured but returns `null`**: `poke()` is a

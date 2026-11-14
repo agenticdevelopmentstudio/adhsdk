@@ -1,0 +1,25 @@
+
+- **render-display-name**: Component MUST render the entry's `displayName` as an `<h1>` heading.
+- **render-full-display-name-untruncated**: Component MUST render the full `displayName` string with no truncation; whether the name wraps or overflows is determined by CSS.
+- **render-photo-when-available**: Component MUST render the entry's photo if `photoAttachmentId` is present and `resolveImageUrl(photoAttachmentId)` returns a non-null value.
+- **render-photo-alt-empty**: Component MUST set the photo `alt` attribute to an empty string (not a description), as the photo is decorative context for sighted users and the name heading provides textual identity.
+- **render-summary-when-present**: Component MUST render the entry's `summary` as a paragraph if the summary string is truthy.
+- **render-category-when-present**: Component MUST render the entry's `category` as a metadata row if the category string is truthy.
+- **render-location-when-present**: Component MUST render the entry's `locationText` as a metadata row if the location string is truthy.
+- **render-languages-list**: Component MUST render the entry's `languages` array as a comma-separated string in a metadata row if the array length is greater than zero.
+- **render-metadata-list-unconditionally**: Component MUST render the `<dl class="rp__meta">` metadata list container even when category, location, and languages are all falsy or empty. Only the individual metadata rows are conditional; the container itself is not.
+- **render-keywords-list**: Component MUST render the entry's `keywords` array as an unordered list of keyword items if the array length is greater than zero.
+- **render-contact-affordance-conditionally**: Component MUST render the `contact` prop inside a contact container only if `entry.contactMode === 'dm'` AND `contact` is not null or undefined.
+- **render-all-fields**: Component MUST render every field in `entry.fields` as a description-list item with the field's label and value.
+- **omit-fields-section-when-empty**: Component MUST render the profile without a `rp__fields` section when `entry.fields.length === 0`.
+- **render-field-visibility-marker**: Component MUST render a visibility marker span inside the field label if the field's visibility is not `public`. The marker text MUST be "Signed-in members only" for `authenticated` visibility and "Private" for `private` visibility.
+- **omit-marker-for-public-fields**: Component MUST NOT render a visibility marker for fields with `public` visibility.
+- **render-service-list**: Component MUST render a `ServiceList` component with the entry's `services` array. When `services` is empty, whether anything is shown is entirely delegated to `ServiceList`, which itself renders nothing for an empty array (see [adhsdk.ingredient.registry-profile.service-list](cookbook:fe09968a-6575-40d0-b0b8-af6ce52d8efd)).
+- **render-links-section**: Component MUST render a navigation section with `aria-label="Elsewhere"` containing an unordered list of links if `entry.links` array length is greater than zero.
+- **render-links-with-fallback-label**: Component MUST render each link with the link's `label` as display text if the label is truthy, otherwise use the `url` as display text.
+- **set-link-security-attributes**: Component MUST set `rel="noopener noreferrer nofollow"` and `target="_blank"` on all links.
+- **use-resolver-for-image-urls**: Component MUST use the `resolveImageUrl` prop to resolve all image attachment IDs to URLs. If `resolveImageUrl` is not provided, Component MUST default to looking up the ID in `entry.imageUrls`.
+- **default-resolver-null-for-unmapped-id**: When `resolveImageUrl` is not provided, the default resolver MUST return `null` when `entry.imageUrls` has no key for the given attachment ID.
+- **accept-null-from-resolver**: Component MUST treat a `null` return value from `resolveImageUrl` as "no image" and render the profile without that image.
+- **render-as-article**: Component MUST render the profile root as an `<article>` element.
+

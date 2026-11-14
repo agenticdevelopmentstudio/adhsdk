@@ -8,5 +8,5 @@ interface DocMetadataField {
 }
 ```
 
-The component detects `Array.isArray(value)`: array values wrap as a flex group, scalar values render inline. The component renders nothing when the fields array is empty.
+`value` is typed `ReactNode`, which already admits arrays. The component detects `Array.isArray(value)`: only an actual array triggers the wrapping flex group; every other value, including a non-array iterable, renders inline as-is. The component renders nothing when the fields array is empty.
 

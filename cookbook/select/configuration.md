@@ -8,5 +8,5 @@
 | `choices` | `Choice<T>[]` | Required | Array of options; each choice has `value`, `label`, and optional `disabled` |
 | `disabled` | `boolean` | `false` | Disables the select element and prevents user interaction |
 | `className` | `string` | `undefined` | Optional CSS class name; applied to the wrapper div in the `aws-field` implementation, and to the `<select>` element itself in the apt-token implementation |
-| `id` | `string` | Generated via `useId()` | Optional HTML id; if not provided, one is automatically generated |
+| `id` | `string` | Generated; unique on the page and stable across renders | Optional HTML id; if not provided, one is automatically generated |
 

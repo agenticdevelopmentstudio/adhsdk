@@ -41,4 +41,6 @@
 - **cap-the-measure**: `DocPage` MUST cap the document at the reader's measure and MUST allow that column to shrink below its content, so a wide code block cannot push the rail off the page.
 - **render-no-landmark**: Each frame MUST NOT render a `main` or any other landmark element. The host's app shell owns its landmarks; HDV owns the columns.
 - **spread-host-attributes**: `DocBreadcrumbs`, `DocArticle`, `DocMetadata`, `DocTableOfContents`, `ViewSourceDisclosure`, `DocNavTree`, `DocNav`, `HierarchicalDocumentView`, and `DocPage` MUST all spread remaining host attributes (`data-*`, `id`, handlers) onto their root element.
-
+- **honour-trigger-label**: `ViewSourceDisclosure` MUST render its trigger with the host's `label` when given, and with "View source" otherwise.
+- **export-class-contracts**: `ViewSourceDisclosure` MUST apply its exported class constants (`VIEW_SOURCE_DISCLOSURE_CLASS`, `VIEW_SOURCE_TRIGGER_CLASS`, `VIEW_SOURCE_PRE_CLASS`) to its row, trigger and panel exactly, so a host can reuse the same chrome.
+- **merge-host-classname**: `DocNav`, `HierarchicalDocumentView` and `DocPage` MUST merge a host `className` onto their root element without dropping the root's own classes.

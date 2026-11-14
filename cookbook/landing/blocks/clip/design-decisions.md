@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: The server-side snapshot of `useSyncExternalStore` returns `false` (motion allowed), so the initial HTML always includes `autoPlay` and `loop` attributes.
-**Rationale**: The server has no OS preference to consult, so returning `false` avoids a hydration mismatch. React corrects the attributes on first hydration once the real client value is available.
+**Rationale**: The server has no OS preference to consult, so it must return some constant, and any constant (`true` included) avoids a hydration mismatch. `false` was chosen so that the common motion-allowed case needs no correction. The accepted cost: a reduced-motion user can see the video begin playing from the raw HTML before hydration, until the post-hydration effect pauses it. Returning `true` would remove that window at the price of showing controls and no autoplay to every motion-allowed user until hydration.
 **Approved**: pending
 
 **Decision**: The component uses a `useEffect` that calls `ref.current?.pause()` whenever `reduced` becomes `true`.

@@ -29,7 +29,7 @@ interface EditorSectionProps {
   emptyList?: React.ReactNode  // rail empty label; default "Nothing here yet."
   emptyDetail: React.ReactNode // EmptyState title when nothing selected
   listHeader?: React.ReactNode // rail leading slot; hidden while collapsed
-  railWidth?: number           // widen for long-identifier rails
+  railWidth?: number           // px; default 240; widen for long-identifier rails
   children: React.ReactNode    // the record editor form, shown while editing
   className?: string
 }
@@ -40,4 +40,3 @@ Accessibility: the toolbar is `role="toolbar"` (via `ButtonBar`) with labeled
 buttons whose `disabled` reflects the editing/dirty/busy state; each warn badge
 carries `warnTitle` as its title/aria-label; the rail's selection and collapse
 behaviors come from `TopicDetail`.
-

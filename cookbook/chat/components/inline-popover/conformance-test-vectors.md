@@ -17,4 +17,5 @@
 | inline-popover-014 | render-arrow-indicator | Any valid data | Arrow span element with class `pc-popover-arrow` is always present in toggle button |
 | inline-popover-015 | toggle-visibility-on-click | Toggle button has focus; user presses Enter or Space | Native `button` semantics activate the click handler; open state toggles the same as a mouse click |
 | inline-popover-016 | initialize-with-default-open | `defaultOpen` prop omitted | Component initializes open (`pc-popover-open` class present, `aria-hidden="false"`), matching the `defaultOpen = true` default |
-
+| inline-popover-017 | render-toggle-button | Any valid data | A `button` with class `pc-popover-toggle` and `aria-label="Toggle details"` is rendered, regardless of `data.title` |
+| inline-popover-018 | render-arrow-indicator | Any valid data | The `pc-popover-arrow` span carries no `aria-hidden` attribute (known gap: the arrow is not hidden from assistive technology) |

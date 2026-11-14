@@ -4,7 +4,7 @@
     "id": "967202ce-c607-4115-9f63-466a4004e7f3",
     "title": "Dashboard Views",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,16 +23,22 @@
       "dashboard",
       "views"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "af0bacb9-bc1f-4773-85f5-35e33ae590ab",
+      "f06a7f7a-1b36-4dfc-a17d-71d20d576155",
+      "4dc15a9e-c129-412a-9f14-e35146563d8d",
+      "55ffb81c-6a7d-4837-9180-0b5d3fe952ec",
+      "488a7fef-19c2-4526-8882-3d0529dda3e3"
+    ],
     "related": [],
     "references": [
-      "packages/web/packages/status-server/src/telemetry/dashboard/views.ts (adhsdk)",
-      "packages/web/packages/status-server/test/dashboard-views.test.ts (adhsdk)"
+      "https://web.dev/articles/vitals",
+      "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DisplayNames"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "18933f213caadfa4",
+  "synced": "cf8780b7b1e0fe16",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

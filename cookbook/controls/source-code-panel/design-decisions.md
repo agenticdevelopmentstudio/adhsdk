@@ -23,3 +23,10 @@
 **Rationale**: The toolkit already changes themes by mutating this style element; observing it directly avoids adding a separate theme-change event system. Other platforms should use their own theme-change callback/observer equivalent (system theme callbacks, CSS-in-JS observer, etc.).
 **Approved**: pending
 
+**Decision**: Accept, for now, a Copy button smaller than the 44×44pt touch target (`padding: 0.15rem 0.5rem; font-size: 0.7rem`).
+**Rationale**: The button sits in a compact code header, and the source styles it for density. The target behavior is at least 44×44pt, so this is accepted debt until the stylesheet changes.
+**Approved**: pending
+
+**Decision**: Accept, for now, hardcoded "Copy" and "Copied" labels with no localization hook.
+**Rationale**: The component has no strings prop yet. The target behavior is for callers to supply localized labels, so this is accepted debt.
+**Approved**: pending

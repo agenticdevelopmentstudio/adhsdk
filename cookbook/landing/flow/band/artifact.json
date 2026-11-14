@@ -4,11 +4,11 @@
     "id": "e0b59d60-0a56-4bf4-85cb-fb0e58170f8e",
     "title": "Band",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "62128878ba3aa93b",
+  "synced": "efb6345298621d19",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

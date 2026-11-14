@@ -4,7 +4,7 @@
     "id": "6ddafe05-a417-498d-90b1-00f69c89f7ac",
     "title": "Theme Data",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,12 +23,16 @@
       "css"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "0f721fc3-0e8f-4a1b-b895-1b1bad370bd0",
+      "391a4eef-9872-432f-a049-eac4af00938d",
+      "54b48020-df78-4b41-853c-268ad0ea6b84"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "185e1cccda0ade09",
+  "synced": "17391d6a7e284355",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

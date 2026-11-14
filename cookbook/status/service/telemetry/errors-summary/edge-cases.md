@@ -7,8 +7,9 @@
   still counted in `active` and `events`.
 - **Equal counts at the cap boundary**: the earlier rows in input order MUST win the last slots of
   `top`, because ties keep input order.
-- **Falsy `count`**: contributes 0 to `events`. Sort order for such an active row is not defined by
-  the source (see `count-not-guarded-in-sort`).
+- **Falsy `count`**: contributes 0 to `events`. The sort compares `b.count - a.count` without the falsy guard used by
+  `events`, so the order of `top` is only defined when every active row has a numeric `count`;
+  `ErrorDTO.count` is typed `number`, which is the documented precondition.
 - **Backlog volume**: backlog rows add to `events` but MUST NOT appear in `top`.
 - **Concurrent access**: not applicable; the function is synchronous and shares no state, so calls
   cannot interleave.

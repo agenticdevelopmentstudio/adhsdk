@@ -2,11 +2,11 @@
 id: 4f066e76-2eca-4cd7-8b73-840178e4edf3
 title: "GmailSettingsView"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -74,7 +74,7 @@ Use it as the Gmail entry of a settings window whose model is already built. It 
 - **remove-button**: The view MUST show a "Remove" button, MUST disable it while no account is selected or the model is busy, and on press MUST ask for confirmation for the selected account instead of removing it.
 - **remove-confirmation**: The removal confirmation MUST be titled "Remove <email>?", MUST say it signs the account out of Google, removes its stored sign-in and deletes its mail from this Mac, and MUST offer an action titled "Remove".
 - **remove-safe-default**: The removal confirmation MUST make Cancel the default response to Return, and Esc MUST decline.
-- **remove-call**: The view MUST call the model's `remove(accountId:)` only when the user confirms, and MUST make no model call when the user declines or when there is no key window to attach the confirmation to; the shared confirmation helper answers no without a window, so unlike alerts the confirmation has no app-modal fallback.
+- **remove-call**: The view MUST call the model's `remove(accountId:)` only when the user confirms, and MUST make no model call when the user declines or when there is no key window to attach the confirmation to (see Edge Cases, No key window).
 - **sign-in-progress**: While the model's `signingIn` is true, the view MUST show a small spinner, the caption "Waiting for Google sign-in in your browser…" and a "Cancel" button beside the Add Account and Remove buttons.
 - **cancel-sign-in**: The "Cancel" button MUST call the model's `cancelSignIn` and MUST NOT be disabled by the model's busy state.
 
@@ -88,6 +88,7 @@ Use it as the Gmail entry of a settings window whose model is already built. It 
 - **window-picker**: The view MUST show a "Fetch mail from the last" picker, no wider than 300 pt, whose fixed choices are 7, 14, 30, 90, 180 and 365 days, each labelled "<n> days".
 - **poll-picker**: The view MUST show a "Check for mail every" picker, no wider than 300 pt, whose fixed choices are 5, 15, 30 and 60 minutes, each labelled "<n> minutes".
 - **custom-value-preserved**: When an account's current window or poll value is not one of the fixed choices, the picker MUST add that value to its choices in ascending order so the current value stays selectable and displayed.
+- **picker-labels-plural**: The picker choice labels SHOULD be localized and plural-aware ("1 day", "1 minute"). The macOS source builds "<n> days" and "<n> minutes" from literals, so a stored value of 1 reads "1 days".
 - **whole-settings-write**: A change to any toggle or picker MUST send the account's complete settings with only that field changed, through the model's `update(accountId:_:)`.
 - **settings-stay-enabled**: The toggles and pickers MUST NOT be disabled while the model is busy, because the model coalesces rapid changes.
 
@@ -102,7 +103,7 @@ Use it as the Gmail entry of a settings window whose model is already built. It 
 ### Security
 
 - **secret-entry-concealed**: The client secret entry field MUST conceal what is typed.
-- **secret-masked-readout**: The view MUST display the stored client secret only as the model's `maskedClientSecret`, never in any other form.
+- **secret-masked-readout**: The view MUST display the stored client secret only as the model's `maskedClientSecret`, never in any other form. That value is ten fixed dots followed by the last five characters of the stored secret, or "Stored (hidden)" when no suffix is available.
 
 ## Appearance
 
@@ -151,56 +152,56 @@ Not applicable: the view has no pressed, hover or focused styling of its own; th
 - **control-labels**: Every toggle and picker MUST carry its visible title as its label, and every button MUST carry its visible title.
 - **status-by-text**: Account status MUST be conveyed by the badge's text, never by color alone.
 - **keyboard-reach**: Every control MUST be operable from the keyboard through the standard controls' own handling; the view MUST NOT add custom key handling that replaces it.
-- **row-accessibility-label**: NEEDS REVIEW: Not implemented in source. The account row is a stack of three texts with no explicit accessibility label or grouping, so what a screen reader announces for a row is whatever the platform composes; a VoiceOver pass over the list would settle whether email, status and last-synced time read as one coherent item.
-- **badge-contrast**: NEEDS REVIEW: Not implemented in source. The status badge is caption text on a quaternary-style capsule and the hint captions use the secondary style; the source cannot say whether these meet 4.5:1 contrast in every appearance, and a contrast measurement in light and dark appearances would settle it.
+- **row-accessibility-label**: NEEDS REVIEW: Not implemented in source. Each account row SHOULD expose one combined accessibility label (email, status and last-synced text) on every platform. The account row is a stack of three texts with no explicit accessibility label or grouping, so what a screen reader announces for a row is whatever the platform composes; a VoiceOver pass over the list would settle whether email, status and last-synced time read as one coherent item.
+- **badge-contrast**: NEEDS REVIEW: Not implemented in source. The status badge and hint captions SHOULD meet 4.5:1 contrast in every appearance. The status badge is caption text on a quaternary-style capsule and the hint captions use the secondary style; the source cannot say whether these meet 4.5:1 contrast in every appearance, and a contrast measurement in light and dark appearances would settle it.
 - **spinner-announcement**: The sign-in spinner and its caption SHOULD be exposed to assistive technology through the standard progress indicator and text; the view adds no explicit announcement beyond what those supply.
 
 ## Conformance Test Vectors
 
-The model's tests are in `GmailSettingsModelTests` (`packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Integrations/GmailSettingsModelTests.swift`). The view has no test beside it, so vectors marked "(view)" are derived from the view source; those naming a test assert the model behavior the view relies on. View-level tests are a known gap: tests should be added for `choices(_:including:)` (gmail-033, gmail-034), the busy gating of Save Client, Import, Add Account, Remove, Reconnect and Sync Now (gmail-006, gmail-019, gmail-024) and the alert wiring (gmail-035 to gmail-037).
+The model's tests are in `GmailSettingsModelTests` (`packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Integrations/GmailSettingsModelTests.swift`). The view has no test beside it, so vectors marked "(view)" are derived from the view source; those naming a test assert the model behavior the view relies on. View-level tests are a known gap, tracked in the Status column: a vector marked `untested` has no view test (gmail-006, gmail-019, gmail-024 and gmail-033 to gmail-037 cover `choices(_:including:)`, the busy gating and the alert wiring).
 
-| ID | Requirements | Input | Expected |
-|----|-------------|-------|----------|
-| gmail-001 | client-heading-and-text | Model before first load (test `oauthClientTextBeforeTheFirstLoad`) | Pane shows "Checking for an OAuth client…"; no current-value grid. |
-| gmail-002 | client-heading-and-text, add-client-first-hint | Model loaded with an unconfigured provider (test `oauthClientTextWhenNoClientIsImported`) | Text begins "Enter the client ID and secret of your Google Cloud Desktop app OAuth client"; caption "Add the OAuth client above before adding an account." shown; Add Account disabled. |
-| gmail-003 | current-client-readout, secret-masked-readout | Provider configured, client ID "id-9.apps.googleusercontent.com", secret suffix "12345" (test `theImportedClientIsShownWithTheSecretMasked`) | Grid shows the full ID and "••••••••••12345"; buttons read "Replace Client" and "Replace from JSON…". |
-| gmail-004 | current-client-readout, secret-masked-readout | Provider configured with no secret suffix (test `aSecretTooShortToPartlyShowIsFullyHidden`) | Current secret row reads "Stored (hidden)". |
-| gmail-005 | current-client-readout | Provider unconfigured (test `nothingIsShownWithoutAnImportedClient`) | No current-value grid. |
-| gmail-006 | save-client-enablement | Client ID "id", secret "   " (test `anIncompleteClientFormSendsNothing`) | Save Client disabled; no import request is sent. |
-| gmail-007 | save-client-button | ID "  id-1.apps.googleusercontent.com \n", secret " GOCSPX-secret " (test `savingTheClientFormSendsItAsInstalledJSONAndClearsTheFields`) | One import request with trimmed values; both fields empty afterward; no alert. |
-| gmail-008 | save-client-button, error-as-alert | Service rejects the import with "bad client" (test `aRejectedClientKeepsTheFormFilled`) | Fields keep "id" and "secret"; an alert titled "Gmail" shows "bad client". |
-| gmail-009 | import-json-call | Chosen file containing a client JSON (test `importFromURLSendsTheFileBytes`) | The file's bytes are sent unchanged; no error; client reported configured. |
-| gmail-010 | import-json-call, error-as-alert | Chosen URL that does not exist (test `importFromMissingURLSetsErrorMessage`) | No import request; an alert titled "Gmail" shows the read failure. |
-| gmail-011 | import-json-cancel | Open panel dismissed without a file (view) | No model call; no alert. |
-| gmail-012 | import-json-panel | Press "Import Client JSON…" (view) | Modal open panel accepting only JSON, one file, no folders. |
-| gmail-013 | reconnect-hint | Client imported, one account (view) | Caption "Accounts signed in with a replaced client need Reconnect." shown; absent when accounts is empty. |
-| gmail-014 | account-row-content | Status values active, error, revoked, pending (test `statusText`) | Badges read "Connected", "Error", "Reconnect needed", "Pending". |
-| gmail-015 | account-row-content | Last sync two hours before now, en_US (test `lastSyncedTextIsExactForAFixedDate`) | Caption "Last synced 2 hours ago". |
-| gmail-016 | account-row-content | No last sync, or unparseable text "garbage" (same test) | Caption "Never synced". |
-| gmail-017 | account-list, controls-follow-selection | Loaded accounts, no prior selection (test `reloadLoadsProviderAndAccounts`) | List shows the account; first account selected; per-account controls visible. |
-| gmail-018 | add-account-button | Press "Add Account…" with a client imported (test `addAccountSendsSignInThenReloads`) | Sign-in request sent, then accounts reloaded. |
-| gmail-019 | add-account-button | Model busy, or no client imported (view) | Button disabled. |
-| gmail-020 | sign-in-progress, cancel-sign-in | Sign-in pending (test `cancelSignInSendsCancelWhileSigningIn`) | Spinner, waiting caption and Cancel visible; pressing Cancel sends cancel-sign-in even though busy is true; `signingIn` false after the sign-in call ends. |
-| gmail-021 | remove-confirmation, remove-safe-default | Press "Remove" with "a@x.com" selected (view) | Confirmation titled "Remove a@x.com?" with the stated detail, Cancel default, action "Remove". |
-| gmail-022 | remove-call | Confirm removal (test `removeSendsRemoveAccount`) | Remove-account request for that account's ID. |
-| gmail-023 | remove-call | Decline removal, press Esc, or press Remove with no key window (view; the confirmation helper answers no without a window) | No model call. |
-| gmail-024 | remove-button | No account selected, or model busy (view) | Remove disabled. |
-| gmail-025 | sync-now-button | Press "Sync Now" (test `syncNowSendsSyncNow`) | Sync-now request for the selected account. |
-| gmail-026 | reconnect-button | Selected account status revoked or error (view) | "Reconnect" shown; pressing it calls addAccount. |
-| gmail-027 | reconnect-button | Selected account status active or pending (view) | "Reconnect" absent. |
-| gmail-028 | show-error-button, account-error-as-alert | Account in error with a last error, press "Show Error" (view, model `showError`) | Alert titled "<email> couldn't sync" with the error message. |
-| gmail-029 | show-error-button | Account in error with no last error (view) | "Show Error" absent. |
-| gmail-030 | whole-settings-write | Toggle "Sync junk mail" on and set window to 90 (test `updateSendsSettings`) | Update request carries the whole settings with `includeSpam` true and `windowDays` 90; account shows them. |
-| gmail-031 | whole-settings-write, error-as-alert | Update rejected with "nope" (test `updateFailureRestoresServerStateAndSetsError`) | Alert titled "Gmail" shows "nope"; account settings revert to the server's. |
-| gmail-032 | settings-stay-enabled | Changes made while a settings send is in flight (tests `rapidUpdatesCoalesceToTheLatestSettings`, `aReloadDuringASettingsSendKeepsShowingTheChosenValue`) | Controls show the chosen value at once; only the first and the latest values are sent. |
-| gmail-033 | window-picker, poll-picker | Account with window 30 days and poll 15 minutes (view) | Window picker lists 7, 14, 30, 90, 180, 365 days; poll picker lists 5, 15, 30, 60 minutes. |
-| gmail-034 | custom-value-preserved | Account with window 45 days (view) | Window picker lists 7, 14, 30, 45, 90, 180, 365 days with 45 selected. |
-| gmail-035 | error-as-alert | Sign-in fails with "sign-in cancelled" (test `remoteFailureSetsErrorMessage`) | Warning alert titled "Gmail" with that message; closing it calls `dismissError`, leaving `errorMessage` nil (test `dismissErrorClearsIt`). |
-| gmail-036 | alert-on-appear | Model already holds an error message when the view appears (view) | Alert shown immediately. |
-| gmail-037 | alert-sheet-or-modal | No key window when an error arrives (view) | Application-modal alert; `dismissError` called after it closes. |
-| gmail-038 | secret-entry-concealed | Type into "Client secret" (view) | Characters are concealed. |
-| gmail-039 | no-self-loading | View created over a fresh model (view) | No service request is made by the view itself. |
-
+| ID | Requirements | Input | Expected | Status |
+|----|-------------|-------|----------|--------|
+| gmail-001 | client-heading-and-text | Model before first load (test `oauthClientTextBeforeTheFirstLoad`) | Pane shows "Checking for an OAuth client…"; no current-value grid. | tested |
+| gmail-002 | client-heading-and-text, add-client-first-hint | Model loaded with an unconfigured provider (test `oauthClientTextWhenNoClientIsImported`) | Text begins "Enter the client ID and secret of your Google Cloud Desktop app OAuth client"; caption "Add the OAuth client above before adding an account." shown; Add Account disabled. | tested |
+| gmail-003 | current-client-readout, secret-masked-readout | Provider configured, client ID "id-9.apps.googleusercontent.com", secret suffix "12345" (test `theImportedClientIsShownWithTheSecretMasked`) | Grid shows the full ID and "••••••••••12345"; buttons read "Replace Client" and "Replace from JSON…". | tested |
+| gmail-004 | current-client-readout, secret-masked-readout | Provider configured with no secret suffix (test `aSecretTooShortToPartlyShowIsFullyHidden`) | Current secret row reads "Stored (hidden)". | tested |
+| gmail-005 | current-client-readout | Provider unconfigured (test `nothingIsShownWithoutAnImportedClient`) | No current-value grid. | tested |
+| gmail-006 | save-client-enablement | Client ID "id", secret "   " (test `anIncompleteClientFormSendsNothing`) | Save Client disabled; no import request is sent. | untested |
+| gmail-007 | save-client-button | ID "  id-1.apps.googleusercontent.com \n", secret " GOCSPX-secret " (test `savingTheClientFormSendsItAsInstalledJSONAndClearsTheFields`) | One import request with trimmed values; both fields empty afterward; no alert. | tested |
+| gmail-008 | save-client-button, error-as-alert | Service rejects the import with "bad client" (test `aRejectedClientKeepsTheFormFilled`) | Fields keep "id" and "secret"; an alert titled "Gmail" shows "bad client". | tested |
+| gmail-009 | import-json-call | Chosen file containing a client JSON (test `importFromURLSendsTheFileBytes`) | The file's bytes are sent unchanged; no error; client reported configured. | tested |
+| gmail-010 | import-json-call, error-as-alert | Chosen URL that does not exist (test `importFromMissingURLSetsErrorMessage`) | No import request; an alert titled "Gmail" shows the read failure. | tested |
+| gmail-011 | import-json-cancel | Open panel dismissed without a file (view) | No model call; no alert. | untested |
+| gmail-012 | import-json-panel | Press "Import Client JSON…" (view) | Modal open panel accepting only JSON, one file, no folders. | untested |
+| gmail-013 | reconnect-hint | Client imported, one account (view) | Caption "Accounts signed in with a replaced client need Reconnect." shown; absent when accounts is empty. | untested |
+| gmail-014 | account-row-content | Status values active, error, revoked, pending (test `statusText`) | Badges read "Connected", "Error", "Reconnect needed", "Pending". | tested |
+| gmail-015 | account-row-content | Last sync two hours before now, en_US (test `lastSyncedTextIsExactForAFixedDate`) | Caption "Last synced 2 hours ago". | tested |
+| gmail-016 | account-row-content | No last sync, or unparseable text "garbage" (same test) | Caption "Never synced". | tested |
+| gmail-017 | account-list, controls-follow-selection | Loaded accounts, no prior selection (test `reloadLoadsProviderAndAccounts`) | List shows the account; first account selected; per-account controls visible. | tested |
+| gmail-018 | add-account-button | Press "Add Account…" with a client imported (test `addAccountSendsSignInThenReloads`) | Sign-in request sent, then accounts reloaded. | tested |
+| gmail-019 | add-account-button | Model busy, or no client imported (view) | Button disabled. | untested |
+| gmail-020 | sign-in-progress, cancel-sign-in | Sign-in pending (test `cancelSignInSendsCancelWhileSigningIn`) | Spinner, waiting caption and Cancel visible; pressing Cancel sends cancel-sign-in even though busy is true; `signingIn` false after the sign-in call ends. | tested |
+| gmail-021 | remove-confirmation, remove-safe-default | Press "Remove" with "a@x.com" selected (view) | Confirmation titled "Remove a@x.com?" with the stated detail, Cancel default, action "Remove". | untested |
+| gmail-022 | remove-call | Confirm removal (test `removeSendsRemoveAccount`) | Remove-account request for that account's ID. | tested |
+| gmail-023 | remove-call | Decline removal, press Esc, or press Remove with no key window (view; the confirmation helper answers no without a window) | No model call. | untested |
+| gmail-024 | remove-button | No account selected, or model busy (view) | Remove disabled. | untested |
+| gmail-025 | sync-now-button | Press "Sync Now" (test `syncNowSendsSyncNow`) | Sync-now request for the selected account. | tested |
+| gmail-026 | reconnect-button | Selected account status revoked or error (view) | "Reconnect" shown; pressing it calls addAccount. | untested |
+| gmail-027 | reconnect-button | Selected account status active or pending (view) | "Reconnect" absent. | untested |
+| gmail-028 | show-error-button, account-error-as-alert | Account in error with a last error, press "Show Error" (view, model `showError`) | Alert titled "<email> couldn't sync" with the error message. | untested |
+| gmail-029 | show-error-button | Account in error with no last error (view) | "Show Error" absent. | untested |
+| gmail-030 | whole-settings-write | Toggle "Sync junk mail" on and set window to 90 (test `updateSendsSettings`) | Update request carries the whole settings with `includeSpam` true and `windowDays` 90; account shows them. | tested |
+| gmail-031 | whole-settings-write, error-as-alert | Update rejected with "nope" (test `updateFailureRestoresServerStateAndSetsError`) | Alert titled "Gmail" shows "nope"; account settings revert to the server's. | tested |
+| gmail-032 | settings-stay-enabled | Changes made while a settings send is in flight (tests `rapidUpdatesCoalesceToTheLatestSettings`, `aReloadDuringASettingsSendKeepsShowingTheChosenValue`) | Controls show the chosen value at once; only the first and the latest values are sent. | tested |
+| gmail-033 | window-picker, poll-picker | Account with window 30 days and poll 15 minutes (view) | Window picker lists 7, 14, 30, 90, 180, 365 days; poll picker lists 5, 15, 30, 60 minutes. | untested |
+| gmail-034 | custom-value-preserved | Account with window 45 days (view) | Window picker lists 7, 14, 30, 45, 90, 180, 365 days with 45 selected. | untested |
+| gmail-035 | error-as-alert | Sign-in fails with "sign-in cancelled" (test `remoteFailureSetsErrorMessage`) | Warning alert titled "Gmail" with that message; closing it calls `dismissError`, leaving `errorMessage` nil (test `dismissErrorClearsIt`). | untested |
+| gmail-036 | alert-on-appear | Model already holds an error message when the view appears (view) | Alert shown immediately. | untested |
+| gmail-037 | alert-sheet-or-modal | No key window when an error arrives (view) | Application-modal alert; `dismissError` called after it closes. | untested |
+| gmail-038 | secret-entry-concealed | Type into "Client secret" (view) | Characters are concealed. | untested |
+| gmail-039 | no-self-loading | View created over a fresh model (view) | No service request is made by the view itself. | untested |
+| gmail-040 | picker-labels-plural | Account with window 1 day (no view test exists) | The picker label is plural-aware, such as "1 day"; the macOS source does not conform and reads "1 days" | untested |
 ## Edge Cases
 
 - **Empty accounts list**: MUST show an empty list with Remove disabled and no per-account controls; the model clears `selectedAccountId` when the selected account disappears (test `removeIntegrationClearsAccounts`).
@@ -212,7 +213,7 @@ The model's tests are in `GmailSettingsModelTests` (`packages/apple/AgenticDevel
 - **Boundary values of settings**: window choices span 7 to 365 days and poll choices 5 to 60 minutes; the view enforces no bound beyond them and shows a stored out-of-range value as a custom choice.
 - **Concurrent access**: rapid toggle or picker changes MUST NOT queue one request each; the model sends the first and then only the latest (test `rapidUpdatesCoalesceToTheLatestSettings`). The view is main-actor bound and is safe to use only from the main thread.
 - **Overlapping calls**: busy MUST stay true until every in-flight call finishes (tests `busyStaysTrueUntilOverlappingCallsBothFinish`, `busyIsNotClearedByTheFirstOfTwoOverlappingCalls`), so busy-gated buttons stay disabled until the last call ends.
-- **Account error alerts**: MUST NOT alert again for an account error already alerted until the account leaves the error state or its error message changes; the model raises the next unseen account error only after `dismissAccountError`, and "Show Error" re-presents it on request. Whether an ordinary error alert and an account-error alert arriving together queue cleanly on one window is decided by the platform, not by the source.
+- **Account error alerts**: MUST NOT alert again for an account error already alerted until the account leaves the error state or its error message changes; the model raises the next unseen account error only after `dismissAccountError`, and "Show Error" re-presents it on request. For an ordinary error alert and an account-error alert arriving together, see the open question in Design Decisions.
 - **No key window**: an error alert MUST fall back to an application-modal alert and call the close handler after it returns; the removal confirmation has no such fallback, because the shared confirmation helper answers no when given no window, so Remove then does nothing.
 - **Service unavailable or call fails**: the model turns every failure into `errorMessage`, which the view shows as an alert titled "Gmail"; the view has no retry control other than pressing the same button again, and no timeout or backoff of its own.
 - **Offline or disconnected**: a failed reload surfaces as the same alert and the view keeps showing the last known accounts; a pending sign-in waits on the browser until the user completes or cancels it.
@@ -220,17 +221,20 @@ The model's tests are in `GmailSettingsModelTests` (`packages/apple/AgenticDevel
 - **Sign-in cancelled**: the sign-in call fails with "Sign-in was cancelled" (model comment on `cancelSignIn`), which then appears as an alert.
 
 ## Configuration
-
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | model | GmailSettingsModel | none (required) | The observed model the view reads and calls. |
+
+These values are fixed constants in the view. Nothing can set them, so they are not options.
+
+| Constant | Type | Value | Description |
+|----------|------|-------|-------------|
 | pollChoices | list of minutes | 5, 15, 30, 60 | Fixed choices for "Check for mail every". |
-| windowChoices | list of days | 7, 14, 30, 90, 180, 365 | Fixed choices for "Fetch mail from the last"; fixed windows rather than a stepper because "each change re-syncs, so a day at a time is costly". |
+| windowChoices | list of days | 7, 14, 30, 90, 180, 365 | Fixed choices for "Fetch mail from the last"; fixed windows rather than a stepper (see Design Decisions). |
 | client form maximum width | points | 460 | Width limit of the ID and secret fields. |
 | picker maximum width | points | 300 | Width limit of both pickers. |
 | list minimum height | points | 120 | Minimum height of the account list. |
 | content inset | points | 20 | Padding around the pane. |
-
 ## Deep Linking
 
 Not applicable: the view is a pane inside a settings window and registers no destination of its own. The browser return after Google sign-in is handled by the model's `GmailSignInTracker` and its owner, not by this view.
@@ -288,17 +292,17 @@ Not applicable: the view writes no log output and has no logging subsystem; erro
 
 ## Platform Notes
 
-- **SwiftUI**: This is the source platform. The view is `GmailSettingsView` in `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift`, observing `GmailSettingsModel` from the sibling `GmailSettingsModel.swift`. It uses `Grid`, `Form`, `TextField` with a prompt, `SecureField`, `List` with a selection binding, `Toggle`, `Picker`, `ProgressView` and a `Capsule` background. A generic `binding(_:_:)` helper turns a writable key path of the account's settings into a binding whose setter sends the whole settings, and `.onChange` with `initial: true` raises alerts for errors already set. The account removal confirmation uses the shared `ComposableSettings.Alerts.confirmDestructive` helper.
-- **Compose**: Start from a screen composable that collects the model state as a state flow. Use `OutlinedTextField` with a `PasswordVisualTransformation` for the secret, `LazyColumn` with selectable rows for accounts, `Switch` rows for the three toggles, and `ExposedDropdownMenuBox` for the pickers. Errors map to an `AlertDialog` driven by the model's error state. The destructive confirmation maps to an `AlertDialog` whose dismiss button is the default focus. There is no open-panel API; use the document picker contract restricted to the JSON media type.
-- **React/Web**: Compose a settings panel from labelled inputs (`type="password"` for the secret), a listbox or table with `aria-selected` rows for accounts, checkboxes or switches for toggles and `select` elements for the pickers. Use the native `dialog` element (or a modal component) for the two alert kinds, with Cancel focused first in the removal dialog, and a file input with `accept=".json"` for the import. Relative time is available from `Intl.RelativeTimeFormat`.
-- **AppKit / UIKit**: On AppKit, the same layout is a vertical `NSStackView` with `NSTextField` and `NSSecureTextField`, an `NSTableView` for accounts, `NSButton` checkboxes and `NSPopUpButton` pickers; the view already calls `NSOpenPanel` and `NSAlert` directly (`beginSheetModal` on the key window, `runModal` otherwise). On UIKit, use a `UITableView` or `UICollectionView` list, `UISwitch` and `UIMenu`-backed buttons for pickers, `UIAlertController` for both alert kinds with the destructive style on "Remove" and Cancel as the preferred action, and `UIDocumentPickerViewController` for JSON.
-- **WinUI 3**: Build a `Page` or `UserControl` with a `StackPanel` (`Spacing="12"`, `Padding="20"`) holding two sections separated by a thin `Rectangle` divider. For the OAuth section use a `TextBlock` with `Style` set to `SubtitleTextBlockStyle` for the heading, a `TextBlock` with `TextWrapping="Wrap"` bound to the model text, a two-column `Grid` for the current values (`IsTextSelectionEnabled="True"` on the client ID only, `FontFamily="Consolas"` on both), a `TextBox` with `PlaceholderText` for the client ID and a `PasswordBox` for the secret (`MaxWidth="460"`), and buttons in a horizontal `StackPanel`; bind `IsEnabled` to the inverse of `Busy` and to `CanSaveClientDraft`. Import with a `FileOpenPicker` filtered to `.json` and initialized with the window handle through `WinRT.Interop.InitializeWithWindow`. For accounts use a `ListView` with `SelectionMode="Single"` and `SelectedItem` two-way bound to the selected account and `MinHeight="120"`. Its `DataTemplate` is a `StackPanel` with the email, a `Border` (`CornerRadius="10"`, `Padding="6,0"`, `Background` from `ControlFillColorSecondaryBrush`) around the status `TextBlock` using `CaptionTextBlockStyle`, and a secondary caption using `TextFillColorSecondaryBrush`. For the sign-in state show a small `ProgressRing` and caption with `Visibility` bound to `SigningIn`, and leave its Cancel button enabled. Per-account toggles are `ToggleSwitch` controls with `Header` set to the title, and the pickers are `ComboBox` controls with `Header` and `MaxWidth="300"` whose `ItemsSource` is rebuilt to include a current custom value. Show errors with a `ContentDialog` (title, `CloseButtonText="OK"`, `XamlRoot` set from the page), and the removal confirmation with a `ContentDialog` whose `PrimaryButtonText="Remove"`, `CloseButtonText="Cancel"` and `DefaultButton="Close"` make Cancel the Enter response; Esc closes a `ContentDialog` as Cancel. Only one `ContentDialog` can be open per `XamlRoot` at a time, so queue them as the model already serializes account errors. Set `AutomationProperties.Name` on each row to compose email, status and last-synced text so Narrator reads one item, a point the source leaves open.
+- **SwiftUI**: This is the source platform. The view is `GmailSettingsView` in `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift`, observing `GmailSettingsModel` from the sibling `GmailSettingsModel.swift`. It uses `Grid`, `Form`, `TextField` with a prompt, `SecureField`, `List` with a selection binding, `Toggle`, `Picker`, `ProgressView` and a `Capsule` background. A generic `binding(_:_:)` helper turns a writable key path of the account's settings into a binding whose setter sends the whole settings, and `.onChange` with `initial: true` raises alerts for errors already set. The account removal confirmation uses the shared `ComposableSettings.Alerts.confirmDestructive` helper. Row label: one combined accessibility label per account row, see #accessibility/row-accessibility-label.
+- **Compose**: Start from a screen composable that collects the model state as a state flow. Use `OutlinedTextField` with a `PasswordVisualTransformation` for the secret, `LazyColumn` with selectable rows for accounts, `Switch` rows for the three toggles, and `ExposedDropdownMenuBox` for the pickers. Errors map to an `AlertDialog` driven by the model's error state. The destructive confirmation maps to an `AlertDialog` whose dismiss button is the default focus. There is no open-panel API; use the document picker contract restricted to the JSON media type. Row label: one combined accessibility label per account row, see #accessibility/row-accessibility-label.
+- **React/Web**: Compose a settings panel from labelled inputs (`type="password"` for the secret), a listbox or table with `aria-selected` rows for accounts, checkboxes or switches for toggles and `select` elements for the pickers. Use the native `dialog` element (or a modal component) for the two alert kinds, with Cancel focused first in the removal dialog, and a file input with `accept=".json"` for the import. Relative time is available from `Intl.RelativeTimeFormat`. Row label: one combined accessibility label per account row, see #accessibility/row-accessibility-label.
+- **AppKit / UIKit**: On AppKit, the same layout is a vertical `NSStackView` with `NSTextField` and `NSSecureTextField`, an `NSTableView` for accounts, `NSButton` checkboxes and `NSPopUpButton` pickers; the view already calls `NSOpenPanel` and `NSAlert` directly (`beginSheetModal` on the key window, `runModal` otherwise). On UIKit, use a `UITableView` or `UICollectionView` list, `UISwitch` and `UIMenu`-backed buttons for pickers, `UIAlertController` for both alert kinds with the destructive style on "Remove" and Cancel as the preferred action, and `UIDocumentPickerViewController` for JSON. Row label: one combined accessibility label per account row, see #accessibility/row-accessibility-label.
+- **WinUI 3**: Build a `Page` or `UserControl` with a `StackPanel` (`Spacing="12"`, `Padding="20"`) holding two sections separated by a thin `Rectangle` divider. For the OAuth section use a `TextBlock` with `Style` set to `SubtitleTextBlockStyle` for the heading, a `TextBlock` with `TextWrapping="Wrap"` bound to the model text, a two-column `Grid` for the current values (`IsTextSelectionEnabled="True"` on the client ID only, `FontFamily="Consolas"` on both), a `TextBox` with `PlaceholderText` for the client ID and a `PasswordBox` for the secret (`MaxWidth="460"`), and buttons in a horizontal `StackPanel`; bind `IsEnabled` to the inverse of `Busy` and to `CanSaveClientDraft`. Import with a `FileOpenPicker` filtered to `.json` and initialized with the window handle through `WinRT.Interop.InitializeWithWindow`. For accounts use a `ListView` with `SelectionMode="Single"` and `SelectedItem` two-way bound to the selected account and `MinHeight="120"`. Its `DataTemplate` is a `StackPanel` with the email, a `Border` (`CornerRadius="10"`, `Padding="6,0"`, `Background` from `ControlFillColorSecondaryBrush`) around the status `TextBlock` using `CaptionTextBlockStyle`, and a secondary caption using `TextFillColorSecondaryBrush`. For the sign-in state show a small `ProgressRing` and caption with `Visibility` bound to `SigningIn`, and leave its Cancel button enabled. Per-account toggles are `ToggleSwitch` controls with `Header` set to the title, and the pickers are `ComboBox` controls with `Header` and `MaxWidth="300"` whose `ItemsSource` is rebuilt to include a current custom value. Show errors with a `ContentDialog` (title, `CloseButtonText="OK"`, `XamlRoot` set from the page), and the removal confirmation with a `ContentDialog` whose `PrimaryButtonText="Remove"`, `CloseButtonText="Cancel"` and `DefaultButton="Close"` make Cancel the Enter response; Esc closes a `ContentDialog` as Cancel. Only one `ContentDialog` can be open per `XamlRoot` at a time, so queue them as the model already serializes account errors. Set `AutomationProperties.Name` on each row to compose email, status and last-synced text so Narrator reads one item, as #accessibility/row-accessibility-label requires; the source leaves it open.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift` | confirmed (1.0.1) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -307,7 +311,7 @@ Not applicable: the view writes no log output and has no logging subsystem; erro
 ## Design Decisions
 
 **Decision**: The view calls only the model and renders only model state.
-**Rationale**: The model is "the tested unit"; keeping the view thin leaves all behavior in one place that tests cover and makes the view replaceable on another platform.
+**Rationale**: The model's own doc comment (in `GmailSettingsModel.swift`) calls it "the tested unit"; keeping the view thin leaves all behavior in one place that tests cover and makes the view replaceable on another platform.
 **Approved**: pending
 
 **Decision**: Errors, including per-account sync errors, are shown as alerts, not inline text.
@@ -315,7 +319,7 @@ Not applicable: the view writes no log output and has no logging subsystem; erro
 **Approved**: pending
 
 **Decision**: The fetch window offers fixed choices (7, 14, 30, 90, 180, 365 days) rather than a stepper, and the picker adds the account's current value when it is custom.
-**Rationale**: Each change to the window triggers a re-sync, so stepping a day at a time would be costly. Adding the current value stops a stored custom setting from being silently replaced or shown blank.
+**Rationale**: Each change to the window triggers a re-sync, so stepping a day at a time would be costly (the doc comment on `windowChoices` in `GmailSettingsView.swift` says "each change re-syncs, so a day at a time is costly"). Adding the current value stops a stored custom setting from being silently replaced or shown blank.
 **Approved**: pending
 
 **Decision**: Toggles and pickers stay enabled while the model is busy.
@@ -323,7 +327,7 @@ Not applicable: the view writes no log output and has no logging subsystem; erro
 **Approved**: pending
 
 **Decision**: A change sends the account's whole settings with one field changed.
-**Rationale**: The service receives a complete settings value each time, so receives a complete settings value each time and partial writes need no merging.
+**Rationale**: The service receives a complete settings value each time, so partial writes need no merging.
 **Approved**: pending
 
 **Decision**: Account removal asks for confirmation with Cancel as the default and Esc declining.
@@ -338,12 +342,16 @@ Not applicable: the view writes no log output and has no logging subsystem; erro
 **Rationale**: Sign-in is itself a call in flight, so the model is busy for the whole wait; gating Cancel on busy would make the sign-in impossible to cancel.
 **Approved**: pending
 
-**Decision**: The client secret is shown only as ten fixed dots plus the last five characters, or "Stored (hidden)" when no suffix is available.
-**Rationale**: The daemon sends only those characters, and the mask has a fixed length so it does not reveal the secret's length.
+**Decision**: The client secret is shown only as the model's masked readout (see #behavioral-requirements/secret-masked-readout).
+**Rationale**: The daemon sends only the last characters of the secret, and the mask has a fixed length so it does not reveal the secret's length.
 **Approved**: pending
 
 **Decision**: Strings are literals with no localization layer, and picker labels do not pluralize. This is acknowledged debt (it is why no-hardcoded-strings fails), not a goal.
-**Rationale**: The macOS source ships English literals. No fixed choice is 1, so "1 days" could appear only for a stored custom value. A port SHOULD use localized, pluralized labels from the start; the debt is repaid on macOS when the settings surface adopts a string catalog.
+**Rationale**: The macOS source ships English literals. No fixed choice is 1, so "1 days" could appear only for a stored custom value. A port SHOULD use localized, pluralized labels from the start (see #behavioral-requirements/picker-labels-plural); the debt is repaid on macOS when the settings surface adopts a string catalog.
+**Approved**: pending
+
+**Decision**: An error alert and an account-error alert that arrive together are left to the platform to queue.
+**Rationale**: The view presents each alert independently on the key window, or app-modally when there is none, and adds no queue of its own, so whether two alerts queue cleanly on one window is decided by the platform. This is an open question; a port SHOULD show one alert at a time and queue the rest.
 **Approved**: pending
 
 **Decision**: The reconnect hint appears whenever a client is imported and any account exists, not only after a client was replaced.
@@ -360,9 +368,10 @@ Not applicable: the view writes no log output and has no logging subsystem; erro
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 | [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
 
-The view passes separation-of-concerns because it only reads and calls the model and keeps its own logic to presentation: alerts, panels and picker choices. Unit-test-coverage is partial: the model has a thorough test file, including the text the view displays and the coalescing the view relies on, but the view has no test, so the choices helper, the button gating and the alert wiring are verified only by reading the source. Explicit-error-handling passes because every model failure becomes an alert and nothing is swallowed in the view. Screen-reader-support is partial: standard controls supply roles and titles, but the account row has no explicit label, and the open question on `row-accessibility-label` remains. No-hardcoded-strings fails because every string is a literal. Native-controls-preference passes because the view uses only standard controls and system panels.
+The view passes separation-of-concerns because it only reads and calls the model and keeps its own logic to presentation: alerts, panels and picker choices. Unit-test-coverage is partial: the model has a thorough test file, including the text the view displays and the coalescing the view relies on, but the view has no test, so the choices helper, the button gating and the alert wiring are verified only by reading the source. Explicit-error-handling passes because every model failure becomes an alert and nothing is swallowed in the view. Screen-reader-support is partial: standard controls supply roles and titles, but the account row has no explicit label, and `row-accessibility-label` is not implemented. No-hardcoded-strings fails because every string is a literal. Native-controls-preference passes because the view uses only standard controls and system panels.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Rewrote configuration, added a Status column and vector 040, named quote sources, and added picker-labels-plural and an alert-queueing decision. |

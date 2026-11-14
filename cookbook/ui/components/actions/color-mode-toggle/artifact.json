@@ -4,11 +4,11 @@
     "id": "7b54db6e-755d-4665-a091-d34cfcaac146",
     "title": "Color Mode Toggle",
     "type": "ingredient",
-    "version": "1.3.1",
+    "version": "1.3.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c003698c07820dfb",
+  "synced": "4d8f4f69cf09e226",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

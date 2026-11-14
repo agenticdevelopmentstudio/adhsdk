@@ -4,11 +4,11 @@
     "id": "40827b84-406e-4091-951b-9498b2f78253",
     "title": "ListChooser",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,18 +28,18 @@
       "4d0e04ff-39eb-472c-93a0-8070f1b64a6a"
     ],
     "related": [
-      "43c55f5e-d9b3-430b-9026-d0af510fda15",
-      "4d0e04ff-39eb-472c-93a0-8070f1b64a6a"
+      "43c55f5e-d9b3-430b-9026-d0af510fda15"
     ],
     "references": [
       "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/",
       "https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html",
-      "https://www.w3.org/WAI/WCAG21/Understanding/target-size.html"
+      "https://www.w3.org/WAI/WCAG21/Understanding/target-size.html",
+      "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "aa63132e5bf1f430",
+  "synced": "1fc22565ec45ac76",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

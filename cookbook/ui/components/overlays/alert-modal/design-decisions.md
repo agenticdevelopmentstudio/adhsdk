@@ -6,6 +6,9 @@
   **Rationale**: A destructive action is exactly the case where an accidental Enter/Escape keypress is most costly, so pairing the visual warning with suppressed keyboard shortcuts is safer than letting a caller opt into one effect without the other; the coupling is accepted as a safety default rather than split into finer-grained props.
   **Approved**: pending
 - **Decision**: The busy-state spinner (`role="status"` / `aria-label="Working…"`) is implemented twice — inline via `Loader2` in alert mode, and delegated to `DialogActions` in confirm mode — instead of both modes delegating to one shared busy-indicator ingredient.
-  **Rationale**: The two code paths currently produce identical visual/accessible output, but the duplication is unresolved technical debt rather than an intentional choice; noted here so a future pass can extract a shared busy-indicator ingredient both modes call.
+  **Rationale**: The two code paths currently produce identical visual/accessible output, but the duplication is unresolved technical debt rather than an intentional choice; noted here so a future pass can extract a shared busy-indicator ingredient both modes call. Pay the debt back when a third surface needs the busy indicator, or when its markup or label must change in both places at once.
   **Approved**: pending
 
+- **Decision**: The busy-spinner label `"Working…"` is fixed in English and has no `busyLabel` prop, unlike `confirmLabel`.
+  **Rationale**: The source hardcodes the string in both the alert-mode spinner and `DialogActions`; adding a prop would need to be mirrored in both places, so the absence is recorded as a known limitation for hosts that must localize it.
+  **Approved**: pending

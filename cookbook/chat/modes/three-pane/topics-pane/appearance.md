@@ -1,5 +1,5 @@
 
-- **Container**: Full-width pane with CSS classes `pc-topics-pane` and visibility modifier class
+- **Container**: Pane with CSS classes `pc-topics-pane` and visibility modifier class; width and layout are defined by the stylesheet, not the component source
 - **Header**: Styled section with CSS class `pc-panel-header` containing the text "Topics"
 - **List**: Unordered list with CSS class `pc-topic-list` containing list items
 - **Topic Item**: Button element with CSS class `pc-topic-item` and optional "active" class modifier

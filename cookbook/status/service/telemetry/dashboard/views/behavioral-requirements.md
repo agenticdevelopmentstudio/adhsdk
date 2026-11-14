@@ -1,9 +1,11 @@
 
 **Site identity**
 
+- **tiebreak-comparator**: Every alphabetical sort and every name tiebreak in this module (`sortSiteNames`, `join-sort`, `marginal-sort`, `errors-site-rows`, `most-errors`, `merge-rows`) MUST use one comparator: a locale-aware string comparison with the fixed locale `en`. The source calls `localeCompare` with no locale argument, so its order follows the host's default locale; a port MUST fix `en` so every platform sorts the same way.
+
 - **site-key**: `siteKey(host)` MUST trim, lower-case and strip one leading `www.`, so `WWW.X.com ` and `x.com` are one site.
 - **project-key**: `projectKey(project)` MUST be `siteKey(domain)` when the project has a domain, and the project name otherwise.
-- **site-names-sorted**: `sortSiteNames` MUST return a new list sorted alphabetically with `localeCompare`, so a site stays where the reader last found it.
+- **site-names-sorted**: `sortSiteNames` MUST return a new list sorted alphabetically with the tiebreak comparator, so a site stays where the reader last found it.
 
 **Failure rate and health**
 
@@ -19,7 +21,7 @@
 - **join-side-by-side**: PostHog and Vercel counts MUST stay side by side and never be summed, because they measure different things and a site reporting to both would count every visit twice.
 - **join-null-provider**: A provider that has not seen a site MUST be `null` on that row, not zeros. A provider whose section is null contributes no rows.
 - **join-health-no-add**: Health MUST attach only to a row that traffic already created; health alone MUST NOT add a row, because that would add every API host. Attached health is merged across hosts with `mergeHealth` and rated.
-- **join-sort**: Rows MUST be sorted by the larger of the two providers' pageviews, descending, with ties broken by key ascending (`localeCompare`).
+- **join-sort**: Rows MUST be sorted by the larger of the two providers' pageviews, descending, with ties broken by key ascending with the tiebreak comparator.
 
 **Pageview chart**
 
@@ -31,7 +33,7 @@
 **Marginals**
 
 - **country-name**: `countryName(code)` MUST return the English region name for a two-letter upper-case code, and the input unchanged for anything else (including lower-case or longer codes) and when the region lookup has no name.
-- **marginal-sort**: Every marginal list MUST be sorted by `pageviews` descending, ties by name ascending (`localeCompare`).
+- **marginal-sort**: Every marginal list MUST be sorted by `pageviews` descending, ties by name ascending with the tiebreak comparator.
 - **dimension-totals**: `dimensionTotals(rows, dimension, site)` MUST sum `pageviews` by the dimension's value over rows of the chosen site (all rows when `site` is null). The dimensions are `country`, `device`, `browser` and `referrer`.
 - **dimension-words**: A referrer of `$direct` MUST be named `Direct`, and a country code MUST be passed through `countryName`.
 - **path-totals**: `pathTotals(rows, site)` MUST sum `pageviews` by path. With `site` null the name MUST be `siteKey(host)` followed by the path, because `/` is a different page on each site; with a site it is the bare path.
@@ -72,16 +74,16 @@
 - **analytics-views-shape**: `analyticsViews(sections, configured)` MUST return `sites`, `joined`, `pageviews` (the all-sites chart), `pages`, `dimensions`, `vercelProjects`, `vercelBreakdowns`, `vitals`, `siteReports` and `failures`.
 - **analytics-views-null**: `pages`, `dimensions`, `vercelProjects`, `vercelBreakdowns` and `vitals` MUST be `null` until their provider section has answered, and not an empty value. `dimensions` is a record over `country`, `device`, `browser` and `referrer`; `vercelBreakdowns` over `countries`, `referrers`, `paths` and `devices`.
 - **analytics-views-projects**: `vercelProjects` MUST list only projects with pageviews above 0, in Vercel's section order, each as `{ site, project, pageviews, visitors }` where `site` is the project key.
-- **analytics-views-reports**: `siteReports` MUST have a report for every listed site and also for every host that has health, so a deep link to a health-only host still draws.
+- **analytics-views-reports**: `siteReports` MUST have a report for every listed site and also for every host that has health, keyed by `siteKey(host)` (the same key as the listed sites), so a deep link to a health-only host still draws.
 - **analytics-views-joined**: `joined` MUST be built with the health rows, so the Sites table rates failures.
 
 **Errors views**
 
-- **errors-site-rows**: `errorsSiteRows(sections)` MUST merge the `sites` rows by site key (host set to the key), rate them, and sort by `requests` descending, ties by host.
-- **most-errors**: `mostErrorSites(sections, limit)` MUST drop sites with zero errors, sort by `errors` descending, then `failures` descending, then host, and keep at most `limit`. `MOST_ERRORS_LIMIT` MUST be 10 and the default limit.
+- **errors-site-rows**: `errorsSiteRows(sections)` MUST merge the `sites` rows by site key (host set to the key), rate them, and sort by `requests` descending, ties by host ascending with the tiebreak comparator.
+- **most-errors**: `mostErrorSites(sections, limit)` MUST drop sites with zero errors, sort by `errors` descending, then `failures` descending, then host ascending with the tiebreak comparator, and keep at most `limit`. `MOST_ERRORS_LIMIT` MUST be 10 and the default limit.
 - **errors-sites**: `errorsSites(sections)` MUST list alphabetically every site named by the `sites` rows or by the detail's `days`, `errors` or `requests`, and be empty before anything loads.
 - **error-row-id**: `errorRowId` MUST be the JSON array string of `name`, `feature`, `step`, `boundary`, `page`; `failedRequestRowId` the JSON array of `status`, `method`, `path`.
-- **merge-rows**: Rows of one site's hosts with the same id MUST merge into one row with `host` set to the site, `count` added and `lastSeen` the later of the two (by `Date.parse`; a null yields the other). The result MUST be sorted by `count` descending, ties by id, and each row MUST carry its `id`.
+- **merge-rows**: Rows of one site's hosts with the same id MUST merge into one row with `host` set to the site, `count` added and `lastSeen` the later of the two (by `Date.parse`; a null yields the other; when either value does not parse, the comparison is false and the already accumulated row's value is kept). The result MUST be sorted by `count` descending, ties by id ascending with the tiebreak comparator, and each row MUST carry its `id`.
 - **errors-chart**: `chart` MUST sum the site's per-day `errors` and `failures` series over the detail buckets, and be `null` when the detail is missing or every value is 0.
 - **errors-report**: `errorsSiteReport(sections, site)` MUST give `health` (null unless requests or errors are above 0), `chart`, `errors`, `requests` and `empty` (true when all four are empty or null).
 - **errors-site-failures**: `errorsSiteFailures` MUST name the `sites` section (site totals) and the `detail` section (errors and failed requests), both from PostHog, by the rule of `collect-failures`.

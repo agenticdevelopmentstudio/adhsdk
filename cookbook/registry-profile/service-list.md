@@ -2,11 +2,11 @@
 id: fe09968a-6575-40d0-b0b8-af6ce52d8efd
 title: "Service List"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,20 +36,20 @@ The Service List component displays a collection of services with their titles, 
 ## Behavioral Requirements
 
 - **render-section**: Component MUST render a `<section>` element when the services array contains one or more items.
-- **hide-when-empty**: Component MUST NOT render any output when the services array is empty (`services.length === 0`). The `services` prop is a required array; passing `null` or `undefined` is outside the documented contract (see Edge Cases).
+- **hide-when-empty**: Component MUST NOT render any output when the services array is empty (`services.length === 0`). The `services` prop is a required array (see Configuration for its shape); passing `null` or `undefined` is outside the documented contract (see Edge Cases).
 - **render-heading**: Component MUST render an `<h2>` heading with the text "Services" within the section. This text is currently a hardcoded literal, not read from a string-key lookup (see the **string-externalization** compliance status).
 - **render-list**: Component MUST render an unordered list (`<ul>`) containing one list item per service.
 - **display-title**: Component MUST display each service's title as an `<h3>` heading within the list item.
 - **display-price**: Component MUST display each service's formatted price using the priceText formatter (see **pricing-free**, **pricing-barter**, **pricing-rate-on-request**, **pricing-range**, **pricing-single-value**, and **pricing-suffix** for the individual formatting rules).
-- **display-description**: Component SHOULD display each service's description text when the description property is present and non-empty.
+- **display-description**: Component MUST display each service's description text in a `<p>` when the description is a non-empty string, and MUST NOT render the paragraph when it is empty or absent.
 - **semantic-elements**: Component MUST NOT wrap rendered content in non-semantic containers (e.g. generic `<div>` elements). The only elements it renders are `<section>`, `<h2>`, `<ul>`, `<li>`, `<h3>`, and `<p>`.
 - **pricing-free**: Component MUST display "Free" when `pricingModel` is `free`, bypassing numeric formatting entirely.
 - **pricing-barter**: Component MUST display "Trade or barter" when `pricingModel` is `barter`, bypassing numeric formatting entirely.
-- **pricing-rate-on-request**: Component MUST display "Rate on request" when both `priceMin` and `priceMax` are absent and `pricingModel` is neither `free` nor `barter`.
-- **pricing-range**: Component MUST display a formatted range (`{min}–{max}`, en dash, no surrounding spaces) when both `priceMin` and `priceMax` are present and differ. Each bound is formatted as currency via `Intl.NumberFormat` with `maximumFractionDigits: 0` and the service's `currency` (defaulting to `USD` when absent).
-- **pricing-single-value**: Component MUST display a single formatted currency value — using whichever of `priceMin`/`priceMax` is present — when only one bound is present, or when both bounds are present and equal.
-- **pricing-suffix**: Component MUST append a trailing suffix to the formatted price: "per hour" (`hourly`), "per job" (`per_job`), "per deliverable" (`per_deliverable`), "per month" (`subscription`). Component MUST omit the suffix (display the amount alone) when `pricingModel` matches none of these four values.
-- **unique-titles**: The `services` array MUST contain unique `title` values. The component uses `service.title` as its React iteration key; duplicate titles are unsupported for stable list reconciliation (see **unique-titles** under Design Decisions).
+- **pricing-rate-on-request**: Component MUST display "Rate on request" when both `priceMin` and `priceMax` are absent (`null` or `undefined`; `0` is a present bound, not an absent one) and `pricingModel` is neither `free` nor `barter`.
+- **pricing-range**: Component MUST display a formatted range (`{min}–{max}`, en dash, no surrounding spaces) when both `priceMin` and `priceMax` are present and differ. Each bound is formatted as currency via `Intl.NumberFormat` with the hardcoded `en-US` locale (not the host locale; see the **locale-aware-formatting** compliance status) and with `maximumFractionDigits: 0` and the service's `currency` (defaulting to `USD` when absent).
+- **pricing-single-value**: Component MUST display a single formatted currency value — using whichever of `priceMin`/`priceMax` is present — when only one bound is present, or when both bounds are present and equal. The value is formatted with the same `en-US` currency formatting as **pricing-range**. A bound of `0` counts as present and renders as "$0".
+- **pricing-suffix**: Component MUST append a trailing suffix, joined to the formatted amount by a single space, to a numeric price (a range or a single value). The suffix never applies to "Free", "Trade or barter" or "Rate on request". The suffixes are: "per hour" (`hourly`), "per job" (`per_job`), "per deliverable" (`per_deliverable`), "per month" (`subscription`). Component MUST omit the suffix (display the amount alone) when `pricingModel` matches none of these four values.
+- **unique-titles**: Precondition on the caller, which the component does not check or enforce: the `services` array contains unique `title` values. The component uses `service.title` as its React iteration key, and duplicate titles give no guarantee of stable list reconciliation (see the React key decision under Design Decisions).
 
 ## Appearance
 
@@ -96,8 +96,8 @@ The Service List component displays a collection of services with their titles, 
 | service-list-013 | pricing-suffix | services = [{title: "Deliverable Based", pricingModel: "per_deliverable", priceMin: 500, currency: "USD"}] | Renders price text as "$500 per deliverable" |
 | service-list-014 | pricing-suffix | services = [{title: "Subscription Based", pricingModel: "subscription", priceMin: 20, currency: "USD"}] | Renders price text as "$20 per month" |
 | service-list-015 | pricing-suffix | services = [{title: "Unknown Model", pricingModel: "quote_only", priceMin: 40, currency: "USD"}] | Renders price text as "$40" with no trailing suffix, since "quote_only" matches no entry in the suffix map |
-| service-list-016 | unique-titles | services = [{title: "Duplicate", pricingModel: "free"}, {title: "Duplicate", pricingModel: "barter"}] | Both items render on the initial render; duplicate titles used as the React key are unsupported for stable reconciliation across re-renders |
-
+| service-list-016 | pricing-single-value, pricing-rate-on-request | services = [{title: "Zero Min", pricingModel: "hourly", priceMin: 0, currency: "USD"}] (priceMax absent) | Renders price text as "$0 per hour", not "Rate on request" |
+| service-list-017 | display-description | services = [{title: "Empty Description", description: "", pricingModel: "free"}] | Does not render the description paragraph |
 ## Edge Cases
 
 - **Empty services array**: Component returns null and renders nothing when `services.length === 0` — see **hide-when-empty** (reference implementation: `ServiceList.tsx`).
@@ -105,14 +105,24 @@ The Service List component displays a collection of services with their titles, 
 - **Missing description**: Component conditionally renders the description paragraph only when `service.description` is truthy — see **display-description** (reference implementation: the conditional check in `ServiceList.tsx`).
 - **Non-array or null `services`**: The `services` prop is typed as a required array; the component reads `services.length` without a null guard. Passing `null` or `undefined` is outside the documented contract and throws at runtime rather than rendering nothing.
 - **Price edge cases**: The `priceText` function (in `ServiceList.tsx`) handles free, barter, absent bounds, equal bounds, and range pricing — see **pricing-free**, **pricing-barter**, **pricing-rate-on-request**, **pricing-single-value**, and **pricing-range**.
+- **Zero price**: `priceMin` or `priceMax` of `0` is a present bound and renders as "$0" (with any suffix); only `null` or `undefined` counts as absent — see **pricing-single-value**.
 - **Unknown pricing model**: An unrecognized `pricingModel` still formats the numeric amount but omits a suffix — see **pricing-suffix**.
-- **Currency formatting**: Uses `Intl.NumberFormat('en-US', ...)` with `maximumFractionDigits: 0` to format prices (no decimal places). The locale is hardcoded to `en-US` regardless of the host's locale — see the **locale-aware-formatting** compliance status.
+- **Currency formatting**: Uses `Intl.NumberFormat('en-US', ...)` with `maximumFractionDigits: 0` to format prices (no decimal places). The locale is hardcoded to `en-US` regardless of the host's locale (the platform notes' locale-aware guidance is the intended direction for other platforms, not current behavior) — see the **locale-aware-formatting** compliance status.
 - **List key**: Component uses `service.title` as the React key — see **unique-titles**.
 
 ## Configuration
+The component takes a single required prop, `services`, an array of `PublicService`. It has no other configuration options or settings.
 
-Not applicable: Component accepts a single `services` prop array as input; no configuration options or settings exposed.
-
+| Field | Type | Meaning |
+|-------|------|---------|
+| title | string | Service name; also the React key (see **unique-titles**) |
+| description | string | Description text; the paragraph is omitted when empty |
+| pricingModel | string | Open string. Known values: `free`, `barter`, `hourly`, `per_job`, `per_deliverable`, `subscription`. Any other value formats the amount with no suffix |
+| priceMin | number or null | Lower price bound; `null` means absent, `0` is a present bound |
+| priceMax | number or null | Upper price bound; `null` means absent, `0` is a present bound |
+| currency | string | ISO 4217 currency code; an empty value falls back to `USD` |
+| unit | string | Carried on the type; not read by this component |
+| deliveryMode | string | Carried on the type; not read by this component |
 ## Deep Linking
 
 Not applicable: This component is a display component with no interactive navigation or state that would warrant deep linking.
@@ -126,7 +136,7 @@ The strings below document the intended externalization targets. The current sou
 | services.heading | "Services" | Section heading text; hardcoded literal in `ServiceList.tsx` |
 | pricing.free | "Free" | Displayed when pricingModel is "free" |
 | pricing.barter | "Trade or barter" | Displayed when pricingModel is "barter" |
-| pricing.rate_on_request | "Rate on request" | Displayed when both priceMin and priceMax are null |
+| pricing.rate_on_request | "Rate on request" | Displayed when both priceMin and priceMax are absent (`null` or `undefined`) |
 | pricing.per_hour | "per hour" | Suffix displayed for hourly pricing model |
 | pricing.per_job | "per job" | Suffix displayed for per_job pricing model |
 | pricing.per_deliverable | "per deliverable" | Suffix displayed for per_deliverable pricing model |
@@ -158,18 +168,16 @@ Not applicable: Component contains no analytics event tracking or user interacti
 Not applicable: Component contains no logging statements.
 
 ## Platform Notes
-
-- **React/Web**: Renders semantic HTML using JSX. Uses `services.map()` to iterate over the array and `Intl.NumberFormat` for currency formatting. CSS classes (rp-services, rp-services__list, rp-service, etc.) handle styling. Key prop uses service.title; ensure titles are unique within the array to avoid React reconciliation issues.
 - **SwiftUI**: Map the services array using a `List` with `ForEach`. Use `Section(header: Text("Services"))` for the heading. Display title with `Text` at heading level, description conditionally with `.lineLimit(nil)`, and price using a localized NumberFormatter configured for currency. Apply `.listStyle(.plain)` or appropriate list style.
 - **Compose**: Use a `LazyColumn` or `Column` within a `Surface` for the section. Display the "Services" heading with appropriate typography style. Iterate services using `.forEach` and render `Row` or `Column` layouts for each item. Format price using NumberFormat or Locale-aware price formatting. Apply conditional rendering for description using `if (service.description != null)`.
+- **React/Web**: Renders semantic HTML using JSX. Uses `services.map()` to iterate over the array and `Intl.NumberFormat` for currency formatting. CSS classes (rp-services, rp-services__list, rp-service, etc.) handle styling. Key prop uses service.title; ensure titles are unique within the array to avoid React reconciliation issues.
 - **AppKit / UIKit**: Use `UIStackView` (vertical axis) as the container, or `NSStackView` on macOS, with a `UILabel`/`NSTextField` for the "Services" heading. Render the item list with a plain `UITableView`, or a `UICollectionView` configured with `UICollectionLayoutListConfiguration`, rather than nesting a `UITableViewController`/`UICollectionViewController` inside the stack view — a view controller does not belong inside a stack view. For each service, render title as bold, description as regular text, and price formatted using `NumberFormatter` with currency style. Conditionally include description based on presence.
 - **WinUI 3**: Use a `StackPanel` with `Orientation="Vertical"` as container. Add a `TextBlock` for the "Services" heading using the `SubtitleTextBlockStyle` theme resource rather than a hardcoded `FontSize`, so it follows the app's type ramp. Use an `ItemsControl` or `ListViewBase` bound to the services collection. For each item, template a `TextBlock` for title using `BodyStrongTextBlockStyle`, a conditional `TextBlock` for description using `BodyTextBlockStyle`, and a `TextBlock` for formatted price. Format price using `NumberFormatInfo` for the appropriate culture with `CurrencySymbol`.
-
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/registry-profile/src/ServiceList.tsx` | unverified |
+| web | `packages/web/packages/registry-profile/src/ServiceList.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -177,7 +185,7 @@ Not applicable: Component contains no logging statements.
 **Rationale**: Keeps presentation separate from markup and lets styling be managed independently of the component.
 **Approved**: pending
 
-**Decision**: The React key for each list item is `service.title`; the component requires titles to be unique within a given `services` array rather than accepting a separate identifier prop (see **unique-titles**).
+**Decision**: The React key for each list item is `service.title`; the component relies on the caller supplying titles that are unique within a given `services` array rather than accepting a separate identifier prop (see **unique-titles**).
 **Rationale**: The source has no `id` field on `PublicService` to key on instead; adding one would be new behavior beyond what the source implements today.
 **Approved**: pending
 
@@ -193,6 +201,9 @@ Not applicable: Component contains no logging statements.
 **Rationale**: The source hardcodes both levels; hosts embedding this component MUST place it at a point in the page outline where `<h2>` is the correct next heading level.
 **Approved**: pending
 
+**Decision**: The `<section>` has no `aria-labelledby` tying it to its `<h2>`, so it is not exposed as a named region landmark.
+**Rationale**: The source omits it; the heading still gives the section a place in the document outline. Adding the association would be new behavior beyond what the source implements today.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -216,3 +227,4 @@ Statuses rest on `ServiceList.tsx`: it renders only semantic HTML tags with no i
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from ServiceList.tsx source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added named pricing/unique-title requirements, replaced line-number citations with symbol references, reformatted Design Decisions, added a Compliance table, added coverage/locale test vectors, fixed the UIKit/WinUI native-controls notes, and added related links to the registry-profile family |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Documented the services prop shape, absent versus zero price bounds, the en-US locale and suffix scope in the requirements, made display-description a MUST, restated unique titles as a caller precondition, added zero-price and empty-description vectors, recorded the missing section landmark, and reordered the platform notes. |

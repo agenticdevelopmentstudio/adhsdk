@@ -1,9 +1,9 @@
 
 - **Provider unknown at removal**: Covered by remove-configured; the decision is `provider?.configured != false`, so only a known not-configured state skips the call.
-- **Pick then remove**: When Gmail was picked from `+` and never configured, a confirmed removal MUST only clear the pick and the error message; nothing is sent.
+- **Pick then remove**: Covered by remove-unconfigured.
 - **Pick already configured elsewhere**: When Gmail is configured, the menu item is disabled, so a pick cannot duplicate it; the listing rule still shows a single row.
 - **Pick survives configuration**: A pick is in-memory only and is not persisted; it is cleared by a confirmed removal and not by a successful configuration, which shows the same single row through the listing rule.
-- **Remove with nothing listed**: Pressing `−` MUST announce refusal and MUST NOT open a confirmation, even though the button is also disabled in that state.
+- **Remove with nothing listed**: Covered by remove-refused-when-empty; the button is also disabled in that state.
 - **Missing window**: The confirmation is attached to the panel's window if it has one; the source passes an optional window. Without one, the shared `confirmDestructive` logs a warning and answers declined, so nothing is removed.
 - **Provider publisher timing**: The provider publisher emits before the property holds its new value, so the AppKit panel runs the rebuild check one main-queue turn later; checking immediately would see the stale value.
 - **Redundant provider updates**: A provider update that does not change whether Gmail is listed MUST NOT rebuild the listing, which preserves the user's selection.

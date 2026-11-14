@@ -4,13 +4,13 @@
     "id": "231a7e9a-8c03-44b3-afaf-b71755e05c1d",
     "title": "ITermColorsParser",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
     "modified": "2026-11-14",
-    "author": "mfullerton",
-    "copyright": "2026 mfullerton",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
     "license": "MIT",
     "summary": "Parses an iTerm2 .itermcolors property list into a ColorTheme, failing fast on missing required colors and falling back for cursor and selection.",
     "platforms": [
@@ -24,13 +24,19 @@
       "iterm2",
       "color"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "932449c9-b57f-4e2c-992a-1e27584742b6",
+      "ad5bae6b-0172-4cd4-a4b7-297eb58eb28d",
+      "591d0b87-ce71-4b11-8642-149fc405cce9"
+    ],
+    "related": [
+      "d15bba09-4574-4fd1-93a0-f7d2cccd04f2"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "86466861068cb3c7",
+  "synced": "9ad9b5200f8e83d2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

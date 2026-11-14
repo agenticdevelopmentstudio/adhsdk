@@ -4,16 +4,15 @@
     "id": "d3e1f776-8ad1-431f-9485-386ac285a039",
     "title": "Avatar Engine Config",
     "type": "ingredient",
-    "category": "engine",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "The two-platform contract for the avatar animation engine's config loader: validates and normalizes six authored JSON files into one CharacterConfig.",
+    "summary": "Validates and normalizes six authored avatar JSON files into one CharacterConfig (Swift and TypeScript).",
     "platforms": [
       "swift",
       "macos",
@@ -28,12 +27,14 @@
       "validation"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "a7c91832-4059-4e06-b8c6-e8c727567c66"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6ad0aab3b68f4553",
+  "synced": "443c6b36cbf71483",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

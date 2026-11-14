@@ -1,11 +1,11 @@
 
 - **Size**
   **Decision**: RadioGroupItem renders at 16×16px (Tailwind `size-4`).
-  **Rationale**: Matches the toolkit's compact control sizing; this is below the WCAG 2.5.8 (AA) minimum target size of 24×24 CSS pixels, so consumers MUST ensure the associated `<label>` (or an equivalent wrapping hit area) extends the clickable region to at least 24×24px — Base UI's radio role allows selecting via a click on the associated label.
+  **Rationale**: Matches the toolkit's compact control sizing; this is below the WCAG 2.5.8 (AA) minimum target size of 24×24 CSS pixels, so consumers MUST ensure the associated `<label>` (or an equivalent wrapping hit area) extends the clickable region to at least 24×24px — a click on a label associated through Base UI's wiring is how a pointer user reaches the control.
   **Approved**: pending
 
 - **Color transitions**
-  **Decision**: `transition-colors` is applied to all state changes (checked, focused, disabled).
+  **Decision**: `transition-colors` is applied to all state changes (checked and focused; disabled has no color change).
   **Rationale**: Provides visual feedback without jarring state shifts, following modern UI conventions. The transition is a brief color fade only, with no transform or motion, so it is treated as exempt from Reduce Motion policies rather than something the component must gate on `prefers-reduced-motion`; a consuming design system that wants zero transition can override with `transition-none`.
   **Approved**: pending
 

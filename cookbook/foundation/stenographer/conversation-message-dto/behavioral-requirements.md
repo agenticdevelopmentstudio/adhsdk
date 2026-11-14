@@ -3,7 +3,7 @@
 - **message-id-identity**: A message `id` MUST be the same value as the `id` of the feed `ConversationEntryDTO` for the same row, so a message and its feed entry are one row.
 - **message-id-is-cursor**: A message `id` MUST be treated as a cursor and not a count: ids grow within one transcript entry but are not ordered across a resumed session's files.
 - **message-type-values**: `type` MUST say who is talking, one of `user` (the human typed it), `model` (the agent said it) or `notice` (an interruption or other transcript event).
-- **message-kind-values**: `kind` MUST carry the extractor's finer kind, one of `prompt`, `reply`, `progress`, `thinking` or `notice`.
+- **message-kind-values**: `kind` MUST carry the extractor's finer kind; the known values are `prompt`, `reply`, `progress`, `thinking` and `notice`, and the type accepts any other string (see **no-validation**).
 - **message-time-format**: `time` MUST be ISO-8601 text as written in the transcript.
 - **message-agent-id**: `agentId` MUST name the subagent that said the message when it comes from a subagent's transcript (read only with work output), and MUST be nil for the session's own agent.
 - **message-agent-id-optional**: `agentId` MUST be optional so a reader built before the field existed still decodes a message.
@@ -14,21 +14,21 @@
 - **type-for-kind-prompt**: `type(forKind:)` MUST return `user` for the kind `prompt`.
 - **type-for-kind-notice**: `type(forKind:)` MUST return `notice` for the kind `notice`.
 - **type-for-kind-default**: `type(forKind:)` MUST return `model` for every other kind, including `reply`, `progress`, `thinking` and any kind it does not know.
-- **fold-single-place**: The user / model / notice fold MUST live only in `type(forKind:)`; the source calls it "the one place the extractor's kinds fold into the user / model / notice split".
+- **fold-single-place**: The user / model / notice fold MUST live only in `type(forKind:)`; the doc comment on `init(entry:)` calls it "the one place the extractor's kinds fold into the user / model / notice split".
 - **page-fields**: A `ConversationMessagesPageDTO` MUST carry `sessionId` (String), `messages` (array of `ConversationMessageDTO`), `nextAfterId` (optional Int) and `isComplete` (Bool).
 - **page-order**: `messages` MUST be oldest first.
-- **page-next-after-id**: `nextAfterId` MUST be the id to ask after for the next page: the last message's `id`, or the cursor the page was asked with when the page is empty, and nil when neither exists.
+- **page-next-after-id**: `nextAfterId` MUST be the id to ask after for the next page: the last message's `id`, or the `afterId` the page was asked with when the page is empty, and nil when neither exists.
 - **page-is-complete**: `isComplete` MUST be true when the page reached the end of the range, meaning the conversation's newest message or the `throughId` asked for.
 - **page-paging-by-id**: A reader MUST page by holding the last id it fetched and asking for what comes after it; the page is not cut on time.
 - **query-fields**: A `ConversationMessagesQueryDTO` MUST carry `sessionId` (String), `afterId` (optional Int), `throughId` (optional Int), `limit` (Int) and `includeWorkOutput` (Bool).
 - **query-after-exclusive**: `afterId` MUST bound the range exclusively: the message with that id is not returned.
 - **query-through-inclusive**: `throughId` MUST bound the range inclusively: the message with that id may be returned.
-- **query-nil-cursors**: A nil `afterId` MUST open the range at the conversation's first message, and a nil `throughId` MUST open it at the conversation's newest message.
-- **query-limit**: `limit` MUST be the most messages one page returns, counted in whole transcript entries: an entry that alone holds more messages than `limit` is returned whole, and the daemon raises a `limit` below 1 to 1.
-- **query-include-work-output**: `includeWorkOutput` MUST select whether work output (`progress` and `thinking` lines, and the session's subagent transcripts) is read; the query shape carries the flag and the daemon honours it.
+- **query-nil-cursors**: A nil `afterId` MUST open the range at the conversation's first message, and a nil `throughId` MUST end the range at the conversation's newest message.
+- **query-limit**: `limit` MUST be the most messages one page returns, counted in whole transcript entries: an entry that alone holds more messages than `limit` is returned whole. The shape does not bound `limit`; the daemon's handling of a `limit` below 1 is in Edge Cases.
+- **query-include-work-output**: `includeWorkOutput` MUST select whether work output (`progress` and `thinking` lines, and the session's subagent transcripts) is read; the query shape carries the flag and a producer MUST honour it.
 - **range-error-case**: `ConversationRangeError` MUST have one case, `unknownMessageId(Int)`, for a cursor id that names no message of the session.
 - **range-error-description**: `ConversationRangeError.unknownMessageId(id)` MUST describe itself as `No message <id> in this conversation.` through `errorDescription`.
 - **range-error-equatable**: `ConversationRangeError` MUST be `Equatable` so a caller can match a thrown case.
 - **conformance-protocols**: The message, page and query types MUST each be `Codable`, `Sendable` and `Equatable`; the error MUST be `Error`, `LocalizedError` and `Equatable`.
-- **no-validation**: The initializers MUST NOT validate: they accept any `limit`, any `kind` string and any cursor pair; the source validates a cursor only in the daemon, which raises `unknownMessageId`.
+- **no-validation**: The initializers MUST NOT validate: they accept any `limit`, any `kind` string and any cursor pair; a cursor is validated only in the daemon, which raises `unknownMessageId` (see the Design Decisions).
 

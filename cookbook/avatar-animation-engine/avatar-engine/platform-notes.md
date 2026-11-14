@@ -15,25 +15,24 @@
   host drives `tick` from a `requestAnimationFrame` loop and renders the
   returned `DisplayList` (commonly via the sibling `render/svg` entry point
   in this same package); `browserEnvironment()` supplies `reducedMotion` by
-  reading `matchMedia("(prefers-reduced-motion: reduce)")` off `globalThis`
-  once at construction.
+  looking up `matchMedia` on `globalThis` once at construction and then calling
+  `matchMedia("(prefers-reduced-motion: reduce)").matches` on every read, so the predicate is fresh on each poll.
 - **AppKit / UIKit** (source platform): `Engine.swift` and `Environment.swift`
   are the actual implementation. A host drives `tick(_:)` from a
   `CVDisplayLink` (AppKit) or `CADisplayLink` (UIKit) callback and renders the
   returned `DisplayList`; the real, platform-backed `AvatarEnvironment` (its
   `reducedMotion` reading `NSWorkspace`'s or `UIAccessibility`'s reduce-motion
   flag) lives in `Render/PlatformShims.swift`'s `AvatarEnvironment.live()`
-  extension, per `Environment.swift`'s own doc comment, not in the two files
-  given to this recipe.
-- **WinUI 3**: this is the platform this recipe exists to prepare a port for,
-  and it needs a from-scratch host and engine, since neither given source
-  compiles on .NET. Drive `Tick(double now)` from a
+  extension, per `Environment.swift`'s own doc comment, not in `Engine.swift` or `Environment.swift`.
+- **WinUI 3**: this is the platform this ingredient exists to prepare a port for,
+  and it needs a from-scratch host and engine, since neither the Swift nor the TypeScript
+  source compiles on .NET. Drive `Tick(double now)` from a
   `CompositionTarget.Rendering` event or a `DispatcherQueueTimer`, called
   synchronously on the UI thread — not through `Task.Run`/`async`, since the
   fixed scheduler-then-arbiter-then-tweens-then-compose order this contract
   requires must run on one thread without interleaving. Deserialize
   `CharacterConfig` with `System.Text.Json` (mirroring the config loader's
-  contract, not this recipe's). Port the xoshiro128** `Prng` bit-for-bit in
+  contract, not this ingredient's). Port the xoshiro128** `Prng` bit-for-bit in
   C# using `uint` arithmetic; .NET's `System.Random` will not reproduce the
   same stream and MUST NOT be substituted. Read the reduced-motion state
   from `Windows.UI.ViewManagement.UISettings` (or the Windows App SDK's

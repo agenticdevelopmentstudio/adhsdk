@@ -1,6 +1,6 @@
 
 **Decision**: Ingestion encodes each event once and hands every sink the same bytes.
-**Rationale**: The source says the encoding is not the sink's concern, so two daemons publish identical payloads whatever their transports, and no transport serializes the event twice on the ingest hot path (a comment in `EventIngestor`).
+**Rationale**: The doc comment on `SessionEventSink` in `SessionEventSink.swift` says the encoding is not the sink's concern, so two daemons publish identical payloads whatever their transports, and no transport serializes the event twice on the ingest hot path (the comment in `broadcastIngestedEvent` in `Database/Daemon/Ingestion/EventIngestor.swift`, line 261).
 **Approved**: pending
 
 **Decision**: The sink protocol returns nothing and cannot throw.

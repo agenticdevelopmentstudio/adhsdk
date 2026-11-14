@@ -2,11 +2,11 @@
 id: bd101720-9fd3-4978-a0aa-7671e301e64b
 title: "Avatar Engine"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -26,6 +26,7 @@ depends-on:
   - d3e1f776-8ad1-431f-9485-386ac285a039
   - 471eb7b8-6821-4fd3-ab89-022c56757421
   - 74ba9dde-4963-42cb-aa03-bf1ee4dcc794
+  - a7c91832-4059-4e06-b8c6-e8c727567c66
 related: []
 references: []
 approved-by: ""
@@ -49,14 +50,14 @@ headless **engine** — no visual surface of its own — that composes a
 ([adhsdk.ingredient.avatar-animation-engine.math](cookbook:471eb7b8-6821-4fd3-ab89-022c56757421)), and a
 `Channels`/`Scheduler`/`Tweens` runtime
 ([adhsdk.ingredient.avatar-animation-engine.runtime](cookbook:74ba9dde-4963-42cb-aa03-bf1ee4dcc794)) with two internal
-collaborators not covered by this recipe or any sibling recipe at the time of
-writing — a mood/timeline arbiter (`Arbiter.swift`/`arbiter.ts`) and an
+collaborators documented in
+[adhsdk.ingredient.avatar-animation-engine.anim](cookbook:a7c91832-4059-4e06-b8c6-e8c727567c66) — a mood/timeline arbiter (`Arbiter.swift`/`arbiter.ts`) and an
 ambient-reflex driver (`Reflexes.swift`/`reflexes.ts`) — to turn per-frame
 commands into a `DisplayList` a renderer can paint. This package name is
 deliberately distinct from the older, web-only
 `@adh-sdk/avatar` package (`useAvatarEngine`, documented in
 [adhsdk.ingredient.avatar](cookbook:ccfd0128-374c-4cca-a83f-71efd3c02176)): the two share the word
-"avatar" and little else, and this recipe does not treat them as related.
+"avatar" and little else, and this ingredient does not treat them as related.
 
 ## Behavioral Requirements
 
@@ -126,7 +127,7 @@ deliberately distinct from the older, web-only
   and `EngineTests.testAnUnknownTimelineThrows`).
 - **look-clamping**: `look(x, y)` MUST clamp both `x` and `y` independently to
   the closed interval `[-1, 1]` (`min(max(v, -1), 1)`) before storing the
-  result as the gaze target (`Reflexes.swift`'s `look`).
+  result as the gaze target (`Reflexes.swift`'s `look`; `reflexes.ts`'s `look`).
 - **say-side-effect**: `say(text)` MUST store the exact `text` given, with no
   transformation, escaping, or localization applied, as the current speech,
   expiring after the character's configured bubble timing
@@ -168,14 +169,7 @@ deliberately distinct from the older, web-only
   as computed properties on Apple (`engine.state`, `engine.channels`) and as
   zero-argument methods on web (`engine.state()`, `engine.channels()`)
   (`Engine.swift`; `engine.ts`).
-- **config-exposure-divergence**: On Apple, `Engine.config` MUST
-  be a public, readable stored property, so a render layer can read `canvas`
-  and `strokeStyle` off the same engine instance it ticks, per `Engine.swift`'s
-  own comment on the property. The web `Engine` interface exposes no
-  equivalent accessor; a web caller MUST retain its own reference to the
-  `CharacterConfig` it passed to `createEngine`, since it already obtained
-  one from `loadConfig()` before construction (`engine.ts`'s `EngineOptions`/
-  `Engine` interfaces define no `config` member).
+- **config-exposure**: A render layer MUST be able to read `canvas` and `strokeStyle` from the same `CharacterConfig` the engine ticks. On Apple, `Engine.config` MUST be a public, readable stored property for this (per `Engine.swift`'s own comment on the property); on web, the caller MUST retain the `CharacterConfig` it passed to `createEngine`, since the `Engine` interface defines no `config` member (`engine.ts`'s `EngineOptions`/`Engine` interfaces).
 - **single-context-usage**: The engine and its internal collaborators
   (`Prng`, `Scheduler`, `Tweens`, `Arbiter`, `Reflexes`, `Channels`) MUST be
   driven from a single thread/execution context at a time. None carries
@@ -183,15 +177,7 @@ deliberately distinct from the older, web-only
   project's `SWIFT_STRICT_CONCURRENCY: complete` build setting enforces at
   compile time (`Engine.swift`, `Environment.swift`: plain classes and a
   struct with mutable, unsynchronized state).
-- **saying-emptiness-divergence**: `randomSaying`/the
-  mutter callback rely on `Prng.pick` drawing from a non-empty saying list, an
-  invariant the config loader is documented to guarantee. If that invariant
-  is broken, Apple's `Prng.pick` MUST fail via `preconditionFailure` — an
-  unrecoverable, uncatchable process crash — while the web `Prng.pick` MUST
-  throw an ordinary, catchable `Error`. Both are intentional, source-documented
-  responses to the same contract violation, not two implementations of one
-  behavior (`Prng.swift`'s `pick`; `prng.ts`'s `pick`).
-
+- **saying-emptiness-contract-violation**: `randomSaying` and the mutter callback MUST treat an empty saying list as a contract violation of the config loader's non-empty guarantee, and MUST NOT silently return a default. A port MUST fail in its platform's idiom for an impossible state: Apple's `Prng.pick` fails via `preconditionFailure` (an unrecoverable process crash) and the web `Prng.pick` throws an ordinary, catchable `Error` (`Prng.swift`'s `pick`; `prng.ts`'s `pick`).
 ## Appearance
 
 Not applicable — this is a headless animation state machine, not a visual
@@ -215,7 +201,7 @@ assistive technology to describe.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| avatar-engine-001 | fixed-tick-order | `Engine(EngineOptions(config:, seed: 1)).tick(0)` | Returns a `DisplayList` of exactly 5 items; every item has a non-empty `d`, an ink resolving via `Color.parseHex`, and finite affine-matrix components — `EngineTests.testTickReturnsEveryPaintableNodeWithAResolvedPaint` |
+| avatar-engine-001 | construction | `Engine(EngineOptions(config:, seed: 1)).tick(0)` | Returns a `DisplayList` of exactly 5 items; every item has a non-empty `d`, an ink resolving via `Color.parseHex`, and finite affine-matrix components — `EngineTests.testTickReturnsEveryPaintableNodeWithAResolvedPaint` |
 | avatar-engine-002 | single-clock, clock-normalization | Two engines, same seed, each ticked through an identical 60fps/4s sequence | Both engines' full per-frame `DisplayList` traces are equal — `EngineTests.testNeverReadsAClockOfItsOwn` |
 | avatar-engine-003 | clock-normalization, fixed-tick-order | One engine run at 60fps for 20s, another at 240fps for 20s, same seed | The two engines' `DisplayList` at `t = 20` and their `state` are exactly equal, not merely close — `EngineTests.testReachesTheSameFrameAtTheSameTimeAtAnyFrameRate` |
 | avatar-engine-004 | command-deferred-effect, mood-validate-before-commit | `tick(0)`, then `setMood("out")`, then read `state` immediately, then `tick(1)` | `state.mood == "out"` and `state.source == .app` immediately after `setMood`, but the `eye.scaleY` channel only reaches the `"out"` pose's configured value after the following `tick(1)` — `EngineTests.testAMoodAppliesOnTheNextTick` |
@@ -225,7 +211,13 @@ assistive technology to describe.
 | avatar-engine-008 | shared-prng-stream | Engine A ticked quietly for 4s at 60fps vs. Engine B ticked once, then `randomSaying()` called, then the same 4s trace | Engine A's and Engine B's per-frame trace (excluding frame 0) are NOT equal — the `randomSaying()` draw shifted every later scheduled-random value — `EngineTests.testRandomSayingDrawsFromTheSAMEStreamAsTheReflexes` |
 | avatar-engine-009 | reduced-motion-gating | `body.x` sampled across an 8s/60fps run with `reducedMotion: { true }` vs. the default `{ false }` | With reduced motion off, the observed spread of `body.x` exceeds 1; with it on, the spread is exactly 0 — `EngineTests.testReducedMotionStillsTheAmbientLoops` |
 | avatar-engine-010 | variant-reaches-scene | `tick(0)` on a plain engine vs. one constructed with `variant: "bold"`, reading the `limb` item's paint width | Plain build paints `limb` at ink width `4`; the `"bold"` variant paints it at width `7` — `EngineTests.testEngineOptionsVariantReachesTheSceneItBuilds` |
-
+| avatar-engine-011 | saying-fallback | `randomSaying(mood)` for a mood with no saying list of its own | The pick comes from the `"active"` ladder mood's list — `EngineTests.testFallsBackToTheActiveMoodsListForAMoodThatHasNone` |
+| avatar-engine-012 | lazy-start | Construct an engine and do not call `tick` | No scheduler entry is armed and no state is evaluated until the first `tick` (no test yet) |
+| avatar-engine-013 | unknown-variant-construction-failure | Construct the engine with a `variant` the rig has no patch for | Construction fails before any `tick` call (no test yet) |
+| avatar-engine-014 | mood-release | `setMood("out")`, then `setMood(nil)`, then `tick` | No error; the idle ladder resolves the mood again (no test yet) |
+| avatar-engine-015 | look-clamping | `look(5, -5)` then `tick` | The gaze target is `(1, -1)` (no test yet) |
+| avatar-engine-016 | say-side-effect | `say("hi")` then `tick` | `state.speech` holds exactly `"hi"` and the idle rung stays at 0 for `alertAfterTypingMs` (no test yet) |
+| avatar-engine-017 | state-and-channels-readout | Read `engine.state` and `engine.channels` (`state()` and `channels()` on web) between ticks | `state` holds `mood`, `source`, `speech`, `idleRung` and `lastInteraction`; `channels` is the live store (no test yet) |
 ## Edge Cases
 
 - Constructing the engine with an unrecognized `variant` string fails
@@ -271,7 +263,7 @@ assistive technology to describe.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `config` | `CharacterConfig` (Apple) / `CharacterConfig` (web) | required | A pre-validated character config produced by the loader (`CharacterConfig.load`/`loadConfig`); the engine trusts every invariant the loader is documented to enforce, including that every reachable mood has at least one saying. |
+| `config` | `CharacterConfig` | required | A pre-validated character config produced by the loader (`CharacterConfig.load`/`loadConfig`); the engine trusts every invariant the loader is documented to enforce, including that every reachable mood has at least one saying. |
 | `seed` | `UInt32` (Apple) / `number` (web) | `1` | Seeds the single `Prng` stream shared by the ambient reflexes and `randomSaying`. |
 | `env` | `AvatarEnvironment` (Apple) / `Partial<Environment>` (web) | `reducedMotion: () => false` | Supplies the reduced-motion predicate. Apple takes a full `AvatarEnvironment`; web merges a partial object over `defaultEnvironment`. |
 | `variant` | `String?` (Apple) / `string?` (web) | `nil`/`undefined` (the true rig) | A scene-build-time rig patch name, consumed once at construction by the `Scene` builder. |
@@ -288,7 +280,7 @@ config-supplied strings verbatim (`say(text)`; the lines `randomSaying`
 draws from `config.sayings.sayings`) with no locale-aware formatting,
 pluralization, or string-table lookup of its own. Localizing the sayings
 data is the config author's concern; `sayings.json` is external content, not
-one of the sources given to this recipe.
+part of this ingredient's source files.
 
 ## Accessibility Options
 
@@ -319,8 +311,8 @@ consumed by the next `tick`.
 - **Storage**: None. Nothing in `Engine.swift`/`Environment.swift`/
   `engine.ts`/`env.ts` writes to disk, `UserDefaults`, `localStorage`, or any
   other persistence layer.
-- **Transmission**: None. The engine performs no network I/O; none of the
-  four given sources imports a networking type.
+- **Transmission**: None. The engine performs no network I/O; none of `Engine.swift`,
+  `Environment.swift`, `engine.ts` or `env.ts` imports a networking type.
 - **Retention**: Speech text set via `say(text)` is held only until
   `speech.until` elapses — a few seconds, per the character's configured
   bubble timing — then dropped (`Arbiter.swift`'s `say`/`evaluate`;
@@ -350,25 +342,24 @@ appears anywhere in `Engine.swift`, `Environment.swift`, `engine.ts`, or
   host drives `tick` from a `requestAnimationFrame` loop and renders the
   returned `DisplayList` (commonly via the sibling `render/svg` entry point
   in this same package); `browserEnvironment()` supplies `reducedMotion` by
-  reading `matchMedia("(prefers-reduced-motion: reduce)")` off `globalThis`
-  once at construction.
+  looking up `matchMedia` on `globalThis` once at construction and then calling
+  `matchMedia("(prefers-reduced-motion: reduce)").matches` on every read, so the predicate is fresh on each poll.
 - **AppKit / UIKit** (source platform): `Engine.swift` and `Environment.swift`
   are the actual implementation. A host drives `tick(_:)` from a
   `CVDisplayLink` (AppKit) or `CADisplayLink` (UIKit) callback and renders the
   returned `DisplayList`; the real, platform-backed `AvatarEnvironment` (its
   `reducedMotion` reading `NSWorkspace`'s or `UIAccessibility`'s reduce-motion
   flag) lives in `Render/PlatformShims.swift`'s `AvatarEnvironment.live()`
-  extension, per `Environment.swift`'s own doc comment, not in the two files
-  given to this recipe.
-- **WinUI 3**: this is the platform this recipe exists to prepare a port for,
-  and it needs a from-scratch host and engine, since neither given source
-  compiles on .NET. Drive `Tick(double now)` from a
+  extension, per `Environment.swift`'s own doc comment, not in `Engine.swift` or `Environment.swift`.
+- **WinUI 3**: this is the platform this ingredient exists to prepare a port for,
+  and it needs a from-scratch host and engine, since neither the Swift nor the TypeScript
+  source compiles on .NET. Drive `Tick(double now)` from a
   `CompositionTarget.Rendering` event or a `DispatcherQueueTimer`, called
   synchronously on the UI thread — not through `Task.Run`/`async`, since the
   fixed scheduler-then-arbiter-then-tweens-then-compose order this contract
   requires must run on one thread without interleaving. Deserialize
   `CharacterConfig` with `System.Text.Json` (mirroring the config loader's
-  contract, not this recipe's). Port the xoshiro128** `Prng` bit-for-bit in
+  contract, not this ingredient's). Port the xoshiro128** `Prng` bit-for-bit in
   C# using `uint` arithmetic; .NET's `System.Random` will not reproduce the
   same stream and MUST NOT be substituted. Read the reduced-motion state
   from `Windows.UI.ViewManagement.UISettings` (or the Windows App SDK's
@@ -386,16 +377,16 @@ appears anywhere in `Engine.swift`, `Environment.swift`, `engine.ts`, or
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AvatarAnimationEngine/Sources/Engine.swift` | unverified |
-| apple | `packages/apple/AvatarAnimationEngine/Sources/Environment.swift` | unverified |
-| web | `packages/web/packages/avatar-engine/src/engine.ts` | unverified |
-| web | `packages/web/packages/avatar-engine/src/env.ts` | unverified |
+| apple | `packages/apple/AvatarAnimationEngine/Sources/Engine.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AvatarAnimationEngine/Sources/Environment.swift` | confirmed (1.0.2) |
+| web | `packages/web/packages/avatar-engine/src/engine.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/avatar-engine/src/env.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 
 - **Decision**: `Prng.pick` on an empty list crashes the host process on
   Apple (`preconditionFailure`, uncatchable) but throws an ordinary,
-  catchable `Error` on web, and this recipe records both as intentional
+  catchable `Error` on web, and this ingredient records both as intentional
   rather than reconciling them into one behavior.
   **Rationale**: Both source files document this as the same underlying
   contract violation — the config loader is supposed to guarantee every
@@ -403,7 +394,7 @@ appears anywhere in `Engine.swift`, `Environment.swift`, `engine.ts`, or
   empty list means that guarantee was broken elsewhere — but each platform's
   own idiom for an "this should be impossible" failure differs: a Swift
   precondition failure versus a thrown JavaScript `Error`. Neither file
-  proposes reconciling the two, and this recipe does not either.
+  proposes reconciling the two, and this ingredient does not either.
   **Approved**: pending
 - **Decision**: `Engine` exposes no explicit teardown or dispose method, even
   though its internal `Reflexes` collaborator has a `stop()` that `Engine`
@@ -453,7 +444,7 @@ re-arming on the environment's predicate, tested on both platforms.
 `explicit-error-handling` is passed: `setMood` and `play` validate before
 committing and raise a named, message-bearing error rather than failing
 silently or corrupting state. `unit-test-coverage` is passed:
-`EngineTests.swift` (13 methods) and `engine.test.ts` cover construction,
+`EngineTests.swift` and `engine.test.ts` cover construction,
 determinism, frame-rate independence, every command, and the shared-PRNG and
 reduced-motion contracts. `fault-tolerance` is partial: the `Scheduler` this
 engine ticks first every frame tolerates a non-monotonic `now` and bounds its
@@ -463,13 +454,14 @@ Decision). `input-sanitization` is passed: `setMood` and `play` both check
 their string argument against the loader-approved mood/timeline sets before
 any state mutation. `separation-of-concerns` is passed: `Engine.swift`/
 `engine.ts` hold only the tick/state-machine orchestration and
-`Environment.swift`/`env.ts` hold only the injected clock/reduced-motion
-predicate, with no rendering code in either file — the render path lives
-entirely in the sibling avatar-engine-render recipe.
+`Environment.swift`/`env.ts` hold only the injected reduced-motion
+predicate (the environment deliberately exposes no clock), with no rendering code in either file — the render path lives
+entirely in the sibling render ingredients.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the anim ingredient in depends-on and the overview, corrected the separation-of-concerns rationale and the matchMedia note, replaced recipe wording and provenance phrases, rewrote the two divergence requirements as testable behavior, and added seven vectors. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Un-hard-wrapped four adhsdk:// recipe URIs split across code-span line breaks; renamed config-exposure/saying-emptiness-divergence requirement names to kebab-case; reduced-motion-gating corrected to describe re-arm/mood-effect-restart when the predicate later returns false. Added best-practices compliance rows (separation-of-concerns: passed). |
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |

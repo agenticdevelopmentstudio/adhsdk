@@ -4,7 +4,7 @@
     "id": "92a9546a-eec1-47ed-8420-7db51e8d0261",
     "title": "Activity Span DTO",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,12 +23,14 @@
       "dto"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "aa775836-5679-4a22-9ff3-b2bdcb09cc20"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c339c07916d34f6d",
+  "synced": "45fc9360b6dc6adc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -13,6 +13,8 @@ NavChrome provides semantic structure and class names for styling; visual appear
   - `.lp-nav`: Navigation anchor links inside the drawer
   - `.lp-foot`: Optional footer content container
 
+- **Close button position (host guidance)**: The host is advised to place the close button where the burger sits, so closing reads as if the control itself changed; the component does not guarantee this position.
+
 - **CSS Custom Properties**:
   - `--lp-chrome-top`: Allows the host to offset the entire chrome (bar, scrim, drawer) below a site header; the component references this but does not set it
 

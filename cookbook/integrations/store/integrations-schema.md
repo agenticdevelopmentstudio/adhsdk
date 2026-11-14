@@ -2,11 +2,11 @@
 id: 39a27113-5478-468c-8417-a291d587aab6
 title: "IntegrationsSchema"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,6 +23,7 @@ depends-on:
   - ea580796-8b16-4832-b11d-ad3cae991ecd
 related:
   - 888b7ba2-61f6-4251-88df-3586c5c86b1f
+  - c19280fd-b80c-46f3-a6a7-0b60a0c90d91
 references: []
 approved-by: ""
 approved-date: ""
@@ -32,16 +33,15 @@ approved-date: ""
 
 ## Overview
 
-`IntegrationsSchema` is a caseless public enum that creates the local mirror of the hub's integration tables. Its doc comment says "Names and columns follow adhbackend; JSON columns are TEXT, timestamps are ISO-8601 UTC strings." It exposes one public operation, `migrate(_:)`, which runs a GRDB `DatabaseMigrator` holding a single migration, `integrations-v1`, against a `BoundedDatabase`. The migration creates five tables: `integration_provider_configs`, `integration_connections`, `integration_email_messages`, `integration_email_labels` and `integration_action_logs`. `IntegrationsStore` calls `migrate` from its initializer. The record structs that map to these tables are described in [adhsdk.ingredient.integrations.model.integration-records](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f), and the database wrapper in [adhsdk.ingredient.data.storage.database](cookbook:ea580796-8b16-4832-b11d-ad3cae991ecd).
+`IntegrationsSchema` is a caseless public enum that creates the local mirror of the hub's integration tables. Its doc comment says "Names and columns follow adhbackend; JSON columns are TEXT, timestamps are ISO-8601 UTC strings." It exposes one public operation, `migrate(_:)`, which runs a GRDB `DatabaseMigrator` holding a single migration, `integrations-v1`, against a `BoundedDatabase`. The migration creates five tables: `integration_provider_configs`, `integration_connections`, `integration_email_messages`, `integration_email_labels` and `integration_action_logs`. `IntegrationsStore` ([adhsdk.ingredient.integrations.store.integrations-store](cookbook:c19280fd-b80c-46f3-a6a7-0b60a0c90d91)) calls `migrate` from its initializer. The record structs that map to these tables are described in [adhsdk.ingredient.integrations.model.integration-records](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f), and the database wrapper in [adhsdk.ingredient.data.storage.database](cookbook:ea580796-8b16-4832-b11d-ad3cae991ecd).
 
 ## Behavioral Requirements
 
 ### Migration
 
 - **migrate-entry-point**: `IntegrationsSchema` MUST expose `migrate(_ database: BoundedDatabase) throws` as its only public operation.
-- **migrate-runs-on-writer**: `migrate` MUST run the migrator against `database.writer`, the underlying GRDB writer of the `BoundedDatabase`.
-- **migration-name**: The migrator MUST register exactly one migration, named `integrations-v1`.
-- **migration-creates-five-tables**: The `integrations-v1` migration MUST create `integration_provider_configs`, `integration_connections`, `integration_email_messages`, `integration_email_labels` and `integration_action_logs`, in that order.
+- **migration-name**: The migrator MUST register exactly one migration, named `integrations-v1`. The name is fixed and not configurable; GRDB records it once the migration has run.
+- **migration-creates-five-tables**: The `integrations-v1` migration MUST create `integration_provider_configs`, `integration_connections`, `integration_email_messages`, `integration_email_labels` and `integration_action_logs`.
 - **migration-single-transaction**: Each table's DDL MUST run inside the one `integrations-v1` migration, so GRDB applies and records the migration as a unit.
 - **migrate-idempotent**: Calling `migrate` again on a database that already ran `integrations-v1` MUST NOT recreate tables or change data, because GRDB records the applied migration by name and skips it.
 - **migrate-propagates-errors**: `migrate` MUST declare `throws` and MUST let any GRDB or SQLite error propagate to the caller unchanged; it has no catch and no recovery path.
@@ -92,9 +92,8 @@ approved-date: ""
 
 ### Concurrency and side effects
 
-- **writer-serialised**: The Swift `migrate` is a synchronous call that blocks until the migration finishes, and a port MUST complete the migration before its store accepts writes; ordering against other writes is the serialisation GRDB's writer provides (a serial `DatabaseQueue` in memory, a `DatabasePool` writer for a file).
+- **writer-serialised**: The migration MUST complete before the store accepts writes.
 - **only-side-effect**: The only side effect of `migrate` MUST be the schema change and GRDB's own migration bookkeeping in the target database; it does no logging, network call or file access of its own.
-- **migrator-internal**: `migrator()` MUST stay internal (not public), so only `migrate` and `@testable` tests can build it.
 
 ## Appearance
 
@@ -110,11 +109,11 @@ Not applicable — this is a database schema and migration, not a visual compone
 
 ## Conformance Test Vectors
 
-The source has no test file of its own. `IntegrationsStoreTests` builds every database through `IntegrationsStore.init`, which calls `IntegrationsSchema.migrate`, so its assertions exercise the schema indirectly. Vectors 001 to 009 and 011 to 018 are derived from the DDL; 010 names the test whose behavior depends on the schema.
+The source has no test file of its own. `IntegrationsStoreTests` builds every database through `IntegrationsStore.init`, which calls `IntegrationsSchema.migrate`, so its assertions exercise the schema indirectly. Vectors 001 to 009 and 011 to 023 are derived from the DDL; 010 names the test whose behavior depends on the schema.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| schema-001 | migration-creates-five-tables, migrate-runs-on-writer | An empty in-memory `BoundedDatabase`; call `IntegrationsSchema.migrate` | The names in `sqlite_master` of type table include `integration_provider_configs`, `integration_connections`, `integration_email_messages`, `integration_email_labels` and `integration_action_logs` |
+| schema-001 | migration-creates-five-tables | An empty in-memory `BoundedDatabase`; call `IntegrationsSchema.migrate` | The names in `sqlite_master` of type table include `integration_provider_configs`, `integration_connections`, `integration_email_messages`, `integration_email_labels` and `integration_action_logs` |
 | schema-002 | migrate-idempotent | Call `migrate` twice on the same database | The second call returns without throwing; the table list is unchanged |
 | schema-003 | migrate-idempotent | Migrate, insert one connection row, call `migrate` again | The connection row is still present |
 | schema-004 | messages-unique-external | Insert two `integration_email_messages` rows with the same `connection_id` and `external_id` but different `id` | The second insert fails with a UNIQUE constraint error |
@@ -123,15 +122,21 @@ The source has no test file of its own. `IntegrationsStoreTests` builds every da
 | schema-007 | connections-account-index | Insert two connection rows with the same `provider` and `external_account_id` and different `id` | Both inserts succeed (the index is not unique) |
 | schema-008 | booleans-default, provider-configs-columns | Insert a provider config row and a message row without `enabled` or `is_deleted` | `enabled` reads back as 1 and `is_deleted` reads back as 0 |
 | schema-009 | connections-required-columns | Insert a connection row with `status` NULL | The insert fails with a NOT NULL constraint error |
-| schema-010 | messages-unique-external | `IntegrationsStoreTests.upsertMessagesIsIdempotent`: upsert message `e1` with subject "old", then again with subject "new" | `SELECT COUNT(*) FROM integration_email_messages` is 1 and the stored subject is "new" |
+| schema-010 | none (illustrative: the store reuses the existing `id` by lookup, so this passes without the index; schema-004 tests the constraint) | `IntegrationsStoreTests.upsertMessagesIsIdempotent`: upsert message `e1` with subject "old", then again with subject "new" | `SELECT COUNT(*) FROM integration_email_messages` is 1 and the stored subject is "new" |
 | schema-011 | action-logs-no-index, action-log-no-tombstone | Insert two action log rows with the same non-null `idempotency_key` | Both inserts succeed; the table has no `deleted_at` or `is_deleted` column |
 | schema-012 | no-foreign-keys | Insert a message row whose `connection_id` matches no connection | The insert succeeds |
 | schema-013 | migration-name | Migrate, then `SELECT identifier FROM grdb_migrations` | Exactly one row, `integrations-v1` |
 | schema-014 | json-columns-text, timestamps-text | `PRAGMA table_info` on each table | `sync_settings`, `scopes`, `to_addresses`, `cc_addresses`, `label_ids`, `attachments`, `request_payload` and every `created_at`, `updated_at`, `deleted_at`, `last_sync_at`, `internal_date` column report type `TEXT` |
 | schema-015 | provider-configs-no-secret, provider-configs-no-index | `PRAGMA table_info` and `PRAGMA index_list` on `integration_provider_configs` | The columns are exactly `id`, `provider_id`, `name`, `client_id`, `enabled`, `created_at`, `updated_at`, `deleted_at`; no index other than the primary key's |
 | schema-016 | messages-date-index | `PRAGMA index_list` and `PRAGMA index_info` on `integration_email_messages` | `integration_email_messages_date` exists, is not unique, and covers `connection_id` then `internal_date` |
-| schema-017 | table-already-exists | On a fresh database, create `integration_connections` by hand, then call `migrate` | `migrate` throws a SQLite error and `integrations-v1` is not recorded |
+| schema-017 | migrate-propagates-errors | On a fresh database, create `integration_connections` by hand, then call `migrate` | `migrate` throws a SQLite error and `integrations-v1` is not recorded |
 | schema-018 | primary-key-text | Insert a connection row with `id` NULL | The insert fails with a NOT NULL constraint error |
+| schema-019 | tombstone-columns, messages-is-deleted, labels-is-deleted | `PRAGMA table_info` on the provider config, connection, message and label tables | Each has a nullable `deleted_at TEXT`; the message and label tables also have `is_deleted BOOLEAN` with `notnull` 1 and default `0` |
+| schema-020 | messages-required-columns, messages-nullable-columns | `PRAGMA table_info` on `integration_email_messages` | The columns listed as required are `TEXT` with `notnull` 1; `body_text`, `body_html`, `history_id` and `deleted_at` have `notnull` 0 |
+| schema-021 | labels-required-columns, labels-nullable-columns | `PRAGMA table_info` on `integration_email_labels` | The required columns are `TEXT` with `notnull` 1; `parent_name`, `color` and `deleted_at` are nullable `TEXT`; `messages_total` and `messages_unread` are nullable `INTEGER` |
+| schema-022 | action-logs-required-columns, action-logs-nullable-columns | `PRAGMA table_info` on `integration_action_logs` | `id`, `connection_id`, `provider`, `action_type`, `request_payload`, `status`, `created_at` and `updated_at` are `TEXT` with `notnull` 1; `idempotency_key`, `result` and `error` are nullable |
+| schema-023 | migrate-propagates-errors | On a database whose `integration_connections` table already exists, call `migrate` and inspect the thrown error | The thrown error is GRDB's `DatabaseError` as raised, not wrapped or replaced |
+
 ## Edge Cases
 
 - **empty-database**: On a database with no tables, `migrate` MUST create all five tables.
@@ -152,8 +157,6 @@ The source has no test file of its own. `IntegrationsStoreTests` builds every da
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `database` | `BoundedDatabase` | none (required) | The database to migrate; `migrate` uses its `writer` property. Supplied by the caller, in practice `IntegrationsStore.init(database:)`. |
-| Migration name | `String` | `integrations-v1` | Fixed identifier GRDB records once the migration has run. Not configurable. |
-| Database path | `String` | none | Owned by the caller's `BoundedDatabase` (a file path or `:memory:`); the schema never opens a file. |
 
 ## Deep Linking
 
@@ -188,8 +191,8 @@ Not applicable: the source makes no log call; a migration failure surfaces only 
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform. The file is `packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsSchema.swift`, in the integrations module, importing `Foundation`, `AgenticDeveloperHubSDKDatabase` (for `BoundedDatabase`) and GRDB (for `DatabaseMigrator`). A caseless `enum` serves as a namespace; the DDL strings are `private static let` constants and `migrator()` is internal. An app does not call this directly; `IntegrationsStore.init(database:)` does, and the call is synchronous, so run it off the main actor.
-- **Compose**: Use Room with a `@Database` listing five `@Entity` classes, and a `Migration` or an auto-migration for later versions. Room's `version` plus its `room_master_table` replaces GRDB's migration-name record, so the single `integrations-v1` step becomes database version 1. Declare the two UNIQUE indices with `@Index(value = ["connection_id", "external_id"], unique = true)`, and note Room has no `DEFAULT` unless declared with `@ColumnInfo(defaultValue = "...")`.
+- **SwiftUI**: Source platform. The file is `packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsSchema.swift`, in the integrations module, importing `Foundation`, `AgenticDeveloperHubSDKDatabase` (for `BoundedDatabase`) and GRDB (for `DatabaseMigrator`). A caseless `enum` serves as a namespace; the DDL strings are `private static let` constants and `migrator()` is internal, so only `migrate` and `@testable` tests can build it. `migrate` runs the migrator against `database.writer`, the underlying GRDB writer of the `BoundedDatabase`, and blocks until the migration finishes; ordering against other writes is the serialisation GRDB's writer provides (a serial `DatabaseQueue` in memory, a `DatabasePool` writer for a file). An app does not call this directly; `IntegrationsStore.init(database:)` does, and the call is synchronous, so run it off the main actor.
+- **Compose**: Use Room with a `@Database` listing five `@Entity` classes, and a `Migration` or an auto-migration for later versions. Room's `version` (stored in SQLite's `PRAGMA user_version`; `room_master_table` holds only the schema identity hash) replaces GRDB's migration-name record, so the single `integrations-v1` step becomes database version 1. Declare the two UNIQUE indices with `@Index(value = ["connection_id", "external_id"], unique = true)`, and note Room has no `DEFAULT` unless declared with `@ColumnInfo(defaultValue = "...")`.
 - **React/Web**: Use a SQLite build for the browser (SQLite WASM with OPFS, or `better-sqlite3` on Node) and run the same five `CREATE TABLE` and index statements inside one transaction guarded by a migrations table, or `PRAGMA user_version = 1`. Where only IndexedDB exists, model each table as an object store and each UNIQUE index as an index with `unique: true` on the compound key path; foreign keys and `DEFAULT` values then become application code.
 - **AppKit / UIKit**: Same Swift source as above; it has no AppKit or UIKit dependency, so macOS and iOS share it unchanged.
 - **WinUI 3**: Use `Microsoft.Data.Sqlite` (or EF Core with the SQLite provider) in a .NET / Windows App SDK app. Run the five DDL strings in one `SqliteTransaction` and record applied migrations in a small `__migrations` table, or use EF Core's `Migrate()` with `HasIndex(...).IsUnique()` for the two unique indices and `HasDefaultValue(true)` and `HasDefaultValue(false)` for `enabled` and `is_deleted`. Call it with `await Task.Run(...)` or `MigrateAsync()` so the UI thread is not blocked, and surface `SqliteException` to the caller instead of swallowing it, matching the source's `throws`. SQLite enforces foreign keys only after `PRAGMA foreign_keys = ON`; the source declares none, so a port should leave them off to match.
@@ -198,7 +201,7 @@ Not applicable: the source makes no log call; a migration failure surfaces only 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsSchema.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsSchema.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -206,7 +209,7 @@ Not applicable: the source makes no log call; a migration failure surfaces only 
 ## Design Decisions
 
 **Decision**: Keep every JSON value and timestamp as TEXT rather than using a native JSON or date type.
-**Rationale**: The doc comment states "JSON columns are TEXT, timestamps are ISO-8601 UTC strings", and says names and columns follow adhbackend; SQLite has no date type and ISO-8601 UTC strings sort as text.
+**Rationale**: SQLite has no date type, and ISO-8601 UTC strings sort in time order as text. TEXT columns keep the file readable by any SQLite build and leave the encoding of structured values to the record layer. The cost is that the database cannot check types or query inside the JSON.
 **Approved**: pending
 
 **Decision**: Declare `integration_email_messages_external` and `integration_email_labels_external` as UNIQUE on `(connection_id, external_id)`, but leave `integration_connections_account` non-unique.
@@ -218,11 +221,11 @@ Not applicable: the source makes no log call; a migration failure surfaces only 
 **Approved**: pending
 
 **Decision**: Declare no foreign keys, CHECK constraints or enum constraints.
-**Rationale**: The DDL contains none. Referential and value rules live in the record and store layers, so a port must enforce them there. This is deliberate, prudent technical debt: the store owns integrity, matching adhbackend, so the local mirror stays a plain copy of the hub tables. The cost is that orphaned rows and unknown `status` values are accepted. Constraints belong in a later migration with a new name, added once the record and store layers no longer need to write rows that violate them.
+**Rationale**: Referential and value rules live in the record and store layers, so a port must enforce them there. This is deliberate, prudent technical debt: the store owns integrity, so the schema stays plain tables. The cost is that orphaned rows and unknown `status` values are accepted. Constraints belong in a later migration with a new name, added once the record and store layers no longer need to write rows that violate them.
 **Approved**: pending
 
 **Decision**: Use a single migration, `integrations-v1`, whose DDL uses plain `CREATE TABLE` without `IF NOT EXISTS`.
-**Rationale**: GRDB's migrator skips a migration it has recorded, so the DDL never reruns on a migrated database. A database that has the tables but no record makes `migrate` throw.
+**Rationale**: GRDB owns idempotency: its migrator skips a migration it has recorded, so the DDL never reruns on a migrated database and needs no guard of its own. Leaving out `IF NOT EXISTS` also makes a database that has the tables but no record fail loudly, rather than silently adopting tables of unknown shape.
 **Approved**: pending
 
 ## Compliance
@@ -240,4 +243,5 @@ The enum holds only DDL and the migrator call, with reads, writes and tombstonin
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Removed the unsupported adhbackend claim, gave real tradeoffs for the TEXT and no-IF-NOT-EXISTS decisions, moved Swift-only rules to the platform notes, added five column vectors, linked IntegrationsStore, and corrected the Room version note. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

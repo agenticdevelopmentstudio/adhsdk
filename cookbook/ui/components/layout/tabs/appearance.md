@@ -8,9 +8,9 @@
 - **Foreground—inactive**: muted gray text (`apt-text-muted`)
 - **Foreground—active**: full contrast text (`apt-text`), gold underline (`apt-gold`)
 - **Foreground—hover**: full contrast text (`apt-text`)
-- **Foreground—disabled**: none — the `disabled:pointer-events-none disabled:opacity-50` classes are Tailwind `:disabled`-pseudo-class selectors, and Base UI's `TabsTab` sets `aria-disabled`/`data-disabled` rather than the native `disabled` attribute (it remains `focusableWhenDisabled`), so neither class ever matches; a disabled tab keeps full opacity, still responds to hover, and remains keyboard-focusable — only click-activation is blocked
+- **Foreground—disabled**: dimmed to 50% opacity with no hover response, keyed off `data-disabled`. The current source instead uses `disabled:pointer-events-none disabled:opacity-50`, which are Tailwind `:disabled`-pseudo-class selectors, and Base UI's `TabsTab` sets `aria-disabled`/`data-disabled` rather than the native `disabled` attribute (it is `focusableWhenDisabled`), so neither class matches: today a disabled tab keeps full opacity, still responds to hover, and remains keyboard-focusable, with only click-activation blocked (known non-conformance, see **Edge Cases**)
 - **Border—TabsList**: 1px bottom border in neutral border color (`apt-border`)
 - **Border—active tab**: 2px bottom border in gold (`apt-gold`), positioned at bottom of tab (negative margin `-mb-px` to overlap list border)
 - **Shadow**: none
-- **Min/Max size**: no size constraints on Tabs root; `TabsTab` renders at approximately 33px tall — `text-[0.8rem]`'s default line-height (~15px) + `py-2`'s 16px total vertical padding + `border-b-2`'s 2px
+- **Min/Max size**: no size constraints on Tabs root; `TabsTab` renders at approximately 33px tall, assuming an inherited line-height of about 15px (the `text-[0.8rem]` size sets no line-height of its own, so it follows the surrounding context) + `py-2`'s 16px total vertical padding + `border-b-2`'s 2px
 

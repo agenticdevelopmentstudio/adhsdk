@@ -9,9 +9,9 @@ Vectors are traced to `ThemeStoreTests` (suite `ThemeStore`) where a test exists
 | theme-store-004 | update-replaces-by-id, update-noop-unknown | `update`: add a theme named Before, rename it to After and call `update`; then call `update` with Dracula renamed Hacked | The custom theme's name is After; Dracula's name stays Dracula |
 | theme-store-005 | delete-removes-custom, delete-builtin-noop | `delete`: add a theme and delete its id; then delete `BuiltInThemes.defaultID` | The custom theme is gone; the built-in default is still found |
 | theme-store-006 | delete-builtin-noop | `builtInsAreUndeletable`: delete the first built-in id | `allThemes` still contains it |
-| theme-store-007 | delete-clears-active-id | Source-derived: storage with `activeThemeID` equal to a custom theme's id; call `delete(id:)` with that id | `storage.activeThemeID` is `nil` and the theme is gone |
-| theme-store-008 | delete-builtin-noop | Source-derived: `activeThemeID` equals `BuiltInThemes.defaultID`; call `delete(id:)` with it | `allThemes` still holds the default; `activeThemeID` is unchanged (`deletingActiveBuiltInKeepsIt`) |
-| theme-store-009 | delete-skips-noop-write | Source-derived: empty custom list; call `delete(id:)` with an unknown id | storage is not written and `activeThemeID` is unchanged |
+| theme-store-007 | delete-clears-active-id | Source-derived (no test): storage with `activeThemeID` equal to a custom theme's id; call `delete(id:)` with that id | `storage.activeThemeID` is `nil` and the theme is gone |
+| theme-store-008 | delete-builtin-noop | `deletingActiveBuiltInKeepsIt`: `activeThemeID` equals the first built-in's id; call `delete(id:)` with it | `activeThemeID` is unchanged and the built-in stays in `allThemes` |
+| theme-store-009 | delete-builtin-noop | Source-derived: empty custom list; call `delete(id:)` with an unknown id | storage is not written and `activeThemeID` is unchanged |
 | theme-store-010 | add-new-seed, add-new-identity, add-new-name | `addNew`: `addNewTheme(name: "Fresh")` | Name is Fresh, `isEditable` is `true`, `customThemes` contains it |
 | theme-store-011 | unique-name, add-new-name | `addNewUniquifiesNames`: call `addNewTheme(name: "New Theme")` three times | Names are New Theme, New Theme 2, New Theme 3 |
 | theme-store-012 | duplicate-copy, duplicate-name, duplicate-unlocks, duplicate-keeps-content | `duplicate`: `duplicate(BuiltInThemes.dracula)` | New id, `isBuiltIn` is `false`, name is Dracula Copy, `ansi` equals Dracula's, stored in `customThemes` |
@@ -34,5 +34,5 @@ Vectors are traced to `ThemeStoreTests` (suite `ThemeStore`) where a test exists
 | theme-store-029 | export-json-format, export-json-roundtrip | Source-derived: `exportJSON` of a theme | The bytes are pretty-printed with keys in sorted order and decode back to an equal `ColorTheme` |
 | theme-store-030 | lookup-by-id, add-unvalidated | Source-derived: `add` a theme carrying a built-in's id | `theme(withID:)` returns the built-in, and `customThemes` holds both entries without error |
 | theme-store-031 | import-iterm-name-not-uniquified | Source-derived: import an `.itermcolors` file whose base name matches an existing theme | The stored name equals the existing name with no numeric suffix |
-| theme-store-032 | storage-injected, main-actor-isolation, no-timeout-no-retry, write-failure-silent | `ThemeStoreTests` construction: `ThemeStore(storage: InMemoryThemeStorage())` on the main actor | Every call completes synchronously and no storage error is surfaced by the store |
+| theme-store-032 | storage-injected, main-actor-isolation, no-timeout-no-retry, write-failure-silent | Structural guarantees, verified by compilation and code inspection: `init(storage:)` is the only initialiser, the type is `@MainActor`, no method suspends, and no setter call is checked | No runtime vector |
 

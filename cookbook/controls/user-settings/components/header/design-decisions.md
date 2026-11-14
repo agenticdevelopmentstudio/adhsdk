@@ -4,7 +4,7 @@
 **Approved**: pending
 
 2. **Decision**: The component always includes the `aws-header` class as a fixed, non-removable default identity class.
-**Rationale**: `aws-header` represents the component's identity and gives every instance a consistent styling baseline; additional classes are composed alongside it (see #requirements/class-composition) so consumers can customize without losing the base style.
+**Rationale**: `aws-header` represents the component's identity and gives every instance a consistent styling baseline (the `aws-` prefix is the class namespace of the user-settings stylesheet); additional classes are composed alongside it (see #requirements/class-composition) so consumers can customize without losing the base style.
 **Approved**: pending
 
 3. **Decision**: Class composition uses a simple array-filter-and-join pattern (`['aws-header', className].filter(Boolean).join(' ')`) rather than conditional rendering or a CSS-in-JS library.
@@ -12,6 +12,6 @@
 **Approved**: pending
 
 4. **Decision**: Children accept any ReactNode.
-**Rationale**: `HeaderProps` defines `children?: ReactNode`, which permits any React-renderable content — fragments, components, or strings — without type checking (see #requirements/children-content). This flexibility allows the component to be used in many contexts without modification.
+**Rationale**: Accepting any renderable content lets the component be used in many contexts without modification (see #requirements/children-content).
 **Approved**: pending
 

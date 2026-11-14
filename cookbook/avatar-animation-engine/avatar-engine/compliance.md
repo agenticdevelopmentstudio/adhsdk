@@ -13,7 +13,7 @@ re-arming on the environment's predicate, tested on both platforms.
 `explicit-error-handling` is passed: `setMood` and `play` validate before
 committing and raise a named, message-bearing error rather than failing
 silently or corrupting state. `unit-test-coverage` is passed:
-`EngineTests.swift` (13 methods) and `engine.test.ts` cover construction,
+`EngineTests.swift` and `engine.test.ts` cover construction,
 determinism, frame-rate independence, every command, and the shared-PRNG and
 reduced-motion contracts. `fault-tolerance` is partial: the `Scheduler` this
 engine ticks first every frame tolerates a non-monotonic `now` and bounds its
@@ -23,7 +23,7 @@ Decision). `input-sanitization` is passed: `setMood` and `play` both check
 their string argument against the loader-approved mood/timeline sets before
 any state mutation. `separation-of-concerns` is passed: `Engine.swift`/
 `engine.ts` hold only the tick/state-machine orchestration and
-`Environment.swift`/`env.ts` hold only the injected clock/reduced-motion
-predicate, with no rendering code in either file — the render path lives
-entirely in the sibling avatar-engine-render recipe.
+`Environment.swift`/`env.ts` hold only the injected reduced-motion
+predicate (the environment deliberately exposes no clock), with no rendering code in either file — the render path lives
+entirely in the sibling render ingredients.
 

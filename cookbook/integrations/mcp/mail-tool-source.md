@@ -2,11 +2,11 @@
 id: cbee8b02-9456-4d9b-942a-51f8a9c074fc
 title: "MailToolSource"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -42,9 +42,9 @@ Results are pretty-printed JSON with sorted keys (the shared `MailJSON.encode` s
 ### Construction and conformance
 
 - **client-injection**: The component MUST be constructed with exactly one `MailClient` and MUST perform every mail operation through it.
-- **tool-source-conformance**: The component MUST conform to the host's tool-source contract by providing a tool-definition list and a call operation taking a tool name and the argument bytes.
-- **caller-ignored**: When the host supplies a caller identifier, the component MUST ignore it.
-- **stateless**: The component MUST hold no mutable state, so that it can be shared between concurrent calls; each call MUST be independent of every earlier call.
+- **tool-source-conformance**: The component MUST conform to the host's tool-source contract by providing a tool-definition list and a call operation taking a tool name and the argument bytes. The host's contract also has a variant of the call operation that takes an optional caller identifier; the component does not implement it, so the contract's default forwards to the plain operation.
+- **caller-ignored**: When the host supplies a caller identifier through the contract's caller variant, the component MUST ignore it.
+- **stateless**: The component MUST hold no mutable state; each call MUST be independent of every earlier call.
 
 ### Tool definitions
 
@@ -53,11 +53,40 @@ Results are pretty-printed JSON with sorted keys (the shared `MailJSON.encode` s
 - **list-accounts-schema**: `mail_list_accounts` MUST declare no properties and no required arguments.
 - **account-argument**: Every tool except `mail_list_accounts` MUST declare a string property `account` ("The account's connection id or email address.") and MUST list it as required.
 - **list-labels-required**: `mail_list_labels` MUST require only `account`.
-- **list-messages-schema**: `mail_list_messages` MUST declare `account` (string, required), `since`, `until`, `cursor` and `query` (strings), `labels` and `any_labels` (string arrays), `limit` (integer) and `include_bodies` (boolean).
-- **get-message-required**: `mail_get_message` MUST declare `account` and `id` as required strings, and MUST NOT declare `include_bodies`.
-- **get-thread-schema**: `mail_get_thread` MUST declare `account` and `id` (strings, both required) and `include_bodies` (boolean).
-- **modify-labels-schema**: `mail_modify_labels` MUST declare `account` (string, required), `message_ids` (string array, required), `add` and `remove` (string arrays).
-- **move-messages-schema**: `mail_move_messages` MUST declare `account` (string), `message_ids` (string array) and `to` (string), all required, and `from` (string array).
+- **list-messages-schema**: `mail_list_messages` MUST declare, besides `account`, the properties `since`, `until`, `cursor` and `query` (strings), `labels` and `any_labels` (string arrays), `limit` (integer) and `include_bodies` (boolean).
+- **get-message-required**: `mail_get_message` MUST require `id` as well as `account`, and MUST NOT declare `include_bodies`.
+- **get-thread-schema**: `mail_get_thread` MUST require `id` (string) as well as `account`, and MUST declare `include_bodies` (boolean).
+- **modify-labels-schema**: `mail_modify_labels` MUST require `message_ids` (string array) as well as `account`, and MUST declare `add` and `remove` (string arrays).
+- **move-messages-schema**: `mail_move_messages` MUST require `message_ids` (string array) and `to` (string) as well as `account`, and MUST declare `from` (string array).
+- **tool-descriptions**: Each definition MUST carry the description text below, and each property MUST carry its description text, so a model sees the same advertised schema on every platform. Properties not listed here (`account` is covered by **account-argument**) have no description beyond their type.
+
+| Tool or property | Description text |
+|------------------|------------------|
+| `mail_list_accounts` | Lists the connected mail accounts. |
+| `mail_list_labels` | Lists an account's labels. |
+| `mail_list_messages` | Lists an account's synced messages, newest first, one page at a time. With query, searches Gmail itself instead, beyond the synced mail. |
+| `mail_list_messages` `since` | Earliest date: YYYY-MM-DD or an ISO-8601 timestamp. |
+| `mail_list_messages` `until` | Latest date: YYYY-MM-DD or an ISO-8601 timestamp. |
+| `mail_list_messages` `labels` | Label ids or names; a message must carry all of them. |
+| `mail_list_messages` `any_labels` | Label ids or names; a message must carry at least one of them. Combines with labels. |
+| `mail_list_messages` `limit` | Page size, 1 to 500. Defaults to 50. |
+| `mail_list_messages` `cursor` | The nextCursor of the previous page. |
+| `mail_list_messages` `include_bodies` | Include message bodies. |
+| `mail_list_messages` `query` | A Gmail search, in Gmail's syntax (from:greenhouse). since, until and labels narrow it; any_labels can't be combined with it (write {label:a label:b} in the query). |
+| `mail_get_message` | Gets one message, with its body. |
+| `mail_get_message` `id` | The message id. |
+| `mail_get_thread` | Gets a whole conversation from Gmail, oldest message first. A message labelled SENT is one the account wrote. |
+| `mail_get_thread` `id` | A thread id, or the id of any message in the thread. |
+| `mail_get_thread` `include_bodies` | Include message bodies. |
+| `mail_modify_labels` | Adds and removes labels on messages, in Gmail. Give at least one of add or remove. |
+| `mail_modify_labels` `message_ids` | The messages to change. |
+| `mail_modify_labels` `add` | Label ids or names to add. |
+| `mail_modify_labels` `remove` | Label ids or names to remove. |
+| `mail_move_messages` | Moves messages to a label, in Gmail: one change that adds the label and removes INBOX, or every label in from. Reports what each message really lost and gained. |
+| `mail_move_messages` `message_ids` | The messages to move. |
+| `mail_move_messages` `to` | The label id or name to move them to. |
+| `mail_move_messages` `from` | Label ids or names to move them out of. Omitted: INBOX (nothing when to is INBOX); empty: nothing, so the label is only added. |
+
 - **schema-not-enforced**: The component MUST NOT rely on the advertised schema for validation; required and typed arguments are checked again when a call arrives.
 
 ### Call dispatch
@@ -66,13 +95,13 @@ Results are pretty-printed JSON with sorted keys (the shared `MailJSON.encode` s
 - **result-shape**: `callTool` MUST return a `(content, isError)` pair and MUST NOT throw.
 - **success-result**: On success the component MUST return the encoded result with `isError` false.
 - **argument-error-result**: A rejected argument MUST return the error's message text as `content` with `isError` true.
-- **service-error-result**: Any other error, including a `MailClientError` from the client, MUST return the error's `localizedDescription` as `content` with `isError` true.
+- **service-error-result**: Any other error, including a `MailClientError` from the client, MUST return the error's user-facing message as `content` with `isError` true.
 - **unknown-tool**: A name outside the seven MUST return `unknown tool <name>` with `isError` true and MUST NOT call the client.
 - **no-client-call-on-bad-arguments**: When argument validation fails, the component MUST NOT call the client.
 
 ### Result encoding
 
-- **json-format**: A result MUST be encoded by the shared mail JSON encoder as pretty-printed JSON with sorted keys, so object keys appear in alphabetical order regardless of declaration order.
+- **json-format**: A result MUST be encoded by the shared mail JSON encoder as pretty-printed JSON with sorted keys, so object keys appear in alphabetical order regardless of declaration order. The indent width, the date and number encoding and the handling of nil fields are those of `MailJSON` in [adhsdk.ingredient.integrations.service.mail-command-support](cookbook:3d12c073-edc3-44fb-a988-5edec20575e0), which also says that ports need not match Swift byte for byte.
 - **result-types**: `mail_list_accounts` MUST return the encoded array of `MailAccount`; `mail_list_labels` the array of `MailLabel`; `mail_list_messages` a `MailMessagePage`; `mail_get_message` a `MailMessage`; `mail_get_thread` a `MailThread`; `mail_modify_labels` an array of `MailMessage`; `mail_move_messages` an array of `MailMoveResult`.
 - **encoding-failure**: A value that cannot be encoded, or whose bytes are not UTF-8, MUST surface as an error result through the service-error path.
 
@@ -82,9 +111,10 @@ Results are pretty-printed JSON with sorted keys (the shared `MailJSON.encode` s
 - **optional-string**: An optional string argument that is absent MUST yield no value; when present with a non-string type the error MUST be `<key> must be a string`.
 - **string-array**: An array argument that is absent MUST yield an empty array; when present and not an array of strings the error MUST be `<key> must be an array of strings`.
 - **boolean-strict**: `include_bodies` MUST default to false when absent; a JSON number MUST NOT count as a boolean, and a non-boolean MUST yield `include_bodies must be a boolean`.
-- **integer-strict**: `limit` MUST be a JSON number with no fractional part and MUST NOT be a boolean; otherwise, or when it is zero or negative, the error MUST be `limit must be a positive integer`.
-- **date-bounds**: `since` and `until` MUST be read by the shared date-bound normaliser, with `since` at the start edge and `until` at the end edge; a value that is not `YYYY-MM-DD` or an ISO-8601 timestamp, or a calendar date that does not exist, MUST yield `<key> must be YYYY-MM-DD or an ISO-8601 timestamp`.
+- **integer-strict**: `limit` MUST be a JSON number with no fractional part that fits a 64-bit signed integer (so `1e10` is accepted) and MUST NOT be a boolean; otherwise, or when it is zero or negative, the error MUST be `limit must be a positive integer`. A number too large for 64 bits, such as `1e30`, is rejected the same way.
+- **date-bounds**: `since` and `until` MUST be read by the shared date-bound normaliser, with `since` at the start edge and `until` at the end edge; a value that is not `YYYY-MM-DD` or an accepted ISO-8601 timestamp (see **timestamp-forms**), or a calendar date that does not exist, MUST yield `<key> must be YYYY-MM-DD or an ISO-8601 timestamp`.
 - **date-only-expansion**: A `YYYY-MM-DD` value MUST become `<date>T00:00:00.000Z` for `since` and `<date>T23:59:59.999Z` for `until`, the start and end of that UTC day.
+- **timestamp-forms**: An accepted timestamp has the form `YYYY-MM-DDTHH:MM:SS`, optionally followed by fractional seconds, and then a required zone designator: `Z` or `z`, or a numeric offset such as `+02:00` or `+0200`. A timestamp with no offset (`2026-01-01T10:00:00`), one without seconds (`2026-01-01T10:00Z`), one with a space or a lowercase `t` in place of `T`, and any other form MUST be rejected with the date-bounds error.
 - **timestamp-utc**: An ISO-8601 timestamp, with or without fractional seconds, MUST be converted to UTC in the form `yyyy-MM-dd'T'HH:mm:ss.SSS'Z'`.
 - **unknown-arguments-ignored**: An argument the tool does not declare MUST be ignored.
 
@@ -92,7 +122,7 @@ Results are pretty-printed JSON with sorted keys (the shared `MailJSON.encode` s
 
 - **filter-mapping**: The component MUST build one `MailMessageFilter` from `account`, `since`, `until`, `labels`, `any_labels`, `limit`, `cursor`, `include_bodies` and `query`, and call `client.messages` once with it.
 - **limit-default**: When `limit` is absent the filter MUST keep `MailMessageFilter.defaultLimit` (50).
-- **limit-clamp**: A positive `limit` above 500 MUST be accepted by the tool and clamped into `MailMessageFilter.limitRange` (1 to 500) by the filter, not rejected.
+- **limit-clamp**: A positive `limit` above 500 that passes **integer-strict** MUST be accepted by the tool and clamped into `MailMessageFilter.limitRange` (1 to 500) by the filter, not rejected.
 - **query-not-blank**: A `query` that is present and, once trimmed of whitespace and newlines, empty MUST yield `query must not be empty`; a non-blank query MUST be passed to the filter as written, untrimmed.
 - **any-labels-with-query**: The tool MUST pass `any_labels` and `query` through together without checking the combination; `MailClient.messages` rejects the service reply when the service did not apply them.
 
@@ -120,7 +150,7 @@ Results are pretty-printed JSON with sorted keys (the shared `MailJSON.encode` s
 
 - **concurrency**: The component MUST be safe to share across concurrent tasks (in Swift, `Sendable`), and every operation that reaches the client MUST be asynchronous.
 - **no-serialisation**: The component MUST NOT serialise concurrent calls; any ordering between them is the service's.
-- **no-persistence**: The component MUST NOT write files, cache results or keep tokens; its only side effects are the `MailClient` requests.
+- **no-persistence**: The component MUST NOT write files or keep tokens; its only side effects are the `MailClient` requests.
 - **write-tools**: Each `mail_modify_labels` or `mail_move_messages` call MUST make exactly one client request, with no idempotency key, and MUST return the service's response unchanged; both change the user's mail at the mail service.
 - **no-timeout-no-retry**: The component MUST NOT add a timeout, cancellation hook or retry around the client call; those belong to the `MailClient` transport and the host.
 
@@ -160,7 +190,7 @@ Vectors derive from `MailToolSourceTests` (Swift Testing) and from the source wh
 | mail-tool-source-016 | service-error-result | client replies not found `No message matches “zz”` (test `notFoundIsAnErrorResult`) | error, content is that text |
 | mail-tool-source-017 | service-error-result | client replies failure `unknown label: Nope` to `mail_list_accounts` (test `toolErrorSurfacesRemoteFailure`) | error, content `unknown label: Nope` |
 | mail-tool-source-018 | move-from-absent, move-from-empty, move-call, json-format | `mail_move_messages` with no `from`, then `from` `["Later"]`, then `from` `[]` (test `moveMapsArguments`) | requests carry from nil, `["Later"]`, `[]`; first result equals the encoded results |
-| mail-tool-source-019 | move-required, modify-ids-required, move-from-type | missing `to`; empty `message_ids`; `from` the string `INBOX` (test `moveRejectsBadArguments`) | contents `missing required argument: to`, `message_ids must not be empty`, `from must be an array of strings`; no request |
+| mail-tool-source-019 | move-required, move-from-type | missing `to`; empty `message_ids`; `from` the string `INBOX` (test `moveRejectsBadArguments`) | contents `missing required argument: to`, `message_ids must not be empty`, `from must be an array of strings`; no request |
 | mail-tool-source-020 | unknown-tool | `callTool` name `mail_nope`, `{}` | error, content `unknown tool mail_nope` (derived from source; no test) |
 | mail-tool-source-021 | argument-decoding | `mail_list_labels` with data `not json` | error, content `missing required argument: account` (derived from source; no test) |
 | mail-tool-source-022 | limit-clamp | `mail_list_messages` with limit 1000 | not an error; filter limit is 500 (derived from `MailMessageFilter.clamp`; no test) |
@@ -170,12 +200,19 @@ Vectors derive from `MailToolSourceTests` (Swift Testing) and from the source wh
 | mail-tool-source-026 | modify-validation-order | `mail_modify_labels` with `message_ids` `[]` and `add` the string `Work`; then `message_ids` `[]` and no `add` or `remove` | first content `add must be an array of strings` (type error before the empty check); second `message_ids must not be empty` (derived from source; no test) |
 | mail-tool-source-027 | schema-shape, list-accounts-schema, account-argument, get-message-required | `toolDefinitions()` | `mail_list_accounts` has an empty `properties` and empty `required`; every other tool has a string `account` and lists it in `required`; `mail_get_message` requires `account` and `id` and has no `include_bodies` property (derived from source; no test) |
 | mail-tool-source-028 | argument-decoding, integer-strict, required-string | `mail_list_messages` with `{"account":"a","limit":null}`; `mail_list_labels` with `{"account":null}`; `mail_list_messages` with `{"account":"a","labels":null}` | contents `limit must be a positive integer`, `account must be a string`, `labels must be an array of strings`; no request (derived from source; no test) |
+| mail-tool-source-029 | integer-strict, limit-clamp | `mail_list_messages` with limit `1e10` | not an error; filter limit is 500 (derived from source; no test) |
+| mail-tool-source-030 | timestamp-forms, date-bounds | `mail_list_messages` with since `2026-01-01T10:00:00` (no offset) | error, content `since must be YYYY-MM-DD or an ISO-8601 timestamp`, no request (derived from source; no test) |
+| mail-tool-source-031 | integer-strict | `mail_list_messages` with limit `1e30` | error, content `limit must be a positive integer`, no request (derived from source; no test) |
+| mail-tool-source-032 | tool-descriptions | `toolDefinitions()` | each tool and property description equals the text in the tool-descriptions table (derived from source; no test) |
+
 ## Edge Cases
 
 - **Malformed arguments**: Invalid JSON or a non-object JSON value MUST be read as an empty dictionary, so the call fails with the first missing required argument rather than a parse error. A tool that needs no arguments (`mail_list_accounts`) still runs.
 - **Empty required string**: An empty `account`, `id` or `to` MUST be treated as missing.
 - **Null values**: A JSON null for `limit` is neither a number nor a boolean and is therefore rejected with `limit must be a positive integer`; a null string is rejected with `<key> must be a string`.
 - **Fractional or boolean limit**: `2.5` and `true` MUST be rejected; `limit` of zero or less MUST be rejected; a limit above 500 MUST be accepted and clamped to 500.
+- **Timestamp without an offset**: `2026-01-01T10:00:00` MUST be rejected with the date-bounds error (mail-tool-source-030), as must a timestamp without seconds.
+- **Huge limit**: `1e10` is accepted and clamped to 500 (mail-tool-source-029); `1e30` does not fit 64 bits and is rejected (mail-tool-source-031).
 - **Impossible calendar date**: `2026-02-30` MUST be rejected, not rolled over into March.
 - **Date-only until**: The upper bound covers the whole day through `23:59:59.999Z`.
 - **Inverted range**: A `since` later than `until` is not checked; the component passes both on and the service decides.
@@ -184,24 +221,22 @@ Vectors derive from `MailToolSourceTests` (Swift Testing) and from the source wh
 - **Unknown or extra input**: An unknown tool name MUST be an error result; extra arguments MUST be ignored.
 - **Unencodable result**: A result the encoder cannot encode, or whose bytes are not UTF-8, is thrown by the encoder and comes back as an error result with its description. No test double can produce one, so no vector covers it.
 - **Error flow**: A service failure, a not-found reply, a thread request to an older service, a reply of the wrong shape or a query or `any_labels` the service ignored all arrive as a thrown `MailClientError` and MUST come back as an error result carrying its description.
-- **Unreachable or slow service**: A transport failure surfaces as an error result with the transport error's `localizedDescription`; the component sets no timeout and does not retry. Offline behavior belongs to the transport.
+- **Unreachable or slow service**: A transport failure surfaces as an error result with the transport error's user-facing message; the component sets no timeout and does not retry. Offline behavior belongs to the transport.
 - **Concurrent calls**: Calls are independent and unserialised. Two writes to the same message have whatever outcome the service gives them; this component adds no ordering rule.
 - **Cancellation**: Cancelling the awaiting task is the client's business; the component installs no handler and does not catch cancellation separately.
 - **Large results**: A page of up to 500 messages with bodies is returned whole as one string; the component does not truncate.
 
 ## Configuration
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `client` | `MailClient` | none (required) | The mail service client every tool call goes through; supplied to `init(client:)` |
 
-The component reads no environment variables or settings keys. Per-call tool arguments (`limit`, `include_bodies`, `from` and the rest) are not construction options; their defaults are in the requirements above.
+
+
 ## Deep Linking
 
 Not applicable: the component exposes tools by name and has no URLs or routes (`MailToolSource` has no navigation code).
 
 ## Localization
 
-Not applicable as a catalogue: every tool description, schema description and argument error is a hardcoded English string in `MailToolSource`, with no string table. A service error is passed through as the client's `localizedDescription`.
+Not applicable as a catalogue: every tool description, schema description and argument error is a hardcoded English string in `MailToolSource`, with no string table. A service error is passed through as the client's user-facing message.
 
 ## Accessibility Options
 
@@ -228,17 +263,17 @@ Not applicable: the component makes no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Source is `MailToolSource.swift` in the Integrations module, with `ChatToolSource` and `ToolJSONSchema` from Core (schemas come from `ToolJSONSchema.object`, results from `MailJSON.encode`, date bounds from `MailDateBound.normalize`); there is no view, so SwiftUI is not involved. A SwiftUI app injects the `MailClient` and hands the source to its chat engine.
+- **SwiftUI**: There is no view, so SwiftUI is not involved. A SwiftUI app injects the `MailClient` and hands the component to its chat engine.
 - **Compose**: Use a Kotlin class implementing the host's tool interface, `kotlinx.serialization.json` to parse arguments into a `JsonObject` (checking `isString` and numeric primitives to keep the boolean-versus-integer rule), a suspend function for `callTool`, and `Result` or a sealed error type instead of throwing. Pretty-printed sorted output needs a custom `Json` with `prettyPrint` and sorted map keys; there is no built-in key sorting.
 - **React/Web**: Use a TypeScript class with an `async callTool(name, argsJson)` returning an object with `content` and `isError`. Parse with `JSON.parse` inside try/catch, check `typeof` and `Number.isInteger` (booleans are already distinct from numbers), and emit `JSON.stringify` with a replacer that sorts keys and two-space indentation. Express the schemas as plain JSON Schema objects.
-- **AppKit / UIKit**: Same source file; it uses `JSONSerialization`, `NSNumber` with `CFBooleanGetTypeID` to tell booleans from numbers, `ISO8601DateFormatter` (to parse timestamps), `Date.ISO8601FormatStyle` (to write the UTC string, through `IntegrationClock`) and `JSONEncoder` with `.prettyPrinted` and `.sortedKeys`. No AppKit or UIKit type is used.
-- **WinUI 3**: Implement as a plain .NET class with `async Task<(string Content, bool IsError)> CallToolAsync(string name, string argumentsJson)`. Parse arguments with `System.Text.Json` (`JsonDocument` and `JsonElement.ValueKind`: `JsonValueKind.True` and `False` for booleans, `Number` with `TryGetInt32` for integers so that `2.5` and `true` fail), and treat invalid JSON or a non-object root as an empty element. Encode results with `JsonSerializer` using `WriteIndented = true`; .NET does not sort keys, so sort properties explicitly (a `JsonNode` tree ordered by key, or a custom converter) to match the Swift output. Use `DateTimeOffset.TryParseExact` and `ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")` for the date bounds, and validate `YYYY-MM-DD` with `DateOnly.TryParseExact` so `2026-02-30` is rejected. The `MailClient` becomes an interface over `HttpClient` or a named-pipe transport, called with `await`; catch `Exception` at the `CallToolAsync` boundary and return its `Message`. Register as a singleton in dependency injection; no `ObservableCollection` or `INotifyPropertyChanged` is needed because the component has no observable state. If the host is a server, expose it as ASP.NET Core minimal API routes or an MCP endpoint wrapping the same method.
+- **AppKit / UIKit**: Conform to `ChatToolSource` (from Core), build schemas with `ToolJSONSchema.object`, encode results with `MailJSON.encode` and read date bounds with `MailDateBound.normalize`. Use `JSONSerialization`, `NSNumber` with `CFBooleanGetTypeID` to tell booleans from numbers, `ISO8601DateFormatter` (to parse timestamps), `Date.ISO8601FormatStyle` (to write the UTC string, through `IntegrationClock`) and `JSONEncoder` with `.prettyPrinted` and `.sortedKeys`. No AppKit or UIKit type is needed. An error's user-facing message is its `localizedDescription`.
+- **WinUI 3**: Implement as a plain .NET class with `async Task<(string Content, bool IsError)> CallToolAsync(string name, string argumentsJson)`. Parse arguments with `System.Text.Json` (`JsonDocument` and `JsonElement.ValueKind`: `JsonValueKind.True` and `False` for booleans, `Number` with `TryGetDouble` for numbers, then require an integral value within the `Int64` range, so that `2.5`, `1e30` and `true` fail while `1e10` is accepted and clamped; `TryGetInt32` would wrongly reject `1e10`), and treat invalid JSON or a non-object root as an empty element. Encode results with `JsonSerializer` using `WriteIndented = true`; .NET does not sort keys, so sort properties explicitly (a `JsonNode` tree ordered by key, or a custom converter) to match the Swift output. Use `DateTimeOffset.TryParseExact` and `ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")` for the date bounds, and validate `YYYY-MM-DD` with `DateOnly.TryParseExact` so `2026-02-30` is rejected. The `MailClient` becomes an interface over `HttpClient` or a named-pipe transport, called with `await`; catch `Exception` at the `CallToolAsync` boundary and return its `Message` as the user-facing message. Register as a singleton in dependency injection; no `ObservableCollection` or `INotifyPropertyChanged` is needed because the component has no observable state. If the host is a server, expose it as ASP.NET Core minimal API routes or an MCP endpoint wrapping the same method.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/MCP/MailToolSource.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/MCP/MailToolSource.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -293,4 +328,5 @@ The component keeps parsing, dispatch and encoding in one small type and leaves 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Added the exact tool and property description table, the caller-variant note, accepted timestamp forms, 64-bit limit rules with matching WinUI guidance, a pointer to MailJSON for encoding details, platform-neutral error wording, trimmed repeated schema facts, fixed vector 019's requirement, and added vectors 029-032. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

@@ -2,11 +2,11 @@
 id: c9bdfe9a-6c8f-44c4-957e-757ecfa2e658
 title: "Group"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,7 +18,11 @@ tags:
   - layout
   - grouping
 depends-on: []
-related: []
+related:
+  - b3d64a66-ef34-444f-b6b0-449565117d26
+  - c2f89e6b-6e86-449b-9955-5bb0da929de3
+  - 89a912f3-f0a0-4896-ba06-a386407ecb15
+  - eeb45f5b-e482-4bea-8827-74f80a1fd21b
 references: []
 approved-by: ""
 approved-date: ""
@@ -34,9 +38,9 @@ The Group component is a semantic section wrapper for organizing related content
 
 - **grouping-container**: Component MUST render a semantic grouping container as its root.
 - **title-when-provided**: When a `title` is provided, component MUST render it as a heading scoped to the group.
-- **title-when-omitted**: When `title` is not provided or is falsy, component MUST NOT render a title element.
-- **hint-when-provided**: When a `hint` is provided, component MUST render it as descriptive text associated with the group.
-- **hint-when-omitted**: When `hint` is not provided or is falsy, component MUST NOT render a hint element (see **Edge Cases** for the literal-zero case, which is falsy but still visible).
+- **title-when-omitted**: When `title` is not provided or is falsy (including the number `0`), component MUST NOT render a title element or any stray text in its place.
+- **hint-when-provided**: When a `hint` is provided, component MUST render it as descriptive text within the group, adjacent to the title and body. Programmatic association with the group is platform-specific (see Accessibility and Platform Notes).
+- **hint-when-omitted**: When `hint` is not provided or is falsy (including the number `0`), component MUST NOT render a hint element or any stray text in its place (see **Edge Cases**).
 - **children-in-body**: Children content MUST be rendered inside a body container, distinct from the title and hint.
 - **base-style-applied**: Component MUST apply its base styling identity to the root element.
 - **custom-style-accepted**: Component MUST accept a caller-supplied style/class extension and combine it with the base styling identity.
@@ -48,16 +52,8 @@ logic) are the React/Web implementation of these requirements — see
 **Platform Notes**.
 
 ## Appearance
-
-- **Corner radius**: Not specified in component; controlled by CSS
-- **Padding**: Determined by CSS classes `aws-group`, `aws-group__title`, `aws-group__hint`, `aws-group__body`
-- **Font**: Title renders as `<h3>` (semantic heading); hint renders as `<p>` (semantic paragraph); styling determined by CSS
-- **Background**: Not specified in component; controlled by CSS
-- **Foreground/Text**: Not specified in component; controlled by CSS
-- **Border**: Not specified in component; controlled by CSS
-- **Shadow**: Not specified in component; controlled by CSS
+- **Styling contract**: All visual styling comes from CSS rules on the four classes `aws-group`, `aws-group__title`, `aws-group__hint` and `aws-group__body`; the component sets no inline styles. The title renders as `<h3>` and the hint as `<p>`.
 - **Min/Max size**: No constraints defined in component
-
 ## States
 
 Not applicable: Group is a static, presentational component. It does not have interactive states such as pressed, focused, disabled, or loading. State changes are managed by the content rendered within its children.
@@ -86,12 +82,13 @@ Not applicable: Group is a static, presentational component. It does not have in
 | group-010 | custom-style-accepted | `className="foo bar"` (multiple space-separated classes) | Root element renders `aws-group foo bar`; all space-separated classes preserved |
 | group-011 | empty-style-filtered | `className={null}` | Root element renders only `aws-group`; `null` is filtered out, no stray whitespace or literal `"null"` |
 | group-012 | children-in-body | No `children` prop | `<div class="aws-group__body">` is present and empty |
-
+| group-013 | hint-when-omitted | `hint={0}` | No `<p class="aws-group__hint">` element and no stray `0` text inside the root |
+| group-014 | title-when-omitted | `title={0}` | No `<h3>` element and no stray `0` text inside the root |
 ## Edge Cases
 
 - **Null title**: When `title` is `null` or `undefined`, the component treats it as falsy and does not render a title element.
 - **Empty title**: When `title` is an empty string `""`, it is falsy and does not render a title element.
-- **Falsy hint**: When `hint` is `null`, `undefined`, `false`, or empty string `""`, nothing renders in its place. When `hint` is the number `0`, the `<p class="aws-group__hint">` wrapper still does not render, but the literal text `0` renders directly inside the `<section>` — the `hint && <p>…</p>` pattern short-circuits to the falsy operand itself, and React renders that bare `0` as a text node.
+- **Falsy hint**: When `hint` is `null`, `undefined`, `false`, or empty string `""`, nothing renders in its place. When `hint` is the number `0`, nothing renders either (**hint-when-omitted**). The React/Web reference currently does not conform: its `hint && <p>…</p>` pattern short-circuits to the falsy operand, so a bare `0` text node leaks into the `<section>`. The same leak applies to `title={0}`. A conforming implementation tests `hint != null && hint !== false && hint !== ""` (or an equivalent) and the matching condition for `title`.
 - **No children**: When `children` is not provided, `undefined`, or `null`, the body div is rendered empty but still present.
 - **React node children**: The `title`, `hint`, and `children` props accept `ReactNode`, which may be strings, numbers, elements, fragments, arrays, or null. All valid React node types MUST render correctly.
 - **Multiple children**: When `children` is an array (list of React elements), all items MUST render within the body div without modification.
@@ -132,17 +129,17 @@ Not applicable: Group does not perform any logging. It is a purely presentationa
 
 ## Platform Notes
 
-- **React/Web**: Source file is `packages/web/packages/controls/src/user-settings/components/Group.tsx`. Renders a semantic `<section>` with class `aws-group`. Optional title and hint render as `<h3 class="aws-group__title">` and `<p class="aws-group__hint">`. Children render in `<div class="aws-group__body">`. Supports a custom `className` prop merged with the base class, filtering out empty or falsy values before joining. Styling is CSS-driven via class names; no inline styles.
+- **React/Web**: Renders a semantic `<section>` with class `aws-group`. Optional title and hint render as `<h3 class="aws-group__title">` and `<p class="aws-group__hint">`. Children render in `<div class="aws-group__body">`. Supports a custom `className` prop merged with the base class, filtering out empty or falsy values before joining. Styling is CSS-driven via class names; no inline styles.
 - **SwiftUI**: Use `Section` when Group appears inside a `Form` or `List` (so it participates in that container's native section chrome); use a `VStack` otherwise. Render an optional `Text` for title styled as a heading, marked with `.accessibilityAddTraits(.isHeader)` so VoiceOver treats it as a heading; render an optional caption `Text` for hint and attach it to the group with `.accessibilityHint(_:)` on the container so VoiceOver associates the hint with the group. Arrange child views below. Differences from web: SwiftUI uses `Section`/`VStack` for semantic grouping instead of `<section>`, text styling is controlled by font modifiers rather than CSS, and layout is vertical-first.
 - **Compose**: Use a `Column` or `Surface` to group content. Render optional `Text` for title with heading style and mark it with `Modifier.semantics { heading() }` so it is announced as a heading; render optional `Text` for hint and tie it to the group by setting `Modifier.semantics { contentDescription = hintText }` on the container so assistive tech associates it with the group. Render child composables. Differences: Compose lacks a direct semantic grouping equivalent; use container composition. Layout is column-based. Styling via Material Design tokens.
 - **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) to group views. UIKit: render an optional `UILabel` for title styled as a heading and set `label.accessibilityTraits = .header` so VoiceOver announces it as a heading; render an optional label for hint and tie it to the group by setting the stack view's `accessibilityHint` from the hint text. AppKit: render an optional `NSTextField` for title styled as a heading; AppKit has no direct heading trait, so also set the stack view's `accessibilityLabel` from the title text; render an optional text field for hint and tie it to the group by setting the stack view's `accessibilityHelp` from the hint text. Differences: Use native stack views for layout; no CSS classes. Accessibility comes from native accessibility APIs on each view.
 - **WinUI 3**: Use `StackPanel` with `Orientation="Vertical"` as the root to group content. Render optional `TextBlock` for title with `Style="{StaticResource HeadingTextBlockStyle}"` and set `AutomationProperties.HeadingLevel="Level3"` so Narrator announces it as a heading; render optional `TextBlock` for hint and tie it to the group via `AutomationProperties.DescribedBy` pointing at the hint `TextBlock`. Place child `UIElement` instances in the stack panel. Differences: WinUI uses XAML-defined brushes and styles instead of CSS classes; layout is managed by `StackPanel` properties like `Spacing`; semantic grouping is implicit via panel composition rather than a `<section>` element.
-
+- **Tests**: A Vitest and React Testing Library suite for vectors group-001 to group-014 belongs beside the existing user-settings component tests, in the `__tests__` folder next to `components`.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/Group.tsx` | unverified |
+| web | `packages/web/packages/controls/src/user-settings/components/Group.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -159,7 +156,7 @@ Not applicable: Group does not perform any logging. It is a purely presentationa
 **Approved**: pending
 
 **Decision**: The title always renders as a fixed `<h3>` heading; there is no `headingLevel` prop to vary the depth.
-**Rationale**: Matches the component's current usage context; a caller needing a different heading depth restyles or wraps Group rather than reconfiguring it, keeping the contract simple.
+**Rationale**: Matches the component's current usage context, where Group sits under a settings panel whose own heading is an `<h2>`; the fixed `<h3>` is valid only in contexts where an `<h2>` precedes it, and nested or standalone use elsewhere breaks heading hierarchy. A caller needing a different heading depth restyles or wraps Group rather than reconfiguring it, keeping the contract simple.
 **Approved**: pending
 
 ## Compliance
@@ -172,8 +169,7 @@ Not applicable: Group does not perform any logging. It is a purely presentationa
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-Statuses rest on `Group.tsx` rendering semantic `<section>`/`<h3>`/`<p>` elements with no ARIA attributes and no accessible name wired to the section (see **Accessibility**), and on the component deferring all typography, color, and spacing to CSS classes (`aws-group*`) that it does not itself define, so dynamic type and contrast cannot be confirmed from the source. `separation-of-concerns` is `passed` because the component is pure presentation over `title`/`hint`/`children` props with no business logic; `unit-test-coverage` is `failed` because no test exercises `user-settings/components/Group.tsx` — the candidate tests found by name (`AnimTests.swift`, `ConfigTests.swift`, etc.) test unrelated avatar-engine code, not this component.
-
+Statuses rest on `Group.tsx` rendering semantic `<section>`/`<h3>`/`<p>` elements with no ARIA attributes and no accessible name wired to the section (see **Accessibility**), and on the component deferring all typography, color, and spacing to CSS classes (`aws-group*`) that it does not itself define, so dynamic type and contrast cannot be confirmed from the source. `separation-of-concerns` is `passed` because the component is pure presentation over `title`/`hint`/`children` props with no business logic; `unit-test-coverage` is `failed` because no test exercises `user-settings/components/Group.tsx`.
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -181,3 +177,4 @@ Statuses rest on `Group.tsx` rendering semantic `<section>`/`<h3>`/`<p>` element
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: platform-neutral behavioral requirements; corrected section-landmark accessibility claim; corrected hint-of-0 edge case; reformatted Design Decisions into Decision/Rationale/Approved entries; added accessibility Compliance table; fixed self-contradictory Appearance corner-radius wording; merged/scoped/added conformance test vectors; clarified SwiftUI `Section` guidance; added heading/hint accessibility wiring to native Platform Notes |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Weakened hint association to adjacency, required that a falsy hint or title (including 0) renders nothing with new vectors, replaced the repeated appearance bullets with the styling contract, scoped the fixed h3 decision, trimmed the compliance prose, linked related ingredients, and added a test-location note. |

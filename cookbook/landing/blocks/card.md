@@ -2,11 +2,11 @@
 id: 01947259-4883-44e1-a047-6b4e463cb422
 title: "Landing Card"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -138,7 +138,7 @@ Not applicable: Component performs no operations that warrant logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Card.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Card.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -178,6 +178,7 @@ Card.tsx renders semantic HTML (`<h3>`, `<span>`, `<div>`) with no ARIA misuse; 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Applied card lint findings: nullish kicker contract stated everywhere, allow-interactive-content requirement, exact vectors and new kicker vectors, platform notes reordered, related link, unit-test-coverage downgraded to partial. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, promoted nullish title/children handling to named requirements with test vectors, reworded the heading-level MUST so it no longer asks the consumer for behavior the component doesn't expose, reformatted Design Decisions to Decision/Rationale/Approved, replaced Compliance with an accessibility checks table, fixed WinUI 3's hardcoded font styles and added native heading traits across platforms, corrected the AppKit label API and two inaccurate edge-case descriptions, and added tags |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from Card.tsx source |

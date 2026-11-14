@@ -11,4 +11,6 @@
 | adkd-identifiers-008 | no-collision-with-stenographer | Compare against `StenographerIdentifiers` and `StenographerPaths` for the same home. | Label, port, keychain service, hook marker, database file name, support directory, logs directory, launch-agent plist, drop directory name, socket file name and lock name all differ (test: testNothingCollidesWithStenographer). |
 | adkd-identifiers-009 | subsystem-suffix | `subsystem("")` | The label followed by a trailing dot: `com.agenticdevelopmentstudio.adkd.` (derived from the source expression; no test). |
 | adkd-identifiers-010 | pure-derivation | `ADKDPaths(home:)` with a home directory that does not exist. | Every property still returns a URL; nothing is created (derived from the source; no test). |
-
+| adkd-identifiers-011 | subsystem-is-label, hook-name | `ADKDIdentifiers.subsystem`, `ADKDIdentifiers.hookName` | `com.agenticdevelopmentstudio.adkd` and `adkd` (derived from the source; no test). |
+| adkd-identifiers-012 | display-name, storage-token | `ADKDPaths.displayName`, `ADKDPaths.storageToken` | `Agentic Developer Kitchen` and `AgenticDeveloperKitchen` (derived from the source; no test). |
+| adkd-identifiers-013 | file-names | `ADKDPaths.launchdStdoutLogName`, `ADKDPaths.launchdStderrLogName` | `stdout.log` and `stderr.log` (derived from the source; no test). |

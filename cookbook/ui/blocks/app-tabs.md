@@ -2,11 +2,11 @@
 id: ff445185-2322-4c94-ad9d-3ad27a50677d
 title: "App Tabs"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -91,7 +91,12 @@ Tabs use the shared tab styling defined by `tabItemClass` and `tabListClass` fro
 | app-tabs-009 | apply-class-name | `className="custom-class"` | Root container's class list contains `custom-class`. |
 | app-tabs-010 | no-content-panels | Any valid props | All tabs are self-contained `<button>` elements; no `role="tabpanel"` (or equivalent content-panel element) exists anywhere in the rendered output. |
 | app-tabs-011 | invoke-callback-on-click | `items=[{id:"tab1", label:"T1"}]`, `endItem={id:"settings", label:"Settings"}`, `onValueChange={spy}` | Clicking `endItem` invokes `onValueChange("settings")`, using the same click handler as any other tab. |
-
+| app-tabs-012 | render-items, render-end-item-if-provided | `items=[]`, `endItem={id:"settings", label:"Settings"}` | The tab list container renders with no item buttons; the endItem button still renders. |
+| app-tabs-013 | mark-active-tab | `items=[{id:"tab1", label:"T1"}]`, `value="missing"` | No tab has `data-active`; every tab has `aria-selected="false"`; nothing throws. |
+| app-tabs-014 | respect-end-item-active-state | `endItem={id:"settings", label:"Settings"}` with no `active` property | The endItem has `aria-selected="false"` and no `data-active` attribute. |
+| app-tabs-015 | render-icon-if-provided | `items=[{id:"tab1", label:"Tab", icon:null}]`, then again with `icon:false` | Nothing renders for the icon slot; the label still renders. |
+| app-tabs-016 | invoke-callback-on-click | `items=[{id:"tab1", label:"T1"}]`, no `onValueChange` | Clicking the tab does nothing and does not throw. |
+| app-tabs-017 | mark-active-tab | `items=[{id:"a", label:"A"}, {id:"a", label:"B"}]`, `value="a"` | Both tabs have `aria-selected="true"` (duplicate ids are unsupported). |
 ## Edge Cases
 
 - **Empty items array**: If `items` is an empty array, the component renders the tab list container but no tab buttons. EndItem (if provided) still renders.
@@ -101,6 +106,8 @@ Tabs use the shared tab styling defined by `tabItemClass` and `tabListClass` fro
 - **EndItem with no active property**: If `endItem` is provided without an `active` property, it renders with `aria-selected` derived from `!!undefined`, which is false. The endItem tab is not active.
 - **Icon is falsy**: If `icon` is `null`, `undefined`, or `false`, nothing is rendered for that slot; the label still renders.
 
+- **EndItem placement in right-to-left layouts**: `endItem` is pushed to the trailing edge with the physical `ml-auto` utility, not a logical one (`ms-auto` / `margin-inline-start`). In a `dir="rtl"` context the class does not mirror, so `endItem` stays on the visual right instead of moving to the trailing (left) edge. See Design Decisions and Platform Notes.
+- **Duplicate ids in `items`**: Unsupported; the component does not check. React reports duplicate-key warnings, and every item whose `id` equals `value` is marked active (`t.id === value` is evaluated per item), so several tabs can be active at once.
 ## Configuration
 
 Not applicable: AppTabs is a controlled component. Configuration is entirely through props (`items`, `value`, `onValueChange`, `endItem`, `className`); no separate configuration object or external settings apply.
@@ -114,11 +121,9 @@ Not applicable: AppTabs is a navigation component that drives app-wide routing v
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
 | Tab labels | User-provided | `label` (on `items` and `endItem`) is a ReactNode supplied by the consumer; the component performs no text generation or translation itself. |
-| EndItem placement | `ml-auto` (LTR-only) | `endItem` is pushed to the trailing edge via the physical `ml-auto` utility, not a logical (`ms-auto` / `margin-inline-start`) one. In a `dir="rtl"` context this class does not mirror, so `endItem` stays on the visual right instead of moving to the trailing (left) edge. See Design Decisions and Platform Notes. |
-
 ## Accessibility Options
 
-Not implemented in source. The component does not respond to Increase Contrast or Differentiate Without Color — it relies on the `apt-*` design tokens for color regardless of contrast mode. The hover/active text-color change uses Tailwind's `transition-colors` utility with no `motion-reduce:` variant, so it does not honor the OS reduced-motion preference either (see `reduced-motion` in Compliance).
+Not implemented in source. The component does not respond to Increase Contrast or Differentiate Without Color — it relies on the `apt-*` design tokens for color regardless of contrast mode. The hover/active text-color change uses Tailwind's `transition-colors` utility with no `motion-reduce:` variant, so it has no explicit reduced-motion handling; the transition animates colour only, with no movement (see `reduced-motion` in Compliance).
 
 ## Feature Flags
 
@@ -138,17 +143,17 @@ Not applicable: No logging is implemented in the component source.
 
 ## Platform Notes
 
-- **React/Web**: Defined in `packages/web/packages/ui/src/blocks/app-tabs.tsx`. Exported as `AppTabs`. Renders plain `<button type="button">` elements — not a Base UI `<Tabs>` component (see **no-content-panels**) — styled with `tabItemClass` and `tabListClass` imported from the shared tab-grammar component ([adhsdk.ingredient.ui.components.layout.tabs](cookbook:fb3a0db4-691e-4025-a391-2853908248b5)). Uses React's `onClick` for tab selection and a managed `value` prop for active-state control; `endItem` is pushed to the trailing edge via the `ml-auto` utility class (LTR-only — see Localization).
+- **React/Web**: Defined in `packages/web/packages/ui/src/blocks/app-tabs.tsx`. Exported as `AppTabs`. Renders plain `<button type="button">` elements — not a Base UI `<Tabs>` component (see **no-content-panels**) — styled with `tabItemClass` and `tabListClass` imported from the shared tab-grammar component ([adhsdk.ingredient.ui.components.layout.tabs](cookbook:fb3a0db4-691e-4025-a391-2853908248b5)). Uses React's `onClick` for tab selection and a managed `value` prop for active-state control; `endItem` is pushed to the trailing edge via the `ml-auto` utility class (LTR-only — see Edge Cases).
 - **SwiftUI**: Use a custom `HStack` of `Button`s with an underline indicator — not `TabView`, which owns app-level/root navigation and associated panels, and not a segmented `Picker` — matching the source's plain-button, no-panel design (see **no-content-panels**). Track the active tab with the equivalent of the `value` prop and apply the underline styling equivalent of the shared tab grammar. The `endItem` property translates to a trailing `Spacer()` followed by the settings/action button, with its own independent `active` binding.
-- **Compose**: Use Material 3's `PrimaryTabRow` (or `SecondaryTabRow`) with `Tab` composables instead of hand-rolled `Button`s in a `Row` — it provides the tab-row affordance without requiring an associated `Pager`/content panel (see **no-content-panels**). Drive `selectedTabIndex` from the equivalent of `value`, and call the equivalent of `onValueChange` from each `Tab`'s `onClick`. The `endItem` property would be placed after a `Spacer(Modifier.weight(1f))` for trailing alignment, with its own independent selected state passed to that `Tab`.
+- **Compose**: Use Material 3's `PrimaryTabRow` (or `SecondaryTabRow`) with `Tab` composables instead of hand-rolled `Button`s in a `Row` — it provides the tab-row affordance without requiring an associated `Pager`/content panel (see **no-content-panels**). Drive `selectedTabIndex` from the equivalent of `value`, and call the equivalent of `onValueChange` from each `Tab`'s `onClick`. `PrimaryTabRow` and `SecondaryTabRow` give every `Tab` equal width and take a single `selectedTabIndex`, so a `Spacer(Modifier.weight(1f))` inside them has no effect and they cannot show two tabs active at once. Put the `endItem` outside the tab row, in a `Row` beside it, or build the bar as a custom `Row` of `Tab`s, with its own independent selected state.
 - **UIKit / AppKit**: Create a custom view — not a Base UI-equivalent tab control — using a horizontal stack (`UIStackView` on iOS, `NSStackView` on macOS) of plain buttons; `NSSegmentedControl` implies a single mutually-exclusive control surface and does not model an independent `endItem`, so it does not fit. Manage active state via a data property and update the UI on value changes. The `endItem` property would be positioned at the trailing edge with a spacer.
-- **WinUI 3**: Use `NavigationView` in Top mode, or `SelectorBar` with `SelectorBarItem` entries — not native `TabView`, which is designed for closable, document-style tabs (browser-tab UX) and carries close-button semantics that don't fit app navigation (see **no-content-panels**). Bind the selected item to the equivalent of `value`/`onValueChange`. Apply Fluent 2 underline-mono styling via control templates or `SelectorBarItem` styling. For the `endItem`, add it as a trailing element outside the main list, positioned with `HorizontalAlignment="Right"` in LTR flow (`"Left"` in RTL flow — see Localization), with its own independent selected state.
+- **WinUI 3**: Use `NavigationView` in Top mode, or `SelectorBar` with `SelectorBarItem` entries — not native `TabView`, which is designed for closable, document-style tabs (browser-tab UX) and carries close-button semantics that don't fit app navigation (see **no-content-panels**). Bind the selected item to the equivalent of `value`/`onValueChange`. Apply Fluent 2 underline-mono styling via control templates or `SelectorBarItem` styling. For the `endItem`, add it as a trailing element outside the main list, positioned with `HorizontalAlignment="Right"` and left to `FlowDirection` to mirror in RTL (do not switch it to `"Left"`, which would mirror it twice), with its own independent selected state.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/app-tabs.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/app-tabs.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -164,30 +169,36 @@ Not applicable: No logging is implemented in the component source.
 **Rationale**: Lets the parent app orchestrate navigation and keep tab selection synchronized with routing.
 **Approved**: pending
 
+
+**Decision**: Route a click on `endItem` through the same `onValueChange` callback as every other tab, passing its `id`, even though `endItem` never becomes active from `value`.
+**Rationale**: The source has one click handler for all tabs, so a consumer tells the end action apart by its `id` and handles it (for example by opening settings) rather than by storing it as the selected value; a separate callback was not added.
+**Approved**: pending
+
+**Decision**: Place `endItem` with the physical `ml-auto` utility, which is LTR-only, rather than a logical margin utility.
+**Rationale**: This is how the source places it; in a `dir="rtl"` context it stays on the visual right instead of moving to the trailing edge (see the endItem placement edge case).
+**Approved**: pending
 ## Compliance
 
-| Check | Status | Category |
-|-------|--------|----------|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
-| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | partial | Accessibility |
-| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
-| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
-| [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | failed | Accessibility |
-| [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | failed | Accessibility |
-| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
-| [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
-| [adc.check.internationalization.text-expansion-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8007859b-a974-5b8a-88f7-162624b0c056) | failed | Internationalization |
-| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | failed | Internationalization |
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
-
-Statuses rest on: plain `<button>`s with visible text and `role="tab"`/`role="tablist"`/`aria-selected` giving basic screen-reader and keyboard operability (screen-reader-support, keyboard-navigable — passed); those same roles being used without the full ARIA tabs pattern (no `aria-controls`, no `tabpanel`, no roving tabindex) — see the Accessibility section (semantic-markup — partial); the fixed `text-[0.8rem]` sizing and the `apt-*` color tokens whose actual values aren't visible in this source file (dynamic-type-support, contrast-ratio — partial); the ~33px computed tab height and the `transition-colors` utility with no `motion-reduce:` variant (touch-target-size, reduced-motion — failed); user-provided `ReactNode` labels with no hardcoded strings and no text processing that would reject Unicode (no-hardcoded-strings, unicode-support — passed); the lack of any word-wrap/truncation handling in `tabItemClass`/`tabListClass` for arbitrarily long label text (text-expansion-tolerance — failed); and the physical, non-mirroring `ml-auto` utility used to place `endItem` (rtl-layout-support — failed). Best-practices statuses rest on `AppTabs` being pure presentation over its `items`/`value`/`onValueChange` props with no embedded state or business logic (separation-of-concerns: passed), and on no test file in the suite exercising this component (unit-test-coverage: failed).
-
+| Check | Status | Category | Basis |
+|-------|--------|----------|-------|
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility | Plain `<button>`s with visible text and `aria-selected`. |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility | Tab and Space/Enter work on buttons, but `role="tablist"` users expect arrow keys and roving tabindex, which are absent. |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | partial | Accessibility | `role="tab"`/`role="tablist"` without `aria-controls`, `tabpanel` or roving tabindex. |
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility | `text-[0.8rem]` is in rem, so it follows the browser font size, but nothing else adapts. |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility | The `apt-*` colour token values are not visible in this source file. |
+| [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | failed | Accessibility | Computed tab height is about 33px. |
+| [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | partial | Accessibility | `transition-colors` animates colour only, with no movement, but has no `motion-reduce:` variant. |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization | Labels are consumer-supplied `ReactNode`s. |
+| [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization | No text processing that would reject Unicode. |
+| [adc.check.internationalization.text-expansion-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8007859b-a974-5b8a-88f7-162624b0c056) | failed | Internationalization | No wrap or truncation handling for long labels. |
+| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | failed | Internationalization | `endItem` uses the physical `ml-auto` utility. |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices | Pure presentation over `items`/`value`/`onValueChange`, with no embedded state. |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices | No test in the suite exercises this component. |
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Regraded keyboard-navigable and reduced-motion to partial with a per-row Basis column, recorded endItem's shared onValueChange and LTR-only placement as Design Decisions, moved the placement note from Localization to Edge Cases, added a duplicate-id edge case and vectors app-tabs-012 to app-tabs-017, and corrected the Compose and WinUI 3 endItem notes. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case names and updated every citation; replaced the React/Base-UI-specific plain-button requirement with a platform-neutral no-content-panels requirement and moved the implementation detail into Platform Notes; documented that endItem shares invoke-callback-on-click's handler and that Disabled is unsupported (no `disabled` property exists) rather than "undefined"; changed "right edge" to "trailing edge" throughout and documented the `ml-auto` endItem placement as LTR-only under Localization; gave concrete Appearance values and a real computed touch-target height instead of "defined by shared tab grammar" and an unsupported native touch-target claim; fixed the `data-active` attribute-value contradiction in States; rewrote the `ml-auto` and `cn()`-merging test vectors to assert observable outcomes and added an endItem-click vector; fixed the missing-onValueChange edge case to describe optional chaining rather than a throwing call; corrected the SwiftUI, Compose, WinUI 3, and AppKit/UIKit platform notes to controls that don't imply owned content panels; reformatted Design Decisions to the three-line Decision/Rationale/Approved form; added the tabs ingredient to depends-on; and built out the Compliance table with applicable Accessibility and Internationalization checks |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source. |

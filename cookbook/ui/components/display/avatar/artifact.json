@@ -4,11 +4,11 @@
     "id": "e3a2394d-d0d0-4495-bde4-59197f9d7866",
     "title": "Avatar",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "219f06b5fd8aaba2",
+  "synced": "b9a65fbb4f1e8077",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

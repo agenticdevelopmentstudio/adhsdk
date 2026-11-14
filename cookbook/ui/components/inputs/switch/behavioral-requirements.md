@@ -9,4 +9,5 @@
 - **class-prop**: The Switch MUST accept a `className` prop and merge it with internal styles.
 - **toggle-on-space**: The Switch MUST toggle its checked state when it has focus and the user presses Space (optionally, Enter).
 - **expose-switch-role**: The Switch MUST expose the ARIA `switch` role via `Switch.Root` so assistive technology can identify it as a toggle and announce the label the consumer provides.
-
+- **read-only-blocks-input**: The Switch MUST ignore user-driven changes when `readOnly` is set, while still reflecting controlled `checked` updates.
+- **form-submission**: The Switch MUST submit its `value` under `name` when checked, through the forwarded `name`/`value` props, so it takes part in native form submission.

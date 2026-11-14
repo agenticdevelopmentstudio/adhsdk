@@ -9,5 +9,7 @@
 | `htd.immerse.hide` | "Hide the topic lists" | `aria-label`/`title` on the cascading style's detail-immersion toggle when the lists are shown. |
 | `htd.immerse.show` | "Show the topic lists" | `aria-label`/`title` on the same toggle when the lists are immersed. |
 
+The `htd.` key prefix is historical: the keys were first written for the sibling topic-detail block and are kept so existing translations still apply; `hmd` names this component and its test vectors.
+
 All other user-facing strings (row labels, `rootLabel`, `trailingCrumbs`, `detailTitle`, `help`, item labels, `emptyLabel`, `newLabel`) are supplied by the host as props; the keys above are the ones the component generates itself and does not externalize.
 

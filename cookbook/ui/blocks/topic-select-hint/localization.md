@@ -1,7 +1,7 @@
 
-TopicSelectHint does not provide localization infrastructure: the computed headline's English scaffolding is hardcoded in source and is not exposed as translatable resource strings. Only prop values (`noun`, `listTitle`, `children`) pass through unmodified from the caller — the surrounding English sentence structure does not.
+TopicSelectHint does not provide localization infrastructure: the computed headline's English scaffolding is hardcoded in source and is not exposed as translatable resource strings. The "Fragment" column names each piece of the sentence for reference only; the `select-hint.*` names are descriptive labels, not resource keys that exist in source or that code can look up. Only prop values (`noun`, `listTitle`, `children`) pass through unmodified from the caller — the surrounding English sentence structure does not.
 
-| String Key | Default (en) | Context |
+| Fragment | Default (en) | Context |
 |-----------|-------------|---------|
 | `select-hint.prefix` | "Select" | Leads every computed headline |
 | `select-hint.article` | "a" / "an" | Chosen by a naive first-letter rule, not true English grammar — see **compute-headline-from-noun** |

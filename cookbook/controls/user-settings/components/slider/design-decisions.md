@@ -8,7 +8,7 @@
 **Approved**: pending
 
 3. **Decision**: Make the label optional, associating it to the input via `htmlFor` only when provided.
-**Rationale**: Supports both labeled and unlabeled use cases while keeping the association correct whenever a label is present; see the label association note under Accessibility for the accessible-name gap this leaves when `label` is omitted.
+**Rationale**: Supports both labeled and unlabeled use cases while keeping the association correct whenever a label is present; see #accessibility/label-association for the accessible-name gap this leaves when `label` is omitted. An unlabeled slider is the caller's responsibility: the component provides no `aria-label` or `aria-labelledby` fallback.
 **Approved**: pending
 
 4. **Decision**: Support the caption as either a static node or a function of the current value.

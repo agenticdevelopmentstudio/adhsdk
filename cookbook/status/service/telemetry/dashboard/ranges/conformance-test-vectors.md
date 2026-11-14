@@ -10,12 +10,12 @@ The vectors use `NOW = 2026-11-04T15:30:20.000Z`, the clock reading in `telemetr
 | ranges-005 | window-buckets-order, window-24h-count | `rangeWindow("24h", NOW).buckets` | Strictly ascending; every consecutive pair 3,600,000 ms apart |
 | ranges-006 | align-zero-fill, align-timestamp-spellings, align-sum | Test "zero-fills, tolerates either timestamp spelling, and sums repeats": buckets `["2026-11-03T00:00:00.000Z", "2026-11-04T00:00:00.000Z"]`, points `["2026-11-04T00:00:00Z", 2]` and `["2026-11-04T00:00:00.000Z", 3]` | `[0, 5]` |
 | ranges-007 | align-drop-off-axis, align-drop-unparseable | Test "drops what is off the axis or unparseable": same buckets, points `["2026-01-01T00:00:00Z", 9]`, `["nope", 9]`, `[null, 9]` | `[0, 0]`; nothing thrown |
-| ranges-008 | window-day-boundaries, window-day-no-local-time | `rangeWindow("7d", Date.parse("2026-11-04T00:00:00.000Z"))` run under any host time zone | Last bucket `"2026-11-04T00:00:00.000Z"`; first `"2026-10-29T00:00:00.000Z"` |
+| ranges-008 | window-day-boundaries, window-day-no-local-time | `rangeWindow("7d", Date.parse("2026-11-04T00:00:00.000Z"))` run once under `TZ=UTC` and once under `TZ=Pacific/Chatham`, with identical output | Last bucket `"2026-11-04T00:00:00.000Z"`; first `"2026-10-29T00:00:00.000Z"` |
 | ranges-009 | window-24h-start, window-24h-last-bucket | `rangeWindow("24h", Date.parse("2026-11-04T15:00:00.000Z"))` (exactly on the hour) | First `"2026-11-03T15:00:00.000Z"`; last `"2026-11-04T15:00:00.000Z"`; 25 buckets |
 | ranges-010 | align-exact-match | Buckets as in ranges-006, point `["2026-11-04T06:00:00Z", 4]` (inside the day, not on its boundary) | `[0, 0]`; the point is dropped, not rounded |
 | ranges-011 | align-timestamp-spellings | Buckets as in ranges-006, point `[Date.parse("2026-11-03T00:00:00.000Z"), 6]` (a number) | `[6, 0]` |
 | ranges-012 | align-length, align-zero-fill | `alignToBuckets([], [["2026-11-04T00:00:00Z", 1]])` | `[]` |
-| ranges-013 | align-input-iterable | Points supplied as a generator yielding one matching pair | The pair is counted; the array result has one 1 in the matching bucket |
+| ranges-013 | align-input-iterable | Buckets as in ranges-006; points supplied as a generator yielding the one pair `["2026-11-04T00:00:00.000Z", 1]` | The pair is counted once; the result is `[0, 1]` |
 | ranges-014 | align-pure | Call `alignToBuckets` twice with the same arrays | Equal results; the `buckets` array is unchanged |
-| ranges-015 | range-validation-by-callers | `GET /analytics/dashboard?range=1y` | HTTP 400 with `{ "error": "invalid range" }` (enforced by the route, not by this module) |
+| ranges-015 | window-day-includes-today, window-day-count | `rangeWindow("30d", NOW)` | 30 buckets; first `"2026-10-06T00:00:00.000Z"`; last `"2026-11-04T00:00:00.000Z"` |
 

@@ -1,0 +1,53 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "e1859aa2-d0c4-4d9a-b926-203dd5fbbca3",
+    "title": "AddUsersModal",
+    "type": "recipe",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-06-26",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A controlled dialog that stages users in a growing DataTable via an inline entry row, then hands the collected rows to an onAdd callback.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "modal",
+      "dialog",
+      "table",
+      "users"
+    ],
+    "ingredients": [
+      "d04eef56-2dbf-4148-964b-c095f242227f",
+      "550f00f7-bfb2-415e-9b15-bd5dce015500"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "e63f713a8519d4f0",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "api", "heading": "API"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

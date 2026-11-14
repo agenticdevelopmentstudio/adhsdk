@@ -1,0 +1,3 @@
+
+Semantic HTML: component uses standard `<ul>` and `<li>` elements, which are recognized by assistive technologies as a list structure (see **base-list-styling**, **list-item-rendering**). The active-item and upcoming-variant states are expressed only through CSS classes (`lp-chip--open`, `lp-chips--soon`); the component adds no corresponding ARIA attribute (e.g. `aria-current`) or text alternative for either state, so an assistive-technology user perceives only the plain list unless the caller's own styling conveys the distinction some other way. Labels are rendered as passed; if labels require accessible text alternatives or ARIA attributes, that is the responsibility of the caller to provide through the `label` prop (which accepts ReactNode).
+

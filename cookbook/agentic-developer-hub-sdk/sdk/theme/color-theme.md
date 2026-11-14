@@ -2,13 +2,13 @@
 id: 932449c9-b57f-4e2c-992a-1e27584742b6
 title: "ColorTheme"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
 modified: 2026-11-14
-author: mfullerton
-copyright: 2026 mfullerton
+author: Mike Fullerton
+copyright: 2026 Mike Fullerton
 license: MIT
 summary: "The app-wide color theme value type: terminal palette, identity and lock flags, semantic role overrides, typography and per-feature options, with tolerant Codable decoding."
 platforms:
@@ -20,9 +20,15 @@ tags:
   - color
   - model
   - codable
-depends-on: []
+depends-on:
+  - ad5bae6b-0172-4cd4-a4b7-297eb58eb28d
+  - ccc0d121-4927-4a83-b0e5-337116edebc0
+  - 794a60b5-7833-4dc3-a7b9-8280333cde8b
 related:
   - 0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6
+  - 1f80f43d-5aa4-42cf-bc3e-fb742662b615
+  - 62abe97d-75f7-48c0-83cd-6df02a48515e
+  - d15bba09-4574-4fd1-93a0-f7d2cccd04f2
 references: []
 approved-by: ""
 approved-date: ""
@@ -32,9 +38,9 @@ approved-date: ""
 
 ## Overview
 
-`ColorTheme` is the canonical, app-wide representation of a color scheme: a plain value type that carries a terminal palette (`foreground`, `background`, `cursor`, `selection` and 16 `ansi` colors), identity and lock metadata (`id`, `name`, `appearance`, `isBuiltIn`, `isImported`, `attribution`), optional explicit colors for app-wide semantic roles (`roleOverrides`), a `typography` value, and optional per-feature overrides (`terminal`, `project`). It is a strict superset of a terminal profile's appearance, so a `.itermcolors` file maps directly onto the palette portion.
+`ColorTheme` is the canonical, app-wide representation of a color scheme: a plain value type that carries a terminal palette (`foreground`, `background`, `cursor`, `selection` and 16 `ansi` colors), identity and lock metadata (`id`, `name`, `appearance`, `isBuiltIn`, `isImported`, `attribution`), optional explicit colors for app-wide semantic roles (`roleOverrides`), a `typography` value (`ThemeTypography` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-typography](cookbook:ccc0d121-4927-4a83-b0e5-337116edebc0))), and optional per-feature overrides (`terminal`, `project`; see `ThemeOptions` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-options](cookbook:794a60b5-7833-4dc3-a7b9-8280333cde8b))). It is a strict superset of a terminal profile's appearance, so a `.itermcolors` file maps directly onto the palette portion.
 
-The file also declares `ThemeAppearance` (`dark`, `light`, `auto`). The type is logic only: it holds data, derives editability from two flags, and decodes older persisted shapes. Palette parsing, semantic-role derivation, the catalog, and persistence live in sibling types (`ITermColorsParser`, `SemanticPalette`, `ThemeStore`, `ThemeStorage`) and are outside this recipe. Colors are `RGBAColor` values, each encoded as an `#RRGGBBAA` string, so a whole theme round-trips through `UserDefaults`.
+The file also declares `ThemeAppearance` (`dark`, `light`, `auto`). The type is logic only: it holds data, derives editability from two flags, and decodes older persisted shapes. Palette parsing, semantic-role derivation, the catalog, and persistence live in sibling types (`ITermColorsParser` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.i-term-colors-parser](cookbook:231a7e9a-8c03-44b3-afaf-b71755e05c1d)), `SemanticPalette` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.semantic-palette](cookbook:1f80f43d-5aa4-42cf-bc3e-fb742662b615)), `ThemeStore` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-store](cookbook:d15bba09-4574-4fd1-93a0-f7d2cccd04f2)), `ThemeStorage` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-storage](cookbook:62abe97d-75f7-48c0-83cd-6df02a48515e))) and are outside this ingredient. Colors are RGBAColor ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d)) values, each encoded as an `#RRGGBBAA` string, so a whole theme round-trips through `UserDefaults`.
 
 ## Behavioral Requirements
 
@@ -50,10 +56,10 @@ The file also declares `ThemeAppearance` (`dark`, `light`, `auto`). The type is 
 - **identity-fields**: `ColorTheme` MUST carry `id` (String), `name` (String), `appearance` (`ThemeAppearance`), `isBuiltIn` (Bool), `isImported` (Bool) and `attribution` (optional String).
 - **palette-fields**: `ColorTheme` MUST carry `foreground`, `background`, `cursor` and `selection` as `RGBAColor`, and `ansi` as an array of `RGBAColor` holding indices 0 to 15 (0 to 7 normal, 8 to 15 bright).
 - **role-overrides-field**: `ColorTheme` MUST carry `roleOverrides` as a dictionary from `ThemeRole.rawValue` strings to `RGBAColor`.
-- **role-overrides-precedence**: A role present in `roleOverrides` MUST win over the value derived from the palette. `ColorTheme` only stores the overrides; the derivation and the precedence are implemented by `SemanticPalette`, named in the source doc comment.
+- **role-overrides-precedence**: `ColorTheme` MUST store `roleOverrides` exactly as given and MUST NOT drop, reorder or rewrite entries. Note (non-normative): that an override wins over the palette-derived value is implemented by `SemanticPalette` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.semantic-palette](cookbook:1f80f43d-5aa4-42cf-bc3e-fb742662b615)), not by this type.
 - **typography-field**: `ColorTheme` MUST carry `typography` as a `ThemeTypography`, defaulting to `ThemeTypography.system`.
 - **feature-override-fields**: `ColorTheme` MUST carry `terminal` (optional `ThemeTerminalOptions`) and `project` (optional `ThemeProjectOptions`). `nil` MUST mean the Terminal or Projects settings panel decides.
-- **color-encoding**: Every color field MUST encode as an `#RRGGBBAA` hex string through `RGBAColor`, and a malformed hex string MUST fail decoding with a data-corrupted error (behavior of `RGBAColor`, which clamps constructed components to the range 0 to 1).
+- **color-encoding**: Every color field MUST encode as an `#RRGGBBAA` hex string through `RGBAColor`, and a malformed hex string MUST fail decoding with a data-corrupted error. Hex parsing and component clamping are owned by RGBAColor ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d)) and are not specified here.
 
 ### Initialization
 
@@ -70,6 +76,7 @@ The file also declares `ThemeAppearance` (`dark`, `light`, `auto`). The type is 
 - **decode-typography-default**: Decoding MUST treat an absent `typography` as `.system`, so themes persisted before typography existed still load.
 - **decode-feature-options-absent**: Decoding MUST treat an absent `terminal` or `project` as `nil`. Absent is the meaningful state, not a migration fallback.
 - **decode-no-palette-validation**: Decoding MUST NOT reject an `ansi` array whose length is not 16; length is checked by callers through `hasValidPalette`.
+- **encode-omits-nil**: Encoding MUST omit `attribution`, `terminal` and `project` when they are `nil`, and MUST NOT write a null for them.
 - **codable-round-trip**: Encoding a theme and decoding the result MUST yield an equal theme, provided each color sits on the 8-bit grid.
 
 ### Derived properties
@@ -80,11 +87,11 @@ The file also declares `ThemeAppearance` (`dark`, `light`, `auto`). The type is 
 - **is-editable**: `isEditable` MUST be `true` exactly when `isBuiltIn` and `isImported` are both `false`.
 - **is-locked**: `isLocked` MUST be the inverse of `isEditable`.
 - **is-deletable**: `isDeletable` MUST be `true` exactly when `isBuiltIn` is `false`, so imported and custom themes can be deleted and built-ins never can.
-- **duplicate-is-custom**: A duplicate of a locked theme is a plain custom theme (`isBuiltIn == false`, `isImported == false`) and is editable. `ColorTheme` expresses this only through the flag logic; the duplicate operation lives in the caller.
+- **duplicate-is-custom**: A theme with `isBuiltIn == false` and `isImported == false` MUST be editable and deletable, however it was made. A caller that duplicates a locked theme and clears both flags therefore gets an editable theme. The duplicate operation itself lives in the caller.
 
 ### Ordering and side effects
 
-- **no-side-effects**: Every operation of `ColorTheme` MUST be synchronous and free of side effects (no files, network, notifications or logging). Persistence is the job of `ThemeStorage`.
+- **no-side-effects**: Every operation of `ColorTheme` MUST be synchronous and free of side effects (no files, network, notifications or logging). Persistence is the job of `ThemeStorage` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-storage](cookbook:62abe97d-75f7-48c0-83cd-6df02a48515e)).
 
 ## Appearance
 
@@ -109,25 +116,29 @@ Not applicable — this is a data model, not a visual component.
 | color-theme-005 | is-editable, is-locked, is-deletable | Test `editability`: a built-in; the same theme with `isImported = true` and `isBuiltIn = false`; the same with both false | Built-in: locked, not editable, not deletable. Imported: locked, not editable, deletable. Custom: editable, not locked, deletable |
 | color-theme-006 | ansi-color-lookup | Test `ansiColor(at:) returns the color in range and nil out of range`: indexes 0, 15, 16, -1 on a built-in | `ansi[0]`, `ansi[15]`, nil, nil |
 | color-theme-007 | has-valid-palette, ansi-color-count, init-no-validation | Test `hasValidPalette requires exactly 16 ANSI colors`: a built-in, and a theme constructed with 3 ANSI colors | Built-in true; the 3-color theme constructs and reports false |
-| color-theme-008 | color-encoding | Test `RGBAColor clamps out-of-range and non-finite components to [0, 1]`: components 1.5, -0.2, 2.0, 9 and NaN, 0.5, +infinity, -infinity | 1, 0, 1, 1 and 0, 0.5, 1, 0 |
-| color-theme-009 | decode-required-keys | JSON with every key except `ansi` | Decoding throws |
-| color-theme-010 | decode-role-overrides-default, decode-typography-default, decode-feature-options-absent | The JSON from color-theme-003 | `roleOverrides` is empty; `typography == .system`; `terminal` and `project` are nil |
-| color-theme-011 | init-defaults, init-required | Initializer with only the required arguments, called twice | Both `id` values are UUID strings and differ; `isBuiltIn`, `isImported` false; `attribution` nil; `roleOverrides` empty |
-| color-theme-012 | appearance-cases, appearance-identifier | `ThemeAppearance.allCases` and `.auto.id` | Three cases `dark`, `light`, `auto`; id "auto" |
-| color-theme-013 | decode-no-palette-validation | JSON with 3 ANSI colors | Decodes; `hasValidPalette` is false |
-| color-theme-014 | color-encoding | JSON whose `foreground` is "not-a-color" | Decoding throws a data-corrupted error |
-
+| color-theme-008 | color-encoding | Test (exercises `RGBAColor`, the owner of clamping) `RGBAColor clamps out-of-range and non-finite components to [0, 1]`: components 1.5, -0.2, 2.0, 9 and NaN, 0.5, +infinity, -infinity | 1, 0, 1, 1 and 0, 0.5, 1, 0 |
+| color-theme-009 | decode-required-keys | JSON with every key except `ansi` (no test yet) | Decoding throws |
+| color-theme-010 | decode-role-overrides-default, decode-typography-default, decode-feature-options-absent | The JSON from color-theme-003 (no test yet) | `roleOverrides` is empty; `typography == .system`; `terminal` and `project` are nil |
+| color-theme-011 | init-defaults, init-required | Initializer with only the required arguments, called twice (no test yet) | Both `id` values are UUID strings and differ; `isBuiltIn`, `isImported` false; `attribution` nil; `roleOverrides` empty |
+| color-theme-012 | appearance-cases, appearance-identifier, appearance-enumerable | `ThemeAppearance.allCases` and `.auto.id` (no test yet) | Three cases `dark`, `light`, `auto`; id "auto" |
+| color-theme-013 | decode-no-palette-validation | JSON with 3 ANSI colors (no test yet) | Decodes; `hasValidPalette` is false |
+| color-theme-014 | color-encoding | JSON whose `foreground` is "not-a-color" (no test yet) | Decoding throws a data-corrupted error |
+| color-theme-015 | is-editable, is-deletable, is-locked | A theme with `isBuiltIn = true` and `isImported = true` (no test yet) | `isEditable` false; `isLocked` true; `isDeletable` false |
+| color-theme-016 | decode-no-palette-validation, ansi-color-lookup | JSON with 17 ANSI colors; then `ansiColor(at: 16)` (no test yet) | Decodes; `hasValidPalette` false; `ansiColor(at: 16)` returns the 17th color |
+| color-theme-017 | decode-required-keys | The JSON from color-theme-003 plus an unknown key `"extra": 1` (no test yet) | Decodes; the theme equals the one decoded without the key |
+| color-theme-018 | appearance-cases | JSON whose `appearance` is "sepia" (no test yet) | Decoding throws |
+| color-theme-019 | encode-omits-nil | Encode a theme with `attribution`, `terminal` and `project` nil (no test yet) | The JSON object has no `attribution`, `terminal` or `project` key |
 ## Edge Cases
 
-- **Empty ansi array**: decoding and construction MUST succeed; `hasValidPalette` is false and `ansiColor(at: 0)` is nil.
+- **Empty ansi array** (see `decode-no-palette-validation`): decoding and construction MUST succeed; `hasValidPalette` is false and `ansiColor(at: 0)` is nil.
 - **More than 16 ansi colors**: decoding and construction MUST succeed; `hasValidPalette` is false; indices above 15 that exist in the array are still returned by `ansiColor(at:)`.
 - **Negative or out-of-range index**: `ansiColor(at:)` MUST return nil and MUST NOT trap.
 - **Both lock flags true**: `isEditable` is false and `isDeletable` is false (the built-in rule wins for deletion).
-- **Unknown keys in JSON**: decoding MUST ignore them (the custom decoder reads only the known keys).
+- **Unknown keys in JSON**: decoding MUST ignore them (the custom decoder reads only the known keys). Ports MUST configure their decoder to ignore unknown keys.
 - **Malformed color string or wrong type**: decoding MUST throw and the theme is not produced; there is no partial theme.
 - **Unknown appearance string**: decoding MUST throw, because `appearance` is required and `ThemeAppearance` accepts only its three raw values.
 - **Unknown `roleOverrides` key**: stored as given; `ColorTheme` does not check keys against `ThemeRole`.
-- **Boundary color components**: values outside 0 to 1 and non-finite values are clamped by `RGBAColor` before they reach the theme.
+- **Boundary color components**: values outside 0 to 1 and non-finite values are clamped by RGBAColor ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d)) before they reach the theme.
 - **Concurrent access**: `ColorTheme` is a `Sendable` value type with no shared mutable state, so each copy is independent and no ordering rule applies.
 - **Offline, cancellation, timeout**: not applicable; the type does no I/O and has no asynchronous operation.
 
@@ -178,11 +189,11 @@ Not applicable: the source of `ColorTheme` makes no log call.
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform. The file is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ColorTheme.swift` and imports only Foundation. `RGBAColor` is the bridge to SwiftUI `Color`; convert at the view edge and keep the model free of UI types. A custom `init(from:)` with `decodeIfPresent` supplies the migration defaults; the synthesized `encode(to:)` writes every field.
-- **Compose**: Use a Kotlin data class with default parameter values and kotlinx.serialization, where properties with defaults decode as absent-tolerant by default. Store colors as ARGB `Long` or a small value class with a custom serializer emitting `#RRGGBBAA` (the alpha position differs from Android's `#AARRGGBB`). Build a Compose `Color` at the UI edge.
+- **SwiftUI**: Source platform. The file is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ColorTheme.swift` and imports only Foundation. `RGBAColor` is the bridge to SwiftUI `Color`; convert at the view edge and keep the model free of UI types. A custom `init(from:)` with `decodeIfPresent` supplies the migration defaults; the synthesized `encode(to:)` writes every field except `nil` optionals (`attribution`, `terminal`, `project`), which it omits.
+- **Compose**: Use a Kotlin data class with default parameter values and kotlinx.serialization, where properties with defaults decode as absent-tolerant by default. Configure `Json { ignoreUnknownKeys = true }`, because kotlinx.serialization rejects unknown keys by default, and `explicitNulls = false` so `nil` optionals are omitted on encode. Store colors as ARGB `Long` or a small value class with a custom serializer emitting `#RRGGBBAA` (the alpha position differs from Android's `#AARRGGBB`). Build a Compose `Color` at the UI edge.
 - **React/Web**: Use a TypeScript interface with optional fields and a decode function that fills defaults and throws on a missing required key. Colors are hex strings; browsers accept 8-digit hex with alpha last, matching the source. Derived flags become plain functions or getters.
 - **AppKit / UIKit**: Same Swift type. Convert `RGBAColor` to `NSColor` or `UIColor` in an extension in the UI layer; `ThemeAppearance` maps to the dark and light `NSAppearance` names or `UIUserInterfaceStyle`, with `auto` meaning follow the system.
-- **WinUI 3**: Model it as a C# `record` (or an immutable class) with `init` properties and defaults, serialized with `System.Text.Json`. Write a `JsonConverter<RGBAColor>` that reads and writes `#RRGGBBAA` and throws `JsonException` on a malformed string, because `Windows.UI.Color` is ARGB and `Color.FromArgb` takes alpha first. Absent keys fall back to property initializers, and required keys use the `required` modifier or a custom converter that throws. Derived flags are get-only expression-bodied properties. Persist custom themes with `Windows.Storage.ApplicationData.Current.LocalSettings` or a JSON file in `LocalFolder`, behind the same storage interface as `ThemeStorage`. Map `ThemeAppearance` to `ElementTheme.Dark`, `Light` and `Default`, and apply it with `FrameworkElement.RequestedTheme`. Bind to the lock state in XAML through `isLocked`; if the record is immutable, raise `INotifyPropertyChanged` from the owning view model rather than the record.
+- **WinUI 3**: Model it as a C# `record` (or an immutable class) with `init` properties and defaults, serialized with `System.Text.Json`. Write a `JsonConverter<RGBAColor>` that reads and writes `#RRGGBBAA` and throws `JsonException` on a malformed string, because `Windows.UI.Color` is ARGB and `Color.FromArgb` takes alpha first. Absent keys fall back to property initializers, and required keys use the `required` modifier or a custom converter that throws. Derived flags are get-only expression-bodied properties. Map `ThemeAppearance` to `ElementTheme.Dark`, `Light` and `Default`, and apply it with `FrameworkElement.RequestedTheme`. Bind to the lock state in XAML through `isLocked`.
 
 ## Reference Implementations
 
@@ -191,7 +202,7 @@ Not applicable: the source of `ColorTheme` makes no log call.
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ColorTheme.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ColorTheme.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -204,7 +215,7 @@ Not applicable: the source of `ColorTheme` makes no log call.
 **Approved**: pending
 
 **Decision**: Do not validate the 16-color palette in the initializer or decoder; expose `hasValidPalette` and `ansiColorCount` instead.
-**Rationale**: Validation is offered as a query. `ThemeStore` rejects an invalid palette at import (`ThemeImportError.invalidPalette`), so the model can load any stored shape.
+**Rationale**: Validation is offered as a query, so the model can load any stored shape. The debt is that an invalid palette (and an unknown `roleOverrides` key) is accepted silently unless the caller asks. The only caller of `hasValidPalette` in source is `ThemeStore` import (`ThemeStore.swift`), which rejects an invalid palette with `ThemeImportError.invalidPalette`; theme builders such as `VSCodeThemeImporter` produce 16 colors by construction. Any new entry point that accepts a theme MUST check `hasValidPalette` itself.
 **Approved**: pending
 
 **Decision**: Imported themes are locked like built-ins but remain deletable.
@@ -230,4 +241,5 @@ Not applicable: the source of `ColorTheme` makes no log call.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Linked RGBAColor, typography, options and sibling ingredients in depends-on and the text, set the author, moved clamping to RGBAColor, added encode-omits-nil and five vectors, marked untested vectors, and corrected the SwiftUI, Compose and WinUI notes. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

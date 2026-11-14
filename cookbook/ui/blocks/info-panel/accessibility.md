@@ -1,6 +1,6 @@
 
 - The panel renders as a `<section>` with an accessible name: `ariaLabel` when
-  given, else the `title` when it is a string, so the panel is a labeled landmark
+  given, else a raw `aria-label` attribute, else the `title` when it is a string, so the panel is a labeled landmark
   region.
 - The leading `icon` is decorative and marked `aria-hidden`, so assistive tech reads
   the title rather than an unlabeled glyph.

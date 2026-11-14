@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: Settings updates apply locally at once, then coalesce per account to the latest value while a send is in flight.
-**Rationale**: A stepper or toggle can change faster than the service answers, and each change must not restart a sync. A failure drops all pending values and reloads, so the user may lose several intermediate choices at once.
+**Rationale**: A stepper or toggle can change faster than the service answers, and each change must not restart a sync. A failure drops the pending value, which is the latest choice, and reloads, so the user may lose the intermediate choices that value replaced.
 **Approved**: pending
 
 **Decision**: A reload that lands mid-send re-applies the newest chosen settings over the service's list.
@@ -19,7 +19,7 @@
 **Rationale**: Alerting again about the same failure on every reload would nag the user, so the model remembers what it alerted and forgets an account once it recovers, so a later identical failure alerts. Only one alert shows at a time.
 **Approved**: pending
 
-**Decision**: The client secret is shown as a fixed ten-bullet mask plus the last five characters of the secret that the mail integration service sends in the provider status (see the [mail integration service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a), which owns the five-character limit), or "Stored (hidden)" when no suffix exists.
+**Decision**: The client secret is shown as a fixed ten-bullet mask plus the last five characters of the secret that the mail integration service sends in the provider status (see the mail integration service, [adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a), which owns the five-character limit), or "Stored (hidden)" when no suffix exists.
 **Rationale**: A fixed mask length does not reveal the secret's length, and the service sends only those characters.
 **Approved**: pending
 
@@ -31,3 +31,6 @@
 **Rationale**: Keeping the text beside the state lets the model's tests cover it. This is deliberate technical debt for localization, tracked on `string-externalization` in Localization. It is retired when the first non-English locale ships for the Integrations settings screen, or when the product decides how that screen is localized, whichever comes first; the owner is the Integrations settings screen's maintainer.
 **Approved**: pending
 
+**Decision**: `lastSyncedText` parses only an ISO 8601 timestamp with fractional seconds; any other text reads "Never synced".
+**Rationale**: The model parses one timestamp form, the form every timestamp in this recipe's vectors uses, and treats anything else as unknown rather than guessing. A valid timestamp without fractional seconds therefore reads "Never synced", which a port MUST reproduce until both forms are specified.
+**Approved**: pending

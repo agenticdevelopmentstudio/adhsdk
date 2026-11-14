@@ -2,11 +2,11 @@
 id: 43c55f5e-d9b3-430b-9026-d0af510fda15
 title: "Combobox"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -110,7 +110,7 @@ array (an async caller can show its own spinner alongside).
 | T1 | renders-combobox-role | render | input has `role="combobox"`, `aria-expanded="false"` |
 | T2 | type-reveals-suggestions | set query "Vu", open | only "Vue" shown; non-matches absent |
 | T3 | aria-controls-listbox | open | input `aria-controls` equals the listbox id |
-| T4 | arrow-moves-active, enter-picks-active | open "S", ArrowDown, Enter | `aria-activedescendant` → "Svelte"; value becomes "Svelte"; popup closes |
+| T4 | arrow-moves-active, enter-picks-active | type "S", press ArrowDown (opens the popup), press ArrowDown again (highlights the first option), press Enter | `aria-activedescendant` → "Svelte"; value becomes "Svelte"; popup closes |
 | T5 | escape-closes | open "V", Esc | `aria-expanded="false"`; value unchanged from before Esc |
 | T6 | empty-shows-message | set query "zzz", open | empty message shown; no options |
 | T7 | controlled-value | edit text | `onValueChange` fires with the new text |
@@ -174,17 +174,17 @@ No logging. Combobox is a presentational form control; it emits no structured lo
 
 ## Platform Notes
 
-- **Web (React)**: New file `packages/web/packages/ui/src/components/combobox.tsx`. Wraps Base UI's headless `Autocomplete` primitive. Export covered by the existing `./components/*` wildcard in `packages/web/packages/ui/package.json`. Dependency on `@base-ui/react/autocomplete` already present in `@adh-sdk/ui`. The popup is sized to Base UI's `--anchor-width` and capped by `--available-height` CSS custom properties, so it always matches the input's width and stays within the viewport at any breakpoint without component-specific responsive code.
-- **SwiftUI**: Use a `TextField` with the `.textInputSuggestions` modifier (or `.searchSuggestions` when composed with `.searchable`) to present suggestions without handing focus to a `Menu`; bind the text to the input value and drive the suggestion list from a locally filtered `[String]`. Track the highlighted suggestion with local state and mirror Base UI's `aria-activedescendant` pattern by moving `.accessibilityFocused` to the highlighted suggestion view.
+- **Web (React)**: The existing implementation wraps Base UI's headless `Autocomplete` primitive. Export covered by the existing `./components/*` wildcard in `packages/web/packages/ui/package.json`. Dependency on `@base-ui/react/autocomplete` already present in `@adh-sdk/ui`. The popup is sized to Base UI's `--anchor-width` and capped by `--available-height` CSS custom properties, so it always matches the input's width and stays within the viewport at any breakpoint without component-specific responsive code.
+- **SwiftUI**: Use a `TextField` with the `.textInputSuggestions` modifier (or `.searchSuggestions` when composed with `.searchable`) to present suggestions without handing focus to a `Menu`; bind the text to the input value and drive the suggestion list from a locally filtered `[String]`. Track the highlighted suggestion with local state and keep VoiceOver focus in the field, as the web version keeps DOM focus in the input; announce the highlighted suggestion instead of moving `.accessibilityFocused` to it (for example with an `AccessibilityNotification.Announcement`).
 - **Compose**: Use `ExposedDropdownMenuBox` with an editable `TextField` as its anchor and its `ExposedDropdownMenu` for the suggestion list; filter suggestions on text change, dismiss on pick or Escape via `onDismissRequest`, and expose the active item through `Modifier.semantics` so assistive tech has an equivalent to `aria-activedescendant`.
-- **AppKit / UIKit**: On AppKit, use `NSComboBox` (or an `NSTextField` with its built-in completion API) rather than hand-rolling a popover — both already provide native filtering, keyboard navigation, and `NSAccessibilityComboBoxRole`. UIKit has no native combobox equivalent, so pair a `UITextField` with an anchored `UITableView`/`UICollectionView` popover, and mirror the combobox semantics explicitly by exposing the field with `UIAccessibilityTraits` (e.g. `.adjustable`) and an `accessibilityValue` that announces the active suggestion, rather than an unnamed "ARIA equivalent."
+- **AppKit / UIKit**: On AppKit, use `NSComboBox` (or an `NSTextField` with its built-in completion API) rather than hand-rolling a popover — both already provide native filtering, keyboard navigation, and `NSAccessibilityComboBoxRole`. UIKit has no native combobox equivalent, so pair a `UITextField` with an anchored `UITableView`/`UICollectionView` popover, and mirror the combobox semantics explicitly by exposing the field with the `.searchField` trait (or the default text-field traits; `.adjustable` is the slider/stepper trait and does not describe a combobox) and announcing the active suggestion with `UIAccessibility.post(notification: .announcement, argument: ...)`, rather than an unnamed "ARIA equivalent."
 - **WinUI 3**: Use `AutoSuggestBox` with its built-in filtering and suggestion list: bind `ItemsSource` to the filtered items, handle `TextChanged` (checking `args.Reason == AutoSuggestionBoxTextChangeReason.UserInput` so programmatic text changes don't re-filter), handle `SuggestionChosen` to fill the text on pick, and handle `QuerySubmitted` for the Enter-key commit. Keyboard navigation (Up/Down, Enter, Escape) is handled by `AutoSuggestBox`'s built-in roving focus.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/combobox.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/components/combobox.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -204,10 +204,13 @@ No logging. Combobox is a presentational form control; it emits no structured lo
 **Rationale**: Plain strings mirror the `<datalist>` pattern this component replaces; richer item shapes belong to `ListChooser` / `OptionMenu`.
 **Approved**: pending
 
-**Decision**: The wrapper adds theme only, no additional behavior beyond styling and the controlled `value`/`onValueChange` surface.
+**Decision**: The wrapper adds theme and the current-value check mark only, with no other behavior beyond styling and the controlled `value`/`onValueChange` surface.
 **Rationale**: Keeping the wrapper disposable and easy to track against upstream Base UI changes.
 **Approved**: pending
 
+**Decision**: Suggestion rows use the shared `adh-touch-row` class, which grows a row's padding by 30% on coarse pointers, instead of a fixed 44×44pt minimum height.
+**Rationale**: The family has one touch-growth rule for list rows, so the popup keeps its compact density on fine pointers and follows the same rule as the other list rows. The rows still fall short of the 44×44pt / 48×48dp minimum, which is why `touch-target-size` is recorded as `failed`.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -226,12 +229,13 @@ No logging. Combobox is a presentational form control; it emits no structured lo
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`passed` rows (role/ARIA wiring, roving `aria-activedescendant` focus, Unicode-safe string handling, and text rendered only as JSX text nodes rather than `dangerouslySetInnerHTML`) are shown directly in the source; `partial` rows (dynamic type via Tailwind's rem-based `text-sm`, the `apt-*` token contrast ratios, and the hardcoded `emptyLabel` default) depend on values the source alone can't confirm or leaves as an overridable default; `touch-target-size` is `failed` because the suggestion rows (`px-2 py-1.5` with `text-sm`) render well under the 44×44pt / 48×48dp minimum. `separation-of-concerns` passes because `combobox.tsx` does nothing but forward props onto `@base-ui/react`'s `Combobox` primitive with Tailwind classes, carrying no business logic of its own. `unit-test-coverage` passes because `src/__tests__/combobox.test.tsx` exercises the component with meaningful assertions.
+`passed` rows (role/ARIA wiring, roving `aria-activedescendant` focus, Unicode-safe string handling, and text rendered only as JSX text nodes rather than `dangerouslySetInnerHTML`) are shown directly in the source; `partial` rows (dynamic type via Tailwind's rem-based `text-sm`, the `apt-*` token contrast ratios, and the hardcoded `emptyLabel` default) depend on values the source alone can't confirm or leaves as an overridable default; `touch-target-size` is `failed` because the suggestion rows (`px-2 py-1.5` with `text-sm`) render well under the 44×44pt / 48×48dp minimum. `separation-of-concerns` passes because `combobox.tsx` does nothing but forward props onto `@base-ui/react`'s `Autocomplete` primitive with Tailwind classes, carrying no business logic of its own. `unit-test-coverage` passes because `src/__tests__/combobox.test.tsx` exercises the component with meaningful assertions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Corrected the Compliance note to name Autocomplete, narrowed the theme-only decision to include the check mark, added a touch-row Design Decision, spelled out T4's key sequence, and fixed the SwiftUI, UIKit and Web platform notes. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | ariaLabel now required/always-wins; restored on-main "recipe" wording; Compliance best-practices added. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: replaced nonexistent WinUI 3 `AutoSuggestBox` members and hand-rolled SwiftUI/AppKit/UIKit notes with real native controls; reformatted Design Decisions into Decision/Rationale/Approved blocks and added one for `<datalist>`'s shortcomings; replaced unsupported verification claims in the Web and AppKit/UIKit notes with grounded statements; added a Required column and rule to Configuration for `ariaLabel`; built a real Compliance table; fixed the active-row `apt-highlight`/`apt-gold` contradiction between Appearance/States and the source; clarified `escape-closes` and `enter-picks-active` wording; required de-duplicated `items` in Edge Cases; added `current-value-marked` requirement and test vector; added `pointer-pick`, `disabled-inert`, and Esc-unchanged test vectors; filled in Localization and Accessibility Options. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) as not applicable; fix domain URI to use agenticdevelopercookbook scheme; expand Platform Notes with cross-platform guidance. |

@@ -20,5 +20,4 @@ All vectors use a stopped clock unless they say the clock moves. Vectors marked 
 | pacer-015 | reservation-final | Derived: rate 10, burst 0; `reserve(10)`, the caller is cancelled during its sleep, then `reserve(10)` on the same instant | 1 s, then 2 s; the first reservation's units are still counted |
 | pacer-016 | cost-table, cost-type | Derived: read each `GmailQuotaCost` constant | profile 1, labelsList 1, historyList 2, messagesList 5, messagesGet 5, threadsGet 10, messagesBatchModify 50 |
 | pacer-017 | shared-process-wide | Derived: read `GmailQuotaPacer.shared` twice | The same instance both times; a reservation made through one read is seen by the other |
-| pacer-018 | units-nonnegative | Derived: rate 10, burst 0; `reserve(10)` returns 1 s; `reserve(-5)` | 500 ms: the unvalidated negative value shortened the backlog by half; this records the code, not a designed refund |
 

@@ -1,5 +1,5 @@
 
-Subsystem: the hub client's own reverse-DNS identifier (`KeychainHelper.service`'s fallback literal) | Category: `Keychain`
+Subsystem: `com.mikefullerton.AgenticDeveloperHubClient` | Category: `Keychain`
 
 | Event | Level | Message |
 |-------|-------|---------|

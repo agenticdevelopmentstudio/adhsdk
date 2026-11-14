@@ -1,7 +1,8 @@
 
 ### Construction
 
-- **sendable-value-type**: `ADHClient` MUST be declared `Sendable`. It is a
+- **sendable-value-type**: `ADHClient` MUST be declared `Sendable`, checked at compile time, with no data race when one
+  instance is used from concurrent tasks. It is a
   `struct` with only `let` stored properties (`api: Client`,
   `transport: APITransport`, `credentials: any CredentialStore`,
   `session: (any SessionStore)?`, `middlewares: [any ClientMiddleware]`), so
@@ -50,8 +51,11 @@
 - **session-factories-mirror-bearer-factories**:
   `.direct(session:onSessionExpired:)`, `.daemon(session:port:onSessionExpired:)`,
   and `.resolved(using:session:onSessionExpired:)` MUST select the same
-  transport as their bearer-only counterparts, differing only in
-  constructing a session-backed `ADHClient`.
+  transport as their bearer-only counterparts, differing in
+  constructing a session-backed `ADHClient`. One asymmetry exists:
+  `.daemon(session:port:onSessionExpired:)` accepts a `port`, which the
+  bearer-only `.daemon(credentials:)` does not (see
+  `daemon-session-factory-port-override`).
 - **daemon-session-factory-port-override**:
   `.daemon(session:port:onSessionExpired:)` MUST accept a caller-supplied
   `port`, defaulting to `DaemonContract.port`, and pass it through to
@@ -71,8 +75,9 @@
   before performing any network activity.
 - **raw-query-sorted-and-percent-encoded**: When `query` is non-empty,
   `rawJSON` MUST build the query string by sorting entries by key and
-  percent-encoding both key and value against `CharacterSet.urlQueryAllowed`
-  minus `+&=?#`, joined with `&`.
+  percent-encoding both key and value so that none of `+`, `&`, `=`, `?`
+  and `#` appears unescaped in a key or value, joined with `&`. The mechanism
+  (`CharacterSet.urlQueryAllowed` minus `+&=?#`) is in Platform Notes.
 - **raw-query-appended-correctly**: `rawJSON` MUST append the built query
   string to `path` with `&` when `path` already contains `?`, otherwise with
   `?`.
@@ -83,31 +88,34 @@
   caller's `headers`, sorted by key, after the default `Accept` /
   `Content-Type` headers, so a caller-supplied value of the same name
   replaces a default.
-- **raw-invalid-header-name-dropped**: `rawJSON` MUST silently skip any
-  caller-supplied header whose name `HTTPField.Name(name)` fails to parse,
-  rather than throwing.
+- **raw-invalid-header-name-dropped**: `rawJSON` MUST skip any
+  caller-supplied header whose name is not a valid HTTP field name, rather than
+  throwing. The skip gives the caller no signal: nothing is thrown or returned
+  to say a header was dropped, so a caller can detect it only by inspecting the
+  request a middleware or the transport receives.
 - **raw-operation-id-derived-from-unqueried-path**: `rawJSON` MUST compute
   its `operationID` as `"raw <METHOD> <path>"` via
   `ADHClient.rawOperationID(method:path:)`, using the original, un-queried
   `path` — never the query-appended `fullPath`.
 - **raw-middleware-chain-reused**: `rawJSON` MUST route the request through
-  the exact same `middlewares` chain (composed by reversing `middlewares`
-  and wrapping the transport's `send`) that `api` was built with, so bearer
+  the exact same `middlewares` chain that `api` was built with, so bearer
   injection and refresh-and-retry behave identically for raw and typed
   requests.
 - **raw-nil-body-yields-empty-data**: When the response has no body,
-  `rawJSON` MUST set `RawResponse.body` to an empty `Data()` without
-  invoking `Data(collecting:upTo:)`.
+  `rawJSON` MUST set `RawResponse.body` to an empty `Data()`.
 - **raw-response-body-capped**: When the response has a body, `rawJSON` MUST
-  collect it via `Data(collecting: responseBody, upTo: ADHBodyLimit.maxBuffered)`
-  — a shared 16 MiB cap (`ADHBodyLimit`, defined in this file and reused by
-  `hub-client-auth`'s `SessionRefreshMiddleware` for request-body buffering)
-  — which throws when the body exceeds that cap.
+  collect it under a shared 16 MiB cap (`ADHBodyLimit.maxBuffered`,
+  defined in this file and reused by `hub-client-auth`'s
+  `SessionRefreshMiddleware` for request-body buffering) and MUST throw when
+  the body exceeds that cap. The thrown error is whatever the runtime's
+  `Data(collecting:upTo:)` throws; `rawJSON` does not wrap it in a
+  `RawRequestError` case, so a caller cannot match it as one.
 - **raw-response-headers-last-wins**: `rawJSON` MUST build
-  `RawResponse.headers` by folding `response.headerFields` into a
-  `[String: String]` keyed by `canonicalName`, so a response with more than
-  one header of the same canonical name retains only the last value
-  encountered.
+  `RawResponse.headers` as a `[String: String]` keyed by the header's canonical
+  name, so a response with more than one header of the same canonical name
+  (such as `Set-Cookie` or `Link`) retains only the last value encountered;
+  callers MUST NOT rely on `RawResponse.headers` for repeated headers (see the
+  design decision on single-value headers).
 - **raw-error-status-throws-http**: `rawJSON` MUST throw
   `RawRequestError.http(status:body:)` for any response with
   `status.code >= 400`, carrying the numeric status and the (already-capped)
@@ -133,12 +141,12 @@ concurrent refreshes are serialized through `RefreshCoordinator.shared`,
 when a rejected refresh clears the session — is `hub-client-auth`'s
 contract; from `ADHClient`'s own two files, only the following is specified.
 
-- **middleware-choice-fixed-at-construction**: Once constructed, an
+- **middleware-choice-fixed-at-construction**: (see also `internal-fields-not-public`) Once constructed, an
   `ADHClient` MUST use exactly the one middleware chosen by which
   initializer built it — bearer-only from `init(transport:credentials:)`,
   refresh-and-retry from `init(transport:session:onSessionExpired:)` — with
   no way to swap it after construction.
-- **raw-and-typed-share-identical-auth**: `rawJSON` MUST observe the exact
+- **raw-and-typed-share-identical-auth**: (the outcome of `raw-middleware-chain-reused`) `rawJSON` MUST observe the exact
   same authentication and refresh behavior as the typed `api` for the same
   `ADHClient` instance, because both route through the identical
   `middlewares` array.
@@ -151,7 +159,7 @@ contract; from `ADHClient`'s own two files, only the following is specified.
 
 ### Concurrency
 
-- **adhclient-carries-no-shared-mutable-state**: `ADHClient` MUST hold only
+- **adhclient-carries-no-shared-mutable-state**: (the structural basis of `sendable-value-type`) `ADHClient` MUST hold only
   `let` stored properties (including the array `middlewares`, referencing
   `Sendable` middleware instances), so concurrent calls through one instance
   need no additional synchronization beyond what the injected

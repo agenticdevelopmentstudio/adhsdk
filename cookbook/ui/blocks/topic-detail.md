@@ -20,9 +20,9 @@ tags:
   - two-pane
   - navigation
 depends-on: []
-related: []
-references:
-  - https://adh.com/home
+related:
+  - 0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -31,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-**TopicDetail** is the reusable two-pane primitive: a selectable topic list (the rail) on the left beside a bare detail pane on the right. The pane has no title row and no action bar of its own. All list chrome (a titled header, a list toolbar with a filter, the create `+`, a footer, a close button) belongs to the rail, which the same file exports as **TopicRail**. `TopicDetail` composes one `TopicRail` with a `<section>` pane and passes the rail no `title`, so the standalone primitive shows the bare control strip and no toolbar; the hierarchical stack ([adhsdk.ingredient.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8)) composes `TopicRail` directly for its titled, filterable columns. The file is the source of truth: it began as a port of the adh.com/home settings rail, and that original is gone.
+**TopicDetail** is the reusable two-pane primitive: a selectable topic list (the rail) on the left beside a bare detail pane on the right. The pane has no title row and no action bar of its own. All list chrome (a titled header, a list toolbar with a filter, the create `+`, a footer, a close button) belongs to the rail, which the same file exports as **TopicRail**. `TopicDetail` composes one `TopicRail` with a `<section>` pane and passes the rail no `title`, so the standalone primitive shows the bare control strip and no toolbar; the hierarchical stack (adhsdk.ingredient.ui.blocks.hierarchical-topic-detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))) composes `TopicRail` directly for its titled, filterable columns. The file is the source of truth: it began as a port of the adh.com/home settings rail, and that original is gone.
 
 The rail is always collapsible. A desktop toggle shrinks it to an icon-only strip of 48px; each topic stays clickable as its icon. Below the `md` breakpoint the grid is a single column and the rail stacks above the pane as the same vertical list; only the collapse toggle and the drag handle are hidden. The component fills its container, so give it a height.
 
@@ -42,7 +42,7 @@ The file also exports small shared pieces: `ListToolButton` (one icon tool on a 
 - **render-two-panes**: The component MUST render a left topic-list rail beside a right detail pane holding `children`.
 - **fill-container**: The component MUST fill its container's height and width (grid with `min-h-0 min-w-0 flex-1`), so a caller supplies an explicit height or a `flex-1` parent.
 - **mark-selected**: The row whose `id` equals `selectedId` MUST be marked active: gold text, a gold 2px left bar in the default `bar` selection style, and `aria-current="true"`.
-- **report-selection**: Clicking a non-disabled row MUST call `onSelect` with the row's `id`, including a re-click on the already-selected row, because the component has no deselect signal of its own.
+- **report-selection**: Clicking a non-disabled row MUST call `onSelect` with the row's `id`, including a re-click on the already-selected row when the list is not `covered` (see `skip-covered-reselect`), because the component has no deselect signal of its own.
 - **skip-covered-reselect**: In covered style a click on the already-selected row MUST do nothing: no `onSelect` and no link flash.
 - **skip-disabled**: A `disabled` row MUST be a native disabled button, dimmed (`text-apt-text-dim`, default cursor), and MUST NOT call `onSelect`.
 - **render-label**: Each row MUST render its `label` as the primary text, truncated with an ellipsis when it overflows.
@@ -449,9 +449,9 @@ Not applicable: the component writes no log output.
 | [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | Platform Compliance |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Statuses rest on `topic-detail.tsx`. Screen-reader and semantic-markup pass on real buttons, `aria-current`, `role="toolbar"`, `role="separator"`, the combobox wiring and the always-mounted status region. Keyboard is partial because the resize handle is pointer-only (the open question on `resize-handle-keyboard`) and touch-target size is partial for the open question on `tool-target-size`. Focus management passes: closing the filter returns focus to its button and the dialog's initial focus is Cancel. Reduced motion is partial: the width transition follows `--apt-anim-scale` but the busy spinner's `animate-spin` has no override in this file. The two internationalization checks fail because the fixed English literals listed under Localization have no override. Explicit error handling is partial because a failed `onDelete` is caught and swallowed, leaving the message to the caller. Separation of concerns passes: `TopicList`, `TopicRail` and `TopicDetail` are separate, and the filter helpers are exported pure functions. Unit-test coverage passes: tests under `packages/web/packages/ui/src/__tests__` (preview, prefetch, blocked, icons, toolbar, link, delete, checkable, busy) cover the behaviors in the vectors, though the collapse, drag and mobile requirements have no test in those files.
+Statuses rest on `topic-detail.tsx`. Screen-reader and semantic-markup pass on real buttons, `aria-current`, `role="toolbar"`, `role="separator"`, the combobox wiring and the always-mounted status region. Keyboard is partial because the resize handle is pointer-only (the open question on `resize-handle-keyboard`) and touch-target size is partial for the open question on `tool-target-size`. Focus management passes: closing the filter returns focus to its button and the dialog's initial focus is Cancel. Reduced motion is partial: the width transition follows `--apt-anim-scale` but the busy spinner's `animate-spin` has no override in this file. The two internationalization checks fail because the fixed English literals listed under Localization have no override. Explicit error handling is partial because a failed `onDelete` is caught and swallowed, leaving the message to the caller. Separation of concerns passes: `TopicList`, `TopicRail` and `TopicDetail` are separate, and the filter helpers are exported pure functions. Unit-test coverage is partial: tests under `packages/web/packages/ui/src/__tests__` (preview, prefetch, blocked, icons, toolbar, link, delete, checkable, busy) cover the behaviors in the vectors, though the collapse, drag and mobile requirements have no test in those files.
 
 ## Change History
 

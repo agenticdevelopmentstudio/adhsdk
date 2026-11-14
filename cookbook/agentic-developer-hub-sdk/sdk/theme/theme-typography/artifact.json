@@ -4,7 +4,7 @@
     "id": "ccc0d121-4927-4a83-b0e5-337116edebc0",
     "title": "ThemeTypography",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -26,13 +26,15 @@
     ],
     "depends-on": [],
     "related": [
-      "932449c9-b57f-4e2c-992a-1e27584742b6"
+      "932449c9-b57f-4e2c-992a-1e27584742b6",
+      "d15bba09-4574-4fd1-93a0-f7d2cccd04f2",
+      "1f80f43d-5aa4-42cf-bc3e-fb742662b615"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7eabda7bd3366e95",
+  "synced": "c7dedd8b705cd43a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

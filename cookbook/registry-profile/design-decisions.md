@@ -4,7 +4,7 @@
   **Approved**: pending
 
 - **Decision**: Visibility markers are rendered inside the `<dt>` field label, not floated beside the field value.
-  **Rationale**: This ensures a reader who encounters the marker has not already read a value they believed was public. The marker placement is a compromise between making the visibility constraint immediately visible and avoiding layout reflow.
+  **Rationale**: This ensures a reader who encounters the marker has not already read a value they believed was public. The alternative, a marker after the value, would let a reader meet the restriction only after reading the value.
   **Approved**: pending
 
 - **Decision**: The `AUDIENCE_NOTE` Record is exhaustive on `FieldVisibility`, so adding a new visibility type to the enum without defining its marker text is a TypeScript compile error rather than a silently unmarked field.
@@ -24,6 +24,9 @@
   **Approved**: pending
 
 - **Decision**: The display name always renders as an `<h1>`, with no prop to change the heading level.
-  **Rationale**: The component assumes it is rendered as the top-level content of the page or view presenting the entry, matching how it is used today. A host that embeds it inside a page with its own `<h1>` accepts a duplicate top-level heading; the component does not currently offer a way to renumber it.
+  **Rationale**: The component assumes it is rendered as the top-level content of the page or view presenting the entry, matching how it is used today. A host that embeds it inside a page with its own `<h1>` accepts a duplicate top-level heading; the component does not currently offer a way to renumber it. A `headingLevel` prop was considered and deferred: it could be added later as an optional prop without breaking existing callers.
   **Approved**: pending
 
+- **Decision**: The visibility marker texts and the "Category", "Location", "Languages" and "Elsewhere" labels are English literals in the component, and no `labels` prop is offered.
+  **Rationale**: A `labels` prop was considered and deferred: it could be added later as an optional prop without breaking existing callers. Until then a host needing another language must fork or wrap the component (see Localization).
+  **Approved**: pending

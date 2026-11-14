@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source (Stats.tsx) |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; cited the full `blocks.css` path in Appearance, Platform Notes, and Design Decisions and moved the column-count rationale into Design Decisions; described the layout as a wrapping three-column grid with narrow-width stacking instead of a horizontal strip; corrected the `dt`/`dd` role description and softened the screen-reader claim; clarified that the wrapper `div` carries no class of its own; added AppKit and grid-based native platform notes with accessibility-grouping guidance; replaced Compliance with a real accessibility/internationalization table; merged overlapping test vectors and added empty-array and null-content vectors; reformatted Design Decisions into Decision/Rationale/Approved entries; documented RTL grid mirroring and required locale-aware number formatting; added related cross-references |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |

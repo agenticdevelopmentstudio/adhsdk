@@ -2,7 +2,7 @@
 | State | Appearance change |
 |---|---|
 | Trigger closed | Label = committed value (item label or free text) or `triggerPlaceholder`; chevron always shown |
-| Trigger focused | `focus-visible` ring 2px `apt-gold/25`, border color unchanged |
+| Trigger focused | `focus-visible` ring 2px `apt-gold/25`, border color changes to `apt-gold` |
 | Trigger disabled | Opacity 50%, cursor `not-allowed`, non-interactive |
 | Trigger hover | Border color `apt-border-strong` (on enabled trigger only) |
 | Open, no highlight | Field shows the typed text; no row highlighted |

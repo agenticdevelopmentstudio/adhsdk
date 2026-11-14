@@ -2,7 +2,10 @@
 - SectionLabel renders a plain `div`, **not** a semantic heading (`h1`–`h6`) or
   `role="heading"` — it is a *display* label, so it does not enter the document's
   heading outline. Consumers who need the label in the outline SHOULD supply
-  their own heading semantics.
+  their own heading semantics. The component has no `as`, `role` or level prop, so the
+  only way is to put `sectionLabelClass` on an `<hN>` element directly; that heading
+  gets the type treatment but not the `trailing` slot's row layout, which only
+  `SectionLabel` provides.
 - It carries no interactivity of its own; the `trailing` slot's node (a button,
   say) brings its own accessible name and focus behavior.
 - Sufficient for a quiet in-pane label whose associated content follows visually;

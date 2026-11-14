@@ -4,11 +4,11 @@
     "id": "8d76adce-493b-4e44-9b15-826c4899d3cd",
     "title": "ConnectorAnchor",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -26,14 +26,12 @@
     "depends-on": [
       "e5b8e26f-2869-4a09-8d8e-0bb68ece805d"
     ],
-    "related": [
-      "e5b8e26f-2869-4a09-8d8e-0bb68ece805d"
-    ],
+    "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c7172ea65e84ad8c",
+  "synced": "fd40b152e62c6a88",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: ef7191ff-63a9-442a-b6d0-f8452a0aa1d6
 title: "Document Navigation Tree"
 type: ingredient
-version: 1.1.2
+version: 1.1.3
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,10 @@ tags:
   - document-structure
 depends-on: []
 related: []
-references: []
+references:
+  - https://www.w3.org/TR/WCAG22/#contrast-minimum
+  - https://www.w3.org/TR/WCAG22/#target-size-enhanced
+  - https://www.w3.org/TR/WCAG22/#target-size-minimum
 approved-by: ""
 approved-date: ""
 ---
@@ -33,10 +36,10 @@ A hierarchical navigation component that renders document structure as a tree wi
 
 ## Behavioral Requirements
 
-- **render-sections**: Component MUST render top-level section nodes as collapsible controls; clicking the chevron control MUST toggle that section's child-list visibility.
+- **render-sections**: Component MUST render top-level section nodes as collapsible controls; clicking the chevron control MUST toggle that section's child-list visibility. The section label is a separate link to the section's `href` (rendered through `LinkComponent`); clicking the label MUST navigate and MUST NOT toggle the section.
 - **render-branches**: Component MUST render branch nodes (children with their own children) as navigable links that always appear when their parent section is expanded, without a second collapse control.
 - **render-leaves**: Component MUST render leaf nodes (children with no further children) as navigable links.
-- **render-headings**: Component MUST render a leaf node's inline page headings (from `node.headings` array) as a sub-list of links indented beneath that leaf.
+- **render-headings**: Component MUST render a leaf node's inline page headings (from `node.headings` array) as a sub-list of links indented beneath that leaf. Every heading renders, in array order, at one indent: `HeadingEntry.depth` does not affect indentation or filtering.
 - **track-active-page**: Component MUST accept an `activePath` prop and highlight the current page link (using `aria-current="page"` and visual styling) when `activePath` matches the node's `href`.
 - **track-ancestor**: Component MUST apply ancestor styling to branch nodes whose `href` is a segment-boundary prefix of `activePath` — `activePath` MUST equal `node.href` followed by `/` and additional path segments, not merely start with the same characters (e.g., `/docs/guides` is an ancestor of `/docs/guides/getting-started`, but `/docs/guide` is not an ancestor of `/docs/guides/getting-started`).
 - **support-heading-scrolling**: When a heading link's page is already active (`activePath` matches the leaf's `href`), clicking the heading MUST prevent default navigation and scroll the target heading element into view smoothly; when the page is not active, the link MUST navigate normally.
@@ -44,20 +47,21 @@ A hierarchical navigation component that renders document structure as a tree wi
 - **preserve-section-state-on-route-change**: Section expansion state MUST NOT change when `activePath` updates; it MUST only change when the toggle control is clicked.
 - **manage-drawer-open-state**: Component MUST accept an `open` prop to control drawer visibility and MUST call `onClose` when the scrim backdrop is clicked or the close button is clicked.
 - **initialize-expanded-sections**: On mount, component MUST set expanded sections to include all sections whose `href` matches `activePath` exactly, or is a segment-boundary prefix of it (`activePath` equals `node.href` followed by `/` and additional path segments — see **track-ancestor**).
-- **order-children**: Component MUST render a node's children in a fixed order: leaf nodes first, then branch nodes; the order does NOT follow the input array order.
+- **order-children**: Component MUST render a node's children in a fixed order: leaf nodes first, then branch nodes; the order does NOT follow the input array order across the two groups. Within each group the input order is kept (a stable partition).
 - **distinguish-link-component**: Component MUST accept a `LinkComponent` prop and use it for all navigation links; if omitted, MUST default to a plain `<a href>` element.
 - **support-top-and-bottom-links**: Component MUST render fixed navigation rows (`topLinks` and `bottomLinks`) above and below the tree respectively, each behind its own divider rule.
 - **render-headings-only-on-leaves**: Inline page headings MUST only render when present on leaf nodes; branch nodes MUST NOT render heading sub-lists.
-
+- **label-navigation-landmarks**: Each `<nav>` landmark MUST carry its own `aria-label`, and the desktop and drawer labels MUST differ, so the two landmarks can be told apart when both are in the DOM.
+- **drawer-focus-management**: While the drawer is open, the component MUST move focus into the drawer, keep Tab focus inside it, close it (calling `onClose`) when Escape is pressed, and return focus to the element that opened it when it closes.
 ## Appearance
 
-- **Desktop layout**: Sticky aside, positioned at `top: var(--adh-header-height, 3.5rem)`, width `24rem` (expandable to `32rem` on wide/desktop viewports), right-aligned border, vertical overflow scrolls independently of the viewport
-- **Mobile layout**: Slide-over drawer positioned at `left: 0`, width `18rem`, appearing on top of a scrim at 50% opacity black
+- **Desktop layout**: Sticky aside, positioned at `top: var(--adh-header-height, 3.5rem)`, width `24rem` (expanded to `32rem` at the `xl` breakpoint; shown from the `lg` breakpoint up, hidden below it), right-aligned border, vertical overflow scrolls independently of the viewport
+- **Mobile layout**: Below the `lg` breakpoint the desktop aside is hidden and the nav is reached through a slide-over drawer (the drawer can also be opened at `lg` and above). Slide-over drawer positioned at `left: 0`, width `18rem`, appearing on top of a scrim at 50% opacity black
 - **Section labels**: Mono font, extra-small size, medium weight, uppercase, wide letter-spacing, always colored `var(--color-accent)` (no hover color change)
 - **Branch and leaf links**: Small text size for branches/leaves, extra-small for headings; secondary text color by default, primary on hover; selected/ancestor links use semibold or medium weight
 - **Selected indicator**: Vertical accent bar (1px width, `var(--color-accent)` color) at left edge of selected link
 - **Indentation**: Links and headings use consistent padding-inline-start (0.875rem); nested lists add 0.875rem left margin per level
-- **Dividers**: Border-top line (1px, `var(--color-border-subtle)` above fixed rows, `var(--color-border)` within tree levels
+- **Dividers**: Border-top line (1px, `var(--color-border-subtle)` above fixed rows, `var(--color-border)` within tree levels)
 - **No text wrapping (desktop)**: Desktop nav prevents entries from wrapping onto a second line, with horizontal scrolling available for anything still too long; mobile allows wrapping
 
 ## States
@@ -77,10 +81,11 @@ A hierarchical navigation component that renders document structure as a tree wi
 
 ## Accessibility
 
-- **Navigation landmark**: Component renders a `<nav>` element (both desktop aside and mobile drawer use semantic nav)
+- **Navigation landmark**: Component renders a `<nav>` element (both desktop aside and mobile drawer use semantic nav); each MUST carry a distinct `aria-label` (see **label-navigation-landmarks**)
 - **Aria-current**: Selected links MUST carry `aria-current="page"` to announce to assistive technology
 - **Section collapse button**: Collapse control MUST have `aria-expanded={true|false}` and an accessible label (`aria-label="Expand/Collapse [section name]"`)
 - **Scrim not announced**: Scrim overlay carries `aria-hidden="true"` and is not focusable, ensuring screen readers do not announce it as a control
+- **Drawer focus**: The open drawer MUST move focus in, trap Tab inside it, close on Escape, and return focus to the opener (see **drawer-focus-management**)
 - **Drawer dismiss button**: Close button MUST have `aria-label` (e.g., "Close navigation")
 - **Heading links nested under leaf**: Heading links appear in a nested list and inherit semantic structure from the leaf's `<li>` parent
 - **Color not sole indicator**: Selected state uses both bold weight AND accent bar, not color alone
@@ -91,7 +96,7 @@ A hierarchical navigation component that renders document structure as a tree wi
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| doc-nav-001 | render-sections | nodes with depth 0 | Sections render as collapsible divs with chevron button and aria-expanded attribute |
+| doc-nav-001 | render-sections | nodes with depth 0 | Each section renders a button with `aria-expanded`; activating it hides or shows the section's child list |
 | doc-nav-002 | render-branches | node with children that have children | Branch links render without collapse control; appear when parent section is expanded |
 | doc-nav-003 | render-leaves | node with children that have no further children | Leaf links render |
 | doc-nav-004 | track-active-page | activePath="/docs/guides" with matching node href | Link styled with semibold, primary color, and left accent bar; aria-current="page" set |
@@ -107,7 +112,11 @@ A hierarchical navigation component that renders document structure as a tree wi
 | doc-nav-014 | support-top-and-bottom-links | bottomLinks array with entries | Fixed rows render below tree with divider above them |
 | doc-nav-015 | render-headings-only-on-leaves | branch node with headings array | Heading sub-list does NOT render; headings only on leaves |
 | doc-nav-016 | render-headings | leaf node with a non-empty `headings` array | Heading sub-list renders below the leaf link, one entry per heading |
-
+| doc-nav-017 | render-sections | click a section's label | Navigates to the section's `href` through `LinkComponent`; expanded state unchanged |
+| doc-nav-018 | order-children | leaves A, B and branches X, Y in input order X, A, Y, B | Rendered A, B, X, Y (input order kept within each group) |
+| doc-nav-019 | render-headings | leaf with headings of depths 2 and 3 | Both render in array order at one indent |
+| doc-nav-020 | drawer-focus-management | open=true, then Escape pressed | Focus moved into the drawer on open; Escape calls `onClose`; focus returns to the opener |
+| doc-nav-021 | label-navigation-landmarks | open=true at `lg+` | Two `<nav>` landmarks, each with a different `aria-label` |
 ## Edge Cases
 
 - **Empty children array**: If `node.children` is undefined or empty array, node is treated as a leaf; no branch or heading sub-list renders.
@@ -116,7 +125,7 @@ A hierarchical navigation component that renders document structure as a tree wi
 - **Active path not in tree**: If `activePath` does not match any node `href`, no links styled as selected; section expansion state still initialized based on prefix matches.
 - **Circular or malformed tree**: Component does not validate tree structure; if a node's href appears as a prefix of itself (invalid) or circular parent-child relationships exist, behavior is undefined; tree MUST be acyclic and well-formed by the host.
 - **Very deep nesting**: No hard depth limit; rendering cost scales with tree size and React reconciliation, same as any other recursive component of this shape.
-- **Drawer open at `lg` breakpoint**: Desktop nav is `hidden lg:block`; drawer renders at all breakpoints; both rendering simultaneously with `open=true` at `lg+` creates duplicate nav in DOM but only drawer is visible to user.
+- **Drawer open at `lg` breakpoint**: Desktop nav is `hidden lg:block`; drawer renders at all breakpoints; both rendering simultaneously with `open=true` at `lg+` creates duplicate nav in DOM but only drawer is visible to user. Each nav carries a distinct `aria-label` so the two landmarks are distinguishable.
 - **Route change during scroll**: If `activePath` changes while `element.scrollIntoView()` is in progress, the scroll completes but may scroll to an element that is no longer "on page" in the component's view (rare edge case, depends on timing).
 - **Missing active page headings**: If `activePath` matches a node but the node has no `headings` array, component renders the leaf link without heading sub-list; this is correct behavior.
 
@@ -140,12 +149,18 @@ A hierarchical navigation component that renders document structure as a tree wi
 
 Not applicable: this component is a navigation chrome, not a linkable destination. Page URLs are determined by the document tree nodes' `href` props, which the host provides.
 
+## Data Model
+
+- **HdvNavNode**: `{ label: string; href: string; headings?: HeadingEntry[]; children?: HdvNavNode[] }`. A node with a non-empty `children` array is a branch (or, at depth 0, a section); a node with no `children` is a leaf. There is no `kind` discriminator — depth and the presence of `children` are the only distinctions the tree draws.
+- **HeadingEntry**: `{ id: string; text: string; depth: number }`. One heading extracted from the rendered document; `id` is the DOM id the component scrolls to and writes onto the URL hash.
+- **DocNavTopLink**: `{ label: ReactNode; href: string }`. One fixed row for `topLinks` or `bottomLinks`.
+
 ## Localization
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| `collapseSection` | Collapse {label} | Section toggle's `aria-label` when the section is expanded; the word "Collapse" is hardcoded in the source and has no config prop |
-| `expandSection` | Expand {label} | Section toggle's `aria-label` when the section is collapsed; the word "Expand" is hardcoded in the source and has no config prop |
+| `collapseSection` | Collapse {label} | Section toggle's `aria-label` when the section is expanded; the word "Collapse" MUST be overridable through a `collapseLabel` prop |
+| `expandSection` | Expand {label} | Section toggle's `aria-label` when the section is collapsed; the word "Expand" MUST be overridable through an `expandLabel` prop |
 | `title` | Navigation | Drawer heading text (`title` prop default) |
 | `closeLabel` | Close navigation | Drawer dismiss button's accessible name (`closeLabel` prop default) |
 
@@ -153,7 +168,7 @@ Not applicable: this component is a navigation chrome, not a linkable destinatio
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | Chevron rotation uses a 150ms transition and heading scroll uses `behavior: "smooth"`, applied unconditionally. The source never checks `prefers-reduced-motion` anywhere, so neither the chevron rotation nor the heading scroll is ever made instant for a reader who has set that preference. |
+| Reduce Motion | When the reader has set `prefers-reduced-motion`, the chevron rotation MUST be instant and the heading scroll MUST use `behavior: "auto"` instead of `"smooth"`. The source does not do this yet (see Compliance). |
 | Increase Contrast | All text colors (secondary, primary, dim, accent) MUST meet WCAG AA 4.5:1 contrast against their backgrounds at all times; component relies on theme tokens to provide these values and does not override them. |
 | Differentiate Without Color | Selected state uses BOTH bold weight and a vertical accent bar, not color alone; this is sufficient for color-blind users to distinguish selected from unselected. |
 
@@ -175,13 +190,13 @@ Not applicable: the component does not perform any logging.
 
 ## Platform Notes
 
-- **React/Web**: Component is a React functional component using hooks (`useState`, `useCallback`) and JSX. Uses `lucide-react` for icons (ChevronRight, X) and `classnames` library (`cn` utility). Tailwind CSS for styling with custom CSS variables (`--adh-header-height`, `--color-*` tokens). Requires React 16.8+. Source file: `packages/web/packages/ui/src/blocks/doc-nav.tsx`.
+- **React/Web**: Component is a React functional component using hooks (`useState`, `useCallback`) and JSX. Uses `lucide-react` for icons (ChevronRight, X) and `classnames` library (`cn` utility). Tailwind CSS for styling with custom CSS variables (`--adh-header-height`, `--color-*` tokens). Requires React 16.8+.
 
-- **SwiftUI**: Port to SwiftUI would start from `NavigationStack` or a custom tree view. Sections would be `DisclosureGroup` with a chevron icon and section label. Leaves and branches would use `NavigationLink`. Expanded sections would be local `@State`; `activePath` would be accepted as a plain value, not a binding, since the component only reads it and never writes back to it. Heading navigation would use `ScrollViewReader` to scroll to heading anchors on the current page. Drawer behavior maps to a sheet modifier with conditional presentation.
+- **SwiftUI**: Port to SwiftUI would start from `NavigationStack` or a custom tree view. Sections would be `DisclosureGroup` with a chevron icon and section label. Leaves and branches would use `NavigationLink`. Expanded sections would be local `@State`; `activePath` would be accepted as a plain value, not a binding, since the component only reads it and never writes back to it. Heading navigation would use `ScrollViewReader` to scroll to heading anchors on the current page. Drawer behavior maps to a leading-edge overlay (or a `NavigationSplitView` sidebar), not a bottom sheet, matching the other platforms.
 
 - **Compose**: Start from `LazyColumn` for the tree structure, since its own scrolling replaces a wrapping `Modifier.verticalScroll` rather than nesting inside one (a `LazyColumn` inside `verticalScroll` in the same axis crashes). Use `Row` with `IconButton` for section collapse control. `Text` for labels, `ClickableText` or custom `Modifier.clickable` for links. `mutableStateOf<Set<String>>` for expanded sections. Heading scrolling would use `LazyListState.animateScrollToItem()`. Drawer implemented as `ModalNavigationDrawer` (a side panel), not a bottom sheet.
 
-- **AppKit / UIKit**: Use `NSOutlineView` (macOS) or implement a table view with custom cells (iOS). Section nodes render as parent rows with disclosure triangle. Branches and leaves as child rows. `NSOutlineView` itself manages expand/collapse state through its data source. For headings, implement an `NSViewController` or `UIViewController` hierarchy. Drawer on iOS uses `UISheetPresentationController`. Route tracking via URL observation or navigation controller delegate.
+- **AppKit / UIKit**: Use `NSOutlineView` (macOS) or implement a table view with custom cells (iOS). Section nodes render as parent rows with disclosure triangle. Branches and leaves as child rows. `NSOutlineView` itself manages expand/collapse state through its data source. For headings, implement an `NSViewController` or `UIViewController` hierarchy. Drawer on iOS is a leading-edge overlay (a custom presentation or split-view sidebar), not a bottom sheet. Route tracking via URL observation or navigation controller delegate.
 
 - **WinUI 3**: Use `TreeView` XAML control with `TreeViewNode` for sections, branches, and leaves. Section nodes have `Collapsed` and `Expanded` visual states; toggle chevron icon via binding to `IsExpanded`. Apply `PointerEntered` / `PointerExited` for hover styling. Heading sub-lists would use a second-level TreeView or an Expander control. For the drawer, use `NavigationView` or `SplitView` with conditional panel visibility; overlay with a `Grid` and semi-transparent `Border` for the scrim. Bind `activePath` to XAML with highlighting logic in code-behind or a converter. Heading navigation would scroll via `ScrollViewer.ChangeView()` or `FrameworkElement.StartBringIntoView()`, not a composition animation.
 
@@ -189,7 +204,7 @@ Not applicable: the component does not perform any logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/doc-nav.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/ui/src/blocks/doc-nav.tsx` | confirmed (1.1.3) |
 
 ## Design Decisions
 
@@ -230,7 +245,7 @@ Not applicable: the component does not perform any logging.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | passed | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
@@ -240,16 +255,12 @@ Not applicable: the component does not perform any logging.
 
 These statuses rest on: theme-token text colors used throughout for contrast; every interactive control (section toggle, links, drawer close button) being reachable and operable via tab and enter, with the scrim providing only a redundant pointer-only dismiss path alongside the keyboard-operable close button; semantic `<nav>`/`<ul>`/`<li>` markup with the host's `LinkComponent` (defaulting to `<a href>`) and `aria-expanded`/`aria-label` on the section toggle plus `aria-current="page"` on selected links; section-toggle buttons padded to 44×44px while link rows measure roughly 24-28px tall, short of that minimum (see Accessibility); and no `prefers-reduced-motion` handling anywhere in the source for the chevron rotation or heading scroll (see Accessibility Options). separation-of-concerns passes because `DocNavTree` (pure tree rendering and expansion state) and `DocNav` (drawer chrome and fixed top/bottom rows) are split apart, and neither pulls in the host's router beyond the injected `LinkComponent`. unit-test-coverage passes because `docNav.test.tsx` exercises both components across rendering, active/ancestor tracking, expansion persistence, heading scroll, drawer open/close, and accessibility.
 
-## Data Model
-
-- **HdvNavNode**: `{ label: string; href: string; headings?: HeadingEntry[]; children?: HdvNavNode[] }`. A node with a non-empty `children` array is a branch (or, at depth 0, a section); a node with no `children` is a leaf. There is no `kind` discriminator — depth and the presence of `children` are the only distinctions the tree draws.
-- **HeadingEntry**: `{ id: string; text: string; depth: number }`. One heading extracted from the rendered document; `id` is the DOM id the component scrolls to and writes onto the URL hash.
-- **DocNavTopLink**: `{ label: ReactNode; href: string }`. One fixed row for `topLinks` or `bottomLinks`.
-
+The source also lacks the drawer focus management (focus in, trap, Escape, focus return), the distinct `aria-label` on each `<nav>`, and the `expandLabel`/`collapseLabel` props; keyboard-navigable is therefore partial.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.3 | 2026-11-14 | Mike Fullerton | Specified label-link, stable child order, heading depth, drawer focus management, distinct nav labels, reduced-motion and label props; fixed breakpoints, test vector 001, SwiftUI/UIKit drawer notes, WCAG references, and moved Data Model before Compliance. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | track-ancestor/initialize-expanded-sections corrected to segment-boundary prefix matching (T005/T010 fixed); moved Data Model after Compliance per template order. |
 | 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; moved styling out of render-sections into Appearance; added a Data Model section; reformatted Design Decisions to Decision/Rationale/Approved form; rebuilt the Compliance table with catalog check names, corrected categories, and removed unverified claims; fixed the Localization table's Default (en) column; removed platform-specific class tokens from Appearance; split test vector doc-nav-003 and added doc-nav-016 for render-headings; fixed the section-label appearance contradiction; removed the unverified deep-nesting performance claim; corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes |

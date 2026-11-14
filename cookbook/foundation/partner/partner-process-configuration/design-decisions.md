@@ -8,6 +8,9 @@
 **Approved**: pending
 
 **Decision**: `--verbose` is always set.
-**Rationale**: The source comment states that `-p` with stream-json output requires it.
+**Rationale**: The source comment states that `-p` with stream-json output requires it, so the fixed prefix always carries `--verbose` in second place.
 **Approved**: pending
 
+**Decision**: `permissionMode` and `model` are free strings, and an empty `permissionMode` is passed through as `--permission-mode` followed by an empty element.
+**Rationale**: The type only builds the argument list and must not validate (see pure-computation); which modes and model names the CLI accepts is the CLI's concern, so an empty mode is left for the CLI to reject when the process launches.
+**Approved**: pending

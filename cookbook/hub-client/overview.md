@@ -2,8 +2,8 @@
 `ADHClient` is the entry point to the Agentic Developer Hub API — a thin
 façade over the generated `Client` from swift-openapi-runtime /
 swift-openapi-urlsession. It wires one of two `APITransport` seams (Direct,
-straight to the backend over HTTPS; Daemon, HTTP to a local `adhd` daemon —
-which does not exist yet, per `DaemonContract`'s own doc comment) to exactly
+straight to the backend over HTTPS; Daemon, HTTP to a local `adhd` daemon,
+see the Daemon design decision) to exactly
 one `ClientMiddleware`: the bearer-only `AuthenticationMiddleware` or the
 bearer-plus-refresh-and-retry `SessionRefreshMiddleware`. The generated
 client is exposed directly as `api`; consumers call any operation the
@@ -14,8 +14,8 @@ arbitrary un-generated request through the identical transport-and-middleware
 pipeline, for backend routes the OpenAPI document does not describe or
 describes stalely.
 
-This recipe covers exactly `ADHClient.swift` and `ADHClient+Raw.swift`
-(`packages/apple/AgenticDeveloperHubClient/Sources/`). `AuthenticationMiddleware`,
+This ingredient covers exactly `ADHClient.swift` and `ADHClient+Raw.swift`
+(`packages/apple/AgenticDeveloperHubClient/AuthSources/`). `AuthenticationMiddleware`,
 `SessionRefreshMiddleware`, `RefreshCoordinator`, `CredentialStore`,
 `SessionStore`, `Credentials`, `Session`, `KeychainHelper`, and the
 `ADHClient+Auth.swift` / `ADHClient+Session.swift` convenience wrappers

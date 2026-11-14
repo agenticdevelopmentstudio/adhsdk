@@ -4,7 +4,7 @@
     "id": "0f721fc3-0e8f-4a1b-b895-1b1bad370bd0",
     "title": "Appearance",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,12 +24,16 @@
       "accessibility"
     ],
     "depends-on": [],
-    "related": [],
-    "references": [],
+    "related": [
+      "112f2150-3fcd-416c-bd25-b40f729b8ef2"
+    ],
+    "references": [
+      "https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b05dbb2b02e755da",
+  "synced": "b621cb568df455a3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

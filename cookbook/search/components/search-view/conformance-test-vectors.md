@@ -43,4 +43,19 @@
 | search-view-040 | reselect-focuses-without-reopening | The preview is already disclosed for a hit; the same hit is selected again | Focus moves into the preview content region; disclosure and selection state do not change |
 | search-view-041 | escape-noop-without-selection | Focus is in the result list; no result is selected; Escape is pressed | Nothing changes; focus remains in the list |
 | search-view-042 | handle-escape-in-preview | The roving-focus cursor is on row 0 (active index = 0, reached via keyboard earlier); the user then clicks row 3, selecting it and opening its preview (a click does not update active index); focus is in the preview content region; Escape is pressed | The dock collapses and the selection clears, but focus returns to row 0 (the active index), not row 3 that opened the preview |
-
+| search-view-043 | accept-search-source | Component mounted with a `source` whose base URL and endpoint are known; a query becomes active | The search request is issued against that source's base URL and results endpoint |
+| search-view-044 | accept-document-type | Component mounted with a `documentType` supplying `ResultRow`, `Preview`, `PreviewHeader`, `getId` and `getTitle`; a query settles with one hit and the hit is selected | The hit renders through the supplied `ResultRow`, and the supplied `Preview` and `PreviewHeader` render in the dock |
+| search-view-045 | accept-document-href | `documentHref` returns `/docs/<id>` for each hit; results settle | Each `ResultRow` receives `href` equal to `documentHref(hit)` |
+| search-view-046 | render-search-filter-bar | Component mounted with no query and no facets | The text query input, the category dropdown and the tag dropdown are all mounted |
+| search-view-047 | render-result-list | Results settle with 3 hits | One `<ul>` holds 3 `<li>` elements; each `ResultRow` receives `hit`, `href`, `query`, `selected`, `active`, `controlRef` and `onSelect` |
+| search-view-048 | track-active-index | Focus is on row 0; ArrowDown is pressed twice; no row is selected | The active index is 2, `selectedId` is unchanged, and no preview opens |
+| search-view-049 | support-preview-dock | A query settles and no row is selected | A preview dock `<section>` renders below the list as a header bar with the title ("Preview") and the collapse toggle, and no body |
+| search-view-050 | announce-loading-container | A re-query is in flight while earlier results are shown | The outer list container has `aria-busy="true"`; after the re-query settles it has no `aria-busy` |
+| search-view-051 | category-filter-label | Component mounts with category options available | The category dropdown label is "Filter by category" |
+| search-view-052 | tag-filter-label | Component mounts with tag options available | The tag dropdown label is "Filter by tag" |
+| search-view-053 | accept-hit-id-extraction | Two hits whose `getId` values differ; the second is selected | The second row has `selected` true and the first has `selected` false, matched by the `getId` value |
+| search-view-054 | accept-hit-title-extraction | A hit is selected, then the dock is collapsed | The collapsed header bar shows the string `getTitle` returns for that hit |
+| search-view-055 | render-loading-skeleton | A query becomes active and the first fetch has not settled | The skeleton list has `aria-label="Loading results"` |
+| search-view-056 | support-url-sync | `urlSync={false}`; the query and a tag filter change | The URL query string is not written, and filters still work from local state |
+| search-view-057 | accept-optional-props | Component mounted with `searchLabel="Find"` and `searchLandmarkLabel="Site search"` | The search input's accessible label is "Find" and the landmark's accessible name is "Site search" |
+| search-view-058 | render-hard-error | The initial fetch fails while the skeleton is showing | The skeleton is replaced by the full error block with the message and Retry; nothing carries `aria-busy` |

@@ -11,7 +11,7 @@
 **Rationale**: Keeps the help button visually subordinate to content, preventing distraction while remaining discoverable for users who need it.
 **Approved**: pending
 
-**Decision**: The help popover has a fixed width of 288px (`w-72`).
+**Decision**: The help popover is 288px wide (`w-72`), capped at the available width.
 **Rationale**: Ensures readability of help text without forcing unnecessary wrapping.
 **Approved**: pending
 

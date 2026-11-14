@@ -16,6 +16,10 @@
   pointer interaction occurs outside it.
 - **restore-focus**: The control MUST return focus to the trigger when the
   popover closes.
+- **forward-localizable-strings**: The control SHOULD forward `title` and
+  `ariaLabel` to `SyntaxQuickReference` as its own props, and SHOULD accept
+  localized row labels while keeping the markdown snippets fixed. It does not
+  today (see Localization).
 - **honor-custom-trigger-label**: The control MUST render `triggerLabel` as
   the visible trigger text while keeping the fixed `Markdown quick reference`
   accessible name.

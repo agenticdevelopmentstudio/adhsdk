@@ -3,7 +3,7 @@
   `attachments` only — never a transcript or prior history, matching the
   toolkit's stated design that a coordinator holds no history. `PermissionStore`
   persists `PermissionDecision` values keyed by `(permission, requesterID)`.
-- **Storage**: `PermissionStore` is the one type in these sources responsible
+- **Storage**: `PermissionStore` is the one type in the apple or web chat contract packages responsible
   for retaining anything past a single call (`remember(decision:for:requesterID:)`);
   everything else — messages, drafts, read markers, command activity — lives
   only in the in-memory `ChatViewModel`/`Orchestrator` state these protocols
@@ -16,5 +16,5 @@
 - **Retention**: Not specified by this contract for messages, drafts, or read
   markers — no expiry, TTL, or deletion method exists on any type here;
   `PermissionStore` decisions persist until a conformer's own storage says
-  otherwise, which these sources do not define.
+  otherwise, which neither the apple nor the web contract defines.
 

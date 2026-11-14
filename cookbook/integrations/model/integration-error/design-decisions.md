@@ -1,6 +1,6 @@
 
 **Decision**: Use one enum for every integration failure (settings, sign-in, token refresh, Keychain, lookup, Gmail) instead of one error type per layer.
-**Rationale**: The doc comment says every case reads as a sentence a person can act on, so any layer's failure can reach the UI and the stored `lastError` through one description path. [MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a).handle relies on this when it turns any thrown error into `.failure(localizedDescription)`.
+**Rationale**: The doc comment says every case reads as a sentence a person can act on, so any layer's failure can reach the UI and the stored `lastError` through one description path. The mail integration service ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) relies on this in its `handle` when it turns any thrown error into `.failure(localizedDescription)`.
 **Approved**: pending
 
 **Decision**: Keep `revoked` separate from `tokenRefresh` and `signInFailed`.

@@ -4,11 +4,11 @@
     "id": "8ce108f2-b64b-4e01-8dbb-94ef3397b46a",
     "title": "Hierarchical Detail View",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "54e87cb5eebe6bc2",
+  "synced": "0eb50c5175d1055c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -73,7 +73,7 @@ interface TopicLevel {
   overviewHelp?: ReactNode         // the nudge's bespoke body: WHAT a row is and WHY to pick one
   onSelect: (id: string, options?: { replace?: boolean }) => void   // select THIS level (clears descendants);
                                    // options.replace avoids pushing history (used by an auto-applied
-                                   // default — see default-select-a-level). Pure nav: push(`…/<id>`)
+                                   // default — see #requirements/default-select-a-level). Pure nav: push(`…/<id>`)
   onClear: () => void              // clear THIS level + everything below. Pure nav: push(parentUrl)
   emptyLabel?: string
   onNew?: () => void               // "New…" create affordance → a right-justified "+" in the list header
@@ -96,8 +96,8 @@ interface TopicDetailItem {
   inlineSublabel?: boolean
   preview?: string
   previewLines?: number
-  description?: string             // no surface in THIS view renders it (the retired overview grid did) —
-                                    // see describe-topics
+  description?: string             // no surface in THIS view renders it (the retired overview grid did);
+                                    // explain a list with the level's overviewHelp instead
   icon?: ReactNode
   leadsTo?: "list" | "detail"       // what a row discloses (the cascade's declared leafness)
   dividerAfter?: boolean
@@ -215,10 +215,10 @@ resize, a `«`/`»` cover toggle, the hover reveal, a drag.
 The suppression is a settle **window**, not one render: a selection's trailing commits (levels
 registering, measured widths landing) repaint geometry a frame or two later, and re-enabling the
 transitions before the browser has painted the new layout animates it anyway — the exact slide-in
-this rule forbids. Transitions stay off until shortly after the LAST structural change.
+this rule forbids. Transitions stay off until `IN_PLACE_SETTLE_MS` (350ms) after the LAST structural change.
 
 The pane's **content**, by contrast, swaps with a **brief crossfade**: when a selection replaces
-what the detail is showing, the outgoing pane dissolves into the incoming one (~220ms); when
+what the detail is showing, the outgoing pane dissolves into the incoming one (`DETAIL_CROSSFADE_MS`, 220ms); when
 nothing was showing yet (the surface's first paint), the content simply appears — no fade, no
 unasked-for intro. The outgoing half is an inert DOM snapshot, so the dissolve works whether the
 selection updates the tree in place or remounts it (a route param nav). Geometry never
@@ -327,7 +327,7 @@ In narrow mode:
   mode (or disclosure-style) change: the frame keeps it mounted once, in a portal host it re-slots into
   whichever stack is active. This is what makes the flip safe on a merged stack, where the deeper levels
   are published from inside the detail — a remount would clear the very selections whose depth put the
-  view in narrow mode (see keep-selection-across-modes).
+  view in narrow mode (see #requirements/keep-selection-across-modes).
 
 ### Create is a modal — the stack's create metaphor
 

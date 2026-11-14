@@ -2,11 +2,11 @@
 id: 86aedf2f-b353-4770-a6dd-9e29b3d9b76a
 title: "Selection Actions"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -42,7 +42,7 @@ The component renders no container of its own — it is designed to be placed in
 ## Behavioral Requirements
 
 - **render-action-buttons**: The component MUST render each provided action as a `Button` element.
-- **duplicate-action-ids**: The component uses each action's `id` as the React list key for its wrapping `Fragment`. A duplicate `id` across actions MUST NOT prevent either action from rendering or from invoking its own `onClick` — React's key collision affects reconciliation identity only, not render count or event wiring. Callers MUST still treat `id` as unique; the component does not deduplicate or otherwise correct a collision.
+- **duplicate-action-ids**: A duplicate `id` across actions MUST NOT prevent either action from rendering or from invoking its own `onClick`. The component uses each `id` as the React list key for its wrapping `Fragment`; a key collision affects reconciliation identity only, not render count or event wiring, and the component does not deduplicate or otherwise correct it. (The caller rule that `id` be unique is in Configuration.)
 - **pass-selected-ids-on-action**: When an action button is clicked, the component MUST call the action's `onClick` callback with the array of currently selected IDs.
 - **disable-selection-required-actions**: Actions with `requiresSelection: true` MUST be disabled when the `selectedIds` array is empty.
 - **keep-standalone-actions-enabled**: Actions without `requiresSelection` or with `requiresSelection: false` MUST remain enabled regardless of selection state.
@@ -57,12 +57,12 @@ The component renders no container of its own — it is designed to be placed in
 - **confirm-modal-destructive-style**: The confirmation modal MUST render with destructive styling — the component always passes `destructive={true}` to the modal.
 - **confirm-button-label**: The confirmation modal's confirm button MUST use the label "Delete".
 - **cancel-button-label**: The confirmation modal's cancel button MUST use the label "Cancel".
-- **use-default-delete-message**: If `deleteConfirm` is not provided, the modal MUST display the default title "Delete selected?".
+- **use-default-delete-message**: If `deleteConfirm` is not provided, the modal MUST display the default title "Delete selected?". No default description renders: the modal shows a description only when `deleteConfirm.description` is provided, so a `deleteConfirm` with only a `title` also shows none.
 - **use-custom-delete-message**: If `deleteConfirm` is provided with a `title` and optional `description`, the modal MUST use those values instead of the defaults.
 - **close-modal-on-cancel**: When the user cancels the delete confirmation modal, the component MUST close the modal without calling `onDelete`.
 - **close-modal-on-confirm**: When the user confirms deletion, the component MUST close the modal before invoking `onDelete`.
 - **call-ondelete-only-after-confirm**: The `onDelete` callback MUST be called only after the user confirms deletion in the modal.
-- **ondelete-selection-argument**: The `onDelete` callback MUST be called with the `selectedIds` array as it stands at the moment of confirmation. The component holds no snapshot of `selectedIds` taken when Delete was first clicked — the confirm handler closes over the current `selectedIds` prop on every render, so a caller that mutates `selectedIds` while the modal is open changes what `onDelete` receives.
+- **ondelete-selection-argument**: The `onDelete` callback is called with the `selectedIds` array as it stands at the moment of confirmation. This is a documented hazard, not a guarantee to build on: the component holds no snapshot of `selectedIds` taken when Delete was first clicked, because the confirm handler closes over the current `selectedIds` prop on every render. A caller SHOULD NOT change `selectedIds` while the modal is open, since rows the user never saw in the confirmation would then be passed to `onDelete`.
 
 ## Appearance
 
@@ -87,6 +87,7 @@ The component renders no container of its own — it is designed to be placed in
 
 - Role: Buttons are standard `<button>` elements with implicit button role.
 - Labels: Each action button uses the text from `action.label` (can be React node). Delete button uses the hardcoded label "Delete".
+- Toolbar semantics: The component renders no `role="toolbar"` and no arrow-key or roving-tabindex navigation; the APG toolbar pattern in `references` applies to the host container, which MUST supply `role="toolbar"` and that keyboard navigation if it wants them. Each button is reachable by Tab.
 - Dividers: Separators use ARIA `role="separator"` with `aria-orientation="vertical"` to communicate structural grouping to screen reader users.
 - State announcement: Disabled state is implicit in the button's `disabled` attribute; browser and assistive technology automatically announce disabled buttons.
 - Touch target: Buttons use the Button component's small size. The Button ingredient's own spec documents that its fixed size-variant heights sit below the Apple HIG 44×44pt and Material 48×48dp minimum touch-target guidance by default, and that a surface must opt in to a larger floor via `--adh-button-min-height`/`--adh-button-min-width` on an ancestor. Selection Actions does not set either variable, so it does not guarantee an accessible tap target on its own; a host that requires one MUST set the floor itself.
@@ -117,9 +118,9 @@ The component renders no container of its own — it is designed to be placed in
 | selection-actions-019 | confirm-button-label | onDelete provided, user clicks Delete | Confirmation modal's confirm button label is "Delete" |
 | selection-actions-020 | cancel-button-label | onDelete provided, user clicks Delete | Confirmation modal's cancel button label is "Cancel" |
 | selection-actions-021 | close-modal-on-confirm | onDelete provided, selectedIds=["row1"], user clicks Delete then confirms | Modal is closed immediately after confirming |
-| selection-actions-022 | ondelete-selection-argument | onDelete provided, selectedIds=["row1"], user clicks Delete, selectedIds prop changes to ["row1","row2"] while the modal is open, user confirms | onDelete is called with ["row1","row2"], not ["row1"] |
+| selection-actions-022 | ondelete-selection-argument | onDelete provided, selectedIds=["row1"], user clicks Delete, selectedIds prop changes to ["row1","row2"] while the modal is open, user confirms | onDelete is called with ["row1","row2"], not ["row1"] (the documented hazard; callers SHOULD NOT change `selectedIds` while the modal is open) |
 | selection-actions-023 | duplicate-action-ids | actions=[{id:"a1", label:"Archive", onClickA}, {id:"a1", label:"Rename", onClickB}] | Both "Archive" and "Rename" buttons render and each invokes its own onClick; the shared id is a caller error the component does not correct |
-
+| selection-actions-024 | use-default-delete-message | onDelete provided, deleteConfirm={title:"Remove items?"}, user clicks Delete | Modal shows the title "Remove items?" and no description |
 ## Edge Cases
 
 - **No actions provided**: When `actions` is an empty array, no action buttons are rendered (only the Delete button if `onDelete` is provided).
@@ -127,7 +128,7 @@ The component renders no container of its own — it is designed to be placed in
 - **Empty selected IDs**: When `selectedIds` is an empty array, all selection-required actions are disabled and the Delete button is disabled, but standalone actions remain enabled.
 - **Multiple simultaneous selections**: The component receives an array of IDs and passes all of them to action handlers. No limit is enforced on the array length.
 - **Rapid action clicks**: Each action handler is called independently when its button is clicked. No debouncing or click prevention is implemented; it is the action handler's responsibility to manage race conditions or duplicate invocations.
-- **Duplicate action IDs**: The component uses each action's `id` as its React list key. Action `id`s MUST be unique; a duplicate does not stop either button from rendering or from invoking its own `onClick`, but callers must not rely on stable list identity across renders when ids collide. See **duplicate-action-ids**.
+- **Duplicate action IDs**: The component uses each action's `id` as its React list key. See **duplicate-action-ids**.
 - **Custom action variant**: An action can override the default `ghost` variant by specifying a `variant` property matching Button's variant prop.
 
 ## Configuration
@@ -139,6 +140,16 @@ The component renders no container of its own — it is designed to be placed in
 | `onDelete` | `(selectedIds: string[]) => void` | undefined | Callback invoked after the user confirms deletion. If undefined, the Delete button does not render. |
 | `deleteConfirm` | `{ title: string; description?: ReactNode }` | undefined | Custom modal message for the delete confirmation. If undefined, the default title "Delete selected?" is used. |
 
+`ListAction` (each entry of `actions`):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | `string` | required | Identifies the action and is its React list key. Callers MUST keep each `id` unique across `actions`. |
+| `label` | `ReactNode` | required | The button's content. |
+| `onClick` | `(selectedIds: string[]) => void` | required | Called with the currently selected ids when the button is clicked. |
+| `requiresSelection` | `boolean` | optional | When `true`, the button is disabled while `selectedIds` is empty. Omitted or `false` leaves it enabled. |
+| `dividerBefore` | `boolean` | optional | Renders a vertical separator before the button. |
+| `variant` | any variant of `Button` | optional | Defaults to `ghost`. |
 ## Deep Linking
 
 Not applicable: Selection Actions is a toolbar component that operates on state within the current view. It does not navigate to a new destination and does not support deep linking.
@@ -166,9 +177,9 @@ Not applicable: Selection Actions holds only local UI state (whether the delete-
 ## Analytics
 
 - **action.clicked**: When the user clicks any action button, the parent application MAY emit an analytics event naming the action and selection state. Selection Actions does not emit events internally.
-- **delete.initiated**: When the Delete button is clicked, the confirmation modal appears. The parent application MAY track this as an intent-to-delete event.
+- **delete.initiated**: When the Delete button is clicked, the confirmation modal appears. The component exposes no callback for this, so the parent cannot observe it; it is unobservable unless a future `onDeleteRequest` prop is added.
 - **delete.confirmed**: When the user confirms deletion in the modal, the parent application MAY emit an event after `onDelete` is called.
-- **delete.cancelled**: When the user cancels the delete confirmation, the parent application MAY track this if needed.
+- **delete.cancelled**: When the user cancels the delete confirmation, the component exposes no callback for this, so the parent cannot observe it; it is unobservable unless a future `onDeleteCancel` prop is added.
 
 Analytics implementation is the responsibility of the parent application and action handlers; Selection Actions provides no built-in analytics.
 
@@ -184,15 +195,15 @@ Not applicable: Selection Actions does not emit logs. Logging of action invocati
 
 - **React/Web**: Selection Actions is implemented as a React functional component (`SelectionActions`) that returns a fragment with Button elements from the shared ui/button component, a `Trash2` icon from `lucide-react`, and an AlertModal from the shared ui/components/alert-modal. Both action buttons and the Delete button use Button's `sm` size. The divider is a `div` with `role="separator"` and `aria-orientation="vertical"`, styled `mx-1 h-5 w-px bg-apt-border` (4px horizontal margin, 20px height at a 16px base, theme border color). The Trash2 icon is placed inline before the "Delete" text with `data-icon="inline-start"`. All styling is applied via Tailwind CSS classes. See `packages/web/packages/ui/src/blocks/selection-actions.tsx`.
 - **SwiftUI**: Start from an `HStack` or `ToolbarItemGroup` in the toolbar placement. Render action buttons using SwiftUI's `Button` with `.buttonStyle(.borderless)` (or `.plain`) to match the ghost variant's chromeless appearance. Implement selection-required actions by binding their `disabled` state to `selectedIds.isEmpty`. For the Delete button, bind its `disabled` state to `selectedIds.isEmpty` and use `Button(role: .destructive)` so the system renders it with destructive semantics and tinting. Handle the confirmation with a `.confirmationDialog` that appears when a `@State var confirming: Bool` is true, using `Button(role: .destructive)` for "Delete" and a plain `Button` for "Cancel". Pass the selected IDs array to each action closure.
-- **Compose (Kotlin)**: Start with a `Row` modifier on a toolbar lambda. Render action buttons using Compose's `TextButton` composable to match the chromeless ghost variant. Use `enabled` parameter bound to selection state for requiresSelection actions. For Delete, use `TextButton` with `MaterialTheme.colorScheme.error` as its content color, and show a confirmation dialog (`AlertDialog`) when the user taps it, with the confirm button styled using the same error content color. Pass selected IDs to each lambda callback.
+- **Compose (Kotlin)**: Start with a `Row` modifier on a toolbar lambda. Render action buttons using Compose's `TextButton` composable to match the chromeless ghost variant. Use `enabled` parameter bound to selection state for requiresSelection actions, and enable the Delete `TextButton` only when the selection is non-empty (`enabled = selectedIds.isNotEmpty()`). For Delete, use `TextButton` with `MaterialTheme.colorScheme.error` as its content color, and show a confirmation dialog (`AlertDialog`) when the user taps it, with the confirm button styled using the same error content color. Pass selected IDs to each lambda callback.
 - **AppKit / UIKit**: Because the component renders no container of its own (see Design Decisions), host toolbar items as plain buttons inside the caller's existing toolbar group rather than standing up a dedicated `NSToolbar`/`NSToolbarItem` per action. On macOS (AppKit), use `NSButton` with `isBordered = false` (or `.bezelStyle = .toolbar` when the host already manages a toolbar) to match the ghost variant. On iOS (UIKit), implement as a `UIView` containing `UIButton` subviews arranged horizontally in a `UIStackView`. Bind button enabled state to the selection array's `isEmpty` property. For the Delete button, use the system destructive/red appearance and present an `NSAlert` (macOS) or `UIAlertController` (iOS) confirmation dialog with "Delete" and "Cancel" actions.
-- **WinUI 3**: Implement as a `StackPanel` with `Orientation="Horizontal"` containing `Button` elements. Use a borderless/`Subtle` style for action buttons and a named destructive style (e.g. a `DeleteButtonStyle` resource using an error/red `Brush`) for the Delete button. Bind the Delete button's `IsEnabled` to a converter evaluating `!(RequiresSelection && SelectedIds.Count == 0)` — enabled unless the action requires a selection and none exists. Show the delete confirmation using `ContentDialog` with `PrimaryButtonText="Delete"`, `CloseButtonText="Cancel"`, and `DefaultButton="Close"` so Enter/gamepad-A does not default onto the destructive action.
+- **WinUI 3**: Implement as a `StackPanel` with `Orientation="Horizontal"` containing `Button` elements. Use a borderless/`Subtle` style for action buttons and a named destructive style (e.g. a `DeleteButtonStyle` resource using an error/red `Brush`) for the Delete button. Bind the Delete button's `IsEnabled` to `SelectedIds.Count > 0`. Bind each action button's `IsEnabled` to a per-action converter evaluating `!(RequiresSelection && SelectedIds.Count == 0)` — enabled unless the action requires a selection and none exists. Show the delete confirmation using `ContentDialog` with `PrimaryButtonText="Delete"`, `CloseButtonText="Cancel"`, and `DefaultButton="Close"` so Enter/gamepad-A does not default onto the destructive action.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/selection-actions.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/selection-actions.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -227,9 +238,9 @@ Not applicable: Selection Actions does not emit logs. Logging of action invocati
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | failed | Accessibility |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-The `passed` accessibility statuses rest on the standard `<button>` elements, the `role="separator"`/`aria-orientation="vertical"` divider markup in `selection-actions.tsx`, and the delegation of modal focus handling to AlertModal (its own recipe); `touch-target-size` and `no-hardcoded-strings` are `failed` because the source renders `sm`-sized buttons without opting into Button's `--adh-button-min-height`/`--adh-button-min-width` floor, and hardcodes "Delete", "Cancel", and "Delete selected?" with no override besides `deleteConfirm.title`/`description`. `separation-of-concerns` passes: the component owns only action rendering and the confirm/cancel flow's open state, delegating the modal itself to `AlertModal`. `unit-test-coverage` passes: `selectionActions.test.tsx` renders `SelectionActions` directly and covers action enablement, the selected-ids argument, dividers, and the confirm/cancel delete flow.
+The `passed` accessibility statuses rest on the standard `<button>` elements, the `role="separator"`/`aria-orientation="vertical"` divider markup in `selection-actions.tsx`, and the delegation of modal focus handling to AlertModal (its own recipe); `touch-target-size` and `no-hardcoded-strings` are `failed` because the source renders `sm`-sized buttons without opting into Button's `--adh-button-min-height`/`--adh-button-min-width` floor, and hardcodes "Delete", "Cancel", and "Delete selected?" with no override besides `deleteConfirm.title`/`description`. `separation-of-concerns` passes: the component owns only action rendering and the confirm/cancel flow's open state, delegating the modal itself to `AlertModal`. `unit-test-coverage` is partial: `selectionActions.test.tsx` has six tests covering the absent Delete, a standalone action, the selected-ids argument, the separator, and the confirm and cancel delete flow (vectors 002, 004, 006, 007, 016, 017, 018), and `listWithDetailsPane.test.tsx` reaches the `requiresSelection` disabling and a pruned-selection Delete (vectors 003 and 009). No test covers vectors 001, 005, 008, 010 to 015 and 019 to 024: the default and custom variants, the Trash2 icon and label, the default and custom modal title, the button labels, the selection argument after a change, duplicate ids and the missing description.
 
 ## Change History
 
@@ -238,3 +249,4 @@ The `passed` accessibility statuses rest on the standard `<button>` elements, th
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; added requirements for the confirm modal's destructive styling, confirm/cancel button labels, closing on confirm, and the onDelete selection argument; replaced the impossible "modal already visible" edge case with a duplicate-action-id edge case and vector; populated depends-on, related, and references; moved web-only Appearance details into the React/Web platform note; corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes to real APIs; rewrote Localization to list the component's unoverridable hardcoded strings instead of "Not applicable"; dropped the "stateless" claim from Feature Flags; reformatted Design Decisions into Decision/Rationale/Approved form; and rebuilt Compliance as a linked table reflecting that touch-target-size and no-hardcoded-strings fail. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added missing duplicate-action-ids requirement; K20c dangling ref now resolves. |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Restated ondelete-selection-argument as a documented hazard, marked unit-test-coverage partial with the untested vectors, split the duplicate-id caller rule into Configuration, added a ListAction table, stated the missing default description and toolbar ownership, marked two analytics events unobservable, and fixed the WinUI 3 and Compose bindings. |

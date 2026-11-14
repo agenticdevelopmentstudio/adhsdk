@@ -14,3 +14,6 @@
 | table-011 | tbody-rows | `columns=["A", "B"]`, `rows=[[null, "x"]]` | Both `<td>` elements render; the first is empty (`null` renders as no visible content), the second contains "x"; no error is thrown |
 | table-012 | tbody-rows, columns-prop | `columns=["Name", <strong>Status</strong>]`, `rows=[["Alice", <span>Active</span>]]` | The header and cell render the ReactNode content as given (the `<strong>` and `<span>` elements appear in the DOM); no error is thrown |
 
+| table-013 | reports-first-mismatched-row, row-width-validation | `columns=["A", "B"]`, `rows=[["1", "2"], ["3"], ["4", "5", "6"]]` | Throws an `Error` reporting row index `1` (the first bad row), not `2` |
+| table-014 | row-width-validation, columns-prop | `columns=[]`, `rows=[["x"]]` | Throws an `Error` reporting row index `0`, `1` cell and `0` columns |
+| table-015 | row-width-validation | `columns=["A"]`, `rows=[["1", "2"]]` (row is too long) | Throws an `Error` reporting row index `0`, `2` cells and `1` column |

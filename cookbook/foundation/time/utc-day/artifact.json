@@ -4,7 +4,7 @@
     "id": "533c7d81-1380-4fba-a5d0-54271dd51772",
     "title": "UTC Day",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "UTC-pinned day helpers: the yyyy-MM-dd UTC day containing a date, and the day after a day string, matching the daemon's UTC day bucketing.",
+    "summary": "UTC-pinned day helpers: the yyyy-MM-dd UTC day containing a date, and the day after a day string, matching day buckets taken from stored UTC timestamps.",
     "platforms": [
       "swift",
       "macos"
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e221ad7749a6dfc1",
+  "synced": "fae0ae07c5ffe93d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,15 +2,15 @@
 id: fafeef0d-c283-4ecf-92fb-b5de35d71f79
 title: "Google Authorizer"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Google OAuth for a desktop app: loopback browser sign-in under a deadline, form-encoded token refresh and revoke, and a coalescing, Keychain-backed token provider."
+summary: "Gmail-only Google OAuth for a desktop app: loopback browser sign-in under a deadline, form-encoded token refresh and revoke, and a coalescing, Keychain-backed token provider."
 platforms:
   - swift
   - macos
@@ -28,14 +28,11 @@ depends-on:
 related:
   - aed9acc9-6340-487b-acfb-b7b13f14e59a
 references:
-  - https://developers.google.com/identity/protocols/oauth2/native-app (Google OAuth 2.0 for installed apps)
-  - https://accounts.google.com/o/oauth2/v2/auth (Google authorization endpoint)
-  - https://oauth2.googleapis.com/token (Google token endpoint)
-  - https://oauth2.googleapis.com/revoke (Google revoke endpoint)
-  - https://www.rfc-editor.org/rfc/rfc8252 (RFC 8252, OAuth 2.0 for Native Apps)
-  - https://www.rfc-editor.org/rfc/rfc7636 (RFC 7636, PKCE)
-  - https://www.rfc-editor.org/rfc/rfc3986#section-2.3 (RFC 3986, unreserved characters)
-  - https://github.com/openid/AppAuth-iOS (AppAuth)
+  - https://developers.google.com/identity/protocols/oauth2/native-app
+  - https://www.rfc-editor.org/rfc/rfc8252
+  - https://www.rfc-editor.org/rfc/rfc7636
+  - https://www.rfc-editor.org/rfc/rfc3986#section-2.3
+  - https://github.com/openid/AppAuth-iOS
 approved-by: ""
 approved-date: ""
 ---
@@ -48,6 +45,7 @@ Google Authorizer is the Google OAuth layer for the Gmail integration. It has fo
 
 The OAuth client (`GoogleOAuthClientConfig`, with `clientId` and `clientSecret`) and the error type (`IntegrationError`) live in sibling files and are inputs to this component, not part of it. This component only reads `clientId` and `clientSecret` from the config.
 
+The source files are `Integrations/Auth/GoogleAuthorizer.swift`, with `GoogleOAuthClientConfig.swift` beside it, `Integrations/Model/IntegrationError.swift` and `AIPluginKit/SecretStoring.swift`. The component is Gmail-only: the scope `gmail.modify` and the Keychain keys `integrations.gmail.*` are fixed.
 ## Behavioral Requirements
 
 ### Credential
@@ -61,7 +59,7 @@ The OAuth client (`GoogleOAuthClientConfig`, with `clientId` and `clientSecret`)
 - **signin-endpoints**: `AppAuthGoogleSignIn` MUST use `https://accounts.google.com/o/oauth2/v2/auth` as the authorization endpoint and `https://oauth2.googleapis.com/token` as the token endpoint.
 - **signin-scopes**: `AppAuthGoogleSignIn` MUST request exactly the scopes `openid`, `email` and `https://www.googleapis.com/auth/gmail.modify`.
 - **signin-offline-consent**: The authorization request MUST carry the additional parameters `access_type=offline` and `prompt=consent`, so Google issues a refresh token on every sign-in.
-- **signin-response-type**: The authorization request MUST use the authorization-code response type and send `clientId` and `clientSecret` from the config.
+- **signin-response-type**: The authorization request MUST use the authorization-code response type and be built from the config's `clientId` and `clientSecret`; the authorization URL carries `client_id` only, and the client secret goes only to the token endpoint (never into the authorization URL, where it would reach browser history and logs).
 - **signin-pkce**: The authorization request MUST carry an S256 `code_challenge` (RFC 7636) and the token exchange MUST send the matching `code_verifier`. The source does not set these; AppAuth's `OIDAuthorizationRequest` generates them by default, so a port that does not use AppAuth must add them.
 - **signin-state**: The authorization request MUST carry a random `state`, and a redirect whose `state` does not match MUST fail the flow rather than be exchanged (RFC 8252). The source relies on AppAuth for both the value and the check.
 - **signin-loopback-redirect**: The redirect URL MUST come from a local HTTP listener started on the loopback interface for the duration of the flow.
@@ -92,7 +90,7 @@ The OAuth client (`GoogleOAuthClientConfig`, with `clientId` and `clientSecret`)
 ### Token endpoint
 
 - **endpoint-protocol**: A token endpoint MUST provide `refresh(refreshToken:config:)`, returning an access token and an `expiresIn` in seconds, and `revoke(token:)`.
-- **endpoint-refresh-request**: `refresh` MUST send one POST to `https://oauth2.googleapis.com/token` with `Content-Type: application/x-www-form-urlencoded` and the body fields, in this order, `grant_type=refresh_token`, `refresh_token`, `client_id`, `client_secret`.
+- **endpoint-refresh-request**: `refresh` MUST send one POST to `https://oauth2.googleapis.com/token` with `Content-Type: application/x-www-form-urlencoded` and the body fields `grant_type=refresh_token`, `refresh_token`, `client_id`, `client_secret`. The order is a test-fixture convention so the vectors can compare the exact body string; Google does not require it.
 - **endpoint-revoke-request**: `revoke` MUST send one POST to `https://oauth2.googleapis.com/revoke` with the same content type and a single body field `token`.
 - **endpoint-form-encoding**: Form values MUST be percent-encoded, escaping every character except the RFC 3986 unreserved set (ASCII letters, digits, `-`, `.`, `_`, `~`), so that `+`, `/`, `=`, `&` and space are escaped.
 - **endpoint-invalid-grant**: A non-2xx refresh reply whose JSON `error` is `invalid_grant` MUST throw `IntegrationError.revoked`.
@@ -106,13 +104,13 @@ The OAuth client (`GoogleOAuthClientConfig`, with `clientId` and `clientSecret`)
 ### Token provider
 
 - **provider-actor**: `GoogleTokenProvider` MUST serialise all of its state in a single actor.
-- **provider-key**: A credential MUST be stored under `integrations.gmail.<connectionId>.credential`, and the client secret key constant MUST be `integrations.gmail.oauth-client-secret`.
+- **provider-key**: A credential MUST be stored under `integrations.gmail.<connectionId>.credential`, and the client secret key constant MUST be `integrations.gmail.oauth-client-secret`. The provider never reads that key; the host (`MailIntegrationService`) stores and reads the secret under it.
 - **provider-fresh-token**: `accessToken(connectionId:config:)` MUST return the stored access token without calling the endpoint when `expiresAt` is at least 60 seconds after `now`.
 - **provider-refresh-margin**: When `expiresAt` is less than 60 seconds after `now` (including already expired), `accessToken` MUST refresh before returning.
 - **provider-refresh-result**: A refresh MUST produce a credential with the new access token, the unchanged refresh token and `expiresAt` of `now` plus the reply's `expiresIn`, and MUST persist it before returning the token.
 - **provider-coalesce**: Concurrent `accessToken` callers for one connection MUST share a single in-flight refresh and receive the same outcome.
-- **provider-owner-persists**: Only the first caller to settle a refresh MUST persist the result and clear the in-flight entry.
-- **provider-save-error-to-owner**: When that save fails, only the persisting (first-to-settle) caller MUST receive the save error; every other caller sharing the refresh MUST return the refreshed access token without error.
+- **provider-owner-persists**: Only the first caller to settle a refresh MUST persist the result and clear the in-flight entry. Which caller settles first depends on scheduling, so callers MUST NOT rely on which one it is.
+- **provider-save-error-to-owner**: When that save fails, only the persisting (first-to-settle) caller MUST receive the save error; every other caller sharing the refresh MUST return the refreshed access token without error. Which caller that is depends on scheduling and is nondeterministic; callers MUST NOT rely on it.
 - **provider-propagates-endpoint-error**: An error thrown by the endpoint's `refresh` MUST propagate unchanged from `accessToken` to every caller sharing that refresh, and MUST NOT be persisted or change the stored credential.
 - **provider-failed-not-reused**: A failed refresh MUST be dropped from the in-flight table so the next call starts a new refresh.
 - **provider-missing-credential**: A missing credential, or one stored but not decodable as `GoogleCredential`, MUST throw `IntegrationError.revoked` from `accessToken`.
@@ -176,15 +174,15 @@ Vectors derive from `GoogleOAuthTests` in `packages/apple/AgenticDeveloperHubSDK
 | gauth-028 | signin-endpoints, signin-scopes, signin-offline-consent, signin-response-type, signin-pkce, signin-state, signin-listener-failure | Run `signIn` with a valid config (traced to `run`; the source states it is verified manually) | Request has the two endpoints, the three scopes, the code response type, an S256 `code_challenge`, a random `state` (a mismatched `state` fails the flow) and parameters `access_type=offline`, `prompt=consent`; a listener bind failure throws `signInFailed("Could not start the local sign-in listener")` before any browser opens | manual |
 | gauth-029 | credential-shape, credential-wire-format, provider-key | Store a credential for connection `c` (test `refreshesWhenWithin60Seconds`) | Value under `integrations.gmail.c.credential` decodes with a default `JSONDecoder` to the credential | unit |
 | gauth-030 | signin-default-timeout | Construct `AppAuthGoogleSignIn()` (traced to the initializer; no unit test) | Timeout is 300 s, `successURL` is nil, clock is `Date.init` | manual |
+| gauth-031 | endpoint-missing-access-token, endpoint-body-parse | Stub reply 200 with body `not json` (traced to `refresh` and `post`; no unit test) | `tokenRefresh("no access_token in reply")` | manual |
+| gauth-032 | provider-actor, provider-injected-clock | Provider built with `now: { epoch }` (every test via `makeProvider`) | All expiry decisions and stored `expiresAt` values use `epoch`; no wall-clock reads | unit |
 | gauth-033 | signin-no-browser-after-cancel | Cancel before presentation, then run a sign-in (traced to `run`; manual only) | `signInCancelled` is thrown; no browser opens | manual |
 | gauth-034 | signin-listener-teardown | Run a sign-in that succeeds, one that fails and one that is cancelled (traced to the `defer` in `run`; manual only) | The listener is cancelled in each case | manual |
 | gauth-035 | signin-loopback-redirect, signin-default-browser, signin-success-url | Run a sign-in with and without a `successURL` (traced to `run` and `DefaultBrowserUserAgent`; manual only) | The redirect URL is a 127.0.0.1 listener URL; the authorization URL opens in the default browser; the browser is sent to `successURL` when given, else shows AppAuth's return page | manual |
 | gauth-036 | signin-main-actor | Run a sign-in and cancel through the deadline helper (traced to `run` and `SessionBox`; manual only) | The flow, handler and cancel handle are touched only on the main actor | manual |
 | gauth-037 | signin-protocol, signin-credential-assembly | Run `signIn(config:)` to a finished token response (traced to `run` and `credential`; manual only) | One async call returns a `GoogleCredential` built from the response's access token, refresh token and expiry | manual |
 | gauth-038 | provider-save-error-to-owner | Expired credential, writes fail; two concurrent `accessToken` calls on one connection (no unit test yet) | One call throws the save error; the other returns `new`; endpoint call count 1 | manual |
-| gauth-031 | endpoint-missing-access-token, endpoint-body-parse | Stub reply 200 with body `not json` (traced to `refresh` and `post`; no unit test) | `tokenRefresh("no access_token in reply")` | manual |
 | gauth-039 | endpoint-transport-errors | A transport failure from the session (traced to `post`; no unit test) | The session's error propagates unchanged; no retry | manual |
-| gauth-032 | provider-actor, provider-injected-clock | Provider built with `now: { epoch }` (every test via `makeProvider`) | All expiry decisions and stored `expiresAt` values use `epoch`; no wall-clock reads | unit |
 
 ## Edge Cases
 
@@ -275,7 +273,7 @@ Subsystem: `com.agenticdeveloperhub.integrations` | Category: `GoogleTokens`
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform is Swift (macOS). The files are `Integrations/Auth/GoogleAuthorizer.swift`, with `GoogleOAuthClientConfig.swift` beside it, `Integrations/Model/IntegrationError.swift` and `AIPluginKit/SecretStoring.swift`. A SwiftUI host calls `signIn` from a task and shows `IntegrationError.errorDescription`. The sign-in uses AppKit (`NSWorkspace.shared.open`) and AppAuth, so it is macOS only, and the source file imports AppKit and AppAuth as a whole; `GoogleTokenProvider`, the token endpoint and `withSignInDeadline` use only platform-neutral Swift concurrency (actor, `Task`, `URLSession`, `Logger`) and would need to be split out of that file to build elsewhere.
+- **SwiftUI**: A SwiftUI host drives `signIn` from a `.task` modifier or a `Task` started by a button and cancels that task when the view disappears; cancelling the calling task makes `withSignInDeadline` throw `signInCancelled` and tear the flow down. It shows `IntegrationError.errorDescription` for failures. The sign-in uses AppKit (`NSWorkspace.shared.open`) and AppAuth, so it is macOS only, and the source file imports AppKit and AppAuth as a whole; `GoogleTokenProvider`, the token endpoint and `withSignInDeadline` use only platform-neutral Swift concurrency (actor, `Task`, `URLSession`, `Logger`) and would need to be split out of that file to build elsewhere.
 - **Compose**: Android has no direct equivalent of the loopback sign-in: start from AppAuth-Android with a custom-tab authorization request and a redirect URI intent filter, keep PKCE and `state` on (AppAuth-Android does), and keep the same scopes and the `access_type=offline`, `prompt=consent` parameters. Port the provider as a class with a per-connection `Mutex` and a map of `Deferred` refreshes; store the JSON in `EncryptedSharedPreferences` or Android Keystore-backed storage; use OkHttp with a hand-built `application/x-www-form-urlencoded` body that escapes everything outside the unreserved set; wrap sign-in in `withTimeout` and map `CancellationException` to cancelled.
 - **React/Web**: Browser apps cannot hold a client secret or a long-lived refresh token safely. A port normally runs the authorization-code flow with PKCE against a backend that holds the secret, or uses Google Identity Services; for a Node or Electron host, use `google-auth-library` with a loopback `http.createServer` redirect. Coalesce refreshes with a `Map<string, Promise<Credential>>` (single-threaded, so no lock) plus a generation counter; encode forms with `URLSearchParams` (it encodes space as `+`, so check it against the `s+t ~` vector); race the sign-in promise against a timer and an `AbortController` for the deadline.
 - **AppKit / UIKit**: AppKit uses the source as written (default browser through `NSWorkspace`). On iOS and iPadOS, AppAuth's iOS external user agent backed by `ASWebAuthenticationSession` replaces the loopback listener and the custom user agent, because loopback redirects and `NSWorkspace` are unavailable; the Keychain, actor and `URLSession` parts transfer unchanged.
@@ -285,7 +283,7 @@ Subsystem: `com.agenticdeveloperhub.integrations` | Category: `GoogleTokens`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleAuthorizer.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleAuthorizer.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -345,8 +343,9 @@ Subsystem: `com.agenticdeveloperhub.integrations` | Category: `GoogleTokens`
 **Approved**: pending
 
 **Decision**: PKCE and `state` are left to AppAuth's defaults rather than set explicitly.
-**Rationale**: `OIDAuthorizationRequest` generates an S256 code challenge and a random `state` and checks the returned `state`, so the source never mentions them. `signin-pkce` and `signin-state` state them explicitly because a port without AppAuth would otherwise omit them.
+**Rationale**: `OIDAuthorizationRequest` generates an S256 code challenge and a random `state` and checks the returned `state`, so the source never mentions them. `signin-pkce` and `signin-state` state them explicitly because a port without AppAuth would otherwise omit them: AppAuth generates the S256 challenge and `state` by default and checks the returned `state`, and a port that does not use AppAuth must add all three.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -366,3 +365,4 @@ The component separates the interactive flow, the HTTP exchange, deadline logic 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Stated that the authorization URL carries client_id only, marked scheduling-dependent save-error ownership, labeled the form field order a fixture convention, trimmed AppAuth notes from requirements, fixed references and vector order, added Gmail-only to the summary and SwiftUI guidance. |

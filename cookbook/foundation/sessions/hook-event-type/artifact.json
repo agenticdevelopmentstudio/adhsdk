@@ -4,7 +4,7 @@
     "id": "1c2b7ff7-4d12-4580-94b0-17258d3384e1",
     "title": "Hook Event Type",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Enum of the 28 Claude Code hook events a session daemon captures, with the rules that decide which events count as activity, turn state or subagent activity.",
+    "summary": "Enum of 27 Claude Code hook events plus the synthetic StatusLine, with rules for activity, turn state and subagent activity.",
     "platforms": [
       "swift",
       "macos"
@@ -24,13 +24,16 @@
       "hook-events"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "fc622208-1504-421f-8892-c5869820550c",
+      "9eb46f78-0ceb-455f-9584-b6b43ddf0871"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The component parses Claude Code hook events and settings; the host's name, events and paths are its subject.",
-  "synced": "9e124ee17bfe6140",
+  "synced": "e8b89ef1fc3b8fff",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

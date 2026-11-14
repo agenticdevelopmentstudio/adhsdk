@@ -8,6 +8,5 @@
 | `sessionID` | `String` | required | Identifies the feed lock |
 | `name` | `String` | required | The daemon's name, part of the lock file name |
 | `directory` | `URL` | the temporary directory | Where lock files live |
-| session id limit | `Int` | `128` | Scalars of the session id kept in the lock file name |
-| lock file mode | `mode_t` | `0600` | Mode of a new lock file |
 
+The session id limit (`128` scalars) and the lock file mode (`0600`) are fixed constants, not options; they are specified by **lock-session-sanitised** and **lock-acquire**.

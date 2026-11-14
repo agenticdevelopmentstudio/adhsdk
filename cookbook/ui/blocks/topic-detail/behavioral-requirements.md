@@ -2,7 +2,7 @@
 - **render-two-panes**: The component MUST render a left topic-list rail beside a right detail pane holding `children`.
 - **fill-container**: The component MUST fill its container's height and width (grid with `min-h-0 min-w-0 flex-1`), so a caller supplies an explicit height or a `flex-1` parent.
 - **mark-selected**: The row whose `id` equals `selectedId` MUST be marked active: gold text, a gold 2px left bar in the default `bar` selection style, and `aria-current="true"`.
-- **report-selection**: Clicking a non-disabled row MUST call `onSelect` with the row's `id`, including a re-click on the already-selected row, because the component has no deselect signal of its own.
+- **report-selection**: Clicking a non-disabled row MUST call `onSelect` with the row's `id`, including a re-click on the already-selected row when the list is not `covered` (see `skip-covered-reselect`), because the component has no deselect signal of its own.
 - **skip-covered-reselect**: In covered style a click on the already-selected row MUST do nothing: no `onSelect` and no link flash.
 - **skip-disabled**: A `disabled` row MUST be a native disabled button, dimmed (`text-apt-text-dim`, default cursor), and MUST NOT call `onSelect`.
 - **render-label**: Each row MUST render its `label` as the primary text, truncated with an ellipsis when it overflows.

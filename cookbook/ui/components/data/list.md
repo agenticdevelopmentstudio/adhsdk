@@ -2,11 +2,11 @@
 id: 3785363d-118e-4d7e-98e6-afaca8bf0838
 title: "List"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,7 +19,8 @@ tags:
   - list
   - collection
 depends-on: []
-related: []
+related:
+  - 40827b84-406e-4091-951b-9498b2f78253
 references: []
 approved-by: ""
 approved-date: ""
@@ -37,7 +38,7 @@ List is a semantic container component for displaying flat collections of items 
 - **semantic-item**: The ListItem component MUST render an `<li>` element.
 - **classname-merge**: Both List and ListItem MUST accept a `className` prop and merge it with their base styles using the `cn()` utility (`twMerge(clsx(...))`); when the caller's `className` conflicts with a base Tailwind class, the caller's class MUST win.
 - **prop-forwarding**: Both List and ListItem MUST forward all remaining React props (`...props`) to their underlying HTML element. This includes props such as `role`, which can override the element's implicit semantics — restoring or removing that semantics is the caller's responsibility.
-- **data-slot**: The List component MUST set `data-slot="list"` on the rendered `<ul>`. The ListItem component MUST set `data-slot="list-item"` on the rendered `<li>`.
+- **data-slot**: The List component MUST set `data-slot="list"` on the rendered `<ul>`. The ListItem component MUST set `data-slot="list-item"` on the rendered `<li>`. Because remaining props are forwarded after `data-slot` (see **prop-forwarding**), a caller who passes `data-slot` replaces the default; a forwarded `data-slot` wins.
 
 ## Appearance
 
@@ -76,15 +77,13 @@ List and ListItem render semantic HTML (`<ul>` and `<li>`) without additional AR
 | list-004 | classname-merge | Render `<ListItem className="custom-item" />` | Output element has both base classes and `custom-item` applied |
 | list-005 | prop-forwarding | Render `<List id="test-list" role="region" />` | Output `<ul>` contains `id="test-list"` and `role="region"` attributes |
 | list-006 | prop-forwarding | Render `<ListItem id="item-1" data-test="value" />` | Output `<li>` contains `id="item-1"` and `data-test="value"` attributes |
-| list-007 | classname-merge | Render `<ListItem className="px-6" />` | Output `<li>` class list contains `px-6` and does not contain the conflicting base class `px-3` |
-
+| list-007 | classname-merge | Render `<ListItem className="px-6" />` | Output `<li>` class list contains `px-6` and does not contain the conflicting base class `px-3` || list-008 | data-slot, prop-forwarding | Render `<List data-slot="custom" />` | Output `<ul>` has `data-slot="custom"`, not `list` |
 ## Edge Cases
 
 - **Empty list**: Rendering `<List />` with no children produces an empty bordered container.
 - **Single item**: Rendering a List with one ListItem produces the container with no visible row dividers (dividers appear between rows, not above or below).
-- **Nested flex content**: ListItem uses flex layout; when child content includes flex or grid elements, they inherit the flex context.
-- **className collision**: If a `className` prop contains a Tailwind class that conflicts with a base class (e.g., `px-6` conflicting with the base `px-3`), `cn()` resolves it with `tailwind-merge`: the caller's class wins and the conflicting base class is dropped, rather than emitting both classes for the CSS cascade to resolve. See **classname-merge** and test vector list-007.
-
+- **Nested flex content**: ListItem uses flex layout; when child content includes flex or grid elements, its direct children are laid out as flex items of the row, spaced by `gap-3`.
+- **className collision**: If a `className` prop contains a Tailwind class that conflicts with a base class (e.g., `px-6` conflicting with the base `px-3`), `cn()` resolves it with `tailwind-merge`: the caller's class wins and the conflicting base class is dropped, rather than emitting both classes for the CSS cascade to resolve. See **classname-merge** and test vector list-007.- **Overflow clipping**: The List container sets `overflow-hidden` to keep the rounded corners, so it clips anything that extends past its edge, such as focus rings, shadows and popovers inside rows. Consumers SHOULD use inset focus styles (for example `ring-inset`) on focusable content in rows.
 ## Configuration
 
 Not applicable: List and ListItem have no configuration options. All appearance and behavior is determined by Tailwind classes and React props.
@@ -119,17 +118,17 @@ Not applicable: List and ListItem do not emit any logs.
 
 ## Platform Notes
 
-- **SwiftUI**: SwiftUI has no `.divider()` modifier, and `List` does not render an outer border by default. Compose the container as `VStack(spacing: 0) { ForEach(...) { item in ...; Divider() } }` for row dividers, and add `.overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.aptBorder))` to reproduce the bordered, rounded-corner container.
-- **Compose**: Android Compose's `LazyColumn` with `Divider()` composables between items provides equivalent row divider behavior. Combine with `Card` or custom styling to add the border treatment.
+- **SwiftUI**: `List` does not render an outer border by default. Compose the container as `VStack(spacing: 0) { ForEach(...) { item in ...; Divider() } }` for row dividers, and add `.overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.aptBorder))` to reproduce the bordered, rounded-corner container.
+- **Compose**: Android Compose's `LazyColumn` with `HorizontalDivider()` composables between items provides equivalent row divider behavior. Combine with `Card` or custom styling to add the border treatment.
 - **React/Web**: The source implementation is in `packages/web/packages/ui/src/components/list.tsx`. The List component renders a styled `<ul>` with Tailwind classes (`flex flex-col divide-y divide-apt-border overflow-hidden rounded-lg border border-apt-border`). The ListItem component renders a styled `<li>` with Tailwind classes (`flex min-h-9 items-center gap-3 px-3 py-1.5`). Both use the `cn()` utility from `lib/utils` to merge classnames.
 - **AppKit / UIKit**: `separatorStyle = .singleLine` on `NSTableView`/`UITableView` gives row separators but not this component's outer border or rounded corners. A plain stack view (`NSStackView`/`UIStackView`) with a hairline divider view between rows, wrapped in a container view with a 1pt border and rounded corners, reproduces the source's appearance without the selection and reuse chrome a table view brings.
-- **WinUI 3**: `SingleSelectionMode` is not a real WinUI API, and `ListView` adds selection behavior this static component doesn't have. Use `ItemsRepeater` with a separator element between rows, hosted inside a `Border` with `CornerRadius` and `BorderThickness` to reproduce the outer border and rounded corners. Use a `Grid`/`StackPanel` for cell layout with column spacing equivalent to `gap-3`.
+- **WinUI 3**: `ListView` adds selection behavior this static component doesn't have. Use `ItemsRepeater` with a separator element between rows, hosted inside a `Border` with `CornerRadius` and `BorderThickness` to reproduce the outer border and rounded corners. Use a `Grid`/`StackPanel` for cell layout with column spacing equivalent to `gap-3`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/list.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/list.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -142,9 +141,11 @@ Not applicable: List and ListItem do not emit any logs.
 **Approved**: pending
 
 **Decision**: Use `data-slot` attributes (`data-slot="list"`, `data-slot="list-item"`) instead of a class-based API.
-**Rationale**: Enables targeted CSS and testing selectors without requiring a class-based API.
+**Rationale**: Follows the shadcn `data-slot` convention that parent selectors and tests rely on, so they can target a component without depending on its Tailwind classes.
 **Approved**: pending
-
+**Decision**: The List component does not add `role="list"` itself; consumers who need it pass it through the forwarded props.
+**Rationale**: Safari/VoiceOver drops list semantics on a flexed `<ul>`, but a default `role="list"` would override the element's implicit role for every caller, including ones that pass their own `role` (see **prop-forwarding**). The component stays a plain wrapper and the Accessibility section tells consumers when to add it.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -162,3 +163,4 @@ Status rests on `list.tsx`: it renders plain `<ul>`/`<li>` elements with correct
 | 1.0.0 | 2026-09-22 | Claude | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and updated all citations; corrected the className-collision edge case and added a tailwind-merge test vector (list-007); reformatted Design Decisions into Decision/Rationale/Approved entries; corrected the SwiftUI, AppKit/UIKit, and WinUI 3 platform notes; marked Accessibility applicable with role-override and WebKit list-semantics guidance; corrected the Compliance entry to semantic-markup/partial |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Documented the forwarded data-slot override and the deliberate absence of a default role=list, fixed the data-slot rationale, corrected the platform notes and flex edge case, added an overflow-clipping edge case, vector list-008 and a related link. |

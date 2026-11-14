@@ -2,11 +2,11 @@
 id: 0c199036-81c3-47c3-9e79-e4b8187ca69a
 title: "Field"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,14 +32,15 @@ approved-date: ""
 
 ## Overview
 
-The shared `Field` in `@adh-sdk/ui` — the family's standard form row. It stacks
-an uppercase-mono caption above whatever control it wraps (`Input`, `Select`,
+The shared `Field` in `@adh-sdk/ui` — the family's standard form row. It places
+an uppercase-mono caption before (above, or beside when inline) whatever control it wraps (`Input`, `Select`,
 `Switch`, `Textarea`, or any other primitive passed as `children`), and it renders
 the whole row inside the shared `Label` so the caption is **implicitly associated**
 with the control: clicking the caption focuses the input, with no `htmlFor`/`id`
 wiring at the call site.
 
-Below the control, `Field` renders one line of supporting text: a dim-mono `hint`
+Below the control, `Field` renders one line of supporting text through the shared
+`FieldFootnote` component: a dim-mono `hint`
 by default, or a red-mono `error` that takes the hint's place when present. This is
 the one place inline field errors live, so forms across the platform stop
 re-implementing (and re-styling) their own error text.
@@ -51,7 +52,8 @@ layout and which supporting line to show.
 ## Behavioral Requirements
 
 - **render-caption**: The field MUST render the `label` node as an
-  uppercase-mono caption (the shared `fieldCaptionClass`) above its control.
+  uppercase-mono caption (the shared `fieldCaptionClass`) before its control (above when stacked, beside
+  when inline — see **render-inline-layout**).
 - **associate-label-implicitly**: The field MUST wrap the caption and the
   control in a single shared `Label` so activating the caption focuses the control,
   without the caller supplying `htmlFor`/`id`.
@@ -72,6 +74,12 @@ layout and which supporting line to show.
   caption beside the control instead of above it — a right-aligned label column
   sized by the `--apt-field-label-w` custom property, with the control (and any
   sibling children) in one cell and the supporting line in the second column.
+- **uppercase-caption-locale**: The caption's uppercase transform MUST follow the
+  user's locale, never an invariant or culture-insensitive uppercase call (see
+  Localization).
+- **no-disabled-dimming**: The field MUST NOT add its own disabled dimming. A
+  disabled control's appearance is left to the control's own styling on every
+  platform (see States).
 
 ## Appearance
 
@@ -112,13 +120,18 @@ helper text below         ← hint: dim mono (apt-text-dim)
 | Default (no hint, no error) | caption + control only; no supporting line |
 | Error | caption, control, then red-mono `error`; the `hint` is suppressed |
 | Focused control | caption + control focus is the control's own affordance; `Field` adds none |
-| Disabled control | no dimming from `Field` itself; the wrapping `Label` carries `peer-disabled:opacity-50`, but that Tailwind variant only fires for a *sibling* marked `peer` that precedes the styled element — here the control is a *child* of `Label`, not a preceding sibling, so the rule never matches. Any disabled appearance comes from the control's own styling. |
+| Disabled control | `Field` adds no dimming (**no-disabled-dimming**); any disabled appearance comes from the control's own styling. The web reference inherits `peer-disabled:opacity-50` from the shared `Label` primitive, but that Tailwind variant only fires for a *sibling* marked `peer` that precedes the styled element, and here the control is a *child* of `Label`, so the rule never matches. It stays because `Label` is shared with callers that do use a `peer` sibling; it is a no-op for `Field` and ports MUST NOT reproduce it. |
 
 ## Accessibility
 
 - The caption and control share one `<label>` element, so the caption is a real,
-  programmatic label for the control — clicking it focuses the control and screen
-  readers announce the caption when the control is focused.
+  programmatic label for the control — clicking it focuses the control. The
+  control's accessible name is computed from the whole label's text content, and
+  the `hint` or `error` line sits inside that same `<label>`, so it becomes part of
+  the name too (for example "Name Required"), not only the caption. Where
+  `aria-describedby={errorId}` also points at the error, a screen reader can
+  therefore announce the error twice; callers that want the name to be the
+  caption alone SHOULD render their own supporting line outside `Field`.
 - The caption text is authored by the caller; it MUST be human-readable label text
   (implicit association carries no `aria-label`).
 - The error line is plain text in the label's flow, so it is read with the field;
@@ -143,9 +156,11 @@ helper text below         ← hint: dim mono (apt-text-dim)
 | T4 | show-error-in-place-of-hint | `hint="…"` AND `error="Required"` | A red-mono "Required" renders; the hint is absent |
 | T5 | omit-supporting-line-when-empty | neither `hint` nor `error` | No supporting line renders below the control |
 | T6 | merge-classname | `className="mt-4"` | Root keeps `flex flex-col …` and adds `mt-4` |
-| T7 | render-inline-layout | `<Field label="Name" layout="inline"><input/></Field>` inside a wrapper setting `--apt-field-label-w` | Root renders as `grid grid-cols-[…]`; the caption is right-aligned in column 1; the control and the supporting line both render in column 2 |
+| T7 | render-inline-layout | `<Field label="Name" layout="inline"><input/></Field>` inside a wrapper setting `--apt-field-label-w` (for example via `FIELD_LABEL_GROUP_CLASS`, which sets it to `6.5rem`) | Root renders as `grid grid-cols-[…]`; column 1 takes its width from `--apt-field-label-w`; the caption is right-aligned in column 1; the control and the supporting line both render in column 2 |
 | T8 | name-error-line | `<Field label="Name" errorId="name-error" error="Required"><input/></Field>` | The rendered error `<span>` has `id="name-error"`; when only `hint` is set instead, the hint `<span>` receives no `id` |
-
+| T9 | name-error-line | `<Field label="Name" errorId="name-error" hint="Shown to teammates"><input/></Field>` (no `error`) | No element in the field has `id="name-error"` |
+| T10 | uppercase-caption-locale | `<Field label="straße">` (or Turkish `i`) rendered under a document or ancestor with the matching `lang` | The caption is uppercased by the locale's rules, via CSS `text-transform`, not by an invariant uppercase call |
+| T11 | no-disabled-dimming | `<Field label="Name"><input disabled/></Field>` | `Field` adds no opacity or dimming class of its own; the control's own disabled styling is the only change |
 ## Edge Cases
 
 - Both `hint` and `error` set → `error` wins and the hint is not rendered (the
@@ -166,14 +181,14 @@ helper text below         ← hint: dim mono (apt-text-dim)
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `label` | `ReactNode` | — (required) | The caption text, rendered uppercase-mono above the control. |
+| `label` | `ReactNode` | — (required) | The caption text, rendered uppercase-mono before the control (above when stacked, beside when inline). |
 | `children` | `ReactNode` | — (required) | The control (e.g. `Input`/`Select`/`Switch`/`Textarea`). |
 | `hint` | `ReactNode` | — | Dim-mono helper line below the control; shown only when `error` is unset. |
 | `error` | `ReactNode` | — | Red-mono inline error; when set, replaces `hint` in the same slot. |
 | `errorId` | `string` | — | Names the error line for a control that points `aria-describedby` at it. |
 | `layout` | `"stacked" \| "inline"` | `"stacked"` | Caption above the control (default) or beside it in a fixed-width right-aligned column for grouped rows. |
 | `className` | `string` | — | Extra classes merged onto the root `Label` via `cn()`. |
-
+| `FIELD_LABEL_GROUP_CLASS` | exported `string` constant | `"[--apt-field-label-w:6.5rem]"` | Public export. A wrapper applies it to set `--apt-field-label-w` to the one label-column width every inline group in the family shares. See Appearance. |
 ## Deep Linking
 
 Not applicable: Field is a presentational primitive without its own routing or deep-link targets.
@@ -186,9 +201,11 @@ copy itself is localized by the caller and the form owning the field, not by
 uppercase treatment (`fieldCaptionClass`'s `uppercase`, and the equivalent
 native transform on each platform). Casing is a locale-sensitive operation
 (for example the German `ß`/`SS` expansion, or Turkish dotted/dotless `i`), so
-that transform MUST use the user's current locale on every platform — never an
+that transform MUST use the user's current locale on every platform (**uppercase-caption-locale**) — never an
 invariant- or culture-insensitive uppercase call — even though the transform
-itself is applied by `Field`, not the caller.
+itself is applied by `Field`, not the caller. On the web, CSS `text-transform:
+uppercase` follows the element's `lang` attribute, not the browser's locale, so
+the host MUST set `lang` correctly on the document or an ancestor of `Field`.
 
 ## Accessibility Options
 
@@ -213,21 +230,21 @@ any telemetry belong to the control and the owning form, not to `Field`.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/field.tsx`, exported via `@adh-sdk/ui/blocks/field`. Composes the shared `Label` (`components/label`) and the `fieldCaptionClass` from `lib/typography`. The `inline` layout uses CSS Grid with `--apt-field-label-w` custom property for label column width; stacked layout is a vertical flexbox. Server-safe with no `"use client"` directive.
+- **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/field.tsx`, exported via `@adh-sdk/ui/blocks/field`. Composes the shared `Label` (`components/label`), the shared `FieldFootnote` (`components/field-footnote`, which renders the hint or error line) and the `fieldCaptionClass` from `lib/typography`. The `inline` layout uses CSS Grid with `--apt-field-label-w` custom property for label column width; stacked layout is a vertical flexbox. Server-safe with no `"use client"` directive.
 
-- **SwiftUI:** Compose with `VStack` for stacked layout, or `HStack` with a fixed-width label column and `Spacer` for inline layout (the fixed width is the platform's equivalent of `--apt-field-label-w`, shared by a group rather than owned by one field). Wrap the caption and control in a `LabeledContent`, or apply `.accessibilityLabel(caption)` directly to the control, so the control's accessible name carries the caption without the caller wiring an id — this is the mechanism behind **associate-label-implicitly**. Render the caption in a monospaced font at the same small size as the hint/error (matching `font-mono text-[0.7rem]`), transformed with `.uppercased()` — locale-sensitive, using the current locale, not a title-case/"capitalized" style and never `Locale(identifier: "en_US_POSIX")` — with `tracking(.wide)` if available. Render hint or error text in the same monospaced size below/beside the control, coloring the error with the semantic red token. Substitute SwiftUI's `@Environment(\.isEnabled)` for peer-disabled dimming, since SwiftUI has no sibling-selector equivalent.
+- **SwiftUI:** Compose with `VStack` for stacked layout, or `HStack` with the caption given `.frame(width: labelWidth, alignment: .trailing)` for inline layout (the fixed width is the platform's equivalent of `--apt-field-label-w`, shared by a group rather than owned by one field). Wrap the caption and control in a `LabeledContent`, or apply `.accessibilityLabel(caption)` directly to the control, so the control's accessible name carries the caption without the caller wiring an id — this is the mechanism behind **associate-label-implicitly**. Render the caption in a monospaced font at the same small size as the hint/error (matching `font-mono text-[0.7rem]`), transformed with `uppercased(with: .current)` or `Text(...).textCase(.uppercase)` — locale-sensitive (bare `String.uppercased()` ignores the locale), not a title-case/"capitalized" style and never `Locale(identifier: "en_US_POSIX")` — with `tracking(.wide)` if available. Render hint or error text in the same monospaced size below/beside the control, coloring the error with the semantic red token. Add no disabled dimming of your own (**no-disabled-dimming**); leave it to the control's own disabled styling.
 
-- **Compose (Kotlin):** Build with `Column` for stacked layout, or a `Row` with a `weight(1f)` modifier on the control column for inline layout (the label column's fixed width mirrors `--apt-field-label-w`, shared across a group). Apply `Modifier.semantics { contentDescription = caption }` to the control (or nest both in a construct that exposes one merged semantics node) so the control's accessible description carries the caption — the mechanism behind **associate-label-implicitly**. Style the caption with `Typography.labelSmall` in uppercase mono, at the same size as hint/error text. Render hint in a `Text` with reduced opacity and error in `MaterialTheme.colorScheme.error` — not a further-reduced-opacity error, which reads as *less* prominent than the hint it replaces. Use `Modifier.alpha()` or the `enabled` parameter for disabled dimming.
+- **Compose (Kotlin):** Build with `Column` for stacked layout, or a `Row` with a `weight(1f)` modifier on the control column for inline layout (the label column's fixed width mirrors `--apt-field-label-w`, shared across a group). Apply `Modifier.semantics(mergeDescendants = true)` to the row so the caption and control expose one merged semantics node, rather than overriding the control's own `contentDescription`, so the control's accessible description carries the caption — the mechanism behind **associate-label-implicitly**. Style the caption with `Typography.labelSmall` and `FontFamily.Monospace` (`labelSmall` alone is not monospaced) in uppercase, at the same size as hint/error text. Render hint in a `Text` with reduced opacity and error in `MaterialTheme.colorScheme.error` — not a further-reduced-opacity error, which reads as *less* prominent than the hint it replaces. Add no disabled dimming of your own (**no-disabled-dimming**); the control's own `enabled` styling is the only change.
 
-- **AppKit / UIKit:** On iOS, compose with `UIStackView` axis `.vertical` (stacked) or `.horizontal` (inline, with a fixed-width label view mirroring `--apt-field-label-w`). Render the caption as a plain, non-interactive `UILabel` with system font `.caption1`, uppercase and tracked, in the same size as the hint/error label — never a `UIButton` or `systemBlue` tint, which would make a label read as a tappable link. Give the caption `isUserInteractionEnabled = true` and a `UITapGestureRecognizer` that calls `becomeFirstResponder()` on the wrapped control, so tapping the caption focuses the control without looking like a button. Set the control's `accessibilityLabel` to the caption text (or group caption + control as one `accessibilityElements` cluster) — the mechanism behind **associate-label-implicitly**, since UIKit/AppKit has no implicit `<label>` wrapping. On macOS, use `NSStackView` with the same treatment; an `NSTextField` (non-editable, non-bezeled) plays the caption's role, with a click gesture recognizer standing in for tap-to-focus. Both platforms dim by graying the stack's `isEnabled` or the individual control's alpha — there is no peer-selector equivalent to substitute.
+- **AppKit / UIKit:** On iOS, compose with `UIStackView` axis `.vertical` (stacked) or `.horizontal` (inline, with a fixed-width label view mirroring `--apt-field-label-w`). Render the caption as a plain, non-interactive `UILabel` with a monospaced font (`UIFont.monospacedSystemFont` scaled with `UIFontMetrics`), uppercase and tracked, in the same size as the hint/error label — never a `UIButton` or `systemBlue` tint, which would make a label read as a tappable link. Give the caption `isUserInteractionEnabled = true` and a `UITapGestureRecognizer` that calls `becomeFirstResponder()` on the wrapped control, so tapping the caption focuses the control without looking like a button. Set the control's `accessibilityLabel` to the caption text (or group caption + control as one `accessibilityElements` cluster) — the mechanism behind **associate-label-implicitly**, since UIKit/AppKit has no implicit `<label>` wrapping. On macOS, use `NSStackView` with the same treatment; an `NSTextField` (non-editable, non-bezeled) plays the caption's role, with a click gesture recognizer standing in for tap-to-focus. Neither `UIStackView` nor `NSStackView` has an `isEnabled` property, and neither platform adds disabled dimming of its own (**no-disabled-dimming**); the control's own disabled styling is the only change.
 
-- **WinUI 3:** Use `StackPanel` orientation `Vertical` (stacked) or `Horizontal` (inline) as root. Render the caption as a `TextBlock` with a monospaced `FontFamily` (not `FontWeight.SemiBold`, which reads as emphasis rather than the mono caption treatment), `FontSize` matching the hint/error text, uppercase (transformed using the current culture, never `CultureInfo.InvariantCulture`), `CharacterSpacing` approximating the tracking-wide treatment, and `Foreground` bound to a muted design-token brush. For inline, size the label column from a shared resource (e.g. a `x:Double` resource keyed the same way `--apt-field-label-w` is shared across a group) rather than a hardcoded `Width="104"`, and right-align via `HorizontalAlignment="Right"`. Set `AutomationProperties.LabeledBy` on the control to point at the caption `TextBlock` — the mechanism behind **associate-label-implicitly** — since WinUI has no implicit label/control pairing. Below or beside the control, add a secondary `TextBlock` for hint (dimmed via a muted brush) or error (bound to a semantic error-red brush), at the same font and size as the caption. Bind `StackPanel.IsEnabled` or the individual control's `IsEnabled`; WinUI 3 applies opacity automatically when controls are disabled.
+- **WinUI 3:** Use `StackPanel` orientation `Vertical` (stacked) or `Horizontal` (inline) as root. Render the caption as a `TextBlock` with a monospaced `FontFamily` (not `FontWeight.SemiBold`, which reads as emphasis rather than the mono caption treatment), `FontSize` matching the hint/error text, uppercase (transformed using the current culture, never `CultureInfo.InvariantCulture`), `CharacterSpacing` approximating the tracking-wide treatment, and `Foreground` bound to a muted design-token brush. For inline, size the label column from a shared resource (e.g. a `x:Double` resource keyed the same way `--apt-field-label-w` is shared across a group) rather than a hardcoded `Width="104"`, and right-align via `HorizontalAlignment="Right"`. Set `AutomationProperties.LabeledBy` on the control to point at the caption `TextBlock` — the mechanism behind **associate-label-implicitly** — since WinUI has no implicit label/control pairing. Below or beside the control, add a secondary `TextBlock` for hint (dimmed via a muted brush) or error (bound to a semantic error-red brush), at the same font and size as the caption. Add no disabled dimming of your own (**no-disabled-dimming**); WinUI 3 applies its own disabled visuals to a control whose `IsEnabled` is false.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/field.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/blocks/field.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -272,7 +289,7 @@ no-config.
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `screen-reader-support` rests on the shared `Label` giving the control a
 meaningful, programmatic name from the caption (**associate-label-implicitly**)
@@ -281,15 +298,17 @@ and on `errorId` naming the error line for `aria-describedby`
 `<label>` and text elements rather than custom ARIA roles.
 `separation-of-concerns` passes: `field.tsx` has no logic beyond choosing
 which layout classes to apply and composes `Label`/`FieldFootnote` rather
-than reimplementing them. `unit-test-coverage` passes — `field.test.tsx`
+than reimplementing them. `unit-test-coverage` is partial — `field.test.tsx`
 asserts both `layout="inline"` and the default `"stacked"` layout, covering
 the caption's right-alignment and the footnote's grid-column placement in
-each.
+each, but no test yet covers hint/error swapping, `errorId`, the
+omit-when-empty case or click-to-focus (T1–T6, T8, T9).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Clarified caption placement, disabled-dimming, accessible-name and locale rules; added requirements, a FIELD_LABEL_GROUP_CLASS entry and test vectors T9-T11; fixed platform notes; downgraded unit-test-coverage to partial. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History row (authorized); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and add requirements/test vectors for `errorId` and inline layout, correct the disabled-state and row-height claims to what the source does, fix platform notes (label-association mechanism, SwiftUI casing, Compose error color, WinUI width/font, no tappable AppKit/UIKit caption), rebuild Compliance from the catalog, and complete Design Decisions' Approved lines. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add the inline layout option, plus platform notes for all five platforms. |

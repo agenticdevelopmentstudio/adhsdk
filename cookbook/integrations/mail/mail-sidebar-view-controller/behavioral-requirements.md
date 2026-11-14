@@ -15,7 +15,7 @@
 - **mailbox-row-indent**: A mailbox row MUST indent its content from the leading edge by 14 points times the mailbox's nesting depth.
 - **mailbox-row-symbol**: A mailbox row MUST show a symbol tinted with the control accent color, chosen by label id: `INBOX` is `tray`, `STARRED` is `star`, `IMPORTANT` is `exclamationmark.circle`, `SENT` is `paperplane`, `DRAFT` is `doc`, no label id (All Mail) is `tray.full`, `SPAM` is `xmark.bin`, `TRASH` is `trash`, and any other label is `tag`. When the system symbol cannot be created, the row falls back to an empty image.
 - **mailbox-row-unread-count**: A mailbox row MUST show the unread count, in the small system font and the secondary label color at the trailing end, only when the count is present and greater than zero.
-- **unread-count-plain-integer**: The unread count MUST be drawn as the plain decimal integer string, with no number formatter and no locale grouping.
+- **unread-count-localized**: The unread count SHOULD be drawn with a locale-aware number formatter. The source draws the plain decimal integer string with no formatter and no locale grouping; that is a known deviation, reported as failed under locale-aware formatting in Compliance.
 - **mailbox-row-title-yields**: A mailbox row's title MUST give up width before the symbol and the count do.
 - **only-mailboxes-selectable**: The sidebar MUST allow selection of mailbox rows only and MUST NOT allow selection of an account group row.
 - **selection-to-model**: When the user selects a mailbox row, the sidebar MUST ask the model to select the mailbox with that row's account id and label id.

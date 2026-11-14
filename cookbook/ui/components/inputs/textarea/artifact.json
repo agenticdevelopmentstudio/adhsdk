@@ -4,11 +4,11 @@
     "id": "1e323e69-44d2-4a15-a11e-22a68e8e6a8c",
     "title": "Textarea",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -22,12 +22,15 @@
       "text-entry"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "0f5b7167-b375-4f44-977b-566f720a453d",
+      "ea565474-df7a-42bd-9613-5dd0cd861911"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "36bd86202aebcc96",
+  "synced": "b36eed1adcd67cf4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

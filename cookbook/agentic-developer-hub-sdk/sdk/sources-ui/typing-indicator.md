@@ -2,11 +2,11 @@
 id: 7d2b41f0-63aa-47d1-94f8-19a06caedc6a
 title: "Typing Indicator"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -51,7 +51,7 @@ The typing indicator displays an active typing or thinking status during persona
 
 - **animate-glyph**: The component MUST animate a rotating glyph character on the `frameMs` interval (default 260ms). The glyph cycles through the provided frame array in order.
 
-- **support-phase-machine**: The component MUST drive phase transitions (idle, thinking, utterance, done) using a shared phase machine that tracks when a turn begins and ends, manages word bag state, and calculates elapsed time.
+- **support-phase-machine**: The component MUST drive phase transitions (idle, thinking, utterance, done) so that the phase tracks when a turn begins and ends, the word bag state follows the phase, and elapsed time is calculated. The phase logic MAY live in a shared type (macOS/iOS use `ThinkingPhase.Machine`) or inline in the component (web implements it inside `ThinkingStatus`).
 
 - **show-active-line-while-typing**: When the phase is "thinking" (during active response generation), the component MUST display the current glyph followed by a space and the current status word with an ellipsis (e.g., "⠙ thinking…"). The text MUST use the `.personaName` color by default.
 
@@ -59,7 +59,7 @@ The typing indicator displays an active typing or thinking status during persona
 
 - **show-settled-line-when-done**: When the phase is "done" (the active turn has ended) and no utterance is currently showing, the component MUST display the done glyph followed by a space, the past-tense form of the last status word, and elapsed seconds in the format "[glyph] [past word] for [N]s". This line MUST use the `.thinkingDoneText` color and MUST NOT be tinted by the `colorful` or `tint` configuration options. On web, if an utterance is showing when the turn settles, **show-utterance-when-provided** wins: the settled line MUST NOT appear until the caller clears the utterance. On macOS/iOS, the shared phase machine settles `.utterance` straight into `.done` on the turn ending, so the settled line replaces the utterance immediately and the caller's later call to clear the utterance is a no-op; see the **Turn transitions during utterance** edge case.
 
-- **show-idle-phrase-when-configured**: When an idle phrase is configured and the phase is "idle" (before the first turn), the component MUST display the idle phrase with the done glyph and an ellipsis using `.thinkingIdleText` color.
+- **show-idle-phrase-when-configured**: On web and macOS (iOS does not support idle phrases; see Configuration), when an idle phrase is configured and the phase is "idle" (before the first turn), the component MUST display the idle phrase with the done glyph and an ellipsis using `.thinkingIdleText` color.
 
 - **not-show-idle-phrase-when-not-configured**: When no idle phrase is configured, the component MUST render no visual indicator during the idle phase.
 
@@ -73,13 +73,13 @@ The typing indicator displays an active typing or thinking status during persona
 
 - **support-word-interval-configuration**: The component MUST accept a word interval duration in milliseconds (default 1800ms) controlling how often the status word rotates.
 
-- **support-colorful-mode**: When `colorful` is enabled, the component MUST flash vivid random non-green hues while thinking or uttering. A non-green hue is one that skips the hue band approximately 75°–165° (greens). The color MUST be generated at HSL 85% saturation and 62% lightness. The color MUST NOT be applied to the settled line. On web, the color MUST change on a 1-second cycle during active phases. On macOS (the only other platform where `colorful` is supported; see Configuration), the color is drawn once when a fresh think begins and once per `say()` call, then held for the rest of that phase — it does not recycle every second.
+- **support-colorful-mode**: On web and macOS (iOS does not support `colorful`; see Configuration), when `colorful` is enabled, the component MUST flash vivid random non-green hues while thinking or uttering. A non-green hue is one that skips the hue band approximately 75°–165° (greens). The color MUST be generated at HSL 85% saturation and 62% lightness. The color MUST NOT be applied to the settled line. On web, the color MUST change on a 1-second cycle during active phases. On macOS (the only other platform where `colorful` is supported; see Configuration), the color is drawn once when a fresh think begins and once per `say()` call, then held for the rest of that phase — it does not recycle every second.
 
-- **support-tint-configuration**: The component MUST accept an optional tint specification that colors the glyph, words, or both while thinking or uttering. The tint MUST NOT be applied to the settled line when done.
+- **support-tint-configuration**: On web and macOS (iOS does not support tint; see Configuration), the component MUST accept an optional tint specification that colors the glyph, words, or both while thinking or uttering. The tint MUST NOT be applied to the settled line when done.
 
 - **support-utterance-clear**: The component MUST provide a mechanism for the caller to clear a transient utterance, causing the indicator to resume showing phase-driven content.
 
-- **announce-status-changes**: The component MUST post accessibility announcements when the phase changes (entering thinking, settling to done) or when a fresh utterance is set. Announcements MUST NOT occur on every frame tick or on every status-word rotation — only on phase transitions and utterance changes.
+- **announce-status-changes**: The component MUST post accessibility announcements when the phase changes (entering thinking, settling to done) or when a fresh utterance is set, at the priority given in the Accessibility section. Announcements MUST NOT occur on every frame tick or on every status-word rotation — only on phase transitions and utterance changes.
 
 - **respond-to-theme-changes**: The component MUST listen for theme/palette changes and repaint immediately to reflect new semantic colors without requiring component restart.
 
@@ -87,8 +87,15 @@ The typing indicator displays an active typing or thinking status during persona
 
 - **handle-empty-frame-array**: If the frame array is empty (malformed configuration), the component MUST render an empty string for the glyph and not crash.
 
-- **handle-empty-word-bag**: If status words are empty, absent, or otherwise malformed (e.g., configured but the array is empty), the component MUST fall back to the three-dot animation path.
+- **handle-empty-word-bag**: If status words are absent (null or undefined) or an empty array, the component MUST fall back to the three-dot animation path.
 
+- **rebuild-bag-on-vocabulary-change**: When the status word vocabulary changes in content mid-turn, the component MUST rebuild the draw-without-replacement bag and reset the word index, and MUST keep the current phase. A new array instance with identical content MUST NOT rebuild the bag.
+
+- **fallback-colors-without-theme**: When the semantic palette cannot be resolved, the component MUST render with safe fallback colors (system text colors) and MUST NOT crash.
+
+- **suppress-idle-phrase-without-words**: When an idle phrase is configured but no status words are configured, the component MUST NOT render the idle phrase; it renders the three-dot path instead.
+
+- **elapsed-seconds-minimum-one**: When a turn settles, the elapsed seconds MUST be `max(1, round((now - startTime) / 1000))`, so the settled line never reports less than 1 second.
 ## Appearance
 
 - **Dot pulse (fallback path)**:
@@ -135,7 +142,7 @@ The typing indicator displays an active typing or thinking status during persona
 
 - Role/trait: The component is a status indicator and does NOT require interactive controls.
 - Label requirements: The indicator's content (status words, elapsed time, idle phrase) MUST be accessible to assistive technologies via a live region or announcement mechanism.
-- Announce state changes: MUST announce via accessibility API when the phase changes or when a fresh utterance is provided. These announcements MUST be announced at medium or polite priority. Announcing every frame or every word rotation MUST NOT occur.
+- Announce state changes: MUST announce via accessibility API when the phase changes or when a fresh utterance is provided. These announcements MUST be announced at polite priority: on web, `aria-live="polite"`; on macOS, `NSAccessibility.post` with the `.announcement` notification and `NSAccessibilityPriorityLevel.medium`; on iOS, `UIAccessibility.post(notification: .announcement, argument:)`. Announcing every frame or every word rotation MUST NOT occur.
 - Visual hidden text for screen readers: On web, an `aria-live` region holding the current phase announcement (separate from the visual DOM) MUST be present and updated only on phase transitions, not on every glyph frame.
 - Minimum tap target: Not applicable; this component is a status display, not an interactive control.
 - Color contrast: The status words and done text MUST meet WCAG AA contrast ratio requirements against their backgrounds when rendered in any theme, using the semantic palette's `.personaName`, `.thinkingDoneText`, and `.thinkingIdleText` colors. This guarantee does not extend to **support-colorful-mode**: its hue is drawn at a fixed 85% saturation / 62% lightness without checking the active theme's background, so a given draw is not guaranteed to meet AA contrast on every theme, particularly light ones.
@@ -147,7 +154,7 @@ The typing indicator displays an active typing or thinking status during persona
 | ti-001 | render-dots-pulse-when-inactive | isTyping=false, no words configured | Web: no visual indicator rendered. macOS/iOS: the three dots remain visible at 30% alpha; only the pulse timer is stopped |
 | ti-002 | render-dots-pulse-when-active | isTyping=true, no words configured | Three dots animating, cycling through opacity 0.3 → 1.0 on 0.35s cycle |
 | ti-003 | show-active-line-while-typing | isTyping=true, words=[{present: "thinking", past: "thought"}] | Glyph animates on 260ms cycle, word "thinking" displays, ellipsis appended |
-| ti-004 | cycle-through-status-words | words=[{present: "a", past: "a"}, {present: "b", past: "b"}], labelMs=100 | First render shows word "a"; after 100ms word "b" appears; after 200ms word "a" appears again (no duplicates in between) |
+| ti-004 | cycle-through-status-words | words=[{present: "a", past: "a"}, {present: "b", past: "b"}], labelMs=100 | The first render shows the first configured word. Over each full pass of the bag (two draws) both "a" and "b" appear exactly once; no word repeats within a pass. The order within a pass is random, so assert on the set per pass rather than a fixed sequence |
 | ti-005 | show-settled-line-when-done | Turn begins and ends, words=[{present: "thinking", past: "thought"}], elapsed=8s | Final render shows "✱ thought for 8s" in `.thinkingDoneText` color, no animation |
 | ti-006 | show-idle-phrase-when-configured | idlePhrase="waiting", phase before first turn | Idle phrase renders as "✱ waiting…" in `.thinkingIdleText` color |
 | ti-007 | reset-idle-on-first-turn | idlePhrase configured, first isTyping→true transition | Idle phrase disappears and thinking state displays |
@@ -164,15 +171,16 @@ The typing indicator displays an active typing or thinking status during persona
 | ti-018 | support-tint-configuration | words configured, tint={color: "#ff0000", applies: "words"}, phase=thinking | Word text renders in the tint color; glyph stays in the default `.personaName` color; once done, the settled line ignores the tint |
 | ti-019 | support-frame-interval-configuration | frameMs=100 (web) / frameInterval=.milliseconds(100) (Apple), phase=thinking | Glyph advances to the next frame every 100ms rather than the 260ms default |
 | ti-020 | support-word-interval-configuration | labelMs=500 (web) / wordInterval=.milliseconds(500) (Apple), words=[{present: "a", past: "a"}, {present: "b", past: "b"}] | Status word rotates every 500ms rather than the 1800ms default |
-| ti-021 | Rapid configuration changes (edge case) | Vocabulary content unchanged but a new array instance is passed mid-turn (same words, new object identity) | The draw-without-replacement bag is NOT rebuilt and the word index is not reset; the current draw order continues uninterrupted |
-| ti-022 | Theme palette unavailable (edge case) | Semantic palette cannot be resolved at render time | Component renders using safe fallback (system text) colors and does not crash |
-| ti-023 | Idle phrase with no words configured (edge case) | idlePhrase="waiting" configured, words=[] (no vocabulary) | Idle phrase does NOT render; component shows the three-dot fallback path instead |
-
+| ti-021 | rebuild-bag-on-vocabulary-change | Vocabulary content unchanged but a new array instance is passed mid-turn (same words, new object identity) | The draw-without-replacement bag is NOT rebuilt and the word index is not reset; the current draw order continues uninterrupted |
+| ti-022 | fallback-colors-without-theme | Semantic palette cannot be resolved at render time | Component renders using safe fallback (system text) colors and does not crash |
+| ti-023 | suppress-idle-phrase-without-words | idlePhrase="waiting" configured, words=[] (no vocabulary) | Idle phrase does NOT render; component shows the three-dot fallback path instead |
+| ti-024 | rebuild-bag-on-vocabulary-change | Mid-turn, the vocabulary is swapped for different words (e.g. [{present: "a", past: "a"}] becomes [{present: "c", past: "c"}]) | The bag is rebuilt from the new words and the word index resets; the phase stays `thinking` and the clock is not restarted |
+| ti-025 | elapsed-seconds-minimum-one | Turn begins and ends 300ms later | The settled line reports "for 1s" |
 ## Edge Cases
 
 - **Null or empty status words**: See **handle-empty-word-bag**. This fallback requires no phase machine to be running.
 
-- **Rapid configuration changes**: If the status word vocabulary is swapped (e.g., persona changes mid-turn), the component MUST rebuild the draw-without-replacement bag immediately and reset the word index. The phase MUST remain unchanged if the active status does not change. Keying on the content of the words array (not its object identity) MUST prevent unnecessary bag rebuilds when the vocabulary is semantically identical but newly created.
+- **Rapid configuration changes**: See **rebuild-bag-on-vocabulary-change**. If the status word vocabulary is swapped (e.g., persona changes mid-turn), the component MUST rebuild the draw-without-replacement bag immediately and reset the word index. The phase MUST remain unchanged if the active status does not change. Keying on the content of the words array (not its object identity) MUST prevent unnecessary bag rebuilds when the vocabulary is semantically identical but newly created.
 
 - **Concurrent phase machine operations**: The component's phase machine is actor-isolated (Swift) or main-thread-only (UIKit/AppKit/web). Concurrent writes from multiple threads/tasks are not applicable; all operations on the phase machine MUST serialize through the UI thread.
 
@@ -184,11 +192,11 @@ The typing indicator displays an active typing or thinking status during persona
 
 - **Empty frame array**: See **handle-empty-frame-array**. The word text (if any) continues to display normally.
 
-- **Idle phrase with no words configured**: If idlePhrase is set but no words are configured, the idle phrase MUST NOT render. The three-dot fallback path does not support idle phrases.
+- **Idle phrase with no words configured**: See **suppress-idle-phrase-without-words**. If idlePhrase is set but no words are configured, the idle phrase MUST NOT render. The three-dot fallback path does not support idle phrases.
 
-- **Theme palette unavailable**: If the semantic palette cannot be resolved, the component MUST use safe fallback colors (system text colors). The component MUST NOT crash due to missing theme.
+- **Theme palette unavailable**: See **fallback-colors-without-theme**. If the semantic palette cannot be resolved, the component MUST use safe fallback colors (system text colors). The component MUST NOT crash due to missing theme.
 
-- **Elapsed time calculation at edge**: When the turn settles, elapsed time MUST be calculated as `max(1, round((now - startTime) / 1000))`, ensuring the minimum reported time is 1 second and the result is rounded to the nearest whole second.
+- **Elapsed time calculation at edge**: See **elapsed-seconds-minimum-one**. When the turn settles, elapsed time MUST be calculated as `max(1, round((now - startTime) / 1000))`, ensuring the minimum reported time is 1 second and the result is rounded to the nearest whole second.
 
 ## Configuration
 
@@ -201,7 +209,7 @@ The typing indicator displays an active typing or thinking status during persona
 | Frame interval | `frameMs?: number` (default `260`) | `frameInterval: Duration` (default `.milliseconds(260)`) | `frameInterval: Duration` (default `.milliseconds(260)`) | Interval between glyph animation frames. |
 | Word interval | `labelMs?: number` (default `1800`) | `wordInterval: Duration` (default `.milliseconds(1800)`) | `wordInterval: Duration` (default `.milliseconds(1800)`) | Interval between status word rotations. |
 | Colorful mode | `colorful?: boolean` (default `false`) | `colorful: Bool` (default `false`) | Not supported | When true, flash random non-green hues while thinking or uttering. |
-| Tint | `tint?: StatusTintSpec` (default `undefined`) | `tint: ThinkingTint?` (default `nil`) | Not supported | Optional color and apply scope (icons/words/both) for the active line. |
+| Tint | `tint?: StatusTintSpec` (`{color: string, applies: 'words' | 'icons' | 'both'}`) (default `undefined`) | `tint: ThinkingTint?` (`color: RGBAColor`, `applies: .words | .icons | .both`) (default `nil`) | Not supported | Optional color and apply scope for the active line. The tint is a value with two fields: `color` (web: a CSS color string; macOS: `RGBAColor`) and `applies` (one of `words`, `icons`, `both`). |
 | Idle phrase | `idlePhrase?: string` (default `undefined`) | `idlePhrase: String?` (default `nil`) | Not supported | Text to display before the first turn begins (settles to grey). Yields on first turn. |
 | Utterance | `utterance?: string \| null` (default `undefined`) | `say(_ utterance: String)` / `clearUtterance()` methods | `say(_ utterance: String)` / `clearUtterance()` methods | Transient utterance text that overrides phase content, including the settled line. On web it persists until the caller clears it. On macOS/iOS it is dropped early by the shared phase machine on a turn transition or a fresh status; see **Turn transitions during utterance**. |
 
@@ -223,11 +231,10 @@ These three strings are literals in `TypingIndicator.tsx`, `ThinkingIndicatorVie
 
 ## Accessibility Options
 
-Not applicable: The component does not respond to platform accessibility display options (reduce motion, increase contrast, differentiate without color). It renders status text in semantic palette colors and announces phase changes via live regions/announcements, conforming to WCAG guidelines without option-specific behavior.
-
+Not applicable: The component does not respond to platform accessibility display options (reduce motion, increase contrast, differentiate without color). It has no reduced-motion handling: the dot pulse, the glyph animation and web's `colorful` hue cycle all run regardless of the reduce-motion setting (see the failed `reduced-motion` check in Compliance). It renders status text in semantic palette colors and announces phase changes via live regions/announcements.
 ## Feature Flags
 
-Not applicable: The component is not gated by feature flags in the sources provided. The two rendering paths (three-dot vs. phase-driven) are determined solely by the presence or absence of configured status words.
+Not applicable: The component is not gated by feature flags by any feature flag. The two rendering paths (three-dot vs. phase-driven) are determined solely by the presence or absence of configured status words.
 
 ## Analytics
 
@@ -243,23 +250,23 @@ Not applicable: The component does not emit log messages. Platform-specific logg
 
 ## Platform Notes
 
-- **Web (React)**: The source is `TypingIndicator.tsx` in `packages/web/packages/chat/src/components/`, which also defines the internal `ThinkingStatus` sub-component in the same file. The component accepts `TypingIndicatorProps`, returns early from the main `TypingIndicator` function if `labels` is empty/falsy (rendering classic three-dot dots), otherwise mounts `ThinkingStatus`, which drives phases, word rotation, colorful hue cycling, and utterance handling. Use the exported `TypingIndicator` component directly; `ThinkingStatus` and `StatusWordPair`'s internal helpers are not exported. Styling is via CSS classes (`.pc-thinking`, `.pc-thinking-glyph`, `.pc-thinking-label`, `.pc-thinking-ellipsis`, `.pc-thinking--done`, `.pc-thinking-for`). Accessibility is via an `aria-live="polite"` region (`.pc-status-announce`) that holds phase announcements. The component uses React hooks (`useState`, `useEffect`, `useMemo`, `useRef`) and a `ShuffleBag` utility for draw-without-replacement word selection.
+- **React/Web**: The source is `TypingIndicator.tsx` in `packages/web/packages/chat/src/components/`, which also defines the internal `ThinkingStatus` sub-component in the same file. The component accepts `TypingIndicatorProps`, returns early from the main `TypingIndicator` function if `labels` is empty/falsy (rendering classic three-dot dots), otherwise mounts `ThinkingStatus`, which drives phases, word rotation, colorful hue cycling, and utterance handling. Use the exported `TypingIndicator` component directly; `ThinkingStatus` and `StatusWordPair`'s internal helpers are not exported. Styling is via CSS classes (`.pc-thinking`, `.pc-thinking-glyph`, `.pc-thinking-label`, `.pc-thinking-ellipsis`, `.pc-thinking--done`, `.pc-thinking-for`). Accessibility is via an `aria-live="polite"` region (`.pc-status-announce`) that holds phase announcements. The component uses React hooks (`useState`, `useEffect`, `useMemo`, `useRef`) and a `ShuffleBag` utility for draw-without-replacement word selection.
 
-- **SwiftUI**: Not implemented in source; the behavioral requirements above apply to any future implementation. A SwiftUI wrapper around the macOS or iOS UIKit/AppKit views would satisfy them directly. A native SwiftUI implementation would instead need to mirror them itself, using a `TimelineView(.periodic(from:by:))` schedule or a `Timer.publish(every:on:in:).autoconnect()` pipeline for the glyph/dot animation, `@State` for phase tracking, and `AccessibilityNotification.Announcement(_:).post()` for phase-change announcements.
+- **SwiftUI**: No implementation exists; the behavioral requirements above apply to a new implementation. A SwiftUI wrapper around the macOS or iOS UIKit/AppKit views would satisfy them directly. A native SwiftUI implementation would instead need to mirror them itself, using a `TimelineView(.periodic(from:by:))` schedule or a `Timer.publish(every:on:in:).autoconnect()` pipeline for the glyph/dot animation, `@State` for phase tracking, and `AccessibilityNotification.Announcement(_:).post()` for phase-change announcements.
 
-- **Compose (Android/Kotlin)**: Not implemented in source; the behavioral requirements above apply to any future implementation. A Compose implementation would use `LaunchedEffect` for animation timers, `remember`/`mutableStateOf` for phase state and word bag, and `Modifier.semantics { liveRegion = LiveRegionMode.Polite }` on the status text to post accessibility announcements only on phase changes. The visual appearance would mirror iOS: dots for the fallback path, glyph + word text for the phase-driven path.
+- **Compose (Android/Kotlin)**: No implementation exists; the behavioral requirements above apply to a new implementation. A Compose implementation would use `LaunchedEffect` for animation timers, `remember`/`mutableStateOf` for phase state and word bag, and `Modifier.semantics { liveRegion = LiveRegionMode.Polite }` on the status text to post accessibility announcements only on phase changes. The visual appearance would mirror iOS: dots for the fallback path, glyph + word text for the phase-driven path.
 
 - **AppKit / UIKit (macOS/iOS)**: The sources are `ThinkingIndicatorView.swift` (macOS/AppKit) and `MobileThinkingIndicatorView.swift` (iOS/UIKit). Both inherit from `NSView`/`UIView`, conform to `Themeable`, and share the same phase machine (`ThinkingPhase.Machine`), but not the same configuration surface: `MobileThinkingIndicatorConfiguration` (iOS) intentionally omits `colorful`, `tint`, and `idlePhrase` — see Configuration above. Initialization is via `init()` or `init(frame:)`. Configuration is installed via `configure(_:)` method; status updates via `update(status:)` method (accepts `ChatStatus?`); utterances via `say(_:)` and `clearUtterance()` methods. Animation uses `Timer` scheduled on `MainActor` for both dot pulse (0.35s cycle, `UIView.animate`/`NSAnimationContext` for opacity transitions) and phase-driven glyph ticking (260ms default). Theme changes via `Themeable` protocol and `ThemePaletteObserver`. Accessibility via `UIAccessibility.post(notification:argument:)` (iOS) or `NSAccessibility.post(element:notification:userInfo:)` (macOS). The macOS version maintains a separate glyph box (`.glyphLabel`) with a fixed-width constraint to prevent text layout shift as glyphs change.
 
-- **WinUI 3**: Not implemented in source; the behavioral requirements above apply to any future implementation. A WinUI 3 implementation would start from `Grid` or `StackPanel` for layout. The three-dot fallback could use three animated `Ellipse` shapes with `Storyboard` for opacity animation. The phase-driven path would use `TextBlock` for glyph and words, `DispatcherTimer` for frame/word cycling, and `VisualStateManager` or custom property animations for phase transitions. Semantic colors would map to XAML `ThemeResource` tokens (e.g., `TextFillColorSecondaryBrush`, `AccentTextFillColorPrimaryBrush`). Accessibility would use `AutomationProperties.Name` and `LiveSetting` on a live-region text block. The glyph box width calculation would use `TextBlock.ActualWidth` measurement of rendered frames.
+- **WinUI 3**: No implementation exists; the behavioral requirements above apply to a new implementation. A WinUI 3 implementation would start from `Grid` or `StackPanel` for layout. The three-dot fallback could use three animated `Ellipse` shapes with `Storyboard` for opacity animation. The phase-driven path would use `TextBlock` for glyph and words, `DispatcherTimer` for frame/word cycling, and `VisualStateManager` or custom property animations for phase transitions. Semantic colors would map to XAML `ThemeResource` tokens (e.g., `TextFillColorSecondaryBrush`, `AccentTextFillColorPrimaryBrush`). Accessibility would use `AutomationProperties.Name` and `LiveSetting` on a live-region text block. The glyph box width calculation would use `TextBlock.ActualWidth` measurement of rendered frames.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Chat/MobileThinkingIndicatorView.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ThinkingIndicatorView.swift` | unverified |
-| web | `packages/web/packages/chat/src/components/TypingIndicator.tsx` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Chat/MobileThinkingIndicatorView.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ThinkingIndicatorView.swift` | confirmed (1.1.2) |
+| web | `packages/web/packages/chat/src/components/TypingIndicator.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -295,6 +302,9 @@ Not applicable: The component does not emit log messages. Platform-specific logg
 **Rationale**: This provides necessary feedback without overwhelming screen readers with constant updates.
 **Approved**: pending
 
+**Decision**: On macOS/iOS the shared phase machine drops a showing utterance on a turn transition, while web keeps it until the caller clears it. The Apple behavior is recorded as a divergence from the web requirements, not as the target.
+**Rationale**: The Apple `ThinkingPhase.Machine` settles `.utterance` into `.done` on a `nil` status and clears `phaseBeforeUtterance`, so a later `clearUtterance()` is a no-op. Treating this as intended behavior would make the requirements untestable on web; treating it as a bug to fix is a decision for the owner. Until then Apple does not conform to `show-utterance-when-provided`, and the same applies to the frozen-dots behavior in `render-dots-pulse-when-inactive`.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -312,8 +322,17 @@ Not applicable: The component does not emit log messages. Platform-specific logg
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-These rest on: the `aria-live="polite"` region in `TypingIndicator.tsx`, updated only on phase/utterance changes (semantic-markup: passed); the absence of any reduced-motion check around the dot-pulse timers and the phase-driven glyph timer in all three sources, and around web's colorful hue cycle (reduced-motion: failed); the hardcoded `"…"`, `"for"`, and `"s"` strings and the fixed `"for {n}s"` elapsed-time template in `TypingIndicator.tsx`, `ThinkingIndicatorView.swift`, and `MobileThinkingIndicatorView.swift` (string-externalization, no-hardcoded-strings, locale-aware-formatting: failed); the tail-truncating text layout on both web and AppKit/UIKit, which tolerates overflow without crashing but is not verified against a 200% expansion target (text-expansion-tolerance: partial); the semantic-palette caption font and the randomly generated `colorful` hue, neither of which is checked against Dynamic Type or the active theme's contrast at render time (dynamic-type-support, contrast-ratio: partial); the fixed glyph-then-word layout order, which none of the three sources exercises or adapts for RTL locales (rtl-layout-support: partial); and Swift's `String`/`NSAttributedString` plus JavaScript's native Unicode string handling, both full-Unicode-capable (unicode-support: passed); the native views delegate the phase state machine to a shared `ThinkingPhase.Machine` and word selection to `ShuffleBag`, but `TypingIndicator.tsx` implements the entire phase state machine — timers, word-bag draws, elapsed-time calculation — inline inside the `ThinkingStatus` component itself (separation-of-concerns: partial), while `TypingIndicator.test.tsx`, `ThinkingIndicatorViewTests.swift`, and `MobileThinkingIndicatorViewTests.swift` all meaningfully exercise this component's behavior (unit-test-coverage: passed).
+Rationale, one line per check:
 
+- semantic-markup (passed): the `aria-live="polite"` region in `TypingIndicator.tsx` is updated only on phase and utterance changes.
+- reduced-motion (failed): no reduced-motion check wraps the dot-pulse timers, the phase-driven glyph timer, or web's colorful hue cycle, in any of the three sources.
+- string-externalization, no-hardcoded-strings, locale-aware-formatting (failed): the `"…"`, `"for"` and `"s"` strings and the fixed `"for {n}s"` elapsed-time template are literals in `TypingIndicator.tsx`, `ThinkingIndicatorView.swift` and `MobileThinkingIndicatorView.swift`.
+- text-expansion-tolerance (partial): the tail-truncating layout on web and AppKit/UIKit tolerates overflow without crashing but is not verified against a 200% expansion target.
+- dynamic-type-support, contrast-ratio (partial): the semantic-palette caption font and the random `colorful` hue are not checked against Dynamic Type or the active theme's contrast at render time.
+- rtl-layout-support (partial): the glyph-then-word layout order is fixed and none of the three sources adapts it for RTL locales.
+- unicode-support (passed): Swift `String`/`NSAttributedString` and JavaScript strings are full-Unicode-capable.
+- separation-of-concerns (partial): the native views delegate the phase state machine to `ThinkingPhase.Machine` and word selection to `ShuffleBag`, but `TypingIndicator.tsx` implements timers, word-bag draws and the elapsed-time calculation inline inside `ThinkingStatus`.
+- unit-test-coverage (passed): `TypingIndicator.test.tsx`, `ThinkingIndicatorViewTests.swift` and `MobileThinkingIndicatorViewTests.swift` exercise this component's behavior.
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -321,3 +340,4 @@ These rest on: the `aria-live="polite"` region in `TypingIndicator.tsx`, updated
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; resolved the announce-on-word-rotation contradiction and the utterance-vs-settled-line conflict; deduplicated the empty-word-bag and empty-frame-array restatements; replaced the "Not applicable" Compliance and Localization claims with grounded content; documented colorful mode's contrast limitation; corrected the web source path and non-existent SwiftUI/Compose/WinUI 3 API names in Platform Notes; reformatted Design Decisions to Decision/Rationale/Approved; split the Configuration table by platform; added `related` and `references` entries; added test vectors for utterance-over-done, tint, frame/word intervals, word-bag rebuild suppression, theme-palette fallback, and idle-phrase-without-words. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Scoped utterance-survives-turn-end MUSTs and colorful 1s-cycle MUST to web; documented actual macOS/iOS divergence (utterance drop, single-draw hue, dots never hidden) in reqs/states/vectors (ti-001/ti-010/ti-017). Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Scoped colorful, tint and idle-phrase requirements to web and macOS, promoted four edge cases to named requirements with vectors ti-024 and ti-025, defined the tint shape, named per-platform announcement priority, recorded the Apple utterance divergence as a pending Design Decision, and corrected the accessibility-options, platform-note and compliance wording. |

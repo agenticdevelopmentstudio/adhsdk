@@ -1,6 +1,6 @@
 
 **Decision**: Render the root as a `<p>` element rather than `<span>` or `<div>`.
-**Rationale**: Trades semantic neutrality for a block-level default; consumers that need it inline override `display` via CSS rather than the component switching elements itself.
+**Rationale**: Trades semantic neutrality for a block-level default; the component has no element prop, so callers place it in block-level content and never inside a `<p>`, `<button>` or other phrasing-only element.
 **Approved**: pending
 
 **Decision**: `free` defaults to `undefined` (falsy) rather than requiring an explicit value.
@@ -12,7 +12,7 @@
 **Approved**: pending
 
 **Decision**: Keep the prop named `free` rather than a neutral name such as `accent` or `variant`.
-**Rationale**: The source docstring documents `free` as marking "the one status that gets the accented treatment" for a specific known use (a complimentary/free tier); the component was built for that one accent, not a general variant system, so the name says what it does.
+**Rationale**: The source docstring documents `free` as marking "the one status that gets the accented treatment". The name began as a free-tier marker, but the Hero status and the `Chips` provider list use the same prop to accent any one item, so `free` is now a legacy name for "accented". Renaming it would break callers for no behavioral gain; read `free` as "accented" everywhere, as the Overview does.
 **Approved**: pending
 
 **Decision**: Keep StatusPill separate from `badge` ([adhsdk.ingredient.ui.controls.badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f)) rather than folding it in as a variant.

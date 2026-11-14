@@ -12,7 +12,7 @@
 **Approved**: pending
 
 **Decision**: An error result is always reported as retryable, and only `resultText` or `subtype` becomes the message.
-**Rationale**: The source marks every failed partner turn retryable, since the next turn can run again; the `errors` array and `numTurns` on the stream message are not read. This is a lossy but surfaced projection.
+**Rationale**: The source marks every failed partner turn retryable, since the next turn can run again; the `errors` array and `numTurns` on the stream message are not read. This is a lossy but surfaced projection, and a port that also reads `errors` is a change to this decision, not a conformance failure.
 **Approved**: pending
 
 **Decision**: A tool event with no current assistant message id mints a fresh one rather than being dropped.
@@ -20,6 +20,14 @@
 **Approved**: pending
 
 **Decision**: `clear()` is not overridden and therefore does nothing; the session is cleared by creating a new instance.
-**Rationale**: The partner transcript is the owner's standing record, and the protocol supplies a no-op default.
+**Rationale**: The partner transcript is the owner's standing record, and the source inherits the protocol's default `clear()`, which does nothing.
 **Approved**: pending
 
+
+**Decision**: The tool-name registry is never pruned, and its growth is accepted.
+**Rationale**: The source adds one entry per distinct tool id and removes none, not even on `.result`. Entries are short strings and a partner session is long-lived but handles a bounded number of tool calls per day, so the growth is small; pruning on `.result` would risk dropping a name that a late tool result still needs.
+**Approved**: pending
+
+**Decision**: The fallback strings `tool` and `error` stay hardcoded English, and the failed `no-hardcoded-strings` check is accepted.
+**Rationale**: They are last-resort labels for a tool event with no name and an error result with no text, in a view for the owner of a developer tool; the source has no string table to localise them through.
+**Approved**: pending

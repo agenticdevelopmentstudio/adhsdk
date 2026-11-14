@@ -2,11 +2,11 @@
 id: e82102a9-a60c-4498-aba3-7cd5a33ade3c
 title: "Menu Button"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -30,7 +30,7 @@ approved-date: ""
 
 ## Overview
 
-A button that displays and toggles between a hamburger menu icon (three stacked bars) and a close icon (two bars crossed). The icon state is controlled by a prop; the bars are rendered as plain DOM elements rather than SVG, allowing them to animate and inherit the button's text color. The component requires an accessible name and extends standard HTML button attributes. See `MenuButton.tsx` for the component and `css/base.css` for the geometry and hit-area values behind the specifics below.
+A button that displays and toggles between a hamburger menu icon (three stacked bars) and a close icon (two bars crossed). The icon state is controlled by a prop; the bars are rendered as plain DOM elements rather than SVG, allowing them to animate and inherit the button's text color. The component requires an accessible name and extends standard HTML button attributes. See `packages/web/packages/chrome/src/MenuButton.tsx` for the component and `packages/web/packages/chrome/src/css/base.css` for the geometry and hit-area values behind the specifics below.
 
 ## Behavioral Requirements
 
@@ -43,16 +43,19 @@ A button that displays and toggles between a hamburger menu icon (three stacked 
 - **close-variant-class**: Component MUST apply the CSS class `menu-button--close` to the button element when `icon="close"`.
 - **custom-classname**: Component MUST allow custom CSS classes to be added via a `className` prop and combine them with the component's internal classes.
 - **plain-element-bars**: Component MUST render bars as plain `<span>` elements with class `mb-bar` rather than as an SVG, to enable animation and color inheritance.
-- **relative-positioning**: The button MUST be `position: relative` so the 44×44px `::after` hit-area pseudo-element centers on it correctly (`css/base.css`).
-
+- **relative-positioning**: The button MUST be `position: relative` so the 44×44px `::after` hit-area pseudo-element centers on it correctly (`packages/web/packages/chrome/src/css/base.css`).
+- **bar-geometry**: Each bar MUST be 16px wide (`--menu-bar-width`) and 1px thick (`--menu-bar-thickness`), with fully rounded ends (`border-radius: 999px`), stacked with a 4px gap (`--menu-bar-gap`) inside a 32×32px box (`--menu-size`). Thickness, gap and the resulting 5px pitch (thickness + gap) MUST all be whole-number CSS pixels, so every bar rounds to the same device-pixel thickness regardless of device-pixel ratio or the button's fractional position; the button's 1px top padding keeps the 11px stack on whole pixels inside the even-height box (`packages/web/packages/chrome/src/css/base.css`).
+- **bar-current-color**: Each bar MUST use `background: currentColor`, so a consumer themes the icon by setting `color` on the button.
+- **bar-transition**: Each bar MUST apply `transition: 0.25s` (all properties), which animates the `rotate()` transform applied to the first and last bar when toggling to the close state; no `prefers-reduced-motion` override exists (see the `reduced-motion` check in [Compliance](#compliance)).
+- **close-bars-overlaid**: In the close state, the two bars MUST share one grid cell (`grid-area: 1 / 1`) and be rotated +45deg (first) and -45deg (last), so the X survives any change to bar thickness or gap.
 ## Appearance
 
 - **Bar rendering**: Bars are plain HTML elements (`<span>`) with class `mb-bar`, not SVG.
 - **Bar quantity**: Three bars in menu state, two bars in close state.
-- **Bar dimensions**: Each bar MUST be 16px wide (`--menu-bar-width`) and 3px thick (`--menu-bar-thickness`), with fully rounded ends (`border-radius: 999px`). Bars MUST be spaced with a 3px gap (`--menu-bar-gap`), giving a 6px pitch (thickness + gap); thickness, gap, and pitch MUST all be whole-number CSS pixels so every bar rounds to the same device-pixel thickness regardless of device-pixel ratio or the button's fractional position (`css/base.css`). The icon occupies a 32×32px box (`--menu-size`).
-- **Bar colour**: Bars MUST use `background: currentColor`, taking the button's `color` so a consumer themes the icon by setting `color` on the button.
-- **Bar transition**: Bars MUST apply `transition: 0.25s` (all properties), which animates the `rotate()` transform applied to the first and last bar when toggling to the close state; see **reduced-motion** in Compliance below.
-- **Close icon derivation**: In close state, the close icon (X shape) is derived from the two bars via CSS rotation/transform; the component does not render separate markup for the X.
+- **Bar dimensions**: See **bar-geometry** in [Behavioral Requirements](#requirements/bar-geometry): 16px wide, 1px thick, 4px gap, 5px pitch, in a 32×32px box.
+- **Bar colour**: See [bar-current-color](#requirements/bar-current-color).
+- **Bar transition**: See [bar-transition](#requirements/bar-transition).
+- **Close icon derivation**: In close state, the close icon (X shape) is derived from the two bars via CSS rotation/transform; the component does not render separate markup for the X (see [close-bars-overlaid](#requirements/close-bars-overlaid)).
 - **Background**: No background specified in component; inherits from button styling context.
 - **Border**: No border specified in component; inherits from button styling context.
 - **Shadow**: No shadow specified in component; inherits from button styling context.
@@ -64,7 +67,7 @@ A button that displays and toggles between a hamburger menu icon (three stacked 
 | Default (menu) | Three stacked bars |
 | Close | Two bars crossed (via CSS transform) |
 | Disabled | Standard HTML button disabled styling (subject to CSS) |
-| Focused | Standard HTML button focus styling (subject to CSS) |
+| Focused | Browser default focus styling; `css/base.css` defines no `:focus-visible` rule, so the zero-border, no-background button shows only the UA outline (see the `focus-visible` note in Compliance) |
 | Pressed/Active | Standard HTML button active styling (subject to CSS) |
 
 ## Accessibility
@@ -75,7 +78,7 @@ A button that displays and toggles between a hamburger menu icon (three stacked 
 - **Keyboard navigation**: Button is fully keyboard accessible via standard `<button>` element behavior; may be activated via Space or Enter keys.
 - **Assistive technology**: Screen readers will announce the button's accessible name and role.
 - **Toggle state (consumer-managed)**: The component itself tracks no open/closed state. When used to toggle a menu, the composing screen SHOULD pass `aria-expanded` and `aria-controls` (referencing the menu it opens) through the button's pass-through props, and SHOULD update `label` to match the current state (e.g. "Open menu" / "Close menu").
-- **Minimum tap target**: The button's visible icon box is 32×32px (`--menu-size`), but the button exposes a 44×44px hit area via an absolutely positioned `::after` pseudo-element (`--menu-hit: 44px`), centred on the button because `.menu-button` is `position: relative` (`css/base.css`; see **relative-positioning**). This meets the 44×44pt minimum tap target guideline.
+- **Minimum tap target**: The button's visible icon box is 32×32px (`--menu-size`), but the button exposes a 44×44 CSS px hit area via an absolutely positioned `::after` pseudo-element (`--menu-hit: 44px`), centred on the button because `.menu-button` is `position: relative` (`packages/web/packages/chrome/src/css/base.css`; see [relative-positioning](#requirements/relative-positioning)). This meets the 44×44 CSS px target size used for the web; the Apple HIG's 44×44pt equivalent is covered in the platform notes.
 
 ## Conformance Test Vectors
 
@@ -93,17 +96,20 @@ A button that displays and toggles between a hamburger menu icon (three stacked 
 | menu-button-010 | menu-icon-default, close-icon-variant | Toggle `icon` prop from `'menu'` to `'close'` | Bar count changes from three to two; `menu-button--close` class is added |
 | menu-button-011 | plain-element-bars | Render with default props | Each `.mb-bar` element's tag name is `SPAN`; no `<svg>` element is present |
 | menu-button-012 | menu-icon-default | `icon="menu"` (explicit) | Three `<span class="mb-bar">` elements render, same as the default |
-| menu-button-013 | menu-icon-default, close-icon-variant | `icon="hamburger"` (value outside the type) | Two `<span class="mb-bar">` elements render, and `menu-button--close` is NOT applied — the third bar is gated on `icon === 'menu'` specifically (not `icon !== 'close'`), so a value that is neither `'menu'` nor `'close'` renders neither the full menu icon nor the close variant |
 | menu-button-014 | custom-classname | No `className` prop | Button's `class` attribute is exactly `menu-button` with no extra whitespace or empty tokens |
 | menu-button-015 | relative-positioning | Default render | `.menu-button` computed `position` is `relative`; the `::after` element's computed size is 44×44px |
 | menu-button-016 | accessible-label | `label` prop omitted (bypassing the type system) | No `aria-label` attribute is present on the button |
 | menu-button-017 | accessible-label | `label=""` | `aria-label=""` is present; the button has an empty accessible name |
 | menu-button-018 | custom-classname, close-variant-class | `icon="close" className="custom-class"` | Button's `class` attribute is `menu-button menu-button--close custom-class` |
-
+| menu-button-019 | bar-geometry | Default render, read `getComputedStyle` of each `.mb-bar` | `width` is `16px`, `height` is `1px`, `border-radius` resolves from `999px` |
+| menu-button-020 | bar-geometry | Default render, read `getComputedStyle` of `.menu-button` | `width` and `height` are `32px`, `row-gap` is `4px` |
+| menu-button-021 | bar-current-color | Set `color: rgb(255, 0, 0)` on the button | Each `.mb-bar` computed `background-color` is `rgb(255, 0, 0)` |
+| menu-button-022 | bar-transition | Default render, read `getComputedStyle` of a `.mb-bar` | `transition-duration` is `0.25s` |
+| menu-button-023 | close-bars-overlaid | `icon="close"`, read `getComputedStyle` of each `.mb-bar` | Both bars have `grid-area` `1 / 1`; the first has a rotate(45deg) transform and the last rotate(-45deg) |
 ## Edge Cases
 
 - **No label prop**: `label` is a required, non-optional `string` prop with no default, so omitting it is a TypeScript compile-time error; the component performs no runtime check. A caller outside TypeScript's reach that omits it renders a button with `aria-label={undefined}` — a button with no accessible name.
-- **Icon prop invalid value**: Component expects `icon` to be `'menu'` or `'close'`, but the type is not enforced at runtime. The third bar and the `menu-button--close` class are gated independently — the third bar on `icon === 'menu'`, the class on `icon === 'close'` — so a value that is neither (e.g., `icon="hamburger"`) renders neither the full three-bar menu icon nor the close variant: only two bars, uncrossed, with no `menu-button--close` class (see menu-button-013). This is a source bug (logged), not a documented fallback.
+- **Icon prop invalid value**: Component expects `icon` to be `'menu'` or `'close'`, but the type is not enforced at runtime. The third bar and the `menu-button--close` class are gated independently — the third bar on `icon === 'menu'`, the class on `icon === 'close'` — so a value that is neither (e.g., `icon="hamburger"`) renders neither the full three-bar menu icon nor the close variant: only two bars, uncrossed, with no `menu-button--close` class. This is an artifact of the two independent gates, not a documented fallback, so no conformance vector locks it in.
 - **Empty string label**: An empty `label=""` satisfies the type requirement but results in an inaccessible button with no meaningful name. The component accepts this but the caller SHOULD provide a meaningful label.
 - **Disabled state interaction**: When disabled, the button MUST NOT respond to clicks; this is standard HTML button behavior and does not depend on component logic.
 - **Multiple class combinations**: Component combines `menu-button`, the conditional `menu-button--close`, and any custom `className` prop. Classes are filtered and joined with spaces; empty strings are removed (see menu-button-014 and menu-button-018).
@@ -114,7 +120,7 @@ A button that displays and toggles between a hamburger menu icon (three stacked 
 |--------|------|---------|-------------|
 | `icon` | `'menu' \| 'close'` | `'menu'` | Controls which icon is displayed: `'menu'` for three bars or `'close'` for two bars |
 | `label` | `string` | (required) | Accessible name for the button; used as `aria-label` |
-| `className` | `string` | (optional) | Custom CSS class(es) to add to the button element |
+| `className` | `string` | `undefined` | Optional. Custom CSS class(es) to add to the button element |
 | `...rest` | `HTMLButtonElement` attributes | N/A | All standard button attributes (e.g., `disabled`, `onClick`, `data-*`) are passed through |
 
 ## Deep Linking
@@ -151,22 +157,22 @@ Not applicable: Component performs no logging.
 
 ## Platform Notes
 
-- **React/Web**: Implemented in React as a functional component (`MenuButton.tsx`). Bars are `<span>` elements with class `mb-bar`; the close icon is derived from the bars via CSS transform (rotation). Styling is external to the component and defined in `css/base.css`, including the `position: relative` and 44×44px `::after` hit area. The component accepts all standard `HTMLButtonElement` attributes via prop spread.
-- **SwiftUI**: Prefer the system glyphs first: `Image(systemName: "line.3.horizontal")` for the menu state and `Image(systemName: "xmark")` for the close state, both taking the button's color via `.foregroundStyle` (`.foregroundColor` is deprecated). Reserve a custom bar-based rendering — three `Capsule().frame(width: 16, height: 3)` shapes, two rotated for the close state — for cases that need the animated bar-to-X morph the source implements. Respect `@Environment(\.isEnabled)` for disabled state, and give the tap target a minimum 44×44pt frame independent of the icon's own size.
+- **React/Web**: Implemented in React as a functional component (`packages/web/packages/chrome/src/MenuButton.tsx`). Bars are `<span>` elements with class `mb-bar`; the close icon is derived from the bars via CSS transform (rotation). Styling is external to the component and defined in `packages/web/packages/chrome/src/css/base.css`, including the `position: relative` and 44×44px `::after` hit area. The component accepts all standard `HTMLButtonElement` attributes via prop spread.
+- **SwiftUI**: Prefer the system glyphs first: `Image(systemName: "line.3.horizontal")` for the menu state and `Image(systemName: "xmark")` for the close state, both taking the button's color via `.foregroundStyle` (`.foregroundColor` is deprecated). Reserve a custom bar-based rendering — three `Capsule().frame(width: 16, height: 1)` shapes, two rotated for the close state — for cases that need the animated bar-to-X morph the source implements. Respect `@Environment(\.isEnabled)` for disabled state, and give the tap target a minimum 44×44pt frame independent of the icon's own size.
 - **Compose**: Implement as `IconButton { Column { Box(Modifier.size(16.dp, 3.dp).background(LocalContentColor.current, CircleShape)) … } }`, applying `Modifier.graphicsLayer { rotationZ = ... }` to the first and last bar for the close state. Use `LocalContentColor` to inherit the button's color. Respect Compose's `enabled` state, and size the `IconButton`'s minimum touch target to 48dp.
-- **AppKit / UIKit**: Prefer the system glyphs first: `UIImage(systemName: "line.3.horizontal")` (UIKit) / `NSImage(systemSymbolName: "line.3.horizontal", accessibilityDescription:)` (AppKit) for menu, and `"xmark"` for close, tinted via `tintColor`. Reserve a custom view with three `UIView`/`NSView` bars and `CABasicAnimation` rotation for the animated morph. Handle `isEnabled` and `isHighlighted` states, accept the label for `accessibilityLabel`, and give the control a minimum 44×44pt hit area (e.g. by enlarging the tappable frame beyond the visible icon, as `css/base.css`'s `::after` does).
+- **AppKit / UIKit**: Prefer the system glyphs first: `UIImage(systemName: "line.3.horizontal")` (UIKit) / `NSImage(systemSymbolName: "line.3.horizontal", accessibilityDescription:)` (AppKit) for menu, and `"xmark"` for close, tinted via `tintColor`. Reserve a custom view with three `UIView`/`NSView` bars and `CABasicAnimation` rotation for the animated morph. Handle `isEnabled` and `isHighlighted` states, accept the label for `accessibilityLabel`, and give the control a minimum 44×44pt hit area (e.g. by enlarging the tappable frame beyond the visible icon, as `packages/web/packages/chrome/src/css/base.css`'s `::after` does).
 - **WinUI 3**: Prefer the system glyphs first: a `FontIcon` using the Segoe Fluent Icons `GlobalNavigationButton` glyph for the menu state and `Cancel` for the close state, with `Foreground` inheriting the button's text color. Reserve a custom `StackPanel` of `Rectangle` bars with `RotateTransform` for the animated morph. Set `AutomationProperties.Name` for accessibility, respect `IsEnabled`, and ensure the `Button`'s minimum interactive size meets the platform's 44×44 effective pixel guidance.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chrome/src/MenuButton.tsx` | unverified |
+| web | `packages/web/packages/chrome/src/MenuButton.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
 1. **Decision**: Render the bars as plain `<span>` elements rather than SVG.
-   **Rationale**: `<span>` elements enable pixel-perfect alignment, color inheritance from the button's text color, and simpler animation via CSS transforms. SVG would require additional coordinate transformation logic and would not automatically inherit the button's color.
+   **Rationale**: Plain DOM boxes let the bar geometry live in CSS custom properties (`--menu-bar-thickness`, `--menu-bar-gap`, `--menu-bar-width`) that a consumer can retune, and let the 0.25s transition and the rotation act on the same elements. Colour inheritance is not the differentiator, since SVG could also use `currentColor`. Unverified: the source does not record whether SVG was tried or measured.
    **Approved**: pending
 
 2. **Decision**: Derive the close icon from the two bars via CSS rotation rather than rendering separate markup for the X.
@@ -174,7 +180,7 @@ Not applicable: Component performs no logging.
    **Approved**: pending
 
 3. **Decision**: Render bars conditionally — three in menu state, two in close state — rather than always rendering three and hiding one with CSS.
-   **Rationale**: This is simpler than rendering three bars in both states and using CSS to hide one, and it matches the semantic difference between the two icons.
+   **Rationale**: No hidden DOM node is left behind: a CSS-hidden third bar would still occupy the grid and add a gap row unless `display: none` were also applied, and the close state's overlay of two bars in one grid cell relies on there being exactly two children.
    **Approved**: pending
 
 4. **Decision**: Keep all animation logic in CSS; the component renders static markup only.
@@ -185,6 +191,9 @@ Not applicable: Component performs no logging.
    **Rationale**: The button has no visible text, so an accessible name is necessary for the component to be usable by assistive technologies.
    **Approved**: pending
 
+6. **Decision**: Perform no runtime check on `label`; rely on the required TypeScript prop.
+   **Rationale**: The source renders `aria-label={label}` directly, so a caller outside the type system that omits or empties `label` gets a button with no accessible name and no warning. The recipe records this as the current behavior, not an endorsement.
+   **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -197,12 +206,14 @@ Not applicable: Component performs no logging.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-Statuses rest on `MenuButton.tsx` (the required `label` prop rendered as `aria-label` on a native `<button>`, with no custom ARIA roles needed) and `css/base.css` (`position: relative` plus the 44px `::after` hit area satisfy touch-target-size; the absence of any `prefers-reduced-motion` rule fails reduced-motion). `separation-of-concerns` passes: the component is a single-purpose presentational element (bars in, click-through button out) with no owned business logic or state beyond the `icon` prop it renders from. `unit-test-coverage` fails: no test file in the `chrome` package, or anywhere else in the repo, renders `MenuButton`.
+Statuses rest on `packages/web/packages/chrome/src/MenuButton.tsx` (the required `label` prop rendered as `aria-label` on a native `<button>`, with no custom ARIA roles needed) and `packages/web/packages/chrome/src/css/base.css` (`position: relative` plus the 44px `::after` hit area satisfy touch-target-size; the absence of any `prefers-reduced-motion` rule fails reduced-motion). `separation-of-concerns` passes: the component is a single-purpose presentational element (bars in, click-through button out) with no owned business logic or state beyond the `icon` prop it renders from. `unit-test-coverage` fails: no test file in the `chrome` package, or anywhere else in the repo, renders `MenuButton`.
 
+Focus visibility has no requirement and no vector: `packages/web/packages/chrome/src/css/base.css` defines no `:focus-visible` style, so the icon-only button relies on the browser's default outline, which a consumer's reset may remove. This is a gap, not a pass.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Corrected the bar geometry to match css/base.css (1px bars, 4px gap, 5px pitch), moved Appearance MUSTs into named requirements with five computed-style vectors, rewrote Design Decisions 1 and 3, recorded the no-runtime-label-check as Decision 6, dropped the vector that locked in the invalid-icon behavior, recorded the missing focus-visible style in Compliance, and switched to repo-relative paths and fragment links. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Invalid icon renders 2 uncrossed bars, no close class, not a menu-icon fallback (bug logged). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename must-* requirements to subject-only kebab-case and drop the redundant icon-toggle requirement, add a relative-positioning requirement and vector for the hit area, correct the Reduce Motion/Increase Contrast claims against css/base.css, reformat Design Decisions to Decision/Rationale/Approved, replace the Compliance section with a real table, fix vector 009 and add the missing conformance vectors, recommend native platform glyphs first in Platform Notes and rename Web to React/Web, resolve the no-label edge case contradiction, add the consumer-managed aria-expanded/aria-controls guidance, and add button to related |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Resolve review markers: bar dimensions and tap target sourced from css/base.css |

@@ -4,11 +4,11 @@
     "id": "c5703986-6d14-4341-8719-b89e44f2ab80",
     "title": "Label",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fca71cd569e9715c",
+  "synced": "516a66cbf6f80df1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

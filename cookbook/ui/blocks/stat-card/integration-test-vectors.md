@@ -10,7 +10,8 @@
 | T7 | forward-classname | `className="col-span-2"` | InfoPanel outer `<section>` carries `col-span-2` |
 | T8 | render-actions-after-link, place-link-in-actions | `link={{href:'https://g.example',label:'Grafana'}} actions={<span>healthy</span>}` | header actions slot holds the "Grafana ↗" link, then the status word |
 | T9 | spread-host-attributes | `data-testid="monitor-card" data-monitor="lewis" data-phase="ok"` | outer `<section>` carries all three attributes |
-| T10 | place-link-in-actions | `<StatCard title="Errors" stats={[{label:'open issues',value:'0'}]} />` (no `link`, no `actions`) | InfoPanel's `actions` prop is `undefined` — the header renders with no actions region at all, not merely an empty one (distinct from T3, which only checks for the missing anchor) |
+| T10 | omit-empty-actions-slot | `<StatCard title="Errors" stats={[{label:'open issues',value:'0'}]} />` (no `link`, no `actions`) | the header contains no actions container element at all, not merely an empty one (distinct from T3, which only checks for the missing anchor) |
 | T11 | render-children-after-rows, render-footnote-when-present | `<StatCard title="Errors" stats={[{label:'open issues',value:'0'}]} footnote="approximate"><div>✓ No errors reported</div></StatCard>` | within the one body stack, order is the "open issues"/"0" row, then "✓ No errors reported", then "approximate" as the last child |
 | T12 | render-actions-after-link, place-link-in-actions | `<StatCard title="Monitor" stats={[{label:'status',value:'ok'}]} actions={<span>healthy</span>} />` (no `link`) | header actions slot renders only `<span>healthy</span>`; no `ExternalLink`/anchor present |
-
+| T13 | render-footnote-when-present | `<StatCard title="Notes" footnote="approximate" />` (no `stats`, no children) | the body stack contains only the "approximate" footnote, as its last and only child |
+| T14 | footnote-guard-is-null-check | `<StatCard title="Notes" footnote="" />` | an empty footnote caption element is rendered in the body stack |

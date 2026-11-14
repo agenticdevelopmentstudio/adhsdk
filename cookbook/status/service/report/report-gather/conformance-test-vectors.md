@@ -1,5 +1,5 @@
 
-Vectors are derived from `report-gather.test.ts` in the status-server `test` directory, by test name, plus direct readings of the source where the tests are silent (vectors 007 and 019 to 025).
+Vectors are derived from `report-gather.test.ts` in the status-server `test` directory, by test name, plus direct readings of the source where the tests are silent. Vectors 007 and 019 to 027 have no test: they are read from the source and are untested.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -28,6 +28,8 @@ Vectors are derived from `report-gather.test.ts` in the status-server `test` dir
 | report-gather-023 | sources-deploy-log-missing, sources-deploy-log-tail, sources-deploy-log-error | `fetchDeploymentLog` returns null; returns a row with a null log; returns a log; throws `boom` | `{ error: 'deployment is not in the monitored feed' }`; `{ error: 'no build log for <platform> (or no token)' }`; the `logTail` of the log; `{ error: 'boom' }` |
 | report-gather-024 | sources-runtime-errors, sources-delegated | The `vercel-runtime` fact is configured and not ok with streak 3 at `sampledAtMs` 99 | `failing` is `{ streak: 3, atMs: 99 }`; with the fact ok or absent it is null; `monitorVersion` equals `config.gitCommitSha` |
 | report-gather-025 | deploys-log-no-monitor | Monitor read fails, `logs` true | No `deployLog` call; the deploys read is `{ ok: true, data: { live, logs: {} } }` |
+| report-gather-026 | params-error-type | `{ range: '1y', logs: 'yes', days: '0', wait: '99' }`, then `{ logs: 'yes', days: '0', wait: '99' }`, then `{ days: '0', wait: '99' }` | Each throws status 400; the messages are the range message, the logs message and the days message in turn, so the check order is range, logs, days, wait |
+| report-gather-027 | integer-forms, params-defaults, log-tail-empty, log-tail-count | `{ days: '+5' }`, `{ days: ' 5' }`, `{ days: '1e1' }` (each rejected); `{ days: '007' }` (accepted as 7); `{ range: null, days: null, wait: null, logs: null }` (all defaults); then `logTail('  \n \t ')` and `logTail('x  ')` | The first three throw status 400 with the days message; `days` is 7 for `'007'`; the null fields give `{ range: '24h', days: 7, wait: 20, logs: false }`; the whitespace-only log gives `{ tail: [], lines: 0 }` and `'x  '` gives `{ tail: ['x'], lines: 1 }` |
 
 The `whole-answer-deadline` bullet carries an open question and has no vector.
 

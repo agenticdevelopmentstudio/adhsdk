@@ -13,7 +13,7 @@
 
 **Warning throttling by id, not per-render**
 
-**Decision**: Missing help entries emit a warning once per unique `id` per session (not per render).
+**Decision**: Missing help entries emit a warning once per unique `id` for the lifetime of the page (not per render); the record is a module-level `Set` that a reload or hot module replacement resets.
 **Rationale**: The component may be rendered multiple times on the same page, and per-render warnings would produce console noise without additional value.
 **Approved**: pending
 
@@ -47,3 +47,15 @@
 **Rationale**: HelpEnabled is a layout/behavior wrapper, not a color-token owner; enforcing contrast for arbitrary backgrounds would require knowledge of the surrounding page that this component does not have.
 **Approved**: pending
 
+
+**Reduce Motion gap accepted for now**
+
+**Decision**: The badge and background transitions carry no `motion-reduce:` guard, so they run even when the system's Reduce Motion preference is on.
+**Rationale**: The transitions are short opacity and color changes with no movement, and adding a `motion-reduce:` variant is a separate change that has not been made yet; the `reduced-motion` Compliance check records the gap as failed.
+**Approved**: pending
+
+**Inline fallback resolution and warn-once bookkeeping stay in the component**
+
+**Decision**: The `stored ?? fallback` resolution and the warn-once `Set` live inline in the component body rather than in an extracted hook.
+**Rationale**: The logic is a few lines used by one component, so extraction would add a module without a second caller; the `separation-of-concerns` Compliance check is partial for this reason, and a hook can be extracted if another consumer needs the same resolution.
+**Approved**: pending

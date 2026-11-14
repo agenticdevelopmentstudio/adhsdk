@@ -1,5 +1,5 @@
 
-- **Empty lists**: a daemon with no write or no read lanes returns an empty array; the shape MUST carry it as an empty array, not omit the key.
+- **Empty lists**: a daemon with no write or no read lanes returns an empty array; the shape carries it as an empty array, not an omitted key (see **empty-arrays-encoded**).
 - **Missing key**: a payload without `write` or `read` fails to decode, because neither is optional.
 - **Boundary values**: counters and latencies are unbounded here; zero, negative and very large values all construct, and the source states no range.
 - **Unit mixups**: the field names carry `Ms`; a client MUST read the latencies as milliseconds and not scale them.

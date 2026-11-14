@@ -1,0 +1,5 @@
+
+- **Semantic structure**: The `dl`/`dt`/`dd` markup encodes a description-list relationship: each entry's `dt` holds the statistic's value (the `term`) and its `dd` holds the caption that explains it (the `detail`). Screen-reader support for the `dl`/`dt`/`dd` pattern is inconsistent across assistive technology, so this markup is a progressive enhancement rather than a guarantee that the relationship will be announced.
+- **Label requirement**: No separate `aria-label` is added by the component. Each entry pairs the value (`dt`) with its caption (`dd`) in a single wrapper `div`, which conveys the relationship visually regardless of how a given screen reader handles `dl`/`dt`/`dd`.
+- **Minimum tap/click target**: Inline text links within `term` or `detail` are exempt from touch-target minimums. If interactive elements (buttons, links) are added to the term or detail content by the caller, those elements SHOULD each have a minimum touch target of 44×44pt (per [adc.guideline.implementing.ui.touch-click-targets](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/73b254b4-c611-434a-a9f4-67c8a7155576)).
+

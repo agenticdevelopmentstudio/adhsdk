@@ -7,5 +7,5 @@ Three things make it safe to call constantly:
 2. It gives each call a 5-second limit. A status line re-renders constantly, so a `git` that has not answered in time is dropped rather than waited on.
 3. It repairs `PATH`, because a status line launched from the GUI inherits a minimal path (`/usr/bin:/bin:/usr/sbin:/sbin`, no Homebrew).
 
-It offers two forms: `git(_:)`, which trims the output (the default, for any displayed value), and `rawGit(_:)`, which returns the bytes untouched for output where leading or trailing whitespace carries meaning (`git status --porcelain`). Any failure (a non-zero exit, a hang past the limit, a spawn error, output that is not UTF-8) collapses to the empty string. It runs the process through `CommandRunner.runToCompletion`, described by the sibling command-runner recipe listed in `related`.
+It offers two forms: `git(_:)`, which trims the output (the default, for any displayed value), and `rawGit(_:)`, which returns the bytes untouched for output where leading or trailing whitespace carries meaning (`git status --porcelain`). Any failure (a non-zero exit, a hang past the limit, a spawn error, output that is not UTF-8) collapses to the empty string. It runs the process through `CommandRunner.runToCompletion`, described by the [command-runner recipe](cookbook:705082e9-8fad-4c20-95a3-4cf843cc6b97).
 

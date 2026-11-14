@@ -2,7 +2,7 @@
 id: 488a7fef-19c2-4526-8882-3d0529dda3e3
 title: "Errors Dashboard Sections"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -20,11 +20,12 @@ tags:
   - dashboard
   - glitchtip
   - errors
-depends-on: []
+depends-on:
+  - 8648272e-2da3-46fc-b9e8-5148dacdbcff
+  - d4e7dd53-4771-425f-af0a-0186ba89c3ef
+  - 7984f592-a12d-49da-806c-ff39d9557998
 related:
   - a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f
-  - 8648272e-2da3-46fc-b9e8-5148dacdbcff
-  - 7984f592-a12d-49da-806c-ff39d9557998
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,7 +37,7 @@ approved-date: ""
 
 The GlitchTip half of the Errors topic: every unresolved issue, read as the board reads it. The module turns the raw GlitchTip issue list into `ErrorIssue` rows, marks each row `active` with the board's own rule (`errorCountsAsProblem`), summarises the list into the KPI figures of an `ErrorsIssuesSection`, and supplies a cached count of resolved issues.
 
-The module has one loader, `loadErrorIssues`, which the dashboard set hands to a section cache, and four pure or near-pure helpers: `isoMs`, `toErrorIssues`, `summarizeIssues` and `resolvedCounter`. It deliberately carries no events-per-day series, because GlitchTip's `stats_v2` answers 200 with nulls for every interval on this instance while issues are firing, which would draw a flat zero beside issues reporting hundreds of events.
+The module has one loader, `loadErrorIssues`, which the dashboard set hands to a section cache, and four helpers: the pure `isoMs`, `toErrorIssues` and `summarizeIssues`, and the stateful `resolvedCounter`, which holds a TTL cache and a single flight. It deliberately carries no events-per-day series, because GlitchTip's `stats_v2` answers 200 with nulls for every interval on this instance while issues are firing, which would draw a flat zero beside issues reporting hundreds of events.
 
 ## Behavioral Requirements
 
@@ -54,10 +55,17 @@ The module has one loader, `loadErrorIssues`, which the dashboard set hands to a
 - **failed-read-throws**: When the unresolved read fails, `loadErrorIssues` MUST throw `GlitchTip issues could not be read`, so the section cache keeps its last answer and its `active` flags rather than judging anything as a frozen feed.
 - **resolved-optional**: A failure to count resolved issues MUST NOT fail the issue list; the count is a nice-to-have on the KPI row.
 - **resolved-cached**: `resolvedCounter(env, ttlMs)` MUST read the resolved list at most once per `ttlMs` (default 60 minutes), through a single flight, and MUST return the same count to every caller within that time.
-- **resolved-value**: The resolved count MUST be the length of the `is:resolved` list when the walk is complete, and null when the walk is incomplete without having been interrupted (the page cap, a repeated cursor, or a full page with no way forward).
+- **resolved-value**: The resolved count MUST be the length of the `is:resolved` list when the walk is complete, and null when the walk is capped (see Walk outcomes below).
 - **resolved-failure-not-kept**: A resolved read that failed, or that was interrupted after its first page, MUST give null to the caller and MUST NOT be cached, so the next call reads again.
-- **resolved-cap-kept**: A walk that is incomplete but not interrupted (the page cap, a repeated cursor, or a full page with no way forward) MUST be cached as null for the whole TTL, since walking again would meet the same limit.
+- **resolved-cap-kept**: A capped walk MUST be cached as null for the whole TTL, since walking again would meet the same limit.
 - **resolved-never-throws**: The function returned by `resolvedCounter` MUST NOT reject; every failure becomes null.
+
+Walk outcomes. The GlitchTip fetcher classifies each walk of an issue list, and these requirements use its terms:
+
+- **failed**: the read is not ok, because no page could be read at all.
+- **interrupted**: a page after the first failed, so the walk was cut short and the fetcher flags it `interrupted`.
+- **capped**: the walk finished without being interrupted but is not complete, because it hit the page cap, met a repeated cursor, or got a full page with no way forward.
+- **complete**: the whole list was read.
 
 ## Appearance
 
@@ -73,7 +81,7 @@ Not applicable — this is a data-shaping service, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 010 are traced to the `errors sections` tests in `telemetry-dashboard-sections.test.ts`; 011 and 012 follow the source.
+Vectors 001 to 010 are traced to the `errors sections` tests in `telemetry-dashboard-sections.test.ts`; 011 and 012 follow the source, as do the vectors from 013 on.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -89,7 +97,12 @@ Vectors 001 to 010 are traced to the `errors sections` tests in `telemetry-dashb
 | errors-sections-010 | resolved-failure-not-kept | A failed resolved read, then a good one | First call null, the next reads again and returns 2 |
 | errors-sections-011 | failed-read-throws | The unresolved read returns not ok | `loadErrorIssues` rejects with `GlitchTip issues could not be read` |
 | errors-sections-012 | iso-ms | `null`, `''`, `not a date` | null for each |
-
+| errors-sections-013 | judging-inputs | `loadErrorIssues` with allowlist `['app']` and `nowMs` 1000 | Each issue is judged with `{ nowMs: 1000, frozen: false, allowlist: ['app'] }`; with a null allowlist, no project filter applies |
+| errors-sections-014 | section-window | `loadErrorIssues` at a given `nowMs` | The section's `buckets` equal those of `rangeWindow('30d', nowMs)` |
+| errors-sections-015 | summary-flags | An unresolved list the fetcher reports `complete` false | `summary.complete` is false |
+| errors-sections-016 | resolved-optional | The resolved count is null because the resolved read failed | `loadErrorIssues` still returns the issue list, with `summary.resolved` null |
+| errors-sections-017 | resolved-cap-kept | A resolved walk that hits the 20-page cap, then a second call inside the TTL | The first call returns null, and the second returns null without reading again |
+| errors-sections-018 | resolved-never-throws | A resolved read that throws | The counter's function resolves null and does not reject |
 ## Edge Cases
 
 - An empty issue list gives empty `issues` and `byType`, zero counts and a `newPerDay` of zeros over the window.
@@ -106,18 +119,20 @@ Vectors 001 to 010 are traced to the `errors sections` tests in `telemetry-dashb
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `env` | `GlitchtipEnv` | required | GlitchTip credentials and base URL for the fetcher |
-| `allowlist` | `readonly string[]` or null | none | GlitchTip projects the board counts; from `glitchtipProjects` in the config |
+| `allowlist` | `readonly string[]` or null | `null` | GlitchTip projects the board counts; from `glitchtipProjects` in the config |
 | `resolvedCount` | `ResolvedCount` | required | The cached counter from `resolvedCounter`, shared across refreshes |
 | `nowMs` | number | current time | The clock for judging and for the 30 day window |
 | `ttlMs` | number | 3600000 | How long a resolved count stands (`RESOLVED_COUNT_TTL_MS`) |
-
+| Page size | number | 100 | Issues per GlitchTip page; the fetcher's `PAGE_LIMIT` |
+| Page cap | number | 20 | The most pages one walk reads (2,000 issues); the fetcher's `MAX_PAGES`. A list that reaches it is capped |
+| Walk budget | number | 12000 | Milliseconds for the whole walk, not per request; the fetcher's `TIMEOUT_MS` |
 ## Deep Linking
 
 Not applicable: the module shapes data; `ErrorIssue.permalink` is a GlitchTip URL carried as data.
 
 ## Localization
 
-Not applicable: the module's one user-visible string, `GlitchTip issues could not be read`, is a developer-facing error message in English, and the `Other` group label is a fixed English key.
+Not applicable: the module's one user-visible string, `GlitchTip issues could not be read`, is a developer-facing error message in English, and the `Other` group label is an English string emitted in the data (`byType`); the module does not localize it.
 
 ## Accessibility Options
 
@@ -143,7 +158,7 @@ Not applicable: the module makes no log call; a failed section refresh is logged
 
 - **SwiftUI**: Model `ErrorIssue` as a `Codable` struct and the section as a value type; the shaping is pure and ports as plain functions over arrays. The cached resolved count is an `actor` holding a task and an expiry date.
 - **Compose**: Pure shaping in Kotlin extension functions over `List<ErrorIssue>`; the counter is a class with a `Mutex` and a `Deferred` that is cleared on failure.
-- **React/Web**: Keep the module as is; `cachedSingleFlight` is the shared utility from the deploy platform package.
+- **React/Web**: Keep the module as is; `cachedSingleFlight` is the shared single-flight cache from the `@adh-sdk/deploy-platform/util` package, and `resolvedCounter` is built on it.
 - **AppKit / UIKit**: Same as SwiftUI; the shaping runs on a background `Task` and publishes the section to the main actor.
 - **WinUI 3**: Records and `System.Linq` (`OrderByDescending`, `GroupBy`) for the shaping, `DateTimeOffset.TryParse` for `isoMs`, and a `Lazy<Task<int?>>` guarded by a `SemaphoreSlim` with an expiry for the single-flight cache; fetch with `HttpClient` and a `CancellationTokenSource` timeout.
 
@@ -151,12 +166,13 @@ Not applicable: the module makes no log call; a failed section refresh is logged
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/dashboard/errors-sections.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/telemetry/dashboard/errors-sections.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
 
 ## Design Decisions
+
 **Decision**: The board's rule, not a second one.
 **Rationale**: `active` calls the board's `errorCountsAsProblem`, so the dashboard and the board agree on which errors count, allowlist included.
 **Approved**: pending
@@ -166,7 +182,7 @@ Not applicable: the module makes no log call; a failed section refresh is logged
 **Approved**: pending
 
 **Decision**: Resolved count cached for an hour.
-**Rationale**: Counting means walking every resolved page for one KPI figure that barely moves; a 60 second refresh would spend up to twenty requests a minute on it.
+**Rationale**: Counting means walking every resolved page for one KPI figure that barely moves; the issue list refreshes every 60 seconds (the GlitchTip cache TTL set by [adhsdk.ingredient.status.service.telemetry.dashboard.dashboard-set](cookbook:f03325ef-f4c6-43ab-9a88-1a0bf3daa002)), so counting on each refresh would spend up to twenty requests a minute on it.
 **Approved**: pending
 
 **Decision**: Failures not cached, caps cached.
@@ -176,20 +192,22 @@ Not applicable: the module makes no log call; a failed section refresh is logged
 **Decision**: No events series.
 **Rationale**: GlitchTip's stats answer nulls on this instance, so a chart would mislead.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | Performance |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
-The shaping is pure and kept apart from the fetcher and the board rule it calls, and its tests cover the active rule, the allowlist, the summary and the resolved count (including the failure path). The resolved count is cached with a TTL that keeps failures out of the cache, and a failed unresolved read is raised rather than hidden.
+The shaping is pure and kept apart from the fetcher and the board rule it calls, and its tests cover the active rule, the allowlist, the summary and the resolved count (including the failure path); the judging inputs, the section window, the incomplete flag and the capped and never-throws resolved cases have no direct test, so coverage is partial. The resolved count is cached with a TTL that keeps failures out of the cache, and a failed unresolved read is raised rather than hidden.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Defined walk outcomes once, added fetch-limit configuration rows, six vectors for untested requirements, the depends-on specs, the 60-second refresh citation and the stateful-counter wording, and marked unit-test-coverage partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

@@ -1,7 +1,7 @@
 
 | Check | Status | Category |
 |---|---|---|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
@@ -19,7 +19,7 @@
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 Statuses rest on: the source's native `nav`/`button` elements and visible-text button
-labels (`screen-reader-support`, `keyboard-navigable`, `semantic-markup`); its
+labels (`keyboard-navigable`, `semantic-markup`; `screen-reader-support` is `partial` because the caption has no `aria-live`, so a page change is not announced); its
 token-driven, hex-free styling that composes the shared `Button` rather than a bespoke
 control (`platform-theming`, `native-controls-preference`); the absence, in this file,
 of a computed pixel size, contrast value, or platform design-language audit for
@@ -32,7 +32,7 @@ behavior under `dir="rtl"` for `rtl-layout-support`; and the hard-coded `"Prev"`
 `locale-aware-formatting`. `separation-of-concerns` passes because `Pagination`
 does one thing — render Prev/label/Next for a controlled `page`/`totalPages` —
 composing the shared `Button` rather than duplicating its styling.
-`unit-test-coverage` passes because `stat.test.tsx`'s `Pagination` suite covers
+`unit-test-coverage` passes because the `Pagination` suite in `packages/web/packages/ui/src/__tests__/stat.test.tsx` covers
 rendering nothing for a single page, disabling Prev/Next at the boundaries, and
 paging both directions.
 

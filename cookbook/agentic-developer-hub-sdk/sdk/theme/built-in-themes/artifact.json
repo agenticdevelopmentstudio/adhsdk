@@ -4,13 +4,13 @@
     "id": "359491fd-36ee-4e07-9971-76260183f243",
     "title": "Built-In Themes",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
     "modified": "2026-11-14",
-    "author": "mfullerton",
-    "copyright": "2026 mfullerton",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
     "license": "MIT",
     "summary": "The catalogue of built-in color themes the SDK ships: 15 hand-authored schemes plus the web-ported set, a stable default ID, and lookup by ID.",
     "platforms": [
@@ -23,13 +23,22 @@
       "color",
       "built-in"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "932449c9-b57f-4e2c-992a-1e27584742b6",
+      "ad5bae6b-0172-4cd4-a4b7-297eb58eb28d",
+      "1f80f43d-5aa4-42cf-bc3e-fb742662b615",
+      "4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d",
+      "fd1f8d3c-6110-4687-a715-c8fa7c7caa5b"
+    ],
+    "related": [
+      "d15bba09-4574-4fd1-93a0-f7d2cccd04f2",
+      "62abe97d-75f7-48c0-83cd-6df02a48515e"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7d07db1284e6da2f",
+  "synced": "55c51d4f8fa78ee4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

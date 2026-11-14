@@ -6,3 +6,4 @@
 - **use-semantic-markup**: Component MUST wrap all entries in a `dl` (description list) element to encode the statistical relationship.
 - **maintain-order**: Component MUST render entries in the order they appear in the `entries` array.
 
+- **three-column-wrap**: At viewport widths of 34rem and above, Component MUST lay entries out three per row, with a fourth entry wrapping onto a new row; below 34rem it MUST collapse to a single column with entries stacked one per row.

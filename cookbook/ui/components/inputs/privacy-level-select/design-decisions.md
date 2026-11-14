@@ -12,15 +12,15 @@
   **Approved**: pending
 
 - **Decision**: If `disabled` becomes `true` while the popover is already open, the popover is left open; closing it on that transition was not implemented.
-  **Rationale**: This is the source's actual behavior. Handling the disabled-while-open transition was left to the parent to manage (for example, by also controlling `open` externally) rather than building it into the component.
+  **Rationale**: This is the source's actual behavior. The component has no `open` prop, so a caller cannot close it from outside today; handling the disabled-while-open transition would need a change to the component.
   **Approved**: pending
 
 - **Decision**: Hovered and keyboard-focused options share the same highlight style (`apt-highlight/15`).
   **Rationale**: Keeps a single visual rule instead of two, and communicates that both interaction modes have the same effect; a user cannot tell which one produced the highlight.
   **Approved**: pending
 
-- **Decision**: The `move` function's null-cursor branch is unreachable dead code, not a real keyboard-navigation contract: `cursor` is always `value` (never `null`) by the time the listbox surface can receive a keydown, and its direction math (seed at index 0, then apply the delta) would send ArrowDown to `hub` and ArrowUp to `only-me` if it ever ran, not both to `only-me`.
-  **Rationale**: **reset-cursor-to-value-on-open** sets `cursor` to `value` in the same synchronous update that opens the popover, and the popover composes the full-featured Popover variant, whose listbox is unmounted while closed — so there is no reachable state where the listbox is focusable and `cursor` is still `null`. The branch is left in place as a defensive fallback rather than removed. See **initialize-null-cursor-to-first-option**.
+- **Decision**: The `move` function's null-cursor branch is unreachable dead code, not a real keyboard-navigation contract. If it ever ran with a `null` cursor it would seed index 0 and then apply the delta (`Math.min(navLevels.length - 1, Math.max(0, idx + delta))`), sending ArrowDown to `hub` and ArrowUp to `only-me`, not both to `only-me`.
+  **Rationale**: `cursor` is always `value` (never `null`) by the time the listbox surface can receive a keydown: opening sets `cursor` to `value` in the same synchronous update that sets `open` to `true` (see **reset-cursor-to-value-on-open**), and the Popover this component composes removes its content from the DOM when closed (the hide-on-close-unmount requirement of [adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)), so no closed-popover state lets a keyboard user press an arrow key with `cursor` still `null`. The branch is left in place as a defensive fallback rather than removed.
   **Approved**: pending
 
 - **Decision**: The popover panel has a fixed width of 288px (`w-72`) that does not respond to the trigger's width or the viewport.

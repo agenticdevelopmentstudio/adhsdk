@@ -2,15 +2,15 @@
 id: 351e3bf8-b137-4f59-94de-c769aa8b0666
 title: "IntegrationError"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The single error enum for integration operations, with eleven cases and a human-readable sentence for each."
+summary: "The single error enum for integration operations, with a case for each failure and a human-readable sentence for each."
 platforms:
   - swift
   - macos
@@ -34,7 +34,7 @@ approved-date: ""
 
 ## Overview
 
-IntegrationError is the one error type that integration code throws or returns when an operation fails: settings validation, Google sign-in, token refresh, Keychain access, account and message lookup, and Gmail REST calls. It is a Swift enum with eleven cases, several carrying a string or a status code, and its doc comment states the design goal: "Every case reads as a sentence a person can act on." It conforms to `Error`, `Equatable`, `Sendable` and `LocalizedError`. It holds no state and performs no I/O. Callers branch on the case, and surface `errorDescription` to a person.
+IntegrationError is the one error type that integration code throws or returns when an operation fails: settings validation, Google sign-in, token refresh, Keychain access, account and message lookup, and Gmail REST calls. It is a Swift enum whose fixed case set is in **case-set**, several cases carrying a string or a status code, and its doc comment states the design goal: "Every case reads as a sentence a person can act on." It conforms to `Error`, `Equatable`, `Sendable` and `LocalizedError`. It holds no state and performs no I/O. Callers branch on the case, and surface `errorDescription` to a person.
 
 ## Behavioral Requirements
 
@@ -65,24 +65,24 @@ IntegrationError is the one error type that integration code throws or returns w
 - **desc-token-refresh**: `tokenRefresh(reason)` MUST describe itself as `Token refresh failed: <reason>`.
 - **desc-keychain**: `keychain(reason)` MUST describe itself as `Keychain error: <reason>`.
 - **desc-verbatim-payload**: A payload string MUST be inserted into the description unchanged: no trimming, truncation or escaping.
-- **desc-typography**: The descriptions MUST use the exact non-ASCII characters of the source, never ASCII substitutes: the em dash U+2014 (`—`) in `notConfigured` and `revoked`, the en dash U+2013 (`–`) in the range text of the `batchModify` and `windowDays` messages that callers pass as payloads, and the curly double quotes U+201C and U+201D (`“ ”`) around the value in `unknownAccount`, `unknownMessage` and `unknownLabel`.
+- **desc-typography**: The descriptions MUST use the exact non-ASCII characters of the source, never ASCII substitutes: the em dash U+2014 (`—`) in `notConfigured` and `revoked`, and the curly double quotes U+201C and U+201D (`“ ”`) around the value in `unknownAccount`, `unknownMessage` and `unknownLabel`.
+- **localized-payload-placement**: A port that localizes the descriptions MUST keep each payload in the same place in its sentence, so that the payload still reads as the reason or the value the sentence names.
 
-### Raised by
+### Callers (non-normative)
 
-These bullets record which callers throw each case today. They describe other components, not the enum, and carry no MUST: the owning ingredient holds the binding requirement.
+These bullets record which callers throw each case today. They describe other components, not the enum, and carry no MUST: the owning ingredient holds the binding requirement. The en dash in the range text of the `batchModify` and `windowDays` payloads, and the mapping of an error to a connection status or a `notFound` response, belong to those callers, not to this enum.
 
-- **gmail-status-zero**: [GmailRESTClient](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914) uses `gmail(status: 0, ...)` for a request whose URL cannot be built (message "Invalid URL for" followed by the path) and for a `batchModify` call whose id list is not 1 to the batch limit (message "batchModify takes 1–<limit> ids, got <count>"), so a status of 0 denotes a failure before any HTTP response.
+- **gmail-status-zero**: [adhsdk.ingredient.integrations.gmail.gmail-rest-client](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914) uses `gmail(status: 0, ...)` for a request whose URL cannot be built (message "Invalid URL for" followed by the path) and for a `batchModify` call whose id list is not 1 to the batch limit (message "batchModify takes 1–<limit> ids, got <count>"), so a status of 0 denotes a failure before any HTTP response.
 - **token-refresh-scope**: `tokenRefresh` is used for Google's token endpoint failing for a reason other than revoked access (a 5xx, a bad reply), per its doc comment.
 - **keychain-scope**: `keychain` is used for the Keychain failing to read or remove a credential (for example, when it is locked), per its doc comment.
 - **revoked-distinct**: Revoked access (the token endpoint answering `invalid_grant`, or no stored credential for a connection) is reported as `revoked`, never as `tokenRefresh`, because callers treat the two differently.
-
-- **raised-invalid-settings**: `invalidSettings` is thrown by [GoogleOAuthClientConfig](cookbook:df121975-deb8-49a9-b023-0aadcb0923d8).parse(json:) for non-JSON input, a Web application client file or missing keys, and by [MailSyncSettings](cookbook:238f4d91-4a22-4a0d-ae4b-b4070d02b357).validated() when `windowDays` is outside 1–3650 or `pollIntervalMinutes` is outside 1–1440.
-- **raised-not-configured**: `notConfigured` is thrown by [MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) when no provider configuration or OAuth client is available, and when provider removals are pending.
-- **raised-unknown-account**: `unknownAccount` is thrown by `MailIntegrationService` when an account identifier or email matches no connection, and by `IntegrationsStore`(cookbook:c19280fd-b80c-46f3-a6a7-0b60a0c90d91) when no live connection has the id being updated.
-- **raised-unknown-message**: `unknownMessage` is thrown by `MailIntegrationService` when Gmail answers 400 or 404 for a requested message id, and `MailIntegrationService.handle` converts it to a `notFound` response carrying its description.
+- **raised-invalid-settings**: `invalidSettings` is thrown by [adhsdk.ingredient.integrations.auth.google-o-auth-client-config](cookbook:238f4d91-4a22-4a0d-ae4b-b4070d02b357) in its `parse(json:)` for non-JSON input, a Web application client file or missing keys, and by [adhsdk.ingredient.integrations.model.mail-sync-settings](cookbook:df121975-deb8-49a9-b023-0aadcb0923d8) in its `validated()` when `windowDays` is outside 1–3650 or `pollIntervalMinutes` is outside 1–1440.
+- **raised-not-configured**: `notConfigured` is thrown by [adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) when no provider configuration or OAuth client is available, and when provider removals are pending.
+- **raised-unknown-account**: `unknownAccount` is thrown by the mail integration service when an account identifier or email matches no connection, and by [adhsdk.ingredient.integrations.store.integrations-store](cookbook:c19280fd-b80c-46f3-a6a7-0b60a0c90d91) when no live connection has the id being updated.
+- **raised-unknown-message**: `unknownMessage` is thrown by the mail integration service when Gmail answers 400 or 404 for a requested message id, and its `handle` converts it to a `notFound` response carrying its description.
 - **raised-unknown-label**: `unknownLabel` is declared, but no other file in the integrations sources throws it (see #requirements/keep-unknown-label).
-- **raised-revoked**: `revoked` is thrown by the Google token endpoint on `invalid_grant`, by the credential store when a connection has no stored credential, and by `MailIntegrationService` when a sync is requested for a connection whose status is revoked. A recorded `revoked` sets the connection status to `revoked`; any other error except cancellation sets it to `error`.
-- **raised-gmail**: `gmail` is thrown by [GmailRESTClient](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914) for a non-success Gmail response, an unbuildable URL or a `batchModify` id list of the wrong size. Callers treat statuses 400 and 404 as "the item is gone" in several paths.
+- **raised-revoked**: `revoked` is thrown by the Google token endpoint on `invalid_grant`, by the credential store when a connection has no stored credential, and by the mail integration service when a sync is requested for a connection whose status is revoked. A recorded `revoked` sets the connection status to `revoked`; any other error except cancellation sets it to `error`.
+- **raised-gmail**: `gmail` is thrown by [adhsdk.ingredient.integrations.gmail.gmail-rest-client](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914) for a non-success Gmail response, an unbuildable URL or a `batchModify` id list of the wrong size. Callers treat statuses 400 and 404 as "the item is gone" in several paths.
 - **raised-sign-in**: `signInCancelled` is thrown when the user or the calling task cancels sign-in, and `signInFailed` when sign-in fails, times out ("Sign-in timed out"), returns no access token or no refresh token, or cannot start its local listener or save the credential.
 - **raised-token-refresh**: `tokenRefresh` is thrown with `<status> <error code>` for a failed refresh or revoke call, `no access_token in reply` for a reply without a token, and `invalid endpoint <endpoint>` for an unusable endpoint.
 - **raised-keychain**: `keychain` is thrown when the Google credential cannot be read or removed, or the OAuth client secret cannot be read.
@@ -112,11 +112,14 @@ Not applicable — this is an error enum, not a visual component.
 | integration-error-007 | desc-unknown-message, desc-unknown-label | `unknownMessage("m1")` and `unknownLabel("L1")` descriptions (new) | `No message matches “m1”` and `No label matches “L1”` |
 | integration-error-008 | desc-sign-in-failed, desc-sign-in-cancelled | `signInFailed("Google returned no refresh token")` and `signInCancelled` descriptions (`GoogleOAuthTests` throws the former) | `Sign-in failed: Google returned no refresh token` and `Sign-in was cancelled` |
 | integration-error-009 | desc-token-refresh, desc-keychain | `tokenRefresh("500 backend_error")` and `keychain("Could not read the Google credential: locked")` descriptions (`GoogleOAuthTests`) | `Token refresh failed: 500 backend_error` and `Keychain error: Could not read the Google credential: locked` |
-| integration-error-010 | desc-invalid-settings, raised-invalid-settings | `MailSyncSettings` with `windowDays: 0`, then `validated()` (existing: `MailIntegrationServiceTests.invalidSettingsFail`) | Throws `IntegrationError.invalidSettings`, described as `Invalid sync settings: windowDays must be 1–3650, got 0` |
-| integration-error-011 | raised-revoked | A Gmail call fails with `IntegrationError.revoked` during sync (`MailIntegrationServiceTests`) | The connection is saved with status `revoked` |
-| integration-error-012 | raised-gmail | A Gmail call fails with `gmail(status: 500, message: "boom")` (`MailIntegrationServiceTests`) | The connection status is `error`, not `revoked` |
+| integration-error-010 | desc-invalid-settings | `IntegrationError.invalidSettings("windowDays must be 1–3650, got 0")` description (the payload is the text `MailSyncSettings.validated()` builds; the existing `MailIntegrationServiceTests.invalidSettingsFail` exercises it) | `Invalid sync settings: windowDays must be 1–3650, got 0` |
+| integration-error-011 | conforms-equatable | `IntegrationError.revoked == IntegrationError.revoked`, and `IntegrationError.revoked == IntegrationError.tokenRefresh("x")` (new) | `true`, then `false` |
+| integration-error-012 | conforms-equatable | `IntegrationError.gmail(status: 500, message: "boom") == IntegrationError.revoked` (new) | `false` |
 | integration-error-013 | desc-verbatim-payload | `invalidSettings("  spaced ")` (new) | `Invalid sync settings:   spaced ` with the payload's whitespace intact |
-| integration-error-014 | conforms-localized, desc-invalid-settings, desc-typography | Build one value of each of the eleven cases (`invalidSettings("r")`, `notConfigured`, `unknownAccount("a")`, `unknownMessage("m")`, `unknownLabel("l")`, `revoked`, `gmail(status: 1, message: "g")`, `signInCancelled`, `signInFailed("r")`, `tokenRefresh("r")`, `keychain("r")`) and read each `errorDescription` (new) | Every value is non-nil and equals, in order: `Invalid sync settings: r`, `Gmail is not configured — import an OAuth client JSON first`, `No connected account matches “a”`, `No message matches “m”`, `No label matches “l”`, `Google access was revoked — sign in again`, `Gmail returned 1: g`, `Sign-in was cancelled`, `Sign-in failed: r`, `Token refresh failed: r`, `Keychain error: r` |
+| integration-error-014 | conforms-localized, desc-invalid-settings, desc-typography | Build one value of each case in **case-set** (`invalidSettings("r")`, `notConfigured`, `unknownAccount("a")`, `unknownMessage("m")`, `unknownLabel("l")`, `revoked`, `gmail(status: 1, message: "g")`, `signInCancelled`, `signInFailed("r")`, `tokenRefresh("r")`, `keychain("r")`) and read each `errorDescription` (new) | Every value is non-nil and equals, in order: `Invalid sync settings: r`, `Gmail is not configured — import an OAuth client JSON first`, `No connected account matches “a”`, `No message matches “m”`, `No label matches “l”`, `Google access was revoked — sign in again`, `Gmail returned 1: g`, `Sign-in was cancelled`, `Sign-in failed: r`, `Token refresh failed: r`, `Keychain error: r` |
+| integration-error-015 | case-set, keep-unknown-label | An exhaustive `switch` over an `IntegrationError` value with one arm per case in **case-set** and no `default` arm (new; a compile-time check) | The code compiles; adding or removing a case makes it fail to compile |
+| integration-error-016 | conforms-sendable | Pass an `IntegrationError.gmail(status: 503, message: "x")` into a `Task` and compare it with the original there (new; a compile-time check under strict concurrency) | The code compiles with no concurrency diagnostic and the values are equal |
+
 ## Edge Cases
 
 - **empty-payload**: A payload string MAY be empty, and the description then ends with its prefix and no text (`Sign-in failed: `); the type does not validate payloads.
@@ -141,7 +144,7 @@ Not applicable: the type is an error enum and handles no URLs of its own (the `g
 
 ## Localization
 
-Not applicable as a mechanism: every description is a hardcoded English string in `errorDescription`, with no string table or `String(localized:)` call. The English strings are the contract; a port that localizes them MUST keep the same payload placement.
+Not applicable as a mechanism: every description is a hardcoded English string in `errorDescription`, with no string table or `String(localized:)` call. The English strings are the contract; see **localized-payload-placement** for what a port that localizes them keeps.
 
 ## Accessibility Options
 
@@ -157,7 +160,7 @@ Not applicable: the source emits no event.
 
 ## Privacy
 
-Not applicable as collection: the type stores nothing and sends nothing. Payloads can carry an account email (`unknownAccount`) or Gmail's reply text (`gmail`), and [MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) stores the description as the connection's `lastError`, so a port SHOULD treat a payload as user data.
+Not applicable as collection: the type stores nothing and sends nothing. Payloads can carry an account email (`unknownAccount`) or Gmail's reply text (`gmail`), and MailIntegrationService ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) stores the description as the connection's `lastError`, so a port SHOULD treat a payload as user data.
 
 ## Logging
 
@@ -165,7 +168,7 @@ Not applicable: the source makes no log call; callers decide whether to log or d
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform. The file is `packages/apple/AgenticDeveloperHubSDK/Integrations/Model/IntegrationError.swift`, a single `public enum` conforming to `Error`, `Equatable`, `Sendable` and `LocalizedError`. Equality is synthesized. SwiftUI shows the message through `error.localizedDescription`, which reads `errorDescription`.
+- **SwiftUI**: Source platform. The file is `packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationError.swift`, a single `public enum` conforming to `Error`, `Equatable`, `Sendable` and `LocalizedError`. Equality is synthesized. SwiftUI shows the message through `error.localizedDescription`, which reads `errorDescription`.
 - **Compose**: Use a Kotlin sealed class (or sealed interface) extending `Exception`, with data classes for the payload cases and objects for `notConfigured`, `revoked` and `signInCancelled`. Data classes give the same value equality. Override `message` with the same sentences; Android string resources are the usual route if localized, which the source does not do.
 - **React/Web**: Use a discriminated union keyed by a `kind` field, or an `Error` subclass with a `kind` and payload fields, and a `describe()` function returning the same sentences. Union members compare structurally only with a helper; do not rely on `===`. The type is serializable, which suits crossing a worker or RPC boundary.
 - **AppKit / UIKit**: Same Swift type, shared unchanged. Present it with `NSAlert(error:)` or `UIAlertController` using `localizedDescription`; `LocalizedError` supplies the message, and no recovery suggestion or failure reason is defined.
@@ -175,7 +178,7 @@ Not applicable: the source makes no log call; callers decide whether to log or d
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationError.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationError.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -183,7 +186,7 @@ Not applicable: the source makes no log call; callers decide whether to log or d
 ## Design Decisions
 
 **Decision**: Use one enum for every integration failure (settings, sign-in, token refresh, Keychain, lookup, Gmail) instead of one error type per layer.
-**Rationale**: The doc comment says every case reads as a sentence a person can act on, so any layer's failure can reach the UI and the stored `lastError` through one description path. [MailIntegrationService](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a).handle relies on this when it turns any thrown error into `.failure(localizedDescription)`.
+**Rationale**: The doc comment says every case reads as a sentence a person can act on, so any layer's failure can reach the UI and the stored `lastError` through one description path. The mail integration service ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) relies on this in its `handle` when it turns any thrown error into `.failure(localizedDescription)`.
 **Approved**: pending
 
 **Decision**: Keep `revoked` separate from `tokenRefresh` and `signInFailed`.
@@ -217,4 +220,5 @@ The enum names failures and words them, with no I/O, storage or presentation, so
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Corrected the Swift source path in Platform Notes, fixed swapped and malformed links to use rdid labels, moved the en dash clause and the cross-component vectors out of the enum's requirements, made localized payload placement a named requirement, kept the case count only in case-set, and added exhaustive-switch and Sendable vectors. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

@@ -1,3 +1,1 @@
-
-Not applicable: The component displays content from the `data` prop, which is provided by the caller. Localization of title, description, and link labels is the responsibility of the data provider.
-
+Partial: the title, description and link labels come from the caller's `data` prop, and localizing them is the data provider's responsibility. The component's own `aria-label="Toggle details"` (**render-toggle-button**) is a hardcoded English string with no prop to override it, so a non-English caller cannot localize it. The fixed label also replaces the visible title as the toggle's accessible name.

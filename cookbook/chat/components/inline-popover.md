@@ -2,11 +2,11 @@
 id: a7e2f9d1-4c8a-4b9e-8f3d-2c5b7e1a9d4f
 title: "Inline Disclosure"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-Inline Disclosure is a collapsible control that toggles the visibility of supplemental content in place, without floating or overlaying other content — unlike the separate `@adh-sdk/popover` package (see Related), which positions an overlay relative to a trigger. It renders a toggle button with an optional arrow indicator and title, followed by a body section containing optional description text and a collection of links. The component maintains open/closed state internally and allows users to toggle visibility by clicking the toggle button.
+Inline Disclosure is a collapsible control that toggles the visibility of supplemental content in place, without floating or overlaying other content — unlike the separate `@adh-sdk/popover` package ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)), which positions an overlay relative to a trigger. It renders a toggle button with an optional arrow indicator and title, followed by a body section containing optional description text and a collection of links. The component maintains open/closed state internally and allows users to toggle visibility by clicking the toggle button.
 
 ## Behavioral Requirements
 
@@ -98,11 +98,12 @@ All visual styling (colors, spacing, sizing, shadows, hover states, transitions)
 | inline-popover-014 | render-arrow-indicator | Any valid data | Arrow span element with class `pc-popover-arrow` is always present in toggle button |
 | inline-popover-015 | toggle-visibility-on-click | Toggle button has focus; user presses Enter or Space | Native `button` semantics activate the click handler; open state toggles the same as a mouse click |
 | inline-popover-016 | initialize-with-default-open | `defaultOpen` prop omitted | Component initializes open (`pc-popover-open` class present, `aria-hidden="false"`), matching the `defaultOpen = true` default |
-
+| inline-popover-017 | render-toggle-button | Any valid data | A `button` with class `pc-popover-toggle` and `aria-label="Toggle details"` is rendered, regardless of `data.title` |
+| inline-popover-018 | render-arrow-indicator | Any valid data | The `pc-popover-arrow` span carries no `aria-hidden` attribute (known gap: the arrow is not hidden from assistive technology) |
 ## Edge Cases
 
-- **Empty data object**: When `data` is passed as an empty object `{}`, no title, description, or links are rendered. The component still renders the toggle button and body container. Expected behavior: component renders with button and empty body.
-- **Null or undefined data properties**: When `data.title`, `data.description`, or `data.links` are null, undefined, or empty string, those content sections are not rendered. Expected behavior: component skips rendering that section.
+- **Empty data object**: `title` is required on `PopoverData`, so `{}` is outside the declared type; at runtime, when `data` is passed as an empty object `{}` (for example by a caller that bypasses the type), no title, description, or links are rendered. The component still renders the toggle button and body container. Expected behavior: component renders with button and empty body.
+- **Null or undefined data properties**: `title` is a required `string`, so `undefined` or `null` for it is outside the declared type, while `description` and `links` are optional. At runtime, when `data.title`, `data.description`, or `data.links` are null, undefined, or empty string, those content sections are not rendered. Expected behavior: component skips rendering that section.
 - **Empty links array**: When `data.links` is an empty array `[]`, the links container div is not rendered. Expected behavior: component does not render the links section.
 - **Multiple rapid toggles**: When a user clicks the toggle button multiple times in rapid succession, each click toggles the state immediately. Expected behavior: state always reflects the most recent click.
 - **Link with missing label**: When a link in `data.links` has no `label` property, the component falls back to displaying the `url` as the link text. Expected behavior: link is always clickable and has visible text.
@@ -124,9 +125,7 @@ All visual styling (colors, spacing, sizing, shadows, hover states, transitions)
 Not applicable: This component is a presentation element with no deep linking semantics. Deep linking behavior, if needed, is the responsibility of the containing application.
 
 ## Localization
-
-Not applicable: The component displays content from the `data` prop, which is provided by the caller. Localization of title, description, and link labels is the responsibility of the data provider.
-
+Partial: the title, description and link labels come from the caller's `data` prop, and localizing them is the data provider's responsibility. The component's own `aria-label="Toggle details"` (**render-toggle-button**) is a hardcoded English string with no prop to override it, so a non-English caller cannot localize it. The fixed label also replaces the visible title as the toggle's accessible name.
 ## Accessibility Options
 
 - **Reduce Motion**: Not implemented in source. Component does not check for `prefers-reduced-motion` and applies no motion-specific behavior changes.
@@ -150,23 +149,25 @@ Not applicable: Component does not collect, store, or transmit any user data. Al
 Not applicable: Component does not perform logging.
 
 ## Platform Notes
+- **SwiftUI**: On iOS, use `DisclosureGroup` for the toggle and body — it provides the native expand/collapse control. Bind its `isExpanded` binding to a `@State` Bool seeded from `defaultOpen`. Place the arrow indicator and title inside the `label` closure and the description/links inside the `content` closure. For links, use `Link(_:destination:)` or the `openURL` environment action to open the system browser — not `NavigationLink`, which pushes an in-app navigation destination rather than opening a URL.
+
+- **Compose**: On Android, use a Column with a Row for the toggle button (a Button with an icon for the arrow). Use a mutableStateOf for the open state. Conditionally render the AnimatedVisibility or if-else branch for the body content. Render links as clickable Text or Button elements that open the URL with `LocalUriHandler.current.openUri(url)`.
 
 - **React/Web**: The source is `packages/web/packages/chat/src/components/InlinePopover.tsx`. State is managed with React's `useState` hook. CSS classes drive appearance, including `pc-popover`, `pc-popover-open`, `pc-popover-toggle`, `pc-popover-arrow`, `pc-popover-title`, `pc-popover-body`, `pc-popover-desc`, `pc-popover-links`, and `pc-popover-link`. Styling is not included in the component; callers must provide matching CSS. The native `<details>`/`<summary>` elements would provide built-in keyboard and screen-reader disclosure semantics; see **Design Decisions** for why this implementation instead builds the toggle from a `button` and a `div`.
-- **SwiftUI**: On iOS, use `DisclosureGroup` for the toggle and body — it provides the native expand/collapse control. Bind its `isExpanded` binding to a `@State` Bool seeded from `defaultOpen`. Place the arrow indicator and title inside the `label` closure and the description/links inside the `content` closure. For links, use `Link(_:destination:)` or the `openURL` environment action to open the system browser — not `NavigationLink`, which pushes an in-app navigation destination rather than opening a URL.
-- **Compose**: On Android, use a Column with a Row for the toggle button (a Button with an icon for the arrow). Use a mutableStateOf for the open state. Conditionally render the AnimatedVisibility or if-else branch for the body content. Render links as clickable Text or Button elements that invoke Intent or deep link navigation.
-- **AppKit / UIKit**: On macOS (AppKit), use an `NSButton` configured with `bezelStyle = .disclosure` — the native disclosure-triangle control (there is no separate `NSDisclosureTriangle` class) — and lay out the toggle and body with `NSStackView`, managing state with a bound property. On iOS (UIKit), which has no built-in disclosure control, construct a `UIButton` with a custom chevron image for the arrow, use a `UIStackView` for layout, and manage state with a property.
-- **WinUI 3**: On Windows, use the native `Expander` control, which already provides the toggle chrome, chevron rotation, and expand/collapse states — set its `Header` to the arrow-plus-title content and its body to the description/links content, bound to a boolean `IsExpanded` seeded from `defaultOpen`. Use `Hyperlink` elements from WinUI for the link collection, setting the `NavigateUri` property.
 
+- **AppKit / UIKit**: On macOS (AppKit), use an `NSButton` configured with `bezelStyle = .disclosure` — the native disclosure-triangle control (there is no separate `NSDisclosureTriangle` class) — and lay out the toggle and body with `NSStackView`, managing state with a bound property. On iOS (UIKit), which has no built-in disclosure control, construct a `UIButton` with a custom chevron image for the arrow, use a `UIStackView` for layout, and manage state with a property.
+
+- **WinUI 3**: On Windows, use the native `Expander` control, which already provides the toggle chrome, chevron rotation, and expand/collapse states — set its `Header` to the arrow-plus-title content and its body to the description/links content, bound to a boolean `IsExpanded` seeded from `defaultOpen`. Use `Hyperlink` elements from WinUI for the link collection, setting the `NavigateUri` property.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/components/InlinePopover.tsx` | unverified |
+| web | `packages/web/packages/chat/src/components/InlinePopover.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 **Decision**: The component accepts a `defaultOpen` prop to seed its internal `useState`, and is uncontrolled only — there is no `open` or `onOpenChange` prop, so a caller cannot drive the open state from outside once mounted.
-**Rationale**: `defaultOpen` lets the caller pick the initial state; the default of `true` matches a common UX pattern where disclosure content is visible by default, reducing the need for users to discover the toggle.
+**Rationale**: `defaultOpen` lets the caller pick the initial state; the default is `true`, so the content is visible until the user collapses it.
 **Approved**: pending
 
 **Decision**: The disclosure content is marked `aria-hidden` on the root element when closed, rather than relying on CSS `display: none` alone.
@@ -178,7 +179,7 @@ Not applicable: Component does not perform logging.
 **Approved**: pending
 
 **Decision**: Title, description, and links are only rendered if their data is truthy.
-**Rationale**: This reduces DOM clutter and improves performance when content is not provided.
+**Rationale**: This leaves no empty title, description or links element in the DOM when that content is not provided.
 **Approved**: pending
 
 **Decision**: The component uses CSS classes (`pc-popover`, `pc-popover-open`, etc.) rather than inline styles.
@@ -186,7 +187,7 @@ Not applicable: Component does not perform logging.
 **Approved**: pending
 
 **Decision**: The toggle is built from a custom `button` + `div` pair with `pc-popover-*` classes rather than the native `<details>`/`<summary>` elements.
-**Rationale**: A hand-built toggle lets the arrow indicator and title be composed freely inside the button's label while keeping the existing `pc-popover-*` CSS class contract; `<details>`/`<summary>` would need different default styling and event handling to match it.
+**Rationale**: A hand-built toggle lets the arrow indicator and title be composed freely inside the button's label while keeping the existing `pc-popover-*` CSS class contract; `<details>`/`<summary>` would need different default styling and event handling to match it. The accepted costs are the documented failures: the root `aria-hidden` hides the toggle button itself when closed, there is no `aria-expanded` on the button, and the fixed `aria-label` replaces the visible title as the accessible name.
 **Approved**: pending
 
 ## Compliance
@@ -207,6 +208,7 @@ The toggle is a native `button` (keyboard-navigable: passed), but `aria-hidden` 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Lint fixes: removed unsupported performance and UX-pattern claims, recorded the accessibility costs in the native-controls decision, rewrote Localization to match the hardcoded aria-label, reworded the empty-data edge cases against the declared type, linked the popover package, named LocalUriHandler for Compose, reordered Platform Notes, and added toggle-button and arrow vectors. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected Configuration table + Conformance vectors (006-013) so example data matches PopoverData's required title/label instead of implying they're optional. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed to Inline Disclosure and cross-linked the Popover recipe; reworded the defaultOpen decision as uncontrolled-only; reformatted Design Decisions and Compliance to convention; renamed requirements to subject-only kebab-case; deduplicated aria-hidden vectors and added keyboard-activation and default-open-omitted vectors; corrected Platform Notes API names and pointed to native disclosure controls (DisclosureGroup, Expander, AppKit disclosure-bezel NSButton); fixed the Configuration null/undefined mismatch; documented the root aria-hidden/label-in-name accessibility gaps and the always-rendered body; added missing references and set author |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

@@ -6,5 +6,5 @@
 - **class-name-merge**: Component MUST accept a `className` prop and merge it with the component's default layout classes so that a caller's classes can override the defaults.
 - **flex-layout**: Component MUST render with `display: flex` to establish flexbox layout for its children.
 - **vertical-center**: Component MUST use flexbox alignment to center children vertically (`align-items: center`).
-- **child-gap**: Component MUST apply a consistent horizontal gap of `0.375rem` (6 pixels) between direct child elements.
-
+- **child-gap**: Component MUST apply a consistent horizontal gap of `0.375rem` (6px at the default 16px root font size) between direct child elements.
+- **accessible-name-from-aria-label**: Component MUST expose its accessible name through the `aria-label` attribute, set to the `ariaLabel` value exactly as given. An explicit empty string is applied as the empty string, with no fallback to the default and no warning (see Edge Cases: Empty ariaLabel).

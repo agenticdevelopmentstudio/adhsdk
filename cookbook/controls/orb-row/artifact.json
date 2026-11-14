@@ -4,11 +4,11 @@
     "id": "96e5e0cf-79a9-4873-9745-03442849b2fd",
     "title": "Orb Row",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,7 +27,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ab74a3a8c35b89a3",
+  "synced": "801a31cdd96741f4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

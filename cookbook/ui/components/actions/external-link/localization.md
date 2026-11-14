@@ -1,5 +1,5 @@
 
-The `↗` glyph is directional and MUST be mirrored (or swapped for a start-pointing
+The `↗` glyph is directional and SHOULD be mirrored (**mirrors-glyph-rtl**) (or swapped for a start-pointing
 equivalent, e.g. `↖`) in right-to-left layouts — an unmirrored trailing arrow
 points the wrong way for an RTL reader. Native ports SHOULD key this off the
 platform's layout-direction API (Apple's `layoutDirection`/

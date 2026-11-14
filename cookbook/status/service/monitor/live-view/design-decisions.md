@@ -21,3 +21,6 @@
   **Rationale**: Stated in the doc comment so the banner can state the number "without owning the number". A caller wanting another threshold must call `selectStaleMonitors` directly; recorded as the code's behavior.
   **Approved**: pending
 
+- **Decision**: `detail` is a fixed English string (`"HTTP <statusCode>"` or `"down"`), not structured data.
+  **Rationale**: The doc comment on `StaleMonitor.detail` says only "what the probe last saw: its error, else the status code, else 'down'"; the source gives no reason for building text in a verdict module. A structured `{ kind, value }` that status-web formats would let it be localized, and is the alternative to weigh. Recorded as the code's behavior.
+  **Approved**: pending

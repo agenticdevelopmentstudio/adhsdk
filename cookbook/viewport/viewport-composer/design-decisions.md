@@ -7,3 +7,6 @@
 **Rationale**: Follows the same "read external state, don't own it" pattern used for the keyboard inset; the browser already exposes `env(safe-area-inset-bottom)`, so no additional plumbing is needed.
 **Approved**: pending
 
+**Decision**: Accept two failed Compliance checks as known debt for now: the 180ms `padding-bottom` transition is not gated behind `prefers-reduced-motion`, and no unit test exercises the component.
+**Rationale**: The transition is declared unconditionally in `base.css` and no test exists in the package for `ViewportComposer`; both are recorded here as work to fix rather than hidden, and the recipe stays in `review` until they are resolved.
+**Approved**: pending

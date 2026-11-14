@@ -31,7 +31,7 @@
   for the staging UI.
   **Approved**: pending
 - **Decision**: Each staged row carries an internally generated id
-  (`` `${Date.now()}-${index}` ``) used only for `DataTable` selection
+  (`` `${Date.now()}-${index}` ``, where `index` is the length of the staged array at insert time) used only for `DataTable` selection
   identity; the id is stripped before rows are passed to `onAdd`, so the
   public `DraftUser` shape has no id field.
   **Rationale**: Two staged rows can have identical name/email/phone/note

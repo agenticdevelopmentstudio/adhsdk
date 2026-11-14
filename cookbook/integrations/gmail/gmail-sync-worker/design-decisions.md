@@ -20,7 +20,7 @@
 **Approved**: pending
 
 **Decision**: Fetch eight messages at a time and store in batches of 100.
-**Rationale**: The numbers are `fetchConcurrency` and `upsertBatchSize`; the source does not state why. Eight is small enough to stay modest against Gmail's per-user quota, which `GmailRESTClient` also paces, and 100 bounds how much a partial failure can lose, because the stored count is a multiple of the batch size. Whether eight is the best number is outside the source.
+**Rationale**: The numbers are `fetchConcurrency` and `upsertBatchSize`. The source gives no reason for fetching eight at a time, so that number is unexplained. A batch of 100 bounds how much a partial failure can lose, because the stored count after a failure is a multiple of the batch size.
 **Approved**: pending
 
 **Decision**: Batch results in completion order, and never in id order.
@@ -36,6 +36,10 @@
 **Approved**: pending
 
 **Decision**: Technical debt: the clock is read separately for the query, the fetch, the window start and the stored time.
-**Rationale**: The worker calls `now()` several times per run, so on a long run the window start used for the final sweep is later than the one in the query. It is harmless in the tests because the clock is fixed, and the effect is a window that drifts a little during one run. A port may read the clock once, but it should record that as a deliberate change.
+**Rationale**: The worker calls `now()` several times per run, so on a long run the window start used for the final sweep is later than the one in the query. It is harmless in the tests because the clock is fixed, and the effect is a window that drifts a little during one run. Pay it off by reading the clock once at the start of `sync` and passing that instant down, as soon as window drift shows up in any test or run. A port may read the clock once sooner, but it should record that as a deliberate change.
+**Approved**: pending
+
+**Decision**: Deliberate prudent debt: the worker does not validate `windowDays`.
+**Rationale**: `MailSyncSettings.validated()` limits it to 1 through 3650 and its caller owns that check, so the worker trusts what it is given. A value of 0 or less would put the window start at or after the present and tombstone nearly every row. Fix it by making `sync` reject settings that fail `validated()` before it writes anything, the first time a caller passes unvalidated settings or a second caller of `sync` appears.
 **Approved**: pending
 

@@ -23,8 +23,9 @@
 - The optional `label` renders as a plain `aws-field__label` div with no
   `id`/`aria-labelledby` pairing to the `role="progressbar"` element, so it is not
   programmatically associated with the progress bar the way the UI bar's forwarded
-  `aria-label` is. A screen reader announces this component's progress bar with no
-  accessible name unless a consumer supplies one out of band.
+  `aria-label` is. Because the component does not forward arbitrary props (no `aria-label`, no
+  `aria-labelledby`), a consumer cannot give the Controls progress bar an accessible name:
+  a screen reader announces it with no name.
 - Purely presentational otherwise: not focusable and not interactive; progress is driven
   by the consumer's `value`.
 

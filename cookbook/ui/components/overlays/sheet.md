@@ -2,11 +2,11 @@
 id: 10cd0ad8-b7b7-4674-9f8c-80a071fecb6f
 title: "Sheet"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,19 +39,21 @@ Sheet is a compound component that renders a slide-out drawer anchored to one ed
 - **render-compound-components**: Component MUST export individual compound parts: Sheet (root), SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, and SheetDescription. `SheetPortal` and `SheetOverlay` are module-local helpers used only inside SheetContent; they are not exported and are not importable by consumers.
 - **position-by-side**: SheetContent MUST position the drawer based on a `side` prop ("top" | "right" | "bottom" | "left"), with default value "right".
 - **render-overlay**: Component MUST render an overlay element with semi-transparent dark background that appears behind the drawer.
-- **backdrop-blur**: Overlay MUST apply a blur effect (backdrop-filter: blur) on supporting browsers.
+- **backdrop-blur**: Overlay MUST blur the content behind it on platforms that support background blur.
 - **close-button-default-visible**: SheetContent MUST render a close button by default in the top-right corner.
 - **close-button-visibility-control**: SheetContent MUST accept a `showCloseButton` boolean prop (default `true`) to control close button visibility.
 - **close-icon**: Close button MUST render a close ("X") icon.
 - **close-button-accessible-label**: Close button MUST include a screen-reader-accessible label ("Close") identifying its purpose to assistive technology.
 - **animate-transitions**: Drawer content and overlay MUST animate with a CSS transition on appearance and disappearance.
 - **animation-scale**: Animation duration MUST be calculated using the CSS custom property `--apt-anim-scale` (default 1), with specific durations: 150ms for overlay, 200ms for drawer. A scale of 0 or a negative value MUST result in an instant (zero-duration) transition, since a non-positive value multiplied against either base duration computes to zero or less and CSS clamps a negative transition-duration to 0.
-- **close-on-overlay-click**: Clicking the overlay MUST close the drawer by default. Base UI's Dialog root ships pointer dismissal enabled unless a caller passes `disablePointerDismissal`; Sheet does not set that prop, so the inherited default applies. Callers MAY disable it by passing `disablePointerDismissal` to `Sheet`.
-- **width-constrained-on-sides**: When positioned left or right, SheetContent MUST constrain width to 75% of the viewport, capped at 24rem on small+ (`sm`, ≥640px) screens.
-- **content-composition-props**: Sheet, SheetTrigger, SheetClose, and SheetContent MUST accept and spread component props to their underlying Base UI primitives. Internally, the module-local `SheetPortal` and `SheetOverlay` helpers do the same, but that is unreachable from outside the module since neither is exported (see **render-compound-components**).
-- **header-footer-divs**: SheetHeader and SheetFooter MUST render as `<div>` elements with predefined padding and flex layout.
-- **title-description-typography**: SheetTitle and SheetDescription MUST wrap Base UI primitives with styled typography.
-
+- **close-on-overlay-click**: Clicking the overlay MUST close the drawer by default. Callers MAY disable this dismissal.
+- **width-constrained-on-sides**: When positioned left or right, SheetContent MUST constrain width to 75% of the viewport, capped at 24rem on viewports 640px wide or wider.
+- **content-composition-props**: Sheet, SheetTrigger, SheetClose, and SheetContent MUST accept and pass through additional component props to the parts they wrap. Internally, the module-local `SheetPortal` and `SheetOverlay` helpers do the same, but that is unreachable from outside the module since neither is exported (see **render-compound-components**).
+- **header-footer-divs**: SheetHeader and SheetFooter MUST render as plain container elements with predefined padding and a column layout.
+- **title-description-typography**: SheetTitle and SheetDescription MUST render the sheet's title and description with styled typography, and expose them to assistive technology as the dialog's name and description.
+- **close-on-escape**: Pressing Escape while the drawer is open MUST close it.
+- **restore-focus-on-close**: When the drawer opens, focus MUST move into it; when it closes, focus MUST return to the element that opened it.
+- **full-width-on-top-bottom**: When positioned top or bottom, SheetContent MUST span the full width of the viewport.
 ## Appearance
 
 - **Corner radius**: None (sharp edges, matching popover design token).
@@ -113,17 +115,19 @@ Sheet is a compound component that renders a slide-out drawer anchored to one ed
 | sheet-014 | close-on-overlay-click | Click the overlay while the drawer is open | Drawer closes; `onOpenChange` fires with a pointer/outside-press dismissal reason. |
 | sheet-015 | width-constrained-on-sides | Render SheetContent with `side="right"` on a small+ (≥640px) viewport | Width is 75% of viewport width, capped at 24rem (`sm:max-w-sm` applies once 75% would exceed 24rem). |
 | sheet-016 | content-composition-props | Render SheetContent with additional `className` | Additional class is applied to the drawer element. |
-| sheet-017 | header-footer-divs | Render SheetHeader and SheetFooter | Both render as `<div>` elements with padding (`p-4`) and flex layout. |
+| sheet-017 | header-footer-divs | Render SheetHeader and SheetFooter | Both render as container elements (`div` on the web) with padding (`p-4`) and a column flex layout. |
 | sheet-018 | title-description-typography | Render SheetTitle and SheetDescription | Title renders with `font-medium`, description with muted foreground color. |
-| sheet-019 | Edge case: null/empty content | Render SheetContent with no children | Drawer renders visible but empty; no error is thrown. |
-| sheet-020 | Edge case: multiple sheets | Render two Sheet instances simultaneously, both open | Both render independently via separate Base UI Portals; because SheetOverlay and SheetContent both use a fixed `z-50`, relative stacking order between the two is determined by DOM order, not managed by the component. |
-| sheet-021 | Edge case: animation interruption | Toggle the drawer open, then toggle it closed before the opening transition finishes | The CSS transition is interrupted and reverses from its current computed value (standard CSS transition-interruption behavior); no additional interruption handling exists in source beyond this. |
-| sheet-022 | Edge case: side boundary | Render SheetContent with `side="left"` on a 320px-wide viewport | Drawer renders at 75% of viewport width (240px); no additional minimum-width or narrow-viewport safeguard is applied by the component. |
-
+| sheet-019 | `#edge-cases/null-empty-content` | Render SheetContent with no children | Drawer renders visible but empty; no error is thrown. |
+| sheet-020 | `#edge-cases/multiple-sheets` | Render two Sheet instances simultaneously, both open | Both render independently via separate Base UI Portals; because SheetOverlay and SheetContent both use a fixed `z-50`, relative stacking order between the two is determined by DOM order, not managed by the component. |
+| sheet-021 | `#edge-cases/animation-interruption` | Toggle the drawer open, then toggle it closed before the opening transition finishes | The CSS transition is interrupted and reverses from its current computed value (standard CSS transition-interruption behavior); no additional interruption handling exists in source beyond this. |
+| sheet-022 | `#edge-cases/side-boundary` | Render SheetContent with `side="left"` on a 320px-wide viewport | Drawer renders at 75% of viewport width (240px); no additional minimum-width or narrow-viewport safeguard is applied by the component. |
+| sheet-023 | close-on-escape | Open the drawer, then press Escape | Drawer closes; `onOpenChange` fires with `false`. |
+| sheet-024 | restore-focus-on-close | Activate a SheetTrigger, then close the drawer | Focus moves into the drawer when it opens and returns to the SheetTrigger when it closes. |
+| sheet-025 | full-width-on-top-bottom | Render SheetContent with `side="bottom"` | Drawer spans the full viewport width (`inset-x-0`). |
+| sheet-026 | content-composition-props | Render SheetContent with `aria-label="Settings"` and no SheetTitle | The dialog's accessible name is "Settings". |
 ## Edge Cases
 
 - **Null/empty content**: If SheetContent is rendered with no children, drawer is still visible but empty. No error is thrown (see sheet-019).
-- **Overlay interaction**: Covered by **close-on-overlay-click** — clicking the overlay closes the drawer by default, inherited from Base UI's Dialog root (see sheet-014).
 - **Multiple sheets**: The component places no limit on how many Sheet instances may be open at once; each renders independently via its own Base UI Portal. SheetOverlay and SheetContent both use a fixed `z-50`, so the visual stacking order between multiple simultaneously open sheets is determined by DOM order, not managed by the component (see sheet-020).
 - **Animation interruption**: Rapidly toggling the drawer open and closed interrupts the current CSS transition; the browser continues from its current computed opacity/transform value toward the new target (standard CSS transition-interruption behavior). No additional interruption handling exists in source beyond this (see sheet-021).
 - **Side boundary**: On mobile with `side="left"` or `side="right"`, the 75%-capped-at-24rem width constraint may leave insufficient space; width calculations use viewport units without media-query safety checks for very narrow viewports (see sheet-022).
@@ -135,14 +139,17 @@ Sheet is a compound component that renders a slide-out drawer anchored to one ed
 |--------|------|---------|-------------|
 | `side` | "top" \| "right" \| "bottom" \| "left" | "right" | Specifies which edge the drawer slides in from. |
 | `showCloseButton` | boolean | `true` | Controls whether the close button is rendered in the top-right corner. |
-
+| `open` | boolean | uncontrolled | On `Sheet`: whether the drawer is open, for controlled use. |
+| `defaultOpen` | boolean | `false` | On `Sheet`: whether the drawer starts open when uncontrolled. |
+| `onOpenChange` | `(open, details) => void` | — | On `Sheet`: called when the drawer opens or closes, including a pointer or Escape dismissal. |
+| `disablePointerDismissal` | boolean | `false` | On `Sheet`: when true, clicking the overlay no longer closes the drawer (see **close-on-overlay-click**). |
 ## Deep Linking
 
 Not applicable: Sheet is a modal overlay component with no navigation entry point or URL routing integration in the source.
 
 ## Localization
 
-Sheet does carry one user-visible string: the close button's screen-reader label, "Close" (see **close-button-accessible-label**). It is hardcoded in `sheet.tsx` rather than sourced from a localization resource, so it renders in English regardless of the consuming app's locale — a real i18n gap in the current source, not a "not applicable" case.
+Sheet does carry one user-visible string: the close button's screen-reader label, "Close" (see **close-button-accessible-label**). It is hardcoded in `sheet.tsx` rather than sourced from a localization resource, so it renders in English regardless of the consuming app's locale — a real i18n gap in the current source, not a "not applicable" case. The source offers no option to override the label; a fix would take it from the consuming app's string table.
 
 ## Accessibility Options
 
@@ -175,7 +182,7 @@ Not applicable: Sheet has no logging or debugging output in the source.
 
 - **SwiftUI**: No SwiftUI version exists. A port would use a `.sheet()` or `.presentationDetents()` modifier for top/bottom drawers, or `.inspector()` for a side-anchored panel. Positioning logic for arbitrary edges would need manual implementation.
 - **Compose**: No Compose version exists. A port would use `ModalBottomSheet` for top/bottom drawers, or Material3's `ModalNavigationDrawer` for left/right side drawers. The four-side positioning would require custom composition logic to unify both under one API.
-- **React/Web**: This is the React/Web version. It uses Base UI Dialog as the foundational primitive, Tailwind CSS for styling, and CSS custom properties for animation scaling. Implementation-specific details: the close icon is lucide-react's `XIcon`; the close button's accessible label is a visually hidden `<span className="sr-only">Close</span>`; the overlay's blur uses the `supports-backdrop-filter:backdrop-blur-xs` utility; left/right width uses the `w-3/4` and `sm:max-w-sm` utilities; and header/footer padding uses the `p-4` utility.
+- **React/Web**: This is the React/Web version. It uses Base UI Dialog as the foundational primitive, Tailwind CSS for styling, and CSS custom properties for animation scaling. Implementation-specific details: the close icon is lucide-react's `XIcon`; the close button's accessible label is a visually hidden `<span className="sr-only">Close</span>`; the overlay's blur uses the `supports-backdrop-filter:backdrop-blur-xs` utility; left/right width uses the `w-3/4` and `sm:max-w-sm` utilities; and header/footer padding uses the `p-4` utility. Header and footer render as `<div>` elements, and the title and description wrap Base UI's `Dialog.Title` and `Dialog.Description`. The overlay blur is CSS `backdrop-filter: blur`, applied only where the browser supports it, and the width cap switches on at Tailwind's `sm` breakpoint (640px). Pointer dismissal comes from Base UI's Dialog root, which enables it unless a caller passes `disablePointerDismissal`; Sheet does not set that prop, so the default applies, and callers can disable it by passing `disablePointerDismissal` to `Sheet`. Escape handling, focus movement and restoration, and the dialog's accessible name also come from Base UI's Dialog.
 - **AppKit / UIKit**: No AppKit or UIKit version exists. `NSPanel` is a floating panel, not a drawer, so it is not the right mapping. A port would use `NSSplitViewController` with a collapsible side pane on macOS, or `UIViewController` with `.modalPresentationStyle = .custom` and a custom transition controller for slide-in behavior on iOS.
 - **WinUI 3**: No WinUI 3 version exists. `ContentDialog` is a centered modal dialog, not a drawer, so it is not the right mapping. A port would use `SplitView` with `DisplayMode="Overlay"` and `OpenPaneLength` for left/right side drawers, or a custom `Grid` with `ThicknessTransition` animations for top/bottom. Side constraints would use `ColumnDefinition` widths or `RelativePanel` for left/right sides.
 
@@ -183,7 +190,7 @@ Not applicable: Sheet has no logging or debugging output in the source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/sheet.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/sheet.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -200,11 +207,11 @@ Not applicable: Sheet has no logging or debugging output in the source.
 **Approved**: pending
 
 **Decision**: The `showCloseButton` prop defaults to `true`, providing an always-available close affordance.
-**Rationale**: Users can disable it if a custom close mechanism is preferred.
+**Rationale**: Every sheet then has a discoverable way to dismiss it without relying on Escape or an overlay click; consumers with their own close control can turn it off.
 **Approved**: pending
 
 **Decision**: Left and right drawers are constrained to 75% viewport width, capped at 24rem, on small+ screens, leaving the underlying content partially visible.
-**Rationale**: This preserves context and allows custom overflow behavior.
+**Rationale**: A visible strip of the underlying content preserves the user's context, and the cap stops a drawer from growing to fill a wide screen.
 **Approved**: pending
 
 **Decision**: The backdrop includes a blur effect (via `supports-backdrop-filter:backdrop-blur-xs`) to create visual separation.
@@ -231,12 +238,13 @@ Not applicable: Sheet has no logging or debugging output in the source.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-`sheet.tsx` grounds these statuses: Base UI's `Dialog` primitive supplies focus trapping/restoration, Escape handling, `role="dialog"`, `aria-modal`, and `aria-labelledby` (the `passed` rows); the close button's `size="icon-sm"` Button variant is 28px square per `button.tsx`, under the 44×44pt minimum (`touch-target-size: failed`); the close label "Close" is a hardcoded, non-externalized string (`string-externalization` and `no-hardcoded-strings: failed`); side positioning uses physical `left-0`/`right-0` rather than logical inline-start/inline-end properties, so it does not flip for RTL locales (`rtl-layout-support: failed`); and `--apt-anim-scale` gives the app a lever for reduced motion, but the component never reads `prefers-reduced-motion` itself (`reduced-motion: partial`). Font sizing in `rem` and unrestricted children content leave `dynamic-type-support`, `contrast-ratio`, `text-expansion-tolerance`, and `unicode-support` as either `partial` (the source can't itself guarantee the outcome) or `passed` (nothing in source restricts it). `separation-of-concerns` passes because `sheet.tsx` only forwards props onto `@base-ui/react`'s `Dialog` primitive, carrying no business logic of its own. `unit-test-coverage` fails because no test file in the `ui` package exercises `Sheet`.
+`sheet.tsx` grounds these statuses: Base UI's `Dialog` primitive supplies focus trapping/restoration, Escape handling, `role="dialog"`, `aria-modal`, and `aria-labelledby` (the `passed` rows); the close button's `size="icon-sm"` Button variant is 28px square per `button.tsx`, under the 44×44pt minimum (`touch-target-size: failed`); the close label "Close" is a hardcoded, non-externalized string (`string-externalization` and `no-hardcoded-strings: failed`); side positioning uses physical `left-0`/`right-0` rather than logical inline-start/inline-end properties, so it does not flip for RTL locales (`rtl-layout-support: failed`); and `--apt-anim-scale` gives the app a lever for reduced motion, but the component never reads `prefers-reduced-motion` itself (`reduced-motion: partial`). `dynamic-type-support` is partial because text sizes use `text-sm`/`text-base` (rem-based, so they follow the root font size) but nothing in the source tests scaling; `contrast-ratio` is partial because text colors come from design tokens and the `bg-black/20` overlay whose contrast the source does not verify; `text-expansion-tolerance` is partial because the drawer width is capped at 75% and 24rem with no handling for long translated strings beyond normal wrapping; and `unicode-support` passes because the sheet renders caller-supplied children and restricts no characters. `separation-of-concerns` passes because `sheet.tsx` only forwards props onto `@base-ui/react`'s `Dialog` primitive, carrying no business logic of its own. `unit-test-coverage` fails because no test file in the `ui` package exercises `Sheet`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Moved web mechanism details out of requirements into the React/Web note, added root-prop rows to Configuration, gave each partial Compliance row its own reason, rewrote two Design Decision rationales, dropped the duplicate overlay edge case, addressed the vector requirement references, and added close-on-escape, focus-restore and full-width requirements with vectors. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Compliance best-practices rows added (prior fixer already fixed E_2 exports). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed Behavioral Requirements to subject-only kebab-case and updated every citation; moved web-specific implementation details (lucide `XIcon`, Tailwind utility classes, the `sr-only` span) out of requirements and test vectors into the React/Web Platform Note; corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 Platform Notes to real native drawer APIs (`.inspector()`, `ModalNavigationDrawer`, `NSSplitViewController`, `SplitView`/`DisplayMode="Overlay"`); added a close-on-overlay-click requirement and test vector grounded in Base UI's default pointer-dismissal behavior; recorded the close button's actual 28px hit target as a known touch-target-size failure instead of a false 44pt claim; defined scale-0/negative as an instant transition via CSS duration clamping and described CSS transition-interruption on rapid toggling instead of leaving both undefined; corrected the width requirement to "75%, capped at 24rem on sm+" and fixed the sheet-012/sheet-003 test vectors to match; rebuilt Compliance as a canonical linked accessibility/internationalization table; reformatted Design Decisions into Decision/Rationale/Approved blocks; added dialog and popover to related; fixed the circular label requirement, the "visible screen-reader-only" and "semantic divs" wording, the unbounded multiple-sheets edge case, the mischaracterized "Not applicable" Localization section, and the "side drawer" summary; added test vectors for every edge case |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Remove review marker from Compliance section; state Base UI Dialog inheritance as fact and list satisfied WCAG compliance items |

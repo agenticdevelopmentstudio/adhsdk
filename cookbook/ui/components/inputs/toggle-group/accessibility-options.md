@@ -1,5 +1,5 @@
 
-ToggleGroup does not implement dedicated Reduce Motion, Increase Contrast, or Differentiate
+The pressed state's only visual cue is the gold fill, so the control relies on color alone for sighted users (a known Differentiate Without Color gap). ToggleGroup does not implement dedicated Reduce Motion, Increase Contrast, or Differentiate
 Without Color handling of its own. The rest/hover/pressed treatments in the source
 (`hover:text-apt-text`, `data-[pressed]:bg-apt-gold`, `transition-colors`) are plain color and
 transition utilities with no `prefers-reduced-motion` or `forced-colors` media query, so their

@@ -10,10 +10,10 @@ No test sits beside the source file. Vector 007 comes from `testAppMatchesAgentO
 | known-terminals-005 | match-contract | `match(termProgram: "ghostty")` | nil |
 | known-terminals-006 | match-exact | `match(termProgram: "iterm.app")` | nil, because the comparison is case sensitive |
 | known-terminals-007 | display-name-use, match-contract | a session with `TERM_PROGRAM` `iTerm.app`, app filter `ITERM` (`testAppMatchesAgentOrTerminalByPrefix`) | the filter matches (by prefix on the raw `TERM_PROGRAM` or the matched `displayName`, case ignored), and a filter of `ghostty` does not |
-| known-terminals-008 | match-empty-input | `match(termProgram: "")` | nil |
+| known-terminals-008 | match-contract | `match(termProgram: "")` | nil |
 | known-terminals-009 | catalog-extensible, term-program-values-plural | a custom catalog with one entry holding values `a` and `b`; `match(termProgram: "b", in: custom)` | that entry |
 | known-terminals-010 | catalog-extensible | `match(termProgram: "iTerm.app", in: [])` | nil |
 | known-terminals-011 | catalog-order | the `displayName` of each entry of `all` | iTerm2, Terminal.app, Warp, VS Code, in that order |
 | known-terminals-012 | match-contract | a custom catalog with two entries that both list `x`; `match(termProgram: "x", in: custom)` | the first of the two |
 | known-terminals-013 | entry-conformance | two `KnownTerminal` values built with the same three arguments | equal |
-
+| known-terminals-014 | catalog-no-duplicates | every `termProgramValues` value across the entries of `all` | no value appears in two entries |

@@ -16,4 +16,6 @@
 | collapse-toggle-013 | classname-merge | `className="custom-class"` | Custom class appears in rendered button className |
 | collapse-toggle-014 | click-invokes-on-toggle | User focuses the button and presses Enter or Space | `onToggle` callback invoked with the resulting click event (native `<button>` key-activation behavior) |
 | collapse-toggle-015 | forwarded-click-event | User ⌘-clicks the button | `onToggle` callback receives the event with `metaKey=true` |
-
+| collapse-toggle-016 | classname-merge | `className="px-3"` | `px-3` is present in the button className and the default `px-1` is absent |
+| collapse-toggle-017 | title-attribute-text | `collapsed={false}, label="Items"` | `title="Collapse Items"` |
+| collapse-toggle-018 | aria-label-text (observed, non-normative) | `collapsed={true}, label=""` | `aria-label="Expand "` and `title="Expand "`; the glyph still renders and `onToggle` still fires |

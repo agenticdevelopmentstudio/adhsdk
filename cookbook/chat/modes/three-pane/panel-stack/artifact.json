@@ -4,11 +4,11 @@
     "id": "4c3c4287-95bd-47f5-9a07-2382e0db523b",
     "title": "PanelStack",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "35045ace98c22f54",
+  "synced": "0f4f4498d29b5a73",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

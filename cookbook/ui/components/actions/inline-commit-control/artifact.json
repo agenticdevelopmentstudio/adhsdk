@@ -4,11 +4,11 @@
     "id": "26df832c-a7f7-4cf6-b3f5-240c61e8bd68",
     "title": "InlineCommitControl",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-07-07",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cca77793a411366d",
+  "synced": "60ed43ed30dae551",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: removed unsupported AWS Amplify attribution; downgraded contrast-ratio compliance to partial and added internationalization check; removed false prefers-reduced-motion claim; replaced AppKit/UIKit subclassing guidance with a composition-based factory pattern; renamed must-* requirements to subject-only kebab-case everywhere they are cited; added related sibling recipes; corrected the self-contradictory whitespace-className edge case and retitled multiple-classes edge case; removed the unsupported false/null className edge case; added test vectors for null/undefined/empty children and undefined/whitespace-only className; added concrete appearance values (color token, font size, line-height) to Appearance and mapped each Platform Notes bullet onto them; reformatted Design Decisions into Decision/Rationale/Approved form |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Removed five source line-number citations (styles.css:180 etc.), replaced with the .aws-explanation rule name. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

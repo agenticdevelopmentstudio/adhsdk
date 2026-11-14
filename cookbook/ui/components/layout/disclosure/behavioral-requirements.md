@@ -6,4 +6,9 @@
 - **actions-exempt-from-toggle**: Interacting with the header `actions` slot MUST NOT toggle the disclosure.
 - **mount-children-only-when-open**: Children MUST be mounted only when open (and unmounted when closed), not merely visually hidden.
 - **expose-expanded-state**: The toggle button MUST carry `aria-expanded` reflecting the current open state.
-
+- **on-open-change-uncontrolled**: In uncontrolled mode the component MUST call `onOpenChange` with the next open value on every toggle, as well as managing its own state.
+- **link-toggle-to-body**: The toggle button SHOULD carry `aria-controls` referencing the id of the body it shows and hides. Known gap: the source sets none.
+- **title-in-heading**: For a section-style disclosure, the title SHOULD sit inside a heading element so it appears in the heading outline. Known gap: the source renders the title in a plain `span`.
+- **respect-reduced-motion**: The chevron rotation MUST NOT animate when the user prefers reduced motion. Known gap: the source has no `motion-reduce:` variant (see Compliance, reduced-motion failed).
+- **keep-truncated-text-available**: A truncated title or subtitle MUST stay fully available to assistive technology and SHOULD stay fully available to sighted users (for example through a tooltip). Known gap: the full text is in the DOM, but sighted users cannot read the truncated part.
+- **rtl-chevron**: In a right-to-left layout the collapsed chevron MUST point toward the inline-start edge, and the open chevron MUST point down, so the rotation stays logical. Known gap: the source does not mirror the chevron.

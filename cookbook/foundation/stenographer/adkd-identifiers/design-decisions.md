@@ -1,6 +1,6 @@
 
 **Decision**: Every launchd, log, keychain, hook, port and path name is spelled once, in this type, and read by the daemon, CLI and host app.
-**Rationale**: The source comment states the aim: the three binaries never spell them twice, so a rename or a collision fix lands in one place.
+**Rationale**: The doc comment on `ADKDIdentifiers` in `ADKDIdentifiers.swift` states the aim: the three binaries never spell them twice, so a rename or a collision fix lands in one place.
 **Approved**: pending
 
 **Decision**: Every identifier and path that could collide differs from the Stenographer daemon's, and a test asserts it.
@@ -12,6 +12,6 @@
 **Approved**: pending
 
 **Decision**: There are no legacy names and no migration.
-**Rationale**: The source comment states the daemon has no history, so nothing needs to be read from an older location.
+**Rationale**: The doc comment on `ADKDIdentifiers` in `ADKDIdentifiers.swift` states the daemon has no history, so nothing needs to be read from an older location.
 **Approved**: pending
 

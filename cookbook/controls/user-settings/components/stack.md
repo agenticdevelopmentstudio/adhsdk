@@ -2,11 +2,11 @@
 id: fcc6d4c4-d83e-402a-857c-fbd0aff91113
 title: "Stack"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -40,16 +40,16 @@ VStack and HStack are layout containers that arrange child elements in a vertica
 - **apply-inline-styles**: The component MUST merge provided `style` prop values with layout-specific styles, giving precedence to `style` prop values when both are present.
 - **apply-class-names**: The component MUST apply the base class name `aws-stack` to the root element; MUST apply either `aws-stack--v` for VStack or `aws-stack--h` for HStack; MUST append the `className` prop if provided.
 - **no-rest-prop-forwarding**: The component MUST NOT forward any prop other than `children`, `gap`, `align`, `justify`, `className`, and `style` to the root element; `id`, `role`, `aria-*`, and any other attribute cannot be set through Stack's props.
-- **render-non-semantic-div**: The component SHOULD render a `div` element for flexible, CSS-class-based styling; because a `div` carries no ARIA semantics, this renders a non-semantic element that adds no role or landmark to the accessibility tree.
-
+- **render-non-semantic-div**: The component MUST render a `div` element for flexible, CSS-class-based styling; a `div` has the implicit `generic` role, so it adds no landmark or accessible name, and its children remain exposed to assistive technology.
+- **stack-css-rules**: The package stylesheet `user-settings/styles.css` MUST provide these rules for the layout classes: `.aws-stack { display: flex; min-width: 0; }`, `.aws-stack--v { flex-direction: column; gap: 0.6rem; }` and `.aws-stack--h { flex-direction: row; align-items: center; gap: 0.6rem; }`. The component sets no `display` or `flex-direction` inline, so a rebuild without these rules does no layout.
 ## Appearance
 
 - **Container element**: `<div>`
-- **Display**: `flex` (set by `aws-stack` class or equivalent)
-- **Gap**: Customizable via `gap` prop; defaults to `undefined` (no gap)
-- **Alignment**: Customizable via `align` prop (maps to `alignItems`); defaults to `undefined`
+- **Display**: `flex` (set by the `aws-stack` rule; see #requirements/stack-css-rules)
+- **Gap**: Customizable via `gap` prop; when the prop is unset, no inline `gap` is written and the class rule applies (`0.6rem` for both directions)
+- **Alignment**: Customizable via `align` prop (maps to `alignItems`); when unset, no inline value is written (HStack's class rule gives `center`)
 - **Justification**: Customizable via `justify` prop (maps to `justifyContent`); defaults to `undefined`
-- **Direction**: VStack uses column; HStack uses row (set by `aws-stack--v` or `aws-stack--h` class)
+- **Direction**: VStack uses column; HStack uses row (set by the `aws-stack--v` or `aws-stack--h` rule; see #requirements/stack-css-rules)
 - **Padding**: None by default; customizable via inline `style` prop
 
 ## States
@@ -58,11 +58,11 @@ Not applicable: Stack is a non-interactive layout container and does not have in
 
 ## Accessibility
 
-- **Role**: Stack renders a plain `<div>` with no ARIA role. Stack does not forward `role` or other rest props (see **no-rest-prop-forwarding**), so consuming code cannot set a role through Stack itself.
+- **Role**: Stack renders a plain `<div>` with the implicit `generic` role and no explicit ARIA role. Stack does not forward `role` or other rest props (see #requirements/no-rest-prop-forwarding), so consuming code cannot set a role through Stack itself.
 - **Keyboard navigation**: Not applicable; Stack is a layout primitive and does not handle keyboard interaction. Child elements within the Stack maintain their native keyboard behavior.
-- **Screen reader**: Stack does not obscure the semantic meaning of child elements. The root `div` carries no role or landmark, so it is invisible to the accessibility tree (see **render-non-semantic-div**).
+- **Screen reader**: Stack does not obscure the semantic meaning of child elements. The root `div` has the implicit `generic` role and adds no landmark or name, and its children remain exposed (see #requirements/render-non-semantic-div).
 - **Labels**: Not applicable; Stack is a layout container and carries no label. Child interactive elements within the Stack MUST maintain their own labels.
-- **Semantic structure**: Stack is transparent to the document outline because the root `div` adds no role or landmark (see **render-non-semantic-div**). Child elements MUST maintain their semantic value (headings, buttons, etc.).
+- **Semantic structure**: Stack is transparent to the document outline because the root `div` adds no landmark or name (see #requirements/render-non-semantic-div). Child elements MUST maintain their semantic value (headings, buttons, etc.).
 
 ## Conformance Test Vectors
 
@@ -85,15 +85,14 @@ Not applicable: Stack is a non-interactive layout container and does not have in
 | stack-015 | apply-inline-styles (conflicting style) | VStack with `gap={8}`, `align="center"`, `style={{ gap: '2rem', alignItems: 'flex-start' }}` | Inline style has `gap: "2rem"` and `alignItems: "flex-start"` |
 | stack-016 | apply-class-names (empty className) | VStack with `className=""` | Class attribute is `"aws-stack aws-stack--v"` with no empty or extra whitespace tokens |
 | stack-017 | no-rest-prop-forwarding | VStack rendered with an unsupported prop forced onto it (e.g. `{ id: 'x' } as any`) | Root element has no `id` attribute |
-
+| stack-018 | render-children (null children) | VStack with `children={null}` | Root `<div>` renders with the layout classes and no child nodes |
 ## Edge Cases
 
-- **Undefined children**: If `children` is `undefined` or `null`, the component MUST render an empty div with layout classes applied.
-- **Empty children array**: If `children` is an empty array, the component MUST render an empty div with layout classes applied.
-- **Gap as zero**: If `gap={0}`, the component MUST apply `gap: "0px"`; if `gap="0"`, it MUST apply `gap: "0"`.
-- **Conflicting inline styles**: If `style` contains `gap`, `alignItems`, or `justifyContent`, those values MUST take precedence over the `gap`/`align`/`justify` props, because `style` is spread last when merging.
-- **Empty or absent className**: If `className` is not provided or is an empty string, the class attribute contains no empty or extra whitespace tokens.
-
+- **Undefined or null children**: The root `div` renders with the layout classes and no child nodes. See #requirements/render-children, stack-011 and stack-018.
+- **Empty children array**: Same outcome as undefined children. See #requirements/render-children and stack-012.
+- **Gap as zero**: Numeric and string zero are applied as written. See #requirements/apply-gap-prop, stack-013 and stack-014.
+- **Conflicting inline styles**: `style` wins over the `gap`/`align`/`justify` props because it is spread last. See #requirements/apply-inline-styles and stack-015.
+- **Empty or absent className**: No empty or extra whitespace tokens appear in the class attribute. See #requirements/apply-class-names and stack-016.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -105,7 +104,7 @@ Not applicable: Stack is a non-interactive layout container and does not have in
 | `className` | `string` | `undefined` | Appended after the base `aws-stack` and direction classes. |
 | `style` | `CSSProperties` | `undefined` | Merged into the computed inline style last, taking precedence over `gap`/`align`/`justify`. |
 
-No other props are accepted. `id`, `role`, `aria-*`, and any other attribute are not forwarded to the root element (see **no-rest-prop-forwarding**).
+No other props are accepted. `id`, `role`, `aria-*`, and any other attribute are not forwarded to the root element (see #requirements/no-rest-prop-forwarding).
 
 ## Deep Linking
 
@@ -141,17 +140,41 @@ Not applicable: Stack is a layout primitive with no logging requirements in the 
 
 ## Platform Notes
 
-- **React/Web**: Implemented as functional components in `Stack.tsx`. VStack renders a div with `aws-stack--v` class; HStack renders a div with `aws-stack--h` class. Gap conversion from number to pixel string is handled by the `gapValue()` utility. Styles are merged inline using spread syntax, with the `style` prop taking precedence. Classes are filtered and joined using a simple boolean filter to avoid empty strings. Only the props defined on `StackProps` are read; the components never spread additional rest props onto the root element, so `id`, `role`, and `aria-*` are never forwarded.
 - **SwiftUI**: Implement using the native `VStack(alignment:spacing:)` and `HStack(alignment:spacing:)` initializers. Map `gap` to the initializer's `spacing` parameter — SwiftUI has no `.spacing()` modifier. Map `align` to the initializer's `alignment` parameter. SwiftUI's `VStack`/`HStack` have no `justifyContent` equivalent; approximate `justify` with `Spacer()` views placed between or around children (see Design Decisions for which control wins when a platform can't represent both `gap` and `justify` independently).
-- **Compose (Android)**: Implement using Jetpack Compose's `Column` (for VStack) and `Row` (for HStack) composables. Map `gap` to the `verticalArrangement` (Column) or `horizontalArrangement` (Row) parameter, using `Arrangement.spacedBy()`. Map `align` to the `horizontalAlignment` (Column) or `verticalAlignment` (Row) parameter — this is the cross-axis alignment, opposite of the axis `gap` uses. `Arrangement.spacedBy()` (from `gap`) and `Arrangement.SpaceBetween` (from `justify`) both set the same `Arrangement` parameter and cannot be applied together; per Design Decisions, `gap` takes precedence and `justify` is dropped when both are set.
-- **AppKit / UIKit**: Use `NSStackView` (macOS) or `UIStackView` (iOS) as the container. Set the `axis` property to `.vertical` for VStack or `.horizontal` for HStack. Map `gap` to the `spacing` property; map `align` to the `alignment` property; map `justify` to the `distribution` property (using `.fillEqually`, `.equalCentering`, or `.fill` as appropriate). A `distribution` other than `.fill` can override the visual effect of `spacing`, so per Design Decisions, `gap` (spacing) takes precedence and `justify` is approximated with the closest available distribution.
-- **WinUI 3**: Implement using XAML `StackPanel`. Set `Orientation="Vertical"` for VStack or `Orientation="Horizontal"` for HStack. Map `gap` to the `Spacing` property, a `double` (not an integer). `StackPanel` has no `justifyContent` equivalent — there is no native way to distribute or justify children within it; where `justify` must be honored, use a `Grid` with star-sized (`*`) rows or columns instead. Custom classes are not applicable to `StackPanel`; apply styling via a XAML `Style` resource (there is no "CSS-in-XAML").
 
+  | `justify` | SwiftUI approximation |
+  |-----------|-----------------------|
+  | `flex-start` | `Spacer()` after the children |
+  | `center` | `Spacer()` before and after the children |
+  | `flex-end` | `Spacer()` before the children |
+  | `space-between` | `Spacer()` between each pair of children |
+  | `space-around` | `Spacer()` between each pair of children and at the ends (closest available; the ends are not half-size) |
+  | `space-evenly` | `Spacer()` between each pair of children and at both ends |
+- **Compose (Android)**: Implement using Jetpack Compose's `Column` (for VStack) and `Row` (for HStack) composables. Map `gap` to the `verticalArrangement` (Column) or `horizontalArrangement` (Row) parameter, using `Arrangement.spacedBy()`. Map `align` to the `horizontalAlignment` (Column) or `verticalAlignment` (Row) parameter — this is the cross-axis alignment, opposite of the axis `gap` uses. `Arrangement.spacedBy()` (from `gap`) and `Arrangement.SpaceBetween` (from `justify`) both set the same `Arrangement` parameter and cannot be applied together; per Design Decisions, `gap` takes precedence and `justify` is dropped when both are set.
+
+  | `justify` | `Arrangement` (Column / Row) |
+  |-----------|------------------------------|
+  | `flex-start` | `Arrangement.Top` / `Arrangement.Start` |
+  | `center` | `Arrangement.Center` |
+  | `flex-end` | `Arrangement.Bottom` / `Arrangement.End` |
+  | `space-between` | `Arrangement.SpaceBetween` |
+  | `space-around` | `Arrangement.SpaceAround` |
+  | `space-evenly` | `Arrangement.SpaceEvenly` |
+- **React/Web**: Implemented as functional components in `Stack.tsx`. VStack renders a div with `aws-stack--v` class; HStack renders a div with `aws-stack--h` class. Gap conversion from number to pixel string is handled by the `gapValue()` utility. Styles are merged inline using spread syntax, with the `style` prop taking precedence. Classes are filtered and joined using a simple boolean filter to avoid empty strings. Only the props defined on `StackProps` are read; the components never spread additional rest props onto the root element, so `id`, `role`, and `aria-*` are never forwarded.
+- **AppKit / UIKit**: Use `NSStackView` (macOS) or `UIStackView` (iOS) as the container. Set the `axis` property to `.vertical` for VStack or `.horizontal` for HStack. Map `gap` to the `spacing` property; map `align` to the `alignment` property; map `justify` to the `distribution` property (using `.fillEqually`, `.equalCentering`, or `.fill` as appropriate). A `distribution` other than `.fill` can override the visual effect of `spacing`, so per Design Decisions, `gap` (spacing) takes precedence and `justify` is approximated with the closest available distribution.
+
+  | `justify` | `NSStackView` / `UIStackView` |
+  |-----------|-------------------------------|
+  | `flex-start`, `center`, `flex-end` | `NSStackView`: `.gravityAreas` with the `.leading`/`.top`, `.center` or `.trailing`/`.bottom` gravity. `UIStackView`: `.fill` plus flexible spacer views before and/or after the children. |
+  | `space-between` | `.equalSpacing` |
+  | `space-around` | `.equalCentering` (closest available) |
+  | `space-evenly` | `.equalSpacing` (closest available; no exact equivalent) |
+- **WinUI 3**: Implement using XAML `StackPanel`. Set `Orientation="Vertical"` for VStack or `Orientation="Horizontal"` for HStack. Map `gap` to the `Spacing` property, a `double` (not an integer). `StackPanel` has no `justifyContent` equivalent — there is no native way to distribute or justify children within it; where `justify` must be approximated, use a `Grid` with star-sized (`*`) rows or columns instead. A `Grid` replaces the `StackPanel` `Spacing`, so per Design Decisions `gap` takes precedence and `justify` is dropped when both are set. Map `align` to the children's `HorizontalAlignment` (VStack) or `VerticalAlignment` (HStack): `flex-start` to `Left`/`Top`, `center` to `Center`, `flex-end` to `Right`/`Bottom`, `stretch` to `Stretch`. Custom classes are not applicable to `StackPanel`; apply styling via a XAML `Style` resource (there is no "CSS-in-XAML").
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/Stack.tsx` | unverified |
+| web | `packages/web/packages/controls/src/user-settings/components/Stack.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -171,7 +194,7 @@ Not applicable: Stack is a layout primitive with no logging requirements in the 
 **Rationale**: This allows default styling from the CSS class definitions to apply, reducing redundant inline style declarations.
 **Approved**: pending
 
-**Decision**: On platforms where the native layout primitive maps `gap` and `justify` onto the same property (Compose `Arrangement`, `NSStackView`/`UIStackView` `distribution`), `gap` takes precedence; `justify` is approximated with the closest available distribution, or dropped.
+**Decision**: On platforms where the native layout primitive maps `gap` and `justify` onto the same property (Compose `Arrangement`, `NSStackView`/`UIStackView` `distribution`, WinUI 3 `StackPanel` `Spacing` versus a `Grid`), `gap` takes precedence; `justify` is approximated with the closest available distribution, or dropped.
 **Rationale**: The React/Web source applies `gap` and `justifyContent` as independent CSS properties with no conflict between them; a priority is needed only where a platform's API cannot represent both independently.
 **Approved**: pending
 
@@ -186,13 +209,11 @@ Not applicable: Stack is a layout primitive with no logging requirements in the 
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
-
-This rests on the source rendering a plain `<div>` with no `role` or other ARIA attribute, and never forwarding `role` or other rest props onto it (see **no-rest-prop-forwarding**); `VStack`/`HStack` are pure presentation over props with only a trivial `gapValue` helper (separation-of-concerns passed), and no test file exercises `Stack.tsx` — the candidate tests matched by name are unrelated Swift and avatar-engine files (unit-test-coverage failed).
-
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Promoted render-non-semantic-div to MUST with generic-role wording, added stack-css-rules, stack-018 and justify mapping tables, mapped WinUI align, pointed Edge Cases at requirement and vector IDs, reordered platform notes, and dropped the Compliance prose. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and updated all citations; rewrote semantic-div claims as non-semantic-div and fixed the Accessibility section's role-forwarding contradiction; added a `no-rest-prop-forwarding` requirement and a Configuration props table; added edge-case test vectors and fixed stack-004's observability; deleted the redundant "missing direction class" edge case; corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes and documented gap/justify precedence; reformatted Design Decisions into the Decision/Rationale/Approved form and documented the hardcoded `aws-stack` prefix; built the Compliance table; and marked Reduce Motion not applicable |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

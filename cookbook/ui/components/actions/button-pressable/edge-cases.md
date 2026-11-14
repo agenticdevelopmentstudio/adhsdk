@@ -9,4 +9,5 @@
 - **Concurrent access**: Not applicable — pointer events are dispatched serially on the browser's single UI thread, and `held`/`pressed` are local, in-memory React state with no cross-thread or cross-session access path.
 - **Error states**: Not applicable — the component has no dependency on a network, database, or file system; it performs no I/O.
 - **Offline or disconnected state**: Not applicable — the component performs no network operation, so connectivity has no effect on its behavior.
-
+- **Unmount during an active press**: the `useEffect` cleanup in `button-pressable.tsx` removes the `window` `pointerup`/`pointercancel` listeners when the component unmounts, so no listener remains and a later window release has no effect (see **no-window-listener-after-unmount**).
+- **Disabled primitive**: PressableButton has no `disabled` check of its own and sets `data-pressed` on any `pointerdown` it receives. Whether a disabled button receives a `pointerdown` at all is decided by the Base UI `Button` primitive and the browser, not by this component.

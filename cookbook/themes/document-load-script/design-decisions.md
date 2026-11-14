@@ -3,7 +3,7 @@
 **Rationale**: The source comment explains that a script element created by a client mount never executes and makes React log "Encountered a script tag while rendering React component"; the pre-paint job only works in the document the server sent.
 **Approved**: pending
 
-**Decision**: Use `useSyncExternalStore` with a no-op subscription instead of `useEffect` and state.
+**Decision**: Use `useSyncExternalStore` with a constant no-op subscription (server snapshot `true`, client snapshot `false`) instead of `useEffect` and state.
 **Rationale**: Inferred from the source: its server snapshot is used for hydration, so the hydrated node matches the server HTML, while the client snapshot makes a fresh mount render nothing, and no effect or state is needed. An effect-and-state version would render the script on the first client render and then remove it.
 **Approved**: pending
 

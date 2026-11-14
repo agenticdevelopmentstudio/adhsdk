@@ -4,11 +4,11 @@
     "id": "86aedf2f-b353-4770-a6dd-9e29b3d9b76a",
     "title": "Selection Actions",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "15eab2d926618d7b",
+  "synced": "63208320aa3d88e6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

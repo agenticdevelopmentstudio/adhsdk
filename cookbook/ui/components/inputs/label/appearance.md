@@ -1,9 +1,7 @@
-
 - **Corner radius**: None
-- **Padding**: None (explicit padding not applied; flexbox layout provides spacing)
-- **Font**: Medium weight (font-medium), small size (text-sm), line-height 1 (leading-none)
-- **Foreground/Text**: `text-apt-text`, a design system color token defined as `--color-apt-text` in `packages/web/packages/themes/src/tailwind.css` and mapped per theme (e.g. to `--color-text-primary` or `--color-on-surface`)
-- **Gap between children**: 2 units (via `gap-2` flex gap)
+- **Padding**: None (explicit padding not applied; a horizontal flex layout provides spacing)
+- **Font**: Medium weight (500), 14px size (0.875rem at the default root size), line-height 1 (no extra leading)
+- **Foreground/Text**: the primary text color token, mapped per theme (e.g. to a primary-text or on-surface color)
+- **Gap between children**: 8px
 - **User select**: None (text is not user-selectable)
-- **Text alignment**: Flexbox centered vertically on the cross-axis (items-center)
-
+- **Child alignment**: Children laid out in a row, vertically centered on the cross-axis

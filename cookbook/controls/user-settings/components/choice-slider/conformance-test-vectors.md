@@ -16,4 +16,7 @@
 | choice-slider-013 | fire-change-callback; Keyboard support (Accessibility) | choices = [{value: "a", label: "A"}, {value: "b", label: "B"}, {value: "c", label: "C"}], value = "a", input focused, ArrowRight pressed once | Slider moves to index 1; onChange called once with argument "b" |
 | choice-slider-014 | maintain-value-in-range, edge case: Number vs. string values | choices = [{value: 1, label: "One"}, {value: 2, label: "Two"}], value = "1" (string) | Strict-equality match fails against both entries; slider positioned at index 0; caption displays "One" |
 | choice-slider-015 | fire-change-callback, edge case: onChange called during render | choices = [{value: "a", label: "A"}, {value: "b", label: "B"}], component re-rendered with a new `value` prop and no user interaction | onChange is not invoked |
-
+| choice-slider-016 | accessible-name | `label` omitted, `choices` non-empty | The slider has a non-empty accessible name. The reference implementation fails this vector. |
+| choice-slider-017 | aria-valuetext | choices = [{value: "a", label: "Small"}, {value: "b", label: "Large"}], value = "b" | The slider's exposed value text is "Large", not "1". The reference implementation fails this vector. |
+| choice-slider-018 | Touch target size (Accessibility) | Any non-empty `choices` | The slider thumb's hit area is at least 24×24 CSS px. The reference implementation fails this vector in browsers whose native thumb is smaller. |
+| choice-slider-019 | maintain-value-in-range | `value` matches no choice in a development build | The first choice is selected and a warning is emitted. The reference implementation selects the first choice but emits no warning. |

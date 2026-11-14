@@ -4,11 +4,11 @@
     "id": "f8b8792e-12f2-4ca1-80a8-9ae7f2c5b31d",
     "title": "Color Picker",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "62aafa14aa3a5f86",
+  "synced": "e6be6eecbc9d53f0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

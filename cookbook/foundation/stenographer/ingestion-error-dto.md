@@ -2,7 +2,7 @@
 id: 95ea4062-09e5-4342-a376-413cb7deb7d1
 title: "Ingestion Error DTOs"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,9 @@ tags:
   - dto
   - wire
 depends-on: []
-related: []
+related:
+  - 96f73261-cf32-42cc-92f3-f8b58542382a
+  - e8286557-84ee-4f45-b78c-f1d184c51a37
 references: []
 approved-by: ""
 approved-date: ""
@@ -34,6 +36,7 @@ Three shapes describe hook events the daemon could not ingest. `IngestionErrorDT
 
 ## Behavioral Requirements
 
+- **timestamp-format**: `quarantinedAt`, `lastRetriedAt`, `updatedAt` and `resolvedAt` are Strings that the daemon writes as ISO-8601 times (`ISO8601DateFormatter`).
 - **error-fields**: An `IngestionErrorDTO` MUST carry `filename`, `eventType`, `sessionId`, `quarantinedAt`, `reason` (String), `retryCount` (Int), `lastRetriedAt` (optional String) and `exhausted` (Bool).
 - **error-live-file**: An `IngestionErrorDTO` MUST describe a file still quarantined on disk; the daemon's `QuarantineService.list()` builds one per event file in the errors directory, not counting `.meta.json` sidecars.
 - **error-reason**: `reason` MUST be read from the file's `.meta.json` sidecar, or be the placeholder `unknown (quarantined before reason capture)` for a file quarantined before reason capture.
@@ -56,7 +59,8 @@ Three shapes describe hook events the daemon could not ingest. `IngestionErrorDT
 - **progress-still-failing**: `stillFailing` MUST count the files whose retry failed, which stay quarantined.
 - **progress-polling**: A client MUST poll `RetryProgressDTO` until `running` is false after starting a batch.
 - **progress-async**: The Retry All batch MUST run off the XPC and HTTP reply thread, so a large backlog cannot time the caller out; starting it while a batch is running changes nothing and returns the live progress. The periodic self-healing batch runs on its scheduler's task and fills the same counters.
-- **conformance-protocols**: `IngestionErrorDTO`, `IngestionErrorLogDTO` and `RetryProgressDTO` MUST be `Codable` and `Sendable` and MUST NOT be declared `Equatable`.
+- **conformance-protocols**: `IngestionErrorDTO`, `IngestionErrorLogDTO` and `RetryProgressDTO` MUST be `Codable` and `Sendable`; they are not declared `Equatable`.
+- **unknown-status**: A client MUST handle a `status` outside the five values, since the type is a String and decodes any value.
 - **no-validation**: The initializers MUST NOT validate: `status` is an unconstrained String here, and counts that do not add up are accepted.
 
 ## Appearance
@@ -86,19 +90,20 @@ Not applicable — this is a set of data shapes, not a visual component.
 | ingestion-error-dto-007 | progress-polling | a progress value with `running` false, `total` 10, `processed` 10 | the poller stops |
 | ingestion-error-dto-008 | error-last-retried | encode an `IngestionErrorDTO` with `lastRetriedAt` nil | the synthesized encoding omits the key; decode gives nil |
 | ingestion-error-dto-009 | no-validation | `IngestionErrorLogDTO` with `status: "mystery"` | constructs; `status` reads `mystery` |
-| ingestion-error-dto-010 | log-no-defaults | construct an `IngestionErrorLogDTO` | every argument must be written, nil included |
+| ingestion-error-dto-010 | log-no-defaults | construct an `IngestionErrorLogDTO` | every argument must be written, nil included (a compile-time check, not a runtime vector) |
 | ingestion-error-dto-011 | log-status-values, log-sqlite-code, log-resolved-at | record a failure twice for `a.json`, then once with `exhausted` true (`testAnUpsertKeepsTheFirstQuarantineTimeAndTracksTheLatestAttempt`) | one row; `quarantinedAt` stays the first time; `retryCount` 3; `status` `exhausted` |
 | ingestion-error-dto-012 | log-status-values, log-resolved-at | resolve `a.json` (`testResolveMarksTheRowRecoveredAndStampsResolvedAt`) | `status` `recovered`; `resolvedAt` non-nil, where it was nil before |
 | ingestion-error-dto-013 | log-status-values, log-resolved-at | clear the active rows with one failing, one exhausted and one recovered row (`testClearTouchesOnlyTheStillActiveRows`) | the failing and exhausted rows read `cleared` with `resolvedAt` set; the recovered row stays `recovered` |
 | ingestion-error-dto-014 | log-status-lost | record a lost event for `empty.json`, then clear (`testALostEventIsATerminalResolvedRowThatClearLeavesAlone`) | `status` `lost`, `retryCount` 0, `resolvedAt` non-nil, `quarantinedAt` the detection time; clear leaves it `lost` |
 | ingestion-error-dto-015 | log-resolved-at | record a failure for a recovered filename again (`testAResolvedFilenameQuarantinedAgainTakesAFreshQuarantineTime`) | `status` `failing`, `quarantinedAt` the new time, `resolvedAt` nil |
+
 ## Edge Cases
 
 - **Never retried**: `retryCount` is 0 and `lastRetriedAt` is nil; the shape MUST carry both.
 - **Placeholder reason**: a file quarantined before reason capture has a placeholder `reason`; the daemon writes `unknown (quarantined before reason capture)`.
-- **Empty drop file**: it appears as `lost` in the log, once, with no retries, and not in the live-failure count.
-- **Unknown status**: a `status` outside the five values still decodes, since the type is a String; a client MUST handle an unknown value.
-- **Empty batch**: Retry All over an empty errors directory sets `total` 0 and `running` true, and the batch ends with `running` false and every count 0.
+- **Empty drop file**: see `#requirements/log-status-lost`.
+- **Unknown status**: a `status` outside the five values still decodes, since the type is a String; see `#requirements/unknown-status`.
+- **Empty batch**: Retry All over an empty errors directory sets `total` 0; `running` is true only until the batch finishes, then false with every count at 0.
 - **Counts out of step**: `recovered` plus `stillFailing` may not equal `processed`, mid-batch or after it, because a file that vanished is processed but neither recovered nor failing; nothing here enforces the sum.
 - **Batch already running**: starting Retry All while a manual or periodic batch runs starts nothing and returns the live progress; a periodic batch that finds a manual one running does nothing.
 - **Re-quarantined filename**: a filename recorded as `recovered` or `cleared` and then failing again takes the new quarantine time and a nil `resolvedAt`.
@@ -107,12 +112,7 @@ Not applicable — this is a set of data shapes, not a visual component.
 
 ## Configuration
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| retryCount | Int | 0 | Failed self-healing retries so far. |
-| lastRetriedAt | String? | nil | Time of the most recent retry. |
-| exhausted | Bool | false | True once `retryCount` reaches the daemon's `maxRetries`, which defaults to 3 and is raised to at least 1. |
-
+Not applicable: nothing here is consumer-configurable. The initializer defaults are in `error-init-defaults`, and `exhausted` is derived from the daemon's `maxRetries` (see `error-exhausted`).
 ## Deep Linking
 
 Not applicable: the shapes define no URL or deep link; `GET /ingestion/errors/log` is the daemon's route, named only in a doc comment.
@@ -146,17 +146,17 @@ Not applicable: this code makes no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Not used; an error list binds to `IngestionErrorDTO` rows, a badge counts those with `exhausted` true, and a Retry All sheet polls `RetryProgressDTO` into a `ProgressView`.
+- **SwiftUI**: A consumer view can bind an error list to `IngestionErrorDTO` rows, a badge counts those with `exhausted` true, and a Retry All sheet polls `RetryProgressDTO` into a `ProgressView`.
 - **Compose**: Kotlin data classes with `kotlinx.serialization`; optional fields are nullable with a default of null; model `status` as a String with a helper enum for the five known values.
 - **React/Web**: TypeScript interfaces with `lastRetriedAt: string | null`; a polling hook (interval plus `running` check) stands in for the progress poll.
-- **AppKit / UIKit**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/IngestionErrorDTO.swift`: three `Codable`, `Sendable` structs without `Equatable`, with explicit public initializers; the XPC side needs these to cross as `Codable` payloads.
+- **AppKit / UIKit**: Bind `IngestionErrorDTO` rows to an `NSTableView` data source (or `UITableView` on iOS), and drive an `NSProgressIndicator` (or `UIProgressView`) from `RetryProgressDTO` by polling until `running` is false; the structs are `Codable` and `Sendable`, so they cross XPC as payloads.
 - **WinUI 3**: Use C# records with `System.Text.Json` (`string?` and `int?` for the optionals); `HttpClient` calls the log route; a `DispatcherTimer` or `PeriodicTimer` polls progress until `Running` is false and updates `ObservableCollection` rows and a `ProgressBar` (`Maximum` from `Total`, `Value` from `Processed`); an `InfoBadge` over the nav item shows the exhausted count.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/IngestionErrorDTO.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/IngestionErrorDTO.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -176,7 +176,7 @@ Not applicable: this code makes no log calls.
 **Approved**: pending
 
 **Decision**: `status` is a String and not an enum.
-**Rationale**: The source types it String and lists five values in a comment; a new value decodes without a shape change, at the cost of no compile-time check.
+**Rationale**: The source types it String and lists five values in a comment; a new value decodes without a shape change, at the cost of no compile-time check; a client parses `status` at the boundary into its own enum with an `unknown` case.
 **Approved**: pending
 
 ## Compliance
@@ -193,3 +193,4 @@ separation-of-concerns passes: the file holds three shapes; quarantine, retry an
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Stated ISO-8601 timestamps, added an unknown-status requirement, deduplicated the lost and maxRetries text, clarified the empty batch, set Configuration to not applicable, fixed the SwiftUI and AppKit notes, and added related links. |

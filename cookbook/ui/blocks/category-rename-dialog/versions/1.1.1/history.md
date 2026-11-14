@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Backdrop clicks never fire onOpenChange (disablePointerDismissal), busy or not; corrected prevent-close-while-busy, rename-021, and the busy edge case to stop framing backdrop as busy-gated. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case (dropped `must-` prefix) everywhere they're cited; replaced line-number citations with source symbol/function names; reformatted Design Decisions into Decision/Rationale/Approved form and corrected the case-only-rename claim; rewrote Compliance as real catalog checks with a plain Category column; marked Analytics "Not applicable" to match Privacy/Feature Flags/Logging; fixed the render-null, confirm-disabled, and extra-names-case-insensitivity ambiguities; added test vectors for whitespace input, the non-Error rejection fallback, busy-state backdrop/cancel, case-only rename, and re-seeding on reopen; unified localization placeholders on `{noun}`/`{nextName}`; grounded Appearance's foreground and max-width claims in theme tokens; and corrected the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes' APIs |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

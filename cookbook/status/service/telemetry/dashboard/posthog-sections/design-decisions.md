@@ -1,9 +1,10 @@
+
 **Decision**: UTC everywhere.
 **Rationale**: HogQL reads a zone-less literal, and starts a day or an hour, in the PostHog project's timezone; naming UTC keeps rows in the window's buckets for any project.
 **Approved**: pending
 
 **Decision**: Production hosts only.
-**Rationale**: Only production sites report analytics, so the host filter keeps stray local, staging and preview hits out of every figure.
+**Rationale**: Stray local, staging and preview hits can reach PostHog, so the host filter removes them from every figure.
 **Approved**: pending
 
 **Decision**: Named properties.
@@ -25,3 +26,4 @@
 **Decision**: Detail queries in sequence.
 **Rationale**: The first failure ends the section without spending the other two scans.
 **Approved**: pending
+

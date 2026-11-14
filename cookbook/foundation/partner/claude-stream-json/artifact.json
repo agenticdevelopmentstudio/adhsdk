@@ -4,7 +4,7 @@
     "id": "f333f036-2c23-4a87-8496-bd3616b44786",
     "title": "Claude Stream JSON",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "c79273e8afebcc2f",
+  "synced": "25abed8843e87d5e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

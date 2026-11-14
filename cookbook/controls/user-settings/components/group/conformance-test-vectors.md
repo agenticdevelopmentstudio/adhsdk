@@ -13,4 +13,5 @@
 | group-010 | custom-style-accepted | `className="foo bar"` (multiple space-separated classes) | Root element renders `aws-group foo bar`; all space-separated classes preserved |
 | group-011 | empty-style-filtered | `className={null}` | Root element renders only `aws-group`; `null` is filtered out, no stray whitespace or literal `"null"` |
 | group-012 | children-in-body | No `children` prop | `<div class="aws-group__body">` is present and empty |
-
+| group-013 | hint-when-omitted | `hint={0}` | No `<p class="aws-group__hint">` element and no stray `0` text inside the root |
+| group-014 | title-when-omitted | `title={0}` | No `<h3>` element and no stray `0` text inside the root |

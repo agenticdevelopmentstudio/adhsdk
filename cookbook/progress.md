@@ -2,11 +2,11 @@
 id: b3a92adc-a28e-4a33-8120-c33f8f0abdf6
 title: "Progress"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -31,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-This recipe covers two independent components that cookr's name-only grouping merges
+This ingredient covers two independent components that cookr's name-only grouping merges
 under one "progress" row, because they share no source and no API:
 
 - **UI** (`Progress`, source: `packages/web/packages/ui/src/components/progress.tsx`):
@@ -85,13 +85,15 @@ the package's other settings-panel form controls.
 - **valuemin-fixed-valuemax-configurable** (Controls): The component MUST report `aria-valuemin` as 0 and `aria-valuemax` as the `max` prop (default 100), unlike the UI bar's fixed 0–100 bounds.
 - **reports-raw-valuenow** (Controls): Unless `indeterminate` or `value` is `undefined`, the component MUST expose `value` verbatim as `aria-valuenow` — not clamped to the 0–`max` range and not rounded, unlike the UI bar's **clamps-below-zero**/**clamps-above-hundred**/**reflects-value-in-valuenow**.
 - **omits-valuenow-without-value** (Controls): With no `value` prop and `indeterminate` not set, the component MUST omit `aria-valuenow` entirely, rather than defaulting it to 0 the way the UI bar's **defaults-to-zero** does.
-- **clamps-fill-width-only** (Controls): The component MUST clamp the fill's visual width to the 0–100% range (via `value / max`) even when the value it reports through `aria-valuenow` is out of range or non-numeric-looking.
+- **clamps-fill-width-only** (Controls): The component MUST clamp the fill's visual width to the 0–100% range (via `value / max`) even when the value it reports through `aria-valuenow` is negative or greater than `max`. A `NaN` value is not handled (see Edge Cases).
 - **indeterminate-mode** (Controls): The component MUST accept an `indeterminate` boolean prop; when true, it MUST apply the `aws-field--progress-indeterminate` modifier class, omit `aria-valuenow`, and drive the fill's position from the CSS keyframe animation instead of an inline `width` style.
 - **accepts-label** (Controls): The component MUST conditionally render an `aws-field__label` element when the `label` prop is provided.
 - **accepts-hint** (Controls): The component MUST conditionally render an `aws-field__hint` paragraph when the `hint` prop is provided.
 - **custom-wrapper-classname** (Controls): The component MUST append any `className` prop to the wrapper's fixed `aws-field aws-field--progress[ aws-field--progress-indeterminate]` class list.
 
 ## Appearance
+
+**UI**:
 
 ```
 value = 0        ├───────────────────────────────┤   (empty track)
@@ -127,11 +129,11 @@ value = 100      █████████████████████
 
 | State | Appearance change |
 |---|---|
-| Empty (`value` ≤ 0) | Indicator fully translated out (`translateX(-100%)`); `aria-valuenow` = 0 |
-| Partial (0 < `value` < 100) | Indicator revealed proportionally; `aria-valuenow` = rounded value |
-| Full (`value` ≥ 100) | Indicator fully revealed (`translateX(-0%)`); `aria-valuenow` = 100 |
-| Transitioning | Fill animates between positions via `transition-transform` (300ms ease-out) |
-| Tinted (`indicatorClassName`) | Fill color overridden (e.g. amber while building, green when done) |
+| Empty (UI, `value` ≤ 0) | Indicator fully translated out (`translateX(-100%)`); `aria-valuenow` = 0 |
+| Partial (UI, 0 < `value` < 100) | Indicator revealed proportionally; `aria-valuenow` = rounded value |
+| Full (UI, `value` ≥ 100) | Indicator fully revealed (`translateX(-0%)`); `aria-valuenow` = 100 |
+| Transitioning (UI) | Fill animates between positions via `transition-transform` (300ms ease-out) |
+| Tinted (UI, `indicatorClassName`) | Fill color overridden (e.g. amber while building, green when done) |
 | Indeterminate (Controls, `indeterminate` prop) | Fill width fixed at 35%, sliding continuously via the `aws-progress-indeterminate` keyframe; `aria-valuenow` omitted |
 
 ## Accessibility
@@ -160,8 +162,9 @@ value = 100      █████████████████████
 - The optional `label` renders as a plain `aws-field__label` div with no
   `id`/`aria-labelledby` pairing to the `role="progressbar"` element, so it is not
   programmatically associated with the progress bar the way the UI bar's forwarded
-  `aria-label` is. A screen reader announces this component's progress bar with no
-  accessible name unless a consumer supplies one out of band.
+  `aria-label` is. Because the component does not forward arbitrary props (no `aria-label`, no
+  `aria-labelledby`), a consumer cannot give the Controls progress bar an accessible name:
+  a screen reader announces it with no name.
 - Purely presentational otherwise: not focusable and not interactive; progress is driven
   by the consumer's `value`.
 
@@ -177,8 +180,8 @@ value = 100      █████████████████████
 | T6 | reflects-value-in-valuenow | UI: `value={35.6}` | `aria-valuenow="36"` (rounded) |
 | T7 | indicator-class-tints-fill | UI: `value={100} indicatorClassName="bg-apt-green"` | fill element carries `bg-apt-green` and NOT `bg-apt-gold` (`cn()` runs `tailwind-merge`, which drops the conflicting `bg-*` utility) |
 | T8 | forwards-track-props, requires-accessible-name | UI: `aria-label="Sync" id="p1"` | track element carries `aria-label="Sync"` and `id="p1"` |
-| T9 | honors-shared-reduce-motion | UI: render `<Progress value={35} />` under `html[data-reduce-motion="on"]` | computed `transition-duration` on the indicator resolves to `0.001ms` (the shared `accessibility.css` override), superseding the nominal `calc(300ms*var(--apt-anim-scale,1))` duration |
-| T10 | clamps-below-zero, clamps-above-hundred (see **non-finite-value-handling** under Edge Cases) | UI: `value={NaN}` | `aria-valuenow="NaN"`; transform `translateX(-NaN%)` — `Math.min`/`Math.max` return `NaN` when either operand is `NaN`, so this one non-finite value passes through unclamped |
+| T9 | honors-shared-reduce-motion | UI: render `<Progress value={35} />` under `html[data-reduce-motion="on"]` | computed `transition-duration` on the indicator resolves to the reduce-motion override duration from `accessibility.css`, superseding the nominal `calc(300ms*var(--apt-anim-scale,1))` duration |
+| T10 | clamps-below-zero, clamps-above-hundred (documents a known defect: `NaN` escapes both; see **non-finite-value-handling** under Edge Cases) | UI: `value={NaN}` | `aria-valuenow="NaN"`; transform `translateX(-NaN%)` — `Math.min`/`Math.max` return `NaN` when either operand is `NaN`, so this one non-finite value passes through unclamped |
 | T11 | pairs-tint-with-text-status | UI: `value={100} indicatorClassName="bg-apt-green" aria-valuetext="Complete"` | fill element carries `bg-apt-green`; track element carries `aria-valuetext="Complete"`, conveying the status alongside the color tint rather than through color alone |
 | T12 | clamps-above-hundred (see **non-finite-value-handling** under Edge Cases) | UI: `value={Infinity}` | `aria-valuenow="100"`; transform `translateX(-0%)` — identical to T5; `Math.min`/`Math.max` treat `Infinity` as an ordinary large number |
 | T13 | clamps-below-zero (see **non-finite-value-handling** under Edge Cases) | UI: `value={-Infinity}` | `aria-valuenow="0"`; transform `translateX(-100%)` — identical to T4 |
@@ -224,8 +227,8 @@ value = 100      █████████████████████
   `role="progressbar"` element (no `aria-labelledby`/`id` pairing) — see Accessibility.
 - The Controls `Progress`'s indeterminate animation (`aws-progress-indeterminate`) is a
   plain CSS `@keyframes` rule with no `prefers-reduced-motion`/reduce-motion guard in
-  `user-settings/styles.css`, unlike the UI bar's **honors-shared-reduce-motion**.
-
+  `user-settings/styles.css`, unlike the UI bar's **honors-shared-reduce-motion**. The shared `accessibility.css` reduce-motion rule matches every element (`*`) and sets `animation-duration`, `animation-iteration-count` and `transition-duration`, so it still reduces this animation and the 120ms width transition.
+- A Controls `Progress` given `value={NaN}` computes a fill width of `NaN%`, which is not a valid CSS width, so the browser drops the declaration; `aria-valuenow` reports `NaN`. Like the UI bar's T10, `NaN` is not clamped. (Controls)
 ## Configuration
 
 **UI**:
@@ -245,7 +248,7 @@ value = 100      █████████████████████
 | `hint` | `ReactNode` | — | Optional hint text rendered below the track in an `aws-field__hint` paragraph. |
 | `value` | `number` | — | Raw progress value; reported verbatim as `aria-valuenow` (not clamped or rounded) and used to compute the clamped fill width. Omitted from `aria-valuenow` when `undefined` or when `indeterminate`. |
 | `max` | `number` | `100` | Upper bound used for the fill-width calculation and `aria-valuemax`; `aria-valuemin` is always `0`. |
-| `indeterminate` | `boolean` | — | Switches to the indeterminate animation, applies `aws-field--progress-indeterminate`, and omits `aria-valuenow`. |
+| `indeterminate` | `boolean` | `false` | Switches to the indeterminate animation, applies `aws-field--progress-indeterminate`, and omits `aria-valuenow`. |
 | `className` | `string` | — | Extra classes appended to the wrapper's `aws-field aws-field--progress[ aws-field--progress-indeterminate]` class list. |
 
 ## Deep Linking
@@ -284,7 +287,7 @@ telemetry around a job's progress belong to the consumer, not the bar.
 ## Platform Notes
 
 - **Web/TypeScript**: Two files. `packages/web/packages/ui/src/components/progress.tsx` (UI) carries `"use client"` because it renders an inline `style` transform, but holds no internal state — `value` is fully controlled by the consumer. Demo in `ui-showcase` Topic `progress` (regenerate `sources.generated.ts` after source changes via `gen-sources.py`). `packages/web/packages/controls/src/user-settings/components/Progress.tsx` (Controls) is a plain function component with no client directive; it ships from the `user-settings` entry point of `@adh-sdk/controls`.
-- **SwiftUI**: Start from `ProgressView(value: clampedValue, total: 100)` with the `.linear` `progressViewStyle` (or a custom `ProgressViewStyle` only if the track/fill need token colors the default style doesn't expose); clamp the incoming value to 0–100 before computing `clampedValue`, mirroring `#requirements/clamps-below-zero` and `#requirements/clamps-above-hundred`, and round it the same way as `#requirements/reflects-value-in-valuenow` before exposing it through `accessibilityValue`. `ProgressView` already draws and animates its own fill — no compositor translation modifier is needed; tint via `.tint(_:)` or the style's tint color. For the Controls variant's `indeterminate` prop, use `ProgressView()` with no `value`/`total` — SwiftUI's own indeterminate spinner — instead of computing a fraction; its `label`/`hint` map to `ProgressView(_:value:total:)`'s label and a `Text` caption below.
+- **SwiftUI**: Start from `ProgressView(value: clampedValue, total: 100)` with the `.linear` `progressViewStyle` (or a custom `ProgressViewStyle` only if the track/fill need token colors the default style doesn't expose); clamp the incoming value to 0–100 before computing `clampedValue`, mirroring `#requirements/clamps-below-zero` and `#requirements/clamps-above-hundred`, and round it the same way as `#requirements/reflects-value-in-valuenow` before exposing it through `accessibilityValue`. `ProgressView` already draws and animates its own fill — no compositor translation modifier is needed; tint via `.tint(_:)` or the style's tint color. For the Controls variant's `indeterminate` prop, use `ProgressView()` with no `value`/`total` and `.progressViewStyle(.linear)` — the default style would render a circular spinner, not a bar — instead of computing a fraction; its `label`/`hint` map to `ProgressView(_:value:total:)`'s label and a `Text` caption below.
 - **Compose**: Clamp the incoming value to 0–100 first, mirroring `#requirements/clamps-below-zero` and `#requirements/clamps-above-hundred`, then use `LinearProgressIndicator` with `progress = clampedValue / 100f` (the composable takes a 0–1 `Float`, not 0–100); round that same clamped value the way `#requirements/reflects-value-in-valuenow` does before exposing it through `Modifier.semantics { progressBarRangeInfo = ... }`. Tint via the `color`/`trackColor` parameters. `LinearProgressIndicator` already draws and animates its own fill — no `Modifier.graphicsLayer()` translation is needed. For the Controls variant's `indeterminate` prop, use `LinearProgressIndicator()` with no `progress` argument — Compose's own indeterminate mode — instead of computing a fraction; `label`/`hint` map to a `Text` above/below the indicator.
 - **AppKit / UIKit**: `NSProgressIndicator` (AppKit) defaults to `isIndeterminate = true` — set it to `false` (and `style = .bar`) to get a determinate bar. `UIProgressView` (UIKit) is determinate-only by default, no flag needed. Clamp the incoming value to 0–100 before setting `doubleValue` (AppKit) or the 0–1 `progress` (UIKit), mirroring `#requirements/clamps-below-zero` and `#requirements/clamps-above-hundred`, and round it the same way as `#requirements/reflects-value-in-valuenow` before exposing it via `accessibilityValue`. Configure either with a custom tint and animate progress updates on the main thread. For the Controls variant's `indeterminate` prop, leave `NSProgressIndicator.isIndeterminate = true` (AppKit's native indeterminate mode) or substitute a `UIActivityIndicatorView` (UIKit, which has no built-in indeterminate progress bar); `label`/`hint` map to a caption `NSTextField`/`UILabel`.
 - **WinUI 3**: Use `ProgressBar` with `Maximum=100`, `Value=clampedValue`; clamp the incoming value to that 0–100 range before assigning `Value`, mirroring `#requirements/clamps-below-zero` and `#requirements/clamps-above-hundred`, and round it the same way as `#requirements/reflects-value-in-valuenow` before exposing it through the automation peer's `RangeValuePattern`. Tint the fill by setting the `Foreground` brush (not `ProgressBarTemplate`/`TemplateBinding`, which isn't how `ProgressBar` fill color works). `ProgressBar` already animates value changes on its own — no custom `Storyboard`/`DoubleAnimation` is needed. For the Controls variant's `indeterminate` prop, set `ProgressBar.IsIndeterminate=True` (WinUI's own indeterminate mode) instead of computing `Value`; `label`/`hint` map to a `TextBlock` above/below the bar.
@@ -293,8 +296,8 @@ telemetry around a job's progress belong to the consumer, not the bar.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/Progress.tsx` | unverified |
-| web | `packages/web/packages/ui/src/components/progress.tsx` | unverified |
+| web | `packages/web/packages/controls/src/user-settings/components/Progress.tsx` | confirmed (1.2.2) |
+| web | `packages/web/packages/ui/src/components/progress.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -321,11 +324,22 @@ track or produce a nonsensical `aria-valuenow`.
 without a variant explosion.
 **Approved**: pending
 
+**Decision**: The Controls bar reports `value` verbatim as `aria-valuenow` and clamps only the fill's width.
+**Rationale**: The reported value stays identical to what the caller supplied while the visual fill stays inside the track. The cost is that an out-of-range or fractional value reaches assistive technology unchanged (see Edge Cases).
+**Approved**: pending
+
+**Decision**: The Controls indeterminate mode is a fixed 35%-wide fill moved by the `aws-progress-indeterminate` keyframe, not a resizing width.
+**Rationale**: The fill's geometry stays constant and only a transform animates, so no value is needed in indeterminate mode.
+**Approved**: pending
+
+**Decision**: The Controls bar does not forward arbitrary props.
+**Rationale**: Its props are the fixed set `label`, `hint`, `value`, `max`, `indeterminate` and `className`, matching the other `aws-field` controls. The cost is that a consumer cannot name the progressbar (see Accessibility).
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | partial | Accessibility |
 | [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | passed | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
@@ -340,7 +354,7 @@ indeterminate), but no test in the `ui` package renders `progress.tsx`
 directly — the only test importing from `blocks/progress-modal` exercises a
 different component (`ProgressModal`), not this one.
 
-`semantic-markup` and `reduced-motion` rest on `progress.tsx` (UI): the
+`semantic-markup` is `partial`: the UI bar passes, but the Controls bar's `label` is not associated with its `progressbar` and a consumer cannot name it. `semantic-markup` and `reduced-motion` rest on `progress.tsx` (UI): the
 `role="progressbar"` + `aria-valuemin`/`aria-valuemax`/`aria-valuenow` attributes, and
 the class-based (non-inline, non-`!important`) `transition`/`duration` utility that lets
 the shared `accessibility.css` reduce-motion rule zero its duration. `contrast-ratio` is
@@ -357,6 +371,7 @@ shipped theme. This check does not apply to the Controls component, which has no
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Tagged UI-only States rows and the first Appearance block, marked semantic-markup partial, added three Controls design decisions, stated that a consumer cannot name the Controls bar, set the indeterminate default to false, replaced the untestable clamp wording, documented NaN for Controls and T10 as a known defect, and specified a linear style for SwiftUI indeterminate. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Split UI/Controls coverage, indeterminate mode, Monokai contrast, NaN clamp; restored 1.0.0 row. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected the Reduce Motion/Increase Contrast claims and cited the measured contrast ratio; fixed the SwiftUI/Compose/AppKit/WinUI 3 platform notes to use each platform's native progress control and API correctly; documented the unclamped non-finite `value` edge case; raised the accessible-name guidance from SHOULD to MUST; rebuilt the Compliance table with canonical linked checks; reformatted Design Decisions to the Decision/Rationale/Approved form; added `progress-modal` to `related`; fixed the States/T5 transform string mismatch; added test vectors for reduce motion, non-finite input, and the tailwind-merge fill override; corrected the 1.1.0 Change History entry's wording and author; scoped the measured contrast ratio to the default token pairing and made re-tinted contrast a consumer responsibility; added a requirement (and test vector) that a color-only status tint be paired with text or `aria-valuetext`; mapped each non-web platform's clamping and rounding onto the shared clamp/round/valuenow requirements. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); update platform notes to cover all target platforms; correct domain URI. Drafted by Claude Haiku 4.5. |

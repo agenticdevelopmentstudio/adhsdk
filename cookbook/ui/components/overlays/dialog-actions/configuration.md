@@ -11,5 +11,5 @@
 | `confirmDisabled` | `boolean` | `false` | Disables confirm when not busy (has no effect when `busy` is true). Defaults to false for backward compatibility. |
 | `initialFocus` | `"confirm" \| "cancel"` | `destructive ? "cancel" : "confirm"` | Which button gets focus on mount. |
 | `focusOnMount` | `boolean` | `true` | When false, do not auto-focus (host focuses its own field). |
-| `layout` | `"auto" \| "equal" \| "natural"` | `"auto"` | `auto` lets CSS resolve the rule per alert-and-dialog §Layout; `equal`/`natural` force one shape. |
+| `layout` | `"auto" \| "equal" \| "natural"` | `"auto"` | `auto` lets CSS resolve the rule per the Layout section of [adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500); `equal`/`natural` force one shape. |
 

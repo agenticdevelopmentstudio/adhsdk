@@ -16,14 +16,14 @@
 **Approved**: pending
 
 **Decision**: The panel lists a single integration through a general sidebar, add menu and footer.
-**Rationale**: The doc comment says "today only Gmail"; the sidebar, add menu and removal flow are built so further integrations can be added, but the code has one hardcoded branch for Gmail rather than a registry.
+**Rationale**: The doc comment says "today only Gmail"; the sidebar, add menu and removal flow are built so further integrations can be added, but the code has one hardcoded branch for Gmail rather than a registry. The source records no further reason, so this is speculative generality: the general layout anticipates more integrations, and it is the cost of a second one that would show whether it was worth it.
 **Approved**: pending
 
 **Decision**: Strings are literals and the panel writes no log entries.
-**Rationale**: The source has no localization or logging calls; this is recorded as technical debt for the localization check and does not change behavior.
+**Rationale**: The source has no localization or logging calls; this is recorded as technical debt for the localization check and does not change behavior. Retire this debt before a second locale ships.
 **Approved**: pending
 
 **Decision**: The panel has no unit test of its own.
-**Rationale**: Only `GmailSettingsModelTests` exist for the code it drives, and they cover the model, not the listing, the add menu or the removal flow; this affects the test coverage compliance result.
+**Rationale**: Only `GmailSettingsModelTests` exist for the code it drives, and they cover the model, not the listing, the add menu or the removal flow; this affects the test coverage compliance result. Retire this debt before a second integration is added to the panel.
 **Approved**: pending
 

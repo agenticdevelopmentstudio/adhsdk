@@ -2,15 +2,15 @@
 id: a56695f3-0205-4c9b-b724-53be608de2f0
 title: "Alert"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Inline, non-modal callout — a bordered, tonal box with an optional icon, title, and description; five color variants: default, info, success, error, accent."
+summary: "Inline, non-modal callout: a bordered, tonal box with an optional icon, title, and description."
 platforms:
   - typescript
   - web
@@ -44,48 +44,45 @@ child is present.
 ## Behavioral Requirements
 
 - **alert-role**: Alert MUST render its root element with
-  `role="alert"`.
+  `role="alert"` for every variant, unless the caller overrides it (see
+  **override-role-and-data-slot**).
 - **alert-data-slot**: Alert MUST render its root element with
   `data-slot="alert"`.
+- **override-role-and-data-slot**: A caller MAY override the root element's
+  `role` and `data-slot` by passing them as props, because the remaining
+  props are applied after those two defaults. Passing a non-assertive `role`
+  (for example `status`) is the escape hatch for a callout that must not
+  interrupt screen-reader users.
 - **default-variant**: Alert MUST apply the `default`
   variant's styling when no `variant` prop is supplied.
-- **five-variants**: Alert MUST support exactly five `variant`
-  values: `default`, `info`, `success`, `error`, `accent`.
-- **merge-classname-alert**: Alert MUST merge a caller-supplied
-  `className` with the selected variant's base classes rather than
-  replacing them.
-- **forward-div-props-alert**: Alert MUST forward all received props
-  other than `variant` to its root `<div>`; `className` is not passed
-  through unchanged — it is merged with the variant's base classes (see
-  **merge-classname-alert**) rather than dropped.
+- **six-variants**: Alert MUST support exactly six `variant`
+  values: `default`, `info`, `success`, `error`, `warning`, `accent`.
+- **merge-classname**: Alert, AlertTitle, and AlertDescription MUST each
+  merge a caller-supplied `className` with their own base classes (the
+  variant's base classes, for Alert) rather than replacing them.
+- **forward-div-props**: Alert, AlertTitle, and AlertDescription MUST each
+  forward all received props to their root `<div>`, except `className`, which
+  is merged with the base classes (see **merge-classname**) rather than
+  passed through unchanged, and, for Alert, `variant`, which selects the
+  styling and is not forwarded.
 - **widen-grid-when-icon-present**: When Alert has a direct `<svg>`
   child, Alert MUST change its grid-template-columns from `0 1fr` to
-  `1.25rem 1fr` and MUST add a column gap between them.
+  `1.25rem 1fr` and MUST add a `0.75rem` column gap between them.
 - **size-icon-child**: Alert MUST render any direct `<svg>` child at a
   fixed size of `1rem` × `1rem` and MUST offset it `0.125rem` downward from
   its row's top edge.
+- **title-data-slot**: AlertTitle MUST render its root element with
+  `data-slot="alert-title"`.
+- **description-data-slot**: AlertDescription MUST render its root element
+  with `data-slot="alert-description"`.
 - **place-title-column-two**: AlertTitle MUST render in the grid's
-  second column (`col-start-2`).
+  second column.
 - **style-title-medium-weight**: AlertTitle MUST render its text with
   medium font weight.
-- **merge-classname-title**: AlertTitle MUST merge a
-  caller-supplied `className` with its base classes rather than replacing
-  them.
-- **forward-div-props-title**: AlertTitle MUST forward all received
-  props other than `className` to its root `<div>`; `className` is not
-  passed through unchanged — it is merged with the base classes (see
-  **merge-classname-title**) rather than dropped.
 - **place-description-column-two**: AlertDescription MUST render in
-  the grid's second column (`col-start-2`).
+  the grid's second column.
 - **style-description-small-muted**: AlertDescription MUST render its
-  text at the `text-sm` size in the muted text color.
-- **merge-classname-description**: AlertDescription MUST merge
-  a caller-supplied `className` with its base classes rather than
-  replacing them.
-- **forward-div-props-description**: AlertDescription MUST forward
-  all received props other than `className` to its root `<div>`;
-  `className` is not passed through unchanged — it is merged with the base
-  classes (see **merge-classname-description**) rather than dropped.
+  text at the small text size (0.875rem) in the muted text color.
 - **export-alert-variants**: The module MUST export `alertVariants` as
   a function usable independently of the `Alert` component.
 - **compose-title-and-description-as-children**: Alert SHOULD be
@@ -98,9 +95,8 @@ child is present.
   element places no constraint on child type or count.
 - **accept-any-icon-element**: Alert MAY receive any element that
   renders as a literal `<svg>` tag as a leading child to trigger the
-  icon-aware grid/sizing behavior; see Design Decisions > Icon detection via
-  CSS `:has()`, not an icon prop, for the mechanism and rationale.
-
+  icon-aware grid/sizing behavior; see the Design Decisions entry on icon
+  detection via CSS `:has()` for the mechanism and rationale.
 ## Appearance
 
 - **Corner radius**: `rounded-lg` (design-token corner radius; exact px
@@ -111,7 +107,7 @@ child is present.
   `font-medium`; `AlertDescription` is also `text-sm`.
 - **Background**: variant-dependent — `bg-apt-surface` (default),
   `bg-apt-blue/10` (info), `bg-apt-green/10` (success), `bg-apt-red/10`
-  (error), `bg-apt-gold/10` (accent). Resolved colors are defined by the
+  (error), `bg-apt-orange/10` (warning), `bg-apt-gold/10` (accent). Resolved colors are defined by the
   `apt-*` design tokens, not by this source file.
 - **Foreground/Text**: `text-apt-text` for every variant (the text color
   class does not change per variant); `AlertDescription` specifically uses
@@ -120,7 +116,7 @@ child is present.
 - **Border**: `border` (1px, Tailwind's default border width), color
   variant-dependent — `border-apt-border` (default), `border-apt-blue/40`
   (info), `border-apt-green/40` (success), `border-apt-red/40` (error),
-  `border-apt-gold/40` (accent). The same color token also tints the
+  `border-apt-orange/40` (warning), `border-apt-gold/40` (accent). The same color token also tints the
   variant's icon (`[&>svg]:text-apt-*`), except `default`, whose icon uses
   `text-apt-text-muted` instead of a status color.
 - **Shadow**: None. No `shadow-*` class appears in `alertVariants`.
@@ -144,7 +140,7 @@ Not applicable: Alert is a static, non-interactive presentational component; pre
 - Role/trait: `role="alert"` on the root element, for every variant.
   `AlertTitle` and `AlertDescription` carry no ARIA role of their own — they
   are plain `<div>`s identified only by their `data-slot` attribute.
-- Label requirements: Not applicable: AlertTitle and AlertDescription are unstyled, positioned grid cells; callers provide content and manage any labeling strategy independently.
+- Label requirements: Not applicable: AlertTitle and AlertDescription are positioned grid cells (AlertTitle in medium weight, AlertDescription in small muted text) with no labeling of their own; callers provide content and manage any labeling strategy independently.
 - Announce state changes: `role="alert"` makes the root an implicit ARIA
   live region (assertive, atomic, per the ARIA specification), so
   assistive technology announces the element's text content when it is
@@ -160,25 +156,27 @@ Not applicable: Alert is a static, non-interactive presentational component; pre
 | alert-001 | alert-role | `<Alert>Text</Alert>` | Rendered root node has attribute `role="alert"`. |
 | alert-002 | alert-data-slot | `<Alert>Text</Alert>` | Rendered root node has attribute `data-slot="alert"`. |
 | alert-003 | default-variant | `<Alert>Text</Alert>` (no `variant` prop) | Root node's border color resolves to the `apt-border` token and its background resolves to the `apt-surface` token — the `default` variant's tone (see Appearance for the token mapping). |
-| alert-004 | five-variants | Render with `variant` set to each of `default`, `info`, `success`, `error`, `accent` in turn | Each render succeeds; the root node's border and background color tokens match the rendered variant's documented tone (see Appearance for the full `variant` → token mapping). |
-| alert-005 | merge-classname-alert | `<Alert className="custom">Text</Alert>` | Root node's rendered styling includes both the caller-supplied custom class and the variant's base visual styling (corner radius, border, background) — the custom addition is combined with, not a replacement for, the base styling. |
-| alert-006 | forward-div-props-alert | `<Alert id="my-alert" data-testid="my-alert">Text</Alert>` | Root node has attributes `id="my-alert"` and `data-testid="my-alert"`. |
-| alert-007 | widen-grid-when-icon-present | `<Alert><svg data-testid="icon" />Text</Alert>` | Root node's computed `grid-template-columns` is `1.25rem 1fr` (widened from the no-icon baseline), with a column gap applied between the two columns. Requires a real browser or Playwright — computed `grid-template-columns` cannot be resolved from utility classes in jsdom. |
+| alert-004 | six-variants | Render with `variant` set to each of `default`, `info`, `success`, `error`, `warning`, `accent` in turn | Each render succeeds; the root node's border and background color tokens match the rendered variant's documented tone (see Appearance for the full `variant` → token mapping). |
+| alert-005 | merge-classname | `<Alert className="custom">Text</Alert>` | Root node's rendered styling includes both the caller-supplied custom class and the variant's base visual styling (corner radius, border, background) — the custom addition is combined with, not a replacement for, the base styling. |
+| alert-006 | forward-div-props | `<Alert id="my-alert" data-testid="my-alert">Text</Alert>` | Root node has attributes `id="my-alert"` and `data-testid="my-alert"`. |
+| alert-007 | widen-grid-when-icon-present | `<Alert><svg data-testid="icon" />Text</Alert>` | Root node's computed `grid-template-columns` is `1.25rem 1fr` (widened from the no-icon baseline), with a `0.75rem` column gap applied between the two columns. Requires a real browser or Playwright — computed `grid-template-columns` cannot be resolved from utility classes in jsdom. |
 | alert-008 | size-icon-child | `<Alert><svg data-testid="icon" /></Alert>` | The rendered direct `<svg>` child has a computed width and height of `1rem` (16px) each, and is offset `0.125rem` downward from its row's top edge via a vertical translate. Requires a real browser or Playwright — these are resolved computed styles, not class-list membership. |
 | alert-009 | place-title-column-two | `<AlertTitle>Title</AlertTitle>` | Rendered node's computed `grid-column-start` is `2`. |
 | alert-010 | style-title-medium-weight | `<AlertTitle>Title</AlertTitle>` | Rendered node's computed `font-weight` is medium (500). |
-| alert-011 | merge-classname-title | `<AlertTitle className="custom">Title</AlertTitle>` | Rendered node's styling includes both the caller-supplied custom class and its base grid placement (`grid-column-start: 2`) — combined, not replaced. |
-| alert-012 | forward-div-props-title | `<AlertTitle id="t1">Title</AlertTitle>` | Rendered node has attribute `id="t1"`. |
+| alert-011 | merge-classname | `<AlertTitle className="custom">Title</AlertTitle>` | Rendered node's styling includes both the caller-supplied custom class and its base grid placement (`grid-column-start: 2`) — combined, not replaced. |
+| alert-012 | forward-div-props | `<AlertTitle id="t1">Title</AlertTitle>` | Rendered node has attribute `id="t1"`. |
 | alert-013 | place-description-column-two | `<AlertDescription>Desc</AlertDescription>` | Rendered node's computed `grid-column-start` is `2`. |
 | alert-014 | style-description-small-muted | `<AlertDescription>Desc</AlertDescription>` | Rendered node's text renders at the `text-sm` size token (0.875rem) in the muted text color token (`apt-text-muted`). |
-| alert-015 | merge-classname-description | `<AlertDescription className="custom">Desc</AlertDescription>` | Rendered node's styling includes both the caller-supplied custom class and its base grid placement (`grid-column-start: 2`) — combined, not replaced. |
-| alert-016 | forward-div-props-description | `<AlertDescription id="d1">Desc</AlertDescription>` | Rendered node has attribute `id="d1"`. |
+| alert-015 | merge-classname | `<AlertDescription className="custom">Desc</AlertDescription>` | Rendered node's styling includes both the caller-supplied custom class and its base grid placement (`grid-column-start: 2`) — combined, not replaced. |
+| alert-016 | forward-div-props | `<AlertDescription id="d1">Desc</AlertDescription>` | Rendered node has attribute `id="d1"`. |
 | alert-017 | export-alert-variants | Import `alertVariants` and call `alertVariants({ variant: "success" })` without rendering `<Alert>` | Returns a class string whose resolved styling includes the `success` variant's border and background color tokens (`apt-green`), independent of any rendered `<Alert>` element. |
 | alert-018 | compose-title-and-description-as-children | `<Alert><AlertTitle>T</AlertTitle><AlertDescription>D</AlertDescription></Alert>` | Both children render inside the same root grid container, each with computed `grid-column-start: 2`; the root's computed `row-gap` is `0.125rem` (`gap-y-0.5`), producing visible stacking between them. |
-| alert-019 | Edge case: attribute-override quirk | `<Alert role="status" data-slot="banner">Text</Alert>` | Root node's `role` attribute resolves to `"status"` and `data-slot` resolves to `"banner"` — the caller's explicit props silently override the component's own `role="alert"` / `data-slot="alert"` defaults (see Edge Cases). |
+| alert-019 | override-role-and-data-slot | `<Alert role="status" data-slot="banner">Text</Alert>` | Root node's `role` attribute resolves to `"status"` and `data-slot` resolves to `"banner"` — the caller's explicit props silently override the component's own `role="alert"` / `data-slot="alert"` defaults (see Edge Cases). |
 | alert-020 | widen-grid-when-icon-present | `<Alert>Text</Alert>` (no `<svg>` child) | Root node's computed `grid-template-columns` is `0px 1fr` — the no-icon baseline — and no column gap is applied. Requires a real browser or Playwright. |
-| alert-021 | Edge case: boundary values | `alertVariants({ variant: "bogus" as any })` (bypassing the `VariantProps` type) | Returns only the shared base classes (layout, padding, corner radius, text size); no variant-specific border, background, foreground, or icon-color classes are included, and it does not fall back to the `default` variant's tone (see Edge Cases). |
-
+| alert-021 | #edge-cases/boundary-values | `alertVariants({ variant: "bogus" as any })` (bypassing the `VariantProps` type) | Returns only the shared base classes (layout, padding, corner radius, text size); no variant-specific border, background, foreground, or icon-color classes are included, and it does not fall back to the `default` variant's tone (see Edge Cases). || alert-022 | title-data-slot | `<AlertTitle>Title</AlertTitle>` | Rendered node has attribute `data-slot="alert-title"`. |
+| alert-023 | description-data-slot | `<AlertDescription>Desc</AlertDescription>` | Rendered node has attribute `data-slot="alert-description"`. |
+| alert-024 | #edge-cases/null-and-empty-input | `<Alert />` (no children) | Renders an empty `<div role="alert">` without throwing. |
+| alert-025 | #edge-cases/null-and-empty-input, default-variant | `<Alert variant={undefined}>Text</Alert>` | Root node's styling is identical to `<Alert>Text</Alert>`: the `default` variant's tone. |
 ## Edge Cases
 
 - **Null and empty input**: `<Alert />` with no children MUST render an
@@ -186,7 +184,7 @@ Not applicable: Alert is a static, non-interactive presentational component; pre
   is not required by `React.ComponentProps<"div">`. `variant={undefined}`
   MUST behave identically to omitting the prop (falls back to `default`
   per **default-variant**).
-- **Boundary values**: A `variant` value outside the five accepted
+- **Boundary values**: A `variant` value outside the six accepted
   literals (only reachable by bypassing the `VariantProps` TypeScript
   type, e.g. from untyped/unchecked data): `class-variance-authority`'s
   lookup finds no match for an unrecognized key, so it omits that
@@ -211,15 +209,15 @@ Not applicable: Alert is a static, non-interactive presentational component; pre
   `role="alert"` / `data-slot="alert"` attributes, because `{...props}` is
   spread in JSX after those two attributes on the root `<div>` — JSX's
   last-attribute-wins rule applies, so the default can be silently
-  replaced. See #test-vectors/alert-019.
-- **Icon detection is structural, not type-based**: See Design Decisions
-  > Icon detection via CSS `:has()`, not an icon prop.
+  replaced. See **override-role-and-data-slot** and #test-vectors/alert-019.
+- **Icon detection is structural, not type-based**: See the Design Decisions entry on
+  detecting the icon via CSS `:has()` rather than an icon prop.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `variant` | enum: `default` \| `info` \| `success` \| `error` \| `accent` | `default` | Selects the tone (border/background/icon color) of the alert. |
+| `variant` | enum: `default` \| `info` \| `success` \| `error` \| `warning` \| `accent` | `default` | Selects the tone (border/background/icon color) of the alert. |
 | `className` | `string` | none | Additional classes merged with the component's computed classes. Available on `Alert`, `AlertTitle`, and `AlertDescription` independently. |
 | `...props` | `React.ComponentProps<"div">` | none | Any other native `<div>` attribute or event handler; forwarded to the root element of `Alert`, `AlertTitle`, or `AlertDescription`. |
 
@@ -270,7 +268,7 @@ Not applicable: Alert.tsx contains no logging or console calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/alert.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/alert.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -281,25 +279,21 @@ and icon sizing are driven entirely by a `has-[>svg]` selector matching any
 direct `<svg>` child. This is why `AlertTitle`/`AlertDescription` are plain
 `col-start-2` siblings rather than named slots — the whole layout is
 structural (presence/absence of an `<svg>` child), not prop-driven. See
-#requirements/accept-any-icon-element and Edge Cases > Icon detection is
-structural, not type-based.
+#requirements/accept-any-icon-element and the Edge Cases entry on structural
+icon detection.
 **Approved**: pending
 
-**Decision**: Differentiate the five variants by border/background/icon
+**Decision**: Differentiate the six variants by border/background/icon
 tone color alone, with no secondary non-color cue.
-**Rationale**: Across `default`/`info`/`success`/`error`/`accent`, the
+**Rationale**: Across `default`/`info`/`success`/`error`/`warning`/`accent`, the
 source's only differentiator besides an optional caller-supplied icon is
 the border/background/icon tone color; the body text color
 (`text-apt-text`) is identical for every variant. An icon-less alert
 therefore communicates its severity through color alone.
 **Approved**: pending
 
-**Decision**: Record the attribute-override quirk as documented behavior
-rather than fixing it.
-**Rationale**: Because `{...props}` is spread after `role`/`data-slot` in
-the root `<div>`'s JSX (see Edge Cases), a caller can silently override
-either attribute. This ingredient documents the source's actual behavior
-rather than the behavior a defensive implementation would have.
+**Decision**: Every variant renders `role="alert"` (an assertive live region), and a caller who needs a quieter callout overrides `role` through the forwarded props (see **override-role-and-data-slot**).
+**Rationale**: `alert.tsx` sets one `role` for all variants, including the neutral `default` and `accent` ones, so a neutral callout present at page load is announced assertively unless the caller passes a different `role` such as `status`. Because `{...props}` is spread after `role`/`data-slot` in the root `<div>`'s JSX (see Edge Cases), the override is the only way to change it.
 **Approved**: pending
 
 **Decision**: Recommend, but do not enforce, composing `Alert` with
@@ -314,7 +308,7 @@ column placement to unrecognized children. See
 **Approved**: pending
 
 **Decision**: Treat this `Alert` (the inline, non-modal callout from
-`alert.tsx`) and the `alert-and-dialog` recipe's modal confirm-dialog as
+`alert.tsx`) and the `alert-and-dialog` recipe's ([adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500)) modal confirm-dialog as
 unrelated implementations despite the shared name.
 **Rationale**: This cookbook also contains an `alert-and-dialog` recipe
 describing a *different*, modal confirm-dialog component that happens to
@@ -346,3 +340,4 @@ These statuses rest on `alert.tsx`'s explicit `role="alert"`/`data-slot="alert"`
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: dropped RFC-2119 prefixes from requirement names; rewrote test-vector assertions as platform-neutral observable behavior/tokens and moved literal Tailwind classes into the React/Web platform note; reworded the forward-div-props-* requirements to reflect that className is merged rather than dropped; added boundary-value, attribute-override-quirk, and no-icon-baseline test vectors; corrected the boundary-value edge case to state cva's single actual outcome; fixed the alert-018 gap-y-0.5 assertion to target the root node; corrected the SwiftUI/Compose/AppKit-UIKit platform notes' accessibility API citations; collapsed duplicate icon-detection prose into cross-references to Design Decisions; reformatted Design Decisions into the three-line Decision/Rationale/Approved form; replaced the empty Localization table with its sentence; added the alert-and-dialog domain to related; replaced "This recipe" with "ingredient"; and replaced the Compliance section's "Not applicable" with an evaluated checks table |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added override-role-and-data-slot, title-data-slot and description-data-slot requirements, a role decision, vectors alert-022 to alert-025, 0.75rem gap, merged the repeated classname and prop-forwarding requirements, removed Tailwind classes from requirements, linked alert-and-dialog and shortened the summary, and added the `warning` variant the source defines (six variants, not five). |

@@ -5,3 +5,4 @@
 - **Caption visibility toggle**: The `showCaption` prop allows the caption to be displayed visually when the surrounding context does not already identify the table's purpose.
 - **Screen reader only class**: The `lp-sr-only` class hides the caption from sighted users by default while preserving it for screen readers.
 
+- **Scroll container**: The `lp-table-scroll` wrapper scrolls horizontally on narrow viewports, but the source does not make it focusable or name it, so keyboard users cannot scroll it. A host that needs keyboard access SHOULD give the wrapper `tabindex="0"`, `role="region"` and an accessible name taken from the caption; the component does not do this today (see the keyboard-navigable row in Compliance).

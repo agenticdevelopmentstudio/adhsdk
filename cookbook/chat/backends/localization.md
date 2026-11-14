@@ -5,7 +5,7 @@ call):
 
 - `ChatBackendAdapter`'s catch-all apology: `"Sorry, something went wrong.
   Let's try again."`
-- `ChatBackend`'s `sendMessage`/`submitWidgetResponse` error messages:
+- `ChatBackendAdapter`'s `send`/`submitWidgetResponse` error messages:
   `'ChatBackend has no attachment channel; send text only.'`, `'ChatBackend
   does not support interactive widgets.'`, `'ChatBackendAdapter has been
   destroyed.'`.

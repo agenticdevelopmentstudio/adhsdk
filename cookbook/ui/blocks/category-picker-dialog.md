@@ -78,8 +78,9 @@ Compliance and Localization-adjacent notes below.
 - **disable-confirm-when-unpickable**: The confirm button MUST be disabled unless the pending selection is confirmable — the root row when `allowRoot` is set AND the filter text is empty, or a node not in `disabledIds`. (The empty-filter condition on the root row exists to prevent a silent move-to-root once the list has been filtered down to something else.)
 - **reset-on-reopen**: Each transition to `open=true` MUST clear the filter text, the expanded set and the roving focus, and MUST reset the pending selection to `initialSelectedId` — a reopen is a fresh question, not a resumed one.
 - **roving-focus-origin**: The roving tab stop MUST start on the first visible row after a reset — the root row when `allowRoot` is set, otherwise the first top-level category — regardless of `initialSelectedId`; a collapsed branch containing `initialSelectedId` is NOT auto-expanded to reveal it, so a nested preselection starts off-screen and unfocused until the user navigates to it.
-- **report-write-errors-inline**: A non-null `error` MUST render above the button bar without closing the dialog; `busy` MUST disable the filter field and MUST replace both the Cancel and Confirm buttons with a `role="status"` loading indicator (via `DialogActions`) while a confirm is in flight — there is no disabled button in the DOM, only the field is actually disabled.
-- **cancel-without-confirming**: Esc or the Cancel button MUST call `onCancel` when not `busy`, and MUST NOT call `onConfirm`; an outside click does not dismiss, because the shared `Dialog` disables pointer dismissal by default. While `busy`, both are blocked — Cancel and Confirm are both replaced by the loading indicator (see **report-write-errors-inline**), so there is no Cancel button to click, and Esc is suppressed by the same busy check, so neither calls `onCancel`.
+- **report-write-errors-inline**: A non-null `error` MUST render above the button bar without closing the dialog; the `busy` behavior is defined by **busy-blocks-actions**.
+- **busy-blocks-actions**: While `busy` is true (a confirm is in flight), the dialog MUST disable the filter field and MUST replace both the Cancel and Confirm buttons with a `role="status"` loading indicator (via `DialogActions`) — there is no disabled button in the DOM, only the field is actually disabled. It MUST also block dismissal: Esc does not call `onCancel`.
+- **cancel-without-confirming**: Esc or the Cancel button MUST call `onCancel` when not `busy`, and MUST NOT call `onConfirm`; an outside click does not dismiss, because the shared `Dialog` disables pointer dismissal by default. While `busy`, both are blocked (see **busy-blocks-actions**): there is no Cancel button to click, and Esc is suppressed by the same busy check, so neither calls `onCancel`.
 - **show-empty-messages**: With no categories at all, browse mode MUST show "No categories yet."; with a filter that matches nothing, filter mode MUST show a message naming the typed text.
 
 ## Appearance
@@ -151,7 +152,7 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
 |---|---|---|---|
 | T1 | browse-the-full-forest | open with a 2-level forest | roots render; expanding a root reveals its children |
 | T2 | filter-by-substring-with-trail | type a substring matching a depth-2 node | that node appears as an option with its ancestor trail (names joined with " / ") |
-| T3 | return-a-place-not-a-record, disable-confirm-when-unpickable | open, confirm disabled; click a row, confirm | confirm was disabled with no selection; `onConfirm(nodeId)` fires after the click |
+| T3 | return-a-place-not-a-record, disable-confirm-when-unpickable | open with `allowRoot` unset, confirm disabled; click a row, confirm | confirm was disabled with no selection; `onConfirm(nodeId)` fires after the click |
 | T4 | offer-a-root-row-only-when-allowed | `allowRoot`, select "Top level", confirm | `onConfirm(null)` |
 | T5 | disable-forbidden-rows | `disabledIds=[x]`, click row x | row x stays unselected; confirm stays disabled |
 | T6 | cancel-without-confirming | open, click Cancel | `onCancel` fires; `onConfirm` never fires |
@@ -194,7 +195,7 @@ Selected row: `bg-apt-gold/15`. Disabled row: `opacity-40`. All color from
   what the tree shows; see the tree-fold's own contract for `buildCategoryTree`.
   The dialog adds no cycle handling of its own — it only walks what the
   fold hands back.
-- **The `MAX_TREE_NODES` cap (4000).** A forest at the cap still renders and is
+- **The `MAX_TREE_NODES` cap (the constant exported by `category-tree.ts`).** A forest at the cap still renders and is
   still fully keyboard-navigable — the fold stops MATERIALISING nodes, not the
   dialog from walking whatever it received; a picker over a capped forest simply
   cannot offer the nodes that were never drawn.
@@ -237,11 +238,11 @@ source subscribes to no router and reads/writes no URL.
 
 ## Localization
 
-None: `title`, `description`, `confirmLabel`, and `rootLabel` are host-supplied
-strings, so the host controls their translation. But the source also carries its
-own hardcoded English strings that are not run through any i18n mechanism: the
+`title`, `description`, `confirmLabel`, and `rootLabel` are host-supplied
+strings, so the host controls their translation. The source also carries its
+own hardcoded English strings that are not run through any i18n mechanism; this is the complete list: the
 filter's placeholder ("Filter categories…") and `aria-label` ("Filter
-categories"), the Cancel button label ("Cancel"), the `aria-label="Categories"` on the list, and the two empty-state messages ("No categories yet." and `No
+categories"), the Cancel button label ("Cancel"), the `aria-label="Categories"` on the list, the Expand/Collapse `title` on each chevron, and the two empty-state messages ("No categories yet." and `No
 categories match "{filter}".`).
 
 ## Accessibility Options
@@ -276,7 +277,7 @@ drives and owns any telemetry for it.
 ## Platform Notes
 
 - **React / Web (TypeScript):** `packages/web/packages/ui/src/blocks/category-picker-dialog.tsx`. `"use client"`.
-- **SwiftUI:** Present with `.sheet(isPresented:)`, pairing `.interactiveDismissDisabled()` with this dialog's non-busy-only dismissal; inside the sheet, an `OutlineGroup` (or nested `DisclosureGroup`s, one per row) over the category forest gives native disclosure-triangle expand/collapse and built-in keyboard navigation — not a bare `List`. Apply `.searchable(text:)` to the sheet for the filter field; SwiftUI itself switches to a flat, breadcrumb-annotated result list when the search text is non-empty. The confirm button's `disabled` binding tracks the same pickability computation as the source; a tap on a row selects it, matching the WAI-ARIA tree pattern's row-activation model.
+- **SwiftUI:** Present with `.sheet(isPresented:)`, pairing `.interactiveDismissDisabled()` with this dialog's non-busy-only dismissal; inside the sheet, an `OutlineGroup` (or nested `DisclosureGroup`s, one per row) over the category forest gives native disclosure-triangle expand/collapse and built-in keyboard navigation — not a bare `List`. Apply `.searchable(text:)` to the sheet for the filter field; `.searchable` only supplies the text binding, so the view must itself replace the `OutlineGroup` with a flat, trail-annotated `List` when the search text is non-empty. The confirm button's `disabled` binding tracks the same pickability computation as the source; a tap on a row selects it, matching the WAI-ARIA tree pattern's row-activation model.
 - **Compose:** Build on `Dialog` (or `ModalBottomSheet`) with custom content — not `AlertDialog`, which is an alert-shaped container with no room for a tree body or a search field. A `LazyColumn` displays expandable category items, each row's expand icon toggling a `remember`ed expanded-id set; a `TextField` above the column switches it to a flat list with parent breadcrumbs when its value is non-empty; disabled categories render at reduced opacity and ignore taps; the confirm button's `enabled` binding mirrors the same pickability computation; arrow keys and a roving `FocusRequester` provide keyboard-only navigation over the shared row list.
 - **AppKit / UIKit:** Not `NSAlert`/`UIAlertController` — both are scoped to alert/action-sheet layouts and cannot host a tree or a search field (the same reason the web implementation builds on plain `Dialog` rather than `AlertModal`; see Design Decisions). Use an `NSPanel` presented as a sheet (macOS) or a modally presented `UIViewController` (iOS) as the container, with an `NSOutlineView` (macOS) or a custom hierarchical `UITableView`/`UICollectionView` (iOS) for browsing; add an `NSSearchField` or `UISearchBar` above it that swaps the outline/table for a flat, breadcrumb-annotated result list while its text is non-empty; disabled rows render at reduced opacity and reject selection; the confirm control's enabled state tracks the same pickability computation; keyboard navigation follows each platform's native outline/table conventions.
 - **WinUI 3:** Use `ContentDialog` as the modal container with a `TreeView` for hierarchical browsing (`IsExpanded` per node) — `TreeView` already provides roving keyboard focus and arrow-key navigation natively, so no additional `IsTabStop` wiring is needed. Add an `AutoSuggestBox` above it for search/filtering; when its text is non-empty, replace the `TreeView` with a `ListView` showing the flat, breadcrumb-annotated results below each match. Apply a disabled visual state (reduced opacity) to items in the `disabledIds` set; `IsPrimaryButtonEnabled` binds to a computed property mirroring the same pickability check.
@@ -343,8 +344,8 @@ internal fold's shape, and lets any caller with the flat rows open the picker
 without importing `buildCategoryTree` itself. The fold runs inside a `useMemo`
 keyed on `nodes`, so it recomputes only when the caller's rows actually change
 rather than on every render; bounded by `MAX_TREE_NODES`, that memoized
-recomputation is cheap enough that this component's contract independence costs
-nothing measurable.
+recomputation is expected to be cheap, so this component's contract independence
+is expected to cost little (not benchmarked).
 **Approved**: pending
 
 **Decision**: No built-in async state.
@@ -355,13 +356,16 @@ consistent with the sibling form controls
 [adhsdk.ingredient.ui.components.inputs.entity-chooser](cookbook:79f7ed30-3193-49bc-856b-d7dd01303baa)).
 **Approved**: pending
 
+**Decision**: In filter mode, ArrowDown and ArrowUp do nothing while focus is still in the filter field; reaching the matches takes Tab or a pointer click.
+**Rationale**: The shared row key handler sits on the list's scroll box, not on the field, so the field keeps its own native key behavior and browse and filter mode share one roving-tab-stop mechanism. The WAI-ARIA combobox/search pattern would move focus from the field to the first option on ArrowDown, so this is a departure from that expectation and is recorded for the owner to confirm or change.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
-| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | Accessibility |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | partial | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
@@ -371,7 +375,7 @@ consistent with the sibling form controls
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on `category-picker-dialog.tsx`: the `role`/`aria-*` attributes on
+focus-management is partial because **roving-focus-origin** leaves a nested preselection collapsed and unfocused. Statuses rest on `category-picker-dialog.tsx`: the `role`/`aria-*` attributes on
 tree and listbox rows, the inherited `Dialog` focus trap, and the full arrow-key
 plus Home/End coverage support the passed accessibility rows; the `apt-*` token
 contrast values and whether the `text-sm`/`text-xs` rem-based classes track

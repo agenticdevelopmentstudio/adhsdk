@@ -4,11 +4,11 @@
     "id": "f8cbc576-a5ef-4e8c-90a0-7d0712b24b72",
     "title": "FlowHero",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "563a0112ff6d6b5f",
+  "synced": "de0a482bd8278ceb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

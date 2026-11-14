@@ -1,0 +1,60 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
+    "title": "Button",
+    "type": "ingredient",
+    "version": "1.4.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-06-26",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The family button — Base UI primitive with shadcn token variants, a pointer-driven pressed state, and an ancestor-settable minimum touch-target floor.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "component",
+      "button",
+      "forms",
+      "ui"
+    ],
+    "depends-on": [
+      "f483dfb7-d60e-4b12-8b17-2eb150b550db"
+    ],
+    "related": [
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f26a9468-a15c-4cd2-b944-d39221e7eee2",
+      "f483dfb7-d60e-4b12-8b17-2eb150b550db"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "1569ad44b3e88ff7",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

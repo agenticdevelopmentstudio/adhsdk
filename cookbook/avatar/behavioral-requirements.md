@@ -114,7 +114,7 @@
   if the list is empty or absent it MUST set speech to `null`.
 - **speech-looping-while-asleep**: While the `looping` flag passed to
   `useSpeech` is true (the engine passes `eyesShut`), a new random line from
-  the same mood's list MUST be emitted every `mutterMs` milliseconds, and
+  the same mood's list MUST be emitted every `tuning.sleepMutterMs` milliseconds (the `mutterMs` parameter of `useSpeech`), and
   this loop MUST stop the instant `effective` changes again.
 - **speech-mute**: While `config.mute` is true, the value of `speech`
   returned by `useAvatarEngine` MUST be `null` regardless of what the
@@ -129,8 +129,10 @@
 - **gaze-eyes-shut-still**: While `eyesShut` is true, gaze MUST hold the
   iris centered `(0, 0)`, the head tilt at `0`, and the lean at `(0, 0)`, and
   MUST NOT install cursor tracking or wander.
-- **gaze-forced-priority**: When both `forcedX` and `forcedY` are non-null,
-  gaze MUST aim the iris at `(forcedX * gazeMax, forcedY * gazeMax)`, tilt
+- **gaze-forced-priority**: `useAvatarEngine` MUST clamp a forced
+  `config.gaze` to `[-1, 1]` on each axis before passing it on as
+  `forcedX`/`forcedY` (`engine.ts`). When both `forcedX` and `forcedY` are
+  non-null, gaze MUST aim the iris at `(forcedX * gazeMax, forcedY * gazeMax)`, tilt
   the head to `-forcedX * tiltMax` degrees, and lean to
   `(forcedX, forcedY) * leanMax`, and MUST ignore the cursor and the wander
   scheduler while it does.
@@ -208,8 +210,8 @@
   `applyPose` MUST tween each antenna to its per-pose `lLeft`/`lRight`
   rotation/offset (when given) regardless of `eyesShut`. Additionally, when
   `eyesShut` is false, `applyPose` MUST run a continuous, out-of-phase bend
-  loop whose amplitude is `sway.lively` (default `18`) when `pose.wiggle > 0`
-  and `sway.calm` (default `8`) otherwise; while `eyesShut` is true, both
+  loop whose amplitude is `tuning.swayLively` (default `18`, passed to `applyPose` as `sway.lively`)
+  when `pose.wiggle > 0` and `tuning.swayCalm` (default `8`, `sway.calm`) otherwise; while `eyesShut` is true, both
   antennae MUST instead settle their bend to a neutral, still value (on top
   of, not instead of, the per-pose rotation/offset tween).
 - **brows-per-pose**: When `rig.brows` is wired and `pose.browLeft`/
@@ -291,6 +293,6 @@
 
 **Unvalidated input — genuine gaps**
 
-- **morph-point-count-validation**: Matching point counts between morph targets on the same channel is an authoring precondition (see **morph-path-point-count-consistency**); nothing in `pose.ts` checks it before calling `gsap.to(..., { morphSVG: ... })`, so a mismatched pair is handed to MorphSVGPlugin as-is and its outcome is whatever the pinned `gsap`/`MorphSVGPlugin` version does.
-- **pose-shape-validation**: `Pose` and `Tuning` shapes are enforced only by TypeScript's compile-time types in `types.ts`; there is no runtime schema check, and every pose table in this source is authored in TypeScript, so a well-typed value is a caller precondition. A value that bypasses the type checker (e.g. a JSON- or CMS-authored table) is passed through unchecked.
+- **morph-point-count-validation**: The engine MAY hand a mismatched pair of morph targets to MorphSVGPlugin as-is. Matching point counts between morph targets on the same channel is an authoring precondition (see **morph-path-point-count-consistency**); nothing in `pose.ts` checks it before calling `gsap.to(..., { morphSVG: ... })`, so a mismatched pair is handed to MorphSVGPlugin as-is and its outcome is whatever the pinned `gsap`/`MorphSVGPlugin` version does.
+- **pose-shape-validation**: The engine MAY receive a `Pose` or `Tuning` that bypasses the type checker, and a caller MUST NOT assume it is rejected. `Pose` and `Tuning` shapes are enforced only by TypeScript's compile-time types in `types.ts`; there is no runtime schema check, and every pose table in this source is authored in TypeScript, so a well-typed value is a caller precondition. A value that bypasses the type checker (e.g. a JSON- or CMS-authored table) is passed through unchecked.
 

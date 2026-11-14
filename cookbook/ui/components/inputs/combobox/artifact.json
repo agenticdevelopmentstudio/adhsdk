@@ -4,11 +4,11 @@
     "id": "43c55f5e-d9b3-430b-9026-d0af510fda15",
     "title": "Combobox",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6e5a1060afa27498",
+  "synced": "361a57e5db10eabc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

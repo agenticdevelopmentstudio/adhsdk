@@ -11,3 +11,4 @@ Most user-facing text is caller-supplied (`ariaLabel`, `emptyLabel`, column `hea
 
 These literals are not routed through any localization layer; a non-English caller sees them in English regardless of locale.
 
+The drag announcements, emitted when `reorder` is set, are also hardcoded English: `Picked up {name}.`, `{name} is over {target}.` (or `{name} is over no drop target.`), `{name} was dropped.` (or `{name} was returned to where it started.`), and `Dragging {name} was cancelled.` Here `{name}` follows **announce-drag-state** and `{target}` is the table's `ariaLabel` or another row's name.

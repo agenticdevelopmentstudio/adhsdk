@@ -2,11 +2,11 @@
 id: ecaba9e2-de10-45ac-80d8-398e9ab02626
 title: "CopyButton"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,7 +39,7 @@ short window. It composes two shared parts rather than re-implementing either: t
 family `Button` (`variant="outline"`, `size="icon"`, shrunk to `size-6`) for the
 chrome and press feel, and the `useClipboard` hook for the write + transient
 `copied` flag. `useClipboard` is a small internal hook, not independently
-catalogued in this cookbook, so it has no domain of its own to list under
+catalogued in this cookbook, so it has no artifact UUID in the index to list under
 `depends-on`.
 
 The payload is a function, not a string: `getText()` runs at click time, so the
@@ -67,6 +67,7 @@ fully self-driving — the only inputs are `getText`, the `label`, and an option
 - **labels-from-prop**: The component MUST expose `label` as its accessible name via `aria-label`.
 - **decorative-icon**: The component MUST mark its glyph `aria-hidden` so the accessible name comes solely from `label`.
 - **forwards-classname**: The component MUST merge a consumer `className` onto the button element via `cn()`.
+- **classname-overrides-default-size**: Because `cn()` merges through tailwind-merge, a consumer `className` that conflicts with a built-in class (for example `size-8` against the built-in `size-6`) MUST win, and the conflicting built-in class MUST be dropped.
 
 ## Appearance
 
@@ -122,9 +123,9 @@ success    [ ✓ ]   apt-green check, title "Copied!"  (1200 ms)  then reverts
 | T6 | reflects-current-selection | `getText` reads a variable mutated between render and click | `writeText` receives the value current at click, not at render |
 | T7 | decorative-icon, labels-from-prop | render `<CopyButton getText={…} label="Copy" />` | rendered svg glyph carries `aria-hidden`; accessible name is `"Copy"` |
 | T8 | forwards-classname | `className="ml-2"` | button element carries the `ml-2` class |
-| T9 | reverts-after-timeout | after a successful copy, click again (also successful) at 1000 ms, before the first timer fires | the check persists until 2200 ms from the second click (timer is cleared and re-armed), not 1200 ms from the first |
+| T9 | reverts-after-timeout | after a successful copy, click again (also successful) at 1000 ms, before the first timer fires | the check reverts 1200 ms after the second click (2200 ms after the first), because the timer is cleared and re-armed |
 | T10 | reverts-after-timeout | unmount the component before the 1200 ms timer fires | the pending timer is cleared on cleanup; no state update occurs after unmount |
-
+| T11 | forwards-classname, classname-overrides-default-size | `className="size-8"` | the button carries `size-8` and does not carry `size-6` (tailwind-merge in `cn()` lets the consumer class win) |
 ## Edge Cases
 
 - `getText()` returning `""` is the sanctioned "nothing to copy" signal — the host
@@ -139,7 +140,9 @@ success    [ ✓ ]   apt-green check, title "Copied!"  (1200 ms)  then reverts
   there is no state update after unmount (T10).
 - The text is resolved lazily, so a stale render never copies stale data — the
   payload always reflects state at the instant of the click.
-
+- A consumer `className` that conflicts with a built-in class (for example `size-8`
+  against `size-6`) wins: `cn()` runs tailwind-merge, so the built-in class is
+  dropped (`classname-overrides-default-size`, T11).
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -153,7 +156,7 @@ component and are not exposed as props — see Design Decisions.
 
 ## Deep Linking
 
-Not applicable. The component is a stateless icon button with no navigation logic or route parameters; deep linking is not relevant to a presentational control.
+Not applicable. The component has no navigation or route state: it holds only a transient `copied` flag and has no navigation logic or route parameters; deep linking is not relevant to a presentational control.
 
 ## Localization
 
@@ -179,9 +182,7 @@ Not applicable. The component has no conditional behavior, build variants, or A/
 Not applicable. The component is a presentational affordance with no built-in telemetry (as stated in Logging). Analytics instrumentation is the responsibility of the consumer application.
 
 ## Privacy
-
-Not applicable. The component does not collect, store, or transmit any data; it only reads from `getText()` at click time and writes to `navigator.clipboard`, both of which are caller-managed and session-local.
-
+The component collects and stores no data of its own. It reads `getText()` at click time and writes the result with `navigator.clipboard.writeText`, which puts the text on the system-wide clipboard. That clipboard is shared across the operating system: other applications, and clipboard managers or synced clipboards, can read it, so the copied text leaves the session. Callers must not return secrets (tokens, passwords, personal data) from `getText` without weighing that exposure.
 ## Logging
 
 No logging. `CopyButton` is a presentational affordance; what a given copy means, and
@@ -197,11 +198,13 @@ button.
   only when *reading* another app's pasteboard content, not when writing. The 1200ms
   flash pattern and glyph swap work identically via `@State` transitions.
 - **Compose (Android)**: Use `IconButton` in Material 3 Compose, paired with
-  `LocalClipboardManager.current.setText(...)` for the write. The lazy text
+  `LocalClipboard.current` and its suspending `setClipEntry(...)` for the write
+  (older Compose versions use the now-deprecated
+  `LocalClipboardManager.current.setText(...)`). The lazy text
   resolution pattern (`getText` thunk) maps cleanly to a lambda. Success state and
   icon swap work via `remember { mutableStateOf() }`. Writing via `ClipboardManager`
   requires no runtime permission on modern Android.
-- **React/Web**: Source files `packages/web/packages/ui/src/components/copy-button.tsx` and hook `packages/web/packages/ui/src/hooks/useClipboard.ts`. The component carries `"use client"` directive (reads `navigator.clipboard` and holds transient `copied` state). Composes the shared `Button` (variant="outline", size="icon", overridden to size-6) and lucide `Copy`/`Check` icons. Demo available in `ui-showcase` Topic "copy-button" under "Composite controls" group (regenerate `sources.generated.ts` via `gen-sources.py` after source changes).
+- **React/Web**: The component carries the `"use client"` directive (it reads `navigator.clipboard` and holds transient `copied` state) and composes the shared `Button` (`variant="outline"`, `size="icon"`, overridden to `size-6`) and lucide `Copy`/`Check` icons. Implementation locations are recorded in the index.
 - **AppKit / UIKit**: `NSButton` (macOS) or `UIButton` (iOS) styled with outline
   appearance and a smaller icon size. Clipboard write via
   `NSPasteboard.general.setString(_:forType:)` (macOS) or `UIPasteboard.general.string`
@@ -221,7 +224,7 @@ button.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/copy-button.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/components/copy-button.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -259,9 +262,21 @@ button.
 - **Decision**: Override the icon size to `size-6` instead of `Button`'s default.
   **Rationale**: The button overrides `Button`'s `size-8` icon square down to
   `size-6` (24px) so the control sits inline beside text or a label without
-  dominating the row.
+  dominating the row. The trade-off: a 24px hit area is below the 44x44pt/48x48dp
+  touch-target guidance, which is why the `touch-target-size` compliance check fails.
   **Approved**: pending
 
+- **Decision**: Accept the 24px touch target as known debt.
+  **Rationale**: The inline fit beside text matters more here than a larger hit area, and `className` can enlarge it per call site. It would be fixed if the button ships on a touch-first surface, by enlarging the hit area beyond the 24px visual.
+  **Approved**: pending
+
+- **Decision**: Accept the hard-coded `"Copied!"` title as known debt.
+  **Rationale**: Only one locale is shipped today, and adding an optional prop is a public API change. It would be fixed when the first localized deployment needs it, by externalizing the string or exposing an optional prop.
+  **Approved**: pending
+
+- **Decision**: Accept the missing `aria-live` announcement as known debt.
+  **Rationale**: The glyph swap and title change reach sighted users, and the accessible name stays stable by design. It would be fixed when screen reader users are reported to miss the confirmation, by adding a polite live region that announces the success.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -295,6 +310,7 @@ fails — no test file in the `ui` package exercises `CopyButton` or
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Rewrote Privacy for the system-wide clipboard, recorded the 24px touch target, hard-coded title and missing live region as accepted-debt decisions, added the classname-overrides-default-size requirement with vector T11, corrected T9, and tidied the overview, deep-linking and platform notes (current Compose clipboard API, React/Web bullet trimmed). |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History row (authorized); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct Platform Notes clipboard-permission/API claims and reorder to SwiftUI/Compose/React-Web/AppKit-UIKit/WinUI-3; rewrite Localization to acknowledge the hard-coded, user-visible "Copied!" title and cite the symbol instead of a line number; reformat Design Decisions into Decision/Rationale/Approved triplets; rebuild Compliance as catalog-linked checks (passed/partial/failed) with a grounding sentence; add the idle-title-from-label requirement and T9/T10 test vectors, and clarify skips-empty-text for whitespace-only text; note why useClipboard has no depends-on entry; rename the 1.0.0 summary to "Initial ingredient". |
 | 1.1.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); expand Platform Notes with concrete guidance for all platforms; update domain and depends-on URIs to canonical agenticdevelopercookbook namespace; mark status review. |

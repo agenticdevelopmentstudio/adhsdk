@@ -20,10 +20,10 @@
 **Approved**: pending
 
 **Decision**: Row strings are literals, not localized resources, and the status literal "Working…" lives in the screen while "Checking sign-in…" lives in `AccountDisplay`.
-**Rationale**: Technical debt noted for fidelity: the source has no localization layer, so implementers on other platforms must add their own.
+**Rationale**: Technical debt noted for fidelity: the source has no localization layer, so implementers on other platforms must add their own. The debt is repaid when the SDK gains a localization layer; the literals then become keys.
 **Approved**: pending
 
-**Decision**: The open-URL closure SHOULD be injectable.
-**Rationale**: It lets tests record the signup URL without launching the system; a host may deviate by hard-wiring the system opener, at the cost of testability.
+**Decision**: The open-URL closure is injectable, with the system opener as the default.
+**Rationale**: It lets tests record the signup URL without launching the system, and vectors mobile-account-006 and mobile-account-007 depend on it; a host may deviate by hard-wiring the system opener, at the cost of testability.
 **Approved**: pending
 

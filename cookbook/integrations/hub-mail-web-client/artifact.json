@@ -4,7 +4,7 @@
     "id": "6b0f3c52-8e47-4d1a-9a35-2f7c1d9e4a60",
     "title": "Hub Mail Web Client",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8b154ffaa4d14d87",
+  "synced": "80c79121abbb8e0f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

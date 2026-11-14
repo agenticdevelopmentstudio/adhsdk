@@ -4,11 +4,11 @@
     "id": "d9dfd305-be0d-4770-9db8-43a35218c8b7",
     "title": "Hub Client Transport",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,12 +24,17 @@
       "daemon"
     ],
     "depends-on": [],
-    "related": [],
-    "references": [],
+    "related": [
+      "9041d819-d6bf-405a-9129-9730bb2c8a6b"
+    ],
+    "references": [
+      "https://github.com/apple/swift-openapi-runtime",
+      "https://github.com/apple/swift-openapi-urlsession"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "19f15b58eb6a674f",
+  "synced": "982e8a878de37245",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

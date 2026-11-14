@@ -8,5 +8,8 @@
 - **close-variant-class**: Component MUST apply the CSS class `menu-button--close` to the button element when `icon="close"`.
 - **custom-classname**: Component MUST allow custom CSS classes to be added via a `className` prop and combine them with the component's internal classes.
 - **plain-element-bars**: Component MUST render bars as plain `<span>` elements with class `mb-bar` rather than as an SVG, to enable animation and color inheritance.
-- **relative-positioning**: The button MUST be `position: relative` so the 44×44px `::after` hit-area pseudo-element centers on it correctly (`css/base.css`).
-
+- **relative-positioning**: The button MUST be `position: relative` so the 44×44px `::after` hit-area pseudo-element centers on it correctly (`packages/web/packages/chrome/src/css/base.css`).
+- **bar-geometry**: Each bar MUST be 16px wide (`--menu-bar-width`) and 1px thick (`--menu-bar-thickness`), with fully rounded ends (`border-radius: 999px`), stacked with a 4px gap (`--menu-bar-gap`) inside a 32×32px box (`--menu-size`). Thickness, gap and the resulting 5px pitch (thickness + gap) MUST all be whole-number CSS pixels, so every bar rounds to the same device-pixel thickness regardless of device-pixel ratio or the button's fractional position; the button's 1px top padding keeps the 11px stack on whole pixels inside the even-height box (`packages/web/packages/chrome/src/css/base.css`).
+- **bar-current-color**: Each bar MUST use `background: currentColor`, so a consumer themes the icon by setting `color` on the button.
+- **bar-transition**: Each bar MUST apply `transition: 0.25s` (all properties), which animates the `rotate()` transform applied to the first and last bar when toggling to the close state; no `prefers-reduced-motion` override exists (see the `reduced-motion` check in [Compliance](#compliance)).
+- **close-bars-overlaid**: In the close state, the two bars MUST share one grid cell (`grid-area: 1 / 1`) and be rotated +45deg (first) and -45deg (last), so the X survives any change to bar thickness or gap.

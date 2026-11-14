@@ -4,7 +4,7 @@
   its starting value to the (respond-mapped) `to` value, per
   **tween-from-resolves-from-channel** — the tween is live and completes
   normally, but produces no visible change because it starts equal to its
-  target. MUST.
+  target.
 - **Zero or negative duration below the snap-channel path.** A duration of
   exactly `0` with `delay: 0` takes the documented immediate-apply path
   (**tween-zero-duration-immediate-apply**). Source does not special-case a
@@ -14,14 +14,14 @@
   defined (no crash, no divide-by-zero), just not called out anywhere in
   source as an intentional input. SHOULD (callers SHOULD NOT rely on a
   negative duration; it is unvalidated, tolerated input, not a documented
-  feature).
+  feature.
 - **Boundary: interval `<= 0` passed to `every`.** As stated in
   **scheduler-one-shot-classification**, `every(0, ...)` and `every(-1, ...)`
   both behave exactly like `once` — one fire, then removal — because `tick`
   branches on `interval <= 0`, not on which factory method was called. MUST.
 - **Boundary: a channel name with no `"."`.** `snaps("pivotX")` (no dot) MUST
   return `false` — the snap rule requires a `"<nodeId>.<prop>"` shape; a bare
-  property name never snaps regardless of its text. MUST.
+  property name never snaps regardless of its text.
 - **Concurrent access.** None of `Channels`, `Scheduler`, or `Tweens`
   synchronizes its mutable state internally — no lock, no actor isolation,
   and (on Apple) none of the three classes conforms to `Sendable`. The
@@ -31,8 +31,7 @@
   `tweens`/`channels`), and `tweens.tick` synchronously, in that order, from
   whatever single caller drives `Engine.tick`. Calling any of these types'
   methods from more than one thread/queue/task concurrently is undefined
-  behavior the source does not guard against. MUST NOT (concurrent,
-  unsynchronized access).
+  behavior the source does not guard against, so callers MUST NOT do it.
 - **Error states: unresolvable ease name.** Covered normatively under
   **tween-ease-resolution-fails-closed** — this is documented, deliberate,
   fail-fast behavior (the config loader is stated to validate every ease name
@@ -41,9 +40,8 @@
   reaches its path branch only after `isPath` confirms both strings start
   with `M`/`m`; it does not otherwise validate path grammar before parsing.
   A malformed value that passes that shape check but fails `parsePath`'s
-  grammar (e.g., a truncated command) reaches `try!` (Apple, traps the
-  process) or an un-try/catch-wrapped `parsePath` call (web, throws
-  uncaught) — the same "not reachable in practice" reasoning as the ease
+  grammar (e.g., a truncated command) traps the Apple process or throws
+  uncaught on the web — the same "not reachable in practice" reasoning as the ease
   case (comments cite upstream loader invariants — `poseKind`, per-timeline
   family checks — that are not part of these three files). Given the sources
   provided for THIS component, `Tweens`/`createTweens` performs no grammar

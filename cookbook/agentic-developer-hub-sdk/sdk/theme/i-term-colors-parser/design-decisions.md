@@ -1,10 +1,10 @@
 
 **Decision**: Foreground, background and all 16 ANSI colors are required and fail fast; cursor and selection fall back to palette-derived values.
-**Rationale**: The source comment says cursor and selection are "common but not universal", so partial files still yield a usable theme, while the palette itself is what makes a theme usable.
+**Rationale**: Cursor and selection each have a safe palette-derived substitute (the foreground, and a background-to-foreground blend), so a file without them still yields a usable theme. The foreground, background and ANSI colors have no substitute, and the palette is what makes a theme usable. The doc comment on `parse` describes cursor and selection as "common but not universal"; that is the source's claim and no external sample is cited here.
 **Approved**: pending
 
 **Decision**: A theme whose foreground equals its background is rejected with `foregroundMatchesBackground`.
-**Rationale**: The doc comment on the error says such a theme renders all text invisible, so it is rejected rather than imported into an unusable state.
+**Rationale**: Text drawn in the background color is invisible, so such a theme is rejected rather than imported into an unusable state. This follows from the colors being identical; the doc comment on `ITermColorsParseError.foregroundMatchesBackground` makes the same point.
 **Approved**: pending
 
 **Decision**: Appearance is inferred from the background's relative luminance unless the caller supplies one.
@@ -16,7 +16,7 @@
 **Approved**: pending
 
 **Decision**: Alpha defaults to 1.0 when absent or not a `Double`.
-**Rationale**: The source comment says alpha is "frequently omitted", so a missing alpha is treated as opaque.
+**Rationale**: A color with no alpha is conventionally opaque, so an absent alpha is treated as `1.0`; the comment on the alpha read in `ITermColorsParser.swift` says alpha is "frequently omitted". A present but non-numeric alpha also becomes `1.0`, unlike the other components, which throw.
 **Approved**: pending
 
 **Decision**: Plist decode errors and file read errors are not wrapped in `ITermColorsParseError`.

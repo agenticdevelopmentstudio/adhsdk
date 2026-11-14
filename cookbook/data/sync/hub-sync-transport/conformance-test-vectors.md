@@ -8,6 +8,10 @@
 | hub-sync-transport-005 | map-resync | The call throws `.resyncRequired` | `.resyncRequired` |
 | hub-sync-transport-006 | map-http | The call throws `.http(503)` | `.invalidResponse(statusCode: 503)` |
 | hub-sync-transport-007 | map-transport | The call throws `.transport("offline")` | `.transport("offline")` |
-| hub-sync-transport-008 | map-coding | The call returns `not json` | `.transport(...)` |
+| hub-sync-transport-008 | map-coding, decode-pull | The call returns `not json` | `.transport(message)` where `message` is non-empty and contains the decoding error's description |
 | hub-sync-transport-009 | cancellation-passes | The call throws `CancellationError()` | `CancellationError` |
-
+| hub-sync-transport-010 | wraps-api | One `pull` and one `push`, each with its own recording call | `pull` invokes only the pull call and `push` only the push call; no other state is held |
+| hub-sync-transport-011 | injectable-calls | Construct the transport from two closures with the internal initializer and call `pull` | The closure is invoked and the transport needs no network |
+| hub-sync-transport-012 | map-coding, encode-push | The push call returns `not json` | `.transport(message)` where `message` is non-empty and contains the decoding error's description |
+| hub-sync-transport-013 | map-unknown | The call throws an error that is not a `CancellationError`, an `ADHSyncAPI.Failure` or a `SyncTransportError` (for example `URLError(.cancelled)`) | `.transport(message)` where `message` is the error's description |
+| hub-sync-transport-014 | cancellation-passes | The push call throws `CancellationError()` | `CancellationError`, unchanged |

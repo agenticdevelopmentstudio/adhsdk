@@ -3,8 +3,8 @@
 toolbar ─────────────────────────────────────────────
   […other controls]  [✓ Check spelling  (3)]   ← toggle Button (outline, sm);
                               │                   SpellCheck icon + label +
-                              │                   count Badge (error) when open
-                              ▼ on enable (popover, side=bottom align=end, w-80)
+                              │                   count Badge (error) when enabled
+                              ▼ when enabled (popover, side=bottom align=end, w-80)
   ┌ SPELLING & GRAMMAR ───────────────────────────┐
   │ ┌───┐                                          │
   │ │teh│  Did you mean "the"?                      │  ← flagged chip (mono, red)

@@ -1,0 +1,21 @@
+
+- **accept-headings-array**: Component MUST accept a `headings` array of `HeadingEntry` objects containing at minimum an `id`, `text`, and `depth` property for each heading.
+- **render-nothing-when-empty**: Component MUST render nothing (return null) when the `headings` array is empty or all headings are filtered by `excludeIds`.
+- **filter-headings**: Component MUST filter headings based on the optional `excludeIds` iterable, excluding any heading whose `id` is in the set.
+- **track-active-heading**: Component MUST track which heading is currently in the viewport using a scrollspy mechanism and highlight it as the active heading.
+- **show-active-heading-styling**: Component MUST render the active heading with an accent-colored left border (1px width), primary text color, and medium font weight.
+- **show-inactive-heading-styling**: Component MUST render inactive headings with a transparent left border (maintaining alignment), dim text color, and regular font weight.
+- **hover-inactive-headings**: Component MUST change inactive heading text color to secondary on hover to indicate interactivity.
+- **indent-by-depth**: Component MUST indent headings based on depth: depth-3 headings MUST have 6 units (1.5 rem) of left padding; all other headings MUST have 3 units (0.75 rem).
+- **scroll-page-on-click**: Component MUST smooth-scroll the document to the target heading's element when clicked, preventing default link behavior.
+- **use-custom-title**: Component MUST accept an optional `title` prop (ReactNode) and MUST default to "On this page" when not provided.
+- **transition-colors**: Component MUST apply a CSS transition effect (150ms) to color and border changes when the active state changes.
+- **respect-custom-classname**: Component MUST accept an optional `className` prop and merge it with the component's default classes without losing the sticky positioning or layout structure.
+- **accept-html-attributes**: Component MUST accept standard HTML element attributes (spread via `...rest` on the aside element) and apply them to the component's root element.
+- **use-monospace-title**: Component MUST render the title in monospace font, uppercase, small size (10px), medium weight, and dim color.
+- **hide-below-xl**: Component MUST hide on screens smaller than the XL breakpoint and show only on XL and larger screens.
+- **be-sticky-positioned**: Component MUST use CSS sticky positioning, offsetting from the top by the value of the CSS custom property `--adh-header-height` (defaulting to 3.5rem if not defined).
+- **have-fixed-width**: Component MUST have a fixed width of 14 rem (56 units) and MUST NOT grow or shrink.
+- **have-left-border**: Component MUST render a left border (1px width) on the heading list using the `--color-border-subtle` custom property.
+- **use-custom-properties**: Component MUST use CSS custom properties (`--color-accent`, `--color-text-primary`, `--color-text-dim`, `--color-text-secondary`, `--color-border-subtle`) for all colors and MUST NOT use hardcoded color values.
+

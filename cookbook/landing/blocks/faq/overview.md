@@ -11,3 +11,5 @@ browser's Find function. See [adhsdk.ingredient.ui.components.layout.accordion](
 single-open variant of this pattern, and [adhsdk.ingredient.ui.components.layout.disclosure](cookbook:c99e2822-f5a9-4e84-8740-9341880bb82a)
 for a single collapsible section.
 
+A landing page can also produce this block from data (`kind: 'Faq'`, with `answer` as an inline array); `landingMarkdown` serializes each entry as a `### question` heading followed by its answer. A port that builds pages from data needs both forms.
+

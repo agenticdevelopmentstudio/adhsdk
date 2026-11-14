@@ -48,8 +48,8 @@ internal fold's shape, and lets any caller with the flat rows open the picker
 without importing `buildCategoryTree` itself. The fold runs inside a `useMemo`
 keyed on `nodes`, so it recomputes only when the caller's rows actually change
 rather than on every render; bounded by `MAX_TREE_NODES`, that memoized
-recomputation is cheap enough that this component's contract independence costs
-nothing measurable.
+recomputation is expected to be cheap, so this component's contract independence
+is expected to cost little (not benchmarked).
 **Approved**: pending
 
 **Decision**: No built-in async state.
@@ -60,3 +60,6 @@ consistent with the sibling form controls
 [adhsdk.ingredient.ui.components.inputs.entity-chooser](cookbook:79f7ed30-3193-49bc-856b-d7dd01303baa)).
 **Approved**: pending
 
+**Decision**: In filter mode, ArrowDown and ArrowUp do nothing while focus is still in the filter field; reaching the matches takes Tab or a pointer click.
+**Rationale**: The shared row key handler sits on the list's scroll box, not on the field, so the field keeps its own native key behavior and browse and filter mode share one roving-tab-stop mechanism. The WAI-ARIA combobox/search pattern would move focus from the field to the first option on ArrowDown, so this is a departure from that expectation and is recorded for the owner to confirm or change.
+**Approved**: pending

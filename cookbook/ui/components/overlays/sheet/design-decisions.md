@@ -12,11 +12,11 @@
 **Approved**: pending
 
 **Decision**: The `showCloseButton` prop defaults to `true`, providing an always-available close affordance.
-**Rationale**: Users can disable it if a custom close mechanism is preferred.
+**Rationale**: Every sheet then has a discoverable way to dismiss it without relying on Escape or an overlay click; consumers with their own close control can turn it off.
 **Approved**: pending
 
 **Decision**: Left and right drawers are constrained to 75% viewport width, capped at 24rem, on small+ screens, leaving the underlying content partially visible.
-**Rationale**: This preserves context and allows custom overflow behavior.
+**Rationale**: A visible strip of the underlying content preserves the user's context, and the cap stops a drawer from growing to fill a wide screen.
 **Approved**: pending
 
 **Decision**: The backdrop includes a blur effect (via `supports-backdrop-filter:backdrop-blur-xs`) to create visual separation.

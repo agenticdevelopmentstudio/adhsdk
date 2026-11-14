@@ -2,11 +2,11 @@
 id: 8b79c521-04f3-4a43-90db-ae6e0bba9f84
 title: "Hub Client Auth"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -15,9 +15,14 @@ platforms:
   - swift
   - macos
   - ios
-tags: []
+tags:
+  - auth
+  - keychain
+  - session
+  - middleware
 depends-on: []
-related: []
+related:
+  - 41649904-2300-42c5-b58a-13e3854b8cf8
 references: []
 approved-by: ""
 approved-date: ""
@@ -38,9 +43,9 @@ that `ADHClient` attaches to every outgoing request. A thin set of convenience
 wrappers on `ADHClient` (`login`, `createAPIToken`, `adopt`, `logout`, `signIn`,
 `completeMfa`, `sendMfaSms`, passkey and OAuth-exchange flows, `signOut`,
 `currentUser`) drive these stores and surface typed outcomes and errors instead
-of the generated OpenAPI request/response shapes. This recipe covers exactly
+of the generated OpenAPI request/response shapes. This ingredient covers exactly
 the nine files under `Sources/Auth/`; `ADHClient` itself, its transports, and
-`rawJSON` are referenced only where the Auth files call into them.
+`rawJSON` are referenced only where the Auth files call into them. `rawJSON` has no spec here; the vectors that touch it (040 to 043) exist because `signOut()` and `exchangeOAuthCode` route through it.
 
 ## Behavioral Requirements
 
@@ -49,9 +54,9 @@ the nine files under `Sources/Auth/`; `ADHClient` itself, its transports, and
 - **credentials-shape**: `Credentials` MUST be a `Sendable, Equatable, Codable` struct with a mutable `token: String` and `kind: Kind`, where `Kind` is a `String`-backed enum with cases `jwt` and `apiToken`.
 - **credentials-transmission-uniformity**: Both `Kind` values MUST be sent identically as `Authorization: Bearer <token>` — `kind` is informational only and MUST NOT change how the token is transmitted.
 - **credentials-redaction**: `Credentials` MUST override `CustomStringConvertible`/`CustomDebugStringConvertible` to print exactly `Credentials(kind: <kind>, token: <redacted>)`, never the raw token, so logging or a failed test assertion cannot leak a live bearer token.
-- **credentials-redaction-value-semantics**: Redaction MUST be presentation-only: `Credentials` equality, hashing through `Codable` round-trips, and the underlying `token`/`kind` values MUST be unchanged by the custom description.
+- **credentials-redaction-value-semantics**: Redaction MUST be presentation-only: `Credentials` equality and `Codable` round-trips, and the underlying `token`/`kind` values MUST be unchanged by the custom description.
 - **session-shape**: `Session` MUST be a `Sendable, Equatable, Codable` struct with `credentials: Credentials` and an optional `refreshToken: String?`, defaulting `refreshToken` to `nil` in its initializer.
-- **session-refresh-token-optionality**: A `Session` for an API-token credential MUST carry `refreshToken == nil`; only password/MFA/passkey/OAuth sign-ins populate a refresh token.
+- **session-refresh-token-optionality**: `SessionStore.save(_ credentials:)` MUST guarantee that an adopted API-token credential is stored with `refreshToken == nil` (`session-store-adopt-drops-refresh`); only password/MFA/passkey/OAuth sign-ins populate a refresh token. The `Session` type itself does not encode this rule (see Design Decisions).
 - **session-redaction**: `Session`'s custom description MUST print exactly `Session(kind: <kind>, token: <redacted>, refreshToken: <none|<redacted>>)` — neither the access token nor the refresh token is ever printed, but whether a refresh token is present IS reported.
 
 ### Storage protocols (`CredentialStore.swift`, `SessionStore.swift`)
@@ -67,8 +72,8 @@ the nine files under `Sources/Auth/`; `ADHClient` itself, its transports, and
 - **keychain-credential-store-namespacing**: `KeychainCredentialStore.init(keyPrefix:)` MUST default `keyPrefix` to `"adh.api"` and derive exactly two Keychain account keys, `<prefix>.token` and `<prefix>.token.kind`.
 - **keychain-credential-store-statelessness**: `KeychainCredentialStore` MUST hold no in-memory state; every `currentCredentials()`/`save`/`clear()` call MUST read or write the Keychain directly, so the value survives process restarts and is shared across instances with the same prefix and `KeychainHelper.service`.
 - **keychain-credential-store-kind-fallback**: `KeychainCredentialStore.currentCredentials()` MUST default `kind` to `.jwt` when the stored kind key is missing or fails to parse as a `Credentials.Kind` raw value.
-- **in-memory-credential-store-thread-safety**: `InMemoryCredentialStore` MUST be a `final class, @unchecked Sendable` guarding its single `Credentials?` with an `NSLock` on every read and write.
-- **in-memory-session-store-thread-safety**: `InMemorySessionStore` MUST be a `final class, @unchecked Sendable` guarding its single `Session?` with an `NSLock` on every read and write.
+- **in-memory-credential-store-thread-safety**: `InMemoryCredentialStore` MUST be safe to share across threads: every read and write of its single `Credentials?` MUST be serialized. The source does this with a `final class, @unchecked Sendable` and an `NSLock`; ports choose their own mechanism (see Platform Notes).
+- **in-memory-session-store-thread-safety**: `InMemorySessionStore` MUST be safe to share across threads: every read and write of its single `Session?` MUST be serialized. The source does this with a `final class, @unchecked Sendable` and an `NSLock`; ports choose their own mechanism (see Platform Notes).
 - **keychain-session-store-three-keys**: `KeychainSessionStore.init(keyPrefix:)` MUST default `keyPrefix` to `"adh.api"` and derive three keys: `<prefix>.token`, `<prefix>.token.kind`, `<prefix>.refresh`.
 - **keychain-session-store-shared-prefix-compat**: `KeychainSessionStore` MUST share its `.token`/`.token.kind` key names with `KeychainCredentialStore` under the same prefix, so a credential saved by one store is readable by the other as a session with no refresh token, and a session saved here is readable there as its bare credentials.
 - **keychain-session-store-save-order**: `KeychainSessionStore.save(_ session:)` MUST write the token and kind unconditionally, then either write `refreshToken` to `<prefix>.refresh` when non-nil or delete that key when `refreshToken == nil` — adopting an API token (no refresh token) into a store that previously held a JWT session MUST remove the stale refresh token from the Keychain.
@@ -76,14 +81,14 @@ the nine files under `Sources/Auth/`; `ADHClient` itself, its transports, and
 
 ### `KeychainHelper`
 
-- **keychain-helper-service-default**: `KeychainHelper.service` MUST default to `Bundle.main.bundleIdentifier`, falling back to a hardcoded literal reverse-DNS bundle-identifier string naming the hub client itself when the bundle identifier is `nil`. It is declared `nonisolated(unsafe) public static var`: the type does not synchronize reads or writes of this global, so a caller that reassigns `service` MUST do so before any concurrent Keychain access begins, per Swift's declaration-level isolation for a `nonisolated(unsafe)` value.
+- **keychain-helper-service-default**: `KeychainHelper.service` MUST default to `Bundle.main.bundleIdentifier`, falling back to the literal `com.mikefullerton.AgenticDeveloperHubClient` when the bundle identifier is `nil`. It is declared `nonisolated(unsafe) public static var`: the type does not synchronize reads or writes of this global, so a caller that reassigns `service` MUST do so before any concurrent Keychain access begins, per Swift's declaration-level isolation for a `nonisolated(unsafe)` value.
 - **keychain-helper-set-overwrite**: `KeychainHelper.set(_:forKey:)` MUST delete any existing item for the key and then `SecItemAdd` the new value — an overwrite, never an update-in-place.
 - **keychain-helper-ios-accessibility**: On iOS, `set(_:forKey:)` MUST set `kSecAttrAccessible` to `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` so a background refresh can read the token after the device's first unlock, and the item never leaves the device via backup or Keychain sync.
 - **keychain-helper-macos-accessibility**: On macOS, `set(_:forKey:)` MUST leave `kSecAttrAccessible` unset (the implicit default) because the file-based legacy Keychain rejects or ignores an explicit accessibility class unless the item also opts into the data-protection Keychain, and that migration is out of this component's scope.
 - **keychain-helper-get**: `get(forKey:)` MUST return the UTF-8-decoded string for the key, or `nil` when the item is absent or the query otherwise fails.
 - **keychain-helper-delete-idempotent**: `delete(forKey:)` MUST return `true` for both `errSecSuccess` and `errSecItemNotFound` — deleting an absent item is not an error.
 - **keychain-helper-exists**: `exists(forKey:)` MUST return whether `SecItemCopyMatching` succeeds for the key, without decoding the stored value.
-- **keychain-helper-error-logging**: A failed `set` or a `get` failure other than `errSecItemNotFound` MUST log the key name and the `OSStatus` at `.error` level via an `os.Logger` scoped to the hub client's own reverse-DNS subsystem identifier and the `Keychain` category, and MUST NOT log the stored value.
+- **keychain-helper-error-logging**: A failed `set` or a `get` failure other than `errSecItemNotFound` MUST log the key name and the `OSStatus` at `.error` level via an `os.Logger` with subsystem `com.mikefullerton.AgenticDeveloperHubClient` and category `Keychain`, and MUST NOT log the stored value.
 
 ### `AuthenticationMiddleware`
 
@@ -95,6 +100,7 @@ the nine files under `Sources/Auth/`; `ADHClient` itself, its transports, and
 
 - **session-refresh-bearer-injection**: `SessionRefreshMiddleware.intercept` MUST attach `Authorization: Bearer <token>` from the current session's credentials before the first attempt, identically to `AuthenticationMiddleware`.
 - **session-refresh-body-buffering**: `intercept` MUST buffer the entire outgoing request body via `Data(collecting:upTo: ADHBodyLimit.maxBuffered)` (16 MiB) for every request, not only ones that eventually fail, so the same body bytes can be resent unchanged on a post-refresh retry.
+- **session-refresh-oversize-body**: When the request body exceeds `ADHBodyLimit.maxBuffered`, the error thrown by `Data(collecting:upTo:)` MUST propagate to the caller unchanged and no request MUST be sent. The middleware catches nothing around the buffering call. The concrete error type belongs to `OpenAPIRuntime`, not to this component.
 - **session-refresh-passthrough-non-401**: A response that is not HTTP 401 MUST be returned unchanged, with no refresh attempt.
 - **session-refresh-exempt-operations**: A 401 on an operation whose ID is in `SessionRefreshMiddleware.exemptOperationIDs` MUST be returned unchanged with no refresh attempt. That set MUST be derived from the generated `Operations.X.id` constants (`PostAuthLogin`, `PostAuthLoginMfa`, `PostAuthLoginMfaSmsSend`, `PostAuthLoginMfaWebauthn`, `PostAuthLoginMfaWebauthnOptions`, `PostAuthLoginWebauthn`, `PostAuthLoginWebauthnOptions`, `PostAuthRefresh`, `PostOauthSigninExchange`) plus `ADHClient.revokeRawOperationID`, never hand-written string literals, so a renamed or removed generated operation fails to compile instead of silently rotting the exemption list.
 - **session-refresh-no-session-passthrough**: A 401 with no current session, an API-token session (`kind != .jwt`), or a JWT session with no `refreshToken` MUST be returned unchanged with no refresh attempt.
@@ -150,13 +156,30 @@ Not applicable — this is a non-UI authentication and session-management compon
 
 ## States
 
-Not applicable — this is a non-UI authentication and session-management component, not a visual component. Its runtime state machines (signed-out / signed-in / MFA-pending / refreshing / expired) are specified under Behavioral Requirements, not as a visual-state table.
+Not applicable as a visual-state table; this is a non-UI component. The session lifecycle is the transition table below. "Expired" is the signed-out state reached through a rejected refresh.
 
+| State | Event | Next state | Store effect |
+|-------|-------|-----------|--------------|
+| signed out | `signIn` returns `.ok` | signed in | save session (token, kind, refresh token) |
+| signed out | `signIn` returns `.accepted` | MFA pending | none |
+| signed out | `signIn` returns `.unauthorized` | signed out | none; throws `invalidCredentials` |
+| signed out | `login(email:password:)` succeeds | signed in | save `Credentials(kind: .jwt)` only |
+| MFA pending | `completeMfa` or `completeMfaPasskey` returns `.ok` | signed in | save session |
+| MFA pending | `completeMfa` returns `.unauthorized` | MFA pending | none; throws `invalidCredentials` |
+| signed in | 401 on a non-exempt operation, JWT session with a refresh token | refreshing | none |
+| refreshing | outcome `.refreshed` | signed in | save rotated session; retry once |
+| refreshing | outcome `.rejected` | expired (signed out) | clear; call `onSessionExpired` |
+| refreshing | outcome `.unavailable` | signed in | none; original 401 returned |
+| signed in | `adopt(_:)` | signed in | replace credential; drop refresh token |
+| signed in | `signOut()` | signed out | best-effort revoke, then clear |
+| signed in | `logout()` | signed out | clear; no network call |
 ## Accessibility
 
 Not applicable — this is a non-UI authentication and session-management component, not a visual component.
 
 ## Conformance Test Vectors
+Vectors 001 to 039 mirror tests in the Auth test files. Vectors 040 to 043 exercise `rawJSON`, which `signOut()` and `exchangeOAuthCode` route through. Vectors 044 to 051 are derived from the source and have no test behind them yet. Vector 032 is asserted by the same test as vector 021, which also checks the buffered body.
+
 
 | ID | Requirements | Input | Expected |
 |----|--------------|-------|----------|
@@ -191,7 +214,7 @@ Not applicable — this is a non-UI authentication and session-management compon
 | hub-client-auth-029 | refresh-coordinator-leader-follower | two concurrent `intercept` calls sharing one store both hit 401 | exactly one `/auth/refresh` call is made; both callers resolve `.ok`; final token is `"jwt-2"` (`SessionRefreshMiddlewareTests.swift`, "concurrent 401s share one refresh") |
 | hub-client-auth-030 | refresh-coordinator-shared-instance, refresh-coordinator-save-before-resume | two separate `ADHClient`s (two `SessionRefreshMiddleware` instances) over ONE shared `SessionStore`, concurrent 401s | exactly one refresh call; `onSessionExpired` never fires; store ends with the single rotated session (`SessionRefreshMiddlewareTests.swift`, "two clients over one store share a single refresh and neither clears the session") |
 | hub-client-auth-031 | refresh-coordinator-follower-token-mismatch | two `SessionRefreshMiddleware`s over two DIFFERENT stores, concurrent 401s | each store gets its own independent refresh and its own rotated pair; two refresh calls total (`SessionRefreshMiddlewareTests.swift`, "two middlewares over two different stores each get their own refresh") |
-| hub-client-auth-032 | session-refresh-body-buffering | 401/refresh/retry sequence carrying a JSON request body `{"name":"x"}` on a `PATCH` operation | the retried request (call index 2) carries the identical body bytes (`SessionRefreshMiddlewareTests.swift`, "401 on a JWT session refreshes, saves the rotated session, and retries once with the new bearer") |
+| hub-client-auth-032 | session-refresh-body-buffering | 401/refresh/retry sequence carrying a JSON request body `{"name":"x"}` on a `PATCH` operation (same test as `hub-client-auth-021`) | the retried request (call index 2) carries the identical body bytes (`SessionRefreshMiddlewareTests.swift`, "401 on a JWT session refreshes, saves the rotated session, and retries once with the new bearer") |
 | hub-client-auth-033 | keychain-session-store-three-keys | `KeychainSessionStore(keyPrefix: "adh.test")` | `tokenKey == "adh.test.token"`, `kindKey == "adh.test.token.kind"`, `refreshKey == "adh.test.refresh"` (`SessionStoreTests.swift`, "keychain store derives its three keys from the prefix") |
 | hub-client-auth-034 | keychain-session-store-save-order | save a session with a refresh token, then save bare `Credentials(kind: .apiToken)` on the same prefix | `refreshKey` item exists after the first save, is deleted after the second; `currentSession()` reports `refreshToken: nil` (`SessionStoreTests.swift`, `KeychainSessionStoreTests`, "saving a session with no refresh token deletes a previously stored one") |
 | hub-client-auth-035 | keychain-session-store-clear | `clear()` on a populated `KeychainSessionStore` | all three keys absent; `currentSession()`/`currentCredentials()` both `nil` (`SessionStoreTests.swift`, `KeychainSessionStoreTests`, "clear removes all three keys") |
@@ -203,11 +226,18 @@ Not applicable — this is a non-UI authentication and session-management compon
 | hub-client-auth-041 | session-refresh-trigger (via `rawJSON`) | `rawJSON` call 401s, refresh succeeds | request is retried and succeeds like any typed operation (`RawJSONTests.swift`, "a 401 is refreshed and retried like any typed operation") |
 | hub-client-auth-042 | oauth-exchange-raw-error-mapping (shared `RawRequestError`) | `rawJSON` receives a 404 | throws `RawRequestError.http(status: 404, body: <error body>)` (`RawJSONTests.swift`, "status >= 400 throws RawRequestError.http with the body") |
 | hub-client-auth-043 | oauth-exchange-raw-error-mapping | `rawJSON(path: "billing/context")` (no leading slash) | throws `RawRequestError.invalidPath("billing/context")` (`RawJSONTests.swift`, "a path without a leading slash is rejected") |
-
+| hub-client-auth-044 | current-user-fetch | `currentUser()` on a client built with `init(transport:credentials:)` and a stored bearer credential, mock `GET /auth/me` returns `.ok` | returns the `User`; throws no `SessionError.notASessionClient`; request carries `Authorization: Bearer` |
+| hub-client-auth-045 | sign-out-silent-when-not-a-session-client | `signOut()` on a client with no `SessionStore` | returns without throwing; no request recorded |
+| hub-client-auth-046 | keychain-credential-store-kind-fallback | `KeychainCredentialStore` holding a token under `<prefix>.token` and an unparseable string under `<prefix>.token.kind` | `currentCredentials()?.kind == .jwt` |
+| hub-client-auth-047 | refresh-coordinator-late-arrival | call `RefreshCoordinator.refresh(previousToken: "old", ...)` while the store already holds a session with token `"new"` | returns `.refreshed` with the stored session; `perform` is never called |
+| hub-client-auth-048 | keychain-helper-delete-idempotent | `delete(forKey:)` for a key that was never set | returns `true` |
+| hub-client-auth-049 | keychain-helper-ios-accessibility | on iOS, `set("v", forKey: "k")` then read the item's `kSecAttrAccessible` | equals `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` |
+| hub-client-auth-050 | sign-in-undocumented-response | `signIn` with a mock returning an undocumented status 418 | throws `SessionError.unexpectedResponse("HTTP 418")` |
+| hub-client-auth-051 | session-refresh-oversize-body | a request body of `ADHBodyLimit.maxBuffered + 1` bytes through `SessionRefreshMiddleware` | the buffering error propagates to the caller; no call is recorded |
 ## Edge Cases
 
 - **Empty/malformed sign-in input**: `email`, `password`, `code`, and challenge tokens are passed straight through to the generated request body with no client-side validation (traced to source: no validation code exists in `ADHClient+Auth.swift` or `ADHClient+Session.swift`); the backend is the sole point of validation, surfaced back as `.badRequest`/`.unprocessableContent` → `SessionError.unexpectedResponse`.
-- **Request body larger than the buffering cap**: `SessionRefreshMiddleware.intercept` buffers the entire request body via `Data(collecting:upTo: ADHBodyLimit.maxBuffered)` (16 MiB, shared with `rawJSON`'s response buffering) before the first send; a body larger than that limit fails during buffering before any request is issued.
+- **Request body larger than the buffering cap**: `SessionRefreshMiddleware.intercept` buffers the entire request body via `Data(collecting:upTo: ADHBodyLimit.maxBuffered)` (16 MiB, shared with `rawJSON`'s response buffering) before the first send; a body larger than that limit throws during buffering, before any request is issued, and the error propagates to the caller unchanged (`session-refresh-oversize-body`).
 - **Concurrent 401s on one store, one middleware instance**: coalesced into a single refresh (`hub-client-auth-029`).
 - **Concurrent 401s on one store, two middleware instances (two `ADHClient`s)**: still coalesced into a single refresh via the process-wide `RefreshCoordinator.shared` (`hub-client-auth-030`); a per-instance coordinator would have let both lead and had the loser's replay of the single-use refresh token rejected by the server.
 - **Concurrent 401s on two different stores**: each gets its own independent refresh; a follower whose `previousToken` does not match the in-flight leader's re-evaluates rather than sharing an unrelated outcome (`hub-client-auth-031`).
@@ -222,7 +252,6 @@ Not applicable — this is a non-UI authentication and session-management compon
 - **Adopting an API token over an existing JWT session**: `KeychainSessionStore.save` and the `SessionStore` default `save(_ credentials:)` both drop the previous refresh token so it cannot be replayed against a session that no longer matches it (`hub-client-auth-034`, `hub-client-auth-037`).
 - **`_Error` payload with neither `message` nor `code`**: `message(_:)` falls back to the literal string `"unknown error"` rather than throwing or returning an empty string.
 - **WebAuthn `options`/`response` payloads**: passed through as opaque `OpenAPIObjectContainer` values with no client-side schema validation beyond what `Codable`/`JSONSerialization` impose when constructing them.
-
 - **Keychain save failures are logged, not surfaced to the caller**: `KeychainHelper.set(_:forKey:)` is `@discardableResult`, and both call sites (`KeychainCredentialStore.save`, `KeychainSessionStore.save`) discard the returned `Bool`; a failed `SecItemAdd` is logged at `.error` (see Logging) but `save` itself returns `Void`, so `login`, `adopt`, and session-refresh persistence proceed as though the write succeeded.
 - **`KeychainSessionStore.save` writes its three keys non-atomically**: `tokenKey`, `kindKey`, and (conditionally) `refreshKey` are written as three independent `SecItemAdd`/`SecItemDelete` calls with no rollback; a crash or process termination between them can leave a mixed old/new triple in the Keychain (e.g. a new token paired with a stale refresh token), with no recovery path in this code.
 
@@ -232,7 +261,7 @@ Not applicable — this is a non-UI authentication and session-management compon
 |--------|------|---------|-------------|
 | `KeychainCredentialStore.keyPrefix` | `String` | `"adh.api"` | Namespaces the two Keychain account keys (`.token`, `.token.kind`); lets multiple independent stores share one Keychain service. |
 | `KeychainSessionStore.keyPrefix` | `String` | `"adh.api"` | Namespaces the three Keychain account keys (`.token`, `.token.kind`, `.refresh`); shares its first two keys with `KeychainCredentialStore` under the same prefix. |
-| `KeychainHelper.service` | `String` (`nonisolated(unsafe) static var`) | `Bundle.main.bundleIdentifier`, else a hardcoded reverse-DNS identifier naming the hub client | The Keychain `kSecAttrService` every key is scoped under. |
+| `KeychainHelper.service` | `String` (`nonisolated(unsafe) static var`) | `Bundle.main.bundleIdentifier`, else `com.mikefullerton.AgenticDeveloperHubClient` | The Keychain `kSecAttrService` every key is scoped under. |
 | `InMemoryCredentialStore.init(_:)` | `Credentials?` | `nil` | Seeds the in-memory credential for tests or ephemeral, non-persisted sessions. |
 | `InMemorySessionStore.init(_:)` | `Session?` | `nil` | Seeds the in-memory session for tests or ephemeral, non-persisted sessions. |
 | `AuthenticationMiddleware.credentials` | `any CredentialProvider` | — (required) | Injected dependency the middleware reads at send time. |
@@ -251,7 +280,7 @@ Not applicable: this component makes no use of URL schemes or universal links �
 | String Key | Default (en) | Context |
 |-----------|---------------|---------|
 | (none — inline literal) | `unknown error` | Fallback message in `ADHClient+Session.message(_:)` when the backend's `_Error.error` payload has neither `message` nor `code`. Surfaces to callers via `SessionError.unexpectedResponse`. |
-| (none — inline literal) | `HTTP <status>` | Fallback message built in every `.undocumented(status, _)` branch across `signIn`, `completeMfa`, `sendMfaSms`, `passkeyOptions`, `completePasskey`, `mfaPasskeyOptions`, `completeMfaPasskey`, `exchangeOAuthCode`, and `currentUser`, and in the raw-exchange's `RawRequestError.invalidPath` mapping. Not translated; interpolates the raw HTTP status code. |
+| (none — inline literal) | `HTTP <status>` | Fallback message built in every `.undocumented(status, _)` branch across `signIn`, `completeMfa`, `sendMfaSms`, `passkeyOptions`, `completePasskey`, `mfaPasskeyOptions`, `completeMfaPasskey`, `exchangeOAuthCode`, and `currentUser`, and in the raw exchange's fallback for `.http(status, body)` when the body does not decode (`oauth-exchange-raw-error-mapping`). Not translated; interpolates the raw HTTP status code. |
 
 ## Accessibility Options
 
@@ -275,7 +304,7 @@ Not applicable: none of the nine Auth source files emit an analytics event; the 
 
 ## Logging
 
-Subsystem: the hub client's own reverse-DNS identifier (`KeychainHelper.service`'s fallback literal) | Category: `Keychain`
+Subsystem: `com.mikefullerton.AgenticDeveloperHubClient` | Category: `Keychain`
 
 | Event | Level | Message |
 |-------|-------|---------|
@@ -288,7 +317,7 @@ No other file under `Sources/Auth/` logs anything; `errSecItemNotFound` is treat
 
 - **SwiftUI**: this is the source implementation's own layer — no SwiftUI dependency. `ObservableObject`/`@Observable` wrappers around `ADHClient`'s session wrappers (e.g. exposing `SignInOutcome` as published state) belong in an app target, not here; nothing in these nine files imports SwiftUI.
 - **Compose**: a port starts from `kotlinx.coroutines` `suspend` functions mirroring `login`/`signIn`/`completeMfa`/etc., `kotlinx.serialization` `@Serializable` data classes for `Credentials`/`Session`, Android `EncryptedSharedPreferences` (or the Keystore-backed `Jetpack Security` crypto library) in place of `KeychainHelper`, and a `Mutex`-guarded singleton in place of the `RefreshCoordinator` actor — Kotlin has no built-in actor model, so the leader/follower coalescing needs an explicit `Mutex` plus a `CompletableDeferred` per waiter.
-- **React/Web**: a port starts from `fetch`-based async functions for each wrapper, a `Credentials`/`Session` TypeScript interface, `localStorage`/`sessionStorage` (or, for stronger isolation, an HttpOnly cookie set server-side) in place of Keychain, and a single in-flight `Promise` cached at module scope (keyed by the expired token, the way `RefreshCoordinator` keys by `previousToken`) to coalesce concurrent 401s instead of an actor.
+- **React/Web**: a port starts from `fetch`-based async functions for each wrapper, a `Credentials`/`Session` TypeScript interface, an HttpOnly cookie set server-side as the primary token store in place of Keychain (script cannot read it, so XSS cannot steal the token), and only as a weaker fallback `sessionStorage` or `localStorage`, which any script on the page can read, and a single in-flight `Promise` cached at module scope (keyed by the expired token, the way `RefreshCoordinator` keys by `previousToken`) to coalesce concurrent 401s instead of an actor.
 - **AppKit / UIKit**: identical to SwiftUI here — this layer has no view-layer dependency at all; both AppKit and UIKit consumers call the same `ADHClient` wrappers directly, exactly as the Mac and iOS destinations of this same framework target already do.
 - **WinUI 3**: a port starts from `System.Net.Http.HttpClient` for the auth/session HTTP calls, `System.Text.Json` for the `Credentials`/`Session` models (`Session` needs a custom `ToString()`/`DebugView` override to reproduce the redaction requirement), the Windows Credential Locker (`Windows.Security.Credentials.PasswordVault`) in place of Keychain — `PasswordVault` has no built-in "this-device-only" accessibility class, so the iOS `AfterFirstUnlockThisDeviceOnly` requirement has no direct equivalent and must be approximated by simply never syncing the vault entry (Credential Locker does not roam by default) — and a `SemaphoreSlim`-guarded singleton keyed by the expired token in place of `RefreshCoordinator`, since .NET has no structured-concurrency actor either. `ObservableCollection`/`INotifyPropertyChanged` are irrelevant here (no collection or bindable property in this component); a WinUI view model wrapping `SignInOutcome` would implement `INotifyPropertyChanged` itself, one layer above this port.
 
@@ -326,6 +355,25 @@ No other file under `Sources/Auth/` logs anything; `errSecItemNotFound` is treat
   **Rationale**: This lets a credential saved by the older, session-agnostic store be read back by the newer session-aware store as a session with no refresh token, and vice versa, without a data migration step when a caller switches between the two.
   **Approved**: pending
 
+- **Decision**: Accept `KeychainSessionStore.save` writing its three keys non-atomically, as known debt.
+  **Rationale**: The Keychain has no multi-item transaction, and a crash between the writes is rare. A mixed old/new triple is repaired the next time a 401 forces a refresh or the user signs in again. Revisit if a mixed triple is ever seen in the field, by writing the refresh token first or storing one combined item.
+  **Approved**: pending
+
+- **Decision**: Treat the discarded `KeychainHelper.set` result as a defect to fix, not as accepted behavior.
+  **Rationale**: `login`, `adopt` and refresh persistence proceed as though the write succeeded, so the user can look signed in and be signed out on the next launch. The failure is only logged. The fix is to make `save` report failure to its caller.
+  **Approved**: pending
+
+- **Decision**: Do not encode "an API-token session has no refresh token" in the `Session` type.
+  **Rationale**: Keeping `Session` a plain pair of credentials and an optional refresh token matches the stored Keychain triple. The rule is enforced where sessions are written (`session-store-adopt-drops-refresh`), not by the type.
+  **Approved**: pending
+
+- **Decision**: The single immediate retry after a refresh is deliberate, so the `retry-with-backoff` check is listed as `failed`.
+  **Rationale**: A refresh token is single-use and cannot be spent repeatedly, so backoff-and-retry would not help. The check describes a different pattern.
+  **Approved**: pending
+
+- **Decision**: No client-side input validation of `email`, `password`, `code` or challenge tokens, so the `input-sanitization` check is listed as `failed`.
+  **Rationale**: The backend is the single point of validation, and a second copy in the client could drift from it. Backend rejections surface as `SessionError` values.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -350,3 +398,4 @@ No other file under `Sources/Auth/` logs anything; `errSecItemNotFound` is treat
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | session-wrappers-require-session-store, sign-out-silent-when-not-a-session-client and current-user-fetch corrected: currentUser() never calls sessionStore() and works with no SessionStore; also removed 6 agenticdeveloperhub product-name mentions (private-scope leak) by rephrasing to code-identifier descriptions. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Aligned requirements with source (HubSession, Keychain literals), added oversize-body requirement, states, Design Decisions, tags and vectors 044 to 051. |

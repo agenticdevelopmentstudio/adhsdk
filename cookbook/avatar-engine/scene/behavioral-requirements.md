@@ -5,12 +5,12 @@
   variant name. When given, it MUST look up that name in
   `config.character.variants`; an unknown name MUST raise, naming the
   variant. `nil`/`undefined` MUST leave the rig unpatched — the "true rig".
-- **prototype-safe-variant-lookup** (web only): `buildScene` MUST test
-  variant existence with `Object.hasOwn(config.character.variants, variant)`
-  rather than a plain indexed lookup, because `character.variants` is a
-  JSON-derived `Record` whose plain index sees `Object.prototype` members
-  (e.g. `"constructor"`) as truthy. The Apple `Dictionary` lookup has no
-  equivalent hazard.
+- **prototype-safe-variant-lookup**: only the own-property names of
+  `config.character.variants` MUST resolve as variants; a name such as
+  `"constructor"` MUST raise like any other unknown variant. The mechanism is
+  in Platform Notes.
+- **leaf-node-without-children**: a rig node with no `children` MUST be
+  treated as a leaf, and Scene construction MUST NOT recurse into it.
 - **depth-first-flattening**: Scene construction MUST walk the rig tree
   depth-first, in declaration order, and record one flattened entry per
   node; this MUST be the same order `compose`'s returned `DisplayList` later
@@ -37,10 +37,9 @@
   pivotX=0, pivotY=0` for any channel absent from the given `Channels`
   store.
 - **channel-value-type-mismatch-falls-back**: when a transform channel is
-  present in the store but does not hold a number (Apple: not a `.number`
-  case; web: `typeof v !== "number"`), `compose` MUST silently use that
-  channel's fallback default rather than raising or propagating the
-  wrongly-typed value.
+  present in the store but does not hold a number, `compose` MUST silently use
+  that channel's fallback default rather than raising or propagating the
+  wrongly-typed value (see the matching Design Decision).
 - **parent-child-composition**: `compose` MUST compute a node's world matrix
   as `parent-world-matrix * local-matrix` (parent argument first, local
   second, on both platforms), using the identity matrix for a node with no
@@ -73,6 +72,12 @@
   axis (`"x"` → index `0`, any other value → index `1`) by that point's
   weight (or `0` when the weights array is shorter than the points array)
   multiplied by the current value of the `<id>.bend` channel (default `0`).
+- **bend-weights-short-falls-back-to-zero**: when `bend.weights` is shorter
+  than the shape's `points` array, the weight for each out-of-range point MUST
+  be `0`, and `compose` MUST NOT raise.
+- **bend-axis-non-x-is-y**: a `bend.axis` of exactly `"x"` MUST offset the
+  x coordinate (index `0`); any other value MUST offset the y coordinate
+  (index `1`), with no validation of the axis vocabulary.
 - **bezier-without-bend-uses-authored-points**: a `bezier` shape with no
   `bend` definition MUST build its path directly from its authored
   `points`, unmodified by any channel.
@@ -80,11 +85,10 @@
   a bend's inward damping to the `.bend` channel's value itself; damping is
   applied exactly once, where the channel value is written
   (`CharacterConfig.respond`, [adhsdk.ingredient.avatar-animation-engine.config](cookbook:d3e1f776-8ad1-431f-9485-386ac285a039)), never at composition time.
-- **unsupported-shape-kind-rejected** (web): the web `resolvePath`'s
-  `switch` MUST throw `unknown shape kind: <kind>` for a `Shape.kind` value
-  outside the six handled cases. The equivalent Apple code path is
-  unreachable rather than checked, because `Shape.Kind` is a closed Swift
-  enum the compiler enforces exhaustively at the call site.
+- **unsupported-shape-kind-rejected** (web): the web `resolvePath` MUST throw
+  `unknown shape kind: <kind>` for a `Shape.kind` value outside the six
+  handled cases. The equivalent Apple code path is unreachable rather than
+  checked, because `Shape.Kind` is a closed Swift enum.
 - **kind-derived-from-parsed-path**: every `DisplayItem`'s `kind` field MUST
   equal the command-signature string (`parsePath(d).kind`,
   [adhsdk.ingredient.avatar-engine.path](cookbook:81f8c0bd-ce00-43b3-816e-b63e96baeacc)) of that same
@@ -115,7 +119,8 @@
   through the late-bound path when it starts with `@`; resolve it via that
   ink's own `color` field when it names a known entry in the scene's
   (variant-folded) ink table; otherwise resolve it as a palette key, raising
-  when the palette has no such key.
+  when the palette has no such key. Resolution depth starts at `0` on
+  the first call.
 - **colour-ref-never-reenters-ink-table**: resolving an `Ink.color` field
   specifically (`resolveColourRef`) MUST NOT look up its input in the ink
   table under any circumstance — only `#hex`, an `@`-late-bound reference,
@@ -128,7 +133,7 @@
   reference and the channel.
 - **ink-resolution-depth-guard**: both `resolveInk` and `resolveColourRef`
   MUST raise, rather than recurse indefinitely, once accumulated resolution
-  depth exceeds `8` — depth increases when entering the ink table from a raw
+  depth exceeds `8` (depth `8` still resolves; depth `9` raises) — depth increases when entering the ink table from a raw
   name (ink → its `color` field) and when following an `@`-late-bound
   reference back into full ink resolution.
 - **unknown-colour-raises**: ink/colour resolution MUST raise, naming the
@@ -139,10 +144,9 @@
 
 - **crop-name-must-exist**: `crop`/`cropList` MUST raise, naming the
   requested crop, when `character.crops` has no entry for it.
-- **prototype-safe-crop-lookup** (web only): `cropList` MUST test crop
-  existence with `Object.hasOwn(config.character.crops, crop)` rather than a
-  plain indexed lookup, for the same JSON-derived-`Record` reason as
-  prototype-safe-variant-lookup.
+- **prototype-safe-crop-lookup**: only the own-property names of
+  `config.character.crops` MUST resolve as crops; a name such as
+  `"constructor"` MUST raise like any other unknown crop.
 - **feature-inheritance**: `crop`/`cropList` MUST determine each display
   item's effective feature by walking the rig from its root and assigning
   every node the nearest declared `feature` among itself and its ancestors
@@ -154,6 +158,8 @@
   the input `DisplayList` with each kept item unchanged (same id, matrix,
   path data, and paint) and in the same relative order; it MUST NOT
   recompute, reorder, or otherwise alter any item's fields.
+- **crop-empty-list-returns-empty**: `crop`/`cropList` given an empty
+  `DisplayList` MUST return an empty list.
 - **crop-does-not-consider-alpha**: `crop`/`cropList` MUST decide inclusion
   solely from a display item's inherited feature; it MUST NOT consult or
   alter `paint.alpha`.
@@ -182,31 +188,22 @@
 
 ### Concurrency
 
-- **apple-scene-is-non-sendable**: `Scene` (Apple) is declared `public` with
-  no `Sendable` conformance, unlike `DisplayItem`, `DisplayList`, and
-  `SceneError`, which are `Sendable`. Under Swift 6 strict concurrency, a
-  `Scene` value MUST remain in the isolation domain that constructed it; the
-  compiler rejects sending it across an actor boundary.
-- **web-is-single-threaded**: `buildScene`, `compose`, `cropList`, and
-  `seedChannels` are synchronous, non-`async` functions; JavaScript's
-  single-threaded execution model serializes every call made from one
-  realm, so there is no runtime data race for these functions to define
-  behavior for.
+- **apple-scene-is-non-sendable**: Apple's `Scene` MUST NOT be declared
+  `Sendable`, and a caller MUST keep a `Scene` in the isolation domain that
+  constructed it (see Design Decisions).
+- **web-is-single-threaded**: `buildScene`, `compose`, `cropList` and
+  `seedChannels` MUST remain synchronous, non-`async` functions, so no call can
+  interleave with another within one realm.
 
-- **seed-before-compose-is-host-enforced**: Scene construction and `compose`
-  do not themselves validate or enforce that `CharacterConfig.seed(into:)`/
-  `seedChannels` has been called on the given `Channels` store before the
-  first `compose` call. `compose`'s own per-property fallback defaults
+### Host preconditions
+
+- **seed-before-compose-is-host-enforced**: the host MUST call
+  `CharacterConfig.seed(into:)` / `seedChannels` on a `Channels` store before
+  the first `compose` call on it. `compose`'s per-property fallback defaults
   (`x=0, y=0, rotation=0, scaleX=1, scaleY=1, pivot=(0,0)`) do not carry a
-  node's authored transform override — for example an authored pivot such as
-  `body.pivotX`/`body.pivotY` — which only reaches the store through
-  `config.rest`. Neither `Rig.swift` nor `rig.ts` states or checks this
-  precondition; the reference host's own per-frame driver enforces the
-  ordering instead. `Engine.init` (`Engine.swift`) and `createEngine`
-  (`engine.ts`) both call `config.seed(into: store)`/`seedChannels(config,
-  channels)` immediately after creating the `Channels` store and before
-  constructing the `Scene`, and neither exposes `compose` except through
-  `tick`, which no caller can invoke before that constructor/factory
-  returns. On both source platforms, no caller reachable through the public
-  API can reach `compose` before seeding has occurred.
-
+  node's authored transform override, such as an authored pivot, which only
+  reaches the store through `config.rest`. Neither `Rig.swift` nor `rig.ts`
+  checks this precondition; `Engine.init` (`Engine.swift`) and `createEngine`
+  (`engine.ts`) both seed the store before constructing the `Scene`, and
+  `compose` is reachable only through `tick`, so no caller of the public API
+  can reach `compose` before seeding.

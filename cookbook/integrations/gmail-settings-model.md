@@ -2,11 +2,11 @@
 id: 2fa64944-9744-4d71-8fed-f785e7ce1e51
 title: "Gmail Settings Model"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -45,7 +45,7 @@ Use it wherever the Gmail integration is configured. It owns no views and makes 
 - **main-actor-isolation**: The model and the tracker MUST be isolated to the main actor.
 - **injected-client**: The model MUST send every service call through the `MailClient` given at initialization.
 - **shared-tracker-default**: The model MUST use `GmailSignInTracker.shared` when no tracker is given at initialization.
-- **reload-after-every-action**: After every action that goes through the shared call path, the model MUST read the provider status from the client.
+- **reload-after-every-action**: After every action that goes through the shared call path, the model MUST read the provider status from the client. The shared call path serves `reload`, `importClientJSON(from:)`, `saveClientDraft` (only when the form is complete), `addAccount`, `remove(accountId:)`, `update(accountId:_:)`, `syncNow(accountId:)` and `removeIntegration`; `cancelSignIn` and the incomplete-form path of `saveClientDraft` do not use it.
 - **accounts-only-when-configured**: The model MUST read the account list only when the provider status reports `configured` as true, and MUST set the account list to empty otherwise.
 - **error-cleared-at-call-start**: The model MUST set `errorMessage` to nil when a call starts.
 - **error-from-first-failure**: When the action fails, the model MUST set `errorMessage` to the failure's `localizedDescription` and MUST still perform the reload.
@@ -80,7 +80,7 @@ Use it wherever the Gmail integration is configured. It owns no views and makes 
 - **update-failure-restores**: When a settings send fails, the model MUST drop the pending value for that account, set `errorMessage`, and show the service's settings from the reload that follows.
 - **reload-keeps-chosen-settings**: A reload that finishes while a settings send is in flight MUST show the newest settings the user chose for that account rather than the service's previous value.
 - **chosen-settings-released**: When the sends for an account finish, the model MUST stop overriding that account's settings with the user's choice.
-- **account-error-alert**: After a reload, when an account has status error and a non-nil `lastError` that has not been alerted, and no alert is showing, the model MUST set `accountError` to an alert for the first such account in list order.
+- **account-error-alert**: After a reload, when an account has status error and a non-nil `lastError` that has not been alerted, and no alert is showing, the model MUST set `accountError` to an alert for the first such account in list order. The alert MUST carry the account's id (`accountId`), its email address (`email`) and the account's `lastError` text as `message`; the view builds the title and layout.
 - **account-error-once**: The model MUST NOT alert again about the same message for the same account while the account stays in error.
 - **account-error-new-message**: The model MUST alert again when an account in error reports a different message than the one last alerted.
 - **account-error-after-recovery**: The model MUST forget an account once it is no longer in error, so a later failure alerts even when the message is identical.
@@ -89,13 +89,13 @@ Use it wherever the Gmail integration is configured. It owns no views and makes 
 - **show-error**: `showError(accountId:)` MUST set `accountError` for that account when it is in error with a `lastError`, and MUST do nothing otherwise.
 - **show-error-marks-alerted**: `showError(accountId:)` MUST record the message as alerted so the next reload does not repeat it.
 - **client-imported**: `isClientImported` MUST be true only when the provider status is loaded and `configured` is true.
-- **oauth-client-text**: `oauthClientText` MUST be "Checking for an OAuth client…" before the first load, the instruction to enter or import a client when not configured, and the replace-client text when configured.
+- **oauth-client-text**: `oauthClientText` MUST be "Checking for an OAuth client…" before the first load, "Enter the client ID and secret of your Google Cloud Desktop app OAuth client, or import its downloaded JSON. One client serves every Gmail account." when not configured, and "Gmail signs in with this OAuth client. To change it, enter new values below or import a new JSON file." when configured.
 - **current-client-id**: `currentClientId` MUST return the provider's client id when a client is imported, and nil otherwise.
 - **masked-secret**: `maskedClientSecret` MUST return ten "•" characters followed by the provider's secret suffix when a client is imported and the suffix is non-empty.
 - **masked-secret-hidden**: `maskedClientSecret` MUST return "Stored (hidden)" when a client is imported and the suffix is nil or empty, and nil when no client is imported.
 - **masked-secret-fixed-length**: The mask MUST be a fixed ten characters so it does not reveal the secret's length.
 - **status-text**: `statusText` MUST map active to "Connected", error to "Error", revoked to "Reconnect needed" and pending to "Pending".
-- **last-synced-text**: `lastSyncedText` MUST return "Last synced " followed by the full-style relative date from the formatter in the given locale, relative to the given clock.
+- **last-synced-text**: `lastSyncedText` MUST return "Last synced " followed by the relative date in the given locale, relative to the given clock, produced by `RelativeDateTimeFormatter` with `unitsStyle = .full` (a port uses its platform's full-style relative formatter).
 - **last-synced-never**: `lastSyncedText` MUST return "Never synced" when the timestamp is nil or is not an ISO 8601 date with fractional seconds.
 - **last-synced-defaults**: The overload without clock and locale MUST use the current date and the current locale.
 
@@ -159,7 +159,7 @@ Not applicable: the model is not a visual or interactive element, so it has no r
 | gmail-settings-022 | account-error-new-message, account-error-after-recovery | Account's error message changes; and an account recovers then fails with the same message (tests `aDifferentErrorIsAlertedAgain`, `theSameErrorAfterARecoveryIsAlertedAgain`) | Each case raises a new alert |
 | gmail-settings-023 | dismiss-account-error, account-error-one-at-a-time | Two failing accounts; dismiss the first alert (test `dismissingRaisesTheNextFailingAccount`) | The second account's alert appears after the dismiss, not before |
 | gmail-settings-024 | show-error, show-error-marks-alerted | `showError` on a failing account, and on a healthy one (tests `showErrorReopensItWithoutRepeatingAfterwards`, `showErrorIgnoresAHealthyAccount`) | The failing account's alert reopens and is not repeated after the next reload; the healthy account raises nothing |
-| gmail-settings-025 | cancel-sign-in, cancel-sign-in-no-reload | `cancelSignIn` while signing in (test `cancelSignInSendsCancelWhileSigningIn`) | A cancel-sign-in request is sent; no reload request follows the cancel and `busy` does not change (the test asserts only that the request is sent) |
+| gmail-settings-025 | cancel-sign-in, cancel-sign-in-no-reload | `cancelSignIn` while signing in (test `cancelSignInSendsCancelWhileSigningIn`) | A cancel-sign-in request is sent |
 | gmail-settings-026 | remove-account, sync-now, remove-integration | `remove`, `syncNow`, `removeIntegration` (tests `removeSendsRemoveAccount`, `syncNowSendsSyncNow`, `removeIntegrationClearsAccounts`) | The matching request is sent and the reloaded accounts reflect the service |
 | gmail-settings-027 | selection-kept-when-valid, selected-account | Select an existing account, then reload (no test asserts this yet) | `selectedAccountId` is unchanged and `selectedAccount` is that account |
 | gmail-settings-028 | reload-failure-reported-if-none, reload-failure-keeps-first-error | Provider read fails, with `errorMessage` nil; then an action fails and the provider read fails again (no test asserts this yet) | The first case sets `errorMessage` to the reload failure's text; the second keeps the action's message |
@@ -168,6 +168,7 @@ Not applicable: the model is not a visual or interactive element, so it has no r
 | gmail-settings-031 | reconnect-is-add-account | An account in `revoked` state; `addAccount` (no test asserts this yet) | A sign-in request is sent, with no separate reconnect request |
 | gmail-settings-032 | last-synced-defaults | `lastSyncedText` with only a timestamp one hour in the past (no test asserts this yet) | "Last synced " followed by the relative date in the current locale |
 | gmail-settings-033 | account-error-alert | Two accounts in error, listed `b1` then `a1`; `reload` (no test asserts this yet) | The alert is for `b1`, the first in list order |
+| gmail-settings-034 | cancel-sign-in-no-reload | `cancelSignIn` while signing in (no test asserts this yet) | No reload request follows the cancel and `busy` does not change |
 
 This ingredient has no SHOULD requirements, so no omission needs a rationale.
 
@@ -178,14 +179,14 @@ This ingredient has no SHOULD requirements, so no omission needs a rationale.
 - **Null and empty input, timestamp**: A nil or unparsable `lastSyncAt`. `lastSyncedText` MUST return "Never synced".
 - **Null and empty input, selection**: No accounts. `selectedAccountId` MUST become nil after a reload.
 - **Boundary values, sign-in tickets**: A model that has never signed in has no ticket, and `startedLatestSignIn` MUST be false.
-- **Boundary values, secret mask**: The mask MUST be ten characters plus the suffix; the model does not compute the suffix length, the service sends it in the provider status (see the [mail integration service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)).
+- **Boundary values, secret mask**: The mask MUST be ten characters plus the suffix; the model does not compute the suffix length, the service sends it in the provider status (see the mail integration service, [adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)).
 - **Boundary values, settings ranges**: The model does not clamp or validate `windowDays` or `pollIntervalMinutes`; it sends the settings it is given. Range limits live in `MailSyncSettings`.
 - **Concurrent access, overlapping calls**: Calls may overlap; `busy` MUST count them and stay true until all finish. Each call's reload replaces `accounts` with the service's list.
 - **Concurrent access, rapid settings changes**: Only one settings send per account runs at a time; later values replace the pending one (MUST).
 - **Concurrent access, tracker**: The tracker is main-actor isolated, so tickets are issued serially (MUST).
 - **Error states, action failure**: The first failure sets `errorMessage`; the reload still runs (MUST).
 - **Error states, reload failure**: The reload failure sets `errorMessage` only when none is set (MUST). When the account read fails after the provider read succeeded, `provider` is updated and only `accounts` keeps its previous value, so `provider` can be newer than `accounts`. When the provider read fails, both keep their previous values.
-- **Error states, settings send failure**: Pending value dropped, chosen-value override released, reload restores the service's state (MUST). When several values were pending, the failure discards them all.
+- **Error states, settings send failure**: Pending value dropped, chosen-value override released, reload restores the service's state (MUST). Only the single latest pending value exists per account, so the failure drops that value and with it any intermediate choices it replaced.
 - **Error states, cancel failure**: Only `errorMessage` is set; no reload runs (MUST).
 - **Error states, duplicate alerts**: An account error already alerted MUST NOT alert again until the account leaves the error state or its message changes.
 - **Error states, removed account**: When an alerted account is removed, the next reload drops its record, because the alerted record is filtered to accounts still in error (MUST).
@@ -207,7 +208,7 @@ Not applicable: the model registers no URL and handles no deep link. It only sup
 
 ## Localization
 
-- **string-externalization**: NEEDS REVIEW: Not implemented in source. The strings the model returns ("Connected", "Error", "Reconnect needed", "Pending", "Never synced", "Last synced ", "Stored (hidden)", "Checking for an OAuth client…", the two OAuth client descriptions, and the incomplete-form error) are English literals with no localization lookup; evidence that would settle it is the product's localization decision for the Integrations settings screen.
+- **string-externalization**: The strings the model returns ("Connected", "Error", "Reconnect needed", "Pending", "Never synced", "Last synced ", "Stored (hidden)", "Checking for an OAuth client…", the two OAuth client descriptions, and the incomplete-form error) are English literals with no localization lookup. This is the localization debt recorded in the Design Decision on display strings.
 - **relative-date-locale**: The model MUST format the relative date with the given locale, which defaults to the current locale; the surrounding "Last synced " prefix is not localized.
 
 ## Accessibility Options
@@ -225,7 +226,7 @@ Not applicable: the source records no analytics event.
 ## Privacy
 
 - **Data collected**: The model holds the user's Gmail account emails, sync status and last error messages, and the OAuth client id and secret the user types.
-- **Storage**: The model keeps these in memory only. The service stores the OAuth client; the daemon sends only the last five characters of the secret, so the whole secret never returns to the model after import.
+- **Storage**: The model keeps these in memory only. The service stores the OAuth client; only a short suffix of the secret returns to the model after import (see the mail integration service, [adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)), so the whole secret never does.
 - **Transmission**: The drafts leave the process only in the import request to the injected client. Drafts clear after the service accepts them.
 - **Retention**: The drafts stay in memory after a rejected import so the user can correct them; the model does not persist them.
 
@@ -235,17 +236,17 @@ Not applicable: the file writes no log statements.
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform. The source is `macOS/Features/Integrations/GmailSettingsModel.swift` and holds the model and the tracker. The model is an `ObservableObject` with `@Published` properties (private setters except `selectedAccountId` and the drafts), isolated with `@MainActor`, and uses Swift concurrency (`async` functions and `defer`) with a plain in-flight counter for `busy`. Tests use Swift Testing with a scripted `MailClient`.
+- **SwiftUI**: The model is framework-neutral Combine and `ObservableObject` code, so it works under SwiftUI as written; the shipping view is AppKit (see the AppKit / UIKit bullet). The source is `macOS/Features/Integrations/GmailSettingsModel.swift` and holds the model and the tracker. The model is an `ObservableObject` with `@Published` properties (private setters except `selectedAccountId` and the drafts), isolated with `@MainActor`, and uses Swift concurrency (`async` functions and `defer`) with a plain in-flight counter for `busy`. Tests use Swift Testing with a scripted `MailClient`.
 - **Compose**: Translate to a `ViewModel` exposing a `StateFlow` of one immutable state class, with actions as `suspend` functions run on `viewModelScope`. Collect state updates on the main dispatcher in place of main-actor isolation; keep the in-flight counter for `busy` and the per-account pending map for coalescing.
 - **React/Web**: Translate to a hook or store (a reducer or a small observable class) with async action functions. Browser code is single-threaded, so main-actor isolation is implicit, but the coalescing map and ticket counter still need to be explicit. Use `Intl.RelativeTimeFormat` with the `long` style for the relative date.
-- **AppKit / UIKit**: AppKit is the shipping surface: bind with Combine sinks on the `@Published` properties, present `accountError` with `NSAlert` and call `dismissAccountError` from its handler. A UIKit port should reuse the model as written (the recipe lists no `ios` platform because no iOS source exists yet), bind the same way and present `accountError` with `UIAlertController`.
+- **AppKit / UIKit**: AppKit is the only macOS UI framework used, and its view is the shipping surface: bind with Combine sinks on the `@Published` properties, present `accountError` with `NSAlert` and call `dismissAccountError` from its handler. A UIKit port should reuse the model as written (the ingredient lists no `ios` platform because no iOS source exists yet), bind the same way and present `accountError` with `UIAlertController`.
 - **WinUI 3**: Implement as a view-model class (a C# class using CommunityToolkit.Mvvm `ObservableObject` with `[ObservableProperty]`) and bind from XAML with `x:Bind` in `OneWay` mode, and `TwoWay` for `SelectedAccountId` on a `ListView` `SelectedValue` and for the two drafts on a `TextBox` and a `PasswordBox`. Marshal back to the UI thread through `DispatcherQueue.TryEnqueue` after each await, which stands in for main-actor isolation. Drive busy and signing-in with `ProgressRing.IsActive` and disable the commands (`AsyncRelayCommand.CanExecute`) while `Busy` is true; expose `CanSaveClientDraft` as the `Button.IsEnabled` binding. Show `AccountError` in a `ContentDialog` (set `XamlRoot` before `ShowAsync`, and call `DismissAccountError` on close); `ContentDialog` allows only one open dialog at a time, which matches the one-alert-at-a-time rule. Format the relative date with the `Humanizer` library or a custom formatter, and load the display strings from `.resw` files through `ResourceLoader`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsModel.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsModel.swift` | confirmed (1.0.1) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -258,7 +259,7 @@ Not applicable: the file writes no log statements.
 **Approved**: pending
 
 **Decision**: Settings updates apply locally at once, then coalesce per account to the latest value while a send is in flight.
-**Rationale**: A stepper or toggle can change faster than the service answers, and each change must not restart a sync. A failure drops all pending values and reloads, so the user may lose several intermediate choices at once.
+**Rationale**: A stepper or toggle can change faster than the service answers, and each change must not restart a sync. A failure drops the pending value, which is the latest choice, and reloads, so the user may lose the intermediate choices that value replaced.
 **Approved**: pending
 
 **Decision**: A reload that lands mid-send re-applies the newest chosen settings over the service's list.
@@ -273,7 +274,7 @@ Not applicable: the file writes no log statements.
 **Rationale**: Alerting again about the same failure on every reload would nag the user, so the model remembers what it alerted and forgets an account once it recovers, so a later identical failure alerts. Only one alert shows at a time.
 **Approved**: pending
 
-**Decision**: The client secret is shown as a fixed ten-bullet mask plus the last five characters of the secret that the mail integration service sends in the provider status (see the [mail integration service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a), which owns the five-character limit), or "Stored (hidden)" when no suffix exists.
+**Decision**: The client secret is shown as a fixed ten-bullet mask plus the last five characters of the secret that the mail integration service sends in the provider status (see the mail integration service, [adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a), which owns the five-character limit), or "Stored (hidden)" when no suffix exists.
 **Rationale**: A fixed mask length does not reveal the secret's length, and the service sends only those characters.
 **Approved**: pending
 
@@ -285,21 +286,25 @@ Not applicable: the file writes no log statements.
 **Rationale**: Keeping the text beside the state lets the model's tests cover it. This is deliberate technical debt for localization, tracked on `string-externalization` in Localization. It is retired when the first non-English locale ships for the Integrations settings screen, or when the product decides how that screen is localized, whichever comes first; the owner is the Integrations settings screen's maintainer.
 **Approved**: pending
 
+**Decision**: `lastSyncedText` parses only an ISO 8601 timestamp with fractional seconds; any other text reads "Never synced".
+**Rationale**: The model parses one timestamp form, the form every timestamp in this recipe's vectors uses, and treats anything else as unknown rather than guessing. A valid timestamp without fractional seconds therefore reads "Never synced", which a port MUST reproduce until both forms are specified.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
-| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 | [adc.check.internationalization.locale-aware-formatting](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c87ff1f1-9d77-5167-b0c4-f13f2aae5acb) | partial | internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 
-The model keeps state and decisions apart from the view and from the service client, which it receives by injection, and its behavior is covered by two test files beside it (`GmailSettingsModelTests` and `GmailSettingsAccountErrorTests`), including the concurrency cases. Unit-test coverage is partial: vectors gmail-settings-027 to 033 are derived from the code and no named test asserts them, and the cancel test does not check that no reload follows. Every failure is surfaced as `errorMessage` or an account alert rather than swallowed, except that a failed reload is hidden when an earlier error is already set. Only the last five characters of the secret reach the model. Relative dates use the injected locale, but the surrounding words are English literals and no localization lookup exists, so locale-aware formatting is partial and hardcoded strings fail.
+The model keeps state and decisions apart from the view and from the service client, which it receives by injection, and its behavior is covered by two test files beside it (`GmailSettingsModelTests` and `GmailSettingsAccountErrorTests`), including the concurrency cases. Unit-test coverage is partial: vectors gmail-settings-027 to 034 are derived from the code and no named test asserts them (gmail-settings-034 is the cancel case: the cancel test does not check that no reload follows). Every failure is surfaced as `errorMessage` or an account alert rather than swallowed, except that a failed reload is hidden when an earlier error is already set. Only a suffix of the secret reaches the model. Relative dates use the injected locale, but the surrounding words are English literals and no localization lookup exists, so locale-aware formatting is partial and hardcoded strings fail.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Specified the shared call path, alert payload and full strings, restated string externalization as fact, and added vector 034 and a date-parsing decision. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

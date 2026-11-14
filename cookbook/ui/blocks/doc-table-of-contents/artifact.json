@@ -4,11 +4,11 @@
     "id": "28436339-4eda-46e9-b45f-f58a26949641",
     "title": "Doc Table of Contents",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b4e06610cfea1f93",
+  "synced": "89edf755f4dc192a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

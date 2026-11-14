@@ -54,9 +54,10 @@
   they are delivered as one call every interval or as a single catch-up after
   a long gap.
 - **scheduler-catch-up-guard**: Within one `tick(now)` call, a repeating
-  registration's catch-up loop MUST NOT fire more than 1000 times; on
-  exceeding that bound the Scheduler MUST stop firing for that registration
-  in this tick and MUST set its next due time to `now + interval`, so an
+  registration's catch-up loop MUST stop after the 1001st fire (the
+  check runs after each fire, so one `tick` delivers at most 1001 callbacks
+  for one registration); the Scheduler MUST then stop firing for that
+  registration in this tick and MUST set its next due time to `now + interval`, so an
   absurd interval or a clock that jumped hours cannot hang the calling frame.
 - **scheduler-one-shot-fires-once**: `Scheduler.once(at:run:)`'s callback MUST
   run exactly once and the registration MUST be removed immediately upon
@@ -108,11 +109,11 @@
   lerp, because a componentwise lerp between two saturated colors visibly
   dips through grey at the midpoint while the OKLab path does not.
 - **tween-color-fallback-on-unmixable-pair**: If the perceptual color mix
-  operation fails for a pair that passed the hex-shape check (e.g., a
-  malformed value that slips past the ASCII-hex guard), `Tweens` MUST hold
-  `from` until progress reaches `1` and then snap directly to `to`, the same
-  answer given for any unrecognized/uninterpolatable pair — it MUST NOT
-  propagate the failure out of the tween loop.
+  operation throws for a pair that passed the hex-shape check, `Tweens` MUST
+  write `to` for that sample instead of propagating the failure out of the
+  tween loop. A value that fails the shape check (fullwidth digits, a 4- or
+  5-digit body) never reaches the mix: it is an unrecognized pair and holds
+  `from` until progress reaches `1` (**tween-unrecognized-pair-snap**).
 - **tween-path-morph-same-kind**: When both `from` and `to` are recognized
   path strings and their parsed "kind" (the joined command-letter sequence,
   e.g. `"MLL"` or `"MCCCCZ"`) is identical, `Tweens` MUST morph anchor-by-anchor
@@ -120,13 +121,17 @@
 - **tween-path-snap-cross-kind**: When both `from` and `to` are recognized
   path strings but their parsed kinds differ (no anchor-for-anchor mapping is
   possible between different command sequences), `Tweens` MUST NOT attempt a
-  morph and MUST instead treat the pair as uninterpolatable: hold `from` until
-  progress reaches `1`, then snap to `to`.
+  morph and MUST instead snap: `to` is written verbatim at the first sample
+  (the first `tick` at or after the start time, or an earlier `settle`), not
+  held until progress reaches `1`.
 - **tween-unrecognized-pair-snap**: For any `from`/`to` pair that is not
-  both-numbers, both-recognized-colors, or both-same-kind-paths (including a
-  color paired with a path, two differently-shaped strings, or any other
-  mixed pairing), `Tweens` MUST hold `from` for the full duration and MUST
-  write `to` verbatim only once progress reaches `1`.
+  both-numbers, both-recognized-colors, or both-paths (including a color
+  paired with a path, a number paired with a string, two differently-shaped
+  strings, or a hex value that fails the ASCII 3-or-6-digit check), `Tweens`
+  MUST hold `from` for the full duration and MUST write `to` verbatim only
+  once progress reaches `1`. Two path strings are never in this case: they
+  morph (**tween-path-morph-same-kind**) or snap at once
+  (**tween-path-snap-cross-kind**).
 - **tween-snap-channel-forces-zero-duration**: If `TweenSpec.channel` is a
   channel `snaps()` classifies as snapping (see **snap-channel-classification**),
   `Tweens.add` MUST use an effective duration of `0` regardless of
@@ -136,10 +141,10 @@
   AND `TweenSpec.delay` is `0`, `Tweens.add` MUST write the (respond-mapped)
   `to` value to the channel synchronously, at call time — before any `tick`
   call — and MUST NOT create a live tween entry for it (`Tweens.active` does
-  not increase). A same-kind path family snap MUST write `to` verbatim,
-  never routed through the morph/lerp path, because two same-instant
-  crossings (an authored snap immediately superseded by an authored morph)
-  must both resolve without one masking the other.
+  not increase). The snap's `to` MUST be written
+  verbatim, never routed through the morph/lerp path, so a tween added next
+  at the same instant with no explicit `from` reads that written value as its
+  starting value.
 - **tween-delay-defers-visible-start**: When `TweenSpec.delay` is greater than
   `0`, neither a zero-duration snap's target nor an interpolated tween's first
   sample MUST become visible before `tick(now)` is called with `now >=` (the
@@ -194,13 +199,13 @@
   `back.out(s)` overshoot values) MUST cause resolving that tween's easing
   function to fail rather than silently substitute a default curve. On the
   Apple platform this happens at `Tweens.add` time and crashes the process
-  (a forced unwrap on `Ease.resolve`, deliberate: the config loader is
+  (a deliberate trap: the config loader is
   documented as validating every reachable ease name before a `TweenSpec`
   ever reaches `Tweens`, so an unknown name here is a bug, not bad data). On
   the web platform, `resolveEase` is invoked from inside `write`, which is
   called from every `tick`/`settle` that touches the tween — so an unknown
   name throws an uncaught `Error` the first time the tween is sampled, not at
-  `add` time, and (per source comment) nothing in the render loop (`useAvatarEngine`'s
+  `add` time, and nothing in the render loop (`useAvatarEngine`'s
   `requestAnimationFrame` callback) catches it.
 - **tween-default-ease-and-delay**: When `TweenSpec.ease` is omitted, `Tweens`
   MUST use `"power3.out"`; when `TweenSpec.delay` is omitted, `Tweens` MUST

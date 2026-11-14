@@ -4,15 +4,15 @@
     "id": "81db83fc-b30c-4ba3-b4d5-572dc8b4e335",
     "title": "Button Bar",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "A recessed editing toolbar that renders preset action buttons (New/Delete/Cancel/Save) or custom content.",
+    "summary": "A recessed editing toolbar that renders preset action buttons (Create/Delete/Cancel/Save) or custom content.",
     "platforms": [
       "typescript",
       "web"
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1034d3f3ca448b72",
+  "synced": "b2651e35f0948a16",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

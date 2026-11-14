@@ -4,7 +4,7 @@
     "id": "8a51a893-a170-4cfc-a620-37939ae6b27b",
     "title": "Privacy Word Store",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,23 +12,28 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Keychain storage for the privacy words (alias and real pairs): one device-only item, plus the owner authentication taken before showing or saving them.",
+    "summary": "Device-only keychain store for privacy-word pairs, plus the owner-authentication helper callers use first.",
     "platforms": [
       "swift",
-      "macos"
+      "macos",
+      "ios"
     ],
     "tags": [
       "foundation",
       "privacy",
       "keychain"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "998864ec-d852-4e92-aa2c-3177130ff21d"
+    ],
+    "related": [
+      "d54db476-c847-4ac0-827e-eae336109f38"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1cdb45afe7f7a7e2",
+  "synced": "42286e3af0c91bfe",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

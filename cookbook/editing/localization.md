@@ -1,5 +1,5 @@
 
-Not marked not-applicable: the package's own English strings are user-facing
+The package's own English strings are user-facing
 and hardcoded, with no localization mechanism in the given sources.
 
 | String Key | Default (en) | Context |

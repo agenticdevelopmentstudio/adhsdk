@@ -16,5 +16,5 @@ Subsystem: the main bundle identifier | Category: `ClaudeHookInstaller` (`Loggab
 | Display toggled | info | `Status-line display turned on` and `Status-line display turned off; the capture tap stays` |
 | Capture script removed or not | info or error | `Removed retired capture script at <path>` and `Could not remove capture script: <error>` |
 
-Error text, paths and commands are logged with public privacy, so a command that embeds a secret would appear in the log.
+Error text, paths and commands are logged with public privacy, so a command that embeds a secret would appear in the log; a port MUST log commands and paths with private privacy instead.
 

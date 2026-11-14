@@ -4,11 +4,11 @@
     "id": "9c6338b6-9a7a-4692-8164-a75800875031",
     "title": "Chat Coordinator",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -26,12 +26,14 @@
       "logic"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "447d0e33-c66e-4bf9-8511-e7823bdbcf9b"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0c5054cbcc5367fc",
+  "synced": "8680abbfb55623c4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

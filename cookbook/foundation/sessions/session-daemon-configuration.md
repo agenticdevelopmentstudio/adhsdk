@@ -2,7 +2,7 @@
 id: 706313bb-1a26-4477-9250-62ad50aff110
 title: "Session Daemon Configuration"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,10 +20,9 @@ tags:
   - daemon
   - configuration
 depends-on: []
-related: []
-references:
-  - packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionDaemonConfiguration.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Core/SessionDaemonRuntimeTests.swift (adhsdk)
+related:
+  - 9eb46f78-0ceb-455f-9584-b6b43ddf0871
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -32,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-`SessionDaemonConfiguration` is everything that makes one session daemon's runtime its own: names, paths, intervals and the Claude Code hook registration it installs. A daemon builds one and hands it to the session runtime (`SessionDaemonRuntime`); nothing in the shared code spells a daemon's name or directory itself.
+`SessionDaemonConfiguration` is everything that makes one session daemon's runtime its own: names, paths, intervals and the Claude Code hook registration it installs ([Claude Hook Configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871)). The runtime and the retention service read it; their own behavior is not specified here. A daemon builds one and hands it to the session runtime (`SessionDaemonRuntime`); nothing in the shared code spells a daemon's name or directory itself.
 
 It is a `Sendable` struct of `var` fields with one initializer that derives several defaults from other arguments, and one static factory, `test(port:root:)`, that roots every path and the hook's `settings.json` under a directory so a test never touches the real Claude Code settings.
 
@@ -41,8 +40,8 @@ It is a `Sendable` struct of `var` fields with one initializer that derives seve
 **Shape**
 
 - **config-value-type**: `SessionDaemonConfiguration` MUST be a `Sendable` struct whose stored properties are `var`s, so a caller can copy it and change a field, as the runtime test does with `hook`.
-- **config-fields**: The struct MUST carry `label` (String), `subsystem` (String), `daemonVersion` (String), `httpPort` (UInt16), `supportDirectory` (URL), `databasePath` (String), `spoolPath` (String), `socketPath` (String), `dropDirectory` (URL), `errorsDirectory` (URL), `hook` (`ClaudeHookConfiguration`), `retentionDays` (Int), `livenessCheckInterval` (TimeInterval), `retentionCheckInterval` (TimeInterval), `claudeJSONPath` (String?), `pluginSearchPaths` ([URL]) and `summariesDefaultEnabled` (Bool).
-- **label-meaning**: `label` MUST be a reverse-DNS label that serves as the log subsystem and the launchd identity.
+- **config-fields**: The struct MUST carry `label` (String), `subsystem` (String), `daemonVersion` (String), `httpPort` (UInt16), `supportDirectory` (URL), `databasePath` (String), `spoolPath` (String), `socketPath` (String), `dropDirectory` (URL), `errorsDirectory` (URL), `hook` (`ClaudeHookConfiguration`, [Claude Hook Configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871)), `retentionDays` (Int), `livenessCheckInterval` (TimeInterval), `retentionCheckInterval` (TimeInterval), `claudeJSONPath` (String?), `pluginSearchPaths` ([URL]) and `summariesDefaultEnabled` (Bool).
+- **label-meaning**: Callers SHOULD pass a reverse-DNS `label`, which serves as the log subsystem and the launchd identity; the struct does not check it (see no-validation).
 - **summaries-no-default**: `summariesDefaultEnabled` MUST have no default value in the initializer, so every daemon states its own.
 
 **Required and defaulted initializer arguments**
@@ -78,7 +77,7 @@ It is a `Sendable` struct of `var` fields with one initializer that derives seve
 - **runtime-reads**: `SessionDaemonRuntime` reads `databasePath`, `spoolPath`, `supportDirectory`, `dropDirectory`, `errorsDirectory`, `socketPath`, `subsystem`, `daemonVersion`, `hook`, `claudeJSONPath`, `pluginSearchPaths` and `summariesDefaultEnabled`; it MUST create `supportDirectory` with intermediate directories when it opens.
 - **runtime-queue-label**: The runtime MUST label its queues and threads as the `subsystem`, a dot and a name.
 - **runtime-daemon-name**: The runtime MUST report its daemon name as `configuration.hook.name`.
-- **host-read-fields**: `label`, `httpPort`, `retentionDays`, `livenessCheckInterval` and `retentionCheckInterval` are not read by the SDK's `Database` code searched; they are carried for the host daemon, which owns the HTTP listener, the launchd registration and the timers that use them.
+- **host-read-fields**: `label`, `httpPort`, `retentionDays`, `livenessCheckInterval` and `retentionCheckInterval` are carried for the host daemon, which owns the HTTP listener, the launchd registration and the timers that use them; the shared runtime MUST NOT depend on them.
 
 ## Appearance
 
@@ -108,19 +107,19 @@ The test `SessionDaemonRuntimeTests` uses `SessionDaemonConfiguration.test(port:
 | session-daemon-configuration-008 | test-identity, test-port, test-summaries-off | `test()` | `label == "test.session-daemon"`, `daemonVersion == "0.0.0-test"`, `httpPort == 0`, `summariesDefaultEnabled == false` |
 | session-daemon-configuration-009 | test-hook, test-account-file | `test(root: /r)` | `hook.name == "session-daemon-test"`, `hook.marker == "# session-daemon-test-hook"`, `hook.settingsURL.path == "/r/settings.json"`, `claudeJSONPath == "/r/claude.json"` |
 | session-daemon-configuration-010 | test-root | Two calls of `test()` with no `root` | The two `supportDirectory` values differ and each ends with a UUID after `session-daemon-test-` |
-| session-daemon-configuration-011 | test-no-create | `test()` with no `root`, then check the file system | No directory exists at `supportDirectory` |
-| session-daemon-configuration-012 | test-intervals | `test()` | `livenessCheckInterval == 1`, `retentionDays == 7` |
+| session-daemon-configuration-011 | test-no-create | `test()` with no `root`, then check the file system; and `test(root:)` with a root that does not exist yet, then check the file system | No directory exists at either `supportDirectory` |
+| session-daemon-configuration-012 | test-intervals | `test()` | `livenessCheckInterval == 1`, `retentionDays == 7`, `retentionCheckInterval == 86400` |
 | session-daemon-configuration-013 | runtime-reads, test-derived-defaults | Test `testOpenPhaseALeavesTheDatabaseNotReady`: a runtime built from `test(port: 0, root: root)`, then `openPhaseA()` | Files exist at `databasePath` and `spoolPath` |
 | session-daemon-configuration-014 | no-validation | `retentionDays: 0` and `httpPort: 0` | Both stored as given; no error |
 
 ## Edge Cases
 
-- **Empty or relative paths**: The initializer MUST store an empty `socketPath` or a relative `databasePath` as given; the struct does no validation, and a failure surfaces later where the path is used.
-- **Zero or negative retention**: `retentionDays` MUST be stored as given, including 0 and negative values; the struct does not constrain it, and what such a value means is up to `RetentionService`.
-- **Zero or negative intervals**: `livenessCheckInterval` and `retentionCheckInterval` MUST be stored as given; the struct does not constrain them.
-- **Port 0**: `httpPort` of 0 MUST be accepted, and means the OS assigns a port; `test` uses it.
+- **Empty or relative paths**: stored as given under `#requirements/no-validation`; a failure surfaces later where the path is used.
+- **Zero or negative retention**: stored as given under `#requirements/no-validation`, including 0 and negative values; what such a value means is up to `RetentionService`.
+- **Zero or negative intervals**: stored as given under `#requirements/no-validation`.
+- **Port 0**: accepted under `#requirements/no-validation`; it means the OS assigns a port, and `test` uses it (`#requirements/test-port`).
 - **Boundary values of `httpPort`**: The `UInt16` type limits the port to 0 through 65535 at compile time; a larger literal does not compile.
-- **Default derived from a nil argument only**: A default for `databasePath`, `spoolPath` or `errorsDirectory` MUST be computed from the arguments passed to the same call; changing `supportDirectory` later on the `var` does not update `databasePath`, `spoolPath` or `errorsDirectory`.
+- **Default derived from a nil argument only**: A default for `databasePath`, `spoolPath` or `errorsDirectory` is computed once from the arguments passed to the same call (`#requirements/database-default`, `#requirements/spool-default`, `#requirements/errors-default`); changing `supportDirectory` later on the `var` does not update `databasePath`, `spoolPath` or `errorsDirectory`.
 - **Shared settings file**: Two daemons whose `hook.settingsURL` point at the same `settings.json` coexist because each hook marker is distinct; the marker rules belong to `ClaudeHookConfiguration`.
 - **Concurrent access**: Not applicable: the struct is a `Sendable` value type, copied on assignment, so no two holders share mutable state.
 - **Error states, offline, cancellation**: Not applicable: building the value does no I/O and cannot throw.
@@ -181,29 +180,30 @@ Not applicable: the struct makes no log calls; `subsystem` is the name other cod
 
 ## Platform Notes
 
-- **SwiftUI**: `SessionDaemonConfiguration.swift` in `Core/Sessions` is Foundation-only and built by a daemon's `main`, not by a view. A SwiftUI host app shows none of it; it reads the daemon's state through the daemon's API.
+- **SwiftUI**: Nothing to port: the Swift struct in `Core/Sessions` is Foundation-only, built by a daemon's `main` and shared as is. A SwiftUI host app shows none of it; it reads the daemon's state through the daemon's API.
 - **Compose**: Port as a Kotlin `data class` with default parameter values and `copy()` for changes. Derive the defaults in a secondary constructor or factory that takes nullable arguments, as the Swift initializer does. A `UShort`-like port needs an `Int` range check or `UShort`.
 - **React/Web**: Port as a TypeScript interface plus a `makeConfiguration(options)` function that fills the derived defaults. Use `Readonly` and spread for copies. A browser has no sockets or files, so this is meaningful only in a Node daemon.
 - **AppKit / UIKit**: A macOS menu bar app or `LaunchAgent` host builds the value once, from bundle info and `FileManager` support directories, and passes it to the runtime. Nothing in it is UI.
-- **WinUI 3**: Port as a C# `record` (or `sealed record class`) with `init` properties and `with` expressions for copies, so it is immutable and thread-safe like the Swift struct. Use `Uri` or `string` for paths, `ushort` for the port, `TimeSpan` for intervals, and `Windows.Storage.ApplicationData.Current.LocalFolder.Path` or `Environment.GetFolderPath` for the support directory. The Unix socket path becomes a named pipe name or a `UnixDomainSocketEndPoint` (supported in .NET on Windows 10 and later). Bind defaults from `IConfiguration` with `IOptions<T>` when the daemon is an `IHostedService`. Port the `test` factory as a static method that creates a unique directory under `Path.GetTempPath()`. C# has no required-without-default parameter equivalent to the Swift initializer, so use the `required` modifier on `summariesDefaultEnabled` to keep "no default".
+- **WinUI 3**: Port as a C# `record` (or `sealed record class`) with `init` properties and `with` expressions for copies, so it is immutable and thread-safe like the Swift struct. Use `Uri` or `string` for paths, `ushort` for the port, `TimeSpan` for intervals, and `Windows.Storage.ApplicationData.Current.LocalFolder.Path` or `Environment.GetFolderPath` for the support directory. The Unix socket path becomes a named pipe name or a `UnixDomainSocketEndPoint` (supported in .NET on Windows 10 and later). Bind defaults from `IConfiguration` with `IOptions<T>` when the daemon is an `IHostedService`. Port the `test` factory as a static method that builds a unique path under `Path.GetTempPath()` without creating the directory, as `test-no-create` requires. Keep "no default" for `summariesDefaultEnabled` by making it a primary-constructor parameter without a default value, or a `required init` property.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionDaemonConfiguration.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionDaemonConfiguration.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Core/SessionDaemonRuntimeTests.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
 **Decision**: A daemon builds one configuration and hands it to the shared runtime; the shared code spells no daemon name or directory.
-**Rationale**: The source says so directly. It lets several daemons share one runtime while each keeps its own paths, hook marker and identity.
+**Rationale**: The doc comment on `SessionDaemonConfiguration` in `SessionDaemonConfiguration.swift` says so directly ("nothing in the shared code spells a daemon's name or directory itself"). It lets several daemons share one runtime while each keeps its own paths, hook marker and identity.
 **Approved**: pending
 
 **Decision**: `summariesDefaultEnabled` has no default.
-**Rationale**: The source says every daemon states its own: a daemon that must not double LLM spend over sessions another daemon already summarizes passes `false`. A default would let that mistake happen by omission.
+**Rationale**: The doc comment on `summariesDefaultEnabled` in `SessionDaemonConfiguration.swift` says every daemon states its own: a daemon that must not double LLM spend over sessions another daemon already summarizes passes `false`. A default would let that mistake happen by omission.
 **Approved**: pending
 
 **Decision**: Paths and the subsystem are derived from other arguments when the caller passes `nil`, and the initializer stores them as plain values.
@@ -215,10 +215,10 @@ Not applicable: the struct makes no log calls; `subsystem` is the name other cod
 **Approved**: pending
 
 **Decision**: `test(port:root:)` roots every path, and the hook's `settings.json`, in one directory.
-**Rationale**: The source says a test must never touch the real Claude Code settings. It also uses port 0 so parallel tests do not collide, a 1-second liveness interval so tests do not wait, and `summariesDefaultEnabled` of `false`.
+**Rationale**: The doc comment on `test(port:root:)` in `SessionDaemonConfiguration.swift` says a test must never touch the real Claude Code settings. It also uses port 0 so parallel tests do not collide, a 1-second liveness interval so tests do not wait, and `summariesDefaultEnabled` of `false`.
 **Approved**: pending
 
-**Decision**: `httpPort`, `label`, `retentionDays` and the two intervals are carried but not read by the SDK's database daemon code.
+**Decision**: `httpPort`, `label`, `retentionDays` and the two intervals are carried for the host daemon and are not depended on by the shared runtime.
 **Rationale**: The host daemon owns the listener, the launchd registration and the timers; the shared struct exists so one value describes the whole daemon.
 **Approved**: pending
 
@@ -230,9 +230,10 @@ Not applicable: the struct makes no log calls; `subsystem` is the name other cod
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | passed | privacy-and-data |
 
-Separation of concerns passes: the struct only holds values and derives defaults, and the runtime, hook installer and services read it. Unit-test coverage is partial: `SessionDaemonRuntimeTests` builds the struct through `test(port:root:)` and checks that the database and spool files appear, but no test asserts the initializer defaults, the derived paths or the explicit overrides. Secure data storage passes because the struct stores no secrets; it only names paths.
+Separation of concerns passes: the struct only holds values and derives defaults, and the runtime, hook installer and services read it. Unit-test coverage is partial: `SessionDaemonRuntimeTests` builds the struct through `test(port:root:)` and checks that the database and spool files appear, but no test asserts the initializer defaults, the derived paths or the explicit overrides. Vectors 001-012 and 014 should be added as a new `SessionDaemonConfigurationTests` test class beside `SessionDaemonRuntimeTests.swift` in the Database test target, one test per vector. Secure data storage passes because the struct stores no secrets; it only names paths.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Reworded label-meaning as a caller obligation and host-read-fields as a design fact, replaced edge-case MUSTs with references to no-validation and the default requirements, fixed the WinUI and SwiftUI notes, added retentionCheckInterval and root-not-created checks to vectors 011 and 012, named the test class for the untested vectors, linked ClaudeHookConfiguration and emptied references. |

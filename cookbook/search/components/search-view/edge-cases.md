@@ -1,5 +1,5 @@
 
-- **Empty query, no facets**: No fetch occurs; a prompt ("Search research documents…") is shown. This remains until the user enters a query or selects a facet.
+- **Empty query, no facets**: No fetch occurs; a prompt is shown (the `emptyStateInactiveTitle` and `emptyStateInactiveDescription` strings in Localization). This remains until the user enters a query or selects a facet.
 - **Query with no results and no error**: A "No matching documents" message is displayed. If facets are active, a hint "Try a different search or remove filters" appears; if no facets, only "Try a different search."
 - **Fetch error with no cached results**: A full error block (centered, min-height 160px) displays the error message and a Retry button. The view is blocked; no partial results are shown.
 - **Fetch error while results are cached**: A compact error strip appears above the cached result list. The list remains visible and scrollable. The user can browse cached results or click Retry to re-fetch.
@@ -9,4 +9,4 @@
 - **Chip removal**: Clicking a chip's remove button clears only that facet (category or tag), not others. The query persists; only the facet is cleared.
 - **Multiple facet filters active**: Both category and tag can be active simultaneously. Each has its own removable chip. "Clear filters" clears both.
 - **Filtering with no results**: The chips remain visible (as feedback that filters are active), and the "No matching documents" message is shown. The user can remove filters via the chips or the "Clear filters" button.
-
+- **Initial fetch fails while the skeleton is showing**: The fetch error settles the search, so the skeleton is replaced by the full error block with the message and a Retry button (see **render-hard-error**). The loading phase ends, so neither the skeleton list nor the outer container carries `aria-busy`. Retry restarts the fetch and shows the skeleton again only if nothing has settled.

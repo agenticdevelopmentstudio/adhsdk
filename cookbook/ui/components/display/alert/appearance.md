@@ -7,7 +7,7 @@
   `font-medium`; `AlertDescription` is also `text-sm`.
 - **Background**: variant-dependent — `bg-apt-surface` (default),
   `bg-apt-blue/10` (info), `bg-apt-green/10` (success), `bg-apt-red/10`
-  (error), `bg-apt-gold/10` (accent). Resolved colors are defined by the
+  (error), `bg-apt-orange/10` (warning), `bg-apt-gold/10` (accent). Resolved colors are defined by the
   `apt-*` design tokens, not by this source file.
 - **Foreground/Text**: `text-apt-text` for every variant (the text color
   class does not change per variant); `AlertDescription` specifically uses
@@ -16,7 +16,7 @@
 - **Border**: `border` (1px, Tailwind's default border width), color
   variant-dependent — `border-apt-border` (default), `border-apt-blue/40`
   (info), `border-apt-green/40` (success), `border-apt-red/40` (error),
-  `border-apt-gold/40` (accent). The same color token also tints the
+  `border-apt-orange/40` (warning), `border-apt-gold/40` (accent). The same color token also tints the
   variant's icon (`[&>svg]:text-apt-*`), except `default`, whose icon uses
   `text-apt-text-muted` instead of a status color.
 - **Shadow**: None. No `shadow-*` class appears in `alertVariants`.

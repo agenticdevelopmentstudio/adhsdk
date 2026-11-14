@@ -15,3 +15,7 @@
 **Rationale**: The failure is a thrown error mapped to status 500 with the installer's message, so a caller never mistakes a failed enable for a state.
 **Approved**: pending
 
+
+**Decision**: A failed uninstall is reported as `not_installed` rather than as an error or a distinct outcome, and this is accepted as known debt.
+**Rationale**: `ClaudeHookInstaller.uninstallHooks()` returns a plain Bool and logs a thrown error, so the response cannot tell "nothing to remove" from "removal failed". This differs from the install path, which throws, and means a caller can be told tracking is off while hooks remain. Revisit by adding an outcome such as `uninstall_failed` (or making `uninstallHooks()` throw) once a caller needs to tell the two apart.
+**Approved**: pending

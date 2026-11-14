@@ -8,5 +8,8 @@
 | field-footnote-005 | error-id-applied | `error="Error"`, `errorId="email-error"` | Renders the error element with `id="email-error"` |
 | field-footnote-006 | error-id-only-on-error | `hint="Hint"`, `errorId="some-id"` | Renders the hint element with no `id` attribute present |
 | field-footnote-007 | caller-class-name-merged | `error="Error"`, `className="custom-class"` | Renders the error element with the caller's `custom-class` present alongside the default classes |
-| field-footnote-008 | supports-react-node-content | `error={<strong>Bold error</strong>}` | Renders the error element containing the bold element as a child |
-
+| field-footnote-008 | supports-rich-content | `error={<strong>Bold error</strong>}` | Renders the error element containing the bold element as a child |
+| field-footnote-009 | caller-class-name-merged | `error="Error"`, `className="text-blue-500"` | The error element has `text-blue-500` and no longer carries the default error-foreground class (the caller's color wins) |
+| field-footnote-010 | supports-rich-content, hint-shown-without-error | `error=""`, `hint="Hint"` | Renders the hint; the empty error is treated as absent |
+| field-footnote-011 | supports-rich-content, renders-nothing-when-empty | `error={0}` | Returns null; nothing is rendered |
+| field-footnote-012 | renders-nothing-when-empty | `hint=""` only | Returns null; nothing is rendered |

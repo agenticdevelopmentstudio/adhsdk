@@ -11,12 +11,12 @@
 
 - **Removal of code pseudo-content**
   **Decision**: Pseudo-elements are stripped from code blocks (see **code-pseudo-content-removal**).
-  **Rationale**: Tailwind Typography's own `code::before`/`::after` rules add quote glyphs around inline and block code by default. Removing them ensures clean code block rendering and accurate screen reader announcements.
+  **Rationale**: Tailwind Typography's own `code::before`/`::after` rules add quote glyphs around inline and block code by default. Removing them ensures clean code block rendering and avoids generated glyphs that some screen readers may announce.
   **Approved**: pending
 
 - **No direct support for HTML sanitization**
   **Decision**: The component does not sanitize or validate the `html` prop.
-  **Rationale**: The host MUST trust the HTML source and sanitize it before passing it to DocArticle. For user-submitted content, the host MUST use a sanitization library (e.g., `sanitize-html`, `DOMPurify`) before rendering.
+  **Rationale**: The host MUST trust the HTML source and sanitize it before passing it to DocArticle. For user-submitted content, the host MUST use a sanitization library (e.g., `sanitize-html`, `DOMPurify`) before rendering. The `html` input stays a plain string rather than a branded or `TrustedHTML`-style type: a brand would only assert trust by cast, the component cannot verify it, and a plain string keeps build-time markdown output usable without wrappers. The type therefore does not distinguish trusted from untrusted HTML; that distinction is the host's responsibility.
   **Approved**: pending
 
 - **HTMLAttributes spread**

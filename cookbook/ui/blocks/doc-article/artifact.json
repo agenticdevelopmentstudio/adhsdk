@@ -4,11 +4,11 @@
     "id": "eb0b16a5-f27e-4b28-9517-12bedc892b7f",
     "title": "Doc Article",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -23,12 +23,14 @@
       "html-rendering"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "2d18fdbd-b2c5-46c0-8e6f-ceb7467fafa6"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "447522c2548dacc9",
+  "synced": "5d770489b044d524",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

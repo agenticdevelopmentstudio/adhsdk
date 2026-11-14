@@ -1,5 +1,5 @@
 
-- **React/Web** (source): Screen is a functional component that conditionally renders a semantic element (`<section>` or `<div>`) based on the `as` prop. It applies BEM-style classes (`lp-screen`, `lp-screen--center`) for styling and optionally renders the Glow component as the first child. Layout and visual appearance are entirely CSS-driven, defined in a separate stylesheet (`css/base.css` per the source comment).
+- **React/Web** (source): Screen is a functional component that conditionally renders a semantic element (`<section>` or `<div>`) based on the `as` prop. It applies BEM-style classes (`lp-screen`, `lp-screen--center`) for styling and optionally renders the Glow component as the first child. Layout and visual appearance are entirely CSS-driven, defined in the `.lp-screen` and `.lp-screen--center` rules of a separate stylesheet, `packages/web/packages/landing/src/css/base.css`.
 
 - **SwiftUI**: Inside a `ScrollView` with `.scrollTargetBehavior(.paging)`, size each screen with `.containerRelativeFrame(.vertical)` so it occupies exactly one viewport height and acts as a paging/snap point. Conditionally overlay a background glow view (via `.background()` or a custom shape) when the glow property is true. Apply conditional padding or alignment modifiers to implement the center vs. top alignment behavior.
 

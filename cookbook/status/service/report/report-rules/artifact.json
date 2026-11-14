@@ -4,7 +4,7 @@
     "id": "581dbca7-c086-48ee-a6e9-e4b80536aa1f",
     "title": "Status Report Rules",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,15 +24,19 @@
       "findings",
       "verdict"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "e2b50620-c7b1-4268-a56e-e039fea3349f",
+      "967202ce-c607-4115-9f63-466a4004e7f3"
+    ],
     "related": [
-      "77587f0b-5a27-44d9-a507-46bb90c9046a"
+      "77587f0b-5a27-44d9-a507-46bb90c9046a",
+      "24b45917-4361-44d8-a3dc-224cc2807aa9"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a88963f338da3816",
+  "synced": "4637dc0fa89954aa",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

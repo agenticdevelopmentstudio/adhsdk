@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.4 | 2026-11-14 | Mike Fullerton | Added card, header and footer layout requirements with vectors, corrected merge-classname-prop to caller-wins with an override vector, folded always-renders-default-div into render-div-root, renamed title-font-weight to title-typography, trimmed Appearance duplication, recorded a heading-semantics decision for native ports, and added footer and header layout to the platform notes. |
 | 1.2.3 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.1 | 2026-09-22 | Mike Fullerton | Narrowed to the UI Card family; Landing Card has its own recipe |

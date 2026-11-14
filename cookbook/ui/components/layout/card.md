@@ -2,11 +2,11 @@
 id: ea565474-df7a-42bd-9613-5dd0cd861911
 title: "Card"
 type: ingredient
-version: 1.2.3
+version: 1.2.4
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,18 +41,20 @@ The UI Card family (`packages/web/packages/ui/src/components/card.tsx`) is a com
 UI Card family (`packages/web/packages/ui/src/components/card.tsx`):
 
 - **export-six-slot-components**: The UI Card family MUST export exactly six components: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`.
-- **render-div-root**: Each of the six UI Card family components MUST render a `div` as its root element.
+- **render-div-root**: Each of the six UI Card family components MUST render a `div` as its root element, with its default classes, whether or not children are supplied.
 - **set-data-slot-attribute**: Each of the six UI Card family components MUST set a `data-slot` attribute on its root element identifying its role (`card`, `card-header`, `card-title`, `card-description`, `card-content`, `card-footer`, respectively).
-- **merge-classname-prop**: Each of the six UI Card family components MUST merge a caller-supplied `className` prop with its own default class list via the `cn` utility, rather than discarding either.
+- **merge-classname-prop**: Each of the six UI Card family components MUST merge a caller-supplied `className` prop with its own default class list via the `cn` utility, so that the caller's classes win on conflict (tailwind-merge): `className="rounded-none"` removes the default `rounded-xl`.
 - **forward-rest-props**: Each of the six UI Card family components MUST spread all other received props onto its rendered root `div` element.
-- **compose-any-slot-subset**: Consumers MAY include any subset and ordering of `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, and `CardFooter` inside `Card`, since `Card` itself renders only the props (including `children`) it receives, without requiring any specific slot structure.
-- **always-renders-default-div**: The UI Card family MUST render its default-classed `<div>` regardless of whether children are supplied, per the unconditional `{...props}`/`children` spread in each component.
+- **compose-any-slot-subset**: `Card` MUST NOT require any particular slot structure: it renders whichever of `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, and `CardFooter` it receives, in any subset and order.
 - **card-corner-radius**: The `Card` root MUST use the `rounded-xl` Tailwind utility for its corner radius; no sub-slot sets its own corner radius.
-- **card-vertical-padding**: The `Card` root MUST use vertical padding `py-6` and sets no horizontal padding of its own.
+- **card-vertical-padding**: The `Card` root MUST use vertical padding `py-6` and MUST NOT set horizontal padding of its own.
 - **slot-horizontal-padding**: `CardHeader`, `CardContent`, and `CardFooter` MUST each add horizontal padding `px-6`.
+- **card-layout**: `Card` MUST lay out its children as a vertical flex column (`flex flex-col`); **card-children-gap** only applies because of it.
+- **header-layout**: `CardHeader` MUST lay out its children as a vertical flex column (`flex flex-col`); **header-children-gap** only applies because of it.
+- **footer-layout**: `CardFooter` MUST lay out its children as a horizontal row, centered on the cross axis (`flex items-center`).
 - **card-children-gap**: `Card` MUST use `gap-6` between its top-level children.
 - **header-children-gap**: `CardHeader` MUST use `gap-1.5` between its own children.
-- **title-font-weight**: `CardTitle` MUST use `font-semibold` with `leading-none`.
+- **title-typography**: `CardTitle` MUST use `font-semibold` with `leading-none`.
 - **description-font-size**: `CardDescription` MUST use `text-sm`.
 - **card-background**: The `Card` root MUST use the `bg-apt-bg` token.
 - **card-text-color**: `Card` and `CardTitle` MUST use the `text-apt-text` token.
@@ -61,25 +63,17 @@ UI Card family (`packages/web/packages/ui/src/components/card.tsx`):
 - **card-shadow**: The `Card` root MUST use `shadow-sm`.
 
 ## Appearance
+The UI Card family expresses appearance by class name rather than by literal value, and the class name is the requirement — it names Tailwind utilities and `apt-*` design tokens inline. Each fact below is stated once, in the requirement it links; this section adds only what no requirement says.
 
-The UI Card family expresses appearance by class name rather than by literal value, and the class name is the requirement — it names Tailwind utilities and `apt-*` design tokens inline.
-
-- **Corner radius** (#requirements/card-corner-radius):
-  - UI Card family: the `Card` root uses the `rounded-xl` Tailwind utility; no sub-slot sets its own corner radius.
-- **Padding** (#requirements/card-vertical-padding, #requirements/slot-horizontal-padding, #requirements/card-children-gap, #requirements/header-children-gap):
-  - UI Card family: the `Card` root uses vertical padding `py-6` and sets no horizontal padding of its own; `CardHeader`, `CardContent`, and `CardFooter` each add horizontal padding `px-6`. `Card` uses `gap-6` between its top-level children and `CardHeader` uses `gap-1.5` between its own children.
-- **Font** (#requirements/title-font-weight, #requirements/description-font-size):
-  - UI Card family: `CardTitle` uses `font-semibold` with `leading-none`; `CardDescription` uses `text-sm`. `Card`, `CardHeader`, `CardContent`, and `CardFooter` set no font utility and inherit from their ancestor. No literal point size appears in the source; the Tailwind scale step is the specification.
-- **Background** (#requirements/card-background):
-  - UI Card family: the `Card` root uses the `bg-apt-bg` token; no sub-slot sets a background.
-- **Foreground/Text** (#requirements/card-text-color, #requirements/description-text-color):
-  - UI Card family: `Card` and `CardTitle` use the `text-apt-text` token; `CardDescription` uses `text-apt-text-muted`. `CardHeader`, `CardContent`, and `CardFooter` set no text color and inherit `text-apt-text` from the `Card` root.
-- **Border** (#requirements/card-border):
-  - UI Card family: the `Card` root uses `border` (the Tailwind default 1px width) with the `border-apt-border` color token; no sub-slot has its own border.
-- **Shadow** (#requirements/card-shadow):
-  - UI Card family: the `Card` root uses `shadow-sm`; no sub-slot has its own shadow.
+- **Corner radius**: #requirements/card-corner-radius
+- **Padding and gap**: #requirements/card-vertical-padding, #requirements/slot-horizontal-padding, #requirements/card-children-gap, #requirements/header-children-gap
+- **Layout**: #requirements/card-layout, #requirements/header-layout, #requirements/footer-layout
+- **Font**: #requirements/title-typography, #requirements/description-font-size. `Card`, `CardHeader`, `CardContent`, and `CardFooter` set no font utility and inherit from their ancestor. No literal point size appears in the source; the Tailwind scale step is the specification.
+- **Background**: #requirements/card-background. No sub-slot sets a background.
+- **Foreground/Text**: #requirements/card-text-color, #requirements/description-text-color. `CardHeader`, `CardContent`, and `CardFooter` set no text color and inherit `text-apt-text` from the `Card` root.
+- **Border**: #requirements/card-border. No sub-slot has its own border.
+- **Shadow**: #requirements/card-shadow. No sub-slot has its own shadow.
 - **Min/Max size**: The UI Card family does not constrain width or height: the `Card` sets no sizing utility, so it fills the inline size its parent gives it and sizes to its content in the block direction.
-
 ## States
 
 Not applicable: Card is a static, non-interactive container and does not define any interactive states beyond the default render state.
@@ -101,7 +95,7 @@ Not applicable: Card is a static, non-interactive container and does not define 
 | card-004 | [merge-classname-prop](#requirements/merge-classname-prop) | `<Card className="extra-class" />` | The rendered root `div`'s `class` attribute contains both `extra-class` and the component's default classes (e.g. `rounded-xl`). |
 | card-005 | [forward-rest-props](#requirements/forward-rest-props) | `<Card data-testid="x" />` | The rendered root `div` carries `data-testid="x"`. |
 | card-006 | [compose-any-slot-subset](#requirements/compose-any-slot-subset) | `<Card><CardContent>Only content</CardContent></Card>` (Header/Title/Description/Footer omitted) | Renders without error, containing only the `CardContent` slot's markup. |
-| card-007 | [always-renders-default-div](#requirements/always-renders-default-div) | `<Card />` (UI Card family, no children) | Renders an empty `<div data-slot="card">` carrying its default classes; nothing in source prevents an empty card. |
+| card-007 | [render-div-root](#requirements/render-div-root) | `<Card />` (UI Card family, no children) | Renders an empty `<div data-slot="card">` carrying its default classes; nothing in source prevents an empty card. |
 | card-008 | [card-corner-radius](#requirements/card-corner-radius) | `<Card />` | The rendered root `div`'s `class` attribute contains `rounded-xl`. |
 | card-009 | [card-vertical-padding](#requirements/card-vertical-padding) | `<Card />` | The rendered root `div`'s `class` attribute contains `py-6` and no horizontal padding utility. |
 | card-010 | [slot-horizontal-padding](#requirements/slot-horizontal-padding) | `<CardHeader />` | The rendered root `div`'s `class` attribute contains `px-6`. |
@@ -109,7 +103,7 @@ Not applicable: Card is a static, non-interactive container and does not define 
 | card-012 | [slot-horizontal-padding](#requirements/slot-horizontal-padding) | `<CardFooter />` | The rendered root `div`'s `class` attribute contains `px-6`. |
 | card-013 | [card-children-gap](#requirements/card-children-gap) | `<Card />` | The rendered root `div`'s `class` attribute contains `gap-6`. |
 | card-014 | [header-children-gap](#requirements/header-children-gap) | `<CardHeader />` | The rendered root `div`'s `class` attribute contains `gap-1.5`. |
-| card-015 | [title-font-weight](#requirements/title-font-weight) | `<CardTitle />` | The rendered root `div`'s `class` attribute contains `font-semibold` and `leading-none`. |
+| card-015 | [title-typography](#requirements/title-typography) | `<CardTitle />` | The rendered root `div`'s `class` attribute contains `font-semibold` and `leading-none`. |
 | card-016 | [description-font-size](#requirements/description-font-size) | `<CardDescription />` | The rendered root `div`'s `class` attribute contains `text-sm`. |
 | card-017 | [card-background](#requirements/card-background) | `<Card />` | The rendered root `div`'s `class` attribute contains `bg-apt-bg`. |
 | card-018 | [card-text-color](#requirements/card-text-color) | `<Card />` | The rendered root `div`'s `class` attribute contains `text-apt-text`. |
@@ -117,10 +111,13 @@ Not applicable: Card is a static, non-interactive container and does not define 
 | card-020 | [description-text-color](#requirements/description-text-color) | `<CardDescription />` | The rendered root `div`'s `class` attribute contains `text-apt-text-muted`. |
 | card-021 | [card-border](#requirements/card-border) | `<Card />` | The rendered root `div`'s `class` attribute contains `border` and `border-apt-border`. |
 | card-022 | [card-shadow](#requirements/card-shadow) | `<Card />` | The rendered root `div`'s `class` attribute contains `shadow-sm`. |
-
+| card-023 | [card-layout](#requirements/card-layout) | `<Card />` | The rendered root `div`'s `class` attribute contains `flex` and `flex-col`. |
+| card-024 | [header-layout](#requirements/header-layout) | `<CardHeader />` | The rendered root `div`'s `class` attribute contains `flex` and `flex-col`. |
+| card-025 | [footer-layout](#requirements/footer-layout) | `<CardFooter />` | The rendered root `div`'s `class` attribute contains `flex` and `items-center`. |
+| card-026 | [merge-classname-prop](#requirements/merge-classname-prop) | `<Card className="p-0" />` | The `class` attribute contains `p-0` and no longer contains the default `py-6`. |
 ## Edge Cases
 
-- **Null/empty input — UI Card family**: No component performs prop validation. `Card` rendered with no children renders an empty `<div>` with its default classes — nothing in source prevents an empty card (#requirements/always-renders-default-div), per the unconditional `{...props}`/`children` spread in each component.
+- **Null/empty input — UI Card family**: No component performs prop validation. `Card` rendered with no children renders an empty `<div>` with its default classes; see #requirements/render-div-root.
 - **Boundary values**: Not applicable: The source exposes no numeric/length-constrained input (no min/max props, no character limits).
 - **Concurrent access**: Not applicable: The UI Card family components are stateless, pure render functions with no internal state and no shared mutable resource; there is nothing to serialize.
 - **Error states**: Not applicable: Card is a presentational container with no error-handling responsibility; errors would originate from child content, not the container itself.
@@ -172,17 +169,17 @@ Not applicable: Card does not perform logging; it is a presentational component 
 
 ## Platform Notes
 
-- **SwiftUI**: No native `Card` primitive exists; compose a `VStack` (`HStack` for a footer-like row) inside a container view, applying `.background()`, `.clipShape(RoundedRectangle(cornerRadius:))`, `.overlay(RoundedRectangle().stroke())`, and `.shadow()` to reproduce the UI Card family's `bg-apt-bg`/`rounded-xl`/`border-apt-border`/`shadow-sm`. Map `CardHeader`/`CardTitle`/`CardDescription`/`CardContent`/`CardFooter` to nested `VStack`/`Text` views, using `VStack(spacing:)` for the `gap-6`/`gap-1.5` rhythm and `.padding(.horizontal)`/`.padding(.vertical)` for the `px-6`/`py-6` split, since SwiftUI has no `data-slot`-style attribute mechanism. Add `.accessibilityElement(children: .contain)` with `.accessibilityLabel()` on the container and `.accessibilityAddTraits(.isHeader)` on the title to supply the group and heading semantics the web source leaves unset.
-- **Compose**: Use Material 3's `androidx.compose.material3.Card` as the base container, configuring its `shape`, `colors`, `border`, and `elevation` parameters to match `rounded-xl`/`bg-apt-bg`/`border-apt-border`/`shadow-sm`; note that M3's default `Card` is filled and elevated, so an outlined, near-flat look needs `OutlinedCard` or an explicit `CardDefaults.cardElevation`. Nest `Column`/`Row` composables for the header/content/footer slots, using `Arrangement.spacedBy()` for `gap-6`/`gap-1.5` and `Modifier.padding()` for `px-6`/`py-6`. Use `Modifier.semantics(mergeDescendants = true)` plus `heading()` on the title composable to recover the semantics the source's plain `div` does not carry.
+- **SwiftUI**: No native `Card` primitive exists; compose a `VStack` (`HStack` for a footer-like row) inside a container view, applying `.background()`, `.clipShape(RoundedRectangle(cornerRadius:))`, `.overlay(RoundedRectangle().stroke())`, and `.shadow()` to reproduce the UI Card family's `bg-apt-bg`/`rounded-xl`/`border-apt-border`/`shadow-sm`. Map `CardHeader`/`CardTitle`/`CardDescription`/`CardContent`/`CardFooter` to nested `VStack`/`Text` views, using `VStack(spacing:)` for the `gap-6`/`gap-1.5` rhythm and `.padding(.horizontal)`/`.padding(.vertical)` for the `px-6`/`py-6` split, since SwiftUI has no `data-slot`-style attribute mechanism. Lay the footer out as an `HStack` with `.alignment(.center)` and the header as a `VStack`. Add `.accessibilityElement(children: .contain)` with `.accessibilityLabel()` on the container and `.accessibilityAddTraits(.isHeader)` on the title to supply the group and heading semantics the web source leaves unset.
+- **Compose**: Use Material 3's `androidx.compose.material3.Card` as the base container, configuring its `shape`, `colors`, `border`, and `elevation` parameters to match `rounded-xl`/`bg-apt-bg`/`border-apt-border`/`shadow-sm`; note that M3's default `Card` is filled and elevated, so an outlined, near-flat look needs `OutlinedCard` or an explicit `CardDefaults.cardElevation`. Nest `Column`/`Row` composables for the header/content/footer slots, using `Arrangement.spacedBy()` for `gap-6`/`gap-1.5` and `Modifier.padding()` for `px-6`/`py-6`. Lay the footer out as a `Row` with `verticalAlignment = Alignment.CenterVertically` and the header as a `Column`. Use `Modifier.semantics(mergeDescendants = true)` plus `heading()` on the title composable to recover the semantics the source's plain `div` does not carry.
 - **React/Web**: This is the source platform; implement as given — the UI Card family as the six `cn`-composed Tailwind `div` components shown in source.
-- **AppKit / UIKit**: No native card container exists. Compose an `NSView` (an `NSBox`, or a plain `NSView` with `wantsLayer = true`) or a `UIView`, setting `layer.cornerRadius` with `layer.masksToBounds`, `layer.borderWidth`/`layer.borderColor`, and `layer.shadowOpacity`/`shadowRadius`/`shadowOffset` to reproduce corner radius, border, and shadow — note that a single layer cannot both mask and cast a shadow, so use a wrapper view for the shadow and an inner masked view for the rounded fill. Lay the header/title/description/content/footer out as an `NSStackView`/`UIStackView`, with `spacing` standing in for `gap-6`/`gap-1.5` and `layoutMargins` for `px-6`/`py-6`, since neither framework has a `data-slot` equivalent. Set `isAccessibilityElement = false` on the container and `accessibilityTraits = .header` on the title label to recover the `<h3>` semantics.
+- **AppKit / UIKit**: No native card container exists. Compose an `NSView` (an `NSBox`, or a plain `NSView` with `wantsLayer = true`) or a `UIView`, setting `layer.cornerRadius` with `layer.masksToBounds`, `layer.borderWidth`/`layer.borderColor`, and `layer.shadowOpacity`/`shadowRadius`/`shadowOffset` to reproduce corner radius, border, and shadow — note that a single layer cannot both mask and cast a shadow, so use a wrapper view for the shadow and an inner masked view for the rounded fill. Lay the header/title/description/content/footer out as an `NSStackView`/`UIStackView`, with `spacing` standing in for `gap-6`/`gap-1.5` and `layoutMargins` for `px-6`/`py-6`, since neither framework has a `data-slot` equivalent. Make the footer a horizontal stack with center alignment and the header a vertical stack. Set `isAccessibilityElement = false` on the container and `accessibilityTraits = .header` on the title label to add heading semantics.
 - **WinUI 3**: Use a `Border` wrapping a `StackPanel` (or `Grid`) as the root, setting `CornerRadius`, `BorderBrush`/`BorderThickness`, and `Background` to the theme resources standing in for `rounded-xl`/`border-apt-border`/`bg-apt-bg`, and apply a `ThemeShadow` through the root element's `Shadow` and `Translation` properties to approximate `shadow-sm`. Nest `StackPanel`s for the header, content, and footer slots, with the footer panel using `Orientation="Horizontal"` and `VerticalAlignment="Center"` to match the source's `flex items-center`. WinUI 3 has no flexbox `gap`, so reproduce `gap-6`/`gap-1.5` with `StackPanel.Spacing` (or an explicit `Margin` on each child inside a `Grid`), and express the source's `py-6`/`px-6` split as `Padding` on the root `Border` for the vertical axis plus `Padding` on each slot panel for the horizontal axis. There is no `data-slot` equivalent: give each slot an `x:Name`, or define the whole card as a templated `ContentControl` whose `ControlTemplate` exposes `Header`, `Content`, and `Footer` `ContentPresenter`s. The card is non-interactive, so set `IsTabStop="False"` and define no `VisualStateManager` states for pointer, press, or focus; set `AutomationProperties.Name` on the root and `AutomationProperties.HeadingLevel="Level3"` on the title `TextBlock` to supply heading semantics the source does not set.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/card.tsx` | confirmed (1.2.3) |
+| web | `packages/web/packages/ui/src/components/card.tsx` | confirmed (1.2.4) |
 
 ## Design Decisions
 
@@ -192,6 +189,10 @@ Not applicable: Card does not perform logging; it is a presentational component 
 
 **Decision**: Document no invented accessibility behavior beyond what the source sets.
 **Rationale**: The UI Card family sets no ARIA role, label association, or tap target, because it is not an interactive control in source — it is a static container. This ingredient does not invent accessibility behavior that is not present in the code (see Accessibility).
+**Approved**: pending
+
+**Decision**: Native ports SHOULD add a group label and a heading trait or level on the title, even though the web source adds neither.
+**Rationale**: SwiftUI, Compose, AppKit and WinUI all have first-class heading and grouping semantics, so a port that omits them is less accessible than the platform allows. The web source's plain `div` is not a model to copy on those platforms.
 **Approved**: pending
 
 ## Compliance
@@ -211,6 +212,7 @@ The source sets no explicit ARIA role or heading semantics for the UI Card famil
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.4 | 2026-11-14 | Mike Fullerton | Added card, header and footer layout requirements with vectors, corrected merge-classname-prop to caller-wins with an override vector, folded always-renders-default-div into render-div-root, renamed title-font-weight to title-typography, trimmed Appearance duplication, recorded a heading-semantics decision for native ports, and added footer and header layout to the platform notes. |
 | 1.2.3 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.1 | 2026-09-22 | Mike Fullerton | Narrowed to the UI Card family; Landing Card has its own recipe |

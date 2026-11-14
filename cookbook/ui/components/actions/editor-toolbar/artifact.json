@@ -4,11 +4,11 @@
     "id": "3c65c844-6c3c-43e2-b792-8575f5dda9cf",
     "title": "EditorToolbar",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3a4cfabe81cb3a54",
+  "synced": "e0d2878d95e41eb9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

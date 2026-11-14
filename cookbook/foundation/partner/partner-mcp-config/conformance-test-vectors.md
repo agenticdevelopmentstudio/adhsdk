@@ -13,8 +13,8 @@ Vectors 001 and 002 are asserted in `PartnerProcessConfigurationTests`; the rest
 | partner-mcp-config-008 | json-url | `json(port: 65535, token: "t", callerID: "c")` | Url is `http://127.0.0.1:65535/mcp` |
 | partner-mcp-config-009 | write-parent-directory | Target in a directory that does not exist, nested two levels deep | Both levels are created; the immediate parent has mode 0700 |
 | partner-mcp-config-010 | write-content | Write, then read the file | The bytes equal `json` for the same arguments |
-| partner-mcp-config-011 | write-open-failure, write-errors-propagate | Target whose parent cannot be written to | The call throws; no file appears at the target |
+| partner-mcp-config-011 | write-errors-propagate | Target whose parent directory belongs to another user, so `setAttributes` fails | The call throws the `setAttributes` error unchanged; no file appears at the target |
 | partner-mcp-config-012 | write-cleanup, write-rename-failure | Target path that is an existing non-empty directory, so `rename` fails | `CocoaError(.fileWriteUnknown)` is thrown; no `.tmp` file remains in the parent |
 | partner-mcp-config-013 | write-temp-sibling | Write twice to the same target in a row | Both succeed; the second replaces the first; no temp name collides |
-| partner-mcp-config-014 | write-atomic-rename | A reader opens the target while a second write completes | The reader sees one complete file, old or new, never a truncated one |
+| partner-mcp-config-014 | write-atomic-rename | Write once, open a handle on the target, then write again to the same target | The target now holds the complete new JSON in a different file (inode); the earlier handle still reads the complete old content |
 

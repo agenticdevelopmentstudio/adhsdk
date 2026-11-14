@@ -1,6 +1,6 @@
 
 **Decision**: The component accepts a `defaultOpen` prop to seed its internal `useState`, and is uncontrolled only — there is no `open` or `onOpenChange` prop, so a caller cannot drive the open state from outside once mounted.
-**Rationale**: `defaultOpen` lets the caller pick the initial state; the default of `true` matches a common UX pattern where disclosure content is visible by default, reducing the need for users to discover the toggle.
+**Rationale**: `defaultOpen` lets the caller pick the initial state; the default is `true`, so the content is visible until the user collapses it.
 **Approved**: pending
 
 **Decision**: The disclosure content is marked `aria-hidden` on the root element when closed, rather than relying on CSS `display: none` alone.
@@ -12,7 +12,7 @@
 **Approved**: pending
 
 **Decision**: Title, description, and links are only rendered if their data is truthy.
-**Rationale**: This reduces DOM clutter and improves performance when content is not provided.
+**Rationale**: This leaves no empty title, description or links element in the DOM when that content is not provided.
 **Approved**: pending
 
 **Decision**: The component uses CSS classes (`pc-popover`, `pc-popover-open`, etc.) rather than inline styles.
@@ -20,6 +20,6 @@
 **Approved**: pending
 
 **Decision**: The toggle is built from a custom `button` + `div` pair with `pc-popover-*` classes rather than the native `<details>`/`<summary>` elements.
-**Rationale**: A hand-built toggle lets the arrow indicator and title be composed freely inside the button's label while keeping the existing `pc-popover-*` CSS class contract; `<details>`/`<summary>` would need different default styling and event handling to match it.
+**Rationale**: A hand-built toggle lets the arrow indicator and title be composed freely inside the button's label while keeping the existing `pc-popover-*` CSS class contract; `<details>`/`<summary>` would need different default styling and event handling to match it. The accepted costs are the documented failures: the root `aria-hidden` hides the toggle button itself when closed, there is no `aria-expanded` on the button, and the fixed `aria-label` replaces the visible title as the accessible name.
 **Approved**: pending
 

@@ -2,15 +2,15 @@
 id: b7a4a259-620f-42a3-8bc2-9e5c07c1819d
 title: "StatCard"
 type: recipe
-version: 1.4.1
+version: 1.4.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "The dashboard stat card — an InfoPanel headed by an icon + title with a '{tool} ↗' deep link, over StatRows, freeform children, and a muted mono footnote."
+summary: "The dashboard stat card — an InfoPanel headed by an icon + title with a deep link (the tool's name followed by ↗), over StatRows, freeform children, and a muted mono footnote."
 platforms:
   - typescript
   - web
@@ -25,10 +25,7 @@ ingredients:
   - bba42d5f-8a52-487f-88c5-4f988dfa714b
   - b329d08b-9812-47d0-8094-516359d82d19
 depends-on: []
-related:
-  - 2ad7c681-6a9e-43ae-a9d9-b448939d3455
-  - bba42d5f-8a52-487f-88c5-4f988dfa714b
-  - b329d08b-9812-47d0-8094-516359d82d19
+related: []
 references: []
 approved-by: ""
 approved-date: ""
@@ -39,7 +36,7 @@ approved-date: ""
 ## Overview
 
 `StatCard` in `@adh-sdk/ui` is the dashboard stat card: an `InfoPanel` headed by
-an icon + title with an optional "{tool} ↗" deep link (plus optional extra header
+an icon + title with an optional deep link (the tool's name followed by ↗) (plus optional extra header
 controls via `actions`) in the header actions slot, over a vertical stack of `StatRow` figures, optional freeform content, and a muted
 mono footnote. It is **pure assembly** — the shell is `InfoPanel`, the rows are
 `StatRow`, the link is `ExternalLink` — so this block owns only the arrangement (a
@@ -57,7 +54,7 @@ It was extracted from a status site's Traffic/Errors telemetry cards, so every s
 
 ## Ingredients
 
-| Name | Domain | Role | Required | Configuration |
+| Name | rdid | Role | Required | Configuration |
 |---|---|---|---|---|
 | InfoPanel | [adhsdk.ingredient.ui.blocks.info-panel](cookbook:2ad7c681-6a9e-43ae-a9d9-b448939d3455) | The card shell — bordered/rounded frame with the standard header (icon + title) and a content-sized body | yes | `title`, `icon`, `actions` (the link + extra `actions`), `className` and remaining host attributes forwarded; default content-sized (no `scroll`) |
 | StatRow | [adhsdk.ingredient.ui.components.display.stat](cookbook:bba42d5f-8a52-487f-88c5-4f988dfa714b) | One label/value figure per `stats[]` entry, in the body stack | yes (when `stats[]` non-empty) | `label`, `value`, `tone` passed through from each `StatCardStat` |
@@ -71,12 +68,14 @@ alongside the component.
 
 - **render-infopanel-shell**: The card MUST render as an `InfoPanel` whose title is `title` and whose leading glyph is `icon`, exposing the card as a labeled region named by `title`.
 - **title-as-accessible-name**: `title` MUST be a plain string, so the region InfoPanel names from it carries a reliable accessible name; a non-string `title` is not guaranteed to produce a meaningful one.
-- **place-link-in-actions**: When `link` is provided, the card MUST render an `ExternalLink` to `link.href` labeled `link.label` in the InfoPanel actions slot, and MUST omit the actions slot when both `link` and `actions` are absent.
+- **place-link-in-actions**: When `link` is provided, the card MUST render an `ExternalLink` to `link.href` labeled `link.label` in the InfoPanel actions slot.
+- **omit-empty-actions-slot**: The card MUST omit the InfoPanel actions slot when both `link` and `actions` are absent.
 - **render-actions-after-link**: When `actions` is provided, the card MUST render it in the InfoPanel actions slot, after the deep link when both are present.
 - **spread-host-attributes**: The card MUST pass remaining host attributes (`data-*`, `id`, handlers) through to the InfoPanel root `<section>`, so hosts can tag the card without a wrapper element.
 - **render-a-statrow-per-stat**: The card MUST render one `StatRow` per `stats[]` entry, passing that entry's `label`, `value`, and `tone`.
 - **render-children-after-rows**: The card MUST render `children` after the stat rows, within the same body stack.
 - **render-footnote-when-present**: The card MUST render `footnote` as a muted mono caption after the children — and as the last item in the body stack even when there are no children or no `stats` — and MUST omit it when `footnote` is null/undefined.
+- **footnote-guard-is-null-check**: The footnote guard MUST be a null/undefined check, so an empty-string `footnote` (`""`) renders an empty caption element; callers hide the footnote by passing `undefined`.
 - **stack-body-vertically**: The card MUST arrange the rows, children, and footnote in a single vertical `gap-2.5` column.
 - **forward-classname**: The card MUST forward `className` onto the InfoPanel outer element.
 
@@ -104,7 +103,7 @@ alongside the component.
 - Footnote: `pt-0.5 font-mono text-[10px] text-apt-text-dim` — matched to the StatRow
   label's micro-caption grammar; rendered only when `footnote != null`.
 - No raw hex, no `!important` — all color/typography via `apt-*` tokens and the
-  composed shared parts.
+  composed shared parts, except the footnote's arbitrary `text-[10px]` size.
 
 ## Shared State
 
@@ -136,10 +135,11 @@ into a composed part; nothing flows back up except the browser navigation an
 | T7 | forward-classname | `className="col-span-2"` | InfoPanel outer `<section>` carries `col-span-2` |
 | T8 | render-actions-after-link, place-link-in-actions | `link={{href:'https://g.example',label:'Grafana'}} actions={<span>healthy</span>}` | header actions slot holds the "Grafana ↗" link, then the status word |
 | T9 | spread-host-attributes | `data-testid="monitor-card" data-monitor="lewis" data-phase="ok"` | outer `<section>` carries all three attributes |
-| T10 | place-link-in-actions | `<StatCard title="Errors" stats={[{label:'open issues',value:'0'}]} />` (no `link`, no `actions`) | InfoPanel's `actions` prop is `undefined` — the header renders with no actions region at all, not merely an empty one (distinct from T3, which only checks for the missing anchor) |
+| T10 | omit-empty-actions-slot | `<StatCard title="Errors" stats={[{label:'open issues',value:'0'}]} />` (no `link`, no `actions`) | the header contains no actions container element at all, not merely an empty one (distinct from T3, which only checks for the missing anchor) |
 | T11 | render-children-after-rows, render-footnote-when-present | `<StatCard title="Errors" stats={[{label:'open issues',value:'0'}]} footnote="approximate"><div>✓ No errors reported</div></StatCard>` | within the one body stack, order is the "open issues"/"0" row, then "✓ No errors reported", then "approximate" as the last child |
 | T12 | render-actions-after-link, place-link-in-actions | `<StatCard title="Monitor" stats={[{label:'status',value:'ok'}]} actions={<span>healthy</span>} />` (no `link`) | header actions slot renders only `<span>healthy</span>`; no `ExternalLink`/anchor present |
-
+| T13 | render-footnote-when-present | `<StatCard title="Notes" footnote="approximate" />` (no `stats`, no children) | the body stack contains only the "approximate" footnote, as its last and only child |
+| T14 | footnote-guard-is-null-check | `<StatCard title="Notes" footnote="" />` | an empty footnote caption element is rendered in the body stack |
 ## Edge Cases
 
 - **No `stats`**: `stats?.map(...)` no-ops, so a card with only `children` and/or a
@@ -150,7 +150,7 @@ into a composed part; nothing flows back up except the browser navigation an
   monitor card's live status word), right-justified by InfoPanel.
 - **`footnote` guard is `!= null`**: `null`/`undefined` hide the footnote; an empty
   string (`""`) is *not* null and WOULD render an empty caption — pass `undefined` to
-  hide, not `""`.
+  hide, not `""` (see **footnote-guard-is-null-check**).
 - **Rows + children + footnote together**: order is always rows → children → footnote
   within the one `gap-2.5` stack; `children` is the escape hatch for anything the
   declarative `stats[]` can't express (e.g. the status Errors card's live error line
@@ -164,9 +164,9 @@ into a composed part; nothing flows back up except the browser navigation an
 
 ## Platform Notes
 
-- **Swift / SwiftUI**: A bordered/rounded container (`.background` + `.clipShape(RoundedRectangle)`, or `GroupBox`) holds a header `HStack` (an `Image` icon marked `.accessibilityHidden(true)`, a `Text` title, a `Spacer`, then — only when `link` or `actions` is present — a nested `HStack` holding a `Link` for the "{tool} ↗" deep link followed by any extra `actions` view) and a body `VStack(spacing: 10)` of label/value `HStack` pairs (one per stat, mirroring `StatRow`), then any freeform child `View`s, then a muted footnote `Text` (`.font(.system(size: 10, design: .monospaced))`, `.foregroundStyle(.secondary)`) as the stack's last child. Forward host attributes through SwiftUI view modifiers (e.g. `.accessibilityIdentifier`) rather than arbitrary attributes.
+- **Swift / SwiftUI**: A bordered/rounded container (`.background` + `.clipShape(RoundedRectangle)`, or `GroupBox`) holds a header `HStack` (an `Image` icon marked `.accessibilityHidden(true)`, a `Text` title, a `Spacer`, then — only when `link` or `actions` is present — a nested `HStack` holding a `Link` for the deep link (the tool's name followed by ↗) followed by any extra `actions` view) and a body `VStack(spacing: 10)` of label/value `HStack` pairs (one per stat, mirroring `StatRow`), then any freeform child `View`s, then a muted footnote `Text` (`.font(.system(size: 10, design: .monospaced))`, `.foregroundStyle(.secondary)`) as the stack's last child. Forward host attributes through SwiftUI view modifiers (e.g. `.accessibilityIdentifier`) rather than arbitrary attributes.
 - **Kotlin / Compose**: A bordered `Card` (or `Surface` with `border`/`shape`) with a header `Row` (an `Icon` given an empty `contentDescription` to mark it decorative, a `Text` title, a `Modifier.weight(1f)` spacer, then — only when `link` or `actions` is present — a nested `Row` holding a `TextButton`/`ClickableText` for the deep link followed by any extra `actions` composable) and a body `Column(verticalArrangement = Arrangement.spacedBy(10.dp))` of label/value `Row` pairs per stat (mirroring `StatRow`), then freeform child composables, then a `Text` footnote (small monospace `FontFamily`, muted `color`) as the column's last child. Forward host attributes via a custom `Modifier` (e.g. `Modifier.semantics { testTag = … }`) rather than arbitrary attributes.
-- **React / Web (TypeScript)**: `packages/web/packages/ui/src/blocks/stat-card.tsx`, exported from `@adh-sdk/ui` (`@adh-sdk/ui/blocks/stat-card`). Composes `InfoPanel` (`../blocks/info-panel`), `StatRow` (`../components/stat`), and `ExternalLink` (`../components/external-link`). Exports `StatCard`, `StatCardProps`, and the `StatCardStat` type. Demo: `ui-showcase` Topic `stat-card` (group "Blocks — cards & sections"); the demo shows a Traffic card (declarative stats + footnote), an Errors card (stats + freeform children), and a monitor card (header `actions` status word, no link). Regenerate `sources.generated.ts` via `gen-sources.py` after source changes. Responsive: the demo lays the cards in a `sm:grid-cols-2` grid; each card is content-sized and full-width in its cell — verify at 375 / 768 / 1440.
+- **React / Web (TypeScript)**: Exported from `@adh-sdk/ui` (`@adh-sdk/ui/blocks/stat-card`). Composes `InfoPanel` (`../blocks/info-panel`), `StatRow` (`../components/stat`), and `ExternalLink` (`../components/external-link`). Exports `StatCard`, `StatCardProps`, and the `StatCardStat` type. Demo: `ui-showcase` Topic `stat-card` (group "Blocks — cards & sections"); the demo shows a Traffic card (declarative stats + footnote), an Errors card (stats + freeform children), and a monitor card (header `actions` status word, no link). Regenerate `sources.generated.ts` via `gen-sources.py` after source changes. Responsive: the demo lays the cards in a `sm:grid-cols-2` grid; each card is content-sized and full-width in its cell — verify at 375 / 768 / 1440.
 - **AppKit / UIKit**: iOS (UIKit): a container `UIView` with a rounded `CALayer` holds a header `UIStackView` (a decorative `UIImageView` icon, a `UILabel` title, then — only when `link` or `actions` is present — a nested `UIStackView` with a link-styled `UIButton` followed by any extra action views) and a body `UIStackView` (spacing 10) of label/value `UIStackView` pairs per stat, then freeform child views, then a muted footnote `UILabel` (10pt, secondary text color) as the last arranged subview. macOS (AppKit): the same shape with `NSStackView` and `NSTextField` labels, and an `NSButton` styled as a link for the deep link. Forward host attributes via `accessibilityIdentifier` on the root view.
 - **WinUI 3**: Start with a `Border` (CornerRadius for rounded corners, BorderBrush for the card outline) containing a `Grid` with two rows — a header row and a body row — so the header-to-body gap is independent of the body's own row spacing. The header row is itself a `Grid` with three columns: icon (`Image` or `SymbolIcon`), title (`TextBlock` with heading-level font), and a horizontal `StackPanel` (Spacing=4) holding a `HyperlinkButton` for the deep link followed by any extra `actions` content; bind that actions `StackPanel`'s `Visibility` to `Collapsed` when both the link and actions are absent, and the `HyperlinkButton`'s `Visibility` to `Collapsed` when only the link is absent. The body row is a `StackPanel` with `Spacing=10` (gap-2.5 equivalence), containing `TextBlock` pairs for each stat row (label and value), a `ContentPresenter` for freeform children, and a `TextBlock` for the footnote (FontSize=10, `Foreground` set to a secondary/dim text brush) as its last child, with `Visibility` bound to `Collapsed` when null. Map forwarded host attributes (`data-*`, `id`) to `AutomationProperties.AutomationId`/`Name`, or a `Tag` dictionary, on the root `Border`, since WinUI has no direct arbitrary-attribute equivalent. Use a `Resources` section to define color and typography tokens matching the design system.
 
@@ -174,7 +174,7 @@ into a composed part; nothing flows back up except the browser navigation an
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/stat-card.tsx` | confirmed (1.4.1) |
+| web | `packages/web/packages/ui/src/blocks/stat-card.tsx` | confirmed (1.4.2) |
 
 ## Design Decisions
 
@@ -193,7 +193,7 @@ caller into imperative rows.
 
 **Decision**: the `link` maps to an `ExternalLink` in the InfoPanel actions slot.
 **Rationale**: a stat card almost always deep-links into its source tool (PostHog,
-GlitchTip); putting that "{tool} ↗" in the header's actions slot is the established
+GlitchTip); putting that "the tool's name ↗" in the header's actions slot is the established
 dashboard grammar and keeps the affordance out of the figure rows.
 **Approved**: pending
 
@@ -252,3 +252,4 @@ with rows, links, actions, and footnote and asserts on the composed output
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Rewrite WinUI 3 platform note with concrete translation guidance: Border, Grid header, StackPanel body, TextBlock pairs for stats, Visibility bindings for optional elements. |
 | 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: strip `must-` from every requirement name and its citations; add title-as-accessible-name requirement; straighten summary quotes; add related domains for the recipe-as-ingredient pattern; rewrite Compliance as linked catalog checks with passed/partial statuses; add Approved: pending to each Design Decision; add three Integration Test Vectors (actions-slot omission, children-before-footnote order, actions-without-link); rewrite WinUI 3 header/actions/host-attribute guidance and give SwiftUI, Compose, and AppKit/UIKit concrete translation guidance in place of Not applicable; clarify the footnote is always last in the body stack. |
 | 1.4.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.4.2 | 2026-11-14 | Mike Fullerton | Split the actions-slot requirement into omit-empty-actions-slot, added footnote-guard-is-null-check, a DOM-based T10 and new T13/T14 vectors, renamed the Domain column to rdid, removed {tool} placeholders and the source path, emptied related, and admitted the text-[10px] exception. |

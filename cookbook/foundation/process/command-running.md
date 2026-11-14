@@ -2,7 +2,7 @@
 id: 78390c0c-2610-4480-8a93-0a2dad559126
 title: "Command Running"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -18,9 +18,9 @@ tags:
   - process
   - subprocess
   - testing-seam
-depends-on: []
-related:
+depends-on:
   - 705082e9-8fad-4c20-95a3-4cf843cc6b97
+related: []
 references: []
 approved-by: ""
 approved-date: ""
@@ -86,17 +86,18 @@ Not applicable — this is a process-running seam, not a visual component.
 | command-running-004 | path-lookup, run-inherits-environment | `run(["echo", "bare"])` (test: a name without a slash resolves through env) | status 0, output `bare\n` |
 | command-running-005 | exit-status-passthrough | `run(["/usr/bin/false"])` (test: false returns a non-zero status) | status is non-zero |
 | command-running-006 | stream-draining | `run(["/usr/bin/head", "-c", "200000", "/dev/zero"])` (test: large output is returned in full) | status 0, output holds exactly 200000 UTF-8 bytes |
-| command-running-007 | launch-failure | `run(["/nonexistent/definitely-not-here"])` (test: a missing executable fails without crashing) | status is non-zero (-1 per the source) and the call returns |
-| command-running-008 | backstop-default, backstop-timeout-report, timeout-never-success | `ProcessCommandRunner(backstop: 0.2).run(["/bin/sleep", "30"])` (test: a timed-out run reports failure) | status -1, output contains `timed out` |
-| command-running-009 | sendable-seam, capture-default-from-run, capture-overload-default | A double implementing only `run`, returning status 7 and output `a b` for the arguments `a` and `b`; call `capture(["a", "b"])` (test: the default capture is built on run) | status 7, stdout `a b`, stderr empty |
+| command-running-007 | launch-failure | `run(["/nonexistent/definitely-not-here"])` (test: a missing executable fails without crashing) | status -1 and the call returns |
+| command-running-008 | backstop-timeout-report, timeout-never-success | `ProcessCommandRunner(backstop: 0.2).run(["/bin/sleep", "30"])` (test: a timed-out run reports failure) | status -1, output ends with `\ntimed out after 0.2s` |
+| command-running-009 | capture-default-from-run, capture-overload-default | A double implementing only `run`, returning status 7 and output `a b` for the arguments `a` and `b`; call `capture(["a", "b"])` (test: the default capture is built on run) | status 7, stdout `a b`, stderr empty |
 | command-running-010 | empty-command | `run([])` and `capture([], environment: nil)` | `run` gives status -1 and output `empty command`; `capture` gives status -1, empty stdout, stderr `empty command` |
 | command-running-011 | path-miss | The lookup on name `nope` with search path `/usr/bin` | returns `nope` unchanged |
 | command-running-012 | slash-verbatim | The lookup on name `/bin/echo` with search path `/nonexistent` | returns `/bin/echo` |
-| command-running-013 | path-default, path-empty-entries | The lookup on name `echo` with no search path; then with search path `::/usr/bin` | `/usr/bin/echo` both times |
+| command-running-013 | path-default, path-empty-entries | A temporary directory `D` holding an executable file `tool`; the lookup on name `tool` with search path `::D`; then the lookup on name `sh` with no search path | `D/tool`; then the path of `sh` in the first of `/usr/bin`, `/bin`, `/usr/sbin`, `/sbin` (in that order) that holds an executable `sh` |
 | command-running-014 | backstop-timeout-report | `ProcessCommandRunner(backstop: 0.2).capture(["/bin/sh", "-c", "echo before; sleep 30"], environment: nil)` | status -1, stdout `before\n`, stderr ends with `\ntimed out after 0.2s` |
 | command-running-015 | utf8-decoding | `run(["/usr/bin/printf", "\\377"])` (one byte that is not valid UTF-8) | status 0, output empty |
+| command-running-016 | backstop-default | `ProcessCommandRunner().backstop` | 600 |
 
-The requirements `off-pool-execution`, `stdin-not-supplied` and `no-cancellation` have no vector: they are scheduling and stream-wiring facts that a unit test cannot observe without instrumenting the thread or the child's stdin, and the source has no test for them. A port copies the behavior from the requirement text.
+The requirements `sendable-seam`, `off-pool-execution`, `stdin-not-supplied` and `no-cancellation` have no vector: they are scheduling and stream-wiring facts that a unit test cannot observe without instrumenting the thread or the child's stdin, and the source has no test for them. A port copies the behavior from the requirement text.
 
 ## Edge Cases
 
@@ -116,7 +117,7 @@ The requirements `off-pool-execution`, `stdin-not-supplied` and `no-cancellation
 | `argv` (each call) | array of strings | none, required | Executable first, then its arguments. |
 | `environment` (`capture` only) | optional dictionary of strings | nil (inherit) | When non-nil, replaces the child's whole environment and supplies the `PATH` used for the lookup. |
 | search `PATH` | string | `/usr/bin:/bin:/usr/sbin:/sbin` when none is available | Colon-separated directories searched for a bare name. |
-| injected dependencies | `CommandRunner.runToCompletion` and `BlockingWork.run` | fixed | The process runner and the off-pool hop `ProcessCommandRunner` is built on. |
+| built-on dependencies | `CommandRunner.runToCompletion` and `BlockingWork.run` | fixed (static calls, not injectable) | The process runner and the off-pool hop `ProcessCommandRunner` is built on; the seam for substitution is the `CommandRunning` protocol, not these. |
 
 ## Deep Linking
 
@@ -148,7 +149,7 @@ Not applicable: this component contains no log call; a caller that wants a faile
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunning.swift` in the `AgenticDeveloperHubSDKCore` target. It imports only Foundation, so nothing in it is SwiftUI-specific; a view model holds a `CommandRunning` value and awaits it. The protocol is `Sendable` so a test can pass a recorder across tasks.
+- **SwiftUI**: It imports only Foundation, so nothing in it is SwiftUI-specific; a view model holds a `CommandRunning` value and awaits it. The protocol is `Sendable` so a test can pass a recorder across tasks.
 - **Compose**: Define an interface with a suspend `run(argv)` and a suspend `capture(argv, environment)` returning a data class of status, stdout and stderr. Implement it with `ProcessBuilder` on `Dispatchers.IO`, reading both streams on separate coroutines, and `withTimeoutOrNull` for the backstop. Call `environment().clear()` then `putAll` for the replace-the-environment behavior. `ProcessBuilder` resolves a bare name against the parent's `PATH`, not the replacement's, so the source's explicit lookup has to be written out.
 - **React/Web**: In Node, an object with async `run` and `capture` over `child_process.spawn` with an `env` option (a plain object replaces the environment, matching the source). Collect `stdout` and `stderr` from their `data` events, use `setTimeout` plus `kill` for the backstop, and map a spawn `error` event to status -1. A browser has no equivalent and needs a server endpoint.
 - **AppKit / UIKit**: `Foundation.Process` exists only on macOS; iOS has no way to run an external command, so this does not port to UIKit. On AppKit, the hop through `BlockingWork.run` at default quality of service avoids the priority inversion a direct launch-and-wait on the main thread would cause.
@@ -158,7 +159,7 @@ Not applicable: this component contains no log call; a caller that wants a faile
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunning.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunning.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -170,7 +171,7 @@ Not applicable: this component contains no log call; a caller that wants a faile
 **Approved**: pending
 
 **Decision**: Launch failure and timeout both report status -1, with the cause in the text.
-**Rationale**: The result is a simple pair, and launch jobs treat any non-zero status as failure. The source states "a timeout is never success", because a child that traps `SIGTERM` can still exit 0. The cost is that a caller must read the text to tell a launch failure from a timeout.
+**Rationale**: The result is a simple pair, and launch jobs treat any non-zero status as failure. The source states "a timeout is never success", because a child that traps `SIGTERM` can still exit 0. The cost is that a caller must read the text to tell a launch failure from a timeout, and an undecodable stream becomes an empty string with no signal. This is accepted debt; it is revisited with a typed outcome on the result when a caller needs to branch on the cause instead of reading text.
 **Approved**: pending
 
 **Decision**: The backstop is 600 seconds and is a constructor setting, not a per-call argument.
@@ -201,3 +202,4 @@ Not applicable: this component contains no log call; a caller that wants a faile
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Dropped 'injected' wording, recorded launch/timeout status sharing as accepted debt, fixed vectors 007/008/009/013, added a backstop-default vector, moved the command-runner link to depends-on and removed the source path from the SwiftUI note. |

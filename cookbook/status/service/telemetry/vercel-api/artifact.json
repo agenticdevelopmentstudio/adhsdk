@@ -4,7 +4,7 @@
     "id": "60ff967b-b041-4723-913e-016fba7bae6d",
     "title": "Vercel API Client",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,12 +23,17 @@
       "status-server"
     ],
     "depends-on": [],
-    "related": [],
-    "references": [],
+    "related": [
+      "c116715f-2986-4554-a779-97e99d875c54",
+      "55ffb81c-6a7d-4837-9180-0b5d3fe952ec"
+    ],
+    "references": [
+      "https://vercel.com/docs/rest-api"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "75f148e13b17767e",
+  "synced": "c333d3d1f62b85ed",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

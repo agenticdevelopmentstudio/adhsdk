@@ -2,7 +2,7 @@
 id: aa775836-5679-4a22-9ff3-b2bdcb09cc20
 title: "Work Tracking Models"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -18,8 +18,15 @@ tags:
   - work-tracking
   - foundation
   - models
-depends-on: []
-related: []
+depends-on:
+  - ed610aa4-2717-4242-a8b9-c4616377dbd9
+  - 92a9546a-eec1-47ed-8420-7db51e8d0261
+related:
+  - a6b177ee-dc1e-441d-9844-eee2ef48ed8d
+  - d525cc69-4d2c-4d17-a570-f71e8d5aa273
+  - ba4dcadb-1225-4bcc-afca-bbb617e6e6c9
+  - f3f1af27-6cd7-4b3f-9024-135c6f6e89da
+  - 02cfb457-46da-4814-a1de-8962533ad78e
 references: []
 approved-by: ""
 approved-date: ""
@@ -49,7 +56,7 @@ The value types the app and the daemon share for work tracking, the feature that
 - **degraded-notice**: `WorkTrackingStatus.degradedNotice` MUST be the string `Tracking without Accessibility — time is unassigned.`.
 - **wire-read-failed-key**: `WorkTrackingWire.readFailedKey` MUST be `work_tracking_read_failed`.
 - **wire-read-failed-row**: `WorkTrackingWire.readFailedRow` MUST be the UTF-8 bytes of `{"work_tracking_read_failed":true}`. A failed list read replies with a one-element list holding this row, the same convention as `BillingWire.readFailedRow`.
-- **settings-keys**: `WorkTrackingSettingsKeys` MUST name the daemon settings keys `activity_enabled`, `activity_added_bundle_ids`, `activity_removed_bundle_ids`, `activity_retention_days`, `activity_ax_last_status` and `activity_ax_signer`. The two bundle-id keys hold JSON arrays. `activity_ax_signer` holds the designated requirement that `activity_ax_last_status` was answered under.
+- **settings-keys**: `WorkTrackingSettingsKeys` MUST name the daemon settings keys `activity_enabled`, `activity_added_bundle_ids`, `activity_removed_bundle_ids`, `activity_retention_days`, `activity_ax_last_status` and `activity_ax_signer`. The two bundle-id keys hold JSON arrays. Each is a static member of `WorkTrackingSettingsKeys`: `enabled` is `activity_enabled`, `addedBundleIds` is `activity_added_bundle_ids`, `removedBundleIds` is `activity_removed_bundle_ids`, `retentionDays` is `activity_retention_days`, `accessibilityLastStatus` is `activity_ax_last_status` and `accessibilitySigner` is `activity_ax_signer`. `activity_ax_signer` holds the designated requirement that `activity_ax_last_status` was answered under.
 - **session-prefix**: `ActivitySpanSession.prefix` MUST be `app:`.
 - **session-id-from-span**: `ActivitySpanSession.sessionId(spanId:)` MUST return the prefix followed by the span id.
 - **span-id-from-session**: `ActivitySpanSession.spanId(sessionId:)` MUST return the text after the prefix when the session id starts with `app:`, and nil otherwise.
@@ -88,6 +95,7 @@ Not applicable — this is a set of data models, not a visual component.
 | work-tracking-models-013 | settings-keys | `WorkTrackingSettingsKeys.retentionDays` and `.accessibilitySigner` | `activity_retention_days` and `activity_ax_signer` |
 | work-tracking-models-014 | status-defaults | `WorkTrackingStatus()` | enabled false, accessibility `.unknown`, currentSpan nil, writeFailures 0, lastError nil |
 
+Vectors 010 to 014 are derived from the source and name no test; an implementer should add tests for them, including one that pins the exact bytes of `WorkTrackingWire.readFailedRow` for vector 012.
 ## Edge Cases
 
 - **Empty id lists** (MUST): `normalized()` on empty `addedBundleIds` and `removedBundleIds` returns them empty.
@@ -95,9 +103,9 @@ Not applicable — this is a set of data models, not a visual component.
 - **An id in both lists** (MUST): `normalized()` keeps it in both. The source does not reconcile `addedBundleIds` against `removedBundleIds`. The layer that applies them owns that rule.
 - **Empty or non-prefixed session id** (MUST): `spanId(sessionId:)` returns nil for an empty string and for any id without the `app:` prefix. For exactly `app:` it returns the empty string.
 - **Span id that contains the prefix** (MUST): `spanId(sessionId: "app:app:X")` returns `app:X`, because only the first prefix is dropped.
-- **Concurrent access** (MUST): not a concern in the file. The types are immutable-by-copy values, and the only mutation is on a caller's own variable.
-- **Error states** (MUST): not applicable to the models. Nothing throws, and the failure signal for a list read is `WorkTrackingWire.readFailedRow`.
-- **Offline or disconnected state** (MUST): not applicable to the models. The transport that carries them is a sibling type, not this file.
+- **Concurrent access**: not a concern in the file. The types are immutable-by-copy values, and the only mutation is on a caller's own variable.
+- **Error states**: not applicable to the models. Nothing throws, and the failure signal for a list read is `WorkTrackingWire.readFailedRow`.
+- **Offline or disconnected state**: not applicable to the models. The transport that carries them is a sibling type, not this file.
 - **Malformed input** (SHOULD): the file does not parse text itself. Decoding a `WorkTrackingStatus` with an unknown `accessibility` string fails in the caller's `Decoder`, as the raw-value enum gives it no fallback.
 
 ## Configuration
@@ -108,7 +116,7 @@ Not applicable — this is a set of data models, not a visual component.
 | `WorkTrackingPreferences.retentionDaysRange` | `ClosedRange<Int>` | 7...3650 | Bounds `normalized()` clamps retention into |
 | `WorkTrackingStatus.degradedNotice` | `String` | `Tracking without Accessibility — time is unassigned.` | Sentence shown while tracking runs without Accessibility |
 | `ActivitySpanSession.prefix` | `String` | `app:` | Prefix of a billing session id made by an app span |
-| Injected dependency | `BillingLimits.clamp` | n/a | The clamp helper `normalized()` calls, from the billing DTOs |
+| Hard dependency | `BillingLimits.clamp` | n/a | The static clamp helper `normalized()` calls directly, from the billing DTOs; nothing is injected |
 
 ## Deep Linking
 
@@ -147,17 +155,17 @@ Not applicable: the file makes no log call. `WorkTrackingStatus.lastError` and `
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform is Swift. The file is `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingModels.swift` in the Core target. It is Foundation-only, so a SwiftUI view can bind to `WorkTrackingStatus` and `WorkTrackingPreferences` directly, for example `isDegraded` driving a banner that shows `degradedNotice`.
+- **SwiftUI**: A port note: the types are Foundation-only, so a SwiftUI view can bind to `WorkTrackingStatus` and `WorkTrackingPreferences` directly, for example `isDegraded` driving a banner that shows `degradedNotice`.
 - **Compose**: Use Kotlin `data class` values with `kotlinx.serialization` `@Serializable` and a `@SerialName` per snake-case key. `enum class` with `@SerialName` gives the raw values. Sort and de-duplicate with `toSortedSet().toList()` and clamp with `coerceIn(7, 3650)`. Collect a status through a `StateFlow` for the UI.
-- **React/Web**: Use TypeScript `interface` types with snake-case JSON keys, a string-literal union for accessibility, `[...new Set(ids)].sort()` for the ids and `Math.min(Math.max(...))` for the clamp. Note that `sort()` on strings compares UTF-16 code units, while Swift `sorted()` compares by Unicode scalar order. Swift also treats canonically equivalent strings (a composed and a decomposed accent) as equal, so `Set` de-duplicates them, which a plain JavaScript `Set` does not unless the ids are normalized first with `normalize('NFC')`. The orders differ for characters outside the Basic Multilingual Plane.
-- **AppKit / UIKit**: The source's own platform family. These types are UI-neutral, so AppKit code reads them as the Swift source does.
+- **React/Web**: Use TypeScript `interface` types with snake-case JSON keys, a string-literal union for accessibility, `[...new Set(ids)].sort()` for the ids and `Math.min(Math.max(...))` for the clamp. Ordering and equality must match Swift: normalize every id with `normalize('NFC')` before de-duplicating, because Swift treats canonically equivalent strings (a composed and a decomposed accent) as equal and a plain JavaScript `Set` does not, then sort with an explicit comparator that compares by Unicode scalar (code point), not the default `sort()`, which compares UTF-16 code units and gives a different order for characters outside the Basic Multilingual Plane.
+- **AppKit / UIKit**: The source's own platform family. These types are Foundation-only and UI-neutral, so AppKit code reads them as the Swift source does: for example a view controller shows `degradedNotice` in a label while `isDegraded` is true.
 - **WinUI 3**: Use C# `record` types with `System.Text.Json` and `[JsonPropertyName]` (or `JsonNamingPolicy.SnakeCaseLower`) for the snake-case keys, and `JsonStringEnumConverter` with `JsonNamingPolicy.CamelCase` (the cases are single lower-case words) for `WorkTrackingAccessibility`. `Math.Clamp(days, 7, 3650)` replaces `BillingLimits.clamp`, and `ids.Distinct().OrderBy(x => x, StringComparer.Ordinal)` replaces the sort and de-duplication (ordinal comparison, not culture). Make `WorkTrackingStatus` bindable by implementing `INotifyPropertyChanged` in a view-model wrapper, and read `isDegraded` as a computed property. Persist the settings keys through `Windows.Storage.ApplicationData.Current.LocalSettings` or the daemon's own table, with the two bundle-id lists stored as JSON strings. Use `UTF8Encoding` bytes for `readFailedRow`. The daemon-side equivalent is an `IHostedService` that owns the settings table.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingModels.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingModels.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -165,11 +173,11 @@ Not applicable: the file makes no log call. `WorkTrackingStatus.lastError` and `
 ## Design Decisions
 
 **Decision**: The initializer stores arguments verbatim, and sorting, de-duplication and clamping happen only in `normalized()`.
-**Rationale**: The doc comment on `normalized()` says "Sorted, de-duplicated ids; retention clamped into range." Callers can build any value, and the layer that persists calls `normalized()` once. This keeps a half-edited form value representable.
+**Rationale**: Callers can build any value, and the layer that persists calls `normalized()` once. This keeps a half-edited form value representable.
 **Approved**: pending
 
 **Decision**: A failed list read replies with one element, `{"work_tracking_read_failed":true}`, instead of an error.
-**Rationale**: The doc comment ties this to review F25 and to `BillingWire.readFailedRow`, so list replies share one failure convention across billing and work tracking.
+**Rationale**: A caller can tell a failed read from an empty list, and billing and work tracking list replies share one failure shape, the same convention as `BillingWire.readFailedRow`.
 **Approved**: pending
 
 **Decision**: `isDegraded` is true for `.unknown` as well as `.denied`.
@@ -177,7 +185,7 @@ Not applicable: the file makes no log call. `WorkTrackingStatus.lastError` and `
 **Approved**: pending
 
 **Decision**: The session id of an app span is `app:` plus the span id, so billing segments from app spans are told apart from other sessions by prefix.
-**Rationale**: The doc comment calls the prefix "the prefix of a billing segment's session id when an app span made it". `spanId(sessionId:)` returns nil for any other session id.
+**Rationale**: Billing sessions come from more than one source, so the prefix is the only marker that a segment came from an app span; `spanId(sessionId:)` returns nil for any other session id.
 **Approved**: pending
 
 ## Compliance
@@ -185,13 +193,14 @@ Not applicable: the file makes no log call. `WorkTrackingStatus.lastError` and `
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | reliability |
 
-The file holds only data shapes and pure functions, and transport, storage and recording sit in sibling types, so separation of concerns passes. `WorkTrackingModelsTests` covers normalization, the session id mapping, degraded status and the snake-case round trip, but not the default value, the wire row or the settings key strings, so the coverage claim is for the behaviors that carry logic. `degradedNotice` is a hardcoded English sentence, which is why the strings check fails. The wire row gives a failed list read a defined, machine-readable reply, so the error-recovery check passes.
+The file holds only data shapes and pure functions, and transport, storage and recording sit in sibling types, so separation of concerns passes. `WorkTrackingModelsTests` covers normalization, the session id mapping, degraded status and the snake-case round trip, but not the default value, the wire row or the settings key strings, so unit-test coverage is partial: vectors 010 to 014 have no test. `degradedNotice` is a hardcoded English sentence, which is why the strings check fails. The wire row gives a failed list read a defined, machine-readable reply, so the error-recovery check passes.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Marked unit-test coverage partial, mapped each settings key member to its string, relabeled the clamp dependency, restated Design Decision rationales without doc-comment citations, dropped RFC keywords from not-applicable edge cases, rewrote the web ordering note, moved the source path out of Platform Notes, and added depends-on and related links. |

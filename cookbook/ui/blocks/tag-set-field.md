@@ -2,11 +2,11 @@
 id: a3645ff4-19c2-4b30-a828-93a56191f656
 title: "TagSetField"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -52,6 +52,9 @@ This component extracts a pattern used consistently across features that manage 
 - **render-chips-from-value**: Component MUST render all items in the `value` array as chips, maintaining their order.
 - **remove-chip-on-delete**: Component MUST remove an item from `value` and call `onChange` with the updated array when the user clicks the remove action on a chip.
 - **empty-chips-row-renders-nothing**: When `value` is empty, `EntitySelectionChips` (given no `emptySelectionLabel`) MUST render nothing at all — no chips-row element in the DOM, not an empty one — so a field with no selection yet costs no height; there is no "No tags yet" label or placeholder row.
+- **pass-state-to-chooser**: Component MUST render the `EntityChooser` in multi-select mode with `selectionPlacement="host"`, passing `options` (the full vocabulary, unfiltered), `value` and `onChange` straight through, and MUST NOT pass `allowCreate` (so the chooser's default of creation enabled applies).
+- **chooser-select-adds-to-value**: When the user accepts an existing label in the EntityChooser, the chooser MUST call `onChange` with that label appended to `value`; an already-selected label is never added twice.
+- **chooser-create-adds-to-value**: When the user types a label that is not in `options` into the EntityChooser's filter field and confirms the create row, the chooser MUST call `onChange` with the new label appended to `value`.
 - **pass-label-to-chips**: Component MUST pass the `label` prop as the `ariaLabel` to `EntitySelectionChips`.
 - **pass-label-to-chooser**: Component MUST pass the `label` prop as the `ariaLabel` to `EntityChooser`.
 - **noun-in-placeholders**: Component MUST build every piece of microcopy from the singular `noun` prop: the Combobox's `ariaLabel` (`Add a ${noun}`) and `placeholder` (`Add a ${noun}…`), and the EntityChooser's `inputLabel` (`Filter or add a ${noun}`) and `placeholder` (`Filter or add a ${noun}…`).
@@ -66,7 +69,7 @@ This component extracts a pattern used consistently across features that manage 
 - **Layout**: Two rows in a vertical flex container with an 8px gap between them (`flex flex-col gap-2`). Top row (`flex w-full items-stretch gap-2`): Combobox and EntityChooser side by side, 8px gap. Bottom row: the chips group, spanning the full field width.
 - **Combobox width**: Flexible (`flex-1`); grows to fill whatever width the EntityChooser leaves.
 - **EntityChooser width**: Fixed at 176px (`w-44`), and it does not shrink (`shrink-0`) — the Combobox, not the chooser, absorbs any extra or missing space.
-- **Chips row**: Spans the full field width; renders nothing visually when `value` is empty.
+- **Chips row**: Spans the full field width; is removed from the DOM when `value` is empty.
 - **Disabled state**: Combobox, EntityChooser, and each chip's remove control render with platform-appropriate disabled styling.
 
 ## States
@@ -77,7 +80,7 @@ This component extracts a pattern used consistently across features that manage 
 | Active (Combobox focused) | Combobox shows focus ring; suggestion dropdown visible if text matches partial options. |
 | Active (EntityChooser opened) | EntityChooser dialog open; Combobox in background. |
 | Item added | Combobox text field cleared; chip appears in chips row. |
-| Item removed | Chip removed from chips row; if last chip, row renders empty. |
+| Item removed | Chip removed from chips row; if last chip, the chips row is removed from the DOM. |
 | Disabled | Both Combobox and EntityChooser render disabled; no interaction possible. |
 
 ## Accessibility
@@ -86,10 +89,10 @@ This component extracts a pattern used consistently across features that manage 
 - **Combobox label**: Set via `ariaLabel={`Add a ${noun}`}` (see **noun-in-placeholders**).
 - **EntityChooser label**: Set via `ariaLabel={label}` (the field-level label) to associate it with the field.
 - **Chips group label**: Set via `ariaLabel={label}` on `EntitySelectionChips` to announce the group.
-- **Keyboard navigation**: Combobox, EntityChooser, and the chips' remove controls are each individually keyboard-accessible; TagSetField adds no keyboard handling of its own. Chip removal's specific keyboard behavior is `EntitySelectionChips`'s own — see [adhsdk.ingredient.ui.components.inputs.entity-chooser](cookbook:79f7ed30-3193-49bc-856b-d7dd01303baa).
-- **Item addition is not announced**: The component does not emit an ARIA live-region announcement when an item is added. Screen-reader users only perceive the change through the Combobox's own text clearing and the new chip entering the DOM — neither of which is an explicit announcement. This is a real gap in the source, not a documented feature.
+- **Keyboard navigation**: Combobox, EntityChooser, and the chips' remove controls are each individually keyboard-accessible; TagSetField adds no keyboard handling of its own. Chip removal's specific keyboard behavior is `EntitySelectionChips`'s own. No separate `EntitySelectionChips` spec exists; the entity-chooser spec covers both components — see [adhsdk.ingredient.ui.components.inputs.entity-chooser](cookbook:79f7ed30-3193-49bc-856b-d7dd01303baa).
+- **Item addition is not announced**: The component does not emit an ARIA live-region announcement when an item is added. Screen-reader users only perceive the change through the Combobox's own text clearing and the new chip entering the DOM — neither of which is an explicit announcement. This is a real gap in the source, and it is accepted for now (see the design decision on live-region announcements).
 - **Item removal is not announced**: Likewise, removing a chip only updates `value` and re-renders the chip list; no live-region announcement accompanies it.
-- **Minimum tap target**: Combobox input and EntityChooser trigger button SHOULD meet platform minimum touch target size (44×44pt on iOS, 48×48dp on Android, typically 44px on web).
+- **Minimum tap target**: Combobox input and EntityChooser trigger button SHOULD meet platform minimum touch target size (44×44pt on iOS, 48×48dp on Android, on web, at least 24×24 CSS px to meet WCAG 2.5.8, and 44×44 CSS px where WCAG 2.5.5 is targeted).
 
 ## Conformance Test Vectors
 
@@ -100,7 +103,7 @@ This component extracts a pattern used consistently across features that manage 
 | tag-set-003 | accept-exact-match-in-combobox | Precondition `options=["foo", "bar"]`, `value=["foo"]`. The Combobox's text becomes exactly "bar" (typed, or the result of clicking a suggestion — both raise the same `onValueChange` event). | `onChange` is called once with `["foo", "bar"]`. |
 | tag-set-004 | clear-combobox-on-acceptance | Precondition `options=["foo", "bar"]`, `value=["foo"]`. Combobox text reaches the exact match "bar" (as in tag-set-003). | Combobox text field is cleared to empty. |
 | tag-set-005 | no-create-on-enter | Precondition `options=["foo", "bar"]`, `value=[]`. User types "newlabel" (not an exact match to any option) and presses Enter. | `onChange` is NOT called; the Combobox text remains "newlabel". |
-| tag-set-006 | render-chips-from-value | `value=["foo", "bar", "baz"]`. | Three chips render in the chips row, in order: "foo", "bar", "baz". |
+| tag-set-006 | render-chips-row, render-chips-from-value | `value=["foo", "bar", "baz"]`. | Three chips render in a row below the control row, in order: "foo", "bar", "baz". |
 | tag-set-007 | remove-chip-on-delete | `value=["foo", "bar", "baz"]`; user clicks remove on chip "bar". | `onChange` is called with `["foo", "baz"]`; the "bar" chip is removed. |
 | tag-set-008 | empty-chips-row-renders-nothing | `value=[]`. | No chips-row element exists in the DOM at all — `EntitySelectionChips` renders nothing. |
 | tag-set-009 | noun-in-placeholders | `noun="label"`. | Combobox `ariaLabel` is "Add a label" and placeholder is "Add a label…"; EntityChooser `inputLabel` is "Filter or add a label" and placeholder is "Filter or add a label…". |
@@ -116,19 +119,21 @@ This component extracts a pattern used consistently across features that manage 
 | tag-set-019 | pass-label-to-chips | `label="Field Caption"`, `value=["foo"]`. | `EntitySelectionChips` receives `ariaLabel="Field Caption"`. |
 | tag-set-020 | pass-label-to-chooser | `label="Field Caption"`. | `EntityChooser` receives `ariaLabel="Field Caption"`. |
 | tag-set-021 | accept-classname-prop | `className="custom-class"`. | The `Field` wrapper's root element includes `custom-class` in its class list. |
-
+| tag-set-022 | pass-state-to-chooser | `options=["foo", "bar"]`, `value=["foo"]`. | `EntityChooser` receives `multiple`, `selectionPlacement="host"`, `options=["foo", "bar"]` (unfiltered), `value=["foo"]` and the field's `onChange`; no `allowCreate` prop is passed. |
+| tag-set-023 | chooser-select-adds-to-value | `options=["foo", "bar"]`, `value=["foo"]`. User opens the chooser and accepts "bar". | `onChange` is called with `["foo", "bar"]`. |
+| tag-set-024 | chooser-create-adds-to-value | `options=["foo"]`, `value=[]`. User opens the chooser, types "diffusion" and presses Enter on the create row. | `onChange` is called with `["diffusion"]`. |
 ## Edge Cases
 
 - **Empty options list**: If `options=[]` and `value=[]`, the component renders with both controls enabled. The Combobox shows no suggestions; the EntityChooser's browse list is empty (`allowCreate` remains available if EntityChooser supports it).
 - **Empty value array**: If `value=[]`, no chips-row element exists in the DOM at all (see **empty-chips-row-renders-nothing**). The component is ready to accept new selections.
 - **Value contains items not in options**: If `value=["custom"]` and `"custom"` is not in `options`, the component displays the chip anyway — the label was created outside this component or by another surface (see **options-as-suggestion**). The Combobox continues to filter `options` normally.
 - **Large value array**: No explicit limit is defined in the source; the component maintains all items and renders all chips. Performance depends on the parent's render optimization and on `EntitySelectionChips`'s own implementation.
-- **Duplicate item attempted via Combobox**: If `value=["foo"]` and the user types "foo" again, **show-filtered-suggestions** has already removed "foo" from the suggestion list, so there is nothing left to match — the duplicate is prevented by omission, not by a separate check.
+- **Duplicate item attempted via Combobox**: If `value=["foo"]` and the user types "foo" again, **show-filtered-suggestions** has already removed "foo" from the suggestion list, so there is nothing left to match — the acceptance check in **accept-exact-match-in-combobox** also tests `!value.includes(next)`, so a duplicate is rejected there as well. The match runs against `options` (not the filtered suggestions); the filter only hides already-selected items from the dropdown. The typed text stays in the Combobox.
 - **Typing a prefix of a longer option**: If `options=["bar", "barn"]`, typing toward "barn" passes through the exact match "bar" on the way — and that match is accepted immediately (see **accept-exact-match-in-combobox**, **case-sensitive-exact-match**, tag-set-016). The component has no notion of "still typing"; any exact match is taken the instant it occurs.
 - **Rapid add/remove cycles**: The component responds to each `onChange` callback; no debouncing or batching is applied. If the parent re-renders with a new `options` list before a Combobox `onValueChange` event fires, the suggestion list is recalculated immediately.
 - **Very long label text**: The component delegates text truncation and overflow behavior to the Combobox and `EntitySelectionChips` sub-components; no truncation is applied at the TagSetField level.
-- **Chip removal while disabled**: `disabled` propagates to `EntitySelectionChips` as well as to the Combobox and EntityChooser (see **pass-disabled-to-controls**). Whether the remove affordance is actually inert when disabled is `EntitySelectionChips`'s own behavior — see [adhsdk.ingredient.ui.components.inputs.entity-chooser](cookbook:79f7ed30-3193-49bc-856b-d7dd01303baa).
-- **Disabled while EntityChooser dialog open**: If `disabled` changes to true while dialog is open, component propagates the change to EntityChooser, which handles state (likely closes or disables the dialog).
+- **Chip removal while disabled**: `disabled` propagates to `EntitySelectionChips` as well as to the Combobox and EntityChooser (see **pass-disabled-to-controls**). Whether the remove affordance is actually inert when disabled is `EntitySelectionChips`'s own behavior. No separate spec exists; the entity-chooser spec covers both components — see [adhsdk.ingredient.ui.components.inputs.entity-chooser](cookbook:79f7ed30-3193-49bc-856b-d7dd01303baa).
+- **Disabled while EntityChooser dialog open**: If `disabled` changes to true while dialog is open, component propagates the change to EntityChooser, which does not close an already-open browser: `disabled` only blocks opening it (the chooser's open handler returns early when disabled). What an already-open dialog does after `disabled` flips is therefore unspecified by this component.
 - **Combobox partial text + blur**: If user enters partial text "fo" in Combobox and blurs the field without selecting a match, text remains; no auto-acceptance occurs.
 - **Concurrency**: Not applicable — this is a single-threaded UI component controlled by React's render loop and event handler serialization.
 - **Offline**: Not applicable — the component manages local state only and makes no network requests.
@@ -145,7 +150,7 @@ Not applicable: TagSetField is a form control within a larger page and is not in
 
 The `label` and `noun` props are host-supplied and already localizable. The remaining microcopy is hardcoded English in the source and is not currently exposed as overridable props or externalized string keys — concatenating `noun` into a fixed English sentence shape (`"Add a ${noun}…"`) also assumes English grammar (e.g. the indefinite article "a"), which will not read correctly in every target language without further work:
 
-| String Key | Default (en) | Context |
+| Proposed String Key | Default (en) | Context |
 |-----------|-------------|---------|
 | `tag-set-field.combobox-aria-label` | `Add a ${noun}` | Combobox `ariaLabel` |
 | `tag-set-field.combobox-placeholder` | `Add a ${noun}…` | Combobox placeholder |
@@ -153,7 +158,7 @@ The `label` and `noun` props are host-supplied and already localizable. The rema
 | `tag-set-field.chooser-placeholder` | `Filter or add a ${noun}…` | EntityChooser placeholder |
 | (from Field) | (parent-provided) | `label` and `hint` are provided by the parent and are not localized by this component. |
 
-The component constructs microcopy dynamically from the `noun` prop and does not maintain a separate string catalog. All other user-facing text originates from parent props.
+The keys above are proposals for a future externalization; no `tag-set-field.*` catalog exists today. The component constructs microcopy dynamically from the `noun` prop and does not maintain a separate string catalog. All other user-facing text originates from parent props.
 
 ## Accessibility Options
 
@@ -181,6 +186,8 @@ Not applicable: Component does not emit debug or error logs. Logging is delegate
 
 ## Platform Notes
 
+The React/Web note below describes the shipped source. The SwiftUI, Compose, AppKit / UIKit and WinUI 3 notes are port guidance for implementations that do not exist in this library yet.
+
 - **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/tag-set-field.tsx` as a functional component. The two-row layout is Tailwind flexbox: `flex flex-col gap-2` for the outer container, `flex w-full items-stretch gap-2` for the control row, `flex-1` on the Combobox, and `w-44 shrink-0` on the EntityChooser. State is local (`text`, the Combobox's in-progress search string); suggestions are computed via `useMemo`. The Combobox's `onValueChange` fires on every keystroke and on every suggestion pick with no distinction between the two; the component treats an exact match against `options.includes(next)` as acceptance regardless of how the text got there (see **accept-exact-match-in-combobox**). Sub-components (`Field`, `Combobox`, `EntityChooser`, `EntitySelectionChips`) are imported from the same UI package and are responsible for their own styling and accessibility.
 
 - **SwiftUI**: Build a `View` with a `TextField` bound to the local search text plus an inline suggestion list or popover shown while text is present — not `.searchable()`, which attaches search chrome to a `List`/`NavigationStack` rather than an inline field. Suggested items are a computed `var` (not `@State`, since they are fully derived from `options` and the current selection) that filters out already-selected values. Add to the selection only when the text exactly matches an offered suggestion (see **accept-exact-match-in-combobox**, **case-sensitive-exact-match**); use plain `String` equality, not a case- or whitespace-insensitive comparison. Present the entity chooser with `.sheet(isPresented:)`. Render selected tags with a custom flow `Layout` (SwiftUI's `Layout` protocol) of removable capsules below the search field. Pass `disabled` via `.disabled()` to the text field, the chooser button, and each chip's remove button.
@@ -195,7 +202,7 @@ Not applicable: Component does not emit debug or error logs. Logging is delegate
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/tag-set-field.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/tag-set-field.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -223,6 +230,9 @@ Not applicable: Component does not emit debug or error logs. Logging is delegate
   **Rationale**: Lets the parent control tag order (e.g. by insertion time, custom ranking, or an external system) (see **maintain-value-order**).
   **Approved**: pending
 
+- **Decision**: Accept, for now, that adding and removing a label is not announced through an ARIA live region; implementations on other platforms SHOULD use their platform's native announcement mechanism where one is cheap to add.
+  **Rationale**: The source emits no announcement and relies on the sub-controls' own roles and labels (see **Item addition is not announced**). Recording the gap as accepted tells implementers it is a known limitation rather than a requirement they missed, while leaving room to close it later.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -239,12 +249,23 @@ Not applicable: Component does not emit debug or error logs. Logging is delegate
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on the source: `ariaLabel` props reach the Combobox, EntityChooser, and EntitySelectionChips directly and each sub-control provides its own keyboard support, but this component adds no ARIA live-region announcement on add/remove, and chip-removal keyboard behavior is EntitySelectionChips's own to confirm; no color, contrast, or type-scale tokens are set at this level (all delegated to Tailwind utility classes and sub-components, which this source cannot confirm); every placeholder and label string is a hardcoded English template literal built from `noun`, not an externalized key; and the fixed 176px EntityChooser width could truncate a longer translated string, which this component does nothing to accommodate; the acceptance-matching logic (`onText`, the `suggestions` filter) is inline in the component rather than extracted apart from rendering (separation-of-concerns partial), and `tagSetField.test.tsx` exercises the autocomplete-acceptance rule, the chooser's add/remove/mint paths, and the layout fix directly (unit-test-coverage passed).
+Evidence for each status, in table order:
 
+- screen-reader-support (partial): `ariaLabel` props reach the Combobox, EntityChooser, and EntitySelectionChips directly, but this component adds no ARIA live-region announcement on add/remove.
+- keyboard-navigable (partial): each sub-control provides its own keyboard support, and chip-removal keyboard behavior is EntitySelectionChips's own to confirm.
+- semantic-markup (passed): grouping and labels come from the shared `Field` and the sub-controls' own roles.
+- touch-target-size (partial): this component sets no target sizes; they come from the sub-components.
+- dynamic-type-support, contrast-ratio (partial): no color, contrast, or type-scale tokens are set at this level (all delegated to Tailwind utility classes and sub-components, which this source cannot confirm).
+- string-externalization (failed): every placeholder and label string is a hardcoded English template literal built from `noun`, not an externalized key.
+- rtl-layout-support (partial): the layout is flexbox and inherits direction from its parent; this source does not confirm RTL behavior.
+- text-expansion-tolerance (partial): the fixed 176px EntityChooser width could truncate a longer translated string, which this component does nothing to accommodate.
+- separation-of-concerns (partial): the acceptance-matching logic (`onText`, the `suggestions` filter) is inline in the component rather than extracted apart from rendering.
+- unit-test-coverage (passed): `tagSetField.test.tsx` exercises the autocomplete-acceptance rule, the chooser's add/remove/mint paths, and the layout fix directly.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added chooser select/create requirements and test vectors, aligned duplicate-check and empty-chips wording with source, marked localization keys as proposed, recorded the live-region gap as a design decision, and split compliance evidence per check. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Renamed empty-chips-row-renders-blank to -renders-nothing; matches source's no-DOM-element behavior. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case, merged the duplicate exact-match/onChange requirements, renamed the empty-chips-row requirement to match its actual behavior, and added a case-sensitivity requirement; corrected the acceptance-trigger wording and test vectors (exact text match, not click/Enter) and added vectors for a prefix-of-a-longer-option, case/whitespace handling, and previously uncovered className/chip-aria-label requirements, each with full input-state preconditions; expanded disabled propagation and noun-based microcopy to cover EntitySelectionChips and the Combobox aria-label; reformatted Design Decisions to the three-line form; replaced the "Not applicable" Compliance section with a table; corrected invalid APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; resolved the "stateless" contradiction with the local Combobox text state; fixed the `{{noun}}` template-variable syntax to `${noun}`; expanded depends-on/related to the composed ingredients and CategoryField; renamed the two malformed edge-case bullets; and switched frontmatter dates to bare ISO form. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |

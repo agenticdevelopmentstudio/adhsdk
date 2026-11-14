@@ -1,5 +1,5 @@
 
-- **Corner radius**: Deferred to Dialog component implementation.
+- **Corner radius**: Deferred to the [adhsdk.ingredient.ui.components.overlays.dialog](cookbook:972be0d0-a9f5-45cd-a23b-c8329410b3d1) component implementation.
 - **Padding**: Input field uses standard form spacing; error text is displayed inline below the input.
 - **Font**: Uses system default input font; error text uses a distinct error-colored variant.
 - **Background**: Dialog content uses light/dark mode theme from Dialog component.

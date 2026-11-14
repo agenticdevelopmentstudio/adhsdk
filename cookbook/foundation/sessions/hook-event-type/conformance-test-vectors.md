@@ -13,12 +13,9 @@
 | hook-event-type-010 | sets-turn-state-notification | `notification_type` of `idle_prompt`, `permission_prompt`, `elicitation_dialog`, `""`, absent, `5` (a number) | false, true, true, true, true, true |
 | hook-event-type-011 | sets-turn-state-session-start | `source` of `compact`, `startup`, absent | false, true, true |
 | hook-event-type-012 | sets-turn-state-default | `setsTurnState("Stop", [:])`, `("SomethingNew", [:])`, `("SomethingNew", ["agent_id": "a1"])` | true, true, false |
-| hook-event-type-013 | sets-turn-state-no-agent-check-for-notification-and-start | `setsTurnState("Notification", ["notification_type": "permission_prompt", "agent_id": "a1"])` | true |
 | hook-event-type-014 | subagent-clock-stop | `subagentClock("SubagentStop", [:])` and with an `agent_id` | -1, -1 |
 | hook-event-type-015 | subagent-clock-activity | `subagentClock("PreToolUse", ["agent_id": "a1"])`, `("SubagentStart", ["agent_id": "a1"])` | 1, 1 |
 | hook-event-type-016 | subagent-clock-stop-failure | `subagentClock("StopFailure", ["agent_id": "a1"])`, and `("StopFailure", [:])` | -1, 0 |
 | hook-event-type-017 | subagent-clock-no-agent | `subagentClock("Stop", [:])`, `("PreToolUse", ["agent_id": ""])`, `("PreToolUse", ["agent_id": 7])` | 0, 0, 0 |
-| hook-event-type-018 | waiting-notification-types, turn-ending-event-types, off-turn-event-types, interrupted-event-type | read the four constants | the exact members and string listed in the requirements |
-| hook-event-type-019 | ambient-creates-not-moves | an ambient event for a session that already exists, ingested by `EventIngestStore` | `last_activity_at` unchanged (test `testAnAmbientEventDoesNotMoveLastActivity`) |
-| hook-event-type-020 | registration-list | `ClaudeHookConfiguration.defaultHookedEvents.count` | 25, so not equal to `allCases` |
+| hook-event-type-018 | waiting-notification-types, turn-ending-event-types, off-turn-event-types, interrupted-event-type | read the four constants | `ambientEventTypes` is `{ConfigChange, StatusLine, InstructionsLoaded}`; `offTurnEventTypes` is `{SubagentStart, SubagentStop, TaskCreated, TaskCompleted, TeammateIdle, PreCompact, PostCompact, FileChanged}`; `waitingNotificationTypes` is `{permission_prompt, elicitation_dialog}`; `turnEndingEventTypes` is `{Stop, StopFailure, SessionEnd}`; `interruptedEventType == "Interrupted"` (untested: no test pins the members) |
 

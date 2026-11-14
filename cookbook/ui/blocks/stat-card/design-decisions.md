@@ -14,7 +14,7 @@ caller into imperative rows.
 
 **Decision**: the `link` maps to an `ExternalLink` in the InfoPanel actions slot.
 **Rationale**: a stat card almost always deep-links into its source tool (PostHog,
-GlitchTip); putting that "{tool} ↗" in the header's actions slot is the established
+GlitchTip); putting that "the tool's name ↗" in the header's actions slot is the established
 dashboard grammar and keeps the affordance out of the figure rows.
 **Approved**: pending
 

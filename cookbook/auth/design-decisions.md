@@ -31,3 +31,22 @@
   **Rationale**: This lets a credential saved by the older, session-agnostic store be read back by the newer session-aware store as a session with no refresh token, and vice versa, without a data migration step when a caller switches between the two.
   **Approved**: pending
 
+- **Decision**: Accept `KeychainSessionStore.save` writing its three keys non-atomically, as known debt.
+  **Rationale**: The Keychain has no multi-item transaction, and a crash between the writes is rare. A mixed old/new triple is repaired the next time a 401 forces a refresh or the user signs in again. Revisit if a mixed triple is ever seen in the field, by writing the refresh token first or storing one combined item.
+  **Approved**: pending
+
+- **Decision**: Treat the discarded `KeychainHelper.set` result as a defect to fix, not as accepted behavior.
+  **Rationale**: `login`, `adopt` and refresh persistence proceed as though the write succeeded, so the user can look signed in and be signed out on the next launch. The failure is only logged. The fix is to make `save` report failure to its caller.
+  **Approved**: pending
+
+- **Decision**: Do not encode "an API-token session has no refresh token" in the `Session` type.
+  **Rationale**: Keeping `Session` a plain pair of credentials and an optional refresh token matches the stored Keychain triple. The rule is enforced where sessions are written (`session-store-adopt-drops-refresh`), not by the type.
+  **Approved**: pending
+
+- **Decision**: The single immediate retry after a refresh is deliberate, so the `retry-with-backoff` check is listed as `failed`.
+  **Rationale**: A refresh token is single-use and cannot be spent repeatedly, so backoff-and-retry would not help. The check describes a different pattern.
+  **Approved**: pending
+
+- **Decision**: No client-side input validation of `email`, `password`, `code` or challenge tokens, so the `input-sanitization` check is listed as `failed`.
+  **Rationale**: The backend is the single point of validation, and a second copy in the client could drift from it. Backend rejections surface as `SessionError` values.
+  **Approved**: pending

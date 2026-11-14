@@ -4,11 +4,11 @@
     "id": "c448c9f4-195d-4625-a49d-22dd5468a914",
     "title": "Gmail REST Client",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -26,7 +26,8 @@
       "rate-limit"
     ],
     "depends-on": [
-      "18871853-95b7-492a-9f1f-417283594824"
+      "18871853-95b7-492a-9f1f-417283594824",
+      "f0543d0b-31fe-4dcc-833e-21ead91bdca5"
     ],
     "related": [
       "cdadfe1d-e4a2-4e2d-96a7-a5eb615a1302"
@@ -35,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3e8a005582b10aba",
+  "synced": "c70dcf1bae7ae3aa",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

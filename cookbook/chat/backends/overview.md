@@ -17,9 +17,9 @@ concrete classes that implement them.
   demos and tests, respectively.
 - **`ShuffleBag.ts`** exports `ShuffleBag`, a general-purpose shuffle-bag
   utility, and `streamTokens`, a token-by-token text-streaming generator —
-  both exported from the package for building custom `ChatBackend`s (in
-  practice, `MockBackend`-style implementations that want to look like they
-  are typing).
+  both exported from the package for building custom `ChatBackend`s and
+  UI that wants to look like it is typing (in practice, `TypingIndicator`
+  uses `ShuffleBag`, and the bitbag feature's backend uses both).
 - **`ChatBackendAdapter.ts`** implements `Backend` by wrapping any
   `ChatBackend`, translating its `ChatStreamEvent`s (or its unary
   `ChatResponse`) into `InboundEvent`s.

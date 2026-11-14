@@ -2,11 +2,11 @@
 id: d6ff2cc3-89c8-4744-b3f4-7262e45a3414
 title: "Help Content"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,15 +34,15 @@ HelpContent is a React context provider and hook system for distributing site-sp
 
 ## Behavioral Requirements
 
-- **provide-context**: HelpContentProvider MUST create and provide a React context containing a SiteHelp dictionary to all descendant components.
+- **provide-context**: HelpContentProvider MUST create and provide a React context containing a `SiteHelp` dictionary (see Configuration) to all descendant components.
 - **accept-help-data**: HelpContentProvider MUST accept a `help` prop of type `Record<string, HelpEntry>`.
 - **pass-children**: HelpContentProvider MUST render its `children` prop unchanged within the context provider.
 - **retrieve-entry-by-id**: useHelpEntry MUST retrieve and return the HelpEntry object for a given id string from the context.
 - **return-undefined-on-missing-id**: useHelpEntry MUST return undefined when the id does not exist in the help dictionary or no HelpContentProvider is mounted.
 - **no-throw-on-missing-entry**: useHelpEntry MUST NOT throw an error when called without a provider or with an unknown id.
-- **exclude-inherited-properties**: useHelpEntry MUST return undefined for an id that is not an own property of the help dictionary, even when that id names an inherited `Object.prototype` member (e.g. `constructor`, `toString`). A suggested implementation is `Object.hasOwn`, rather than a bare index lookup.
+- **exclude-inherited-properties**: useHelpEntry MUST return undefined for an id that is not an own property of the help dictionary, even when that id names an inherited `Object.prototype` member (e.g. `constructor`, `toString`).
 - **support-three-flavors**: The HelpFlavor type MUST support exactly three values: "help", "info", "new".
-- **default-flavor-to-info**: HelpEntry's `flavor` property is optional; when it is absent, a consumer reading the entry MUST treat it as `"info"`. useHelpEntry returns the entry unchanged — a TypeScript interface cannot carry a runtime default — so the default is applied by the consumer, not by the hook.
+- **default-flavor-to-info**: HelpEntry's `flavor` property is optional, and useHelpEntry returns the entry unchanged, so an absent `flavor` stays `undefined`. Consumers of an entry SHOULD treat an absent `flavor` as `"info"`; the hook cannot apply that default (a TypeScript interface carries no runtime default), and this ingredient has no consumer to test it against.
 - **support-optional-title**: HelpEntry MUST accept an optional `title` property; it MAY be omitted.
 - **require-body**: HelpEntry MUST require a `body` property as a non-optional field.
 - **accept-string-body**: HelpEntry `body` MUST be a string, not a ReactNode or JSX element.
@@ -72,27 +72,30 @@ Not applicable: HelpContent is a context provider component that has no direct u
 | help-content-007 | support-three-flavors | Pass `{body: "text", flavor: "help"}` to HelpEntry | Accepted without type error |
 | help-content-008 | support-three-flavors | Pass `{body: "text", flavor: "info"}` to HelpEntry | Accepted without type error |
 | help-content-009 | support-three-flavors | Pass `{body: "text", flavor: "new"}` to HelpEntry | Accepted without type error |
-| help-content-010 | default-flavor-to-info | Retrieve a HelpEntry with no `flavor` property specified | useHelpEntry returns the entry unchanged with `flavor` equal to `undefined`; a consumer reading the entry MUST treat the missing `flavor` as `"info"` |
+| help-content-010 | default-flavor-to-info | Retrieve a HelpEntry with no `flavor` property specified | useHelpEntry returns the entry unchanged with `flavor` equal to `undefined`; a consumer reading the entry SHOULD treat the missing `flavor` as `"info"` |
 | help-content-011 | support-optional-title | Pass HelpEntry without `title` property | Entry is valid and accepted; `title` is `undefined` |
 | help-content-012 | support-optional-title | Pass HelpEntry with `title: "How this works"` | Entry is valid and accepted; `title` is returned unchanged as `"How this works"` |
 | help-content-013 | require-body | Attempt to create HelpEntry without `body` property | Type error; body is required |
-| help-content-014 | accept-string-body | Pass `{body: "plain text"}` | Accepted; JSX or ReactNode is not accepted for `body` |
-| help-content-015 | accept-string-body | Pass `{body: "multiline\ntext"}` | Accepted; JSX or ReactNode is not accepted for `body` |
+| help-content-014 | accept-string-body | Pass `{body: "plain text"}` | Accepted |
+| help-content-015 | accept-string-body | Pass `{body: <b>x</b>}` | Type error; JSX or ReactNode is not accepted for `body` |
+| help-content-016 | support-three-flavors | Pass `{body: "text", flavor: "warning"}` | Type error; only "help", "info" and "new" are accepted |
 
 ## Edge Cases
 
-- **No provider mounted**: useHelpEntry called without a HelpContentProvider ancestor returns undefined; no error is thrown. This is intentional: the first consumer is in the header on every page of every site, so throwing would turn a typo into a white screen.
-- **Prototype pollution prevention**: useHelpEntry("constructor") or other inherited property names return undefined because Object.hasOwn filters to owned properties only, preventing SiteHelp object literals from accidentally returning constructor or other inherited functions.
-- **Empty help dictionary**: HelpContentProvider mounted with empty `help={{}}` causes useHelpEntry to return undefined for any id queried. See **return-undefined-on-missing-id**.
+- **No provider mounted**: useHelpEntry called without a HelpContentProvider ancestor returns undefined; no error is thrown. The reason for not throwing is recorded in Design Decisions.
+- **Inherited-key lookup**: useHelpEntry("constructor") or other inherited property names return undefined. See `#requirements/exclude-inherited-properties`; the lookup method is recorded in Design Decisions.
+- **Empty help dictionary**: HelpContentProvider mounted with empty `help={{}}` causes useHelpEntry to return undefined for any id queried. See `#requirements/return-undefined-on-missing-id`.
 - **Help data prop changes**: HelpContentProvider passes `help` straight through as the context value without memoizing it. If a caller supplies a new object reference on every render (for example, an inline object literal), context consumers re-render on every parent render even though the entries themselves did not change. Callers SHOULD hold `help` in a stable reference (a module-level constant, or a value the caller memoizes) to avoid those unnecessary re-renders; HelpContentProvider itself does not memoize the prop.
 
 ## Configuration
+
+`SiteHelp` is the type `Record<string, HelpEntry>`: a help dictionary keyed by component id.
 
 ### HelpContentProvider props
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| help | `Record<string, HelpEntry>` | — | A dictionary of help entries keyed by component id. Required for HelpContentProvider. |
+| help | `SiteHelp` | — | A dictionary of help entries keyed by component id. Required for HelpContentProvider. |
 
 ### HelpEntry fields
 
@@ -100,7 +103,7 @@ Not applicable: HelpContent is a context provider component that has no direct u
 |-------|------|---------|-------------|
 | title | string | undefined | Optional heading for a help entry. Omitted for entries with no title. |
 | body | string | — | The help text content. Required for every HelpEntry. |
-| flavor | "help" \| "info" \| "new" | "info" | Flavor tag categorizing the type of help content. See **default-flavor-to-info** for where the default is applied. |
+| flavor | "help" \| "info" \| "new" | — | Flavor tag categorizing the type of help content. Absent ⇒ the consumer treats it as `info`; the hook supplies no value. See `#requirements/default-flavor-to-info`. |
 
 ## Deep Linking
 
@@ -130,25 +133,25 @@ Not applicable: HelpContent distributes site configuration help text declared in
 
 ## Logging
 
-The `useHelpEntry` hook does not implement logging or console warnings itself; it returns `undefined` when an entry is not found. Consuming components (such as `<HelpEnabled>`) are responsible for warning to the console when an unknown id is requested, preventing downstream components from rendering popovers with undefined content.
+The `useHelpEntry` hook does not implement logging or console warnings itself; it returns `undefined` when an entry is not found. Consuming components (such as `<HelpEnabled>`, [adhsdk.ingredient.ui.components.overlays.help-enabled](cookbook:fcb8a0a4-2446-46f9-99bb-49b0317529d4)) are responsible for warning to the console when an unknown id is requested, preventing downstream components from rendering popovers with undefined content.
 
 ## Platform Notes
 
-- **SwiftUI**: Implement as a SwiftUI Environment value providing an immutable dictionary of help entries. Create a `HelpEntry` struct mirroring the TypeScript interface with optional `title`, required `String` body, and `HelpFlavor` enum (info, help, new) with info as default. Expose via `@Environment(\.helpEntries) var helpEntries: [String: HelpEntry]`, mounted with `.environment(\.helpEntries, helpDictionary)` at the app root to parallelize the document-level provider placement. A lookup for a missing id (`helpEntries[id]`) naturally returns `nil`, matching **return-undefined-on-missing-id**; a Swift dictionary has no prototype chain, so no inherited-key filtering (see **exclude-inherited-properties**) is needed.
+- **SwiftUI**: Implement as a SwiftUI Environment value providing an immutable dictionary of help entries. Create a `HelpEntry` struct mirroring the TypeScript interface with optional `title`, required `String` body, and `HelpFlavor` enum (info, help, new). Keep `flavor` optional (`HelpFlavor?`) and let the consumer apply `.info`, as on web. Declare the environment key with `defaultValue = [:]`, which makes "no provider ⇒ nil" hold. Expose via `@Environment(\.helpEntries) var helpEntries: [String: HelpEntry]`, mounted with `.environment(\.helpEntries, helpDictionary)` at the app root to mirror the document-level provider placement. A lookup for a missing id (`helpEntries[id]`) naturally returns `nil`, matching `#requirements/return-undefined-on-missing-id`; a Swift dictionary has no prototype chain, so no inherited-key filtering (see `#requirements/exclude-inherited-properties`) is needed.
 
-- **Compose**: Implement as a CompositionLocal providing a `(String) -> HelpEntry?` lookup function backed by an immutable `Map<String, HelpEntry>`. Define `HelpEntry` data class with optional title, required String body, and `HelpFlavor` enum (INFO, HELP, NEW) with INFO default. Create `val LocalHelpEntries = compositionLocalOf<(String) -> HelpEntry?> { { null } }` and mount at the composition root via `CompositionLocalProvider(LocalHelpEntries provides { id -> helpMap[id] }) { ... }`. Consuming components access via `LocalHelpEntries.current?.invoke(id)`. `helpMap[id]` returns `null` for a missing key, matching **return-undefined-on-missing-id**; a Kotlin `Map` has no prototype chain, so no inherited-key filtering (see **exclude-inherited-properties**) is needed.
+- **Compose**: Implement as a CompositionLocal providing a `(String) -> HelpEntry?` lookup function backed by an immutable `Map<String, HelpEntry>`. Define `HelpEntry` data class with optional title, required String body, and `HelpFlavor` enum (INFO, HELP, NEW); keep `flavor` nullable and let the consumer apply INFO, as on web. Create `val LocalHelpEntries = compositionLocalOf<(String) -> HelpEntry?> { { null } }` and mount at the composition root via `CompositionLocalProvider(LocalHelpEntries provides { id -> helpMap[id] }) { ... }`. Consuming components access via `LocalHelpEntries.current(id)`. `helpMap[id]` returns `null` for a missing key, matching `#requirements/return-undefined-on-missing-id`; a Kotlin `Map` has no prototype chain, so no inherited-key filtering (see `#requirements/exclude-inherited-properties`) is needed.
 
 - **React/Web**: HelpContentProvider is a React function component wrapping React.createContext and Context.Provider. useHelpEntry is a React hook using useContext to retrieve data. The component uses "use client" directive and is appropriate for client-side React patterns (Next.js App Router). Mounted at the document level rather than passed to individual components because some sites replace the shared header entirely, so props to the header would miss them.
 
-- **AppKit / UIKit**: Create a `HelpEntry` struct with optional `title: String?`, required `body: String`, and `flavor: HelpFlavor` enum (info, help, new) with info as default. Build an immutable `[String: HelpEntry]` dictionary once and inject it down the view/controller hierarchy — through each view controller's initializer, or via a single dependency container handed to the window's root view controller — rather than a mutable global singleton. A lookup is `entries[id]`, returning `nil` for an unknown id, matching **return-undefined-on-missing-id**.
+- **AppKit / UIKit**: Create a `HelpEntry` struct with optional `title: String?`, required `body: String`, and `flavor: HelpFlavor` enum (info, help, new); keep it optional (`HelpFlavor?`) and let the consumer apply `.info`, as on web. Build an immutable `[String: HelpEntry]` dictionary once and inject it down the view/controller hierarchy — through each view controller's initializer, or via a single dependency container handed to the window's root view controller — rather than a mutable global singleton. A lookup is `entries[id]`, returning `nil` for an unknown id, matching `#requirements/return-undefined-on-missing-id`.
 
-- **WinUI 3**: Create `public class HelpEntry { public string? Title { get; init; } public required string Body { get; init; } public HelpFlavor Flavor { get; init; } = HelpFlavor.Info; }` and `public enum HelpFlavor { Info, Help, New }`. Build an immutable `IReadOnlyDictionary<string, HelpEntry>` once and inject it into the window/page hierarchy — through a constructor parameter, or a value handed down from the window's root — rather than a mutable static singleton. Look up entries with `Entries.TryGetValue(id, out var entry)`, never by indexing: indexing throws `KeyNotFoundException` on a missing key, which would violate **no-throw-on-missing-entry**.
+- **WinUI 3**: Create `public class HelpEntry { public string? Title { get; init; } public required string Body { get; init; } public HelpFlavor? Flavor { get; init; } }` and `public enum HelpFlavor { Info, Help, New }`. Build an immutable `IReadOnlyDictionary<string, HelpEntry>` once and inject it into the window/page hierarchy — through a constructor parameter, or a value handed down from the window's root — rather than a mutable static singleton. Look up entries with `Entries.TryGetValue(id, out var entry)`, never by indexing: indexing throws `KeyNotFoundException` on a missing key, which would violate `#requirements/no-throw-on-missing-entry`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/help-content.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/help-content.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -183,6 +186,7 @@ The `useHelpEntry` hook does not implement logging or console warnings itself; i
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Defined SiteHelp once, made the consumer-applied flavor default a SHOULD with a dash default, renamed the inherited-key edge case, linked HelpEnabled from Logging, replaced the duplicate string-body vector with a JSX type-error vector and added an invalid-flavor vector, and aligned the native notes with the web flavor handling. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; fix default-flavor-to-info to describe the consumer-applied default with a matching vector; correct Object.hasOwnProperty citation to Object.hasOwn; rewrite AppKit/UIKit and WinUI 3 notes for immutable dependency injection and non-throwing lookup, scope SwiftUI guidance to the SwiftUI bullet, and add SwiftUI/Compose parity notes; generalize unsourced consumer counts in Localization and Design Decisions; reformat Design Decisions to Decision/Rationale/Approved; replace the Compliance placeholder with a checks table; split Configuration into provider props and entry fields; drop the untested null-id edge case and replace the duplicate-entry edge case with a prop-memoization note; split folded flavor/body vectors and add optional-title and empty-dictionary vectors; add tags and a related cross-reference to HelpEnabled |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Fix Logging section to reflect actual source behavior; add Platform Notes translation guidance for SwiftUI, Compose, AppKit/UIKit, WinUI 3 |

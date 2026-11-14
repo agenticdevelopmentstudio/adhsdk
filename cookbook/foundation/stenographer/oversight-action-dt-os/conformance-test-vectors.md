@@ -11,6 +11,8 @@ No test beside the source exercises these shapes; the vectors are derived from t
 | oversight-action-dt-os-006 | result-succeeded, result-status | `OversightActResultDTO(findingId: 7, succeeded: true, status: "acted", reason: "")` | each field reads back |
 | oversight-action-dt-os-007 | result-status, result-reason | `OversightActResultDTO(findingId: 7, succeeded: false, status: "resolved", reason: "already resolved")` | `status` is the current status; `reason` is non-empty |
 | oversight-action-dt-os-008 | result-status | `OversightActResultDTO(findingId: 9, succeeded: false, status: "", reason: "not found")` | `status` is empty |
+| oversight-action-dt-os-012 | result-status | `OversightActionService.result(for: .failed("boom"), findingId: 7)` | `succeeded` false, `status` empty, `reason` `boom` |
+| oversight-action-dt-os-013 | result-status | `StenographerHTTPClient.actOnOversightFinding` against a non-2xx reply | `succeeded` false, `status` empty, `reason` the route's `error` text or `HTTP <code>` |
 | oversight-action-dt-os-009 | conformance-protocols | two targets built from identical arguments | they compare equal |
 | oversight-action-dt-os-010 | conformance-protocols | encode then decode a target and a result | the decoded values equal the originals |
 | oversight-action-dt-os-011 | no-validation | `OversightActionTargetDTO(findingId: 1, actionable: true, reason: "x", ...)` | constructs without error |

@@ -4,11 +4,11 @@
     "id": "d431934e-d64c-4dcf-bdab-b7c3465ee71b",
     "title": "Radio Group",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9b70028803b468f6",
+  "synced": "0c60892aa7184e66",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

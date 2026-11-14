@@ -4,11 +4,11 @@
     "id": "81b8d777-f5c2-4a9a-8d5f-bbddf6e4e094",
     "title": "Markdown Spell Check",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1f2cf9a12c0b338e",
+  "synced": "8f8d7090ae9ea4ab",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

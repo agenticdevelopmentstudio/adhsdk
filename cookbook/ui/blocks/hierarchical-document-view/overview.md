@@ -11,7 +11,7 @@ tree; and HTDV stacks *panes* horizontally where HDV nests *one* tree vertically
 arbitrary depth with per-branch collapse. They are different shapes that happen to
 share the word "hierarchical".
 
-**The reader landed in stages**, completed in 1.4.0, then hardened in 1.5.x:
+**The reader landed in stages**, completed in 1.4.0, hardened in 1.5.x, then given its lint-pass and section additions in 1.7.x (Change History has no 1.6.0 entry):
 
 | Component | Status |
 |---|---|
@@ -22,14 +22,20 @@ share the word "hierarchical".
 | `HierarchicalDocumentView` + `DocPage` (the frame) | 1.4.0 |
 | Hardening: shared drawer collapse state, one announced dismiss control, ordered scrollspy, no dangling `aria-controls` | 1.5.0 |
 | Platform Notes restructured per platform | 1.5.1 |
+| Requirements renamed subject-only (1.7.0); Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics and Privacy sections added (1.7.1) | 1.7.x |
 
 The governing constraint for the whole extraction is that **it is a move, not a
 redesign**: every default here byte-matches what the cookbook site rendered before
 it, so a visual delta is a bug rather than a judgement call. Redesign happens later,
 on a green base.
 
-There are exactly **two** recorded exceptions to that byte-match, recorded
-precisely so they are not drift — and only one of the two is visible.
+There are exactly **two** recorded exceptions to that byte-match *in how the page
+looks or lays out*, recorded precisely so they are not drift — and only one of the
+two is visible. The extraction also made a few non-visual markup changes, which
+are named where they occur below and in Change History: the nav's dropped
+`data-autoscroll` attribute and its toggle's added `type="button"` and
+`aria-expanded`, and the view-source disclosure's added `aria-expanded` and
+`aria-controls`. None of them changes a pixel.
 
 **The chevrons.** Every one is lucide's `ChevronRight` rather than the site's
 hand-rolled inline `<svg>` — `ViewSourceDisclosure`'s and the nav section's

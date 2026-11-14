@@ -4,7 +4,7 @@
     "id": "0de17653-f56d-418f-b212-33e9017972cd",
     "title": "Short Text",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "String.shortened(to:) returns the text unchanged or cut to limit-3 characters plus an ellipsis, one 60-character default for every error line.",
+    "summary": "Cuts a string to limit-3 Characters plus `…` (default 60): one shared budget for one-line messages.",
     "platforms": [
       "swift",
       "macos"
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6e85d139e274991b",
+  "synced": "457b475cabe630a1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

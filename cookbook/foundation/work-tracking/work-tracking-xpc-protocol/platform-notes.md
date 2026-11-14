@@ -1,5 +1,5 @@
 
-- **SwiftUI**: Source platform, but there is no view here. The file is `WorkTrackingXPCProtocol.swift` under `Core/WorkTracking`. The protocol is `@objc public`, so every parameter and reply type must be Objective-C representable (`Data`, `String?`, `Int`, `[Data]`).
+- **SwiftUI**: No SwiftUI surface; the protocol is consumed through the client, not from a view. The protocol is `@objc public`, so every parameter and reply type must be Objective-C representable (`Data`, `String?`, `Int`, `[Data]`).
 - **Compose**: Express the four calls as a Kotlin interface of suspend functions returning `ByteArray?` and `List<ByteArray>` over a bound service (AIDL) or a local socket; keep the same snake-case JSON and the empty-bytes and sentinel-row failure conventions.
 - **React/Web**: Four `fetch` routes or WebSocket messages exchanging JSON; the spans route returns an array of objects with the sentinel object `{"work_tracking_read_failed": true}` as the only element on failure. Use a TypeScript type guard for the sentinel.
 - **AppKit / UIKit**: NSXPC is macOS and the iOS-limited app-extension case; build an `NSXPCInterface(with: WorkTrackingXPCProtocol.self)` on the client and export an object conforming to it in the daemon. A daemon composes it with its own protocol by refining both.

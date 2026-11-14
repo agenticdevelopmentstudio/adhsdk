@@ -2,7 +2,7 @@
 id: d15bba09-4574-4fd1-93a0-f7d2cccd04f2
 title: "ThemeStore"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -20,8 +20,13 @@ tags:
   - store
   - import
   - persistence
-depends-on: []
-related: []
+depends-on:
+  - 932449c9-b57f-4e2c-992a-1e27584742b6
+  - 62abe97d-75f7-48c0-83cd-6df02a48515e
+related:
+  - 359491fd-36ee-4e07-9971-76260183f243
+  - 231a7e9a-8c03-44b3-afaf-b71755e05c1d
+  - ccc0d121-4927-4a83-b0e5-337116edebc0
 references: []
 approved-by: ""
 approved-date: ""
@@ -31,9 +36,9 @@ approved-date: ""
 
 ## Overview
 
-`ThemeStore` is the catalog of selectable themes. It concatenates the built-in themes (`BuiltInThemes.all`) with the user's custom themes, which it reads from and writes to an injected `ThemeStorage`. It also holds the mutators that create custom themes: add, update, delete, add-new, duplicate, and three import paths (`.itermcolors`, `ColorTheme` JSON, and a content-sniffing front door), plus `exportJSON`. The same file declares `ThemeImportError`, the user-facing errors the JSON import raises.
+`ThemeStore` is the catalog of selectable themes. It concatenates the built-in themes (`BuiltInThemes.all`, see [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.built-in-themes](cookbook:359491fd-36ee-4e07-9971-76260183f243)) with the user's custom themes, which it reads from and writes to an injected `ThemeStorage` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-storage](cookbook:62abe97d-75f7-48c0-83cd-6df02a48515e)). It also holds the mutators that create custom themes: add, update, delete, add-new, duplicate, and three import paths (`.itermcolors`, `ColorTheme` JSON, and a content-sniffing front door), plus `exportJSON`. The same file declares `ThemeImportError`, the user-facing errors the JSON import raises.
 
-It is Foundation-only and `@MainActor`, with no AppKit and no settings system, so it ships on every platform and is tested against an in-memory storage. The store caches nothing: every read goes to storage. Palette parsing lives in `ITermColorsParser`, the theme value type in `ColorTheme`, and the active-theme selection in `ThemeManager`; this recipe covers only the catalog and its persistence calls.
+It is Foundation-only and `@MainActor`, with no AppKit and no settings system, so it ships on every platform and is tested against an in-memory storage. The store caches nothing: every read goes to storage. Palette parsing lives in [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.i-term-colors-parser](cookbook:231a7e9a-8c03-44b3-afaf-b71755e05c1d), the theme value type in [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.color-theme](cookbook:932449c9-b57f-4e2c-992a-1e27584742b6), the size-scale clamp in [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-typography](cookbook:ccc0d121-4927-4a83-b0e5-337116edebc0), and the active-theme selection in `ThemeManager`; this ingredient covers only the catalog and its persistence calls.
 
 ## Behavioral Requirements
 
@@ -52,8 +57,7 @@ Public surface: `ThemeStore.init(storage:)`, `customThemes`, `allThemes`, `theme
 - **update-noop-unknown**: `update(_:)` MUST do nothing, and MUST NOT write to storage, when no custom theme has the given `id`; this includes every built-in id.
 - **delete-removes-custom**: `delete(id:)` MUST remove every custom theme with the given `id` and write the filtered list to storage.
 - **delete-clears-active-id**: `delete(id:)` MUST set `storage.activeThemeID` to `nil` when it equals the given `id`, so storage never keeps pointing at a removed theme.
-- **delete-builtin-noop**: `delete(id:)` MUST be a no-op when `id` names no custom theme, built-ins included: it writes nothing and leaves `activeThemeID` alone even when that id is the active theme. Covered by `builtInsAreUndeletable` and `deletingActiveBuiltInKeepsIt`.
-- **delete-skips-noop-write**: `delete(id:)` MUST NOT write storage when no custom theme matched, so an unknown or built-in id leaves `customThemes` and `activeThemeID` untouched.
+- **delete-builtin-noop**: `delete(id:)` MUST be a no-op when `id` names no custom theme, built-ins and unknown ids included: it MUST NOT write storage, so `customThemes` and `activeThemeID` stay untouched even when that id is the active theme. Covered by `builtInsAreUndeletable` and `deletingActiveBuiltInKeepsIt`.
 - **add-new-seed**: `addNewTheme(basedOn:name:)` MUST copy the template, defaulting to `BuiltInThemes.solarizedDark`, so the new theme keeps the template's palette, typography and other fields.
 - **add-new-identity**: `addNewTheme` MUST give the copy a fresh `UUID().uuidString` id, set `isBuiltIn` and `isImported` to `false`, set `attribution` to `nil`, and store it through `add(_:)`.
 - **add-new-name**: `addNewTheme` MUST name the copy `uniqueName(name)`, with `name` defaulting to `"New Theme"`.
@@ -87,7 +91,7 @@ Public surface: `ThemeStore.init(storage:)`, `customThemes`, `allThemes`, `theme
 
 Concurrency: the type is `@MainActor`, and every method is synchronous, so each read-modify-write (`add`, `update`, `delete`) runs without interleaving with another store call. A change made to the storage from outside the store (a settings panel, a sync from another device) can land between two calls; the store does not detect it, and the next call reads the new value. `ThemeStorage.onExternalChange` is how a host learns of that, and `ThemeStore` never sets or invokes it.
 
-Persistence: nothing is persisted by the store itself. Custom themes and `activeThemeID` survive a restart only to the extent the injected `ThemeStorage` round-trips them, which the protocol requires of every conformer. Built-ins are never stored, and the ephemeral data is the store instance itself.
+Persistence: nothing is persisted by the store itself. Custom themes and `activeThemeID` survive a restart only to the extent the injected `ThemeStorage` round-trips them, which the protocol requires of every conformer. Built-ins are never stored, and nothing is ephemeral because the store keeps no state of its own.
 
 ## Appearance
 
@@ -113,9 +117,9 @@ Vectors are traced to `ThemeStoreTests` (suite `ThemeStore`) where a test exists
 | theme-store-004 | update-replaces-by-id, update-noop-unknown | `update`: add a theme named Before, rename it to After and call `update`; then call `update` with Dracula renamed Hacked | The custom theme's name is After; Dracula's name stays Dracula |
 | theme-store-005 | delete-removes-custom, delete-builtin-noop | `delete`: add a theme and delete its id; then delete `BuiltInThemes.defaultID` | The custom theme is gone; the built-in default is still found |
 | theme-store-006 | delete-builtin-noop | `builtInsAreUndeletable`: delete the first built-in id | `allThemes` still contains it |
-| theme-store-007 | delete-clears-active-id | Source-derived: storage with `activeThemeID` equal to a custom theme's id; call `delete(id:)` with that id | `storage.activeThemeID` is `nil` and the theme is gone |
-| theme-store-008 | delete-builtin-noop | Source-derived: `activeThemeID` equals `BuiltInThemes.defaultID`; call `delete(id:)` with it | `allThemes` still holds the default; `activeThemeID` is unchanged (`deletingActiveBuiltInKeepsIt`) |
-| theme-store-009 | delete-skips-noop-write | Source-derived: empty custom list; call `delete(id:)` with an unknown id | storage is not written and `activeThemeID` is unchanged |
+| theme-store-007 | delete-clears-active-id | Source-derived (no test): storage with `activeThemeID` equal to a custom theme's id; call `delete(id:)` with that id | `storage.activeThemeID` is `nil` and the theme is gone |
+| theme-store-008 | delete-builtin-noop | `deletingActiveBuiltInKeepsIt`: `activeThemeID` equals the first built-in's id; call `delete(id:)` with it | `activeThemeID` is unchanged and the built-in stays in `allThemes` |
+| theme-store-009 | delete-builtin-noop | Source-derived: empty custom list; call `delete(id:)` with an unknown id | storage is not written and `activeThemeID` is unchanged |
 | theme-store-010 | add-new-seed, add-new-identity, add-new-name | `addNew`: `addNewTheme(name: "Fresh")` | Name is Fresh, `isEditable` is `true`, `customThemes` contains it |
 | theme-store-011 | unique-name, add-new-name | `addNewUniquifiesNames`: call `addNewTheme(name: "New Theme")` three times | Names are New Theme, New Theme 2, New Theme 3 |
 | theme-store-012 | duplicate-copy, duplicate-name, duplicate-unlocks, duplicate-keeps-content | `duplicate`: `duplicate(BuiltInThemes.dracula)` | New id, `isBuiltIn` is `false`, name is Dracula Copy, `ansi` equals Dracula's, stored in `customThemes` |
@@ -138,15 +142,15 @@ Vectors are traced to `ThemeStoreTests` (suite `ThemeStore`) where a test exists
 | theme-store-029 | export-json-format, export-json-roundtrip | Source-derived: `exportJSON` of a theme | The bytes are pretty-printed with keys in sorted order and decode back to an equal `ColorTheme` |
 | theme-store-030 | lookup-by-id, add-unvalidated | Source-derived: `add` a theme carrying a built-in's id | `theme(withID:)` returns the built-in, and `customThemes` holds both entries without error |
 | theme-store-031 | import-iterm-name-not-uniquified | Source-derived: import an `.itermcolors` file whose base name matches an existing theme | The stored name equals the existing name with no numeric suffix |
-| theme-store-032 | storage-injected, main-actor-isolation, no-timeout-no-retry, write-failure-silent | `ThemeStoreTests` construction: `ThemeStore(storage: InMemoryThemeStorage())` on the main actor | Every call completes synchronously and no storage error is surfaced by the store |
+| theme-store-032 | storage-injected, main-actor-isolation, no-timeout-no-retry, write-failure-silent | Structural guarantees, verified by compilation and code inspection: `init(storage:)` is the only initialiser, the type is `@MainActor`, no method suspends, and no setter call is checked | No runtime vector |
 
 ## Edge Cases
 
 - **Empty storage** (MUST): a fresh install has no custom themes; `allThemes` is the built-ins alone and `theme(withID:)` returns `nil` for an unknown id.
 - **Unknown id on update** (MUST): `update(_:)` does nothing and does not write to storage.
-- **Unknown id on delete** (MUST): `delete(id:)` returns without writing storage or touching `activeThemeID`.
+- **Unknown id on delete** (MUST): see `delete-builtin-noop`.
 - **Deleting the active custom theme** (MUST): `activeThemeID` becomes `nil`, so a later import that reuses the id cannot silently become active.
-- **Deleting a built-in id** (MUST): the built-in stays in the catalog; `activeThemeID` is left alone even when it names that built-in.
+- **Deleting a built-in id** (MUST): see `delete-builtin-noop`; the built-in stays in the catalog.
 - **Id collisions through `add`** (SHOULD NOT be relied on): `add` accepts a theme whose id matches a built-in or custom theme; the built-in then shadows it in `theme(withID:)`. The import paths avoid this by assigning fresh ids.
 - **Name collisions** (MUST): `addNewTheme` and `duplicate` add a numeric suffix starting at 2; `add` and the import paths keep the name as given.
 - **Malformed JSON, wrong shape, or missing fields** (MUST): the `JSONDecoder` error propagates and nothing is stored.
@@ -225,7 +229,7 @@ Not applicable: `ThemeStore.swift` makes no log call; failures are thrown to the
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeStore.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeStore.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -263,13 +267,14 @@ Not applicable: `ThemeStore.swift` makes no log call; failures are thrown to the
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
-| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | security |
 
-The store does one job, cataloguing themes over an injected storage, and leaves palette parsing, the theme value, persistence and the active selection to `ITermColorsParser`, `ColorTheme`, `ThemeStorage` and `ThemeManager`, so separation of concerns passes. Unit-test coverage is partial: `ThemeStoreTests` covers add, update, delete, duplicate, add-new, both import routes, content sniffing, validation failures and name disambiguation, but has no test for `delete(id:)` clearing `activeThemeID`, the `sizeScale` clamp, `importJSON(contentsOf:)`, `exportJSON` formatting, a leading-whitespace JSON file, a plist routed through `importTheme`, or the empty-file and unreadable-file paths. Explicit error handling is partial: import and export failures are thrown typed or propagated, but storage writes cannot fail visibly and the active-id side effect of deleting a built-in conflicts with its doc comment. Input sanitization passes for the import boundary, which assigns a fresh id, forces the lock flags, validates the palette and clamps the scale, while the unvalidated `add(_:)` is a documented caller responsibility.
+The store does one job, cataloguing themes over an injected storage, and leaves palette parsing, the theme value, persistence and the active selection to `ITermColorsParser`, `ColorTheme`, `ThemeStorage` and `ThemeManager`, so separation of concerns passes. Unit-test coverage is partial: `ThemeStoreTests` covers add, update, delete, duplicate, add-new, both import routes, content sniffing, validation failures and name disambiguation, but the Source-derived vectors (007, 009, 018, 019 and 025 through 031) have no test; they are the tests still to write. Explicit error handling passes: import and export failures are thrown typed or propagated, and the store cannot see a storage write failure (`write-failure-silent`), which is a documented property of the non-throwing `ThemeStorage` setters rather than a defect in the store. Input sanitization passes for the import boundary, which assigns a fresh id, forces the lock flags, validates the palette and clamps the scale, while the unvalidated `add(_:)` is a documented caller responsibility.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Merged the duplicate delete no-op requirements, re-evaluated explicit error handling as passed, relabelled vector 008 as test-traced, marked vector 032 structural, aligned the test gap list with the Source-derived vectors, fixed the persistence prose and added depends-on, related and in-text links. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Non-finite size scale becomes 1.0; a delete that matches nothing skips the write; claims verified against source |

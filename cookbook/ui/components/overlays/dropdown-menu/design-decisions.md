@@ -6,7 +6,7 @@
 
 **closeOnClick default flips for checkbox, radio, and link items**
 **Decision**: This wrapper inverts Base UI's `closeOnClick` default from `false` to `true` for `CheckboxItem`, `RadioItem`, and `LinkItem`.
-**Rationale**: Base UI's `CheckboxItem` and `RadioItem` default `closeOnClick` to `false` to keep the menu open while toggling state, but this wrapper matches typical dropdown menu behavior where selecting an option closes the menu. `LinkItem` is defaulted to `true` for the same reason: in this codebase, `render={<Link/>}` navigates client-side without unmounting the header, so the menu would remain open after navigation unless explicitly closed. This decision is traced to Base UI's `Menu` documentation and to the code comments on the `DropdownMenuLinkItem` and `DropdownMenuCheckboxItem` wrapper functions.
+**Rationale**: Base UI's `CheckboxItem` and `RadioItem` default `closeOnClick` to `false` to keep the menu open while toggling state, but this wrapper matches typical dropdown menu behavior where selecting an option closes the menu. `LinkItem` is defaulted to `true` for the same reason: when a framework router (`render={<Link/>}`) navigates client-side and keeps the menu mounted across navigation, the menu would remain open after navigation unless explicitly closed. This decision is traced to Base UI's `Menu` documentation and to the code comments on the `DropdownMenuLinkItem` and `DropdownMenuCheckboxItem` wrapper functions.
 **Approved**: pending
 
 **Submenu positioning defaults**
@@ -21,12 +21,7 @@
 
 **Label component not bound to Group**
 **Decision**: `DropdownMenuLabel` is a plain styled `<div>`, not Base UI's `MenuPrimitive.GroupLabel`.
-**Rationale**: `MenuPrimitive.GroupLabel` throws when rendered outside a `Menu.Group`, and this label is also used standalone (e.g. as a heading in the DebugMenu). This flexibility comes at the cost of no built-in ARIA relationship to a group.
-**Approved**: pending
-
-**Reference implementation**
-**Decision**: The `@adh-sdk/ui` package's dropdown-menu component — `DropdownMenu`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuLinkItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioItem`, and related exports, built on Base UI's `Menu` primitive — is the reference implementation for this ingredient's behavioral contract.
-**Rationale**: Citing the package and exported symbol names, rather than a file path or line numbers, keeps the reference stable as the file is refactored. See the Base UI `Menu` documentation in references.
+**Rationale**: `MenuPrimitive.GroupLabel` throws when rendered outside a `Menu.Group`, and this label is also used standalone (e.g. as a heading above a set of items, outside any group). This flexibility comes at the cost of no built-in ARIA relationship to a group.
 **Approved**: pending
 
 **Long item text truncates**

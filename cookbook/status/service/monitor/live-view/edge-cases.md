@@ -5,5 +5,5 @@
 - **Error states**: Not applicable — no function performs I/O, throws or catches. Unparseable dates are handled by value: `snapshotFreshness` reads fresh (a banner is never raised on NaN), `deployUnconfirmed` fails closed (not believed), and `selectStaleMonitors` skips the row.
 - **Offline or disconnected state**: Not applicable — the module touches no network. Its freshness verdict is the signal that the data has stopped moving when a poller or the SSE stream stops; the data clock lags the re-stamped read clock.
 - **Unparseable clock asymmetry**: An unparseable data or read clock reads fresh, yet an unparseable deploy clock reads unconfirmed; this opposite direction is deliberate in the source comments (a banner must not rise on NaN, a progress claim must not rest on one) — MUST.
-- **Display older than the snapshot**: A client may keep showing a snapshot after the stream stalls; `deployUnconfirmedAt` is the deadline it ages on — SHOULD be used by the display; this module only publishes it.
+- **Display older than the snapshot**: A client may keep showing a snapshot after the stream stalls; `deployUnconfirmedAt` is the deadline it can age on; this module only publishes the deadline and places no requirement on the display.
 

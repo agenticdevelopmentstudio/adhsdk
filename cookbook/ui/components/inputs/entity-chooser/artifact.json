@@ -4,11 +4,11 @@
     "id": "79f7ed30-3193-49bc-856b-d7dd01303baa",
     "title": "EntityChooser",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9aee111174d56b88",
+  "synced": "15108b37086cc1cd",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

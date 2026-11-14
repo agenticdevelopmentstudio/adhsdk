@@ -26,7 +26,8 @@
 - **message-footer**: When the display has a message, the section footer MUST be that message, whether or not a user is shown.
 - **summary-footer**: When there is no message, no shown user, and the account's summary is not empty, the section footer MUST be the account's summary.
 - **no-footer**: In every other case the section footer MUST be absent.
-- **open-url-injection**: The screen SHOULD accept an open-URL closure at creation so tests and hosts can intercept the signup page; the default MUST hand the URL to the system.
+- **open-url-injection**: The screen MUST accept an open-URL closure at creation so tests and hosts can intercept the signup page.
+- **open-url-default**: When no open-URL closure is given, the screen MUST hand the signup URL to the system.
 - **selection-style**: Rows MUST use no selection style except Login, Signup and Logout, which use the default selection style.
 - **accessibility-identifiers**: The table and each row type MUST carry the identifiers listed under Accessibility.
 - **no-coder-init**: Creating the screen from a decoder MUST be unavailable and, if called, MUST terminate with the message "init(coder:) is not supported".

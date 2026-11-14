@@ -2,11 +2,11 @@
 id: c57b1aed-ef38-4803-b38a-2d7e0aeced5f
 title: "SearchFilterBar"
 type: ingredient
-version: 1.3.2
+version: 1.3.3
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,9 +39,7 @@ axis is **fully controlled** by the caller (value + `onChange`), and the option
 sets for each select are supplied by the caller — so narrowing the list (which
 typically refetches the rows) never empties a dropdown of its own options.
 
-It is the single home for the "search + filters above a list" pattern. First
-consumer: the hub `/research` document list (`ResearchFilters` is a thin domain
-adapter that maps its `{ q, category, tag }` state onto this component).
+It is the single home for the "search + filters above a list" pattern. A consuming feature typically adds a thin domain adapter that maps its own filter state onto this component.
 
 ## Behavioral Requirements
 
@@ -76,10 +74,12 @@ adapter that maps its `{ q, category, tag }` state onto this component).
   under the search field by default (`orientation="stacked"`), and MUST lay the
   field and the row out as one wrapping line when `orientation="inline"`, the
   search field taking the free space with a minimum width of its own.
-- **autofill-form-scope**: The SearchFilterBar MAY root itself on a
-  `<form>` instead of a `<div>` when `asForm` is set, carrying `role="search"`
+- **autofill-form-scope**: The SearchFilterBar MUST root itself on a
+  `<form>` instead of a `<div>` when `asForm` is true, carrying `role="search"`
   onto that element and cancelling its `submit`. It MUST default to the `<div>`.
-
+- **search-field-placeholder**: The SearchFilterBar MUST show `search.placeholder` as the search field's placeholder when the field is empty.
+- **search-field-keydown**: The SearchFilterBar MUST pass key events on the search field to `search.onKeyDown`, when given, in addition to the live `search.onChange`.
+- **landmark-label**: The SearchFilterBar MUST expose its `aria-label` prop as the accessible name of the `role="search"` root, and MUST apply `className` to that root.
 ## Appearance
 
 ```
@@ -113,9 +113,9 @@ role="search"
 | State | Appearance change |
 |---|---|
 | Default | Search empty (placeholder shown); each select on its all-pass option |
-| Search focused | `Input` gold focus ring (`focus-visible:ring-apt-gold/25`) |
+| Search focused | Inherited `Input` focus ring ([adhsdk.ingredient.ui.components.inputs.input](cookbook:0f5b7167-b375-4f44-977b-566f720a453d)) |
 | Filter active | Select shows the chosen option's label |
-| Filter focused | `Select` gold focus ring |
+| Filter focused | Inherited `Select` focus ring |
 | No filters configured | Only the search field renders; no filter row |
 | Disabled (per-primitive) | Inherited `Input`/`Select` disabled styling if the caller disables the underlying controls |
 
@@ -139,7 +139,7 @@ role="search"
 |---|---|---|---|
 | T1 | search-region-wrapper | Render with only `search` | A single `role="search"` element wraps the controls |
 | T2 | search-field-control, search-field-label | `search.label="Search documents"`; type `agents` | `getByRole("searchbox", { name: "Search documents" })` resolves; `onChange("agents")` fires |
-| T3 | filter-row-omitted-when-empty | Render with no `filters` | No `combobox`/select is present |
+| T3 | filter-row-omitted-when-empty | Render with no `filters` | No `combobox`/select is present, and the root has exactly one child (the search field wrapper) |
 | T4 | one-select-per-filter, filter-options-list | Two filters (`category` opts `[Agents, Retrieval]`, `tag` opts `[rag]`) | Two labelled selects; `category` lists `All categories`, `Agents`, `Retrieval` (in order); `tag` lists `All tags`, `rag` |
 | T5 | filter-value-sync | `category.value="Agents"`; select `Retrieval` | Select shows `Agents` initially; `category.onChange("Retrieval")` fires |
 | T6 | filter-value-sync | `category.value="Agents"`; choose `All categories` | `category.onChange("")` fires |
@@ -149,7 +149,9 @@ role="search"
 | T10 | orientation-layout | Render default, then rerender `orientation="inline"` | Root has `flex-col` by default; inline drops it for `flex-wrap`, and the field wrapper carries `flex-1 min-w-48` |
 | T11 | autofill-form-scope | Render default, then rerender `asForm` | Root is a `DIV`, then a `FORM`; exactly one `role="search"` either way; `fireEvent.submit` on the form reports the event cancelled |
 | T12 | filter-value-sync | `category.value` set to a value absent from `category.options` (e.g. after the option universe changed) | The select's displayed option is the all-pass entry (index 0) even though `category.value` is still the stale, unmatched string; no `onChange` fires until the user picks something |
-
+| T13 | search-field-placeholder | `search.placeholder="Search documents…"`, empty `search.value` | The search input's placeholder is `Search documents…` |
+| T14 | search-field-keydown | `search.onKeyDown` given; press Enter in the search field | `onKeyDown` receives the Enter event; typing still calls `search.onChange` |
+| T15 | landmark-label | `aria-label="Document search"`, `className="extra"` | The `role="search"` root has accessible name `Document search` and carries the class `extra` |
 ## Edge Cases
 
 - **Empty option list**: a filter with `options: []` still renders its all-pass
@@ -160,7 +162,7 @@ role="search"
   while `value` (and the caller's state) still holds the stale, unmatched string.
   This is misleading: the control *looks* reset to "all", but the caller's filter
   is still narrowed by the old value. The caller owns keeping `value` within the
-  option universe (e.g. the research pane sources options from the *unfiltered*
+  option universe (e.g. a consuming list sources options from the *unfiltered*
   document universe for this reason). See **T12**.
 - **Search-only bar**: omit `filters` (or pass `[]`) for a bare search field.
 - **Duplicate option strings**: the React key for each `<option>` is `value` (not
@@ -235,7 +237,7 @@ Not applicable: this is a reusable UI primitive with no feature-flag concerns. F
 
 ## Analytics
 
-Not applicable: this is a presentational component that emits no telemetry of its own — see **Logging** for the same reasoning. Searches and filter changes are observed and tracked by the consuming feature (e.g., the research pane's event tracking), not by the bar itself.
+Not applicable: this is a presentational component that emits no telemetry of its own — see **Logging** for the same reasoning. Searches and filter changes are observed and tracked by the consuming feature (for example, its own event tracking), not by the bar itself.
 
 ## Privacy
 
@@ -244,15 +246,14 @@ Not applicable: the component stores no data, collects no telemetry, and transmi
 ## Logging
 
 This ingredient is presentational and emits no structured log events. Searches and
-filter changes are observed by the consuming feature (e.g. the research pane's list
+filter changes are observed by the consuming feature (for example, its list
 fetch + telemetry), not by the bar.
 
 ## Platform Notes
 
 - **React / Web (TypeScript):** Component at
   `packages/web/packages/ui/src/components/search-filter-bar.tsx`, composing the shared
-  `Input` and `Select` primitives. Demoed in `ui-showcase` (Forms group). The hub
-  `ResearchFilters` adapts its `{ q, category, tag }` `FilterState` onto it.
+  `Input` and `Select` primitives. Demoed in `ui-showcase` (Forms group). A consuming feature typically adapts its own filter state onto it.
 - **iOS / Safari:** a search field with no `<form>` ancestor is scoped for
   autofill against the whole document, so on a page that also carries
   contact-shaped content iOS can offer "AutoFill Contact" over the search box.
@@ -260,7 +261,7 @@ fetch + telemetry), not by the bar.
   applies (`autocomplete="off"` plus the password-manager opt-outs) is not
   sufficient on its own.
 - **SwiftUI:** Build the search field from a `TextField` bound to `search.value`/`search.onChange`, with a leading `Image(systemName: "magnifyingglass")` overlay for the icon — SwiftUI has no `SearchField` view, and `.searchScopes` is for scope tokens, not for binding query text (reach for `.searchable` instead of a plain field only when the search belongs in a navigation bar's built-in search UI, not inline like this bar). Filters always render as one `Picker` per axis in a single `HStack`, each with `.pickerStyle(.menu)` for the same compact dropdown a native `<select>` gives on the web, its selection bound to the filter's `value`/`onChange` and the all-pass entry as the `.tag("")` case. `orientation` governs the bar, not the filter row: `stacked` (default) wraps the search field and the filter `HStack` in an outer `VStack`; `inline` instead lets the field and the filter `HStack` share one row, with the field taking the slack via `.frame(minWidth:)`. `asForm` has no native SwiftUI equivalent — native ports ignore this property.
-- **Compose:** Build from `OutlinedTextField` for the search input and `ExposedDropdownMenuBox` per filter in a horizontal row (use `Row` with `horizontalArrangement = Arrangement.spacedBy(8.dp)` for `orientation="inline"`, or `Column` for `orientation="stacked"`). The search field is fully controlled by `value`/`onValueChange` with a leading search icon (`Icons.Default.Search`) rendered via a `leadingIcon` lambda. Each dropdown's all-pass option is the default selection (value `""`). The `asForm` property wraps the layout in a `Column` — no form submission exists in Compose; treat it as a composition point for caller validation logic.
+- **Compose:** Build from `OutlinedTextField` for the search input and `ExposedDropdownMenuBox` per filter in a horizontal row (filters always go in a `Row` with `horizontalArrangement = Arrangement.spacedBy(8.dp)`; `orientation` governs the outer arrangement instead — `stacked` (default) puts the search field and that filter `Row` in a `Column`, `inline` puts them in a `FlowRow`). The search field is fully controlled by `value`/`onValueChange` with a leading search icon (`Icons.Default.Search`) rendered via a `leadingIcon` lambda. Each dropdown's all-pass option is the default selection (value `""`). `asForm` has no native Compose equivalent — native ports ignore this property.
 - **AppKit / UIKit:** Build the search field from `NSSearchField` (macOS) or `UISearchBar` (iOS); on iOS, text changes arrive through the `UISearchBarDelegate` method `searchBar(_:textDidChange:)`, not target-action. Each filter is `NSPopUpButton` (macOS) — on iOS, `UIPickerView` is too heavy for a compact filter dropdown; use a `UIButton` with a `UIMenu` (`showsMenuAsPrimaryAction = true`) instead, or `UISegmentedControl` for filters with few options. Filters always sit in one horizontal `NSStackView`/`UIStackView`; `orientation` governs the outer arrangement instead — `stacked` (default) puts that filter stack below the search field in a vertical outer stack, `inline` puts the two side by side in a horizontal outer stack that wraps. `asForm` has no native AppKit/UIKit equivalent — the autofill scoping it fixes is a web/`<form>`-specific quirk — so native ports ignore this property.
 - **WinUI 3:** Build the search field from a `TextBox` (or `AutoSuggestBox`) with `PlaceholderText` bound to `search.placeholder`, two-way binding to `search.value`, and a `TextChanged` handler calling `search.onChange` directly — the component has no built-in debounce, and native ports need none either. Each filter is a `ComboBox` with items bound to the options list, the all-pass entry prepended manually, two-way binding to `value`, and a `SelectionChanged` handler calling `onChange`. Filters always sit in one horizontal `StackPanel`; `orientation` governs the outer arrangement instead — `stacked` (default) puts that filter `StackPanel` below the search box in a vertical outer `StackPanel`, `inline` puts the two side by side in a horizontal outer arrangement that wraps. `asForm` has no native WinUI 3 equivalent — `Microsoft.UI.Xaml` (the WinUI 3 namespace; `Windows.UI.Xaml` is UWP's) has no form/autofill-scoping construct to map it to — so native ports ignore this property.
 
@@ -268,7 +269,7 @@ fetch + telemetry), not by the bar.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/search-filter-bar.tsx` | confirmed (1.3.2) |
+| web | `packages/web/packages/ui/src/components/search-filter-bar.tsx` | confirmed (1.3.3) |
 
 ## Design Decisions
 
@@ -310,7 +311,7 @@ fetch + telemetry), not by the bar.
   **Rationale**: dry / consistency — the bar inherits the standard
   focus-ring and token treatment, so it matches every other field on the platform.
   **Approved**: pending
-- **Decision**: The filter row is omitted entirely when `filters` is empty.
+- **Decision**: The filter row is omitted entirely when there are no `filters` and no renderable `children`.
   **Rationale**: principle-of-least-astonishment — a search-only bar shows no empty
   control row.
   **Approved**: pending
@@ -362,3 +363,4 @@ attributes with meaningful assertions.
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: corrected `depends-on` to the Input/Select recipes; added `Approved: pending` to every Design Decision; rebuilt Compliance as linked, catalog-derived checks; fixed wrong native APIs and the orientation mapping in the SwiftUI, AppKit/UIKit, and WinUI 3 platform notes and removed their fabricated `asForm`/debounce claims; corrected the stale-selected-value and duplicate-option-strings edge cases with a new conformance vector; fixed the Filter-active state description; and collapsed the duplicated Analytics/Logging text. |
 | 1.3.1 | 2026-09-24 | Mike Fullerton | Renamed `may-scope-autofill-with-a-form` to the subject-only `autofill-form-scope`. |
 | 1.3.2 | 2026-09-25 | Mike Fullerton | Reshaped Design Decisions into `**Decision**`/`**Rationale**`/`**Approved**` line triples. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.3.3 | 2026-11-14 | Mike Fullerton | Made the focus-ring and filter-row wording match source, made asForm a MUST, removed consumer-specific names, added placeholder, keydown and landmark requirements with vectors T13-T15, strengthened T3 and aligned Compose notes. |

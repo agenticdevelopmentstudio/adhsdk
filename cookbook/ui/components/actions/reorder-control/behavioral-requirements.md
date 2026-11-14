@@ -6,11 +6,11 @@
 - **boundary-buttons-persist**: Component MUST NOT remove buttons when canMoveUp or canMoveDown is false; it MUST display them in disabled state.
 - **arrow-icons**: Component MUST use arrow-shaped icons to represent move direction (up and down), not chevrons or other shapes.
 - **group-role**: Component MUST wrap both buttons in a container with role="group" to semantically group them.
-- **group-aria-label**: Component MUST provide an aria-label to the group container that includes the text "Reorder" and optionally the subject.
-- **button-aria-labels**: Each button MUST have an aria-label describing the action ("Move up" or "Move down") and optionally the subject.
+- **group-aria-label**: Component MUST provide an aria-label to the group container: `Reorder` when there is no subject, otherwise `Reorder ${subject}` (one space between).
+- **button-aria-labels**: Each button MUST have an aria-label describing the action: `Move up` or `Move down` when there is no subject, otherwise `Move up ${subject}` or `Move down ${subject}` (one space between).
 - **button-titles**: Each button MUST have a title attribute matching its aria-label for tooltip display.
-- **custom-subject-support**: Component SHOULD append a subject string to button and group labels when the subject prop is provided.
-- **busy-state-appearance**: When busy is true, component MUST reduce opacity to 60% on the outer container and set aria-disabled on both buttons; the group container itself gets aria-busy (see **group-aria-busy**), not aria-disabled.
+- **custom-subject-support**: Component MUST append a space and the subject string to the button and group labels when the subject prop is provided, as in `Move up Work item`.
+- **busy-state-appearance**: When busy is true, component MUST reduce opacity to 60% on the outer container. The ARIA rules for busy are in **aria-disabled-while-busy** and **group-aria-busy**.
 - **aria-disabled-while-busy**: Component MUST use aria-disabled (not the disabled HTML attribute) when busy to preserve keyboard focus.
 - **busy-click-guard**: Click handlers for onMoveUp and onMoveDown MUST NOT fire when busy is true, even if the button is clicked.
 - **decorative-icons**: Component MUST mark arrow icons as aria-hidden="true" because they are decorative (the aria-label conveys the meaning).
@@ -21,4 +21,4 @@
 - **empty-subject-no-suffix**: When subject is omitted or an empty string, component MUST render button and group labels without a trailing space or subject suffix (e.g., "Move up", not "Move up ").
 - **both-boundaries-disabled**: When both canMoveUp and canMoveDown are false, component MUST render both buttons disabled and MUST NOT error.
 - **busy-to-idle-recovery**: When busy transitions from true to false, component MUST restore full opacity and interactivity, and MUST no longer set aria-disabled or aria-busy.
-
+- **subject-not-truncated**: Component MUST include the full subject text in every label it builds, however long; it MUST NOT truncate or wrap it. Truncation is the consuming component's job if it wants one.

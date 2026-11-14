@@ -1,0 +1,8 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
+| 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; corrected the title-text token to the raw capability key instead of the letter; made aria-pressed's relationship to the displayed `on` state explicit with a new test vector; corrected clamp-emitted-values to describe the actual (per-key, not whole-object) clamp scope and rewrote its test vector to check the onChange payload; merged the redundant blocked-capability-visual requirement into enforce-parent-ceiling and changed its test vector to assert observable state instead of a CSS opacity value; converted Compliance and Localization to the required table formats; reformatted Design Decisions into Decision/Rationale/Approved form and resolved the tap-target-size and reduced-motion gaps into it, keeping one review marker per gap in Accessibility Options; rewrote Appearance in px values and moved Tailwind class names into the React/Web platform note; named a single native toggle control per platform in Platform Notes; corrected the claim that opacity/cursor communicate unavailability to assistive technology; and added conformance test vectors for the previously untested edge cases. |
+| 1.0.1 | 2026-09-22 | Mike Fullerton | Revision pass: clarify Reduce Motion gap, fold Compliance concerns into earlier sections |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

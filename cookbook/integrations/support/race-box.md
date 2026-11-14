@@ -2,11 +2,11 @@
 id: 667825e5-d557-4410-b54e-29dcf98ca930
 title: "RaceBox"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,11 +32,11 @@ approved-date: ""
 
 ## Overview
 
-`RaceBox<T>` is a small internal class in `Integrations/Support/RaceBox.swift`. Several tasks race to settle it with a `Result<T, Error>`; the first call to `finish` wins and every later call is ignored. Any number of callers can wait on `value()`, and all of them are released the moment the box settles.
+`RaceBox<T>` is a small internal class in `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/RaceBox.swift`. Several tasks race to settle it with a `Result<T, Error>`; the first call to `finish` wins and every later call is ignored. Any number of callers can wait on `value()`, and all of them are released the moment the box settles.
 
 The source comment gives the reason it exists: unlike a task group, a waiter is released as soon as the box settles, even if the losing tasks never finish. The integration code uses it to put a deadline around work that may ignore cancellation: `withSignInDeadline` (Google sign-in) and `MailIntegrationService.stop(timeout:)` each race the work, a timer and, for sign-in, the caller's cancellation.
 
-The type is generic over `T: Sendable`, is marked `@unchecked Sendable`, and guards its two pieces of mutable state (the settled result and the waiter list) with one `NSLock`. It does no I/O, starts no task, and logs nothing. It imports `Foundation` only and is internal to the SDK module. A Swift actor could replace the `NSLock` and the `@unchecked Sendable`, but `finish` would then be async; the synchronous `finish` is what lets a cancellation handler call it, so the source keeps the lock.
+The type is generic over `T: Sendable`, is marked `@unchecked Sendable`, and guards its two pieces of mutable state (the settled result and the waiter list) with one `NSLock`. It does no I/O, starts no task, and logs nothing. It imports `Foundation` only and is internal to the SDK module.
 
 ## Behavioral Requirements
 
@@ -53,7 +53,7 @@ The type is generic over `T: Sendable`, is marked `@unchecked Sendable`, and gua
 - **later-finish-ignored**: A call to `finish` on a box that is already settled MUST return `false` and MUST NOT change the stored outcome.
 - **winner-decided-atomically**: Checking whether the box is settled and storing the outcome MUST be one atomic step, so exactly one of any set of concurrent `finish` calls returns `true`.
 - **failure-is-an-outcome**: `finish(.failure(error))` MUST settle the box the same way a success does; a failure counts as the winning call.
-- **release-all-waiters**: The winning `finish` MUST resume every waiter that was suspended in `value()` with the winning outcome, in the order they were added.
+- **release-all-waiters**: The winning `finish` MUST resume every waiter that was suspended in `value()` with the winning outcome; the source iterates its waiter list in insertion order, which a caller cannot observe because resuming a continuation only schedules the task.
 - **waiters-cleared**: The winning `finish` MUST empty the waiter list when it settles the box, so no continuation is resumed twice.
 - **resume-outside-lock**: The winning `finish` MUST resume waiters after the lock is released, so a resumed continuation can call back into the box without deadlocking.
 - **loser-resumes-nothing**: A losing `finish` MUST NOT resume any waiter.
@@ -77,7 +77,7 @@ The type is generic over `T: Sendable`, is marked `@unchecked Sendable`, and gua
 - **one-shot**: A settled box MUST stay settled; there is no reset, and the outcome never changes.
 - **losers-not-awaited**: The box MUST NOT wait for, track or cancel the tasks that lose the race; releasing waiters depends only on a winning `finish`.
 - **value-not-cancellable**: `value()` itself MUST NOT react to cancellation of the calling task; the source registers a checked continuation and nothing else, so a caller that wants cancellation to end the wait must race a `finish` of its own (as `withSignInDeadline` does with `withTaskCancellationHandler`).
-- **never-settled-never-returns**: If no `finish` is ever called, `value()` suspends for as long as the box lives. The box has no timeout of its own; the owner supplies one by racing a timer.
+- **never-settled-never-returns**: `value()` MUST remain suspended until a `finish` wins, and the box MUST NOT impose a timeout of its own; the owner supplies one by racing a timer.
 
 ## Appearance
 
@@ -104,19 +104,20 @@ The source has no `RaceBox` test file. The vectors come from the code and its do
 | race-box-005 | value-after-settle, value-repeatable | Settled box holding `.success(5)`; call `value()` twice | Both calls return `5` without waiting for a `finish` |
 | race-box-006 | winner-decided-atomically | New box; 100 tasks each call `finish` with a distinct value at once | Exactly one call returns `true`; `value()` returns the value of that caller |
 | race-box-007 | value-register-atomic | New box; one task calls `value()` while another calls `finish` at the same moment, repeated many times | Every `value()` returns the winning outcome; none hangs and none crashes with a double resume |
-| race-box-008 | losers-not-awaited, release-all-waiters | A box raced by a work task that never returns and a timer that calls `finish(.failure(timeout))`. Source test: `deadlineIsPromptEvenWhenTheOperationIgnoresCancellation` in `GoogleOAuthTests.swift` | `value()` throws the timeout error promptly; the work task is still suspended |
+| race-box-008 | losers-not-awaited, release-all-waiters | A box raced by a work task that never returns and a timer that calls `finish(.failure(timeout))`. Source test: `deadlineIsPromptEvenWhenTheOperationIgnoresCancellation` in `GoogleOAuthTests.swift` | `value()` throws the timeout error within 2 times the timeout and under 5 s; the work task is still suspended |
 | race-box-009 | first-finish-wins | Work and timer both race; the work finishes first with `.success(42)`. Source test: `deadlineReturnsOperationResult` | `value()` returns `42`; a later `finish` (from the timer, if it fires before the caller's `defer` cancels it) returns `false` and cancels nothing |
 | race-box-010 | never-settled-never-returns | New box; a task awaits `value()`; no `finish` is ever called | The task is still suspended and `isFinished == false` after 200 ms; a later `finish` releases it |
 | race-box-011 | value-not-cancellable | New box; a task awaits `value()` and is cancelled; no `finish` is called | The task is still suspended and `isFinished == false` after 200 ms; a later `finish` releases it |
-| race-box-012 | resume-outside-lock | A waiter's continuation calls `isFinished` and `value()` as soon as it resumes | Both return at once; no deadlock |
+| race-box-012 | resume-outside-lock | Verified by code review, not a runnable vector: a checked continuation never runs inline inside `finish`, so a test cannot catch a resume made inside the lock. Review that `finish` leaves `lock.withLock` before it resumes any waiter | The resume loop is outside the lock |
 | race-box-013 | first-finish-wins, losers-not-awaited | `MailIntegrationService.stop(timeout: .milliseconds(200))` with a sync that ignores cancellation and outlives the timeout. Both racers (the stop waiter and the stop timer) settle with `.success(())`, not a failure, unlike race-box-008. Source test: the stop-bound test in `MailIntegrationServiceTests.swift` (`stopGivesUpOnASyncThatIgnoresCancellation`) | `stop` returns after at least 150 ms and under 5 s, not when the sync ends |
+| race-box-014 | waiters-cleared, cross-task-use | New box; start 50 tasks each awaiting `value()` while 50 other tasks call `finish` at once, then read `value()` again from 10 more tasks | Every `value()` returns the same winning outcome; none resumes twice or hangs; exactly one `finish` returned `true` |
 
 ## Edge Cases
 
 - **Finish before any waiter**: `finish` on a box with no waiters MUST settle it and return `true`; a later `value()` returns the stored outcome (`value-after-settle`).
 - **Finish with a `CancellationError`**: The box stores whatever `Error` it is given and does not interpret it; callers map cancellation to their own error before calling `finish` (`withSignInDeadline` does). The box MUST NOT rewrite the error.
 - **Two finishes at the same instant**: Exactly one MUST win; the lock serialises them, and lock order alone decides which. The loser MUST get `false`.
-- **Waiter added while `finish` is resuming others**: A `value()` call that takes the lock after the winner stored the result MUST see the result and resume itself; one that took it before is in the list the winner resumes. Neither MUST be resumed twice or missed (`value-register-atomic`).
+- **Waiter added while `finish` is resuming others**: A `value()` call that takes the lock after the winner stored the result MUST see the result and resume itself; one that took it before is in the list the winner resumes. Each MUST be resumed exactly once (`value-register-atomic`).
 - **Box never settled**: `value()` stays suspended. The box has no timeout, no deinit hook and no cancellation path, so a waiter on a box nobody finishes is never released. This is a fact of the source, not a gap: every caller in the repo pairs the box with a timer.
 - **Dropped box with waiters**: A suspended `value()` call is a method running on the box, so it keeps the box alive; a box with waiters cannot be released by its other owners going away. It stays suspended until some `finish` wins, as in the never-settled case.
 - **Payload copies**: `T` is stored once and handed to every waiter by value through `Result`; `T: Sendable` is the only constraint, so a large value type is copied per waiter.
@@ -169,21 +170,21 @@ Not applicable: the source makes no log call.
 - **SwiftUI**: Not used directly by SwiftUI: a host never touches `RaceBox`. The source is `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/RaceBox.swift`.
 - **Compose**: Kotlin's equivalent is `CompletableDeferred<T>`: `complete(value)` and `completeExceptionally(error)` both return `false` once it is settled, and `await()` suspends until then, so first-wins is built in. Race a timer with `withTimeout` or `select`. `await()` does react to cancellation of the awaiting coroutine, which differs from the source's `value()`.
 - **React/Web**: Use a `Promise` with its `resolve` and `reject` captured in a closure: the first call settles it and later calls are ignored, and `await` releases every waiter in registration order. Keep a settled flag if the caller needs the `Bool` that `finish` returns. JavaScript is single-threaded, so no lock is needed. `Promise.race` over a work promise and a timeout promise gives the same prompt release.
-- **AppKit / UIKit**: Same Swift source as above; it compiles unchanged on macOS and iOS because it uses only `Foundation` and the concurrency runtime. A view controller reaches it only through the helpers that wrap it.
+- **AppKit / UIKit**: Same Swift source as above; the type itself uses only `Foundation` and the concurrency runtime, but it lives in the macOS-only Integrations module, so it builds for macOS only; an iOS use would need it moved to a shared module first. A view controller reaches it only through the helpers that wrap it.
 - **WinUI 3**: In C#, use `TaskCompletionSource<T>` created with `TaskCreationOptions.RunContinuationsAsynchronously`. `TrySetResult(value)` and `TrySetException(error)` return `false` once it is settled, which maps to `finish` returning `false`; the first caller wins atomically, so no `lock` is needed for the settle itself. `await tcs.Task` is `value()`, and many awaiters are allowed. `RunContinuationsAsynchronously` is the equivalent of the source resuming waiters outside its lock, so a continuation never runs inside the caller of `TrySet*`. `isFinished` is `tcs.Task.IsCompleted`. Map `Result.failure` to `TrySetException`, or to `TrySetCanceled` if you want an `OperationCanceledException`. Race the work against `Task.Delay(timeout)` with `Task.WhenAny`, or settle the box from a `CancellationToken.Register` callback, as the source does with `withTaskCancellationHandler`. A `TaskCompletionSource` does not observe the awaiter's cancellation, which matches `value-not-cancellable`. This is a plain class with no `ObservableCollection` or `INotifyPropertyChanged`, because nothing binds to it.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/RaceBox.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/RaceBox.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | windows | (planned) | planned |
 
 ## Design Decisions
 
 **Decision**: First `finish` wins and later calls are ignored, and `finish` returns whether the caller won.
-**Rationale**: The callers use the return value to decide who runs the cleanup: the timer in `withSignInDeadline` calls `cancel()` and cancels the work only if its `finish` won, and the cancellation handler calls `cancel()` only if its `finish` won (it cancels the work either way). A port MUST keep the winner signal, not only the first-wins rule.
+**Rationale**: The callers use the return value to decide who runs the cleanup: the timer in `withSignInDeadline` calls `cancel()` and cancels the work only if its `finish` won; the cancellation handler calls `cancel()` only if its `finish` won, and cancels the work whether it won or lost. A port MUST keep the winner signal, not only the first-wins rule.
 **Approved**: pending
 
 **Decision**: A box is used instead of a task group.
@@ -195,12 +196,13 @@ Not applicable: the source makes no log call.
 **Approved**: pending
 
 **Decision**: The class is `@unchecked Sendable` with a hand-written `NSLock`.
-**Rationale**: The compiler cannot verify a mutable class, so the type asserts its own safety; every access to `result` and `waiters` goes through the lock. A port with a built-in settle-once primitive does not need this.
+**Rationale**: The compiler cannot verify a mutable class, so the type asserts its own safety; every access to `result` and `waiters` goes through the lock. A Swift actor could replace the `NSLock` and the `@unchecked Sendable`, but `finish` would then be async, and the synchronous `finish` is what lets a cancellation handler call it, so the source keeps the lock. A port with a built-in settle-once primitive does not need this.
 **Approved**: pending
 
 **Decision**: `value()` does not respond to cancellation of the caller.
 **Rationale**: Cancellation is the caller's job, so the sign-in race wires it to `finish` through `withTaskCancellationHandler`. This keeps the box a pure race cell with no knowledge of tasks.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -210,9 +212,10 @@ Not applicable: the source makes no log call.
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | reliability |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | reliability |
 
-The type does one job, settling a result once and releasing waiters, and leaves timers, cancellation and cleanup to its callers, so separation of concerns passes. There is no `RaceBox` test file beside the source, so vectors race-box-001 to 007 and 010 to 012 are not run by any test; the box is exercised only through the deadline tests of `withSignInDeadline` and the stop-bound test of `MailIntegrationService`, which makes unit-test coverage partial. The box is what lets those callers return at their deadline even when the work ignores cancellation, so timeout handling passes. It does not itself time out, and a box that is never finished leaves its waiters suspended, so fault tolerance is partial.
+The type does one job, settling a result once and releasing waiters, and leaves timers, cancellation and cleanup to its callers, so separation of concerns passes. There is no `RaceBox` test file beside the source, so vectors race-box-001 to 007, 010, 011 and 014 are not run by any test; the box is exercised only through the deadline tests of `withSignInDeadline` and the stop-bound test of `MailIntegrationService`, which makes unit-test coverage partial. The box is what lets those callers return at their deadline even when the work ignores cancellation, so timeout handling passes. It does not itself time out, and a box that is never finished leaves its waiters suspended, so fault tolerance is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Reworded the waiter-order and never-settled requirements, moved the actor-versus-lock reasoning into the Design Decision, bounded vector 008, marked vector 012 as a code review check, added a concurrency vector, and used the full repo-relative path. |

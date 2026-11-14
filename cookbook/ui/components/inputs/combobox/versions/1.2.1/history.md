@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---|---|---|---|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | ariaLabel now required/always-wins; restored on-main "recipe" wording; Compliance best-practices added. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: replaced nonexistent WinUI 3 `AutoSuggestBox` members and hand-rolled SwiftUI/AppKit/UIKit notes with real native controls; reformatted Design Decisions into Decision/Rationale/Approved blocks and added one for `<datalist>`'s shortcomings; replaced unsupported verification claims in the Web and AppKit/UIKit notes with grounded statements; added a Required column and rule to Configuration for `ariaLabel`; built a real Compliance table; fixed the active-row `apt-highlight`/`apt-gold` contradiction between Appearance/States and the source; clarified `escape-closes` and `enter-picks-active` wording; required de-duplicated `items` in Edge Cases; added `current-value-marked` requirement and test vector; added `pointer-pick`, `disabled-inert`, and Esc-unchanged test vectors; filled in Localization and Accessibility Options. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) as not applicable; fix domain URI to use agenticdevelopercookbook scheme; expand Platform Notes with cross-platform guidance. |
+| 1.0.0 | 2026-06-26 | Mike Fullerton | Initial component + recipe. |

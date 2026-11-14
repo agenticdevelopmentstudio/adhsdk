@@ -4,6 +4,8 @@ fixed English strings plus the consumer-supplied `subject`; none are
 externalized today. The `subject` value itself is the consumer's data and is
 out of scope here.
 
+Proposed keys (not yet externalized; the strings are hardcoded in the component today):
+
 | String Key | Default (en) | Context |
 |---|---|---|
 | `inlineCommitControl.delete` | "Delete{subject}" | Idle trash `aria-label`/`title` |
@@ -19,7 +21,7 @@ out of scope here.
 | `unsavedChangesGuard.stay` | "Stay" | Navigation-guard cancel action |
 
 Layout is trailing-aligned (logical, following the writing direction), not
-literally right-aligned, so it flips correctly under `dir="rtl"`; the
-control's own flex-row markup carries no `right`-specific CSS, but the
-recipe's earlier "right-justified" phrasing described the LTR case only.
+literally right-aligned. The control's own flex-row markup carries no
+`right`-specific CSS, but no test renders it under `dir="rtl"`, so
+`rtl-layout-support` stays failed in Compliance until one does.
 

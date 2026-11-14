@@ -4,11 +4,11 @@
     "id": "441dd61d-3e76-499b-b45c-92869015eced",
     "title": "Text Lens",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-25",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7ed9c7d6ca0fb0ff",
+  "synced": "e97e173f5db77156",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

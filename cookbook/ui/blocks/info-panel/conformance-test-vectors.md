@@ -19,4 +19,7 @@
 | T16 | host-attribute-passthrough | `title="Fleet"` (string), rest `aria-label="FromRest"`, no `ariaLabel` prop | `<section aria-label="FromRest">` — the rest attribute wins over the string `title` fallback when `ariaLabel` is absent |
 | T17 | count-when-positive | `count={-3}` | no count rendered (negative is treated as not positive) |
 | T18 | label-region | non-string `title`, no `ariaLabel` | `<section>` has no `aria-label` — the known gap (see Edge Cases, "Non-string title") |
-
+| T19 | label-region | non-string `title`, rest `aria-label="FromRest"`, no `ariaLabel` | `<section aria-label="FromRest">` — the raw attribute names the region even though `title` cannot |
+| T20 | decorative-icon | `icon=<I/>` | the icon's wrapper carries `aria-hidden="true"`; the title text is still exposed |
+| T21 | style-precedence | `flex="2 1 0"`, `maxHeight={400}`, `style={{ flex: "3 1 0", maxHeight: 200 }}` | outer style is `flex: 3 1 0` and `max-height: 200px` — `style` wins over the props |
+| T22 | style-precedence | `className="rounded-none"` | the outer `<section>` has `rounded-none` and not `rounded-[10px]` |

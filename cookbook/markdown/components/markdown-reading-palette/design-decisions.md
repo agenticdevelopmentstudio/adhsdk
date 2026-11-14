@@ -11,11 +11,7 @@
 **Rationale**: The component is a generic reading surface reused under different names by different hosts (e.g., `MarkdownDocumentEditor`'s preview pane uses `"markdown-preview"`, while a future caller might use something else). Taking the slot as a prop lets each host name it according to its context.
 **Approved**: pending
 
-**Decision**: The component calls `getThemeById(themeId)` at render time rather than caching or memoizing the lookup.
-**Rationale**: This keeps the component simple and ensures it reflects the current `themeId` prop on each render, without introducing component state.
-**Approved**: pending
-
 **Decision**: The component does not validate `themeId` or wrap `getThemeById` in a try/catch of its own.
-**Rationale**: `getThemeById` already handles an unrecognized id by falling back to the `DEFAULT_THEME_ID` theme instead of throwing, so a markdown reading surface never fails to render over a stale or unrecognized theme id. Because the fallback lives in `getThemeById`, the component needs no error-handling logic of its own.
+**Rationale**: `getThemeById` already handles an unrecognized id by falling back to the `DEFAULT_THEME_ID` theme instead of throwing, so a markdown reading surface never fails to render over a stale or unrecognized theme id. Because the fallback lives in `getThemeById`, the component needs no error-handling logic of its own. It also calls `getThemeById(themeId)` at render time without memoizing, which keeps it free of state and always in step with the current `themeId` prop.
 **Approved**: pending
 

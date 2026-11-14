@@ -4,7 +4,7 @@
     "id": "c861465b-50c8-49d1-93cc-00d9e062ad5f",
     "title": "Dashboard Formatting",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -17,7 +17,11 @@
       "typescript",
       "web"
     ],
-    "tags": [],
+    "tags": [
+      "dashboard",
+      "formatting",
+      "analytics"
+    ],
     "depends-on": [],
     "related": [
       "564c6102-e100-41ad-9c92-14606a33c394"
@@ -26,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5a1f76c159118378",
+  "synced": "c42b595eadab9a74",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

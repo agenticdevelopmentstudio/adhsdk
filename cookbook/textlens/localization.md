@@ -1,5 +1,5 @@
 
-Not applicable: the three thrown error messages
+Not applicable: the two thrown error messages
 (`"textlens: cannot read ... as a colour. ..."`,
 `"textlens: fromColor and toColor go together — give both, or neither."`)
 are fixed, non-localized diagnostic strings aimed at the developer who

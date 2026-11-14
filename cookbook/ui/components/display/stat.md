@@ -2,11 +2,11 @@
 id: bba42d5f-8a52-487f-88c5-4f988dfa714b
 title: "Stat"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,16 +34,20 @@ approved-date: ""
 
 The stat family in `@adh-sdk/ui` renders one label/value figure in the shared
 dashboard grammar: a micro **uppercase mono** caption paired with a big, bold, mono
-**value** tinted by a status tone. Two exports ship the same grammar in two shapes:
+**value** tinted by a status tone. Three exports ship the grammar:
 
 - `StatRow` — label left, big value right on a shared baseline. The dashboard-card
   form (a stack of these fills an `InfoPanel`).
-- `Stat` — the value stacked over its label, right-aligned. The hero-strip form.
+- `Stat` — the value stacked over its label, right-aligned by default (`align`
+  switches it to left-aligned). The hero-strip form.
+- `StatStrip` — a left-aligned, wrapping row of `Stat`s: a card's headline figures.
 
-Both take the same `StatProps` (`label`, `value`, `tone`, `valueClassName`,
-`className`) and share one cva, `statValueVariants`, whose `tone` picks the value's
-color from the family status tokens (`neutral`, `muted`, `accent`, `blue`, `orange`,
-`success`, `error`). The type `StatTone` is also exported. The label always uses the
+`StatRow` takes `StatProps` (`label`, `value`, `tone`, `valueClassName`,
+`className`); `Stat` takes `StatColumnProps`, which is `StatProps` plus `align`.
+Both share one cva, `statValueVariants`, whose `tone` picks the value's color from
+the family status tokens (`neutral`, `muted`, `accent`, `blue`, `orange`, `success`,
+`error`). The tone-to-class table is the single shared `TONE_TEXT_CLASS` in
+`lib/tone.ts`, which `StatusDot` also reads. The type `StatTone` is also exported. The label always uses the
 micro-caption treatment — smaller and dimmer than the form-field caption, because it
 is a display label under/beside a figure, not a field name.
 
@@ -54,13 +58,15 @@ holds. Extracted from the status board so every site's dashboard figures share o
 ## Behavioral Requirements
 
 - **renders-label-and-value**: The component MUST render both the `label` and the `value`.
-- **tints-value-by-tone**: The component MUST color the value from the `tone`'s family status token — `neutral`→`text-apt-text`, `muted`→`text-apt-text-dim`, `accent`→`text-apt-gold`, `blue`→`text-apt-blue`, `orange`→`text-apt-orange`, `success`→`text-apt-green`, `error`→`text-apt-red`.
+- **tints-value-by-tone**: The component MUST color the value from the `tone`'s family status token, read from the shared `TONE_TEXT_CLASS` table — `neutral`→`text-apt-text`, `muted`→`text-apt-text-dim`, `accent`→`text-apt-gold`, `blue`→`text-apt-blue`, `orange`→`text-apt-orange`, `success`→`text-apt-green`, `error`→`text-apt-red`. This is the one place the seven mappings are written out.
 - **defaults-neutral-tone**: With no `tone`, the component MUST render the value in the neutral text token (`text-apt-text`).
 - **value-class-overrides-tone**: The component MUST apply `valueClassName` to the value merged after the tone class through `cn()`'s `tailwind-merge` de-confliction, so a caller MAY override the tone hue. (Plain class concatenation would leave both `text-*` classes in the string and let CSS source order — not merge order — decide the winner.)
 - **label-uses-micro-caption**: The component MUST render the label in the micro uppercase-mono caption treatment (small, letter-spaced, dimmed).
 - **value-uses-figure-type**: The component MUST render the value in the big mono-bold figure treatment (`font-mono text-lg font-bold leading-none`).
 - **row-lays-out-on-baseline**: `StatRow` MUST place the label at the left and the value at the right on a shared baseline (`items-baseline justify-between`).
-- **column-right-aligns**: `Stat` MUST stack the value above the label, both right-aligned (`flex-col items-end`).
+- **column-right-aligns**: `Stat` MUST stack the value above the label, both right-aligned (`flex-col items-end`) when `align` is `"end"` or omitted.
+- **column-align-start**: `Stat` MUST, when `align="start"`, stack the value above the label with both left-aligned (`flex-col items-start`).
+- **strip-wraps-stats**: `StatStrip` MUST lay its children out in a wrapping row with horizontal and vertical gaps (`flex flex-wrap gap-x-8 gap-y-3`) and MUST merge a caller `className` onto its wrapper.
 - **forwards-classname**: The component MUST merge a caller `className` onto the wrapper element.
 
 ## Appearance
@@ -68,9 +74,9 @@ holds. Extracted from the status board so every site's dashboard figures share o
 `StatRow` (dashboard-card form):
 
 ```
-UPTIME                              99.98%   ← success tint (text-apt-green)
+UPTIME                              99.98%   ← success tint
 BUILDS · 24H                            12   ← neutral (default)
-FAILURES · 24H                           0   ← muted (text-apt-text-dim)
+FAILURES · 24H                           0   ← muted
 └ micro uppercase-mono label        └ big mono-bold value, right on the baseline
 ```
 
@@ -86,23 +92,21 @@ FAILURES · 24H                           0   ← muted (text-apt-text-dim)
 - Label: `font-mono text-[10px] uppercase tracking-[0.06em] text-apt-text-dim` — the
   display micro-caption, deliberately smaller/dimmer than the form-field caption.
 - `StatRow` wrapper: `flex items-baseline justify-between gap-3`.
-- `Stat` wrapper: `flex flex-col items-end gap-px`.
+- `Stat` wrapper: `flex flex-col items-end gap-px` (`items-start` when `align="start"`).
+- `StatStrip` wrapper: `flex flex-wrap gap-x-8 gap-y-3`.
 - Color comes entirely from `apt-*` tokens; no raw hex, no `!important`.
 
 ## States
 
 | State | Appearance change |
 |---|---|
-| `neutral` (default) | value `text-apt-text` |
-| `muted` | value `text-apt-text-dim` (de-emphasized figure) |
-| `accent` | value `text-apt-gold` |
-| `blue` | value `text-apt-blue` |
-| `orange` | value `text-apt-orange` |
-| `success` | value `text-apt-green` |
-| `error` | value `text-apt-red` |
+| `neutral` (default) | value takes the neutral tone class (see **tints-value-by-tone**) |
+| `muted`, `accent`, `blue`, `orange`, `success`, `error` | value takes that tone's class from the same table; `muted` is the de-emphasized figure |
 | `valueClassName` override | value hue replaced by the supplied class (wins over tone) |
 | Row form (`StatRow`) | label left, value right, shared baseline |
 | Column form (`Stat`) | value over label, right-aligned |
+| Column form, `align="start"` | value over label, left-aligned |
+| `StatStrip` | `Stat`s in a wrapping, left-aligned row |
 
 No interactive states — the primitive is not focusable, hoverable, or disable-able.
 
@@ -114,14 +118,15 @@ No interactive states — the primitive is not focusable, hoverable, or disable-
 - In the column form (`Stat`), that reading order means a screen reader hears the
   value before it has the label's context (e.g. "3" before "failures · 24h").
   Callers SHOULD group the two for assistive tech when that would be confusing on
-  its own — e.g. an `aria-label` on the wrapper combining label and value, or the
-  platform's accessibility-element-grouping equivalent — rather than relying on
-  reading order alone.
+  its own — e.g. give the wrapper `role="group"` with an `aria-label` combining label
+  and value (an `aria-label` on a plain `<div>` is ignored), or add visually hidden
+  text that puts the label first — or use the platform's accessibility-element-grouping
+  equivalent, rather than relying on reading order alone.
 - Tone is conveyed by color only — it carries no ARIA and adds no accessible name;
   the `label` is the sole textual meaning, so callers SHOULD keep the label
   descriptive (e.g. "failures · 24h") rather than leaning on the red tint alone.
 - Purely presentational: no role, not focusable, not interactive.
-- Color and contrast come from the `apt-*` theme tokens, consistent in light and dark.
+- Color and contrast come from the `apt-*` theme tokens, which resolve per theme in the `apt-*` theme CSS.
 
 ## Conformance Test Vectors
 
@@ -136,7 +141,8 @@ No interactive states — the primitive is not focusable, hoverable, or disable-
 | T7 | forwards-classname | `<StatRow className="pt-1" .../>` | wrapper carries `pt-1` |
 | T8 | renders-label-and-value | `label={<b>N</b>} value={0}` | node label rendered; value `0` rendered (not dropped) |
 | T9 | forwards-classname | `<Stat className="pb-2" label="x" value="1" />` | wrapper carries `pb-2` |
-
+| T10 | column-align-start | `<Stat align="start" label="x" value="1" />` | wrapper carries `flex-col items-start` and NOT `items-end` |
+| T11 | strip-wraps-stats | `<StatStrip className="pt-2"><Stat label="a" value="1" /></StatStrip>` | wrapper carries `flex flex-wrap gap-x-8 gap-y-3` and `pt-2`; the `Stat` is rendered inside |
 ## Edge Cases
 
 - `label` and `value` are `ReactNode`: a value of `0` renders as "0" (not treated as
@@ -150,8 +156,9 @@ No interactive states — the primitive is not focusable, hoverable, or disable-
   error, not a runtime fallback.
 - No truncation or wrapping is imposed — a very long value in `StatRow` competes with
   the label across `justify-between`; the host sizes the container.
-- The two forms are separate exports on one grammar: pick `StatRow` inside cards,
-  `Stat` for a right-aligned hero strip; there is no orientation prop.
+- The forms are separate exports on one grammar: pick `StatRow` inside cards and
+  `Stat` for a hero strip. `Stat` has no orientation prop; its only layout option is
+  `align` (`"end"` default, `"start"`), and `StatStrip` wraps several `Stat`s.
 
 ## Configuration
 
@@ -162,9 +169,12 @@ No interactive states — the primitive is not focusable, hoverable, or disable-
 | `tone` | `StatTone` | `neutral` | Value tint: `neutral`/`muted`/`accent`/`blue`/`orange`/`success`/`error`. |
 | `valueClassName` | `string` | — | Extra classes for the value; merged after the tone class (escape hatch for categorical hues). |
 | `className` | `string` | — | Extra classes for the wrapper; merged via `cn()`. |
+| `align` (`Stat` only) | `"start"` \| `"end"` | `"end"` | Which edge the value and label share: `end` is the hero-strip form, `start` left-aligns them. |
 
-Exports from `@adh-sdk/ui/components/stat`: `StatRow`, `Stat`, the `StatTone`
-type, and the `StatProps` interface.
+`StatStrip` takes `children` and an optional `className`.
+
+Exports from `@adh-sdk/ui/components/stat`: `StatRow`, `Stat`, `StatStrip`, the
+`StatTone` type, and the `StatProps` and `StatColumnProps` interfaces.
 
 ## Deep Linking
 
@@ -181,7 +191,7 @@ None applicable: the component contains no hardcoded user-facing strings.
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: the source renders static markup with no transition or animation at all. |
-| Increase Contrast | Depends on the `apt-*` design tokens driving `TONE_TEXT_CLASS`; the component itself does no `prefers-contrast` handling. |
+| Increase Contrast | Depends on the `apt-*` design tokens that the shared `TONE_TEXT_CLASS` table (see Overview) maps tones to; the component itself does no `prefers-contrast` handling. |
 | Differentiate Without Color | Tone is conveyed by color only, as already noted in Accessibility; there is no non-color indicator, so callers SHOULD keep `label` descriptive rather than relying on the tint. |
 
 ## Feature Flags
@@ -208,15 +218,15 @@ and any telemetry around it belong to the host, not the display element.
 
 - **React/Web**: File `packages/web/packages/ui/src/components/stat.tsx`. No `"use client"` directive — renders static spans with no state or effects, works as a server component. Styled with `apt-*` token utilities registered centrally via `@source`. Demo in `ui-showcase` Topic `stat` (group "Primitives — display"); regenerate `sources.generated.ts` via `gen-sources.py` after source changes.
 - **SwiftUI**: Column form (`Stat`) — `VStack(alignment: .trailing, spacing: 4)` with `Text(value).font(.title2).fontWeight(.bold).monospaced()` over `Text(label).font(.caption2).tracking(0.6).textCase(.uppercase).foregroundStyle(.secondary)`; `.tracking` is in points, so 0.6pt approximates the web's `0.06em` at a 10pt label (`.tracking(0.06)` would be roughly 10× too small). Row form (`StatRow`) — `HStack(alignment: .firstTextBaseline) { Text(label)...; Spacer(); Text(value)... }` with the same two text styles. Map `tone` to `Color`: `neutral`→`.primary`, `muted`→`.secondary`, `accent`→a shared gold `Color`, `blue`→`.blue`, `orange`→`.orange`, `success`→`.green`, `error`→`.red`, mirroring the `apt-*` token table rather than hardcoding per view.
-- **Compose**: Column form — `Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp))` (`Modifier.gap` does not exist; a `Column`'s spacing is `verticalArrangement`) with `Text(value, style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold))` over `Text(label.uppercase(), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)`. `String.uppercase()` takes the current `Locale` by default — never call it with an invariant/root locale for user-facing text. Row form — `Row(verticalAlignment = Alignment.Bottom) { Text(label, modifier = Modifier.alignByBaseline()); Spacer(Modifier.weight(1f)); Text(value, modifier = Modifier.alignByBaseline()) }`. Material3's `colorScheme` ships only `error` as a semantic status color, so `neutral`/`muted`/`accent`/`blue`/`orange`/`success` need a small custom tone-color extension mirroring the `apt-*` table; only `error`→`colorScheme.error` is built in.
-- **AppKit / UIKit**: Column form — vertical `NSStackView` / `UIStackView` (`alignment: .trailing`) holding value and label `NSTextField` / `UILabel` instances. `.font(.systemFont(ofSize: 18, weight: .bold))` is SwiftUI syntax, not AppKit/UIKit, and `.setMonospaced()` is not an API — instead assign `label.font = NSFont.monospacedSystemFont(ofSize: 18, weight: .bold)` / `UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)` directly to the value's font property. Give the label `.font = .systemFont(ofSize: 11, weight: .regular)`, a dimmed `.textColor`, and uppercase its string with `.uppercased(with: Locale.current)` before assigning it — locale-sensitive, never bare `.uppercased()` for user-facing text. Row form — a horizontal stack view with `alignment: .firstBaseline` (a real `NSStackView.Alignment` / `UIStackView.Alignment` case) instead of vertical. Map `tone` to `NSColor`/`UIColor`: `neutral`→`.labelColor`/`.label`, `muted`→`.secondaryLabelColor`/`.secondaryLabel`, `accent`→a shared gold color asset, `blue`→`.systemBlue`, `orange`→`.systemOrange`, `success`→`.systemGreen`, `error`→`.systemRed`.
-- **WinUI 3**: Column form — a `StackPanel` with `Orientation="Vertical"`, `HorizontalAlignment="Right"`, and `Spacing="4"` (the built-in gap property — not `Margin` on each child) holding value and label `TextBlock`s. Set the value's `FontWeight="Bold"`, `FontSize="18"`, and a shared monospace `FontFamily` resource (not a hardcoded `Consolas`, which skips the app's theme); set the label's `FontSize="10"` with a dimmed foreground brush and its text uppercased via `text.ToUpper(CultureInfo.CurrentCulture)` — locale-sensitive, never `ToUpperInvariant()` for user-facing text. Row form — a two-column `Grid` (`Auto`,`*`) with the label in column 0 and the value, `HorizontalAlignment="Right"`, in column 1. Map `tone` to a `Brush`: `neutral`→`TextFillColorPrimaryBrush`, `muted`→`TextFillColorSecondaryBrush`, `accent`→a shared gold brush resource, `blue`→`SystemFillColorAttentionBrush`, `orange`→`SystemFillColorCautionBrush`, `success`→`SystemFillColorSuccessBrush`, `error`→`SystemFillColorCriticalBrush`.
+- **Compose**: Column form — `Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp))` with `Text(value, style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold))` over `Text(label.uppercase(), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.6.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)`. `String.uppercase()` takes the current `Locale` by default — never call it with an invariant/root locale for user-facing text. Row form — `Row(verticalAlignment = Alignment.Bottom) { Text(label, modifier = Modifier.alignByBaseline()); Spacer(Modifier.weight(1f)); Text(value, modifier = Modifier.alignByBaseline()) }`. Material3's `colorScheme` ships only `error` as a semantic status color, so `neutral`/`muted`/`accent`/`blue`/`orange`/`success` need a small custom tone-color extension mirroring the `apt-*` table; only `error`→`colorScheme.error` is built in.
+- **AppKit / UIKit**: Column form — vertical `NSStackView` / `UIStackView` (`alignment: .trailing`; `.leading` for `align="start"`) holding value and label `NSTextField` / `UILabel` instances. Set the value's font with `NSFont.monospacedSystemFont(ofSize: 18, weight: .bold)` / `UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)`. Give the label `.font = .systemFont(ofSize: 11, weight: .regular)`, a dimmed `.textColor`, and uppercase its string with `.uppercased(with: Locale.current)` before assigning it — locale-sensitive, never bare `.uppercased()` for user-facing text. Row form — a horizontal stack view with `alignment: .firstBaseline` (a real `NSStackView.Alignment` / `UIStackView.Alignment` case) instead of vertical. Map `tone` to `NSColor`/`UIColor`: `neutral`→`.labelColor`/`.label`, `muted`→`.secondaryLabelColor`/`.secondaryLabel`, `accent`→a shared gold color asset, `blue`→`.systemBlue`, `orange`→`.systemOrange`, `success`→`.systemGreen`, `error`→`.systemRed`.
+- **WinUI 3**: Column form — a `StackPanel` with `Orientation="Vertical"`, `HorizontalAlignment="Right"`, and `Spacing="4"` (the built-in gap property — not `Margin` on each child) holding value and label `TextBlock`s. Set the value's `FontWeight="Bold"`, `FontSize="18"`, and a shared monospace `FontFamily` resource (not a hardcoded `Consolas`, which skips the app's theme); set the label's `FontSize="10"` with a dimmed foreground brush and its text uppercased via `text.ToUpper(CultureInfo.CurrentCulture)` — locale-sensitive, never `ToUpperInvariant()` for user-facing text. Row form — a two-column `Grid` (`Auto`,`*`) with the label in column 0 and the value, `HorizontalAlignment="Right"`, in column 1. Set `VerticalAlignment="Bottom"` on both text blocks and match their line heights to approximate the shared baseline; a `Grid` has no baseline alignment, so this only approximates **row-lays-out-on-baseline**. Map `tone` to a `Brush`: `neutral`→`TextFillColorPrimaryBrush`, `muted`→`TextFillColorSecondaryBrush`, `accent`→a shared gold brush resource, `blue`→`SystemFillColorAttentionBrush`, `orange`→`SystemFillColorCautionBrush`, `success`→`SystemFillColorSuccessBrush`, `error`→`SystemFillColorCriticalBrush`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/stat.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/stat.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -260,7 +270,7 @@ through `apt-*` tokens — no raw hex, no `!important` — without itself assert
 measured ratio. `semantic-markup` passes because the component renders plain,
 non-interactive `<span>`/`<div>` elements with no ARIA misuse. `platform-theming`
 passes because every color comes from the shared `apt-*` theme tokens, which the
-Appearance section states resolve consistently in light and dark. `StatRow`/`Stat`
+`apt-*` theme CSS defines for light and dark. `StatRow`/`Stat`
 are pure presentation over props with no business logic (separation-of-concerns
 passed), and `stat.test.tsx` directly renders both and asserts on tone-class output
 (unit-test-coverage passed).
@@ -269,6 +279,7 @@ passed), and `stat.test.tsx` directly renders both and asserts on tone-class out
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Documented the Stat align prop, StatColumnProps and StatStrip with new requirements and test vectors, stated the tone table once with TONE_TEXT_CLASS, fixed the accessibility grouping advice, and removed lint residue from the platform notes. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added the Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics and Privacy sections. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: ground `value-class-overrides-tone` and its Edge Case in `tailwind-merge`, and limit the tone fallback claim to `undefined`; rename the web Platform Notes bullet to `React/Web`, fix inaccurate Compose/AppKit-UIKit/WinUI APIs, add row-form/uppercase-label/tone-color guidance for every native platform, and correct the SwiftUI tracking unit and hardcoded WinUI font; add a SHOULD on grouping value/label for assistive tech; give T6 a concrete input and add a `Stat`+`className` test vector; rewrite Design Decisions in the Decision/Rationale/Approved form; replace the Compliance table's circular/misnamed checks with linked catalog checks. |
 | 1.0.2 | 2026-09-22 | Claude Haiku 4.5 | Remove "Not applicable" phrasing from Platform Notes non-web bullets; sharpen translation guidance. |

@@ -10,3 +10,4 @@
 - **scroll-container**: Component MUST wrap the table in a div element with class `lp-table-scroll` to enable horizontal scrolling on narrow viewports.
 - **table-class**: Component MUST apply the `lp-table` class to the `<table>` element.
 
+- **reports-first-mismatched-row**: When more than one row has the wrong width, Component MUST report the index of the first (lowest-index) bad row in the thrown error; it does not assume only one row can be invalid.

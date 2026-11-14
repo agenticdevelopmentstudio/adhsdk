@@ -1,22 +1,6 @@
 
-*Provenance: `press-on-pointerdown-inside` through `no-pointer-capture` below describe the
-observable pointer-tracking behavior of `Button` as rendered — behavior that `Button` gets by
-composing the sibling `PressableButton` (`button-pressable.tsx`), which is that contract's
-single owner ([adhsdk.ingredient.ui.components.actions.button-pressable](cookbook:f483dfb7-d60e-4b12-8b17-2eb150b550db), see its own
-`pressed-on-pointerdown` through `no-pointer-capture` requirements and its
-**active press** terminology, called "held" below). This recipe restates them at the `Button`
-level only so `Button`'s own Conformance Test Vectors can exercise them end-to-end; do not edit
-them here without also checking `button-pressable.md`, and re-verify them here whenever that
-recipe's requirements change, since `button.md`'s `depends-on` does not by itself trigger
-re-extraction of this file.*
+*Provenance: `Button` gets its pointer-tracking behavior by composing the sibling `PressableButton` (`button-pressable.tsx`), which is that contract's single owner ([adhsdk.ingredient.ui.components.actions.button-pressable](cookbook:f483dfb7-d60e-4b12-8b17-2eb150b550db)). Its `pressed-on-pointerdown` through `no-pointer-capture` requirements and its **active press** terminology (called "held" in this ingredient's test vectors) apply to `Button` as rendered, and are not restated here. Test vectors T1-T6, T9, T10 and T23 exercise them end-to-end through `Button` and cite that ingredient's requirement names.*
 
-- **press-on-pointerdown-inside**: The button MUST set `data-pressed` when a pointer is pressed down inside it.
-- **release-clears-pressed**: The button MUST clear `data-pressed` on `pointerup`.
-- **cancel-clears-pressed**: The button MUST clear `data-pressed` on `pointercancel`.
-- **leave-while-held-clears-pressed**: While the pointer is still held, the button MUST clear `data-pressed` when the pointer leaves it.
-- **reenter-while-held-restores-pressed**: While the pointer is still held, the button MUST restore `data-pressed` if the pointer re-enters it.
-- **release-outside-ends-hold**: The button MUST end the held state when the pointer is released or cancelled anywhere, including outside the button, so the press never sticks.
-- **no-pointer-capture**: The button MUST track the press from held + pointer-inside state and MUST NOT call `setPointerCapture`.
 - **pressed-visual-from-data-attr**: The button MUST express its pressed appearance (the translate-y dip plus darken) purely from `data-pressed`, never from CSS `:active`.
 - **haspopup-suppresses-dip**: A button with `aria-haspopup` (a popup/menu trigger) MUST NOT apply the pressed dip.
 - **keyboard-activates**: Space and Enter on a focused button MUST activate it (fire its click), independent of the pointer pressed visual.
@@ -31,4 +15,6 @@ re-extraction of this file.*
 - **icon-svgs-non-interactive**: An SVG child of the button MUST NOT receive pointer events (`pointer-events: none`) and MUST NOT shrink in the flex layout (`flex-shrink: 0`).
 - **unsized-icon-svgs-scale-with-button-size**: An SVG child that carries no `size-*` class MUST render at `1rem` (16px) square by default, `0.875rem` (14px) at the `sm` size, and `0.75rem` (12px) at the `xs`/`icon-xs` sizes.
 - **consumer-classname-precedence**: The button SHOULD apply a consumer-supplied `className` so it can override the variant/size classes it conflicts with, per the project's `cn()` merge convention. (Rationale: see Design Decisions.)
-
+- **disabled-never-pressed**: A `disabled` button MUST NOT set `data-pressed`; `disabled:pointer-events-none` means it receives no pointer events.
+- **explicit-sized-svgs-untouched**: An SVG child that carries an explicit `size-*` class MUST keep that size; the default icon sizing rule MUST NOT override it (the rule is scoped with `:not([class*='size-'])`).
+- **default-floor-is-zero**: When no ancestor sets `--adh-button-min-height` or `--adh-button-min-width`, both MUST resolve to `0px`, so the button is exactly as large as its `size` variant and no larger.

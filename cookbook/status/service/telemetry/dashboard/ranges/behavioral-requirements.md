@@ -3,7 +3,7 @@
 
 - **range-names**: `ANALYTICS_RANGES` MUST be the ordered list `"24h"`, `"7d"`, `"30d"`.
 - **range-type**: `AnalyticsRange` MUST be the union of exactly those three strings.
-- **range-validation-by-callers**: Callers that accept a range from outside the process validate it against `ANALYTICS_RANGES`. The analytics dashboard route answers HTTP 400 with `{ "error": "invalid range" }` for any other value, and the report parameter parser rejects it with the message `range must be one of 24h, 7d, 30d`. This module does not validate; `rangeWindow` is typed to take only an `AnalyticsRange`.
+- **range-validation-by-callers**: Callers that accept a range from outside the process MUST validate it against `ANALYTICS_RANGES` first. This module does not validate; `rangeWindow` takes only an `AnalyticsRange`, and any other value is outside its contract.
 
 **Window shape**
 
@@ -17,7 +17,7 @@
 
 - **window-24h-unit**: For `"24h"`, `unit` MUST be `"hour"` and the step MUST be 3,600,000 ms.
 - **window-24h-start**: For `"24h"`, the first bucket MUST start 24 hours before the start of the hour that contains `nowMs`.
-- **window-24h-count**: For `"24h"`, `buckets` MUST hold 25 entries: the partial hour the window starts in, 23 full hours, and the current hour. The source comment states it as "both the partial hour it starts in and the current one, so 25 buckets".
+- **window-24h-count**: For `"24h"`, `buckets` MUST hold 25 entries: 24 full hours plus the current, partial hour.
 - **window-24h-last-bucket**: For `"24h"`, the last bucket MUST be the start of the hour that contains `nowMs`.
 
 **The 7d and 30d windows**
@@ -33,15 +33,15 @@
 - **align-length**: `alignToBuckets(buckets, points)` MUST return an array the same length as `buckets`, in the same order.
 - **align-zero-fill**: A bucket that no point lands in MUST hold `0`.
 - **align-sum**: Points that land in the same bucket MUST be summed, not replaced or averaged.
-- **align-exact-match**: A point lands in a bucket only when its timestamp, parsed and re-serialised with `toISOString`, equals the bucket string exactly. The module does not round a timestamp down to the containing bucket; a provider whose timestamps are not already on a bucket boundary has them dropped.
+- **align-exact-match**: A point MUST land in a bucket only when its timestamp, parsed and re-serialised with `toISOString`, equals the bucket string exactly. The module MUST NOT round a timestamp down to the containing bucket; a provider whose timestamps are not already on a bucket boundary has them dropped.
 - **align-timestamp-spellings**: A timestamp MAY be a string or a number. Both `"2026-11-04T00:00:00Z"` and `"2026-11-04T00:00:00.000Z"` MUST land on the bucket `"2026-11-04T00:00:00.000Z"`.
 - **align-drop-off-axis**: A point whose timestamp matches no bucket MUST be dropped.
 - **align-drop-unparseable**: A point whose timestamp is neither a string nor a number, or whose string or number does not parse to a valid date, MUST be dropped without throwing. `null`, `undefined`, objects and `"nope"` all fall in this case.
 - **align-input-iterable**: `points` MAY be any iterable of `[timestamp, value]` pairs; it is consumed once.
-- **align-value-added-as-is**: The value of a matched point is added to the bucket total as given. The function does not validate it; a caller that passes a non-numeric or `NaN` value gets whatever JavaScript addition produces. The callers in the sibling modules coerce values to numbers before the call.
+- **align-value-added-as-is**: The value of a matched point MUST be added to the bucket total as given. The function does not validate it, and a non-numeric or `NaN` value is outside its contract; callers MUST coerce values to numbers before the call, as the sibling modules do.
 - **align-pure**: `alignToBuckets` MUST NOT modify `buckets` or its input pairs.
 
 **Side effects**
 
-- **no-side-effects**: Neither function reads a clock, performs I/O, logs or keeps state. The same inputs MUST give the same outputs.
+- **no-side-effects**: Neither function MUST read a clock, perform I/O, log or keep state. The same inputs MUST give the same outputs.
 

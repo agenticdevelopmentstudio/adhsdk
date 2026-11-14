@@ -3,7 +3,7 @@
 - **Empty reply**: A zero-byte reply MUST become `<daemonName> dropped the reply`, not an empty successful result.
 - **Reply that is not a valid response**: `send` MUST return the bytes without checking them; the decode failure arises later in `MailClient.send`, outside this type.
 - **Failure after a deadline**: The transport does not enforce the 360 s deadline itself; it hands the value to `call`, and the host's IPC layer enforces it and reports expiry through `classify` as `timedOut`.
-- **Long sync with healthy daemon**: `syncNow` MUST NOT be given a deadline, because it answers when the whole sync ends, joins a sync already running, and is paced at about 40 messages a second per the source comment.
+- **Long sync with healthy daemon**: `syncNow` MUST NOT be given a deadline, because it answers when the whole sync ends, joins a sync already running, and is paced at about 40 messages a second (the doc comment on `timeout(for:)` in `MailDaemonTransport.swift`).
 - **Dead daemon during a sync**: With no deadline, the call ends through the dropped connection, which the host classifies as `connectionDropped`.
 - **Empty daemon name**: Not validated; the name is interpolated as given into every sentence.
 - **Empty or unusual `unreachable` detail**: Interpolated as given; an empty detail yields `cannot reach <daemonName>: `.

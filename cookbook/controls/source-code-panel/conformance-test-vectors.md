@@ -26,4 +26,12 @@
 | scp-023 | fallback-to-preformatted | lang="not-a-real-language" | Shiki rejects the unknown identifier and throws; component falls back to `<pre><code>` with no `aria-busy`, same as any other highlight failure |
 | scp-024 | render-highlighted-html | code contains `<script>alert(1)</script>` | Shiki escapes the code before generating HTML; the rendered `.scp-shiki` markup contains no executable `<script>` element |
 | scp-025 | discard-stale-highlight-results | `lang` (or `code`/`theme`) changes while a previous highlight call for the old value is still pending | The stale result is discarded when it resolves; only the highlight for the latest `code`/`lang`/`theme` updates `html`/`error` |
-
+| scp-026 | reset-copied-state | showCopy=true; Copy clicked successfully, then clicked again 800ms later | The label returns to "Copy" 1200ms after the second click (timer restarted); the first click's timer does not reset it early. Ports SHOULD restart the timer on each click |
+| scp-027 | reset-copied-state | Copy clicked successfully, then the component unmounts before 1200ms elapse | The pending timer is cancelled; no state update occurs after unmount. Ports SHOULD cancel the timer on unmount |
+| scp-028 | display-filename | filename="" (empty string), showCopy=true, lang="jsx" | Header renders; the filename label is empty because `filename ?? lang` does not fall back for an empty string (the reference does not substitute "jsx") |
+| scp-029 | render-code | code="" (empty string) | Component renders without error; the output is empty or blank |
+| scp-030 | handle-copy-failure | `navigator.clipboard` unavailable, Copy clicked | Click is a silent no-op; no error state, no console message, label stays "Copy" |
+| scp-031 | watch-theme-changes | theme not provided, no `#adh-sdk-theme` element in the document | No observer is created; the theme is read once from `--scp-shiki-theme` (or falls back to "github-dark") and is not re-read |
+| scp-032 | support-maxheight | maxHeight="200px", code longer than 200px when rendered | The full code string is rendered; the body container is limited to 200px and scrolls |
+| scp-033 | discard-stale-highlight-results | theme not provided; `#adh-sdk-theme` content mutates several times in quick succession | Each mutation re-reads the theme and starts a new highlight; results from earlier pending calls are discarded and the output reflects the latest theme |
+| scp-034 | header-when-content | showCopy=false, filename not provided | Header element does not render; only the code body is displayed |

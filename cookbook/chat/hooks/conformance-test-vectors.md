@@ -12,11 +12,11 @@
 | chat-coordinator-hooks-009 | session-select-message | `selectMessage(0)` | `selectedIndex` goes from `-1` to `0` |
 | chat-coordinator-hooks-010 | session-default-participants | `sendMessage('hi')` with no explicit user participant | `messages[0].sender.name === 'You'` |
 | chat-coordinator-hooks-011 | session-teardown | `unmount()` on an owned, raw-backend session | Raw backend's `destroy()` is called |
-| chat-coordinator-hooks-012 | session-teardown | `unmount()` on an owned, adapter-wrapped session | Both `ChatBackendAdapter.prototype.destroy` AND the raw backend's `destroy()` are called |
+| chat-coordinator-hooks-012 | session-teardown | `unmount()` on an owned, adapter-wrapped session | `ChatBackendAdapter.prototype.destroy` is called, and the adapter forwards `destroy()` to the raw backend, so both are called |
 | chat-coordinator-hooks-013 | session-say-landing-on-teardown | `say('a line long enough to still be mid-word')`, advance `100ms`, then `unmount()` | Timer count is `> 0` before unmount, `=== 0` immediately after |
 | chat-coordinator-hooks-014 | session-say-landing-on-teardown | Same `say(...)` call, `unmount()`, then `advanceTimersByTimeAsync(0)` | The line's promise, unsettled at `+100ms`, becomes settled after unmount |
 | chat-coordinator-hooks-015 | caret-metrics-geometry | `caretMetrics(input)` with `fontSize:'20px'` | `box.height === 13`, `box.width === 8` |
-| chat-coordinator-hooks-016 | caret-metrics-clamping | `caretMetrics(input)` with a very long value | `box.x` stays within `[rect.left, rect.right]` |
+| chat-coordinator-hooks-016 | caret-metrics-clamping | `caretMetrics(input)` with a very long value | `box.x` stays within `[rect.left, rect.right - box.width]` |
 | chat-coordinator-hooks-017 | caret-metrics-mirror | Any `caretMetrics(input)` call | `document.body.childElementCount` is unchanged after the call returns |
 | chat-coordinator-hooks-018 | caret-tracker-disabled | `useCaretTracker(ref, false, onMeasure)` | `onMeasure` is called with `null` immediately |
 | chat-coordinator-hooks-019 | caret-tracker-teardown | `useCaretTracker(ref, true, onMeasure)` then `unmount()` | `onMeasure` is called with `null` on unmount |
@@ -73,6 +73,7 @@
 | chat-coordinator-hooks-070 | ritual-engage-on-element | `engageOn:` an element ref; `pointerdown` inside it (never a window pointer move or the give-up timeout, even after `60000ms`) | Engages only from the deliberate `pointerdown`/`focusin` |
 | chat-coordinator-hooks-071 | images-loaded-empty-set | `content:[]` | Returns `true` immediately (traced to source; no dedicated test file exists for this hook) |
 | chat-coordinator-hooks-072 | images-loaded-tracking, images-loaded-return-value | Two image items; one `Image` fires `onload`, the other fires `onerror` | Both are marked loaded; hook returns `true` (traced to source) |
+| chat-coordinator-hooks-073 | focus-reclaim-no-match | `useInputFocusReclaim(wrapperRef, true)` where no element in the wrapper matches the selector | No element is focused and nothing throws (traced to source; no dedicated test) |
 
 Vectors 001–014 are traced to `useChatSession.test.ts`; 015–017 to
 `useCaretTracker.test.ts`'s `caretMetrics` block; 018–020 to the same

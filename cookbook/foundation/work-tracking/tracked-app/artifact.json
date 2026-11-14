@@ -4,7 +4,7 @@
     "id": "a6b177ee-dc1e-441d-9844-eee2ef48ed8d",
     "title": "TrackedApp",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,13 +23,15 @@
       "allowlist",
       "bundle-id"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "d525cc69-4d2c-4d17-a570-f71e8d5aa273"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f97929087cba0f46",
+  "synced": "6c98fa2bc455cd2b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

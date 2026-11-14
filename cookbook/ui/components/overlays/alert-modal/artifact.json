@@ -4,15 +4,15 @@
     "id": "e26e765d-2caa-40f8-a668-661ed2b0632c",
     "title": "AlertModal",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Controlled alert/confirm modal on Dialog — tone icon, one- or two-button footer, busy spinner, configurable dismissal and keyboard policy, destructive mode.",
+    "summary": "Controlled alert/confirm modal on Dialog — tone icon, one- or two-button footer, busy spinner, dismissal and keyboard policy, destructive mode.",
     "platforms": [
       "typescript",
       "web"
@@ -30,8 +30,6 @@
       "f3c25236-d72f-4a7b-839a-b7f335b3acd0"
     ],
     "related": [
-      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
-      "f679a77e-04f7-4e43-b898-6d78a637a760",
       "550f00f7-bfb2-415e-9b15-bd5dce015500"
     ],
     "references": [
@@ -41,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "28540f387ce6f9f7",
+  "synced": "4c6a6e9c8d6760fc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -27,3 +27,6 @@
   **Rationale**: This lets the component respect theme changes and adapt to light/dark mode without prop drilling or conditional styling.
   **Approved**: pending
 
+- **Decision**: Heading links keep their compact row height and do not meet the 44×44 touch-target size.
+  **Rationale**: The links are inline text in a fixed-width reading rail at XL screen widths and larger, where pointer input is the norm; padding every row to 44px would make the rail taller than the outline it summarizes.
+  **Approved**: pending

@@ -39,7 +39,7 @@
   
 - **Option Icons**:
   - All icons: 14px (size-[14px])
-  - Padding-top: 4px (mt-0.5) to optical center align with text baseline
+  - Margin-top: 2px (mt-0.5) to optical center align with text baseline
   - Label icon and privacy icon: `apt-text-muted` color
   - Check icon: gold (`apt-gold`) when checked, otherwise opacity-0
   - Coming-soon option: all icons and text at 40% opacity

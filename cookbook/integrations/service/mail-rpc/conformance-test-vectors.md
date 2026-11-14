@@ -33,7 +33,7 @@ Tests live in `MailIntegrationServiceTests.swift` and `MailRequestAccessTests.sw
 | mail-rpc-028 | client-send-flow | the service handles `Data("nope".utf8)` (`undecodableRequestIsBadRequest`) | the reply decodes to `.failure("bad request")` |
 | mail-rpc-029 | client-transport, client-send-flow | transport throws its own error | `send` rethrows the same error |
 | mail-rpc-030 | page-applied-flags, filter-any-labels-or | service lists with `anyLabels: ["INBOX"]` and again with `labels` only (`MailIntegrationServiceTests`, the any-labels listing test) | first page has `appliedAnyLabels` true; second has it false |
-| mail-rpc-031 | filter-any-labels-or | service lists with `anyLabels: ["INBOX", "Nope"]` | the reply is `.failure("unknown label: Nope")`; the refusal of an unknown label is the service's behavior and no requirement in this recipe covers it |
+| mail-rpc-031 | filter-any-labels-or | service lists with `anyLabels: ["INBOX", "Nope"]` | the reply is `.failure("unknown label: Nope")`; the refusal of an unknown label is the service's behavior and no requirement in this ingredient covers it; the rule declared in `filter-any-labels-or` is the service's to enforce |
 | mail-rpc-032 | filter-query-gmail, page-applied-flags | service lists with `query: " from:sender OR from:other "`, `labels: ["Work"]`, `limit: 2` | first page has `appliedQuery` true |
 | mail-rpc-033 | request-wire-form | encode `MailRequest.listAccounts` and hand the bytes to the service's `handle(requestData:)` (`requestRoundTripsThroughData`) | the reply decodes as `MailResponse.accounts([])`, so the service decoded the request |
 | mail-rpc-034 | response-cases, failure-not-found-factory | `MailResponse.notFound("x")` | equals `.failure("x", notFound: true)` |

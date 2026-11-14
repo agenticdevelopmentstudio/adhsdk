@@ -1,10 +1,10 @@
 
 **Decision**: Convert with a hand-written single pass over Unicode scalars, with no layout engine, no WebKit and no regular expressions.
-**Rationale**: The source's doc comment says the HTML is sender-controlled, so the conversion must be linear and nothing is rescanned; WebKit wants the main thread. A test bounds hostile inputs to 5 seconds.
+**Rationale**: The HTML is sender-controlled, so the conversion must be linear in the input and nothing may be rescanned; WebKit wants the main thread. A test bounds hostile inputs to 5 seconds.
 **Approved**: pending
 
 **Decision**: An unclosed comment, tag, quoted value or hidden element drops the rest of the input.
-**Rationale**: The source's doc comment says it "runs to the end of the input, as in a browser"; stopping also avoids rescanning, which keeps the pass linear.
+**Rationale**: A browser treats an unclosed construct as running to the end of the input; stopping also avoids rescanning, which keeps the pass linear.
 **Approved**: pending
 
 **Decision**: Breaks are carried as control-character markers (U+0001 line, U+0002 paragraph, U+0003 bullet) and resolved after the whole text is read.
@@ -16,19 +16,19 @@
 **Approved**: pending
 
 **Decision**: `decodeEntities` decodes only a built-in list of named references plus all numeric ones, looks 12 scalars ahead for the `;`, and leaves anything else as written.
-**Rationale**: The source comment says names and numbers are short and looking further only finds the next sentence's `;`; leaving unknown references untouched keeps text such as `AT&T;` intact.
+**Rationale**: Names and numbers are short, and looking further only finds the next sentence's `;`; leaving unknown references untouched keeps text such as `AT&T;` intact.
 **Approved**: pending
 
 **Decision**: Numeric references 128 to 159 decode as windows-1252.
-**Rationale**: The source comment says this is what browsers show and what Word and Outlook meant; the five undefined codes stay controls and are dropped.
+**Rationale**: Browsers show these characters, and Word and Outlook meant them; the five undefined codes stay controls and are dropped.
 **Approved**: pending
 
 **Decision**: Control characters are dropped from decoded text and from raw text.
-**Rationale**: The source comment says this stops mail writing terminal escape sequences; tab and line breaks are kept because they are whitespace.
+**Rationale**: Dropping them stops mail writing terminal escape sequences; tab and line breaks are kept because they are whitespace.
 **Approved**: pending
 
 **Decision**: Zero-width non-joiner and joiner are kept only between two visible, non-joiner scalars; the other invisible characters are always dropped.
-**Rationale**: The source comment says joiners shape emoji sequences and Persian and Indic words, while marketing mail fills preview text with them.
+**Rationale**: Joiners shape emoji sequences and Persian and Indic words, while marketing mail fills preview text with them.
 **Approved**: pending
 
 **Decision**: Entities are decoded on each text run before whitespace is collapsed, and decoded text is not reparsed.
@@ -39,3 +39,6 @@
 **Rationale**: Keeps a row on one line in a terminal; the source has no numbering, so ordered lists read as bullets (test `listItemsWithBlockChildrenKeepTheirBullets`).
 **Approved**: pending
 
+**Decision**: Truncated or malformed markup degrades silently: the caller gets the text read so far, or the reference left as written, and no error or flag.
+**Rationale**: Mail bodies are routinely malformed, and a browser shows them anyway; the output is read by a person or a model, which can use partial text, and an error channel would force every caller to handle a case that has no better answer than the partial text. The cost is that a caller cannot tell truncation happened, which is why `explicit-error-handling` is `partial` in Compliance.
+**Approved**: pending

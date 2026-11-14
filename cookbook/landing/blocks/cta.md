@@ -2,11 +2,11 @@
 id: f98e53f7-ac16-48b0-afa5-544d05bf3f70
 title: "Call-to-Action Group"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,10 +36,10 @@ The Cta component is a layout container for grouping call-to-action buttons. It 
 
 ## Behavioral Requirements
 
-- **renders-children**: Component MUST render all ReactNode children without modification.
+- **renders-children**: Component MUST render all ReactNode children, in order.
 - **container-class**: Component MUST apply the `lp-cta` CSS class to its container div.
 - **children-untouched**: Component MUST NOT modify or filter props passed to children; all children render with their original props intact.
-
+- **wrapping-centered-row**: Component MUST lay its children out as a horizontal row that wraps onto additional rows when they exceed the available width and centers the children on each row; it MUST NOT switch to a vertical axis at any width (see Appearance, **Layout**, for the exact values).
 ## Appearance
 
 - **Container element**: `div` with class `lp-cta`
@@ -67,16 +67,15 @@ Not applicable: This component is a static container with no interactive or visu
 |----|-------------|-------|----------|
 | cta-001 | renders-children | Children: `<button>Sign Up</button>` | Output contains `<button>Sign Up</button>` |
 | cta-002 | renders-children | Children: multiple buttons, links | All children rendered in order |
-| cta-003 | renders-children | Children: null or undefined | Renders empty container |
-| cta-004 | container-class | Any children | Rendered div has `className="lp-cta"` |
+| cta-003 | renders-children | Children: null, undefined, or none provided | Renders `<div class="lp-cta"></div>` with no visible width or height, since `.lp-cta` has no padding or margin and `gap` produces no space with zero or one child |
+| cta-004 | container-class | Any children | The rendered element's `class` attribute is exactly `lp-cta` |
 | cta-005 | children-untouched | Button child with `onClick` handler | Child onClick handler fires on click |
-| cta-006 | renders-children | No children provided | Renders `<div className="lp-cta"></div>` with no visible width or height, since `.lp-cta` has no padding or margin and `gap` produces no space with zero or one child |
 | cta-007 | children-untouched | Button child with `aria-label`, `data-testid`, and `className` props | All three props reach the rendered child unchanged: `aria-label` and `data-testid` are present, and the child's own `className` is retained |
-
+| cta-008 | wrapping-centered-row | Any children, with the package stylesheet applied | Computed style of the container has `display: flex`, `flex-wrap: wrap`, `justify-content: center` and a row `flex-direction` (`row`, the default), and children that exceed the container width wrap onto a second row |
 ## Edge Cases
 
-- **Empty children**: Component renders an empty `<div className="lp-cta"></div>` without error. Because `.lp-cta` (`packages/web/packages/landing/src/css/blocks.css`) declares no padding or margin — only `display: flex`, `flex-wrap: wrap`, `gap: 0.75rem`, and `justify-content: center` — and `gap` has no effect with zero or one child, the empty container has no visible size. See **renders-children** and test vector cta-006.
-- **Null or undefined children**: Renders empty container (React renders nothing for null/undefined).
+- **Empty children**: Component renders an empty `<div className="lp-cta"></div>` without error. The empty container has no visible size, because the container declares no padding or margin (see Appearance, **Layout**). See **renders-children** and test vector cta-003.
+- **Null or undefined children**: Renders the same empty container (React renders nothing for null/undefined); see test vector cta-003.
 - **Multiple children**: All children are rendered in document order within the container.
 - **Fragment children**: React.Fragment children are unwrapped; their children render in the container.
 - **Text node children**: Plain text or string children render as text nodes within the container.
@@ -116,17 +115,17 @@ Not applicable: No diagnostic logging is implemented for this container componen
 
 ## Platform Notes
 
-- **React/Web**: `packages/web/packages/landing/src/blocks/Cta.tsx` — a simple functional component accepting `children: ReactNode` prop; styling applied via `className="lp-cta"`. `.lp-cta` in `packages/web/packages/landing/src/css/blocks.css` sets `display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center` — no padding, margin, or breakpoint-driven axis change.
+- **React/Web**: `packages/web/packages/landing/src/blocks/Cta.tsx` — a simple functional component accepting `children: ReactNode` prop; styling applied via `className="lp-cta"`. The layout values are given once, in Appearance (**Layout**).
 - **SwiftUI**: Implement as a horizontal flow: children laid out left-to-right with ~12pt spacing (matching `gap: 0.75rem`), wrapping onto a new row and centering each row's children when they exceed the available width. A plain `HStack` does not wrap; use a `Layout`-conforming flow container (iOS 16+ / macOS 13+) instead, and never fall back to a `VStack` for narrow widths.
 - **Compose**: Implement using `androidx.compose.foundation.layout.FlowRow` with `horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)` (or equivalent) to reproduce `gap: 0.75rem` and `justify-content: center`; children wrap onto additional rows automatically. Do not use a plain `Row` or `Column`.
-- **AppKit / UIKit**: Compose a plain horizontal `NSStackView` / `UIStackView` — never subclass `NSView` / `UIView` — for the common case of children that fit on one row. Because neither stack view wraps natively, back the layout with a flow container (for example, a small custom flow view, or `UICollectionView` with a compositional flow layout) when children must wrap onto additional rows, keeping ~12pt spacing and centered alignment.
+- **AppKit / UIKit**: Always use a flow container, never a plain `NSStackView` / `UIStackView`, which does not wrap. For example, use a small custom flow view, or `UICollectionView` with a compositional flow layout, keeping ~12pt spacing and centered alignment so children wrap onto additional rows.
 - **WinUI 3**: Implement as an `ItemsRepeater` with a horizontal `Microsoft.UI.Xaml.Controls.FlowLayout`, setting `MinItemSpacing` / `MinRowSpacing` to match `gap: 0.75rem` (~12px) and `HorizontalAlignment="Center"`, so buttons wrap onto additional rows instead of clipping. A plain `StackPanel` does not wrap and must not be used.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Cta.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Cta.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -159,3 +158,4 @@ The status rests on the source rendering a plain `div` with a single static clas
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source (generated by Claude Haiku 4.5) |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: state concrete `.lp-cta` layout values (flex, wrap, gap, center) across Appearance and Platform Notes; fix AppKit/UIKit to compose stack views instead of subclassing; fix WinUI 3 to a wrapping `FlowLayout`; pick Compose's `FlowRow` and SwiftUI's `Layout` protocol for wrapping fidelity; rename requirements to subject-only kebab-case everywhere they're cited; reformat Design Decisions to the three-line form and add two new decisions (className restriction, grouping semantics); replace Compliance with a real linked check; add Hero/Closer to `related`; broaden tags; retitle to "Call-to-Action Group"; add test vectors for empty children and prop passthrough |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Lint pass: added the wrapping-centered-row requirement and a computed-style vector, trimmed renders-children, stated the layout values only in Appearance, required a flow container on AppKit and UIKit, expressed cta-004 as the class attribute, and merged cta-003 and cta-006. |

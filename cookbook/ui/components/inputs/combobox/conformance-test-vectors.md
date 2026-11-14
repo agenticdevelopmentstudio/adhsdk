@@ -4,7 +4,7 @@
 | T1 | renders-combobox-role | render | input has `role="combobox"`, `aria-expanded="false"` |
 | T2 | type-reveals-suggestions | set query "Vu", open | only "Vue" shown; non-matches absent |
 | T3 | aria-controls-listbox | open | input `aria-controls` equals the listbox id |
-| T4 | arrow-moves-active, enter-picks-active | open "S", ArrowDown, Enter | `aria-activedescendant` → "Svelte"; value becomes "Svelte"; popup closes |
+| T4 | arrow-moves-active, enter-picks-active | type "S", press ArrowDown (opens the popup), press ArrowDown again (highlights the first option), press Enter | `aria-activedescendant` → "Svelte"; value becomes "Svelte"; popup closes |
 | T5 | escape-closes | open "V", Esc | `aria-expanded="false"`; value unchanged from before Esc |
 | T6 | empty-shows-message | set query "zzz", open | empty message shown; no options |
 | T7 | controlled-value | edit text | `onValueChange` fires with the new text |

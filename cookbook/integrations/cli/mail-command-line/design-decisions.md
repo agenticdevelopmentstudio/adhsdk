@@ -35,3 +35,6 @@
 **Rationale**: The service's `list` handler refuses the combination, so the command line forwards the filter unchanged and one place owns the rule.
 **Approved**: pending
 
+**Decision**: All output text is English only, with no string table.
+**Rationale**: The command line is a developer tool whose output scripts read and parse, so stable English wording matters more than localization; translating the usage text, the `Error: ` prefix or the field labels would break callers that match on them.
+**Approved**: pending

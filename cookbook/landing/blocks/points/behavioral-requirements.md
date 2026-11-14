@@ -5,7 +5,7 @@
 - **term-bold**: When an entry has a `term` property, Component MUST render it as `<b>{term}</b>`.
 - **detail-text**: Component MUST render the `detail` property of each entry as ReactNode content.
 - **term-detail-spacing**: When both `term` and `detail` are present, Component MUST render a space character between them.
-- **term-omission**: When an entry has no `term` property, Component MUST NOT render a `<b>` element or space separator.
+- **term-omission**: When an entry's `term` is `undefined` (or the property is absent), Component MUST NOT render a `<b>` element or space separator. Only `undefined` counts as absent: `null`, `""` and `0` are present values and render `<b>` plus the space (see points-012).
 - **base-class**: Component MUST apply the CSS class `lp-points` to the root list element.
 - **ordered-class**: Component MUST apply the CSS class `lp-points--ordered` to the root element when `ordered` is true.
 - **ordered-class-exclusion**: Component MUST NOT apply `lp-points--ordered` class when `ordered` is false.

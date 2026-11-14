@@ -7,7 +7,7 @@
   view model owns a `Prng` instance and confines its draws to one call site
   per `prng-scheduled-draw-only`.
 - **Compose**: Kotlin has no built-in xoshiro128**, so a port MUST hand-write
-  it with `kotlin.math` (`kotlin.math.cbrt`, `pow`, `sin`, `cos`) for `Color`
+  it. Use `kotlin.math` (`kotlin.math.cbrt`, `pow`, `sin`, `cos`) for `Color`
   and `Mat`, and explicit `UInt`/`Int` bit operations
   (`rotateLeft`/`ushr`/`shl`, all already 32-bit-wrapping under Kotlin's
   `UInt`) for `Prng` — `kotlin.random.Random` is NOT a substitute, since it
@@ -17,7 +17,7 @@
 - **React/Web**: The source files (`color.ts`, `ease.ts`, `mat.ts`,
   `prng.ts`, under
   `packages/web/packages/avatar-engine/src/math/`) are the other reference
-  implementation this recipe specifies verbatim; a React host imports them
+  implementation this ingredient specifies verbatim; a React host imports them
   as ordinary modules with no framework coupling (no React import in any of
   the four files).
 - **AppKit / UIKit**: Same Swift source files as the SwiftUI bullet — the

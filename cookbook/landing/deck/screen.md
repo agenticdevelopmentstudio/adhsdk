@@ -2,11 +2,11 @@
 id: 07c437af-a291-4356-bd83-c896bd4facde
 title: "Screen"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,14 +41,14 @@ Screen is a full-viewport-height container component for use in a scrollable or 
 - **render-semantic-element**: Component MUST render as either `<section>` (landmark) or `<div>` (non-landmark) based on the `as` prop.
 - **apply-base-class**: Component MUST apply the `lp-screen` class to the root element.
 - **center-alignment**: Component MUST apply the `lp-screen--center` class when `align` is set to `'center'`.
-- **merge-classname**: Component MUST merge the optional `className` prop with the base classes (`lp-screen`, and `lp-screen--center` when applicable) by concatenation; it does not deduplicate, so a `className` that repeats a base class produces a class list with that token twice.
+- **merge-classname**: Component MUST merge the optional `className` prop with the base classes (`lp-screen`, and `lp-screen--center` when applicable) by concatenation, so every token of `className` appears in the class list alongside the base classes. Whether a token that repeats a base class is deduplicated is unspecified; a port MAY deduplicate and MUST NOT rely on either behavior.
 - **render-glow**: Component MUST render a `<Glow />` component as the first child when `glow` is `true`, and MUST NOT render it when `glow` is `false` or omitted.
 - **accept-id**: Component MUST apply the optional `id` prop to the root element when provided.
-- **snap-point-viewport-height**: Component MUST establish itself as a full-viewport-height scroll-snap point via the `lp-screen` class, which sets `min-height: 100vh` and `scroll-snap-align: start` (`css/base.css`).
+- **snap-point-viewport-height**: Component MUST establish itself as a full-viewport-height scroll-snap point via the `lp-screen` class, which sets `min-height: 100vh` and `scroll-snap-align: start` (the `.lp-screen` rule in `packages/web/packages/landing/src/css/base.css`).
 
 ## Appearance
 
-Component applies layout and styling through CSS classes (`lp-screen`, `lp-screen--center`). The `lp-screen` class also fixes the screen's minimum height and its scroll-snap participation — see **snap-point-viewport-height**. Beyond that contract, visual appearance depends on the host stylesheet. Component itself does not prescribe:
+Component applies layout and styling through CSS classes (`lp-screen`, `lp-screen--center`). The `lp-screen` class also fixes the screen's minimum height and its scroll-snap participation — see `#requirements/snap-point-viewport-height`. Beyond that contract, visual appearance depends on the host stylesheet. Component itself does not prescribe:
 
 - Corner radius
 - Padding
@@ -66,7 +66,7 @@ Not applicable: Screen is a static container with no interactive states.
 ## Accessibility
 
 - **Semantic role**: When rendered as `<section>` (`as: 'section'`), the element only becomes a `region` landmark once it has an accessible name; without one, assistive technology exposes it as a generic section, not a landmark. When rendered as `<div>` (`as: 'div'`), there is no implicit role. Role depends solely on the `as` prop — CSS classes and stylesheets have no effect on ARIA semantics.
-- **Label requirement**: Screen accepts no `aria-label`, `aria-labelledby`, or other pass-through attribute on its root element beyond `id`, `align`, `as`, `className`, and `glow`. Consequently, a `<section>` rendered by Screen has no accessible name through Screen's own props — hosts that need a labelled landmark region MUST provide that name outside Screen's public API.
+- **Label requirement**: Screen accepts no `aria-label`, `aria-labelledby`, or other pass-through attribute on its root element beyond `id`, `align`, `as`, `className`, and `glow`. Consequently, a `<section>` rendered by Screen has no accessible name through Screen's own props — hosts that need a labelled landmark region SHOULD render Screen with `as: 'div'` inside their own labelled landmark element (see Design Decisions).
 - **Content accessibility**: Screen does not define accessibility for its children; child components are responsible for their own accessible implementation.
 
 ## Conformance Test Vectors
@@ -80,12 +80,12 @@ Not applicable: Screen is a static container with no interactive states.
 | screen-005 | center-alignment | `align: 'center'` | Root element has both `lp-screen` and `lp-screen--center` in class list |
 | screen-006 | center-alignment | `align: 'top'` or omitted | Root element has `lp-screen` class but not `lp-screen--center` |
 | screen-007 | merge-classname | `className: 'custom-class'` | Root element has `lp-screen` and `custom-class` in class list |
-| screen-008 | merge-classname | `className: 'lp-screen extra'` | Root element's class attribute contains `lp-screen` twice (e.g. `lp-screen lp-screen extra`); a DOM `classList` treats the duplicate token as a no-op |
+| screen-008 | merge-classname | `className: 'lp-screen extra'` | Root element's class list contains `lp-screen` and `extra`; whether the class attribute repeats `lp-screen` is not asserted |
 | screen-009 | render-glow | `glow: true` | First child of root element is the Glow component |
 | screen-010 | render-glow | `glow: false` or omitted | No Glow component is rendered |
 | screen-011 | render-glow | `glow: true, children: null` | First child of root element is still the Glow component; Glow's presence does not depend on `children` |
 | screen-012 | accept-id | `id: 'slide-1'` | Root element has `id="slide-1"` |
-| screen-013 | snap-point-viewport-height | Any props | The `lp-screen` class's computed style resolves to `min-height: 100vh` and `scroll-snap-align: start` |
+| screen-013 | snap-point-viewport-height | Any props | The `.lp-screen` rule in `packages/web/packages/landing/src/css/base.css` declares `min-height: 100vh` and `scroll-snap-align: start`. jsdom does not apply stylesheets, so check it by parsing `base.css` for that rule, or run it as a Playwright test against the loaded stylesheet |
 | screen-014 | render-children | `children: null` or `children: undefined` | Root element renders with no additional content beyond any Glow output |
 | screen-015 | render-children | `children: []` (empty array) | Root element renders with no additional content, same as `null` or `undefined` |
 
@@ -93,8 +93,9 @@ Not applicable: Screen is a static container with no interactive states.
 
 - **Null or undefined children**: The root element always renders regardless of `children`; there is no case where the component itself does not render. React renders `null`/`undefined` children as nothing, so the rendered output is the root element plus, if `glow: true`, the Glow component. See screen-014.
 - **Empty children array**: An empty array renders the same as `null` or `undefined` — nothing — so the root element renders with no additional content. See screen-015.
-- **Glow with no children**: Component MUST render Glow when `glow: true`, independent of whether `children` is null, undefined, or empty; Glow's presence depends only on the `glow` prop. See screen-011.
-- **Multiple class collisions**: If `className` contains `lp-screen` or `lp-screen--center`, the merge logic (see **merge-classname**) concatenates all classes without deduplication, producing a class list with duplicate tokens; a DOM `classList` treats duplicate tokens as a no-op, and host stylesheet SHOULD rely on CSS cascade to manage any remaining style conflicts. See screen-008.
+- **Glow with no children**: Glow's presence depends only on the `glow` prop, not on `children` being null, undefined, or empty; see `#requirements/render-glow` and screen-011.
+- **Multiple class collisions**: If `className` contains `lp-screen` or `lp-screen--center`, the class list still contains every token (see `#requirements/merge-classname`); a DOM `classList` treats duplicate tokens as a no-op, so the rendered element is styled identically whether or not a port deduplicates. See screen-008.
+- **Viewport height on mobile browsers**: `min-height: 100vh` is deliberate. On mobile browsers whose toolbars resize the viewport, `100vh` is the toolbar-collapsed height, so the snap unit never changes while the reader scrolls; `100svh` is the toolbar-expanded height and would let the next screen peek in once the toolbar collapses. A host that wants `100dvh` or `100svh` overrides `min-height` on `.lp-screen` in its own stylesheet.
 
 ## Configuration
 
@@ -105,7 +106,7 @@ Not applicable: Screen is a static container with no interactive states.
 | `className` | `string` | — | Additional CSS class to merge with base classes. |
 | `glow` | `boolean` | `false` | Whether to render a Glow component behind the content. |
 | `id` | `string` | — | Optional HTML id attribute for the root element. |
-| `children` | `ReactNode` | — | Required content to render inside the screen. |
+| `children` | `ReactNode` | — | Content to render inside the screen. Any `ReactNode`, including `null`, `undefined` or an empty array; the root element renders either way. |
 
 ## Deep Linking
 
@@ -137,7 +138,7 @@ Not applicable: Screen does not implement logging.
 
 ## Platform Notes
 
-- **React/Web** (source): Screen is a functional component that conditionally renders a semantic element (`<section>` or `<div>`) based on the `as` prop. It applies BEM-style classes (`lp-screen`, `lp-screen--center`) for styling and optionally renders the Glow component as the first child. Layout and visual appearance are entirely CSS-driven, defined in a separate stylesheet (`css/base.css` per the source comment).
+- **React/Web** (source): Screen is a functional component that conditionally renders a semantic element (`<section>` or `<div>`) based on the `as` prop. It applies BEM-style classes (`lp-screen`, `lp-screen--center`) for styling and optionally renders the Glow component as the first child. Layout and visual appearance are entirely CSS-driven, defined in the `.lp-screen` and `.lp-screen--center` rules of a separate stylesheet, `packages/web/packages/landing/src/css/base.css`.
 
 - **SwiftUI**: Inside a `ScrollView` with `.scrollTargetBehavior(.paging)`, size each screen with `.containerRelativeFrame(.vertical)` so it occupies exactly one viewport height and acts as a paging/snap point. Conditionally overlay a background glow view (via `.background()` or a custom shape) when the glow property is true. Apply conditional padding or alignment modifiers to implement the center vs. top alignment behavior.
 
@@ -151,7 +152,7 @@ Not applicable: Screen does not implement logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/deck/Screen.tsx` | unverified |
+| web | `packages/web/packages/landing/src/deck/Screen.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -161,6 +162,10 @@ Not applicable: Screen does not implement logging.
 
 **Decision**: `glow` is an optional boolean prop (default `false`) rather than leaving ordering to the host.
 **Rationale**: Placing a `<Glow />` before or after Screen's other children is order-sensitive; making `glow` a prop lets Screen guarantee the correct order automatically. The default is `false` because lighting every screen in a deck is a host-level design decision, not a component default.
+**Approved**: pending
+
+**Decision**: Screen forwards only `id` to its root element and takes no `aria-label` or `aria-labelledby` prop; a host that needs a labelled landmark renders Screen with `as: 'div'` inside its own labelled landmark.
+**Rationale**: Keeping the prop surface small avoids a second route to the same result, and the `as` prop already gives the host the choice between a landmark and a plain container.
 **Approved**: pending
 
 **Decision**: The `as` prop lets Screen render as either a landmark (`<section>`) or a generic container (`<div>`).
@@ -181,6 +186,7 @@ Partial because Screen correctly switches between `<section>` and `<div>` based 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Relaxed class-deduplication to unspecified, documented the 100vh choice and the labelled-landmark workaround, made children optional in the table, and fixed the css-contract vector, edge cases and citations. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and elevated render-glow/accept-id to MUST, added glow as a dependency and deck as related, unquoted the modified date, added a snap-point-viewport-height requirement and test vector for the min-height/scroll-snap-align CSS contract, resolved the as-default and null/empty-children contradictions and dropped the untestable invalid-align/invalid-as edge cases, corrected merge-classname to describe concatenation without deduplication and added a class-collision test vector, corrected the section-landmark wording in Accessibility and added a Compliance table, reformatted Design Decisions into decision/rationale/approved triples, and fixed the invalid WinUI 3 APIs, vague SwiftUI/Compose guidance, and AppKit/UIKit subclassing note in Platform Notes |
 | 1.0.0 | 2026-09-22 | — | Initial creation |

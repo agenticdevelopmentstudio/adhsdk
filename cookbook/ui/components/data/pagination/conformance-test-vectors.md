@@ -11,6 +11,5 @@
 | T8 | forwards-classname | `className="mt-4"` | `nav` element carries the `mt-4` class |
 | T9 | hides-when-single-page | `page={1} totalPages={0}` | renders nothing (empty container) |
 | T10 | shows-page-caption, disables-next-on-last | `page={5} totalPages={3}` | caption `"Page 5 of 3"`; `Next` button disabled |
-| T11 | disables-prev-on-first | `page={1} totalPages={3}` | `Next` button is enabled |
-| T12 | disables-next-on-last | `page={3} totalPages={3}` | `Prev` button is enabled |
-
+| T11 | disables-prev-on-first | negative case: `page={1} totalPages={3}` | `Next` button is enabled |
+| T12 | disables-next-on-last | negative case: `page={3} totalPages={3}` | `Prev` button is enabled || T13 | shows-page-caption, hides-when-single-page | `page={1} totalPages={NaN}` | renders the pager (`NaN <= 1` is false); caption `"Page 1 of NaN"`; `Prev` disabled, `Next` enabled |

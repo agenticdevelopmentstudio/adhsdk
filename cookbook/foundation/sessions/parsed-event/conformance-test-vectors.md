@@ -6,9 +6,9 @@
 | parsed-event-003 | oauth-nil-versus-empty | `oauthAccountEmail: ""` | `oauthAccountEmail == ""`, which is not nil |
 | parsed-event-004 | oauth-account-email | `oauthAccountEmail: "me@x.y"` | `"me@x.y"` |
 | parsed-event-005 | context | `context: ["cwd": "/tmp/p"]` | `context?["cwd"] as? String == "/tmp/p"` (test `testEnvelopeRoundTripsThroughTheDropFileParser`, after the round trip) |
-| parsed-event-006 | no-validation, event-type | `eventType: ""`, `hookData: ["session_id": "s-u"]` | constructed without error; parsing its envelope later returns `.unparseable` (test `testAnUnparseableEnvelopeIsQuarantinedWithoutReachingTheDatabase`) |
-| parsed-event-007 | no-validation | `hookData: [:]` | constructed without error; its `sessionId` is `""` and its envelope parses to `.skip` |
+| parsed-event-006 | no-validation, event-type | `eventType: ""`, `hookData: ["session_id": "s-u"]` | constructed without error (what parsing does with it is in the [Parse Result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1) vectors) |
+| parsed-event-007 | no-validation | `hookData: [:]` | constructed without error; its `sessionId` is `""` (the parse outcome is in the [Parse Result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1) vectors) |
 | parsed-event-008 | account-email | `accountEmail: ""` | `accountEmail == ""` |
 | parsed-event-009 | session-id-accessor | `hookData: ["session_id": "s-rt"]` | `sessionId == "s-rt"` (test `testEnvelopeRoundTripsThroughTheDropFileParser`) |
-| parsed-event-010 | immutable-fields | assigning to `eventType` on a constant | compile error; the property is `let` |
+| parsed-event-010 | immutable-fields | static check (code review or API-surface inspection, not a runtime test): every stored property is declared `let` | no stored property is `var`; assigning to `eventType` on a constant is a compile error |
 

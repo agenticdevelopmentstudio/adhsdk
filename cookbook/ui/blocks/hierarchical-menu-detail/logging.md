@@ -1,3 +1,1 @@
-
-Not applicable: Source includes an internal debug log (gated behind a dev-only switch) for development; no production logging is implemented.
-
+Not applicable: This component specifies no logging. Its development-time debug log is described in the React/Web platform note.

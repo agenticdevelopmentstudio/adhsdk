@@ -4,7 +4,7 @@
     "id": "211ef664-01fc-45d5-996b-1a0a4167a748",
     "title": "Partner Step Template",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,14 +23,16 @@
       "templating",
       "shell-quoting"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "79810488-c613-4f9b-af2a-4ba9d8ee1c26"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "49dd03452f7fdafd",
+  "synced": "b5775248fe2b3906",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -6,5 +6,6 @@
 - **side-class**: Component MUST apply a class `lp-bleed--{side}` to the rendered `div`, where `{side}` is the value of the `side` prop.
 - **accept-class-name-prop**: Component MUST accept an optional `className` prop and append it to the rendered `div`.
 - **falsy-class-filter**: Component MUST NOT output empty strings or undefined values in the class list; falsy class names MUST be filtered before joining.
-- **side-passthrough**: `side` is typed `'left' | 'right'`; the component performs no runtime check, so a value outside that type (reachable only by a caller that bypasses TypeScript) MUST still render as `lp-bleed--{value}` verbatim. This is unenforced, undefined-by-the-type-system behavior, not a supported input.
-
+- **bleed-offset**: At a viewport width of `62rem` or more, `.lp-bleed--right` MUST set `margin-right` and `.lp-bleed--left` MUST set `margin-left` to `calc(-1 * var(--lp-bleed, clamp(2.5rem, 10vw, 9rem)))`, so the offset is 10% of the viewport width, never less than `2.5rem` and never more than `9rem` unless the host sets `--lp-bleed`. The opposite side keeps no margin.
+- **bleed-breakpoint**: Below `62rem` the offset MUST NOT apply: a bleed is a no-op and the frame sits in the column like any other content. `62rem` matches the `.lp-split` breakpoint so a bleeding shot and its split change together.
+- **bleed-min-width**: `.lp-bleed` MUST set `min-width: 0` so that the bled element can shrink inside a flex or grid parent.

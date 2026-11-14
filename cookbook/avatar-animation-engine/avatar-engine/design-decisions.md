@@ -1,7 +1,7 @@
 
 - **Decision**: `Prng.pick` on an empty list crashes the host process on
   Apple (`preconditionFailure`, uncatchable) but throws an ordinary,
-  catchable `Error` on web, and this recipe records both as intentional
+  catchable `Error` on web, and this ingredient records both as intentional
   rather than reconciling them into one behavior.
   **Rationale**: Both source files document this as the same underlying
   contract violation — the config loader is supposed to guarantee every
@@ -9,7 +9,7 @@
   empty list means that guarantee was broken elsewhere — but each platform's
   own idiom for an "this should be impossible" failure differs: a Swift
   precondition failure versus a thrown JavaScript `Error`. Neither file
-  proposes reconciling the two, and this recipe does not either.
+  proposes reconciling the two, and this ingredient does not either.
   **Approved**: pending
 - **Decision**: `Engine` exposes no explicit teardown or dispose method, even
   though its internal `Reflexes` collaborator has a `stop()` that `Engine`

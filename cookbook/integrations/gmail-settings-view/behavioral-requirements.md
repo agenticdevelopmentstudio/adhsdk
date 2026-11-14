@@ -31,7 +31,7 @@
 - **remove-button**: The view MUST show a "Remove" button, MUST disable it while no account is selected or the model is busy, and on press MUST ask for confirmation for the selected account instead of removing it.
 - **remove-confirmation**: The removal confirmation MUST be titled "Remove <email>?", MUST say it signs the account out of Google, removes its stored sign-in and deletes its mail from this Mac, and MUST offer an action titled "Remove".
 - **remove-safe-default**: The removal confirmation MUST make Cancel the default response to Return, and Esc MUST decline.
-- **remove-call**: The view MUST call the model's `remove(accountId:)` only when the user confirms, and MUST make no model call when the user declines or when there is no key window to attach the confirmation to; the shared confirmation helper answers no without a window, so unlike alerts the confirmation has no app-modal fallback.
+- **remove-call**: The view MUST call the model's `remove(accountId:)` only when the user confirms, and MUST make no model call when the user declines or when there is no key window to attach the confirmation to (see Edge Cases, No key window).
 - **sign-in-progress**: While the model's `signingIn` is true, the view MUST show a small spinner, the caption "Waiting for Google sign-in in your browser…" and a "Cancel" button beside the Add Account and Remove buttons.
 - **cancel-sign-in**: The "Cancel" button MUST call the model's `cancelSignIn` and MUST NOT be disabled by the model's busy state.
 
@@ -45,6 +45,7 @@
 - **window-picker**: The view MUST show a "Fetch mail from the last" picker, no wider than 300 pt, whose fixed choices are 7, 14, 30, 90, 180 and 365 days, each labelled "<n> days".
 - **poll-picker**: The view MUST show a "Check for mail every" picker, no wider than 300 pt, whose fixed choices are 5, 15, 30 and 60 minutes, each labelled "<n> minutes".
 - **custom-value-preserved**: When an account's current window or poll value is not one of the fixed choices, the picker MUST add that value to its choices in ascending order so the current value stays selectable and displayed.
+- **picker-labels-plural**: The picker choice labels SHOULD be localized and plural-aware ("1 day", "1 minute"). The macOS source builds "<n> days" and "<n> minutes" from literals, so a stored value of 1 reads "1 days".
 - **whole-settings-write**: A change to any toggle or picker MUST send the account's complete settings with only that field changed, through the model's `update(accountId:_:)`.
 - **settings-stay-enabled**: The toggles and pickers MUST NOT be disabled while the model is busy, because the model coalesces rapid changes.
 
@@ -59,5 +60,5 @@
 ### Security
 
 - **secret-entry-concealed**: The client secret entry field MUST conceal what is typed.
-- **secret-masked-readout**: The view MUST display the stored client secret only as the model's `maskedClientSecret`, never in any other form.
+- **secret-masked-readout**: The view MUST display the stored client secret only as the model's `maskedClientSecret`, never in any other form. That value is ten fixed dots followed by the last five characters of the stored secret, or "Stored (hidden)" when no suffix is available.
 

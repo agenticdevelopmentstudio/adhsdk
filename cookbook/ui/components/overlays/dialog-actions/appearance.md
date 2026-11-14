@@ -26,7 +26,9 @@ Busy:
 - Row: `flex items-center gap-3`; `w-full justify-end` in `auto`, `w-full` in
   forced-equal, `justify-end` in forced-natural and busy modes.
 - Buttons in `auto` carry `flex-1 max-w-max`; forced-equal carries `flex-1`
-  (uncapped); forced-natural carries neither.
+  (uncapped) only when both buttons render; forced-natural carries neither. A lone
+  confirm button in forced-equal has no grow class and the row has no `justify-end`,
+  so it sits at its natural width at the start edge of the full-width row.
 - Buttons are the shared `Button` at `size="sm"`. Cancel is `variant="outline"`;
   confirm is `destructive` when `destructive`, else `confirmVariant` (default
   `"default"`, the gold primary).

@@ -9,5 +9,5 @@ A response has three parts:
 - **Sections** — the raw data per source, each wrapped as a section that keeps its last good answer next to the latest failure (`DashboardSection`).
 - **Views** — what the pages draw, already joined, sorted, thresholded and rated by the server. The pages only lay them out.
 
-The constant lists are the analytics ranges (`ANALYTICS_RANGES`), the breakdown dimensions (`DIMENSIONS`), the Vercel breakdowns (`VERCEL_BREAKDOWNS`) and the web vitals (`VITALS`). The dashboard queries recipe consumes the responses, and the dashboard formatting recipe consumes `AnalyticsRange`, `Vital` and the site list. For number and time wording see Format ([adhsdk.ingredient.status.dashboard.logic.format](cookbook:564c6102-e100-41ad-9c92-14606a33c394)).
+The constant lists are the analytics ranges (`ANALYTICS_RANGES`), the breakdown dimensions (`DIMENSIONS`), the Vercel breakdowns (`VERCEL_BREAKDOWNS`) and the web vitals (`VITALS`). The dashboard queries recipe consumes the responses, and the formatting module, Dashboard Formatting ([adhsdk.ingredient.status.dashboard.lib.dashboard-format](cookbook:c861465b-50c8-49d1-93cc-00d9e062ad5f)), consumes `AnalyticsRange`, `Vital` and the site list. For number and time wording see Format ([adhsdk.ingredient.status.dashboard.logic.format](cookbook:564c6102-e100-41ad-9c92-14606a33c394)).
 

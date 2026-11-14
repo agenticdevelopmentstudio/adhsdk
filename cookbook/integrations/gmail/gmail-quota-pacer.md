@@ -2,11 +2,11 @@
 id: f0543d0b-31fe-4dcc-833e-21ead91bdca5
 title: "Gmail Quota Pacer"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -38,7 +38,7 @@ approved-date: ""
 
 The arithmetic is the generic cell rate algorithm. The pacer keeps one value, `drainedAt`, the instant when every unit reserved so far would have drained at `unitsPerSecond`. A call waits only for the part of that backlog which lies beyond the burst allowance, so the first `burstUnits` units go out back to back and later calls are spaced to the configured average rate.
 
-The same file holds `GmailQuotaCost`, an internal `enum` of `static let` constants giving each Gmail call's cost in units, taken from [Google's published quota table](https://developers.google.com/workspace/gmail/api/reference/quota). [GmailRESTClient](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914) is the consumer: every request attempt, retries included, reserves its cost, sleeps for any returned wait, and then sends. The REST client (and the [mail integration service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) above it), its retry and backoff policy and the Gmail response types are separate components.
+The same file holds `GmailQuotaCost`, an internal `enum` of `static let` constants giving each Gmail call's cost in units, taken from [Google's published quota table](https://developers.google.com/workspace/gmail/api/reference/quota). the `GmailRESTClient` type ([adhsdk.ingredient.integrations.gmail.gmail-rest-client](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914)) is the consumer: every request attempt, retries included, reserves its cost, sleeps for any returned wait, and then sends. The REST client (and the the mail integration service ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) above it), its retry and backoff policy and the Gmail response types are separate components.
 
 ## Behavioral Requirements
 
@@ -52,9 +52,9 @@ Contract: `public actor GmailQuotaPacer` with `public init(unitsPerSecond: Doubl
 - **drain-advance**: Each reservation MUST set `drainedAt` to `max(previous drainedAt, current time)` plus `units / unitsPerSecond` seconds, where a nil `drainedAt` counts as the current time.
 - **idle-credit-capped**: Time spent idle MUST NOT build up credit beyond the burst allowance, because a `drainedAt` already in the past is replaced by the current time on the next reservation.
 - **zero-units**: Reserving 0 units MUST leave `drainedAt` unchanged when it is at or after the current time, and MUST return the wait that backlog still implies.
-- **nanosecond-rounding**: Each conversion of units, or of the burst allowance, to a `Duration` MUST round to the nearest whole unit of the platform's `Duration` resolution (a whole nanosecond in Swift).
+- **nanosecond-rounding**: Each conversion of units, or of the burst allowance, to a `Duration` MUST round to the nearest whole unit of the platform's `Duration` resolution (a whole nanosecond in Swift), with a tie rounding away from zero, as Swift's `.rounded()` does.
 - **units-nonnegative**: NEEDS REVIEW: Not implemented in source. `reserve(_:)` takes an `Int` and never checks its sign, so a negative `units` moves `drainedAt` earlier and shortens the backlog; the only callers pass `GmailQuotaCost` constants, which are all positive. Settling it needs a decision whether a negative reservation is a caller error to trap, clamp or accept as a refund.
-- **reservation-final**: The pacer MUST offer no cancel or release operation, so a call that fails, is retried, or is cancelled while its caller sleeps keeps the units it reserved. A negative `units` is not a designed release; see the open question on `units-nonnegative`.
+- **reservation-final**: The pacer MUST offer no cancel or release operation, so a call that fails, is retried, or is cancelled while its caller sleeps keeps the units it reserved. A negative `units` is not a designed release; see #requirements/units-nonnegative.
 - **serialised-reservations**: Concurrent `reserve(_:)` calls MUST be serialised by the actor so each one reads and updates `drainedAt` as a single step and no two calls read the same prior value.
 
 ### Configuration and clock
@@ -112,21 +112,20 @@ All vectors use a stopped clock unless they say the clock moves. Vectors marked 
 | pacer-015 | reservation-final | Derived: rate 10, burst 0; `reserve(10)`, the caller is cancelled during its sleep, then `reserve(10)` on the same instant | 1 s, then 2 s; the first reservation's units are still counted |
 | pacer-016 | cost-table, cost-type | Derived: read each `GmailQuotaCost` constant | profile 1, labelsList 1, historyList 2, messagesList 5, messagesGet 5, threadsGet 10, messagesBatchModify 50 |
 | pacer-017 | shared-process-wide | Derived: read `GmailQuotaPacer.shared` twice | The same instance both times; a reservation made through one read is seen by the other |
-| pacer-018 | units-nonnegative | Derived: rate 10, burst 0; `reserve(10)` returns 1 s; `reserve(-5)` | 500 ms: the unvalidated negative value shortened the backlog by half; this records the code, not a designed refund |
 
 ## Edge Cases
 
-- **Null and empty input**: There is no optional input. `drainedAt` is nil before the first reservation and is treated as the current time, so the first call is paced only by its own cost beyond the burst allowance. This MUST hold.
-- **Zero units**: A reservation of 0 units adds nothing to the backlog and returns the wait the existing backlog implies, or `.zero` when there is none. This MUST hold.
-- **Negative units**: The sign of `units` is never validated; a negative value moves `drainedAt` earlier and returns a reduced wait. This is what the code does, and the open question on `units-nonnegative` records it.
-- **Boundary at the burst allowance**: Reservations that total exactly `burstUnits` still return `.zero`; the first unit past it returns a positive wait. This MUST hold.
-- **Zero burst**: `burstUnits` of 0 is valid and makes even the first call wait its own cost divided by the rate. This MUST hold.
+- **Null and empty input**: There is no optional input. `drainedAt` is nil before the first reservation and is treated as the current time, so the first call is paced only by its own cost beyond the burst allowance.
+- **Zero units**: A reservation of 0 units adds nothing to the backlog and returns the wait the existing backlog implies, or `.zero` when there is none. See #requirements/zero-units.
+- **Negative units**: The sign of `units` is never validated; a negative value moves `drainedAt` earlier and returns a reduced wait. This is what the code does, and #requirements/units-nonnegative records it.
+- **Boundary at the burst allowance**: Reservations that total exactly `burstUnits` still return `.zero`; the first unit past it returns a positive wait. See #requirements/wait-formula.
+- **Zero burst**: `burstUnits` of 0 is valid and makes even the first call wait its own cost divided by the rate. See #requirements/zero-burst.
 - **Invalid configuration**: A rate of 0 or below, or a negative burst, traps in the initializer through `precondition`. A `NaN` for either value also traps, because the comparisons are false. A release build compiled with unchecked optimisation removes the check. This is what the code does.
 - **Unbounded configuration**: A burst or rate that makes a duration exceed the range of `Int64` nanoseconds (about 9.2 billion seconds, which includes an infinite burst) passes the precondition and then traps in the conversion to `Duration`. The source does not guard this; callers pass finite constants.
 - **Very large rate**: An infinite `unitsPerSecond` passes the precondition, makes every cost zero seconds, and so turns pacing off. This is what the code does.
 - **Clock moves backward**: With an injected clock that returns an earlier instant than before, `drainedAt` stays ahead of the current time, so the backlog is longer than real time implies. The default `ContinuousClock` never moves backward.
-- **Clock moves forward**: Time passing drains the backlog, and once the clock passes `drainedAt` the backlog is gone and no credit beyond the burst allowance remains. This MUST hold.
-- **Concurrent access**: Calls arriving together from many tasks are serialised by the actor; each sees the `drainedAt` left by the one before. This MUST hold. The pacer does not decide who is first.
+- **Clock moves forward**: Time passing drains the backlog, and once the clock passes `drainedAt` the backlog is gone and no credit beyond the burst allowance remains. See #requirements/idle-credit-capped.
+- **Concurrent access**: Calls arriving together from many tasks are serialised by the actor; each sees the `drainedAt` left by the one before; see #requirements/serialised-reservations. The pacer does not decide who is first.
 - **Cancellation**: The pacer cannot be cancelled mid-call because `reserve(_:)` is synchronous inside the actor. A caller cancelled while it sleeps out the returned wait keeps its reservation, so quota is over-counted rather than exceeded.
 - **Failed or retried requests**: The pacer cannot tell a failed request from a successful one. `GmailRESTClient` reserves once per attempt, so each retry after a 429, a 5xx or a transient network error reserves its cost again.
 - **Error states, network and offline**: Not applicable: the pacer performs no I/O and has no dependency that can fail; it raises no errors and returns a `Duration` on every call.
@@ -142,7 +141,7 @@ All vectors use a stopped clock unless they say the clock moves. Vectors marked 
 | `now` | `@Sendable () -> ContinuousClock.Instant` | `ContinuousClock.now` | The clock; injected so tests control time. |
 | `units` (argument to `reserve`) | `Int` | none | Quota cost of the next call; callers pass a `GmailQuotaCost` constant. |
 
-There are no environment variables or settings keys. [GmailRESTClient](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914) takes the pacer as an initializer parameter that defaults to `GmailQuotaPacer.shared`, and its tests pass their own pacer with a very high rate (1,000,000 units a second and burst) to switch pacing off.
+There are no environment variables or settings keys. the `GmailRESTClient` type ([adhsdk.ingredient.integrations.gmail.gmail-rest-client](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914)) takes the pacer as an initializer parameter that defaults to `GmailQuotaPacer.shared`, and its tests pass their own pacer with a very high rate (1,000,000 units a second and burst) to switch pacing off.
 
 ## Deep Linking
 
@@ -175,16 +174,16 @@ Not applicable: the source makes no log call.
 ## Platform Notes
 
 - **SwiftUI**: Not a view, so nothing to translate. A SwiftUI app reaches the pacer only through `GmailRESTClient`; the pacer has no `Observable` or `ObservableObject` dependency and no UI state.
-- **Compose**: Port as a Kotlin class whose non-suspending `reserve` is guarded by a `synchronized` block (a coroutine `Mutex` would make it `suspend`, which conflicts with `no-sleep`), because Kotlin has no actor type and the read-then-write of `drainedAt` must be one step. Use `kotlin.time.TimeSource.Monotonic` (a `TimeMark` per reservation) and `kotlin.time.Duration` (`Duration.Companion.seconds`, rounded to nanoseconds with `toLong(DurationUnit.NANOSECONDS)`). Inject the clock as a `() -> TimeMark` or a `TimeSource`. Callers `delay(wait)` for the returned wait. For the rate precondition use `require`, which throws `IllegalArgumentException` instead of trapping.
+- **Compose**: Port as a Kotlin class whose non-suspending `reserve` is guarded by a `synchronized` block, which exists only on the JVM and Android, so this port targets those; a Kotlin Multiplatform or Native target uses a multiplatform lock such as the `SynchronizedObject` from `kotlinx.atomicfu` (a coroutine `Mutex` would make it `suspend`, which conflicts with `no-sleep`), because Kotlin has no actor type and the read-then-write of `drainedAt` must be one step. Use `kotlin.time.TimeSource.Monotonic` (a `TimeMark` per reservation) and `kotlin.time.Duration` (`Duration.Companion.seconds`, rounded to nanoseconds with `toLong(DurationUnit.NANOSECONDS)`). Inject the clock as a `() -> TimeMark` or a `TimeSource`. Callers `delay(wait)` for the returned wait. For the rate precondition use `require`, which throws `IllegalArgumentException` instead of trapping.
 - **React/Web**: Port as a TypeScript class with a synchronous `reserve(units: number): number` returning milliseconds. JavaScript runs one task at a time, so no lock is needed as long as `reserve` does not `await`. Use `performance.now()` as the default clock (monotonic) and accept a `() => number` for tests. Callers `await new Promise(resolve => setTimeout(resolve, wait))`. Use a plain `number` in milliseconds and round only at the sleep, since a double holds fractional milliseconds; there is no `Int64` trap to match. `throw new RangeError` for the precondition.
 - **AppKit / UIKit**: Source platform. The code is `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailQuotaPacer.swift`. It uses Foundation only for the file import and relies on the Swift standard library: `actor` for isolation, `ContinuousClock` and `ContinuousClock.Instant` for time, `Duration` with `.nanoseconds(Int64)` for the result, and `precondition` for the configuration check. `GmailQuotaCost` is a caseless internal `enum` in the same file, compiled into the SDK target (see the Xcode project file in `packages/apple/AgenticDeveloperHubSDK`). `GmailRESTClientTests` in `Tests/AgenticDeveloperHubSDKIntegrationsTests` holds the only pacer tests.
-- **WinUI 3**: Write a `sealed class GmailQuotaPacer` in C#. .NET has no actor, so guard `Reserve` with a `lock` on a private object (a synchronous method, so `lock` is enough and `SemaphoreSlim` is not needed), keeping `drainedAt` as a nullable `long` of `Stopwatch` ticks. Take the clock as a `Func<long>` returning `Stopwatch.GetTimestamp()` by default; `Stopwatch` is monotonic like `ContinuousClock`, and `Stopwatch.Frequency` converts ticks to `TimeSpan` (use `TimeSpan.FromTicks`, which has 100 ns resolution, so the nanosecond rounding differs: 1 unit at 3 units a second returns 3,333,333 ticks, or 333,333,300 ns, not 333,333,333 ns). Return a `TimeSpan` clamped with `TimeSpan.Zero`, and have callers `await Task.Delay(wait, cancellationToken)`. Throw `ArgumentOutOfRangeException` for the rate precondition rather than trapping. Expose `static GmailQuotaPacer Shared { get; } = new(200, 200)` and `internal static class GmailQuotaCost` with `const int` fields. Register `Shared` as a singleton in `Microsoft.Extensions.DependencyInjection` if the app uses it. The pacer holds no observable state, so no `INotifyPropertyChanged` or `ObservableCollection` belongs in it.
+- **WinUI 3**: Write a `sealed class GmailQuotaPacer` in C#. .NET has no actor, so guard `Reserve` with a `lock` on a private object (a synchronous method, so `lock` is enough and `SemaphoreSlim` is not needed), keeping `drainedAt` as a nullable `long` of `Stopwatch` ticks. Take the clock as a `Func<long>` returning `Stopwatch.GetTimestamp()` by default; `Stopwatch` is monotonic like `ContinuousClock`, and `Stopwatch.Frequency` converts ticks to `TimeSpan` (`Stopwatch` ticks are not 100 ns units, so convert with `ticks * TimeSpan.TicksPerSecond / Stopwatch.Frequency` before calling `TimeSpan.FromTicks`, or use `Stopwatch.GetElapsedTime`, and never pass raw `Stopwatch` ticks to it; `TimeSpan` has 100 ns resolution, so the nanosecond rounding differs: 1 unit at 3 units a second returns 3,333,333 ticks, or 333,333,300 ns, not 333,333,333 ns). Return a `TimeSpan` clamped with `TimeSpan.Zero`, and have callers `await Task.Delay(wait, cancellationToken)`. Throw `ArgumentOutOfRangeException` for the rate precondition rather than trapping. Expose `static GmailQuotaPacer Shared { get; } = new(200, 200)` and `internal static class GmailQuotaCost` with `const int` fields. Register `Shared` as a singleton in `Microsoft.Extensions.DependencyInjection` if the app uses it. The pacer holds no observable state, so no `INotifyPropertyChanged` or `ObservableCollection` belongs in it.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailQuotaPacer.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailQuotaPacer.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -216,7 +215,7 @@ Not applicable: the source makes no log call.
 **Approved**: pending
 
 **Decision**: `reserve` takes a signed `Int` and does not validate its sign.
-**Rationale**: A negative reservation shortens the backlog, which is behavior the source does not intend and its callers do not use. The open question on `units-nonnegative` records it so a port either copies or rejects it deliberately. It is settled when the owner decides whether to trap, clamp or accept it.
+**Rationale**: A negative reservation shortens the backlog, which is behavior the source does not intend and its callers do not use. #requirements/units-nonnegative records it so a port either copies or rejects it deliberately. It is settled when the owner decides whether to trap, clamp or accept it.
 **Approved**: pending
 
 **Decision**: The cost table is a set of `Int` constants in the same file, from Google's published table.
@@ -226,6 +225,7 @@ Not applicable: the source makes no log call.
 **Decision**: `shared` and `reserve` are public while `GmailQuotaCost` is internal.
 **Rationale**: In the source only code inside the SDK module reserves quota, and it uses the cost constants. An outside caller of `shared` cannot name the costs and must supply its own unit counts; the source has no public cost table. This is what the code does, not a designed extension point.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -235,9 +235,10 @@ Not applicable: the source makes no log call.
 | [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | partial | access-patterns |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 
-The pacer separates concerns cleanly: it computes a wait from an injected clock and leaves sleeping, sending, retrying and backoff to `GmailRESTClient`. Unit-test coverage is partial because no `GmailQuotaPacerTests` file exists; the only tests are two in `GmailRESTClientTests`, covering a burst and a zero burst with two sequential calls, and vectors pacer-003 to pacer-018 are derived from the code and are the backlog for a `GmailQuotaPacerTests` file. Rate-limit handling is partial: the pacer spaces calls ahead of time, while reacting to a 429 or a rate-limit 403 belongs to the REST client, and the pacer never learns that one happened. Explicit error handling is partial because the pacer raises no error, and a bad rate or an overflowing duration traps, while a negative `units` is accepted silently.
+The pacer separates concerns cleanly: it computes a wait from an injected clock and leaves sleeping, sending, retrying and backoff to `GmailRESTClient`. Unit-test coverage is partial because no `GmailQuotaPacerTests` file exists; the only tests are two in `GmailRESTClientTests`, covering a burst and a zero burst with two sequential calls, and vectors pacer-003 to pacer-017 are derived from the code and are the backlog for a `GmailQuotaPacerTests` file. Rate-limit handling is partial: the pacer spaces calls ahead of time, while reacting to a 429 or a rate-limit 403 belongs to the REST client, and the pacer never learns that one happened. Explicit error handling is partial because the pacer raises no error, and a bad rate or an overflowing duration traps, while a negative `units` is accepted silently.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Dropped the unvalidated negative-units vector, pointed edge cases and prose at requirement fragments, used rdid link labels, named the tie rounding mode, corrected the WinUI Stopwatch tick conversion, scoped the Compose lock to the JVM, and fixed the blank line before Compliance. |

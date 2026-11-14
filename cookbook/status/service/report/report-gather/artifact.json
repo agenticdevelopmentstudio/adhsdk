@@ -4,7 +4,7 @@
     "id": "24b45917-4361-44d8-a3dc-224cc2807aa9",
     "title": "Status Report Gather",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,7 +24,9 @@
       "parallel-reads",
       "timeouts"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "581dbca7-c086-48ee-a6e9-e4b80536aa1f"
+    ],
     "related": [
       "77587f0b-5a27-44d9-a507-46bb90c9046a"
     ],
@@ -32,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "960c45928a493789",
+  "synced": "c08490869c887794",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

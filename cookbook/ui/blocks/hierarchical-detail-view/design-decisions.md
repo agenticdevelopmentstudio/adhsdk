@@ -11,12 +11,12 @@
 
 - **Cascading-to-covered mapping:**
   **Decision**: When a consumer passes `disclosureStyle: "cascading"` to the router component and the context is `false`, the component maps it to `disclosureStyle: "covered"`.
-  **Rationale**: This graceful degradation prevents passing an invalid prop to `HierarchicalTopicDetail` and provides a reasonable fallback: the covered style borrows the cascade's rules for covering, pins, and hover reveal, so it approximates the cascade's visual behavior without the vertical step unique to the menu view.
+  **Rationale**: This graceful degradation prevents passing an invalid prop to `HierarchicalTopicDetail` and provides a reasonable fallback: the covered style borrows the cascade's rules for covering, pins, and hover reveal, so it approximates the cascade's visual behavior without the vertical step unique to the menu view. The source emits no dev-mode warning when this happens; the fallback is silent because the covered style is a deliberate approximation, and callers who need the exact cascade turn the provider on.
   **Approved**: pending
 
 - **autoHideTopics passed through, not filtered:**
   **Decision**: The `autoHideTopics` prop is cascade-only and has no meaning in the classic topic view, but it is not filtered out — it is carried along in the destructured rest props and passed to `HierarchicalTopicDetail` unchanged.
-  **Rationale**: `HierarchicalTopicDetail` ignores unknown props rather than throwing an error, so this allows consumers to pass superset props without conditional logic of their own; see **cascade-only-props**.
+  **Rationale**: `HierarchicalTopicDetail` ignores unknown props rather than throwing an error, so this allows consumers to pass superset props without conditional logic of their own; see **preserve-other-props**.
   **Approved**: pending
 
 - **The router is temporary:**
@@ -24,3 +24,7 @@
   **Rationale**: Once the experiment concludes, the losing detail-view component and this router file are deleted together; only the winning component remains, and consumers call it directly instead of going through the switch.
   **Approved**: pending
 
+- **Three names, one switch:**
+  **Decision**: The provider prop is `menuDetail`, the provider is `HierarchicalDetailViewProvider` and the hook is `useHierarchicalMenuDetailView`; the names are kept as they are.
+  **Rationale**: The exports are already consumed under these names and renaming would touch every call site. `menuDetail` names the choice (the menu view), while the provider and router are named for the whole detail view they select.
+  **Approved**: pending

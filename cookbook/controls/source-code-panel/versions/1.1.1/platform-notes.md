@@ -1,0 +1,7 @@
+
+- **SwiftUI**: SwiftUI has no direct Shiki integration. Use a `WebView` or equivalent to render HTML; inject Shiki CSS and the generated HTML from the equivalent React implementation. Detect theme changes via SwiftUI environment and pass as prop.
+- **Compose**: Use `AndroidView` wrapping a WebView (Chromium-based) hosting the same Shiki-based implementation as the source, consistent with the other native platforms — see **Design Decisions**. Theme detection maps to system theme or explicit theme param. Button copy uses Compose's `Clipboard` or system clipboard API.
+- **React/Web**: Source implementation. Use `SourceCodePanel` component directly; props match source signature. Theme resolution reads `--scp-shiki-theme` from DOM and respects explicit `theme` prop. Shiki version and available themes are fixed by the toolkit build.
+- **AppKit / UIKit**: Use `WKWebView` or equivalent; serve the React component as a web page or embed pre-rendered HTML. Detect app theme via `NSAppearance` (macOS) or `UITraitCollection` (iOS) and inject theme as prop. Implement copy via `NSPasteboard` (macOS) or `UIPasteboard` (iOS).
+- **WinUI 3**: Implement using `WebView2` control to host Shiki rendering. Resolve theme from `Application.Current.RequestedTheme` (Light/Dark) and map to Shiki theme names (e.g., Dark → "github-dark", Light → "github-light"). Implement copy button using `Windows.ApplicationModel.DataTransfer.Clipboard`. Handle missing clipboard gracefully with fallback or disabled state.
+

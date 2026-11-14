@@ -2,11 +2,11 @@
 id: 86b4d53c-8122-480c-9a33-43e08b063469
 title: "TopicSelectHint"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,10 +18,10 @@ tags:
   - selection
   - placeholder
   - empty-state
-depends-on: []
+depends-on:
+  - ea565474-df7a-42bd-9613-5dd0cd861911
 related:
   - e86eb195-1ec2-4b12-8a24-79f8c03f65ce
-  - ea565474-df7a-42bd-9613-5dd0cd861911
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,16 +36,16 @@ TopicSelectHint is a centered card component displayed when no selection is acti
 ## Behavioral Requirements
 
 - **render-card**: Component MUST render a Card element containing an icon, optional headline, and optional descriptive content.
-- **render-icon**: Component MUST render a mouse-pointer icon (MousePointerClick from lucide-react) inside a circular container.
+- **render-icon**: Component MUST render a pointer/click glyph inside a circular container.
 - **use-test-hook**: Component MUST set `data-htd-select-hint` attribute on the root container for test targeting. The `htd` prefix is the shared test-hook namespace for the whole HierarchicalTopicDetail component family (`topic-detail`, `hierarchical-topic-detail`, `hierarchical-menu-detail`); TopicSelectHint is that family's shared "nothing selected" placeholder, so it carries the same prefix rather than a bespoke one.
-- **accept-custom-title**: Component MUST render the `title` prop as the headline verbatim when provided, taking precedence over computed headlines and over `selectable` — an explicit `title` still renders even when `selectable` is false.
-- **compute-headline-from-noun**: Component MUST generate the headline as "Select [article] [noun]" when `noun` is provided (truthy) and `title` is not, where `article` is `"an"` when `noun`'s first character matches `/^[aeiou]/i` (case-insensitive) and `"a"` otherwise. This is a naive first-letter rule, not true English pronunciation, so it mis-genders words like "hour" and "user" — see Edge Cases.
-- **compute-headline-from-list-title**: Component MUST generate the headline as "Select an item from [listTitle]" when `listTitle` is provided (truthy), `noun` is not, and `title` is not.
-- **use-fallback-headline**: Component MUST generate the headline as "Select an item from the list" when none of `title`, `noun`, or `listTitle` are provided (or `noun`/`listTitle` are falsy, e.g. an empty string), and `selectable` is true.
-- **append-edit-suffix**: Component MUST append " to view or edit it here." to the computed headline when `selectable` is true and no `children` are provided. This applies to every computed headline (noun-derived, listTitle-derived, and the fully generic default) equally.
+- **accept-custom-title**: Component MUST render the `title` prop as the headline verbatim when it is not `null`/`undefined` (`title=""` renders an empty headline), taking precedence over computed headlines and over `selectable` — an explicit `title` still renders even when `selectable` is false.
+- **compute-headline-from-noun**: Component MUST generate the headline as "Select [article] [noun]" when `noun` is truthy (a non-empty string), `title` is `null`/`undefined`, and `selectable` is true, where `article` is `"an"` when `noun`'s first character matches `/^[aeiou]/i` (case-insensitive) and `"a"` otherwise. This is a naive first-letter rule, not true English pronunciation, so it picks the wrong article for words like "hour" and "user" — see Edge Cases.
+- **compute-headline-from-list-title**: Component MUST generate the headline as "Select an item from [listTitle]" when `listTitle` is truthy (a non-empty string), `noun` is falsy, `title` is `null`/`undefined`, and `selectable` is true.
+- **use-fallback-headline**: Component MUST generate the headline as "Select an item from the list" when `title` is `null`/`undefined`, `noun` and `listTitle` are both falsy (absent or an empty string), and `selectable` is true.
+- **append-edit-suffix**: Component MUST append " to view or edit it here." to the computed headline when `selectable` is true and `children` is `null`/`undefined` (any other value, including `""` and `0`, counts as provided). This applies to every computed headline (noun-derived, listTitle-derived, and the fully generic default) equally.
 - **hide-headline-when-not-selectable**: Component MUST NOT render the computed headline when `selectable` is false and no `title` is provided; an explicit `title` still renders regardless of `selectable`.
-- **render-children**: Component MUST render the `children` prop as descriptive content when provided.
-- **hide-children-when-not-provided**: Component MUST not render a content section when `children` are not provided.
+- **render-children**: Component MUST render the `children` prop as descriptive content when `children` is not `null`/`undefined`; `children=""` renders an empty description container.
+- **hide-children-when-not-provided**: Component MUST NOT render a content section when `children` is `null`/`undefined`.
 - **center-content**: Component MUST center the card horizontally and vertically within its container.
 
 ## Appearance
@@ -102,16 +102,16 @@ TopicSelectHint is a centered card component displayed when no selection is acti
 | topic-select-hint-015 | accept-custom-title, hide-headline-when-not-selectable | `title="Confirm delete"` `selectable={false}` | Headline still renders as "Confirm delete" — an explicit `title` takes precedence over `selectable` |
 | topic-select-hint-016 | use-fallback-headline | `noun=""` | Headline renders as "Select an item from the list to view or edit it here." — an empty string is falsy in JS, so `noun` is treated as not provided |
 | topic-select-hint-017 | use-fallback-headline | `listTitle=""` | Headline renders as "Select an item from the list to view or edit it here." — an empty string is falsy in JS, so `listTitle` is treated as not provided |
-| topic-select-hint-018 | compute-headline-from-noun | `noun="hour"` | Headline renders as "Select a hour to view or edit it here." — the article rule tests only the first letter, not English pronunciation, so this is a known grammatical miss |
-
+| topic-select-hint-018 | render-children, append-edit-suffix | `children=""` `noun="site"` | The description container is rendered (empty) and the headline does NOT end with " to view or edit it here." — the test is `children == null`, so an empty string counts as provided |
+| topic-select-hint-019 | accept-custom-title | `title=""` `noun="site"` | An empty headline element is rendered; the computed headline does not appear — the test is `title ?? computed`, so an empty string counts as provided |
 ## Edge Cases
 
 - **Empty string `noun`**: An empty string is falsy in JavaScript, so `noun` is treated the same as not provided; the headline falls through to `listTitle` (if given) or the fully generic default. See **use-fallback-headline**.
 - **Empty string `listTitle`**: Likewise falsy; `listTitle=""` falls through to the fully generic default rather than producing a "Select an item from " string with a trailing space.
-- **Naive article selection**: `article()` (`/^[aeiou]/i.test(noun)`) tests only the noun's first letter, not English pronunciation, so it mis-genders words like "hour" ("a hour" instead of "an hour") and "user" ("an user" instead of "a user"). This is a known, accepted limitation — see **compute-headline-from-noun**.
+- **Naive article selection**: `article()` (`/^[aeiou]/i.test(noun)`) tests only the noun's first letter, not English pronunciation, so it picks the wrong article for words like "hour" ("a hour" instead of "an hour") and "user" ("an user" instead of "a user"). This is a known, accepted limitation, not required behavior: a port may use a better article rule without breaking conformance — see **compute-headline-from-noun**.
 - **Custom title with selectable false**: `title` is checked with `??` (nullish coalescing), which only defers to the computed headline when `title` is `null`/`undefined`. An explicit `title` therefore still renders even when `selectable` is false; `selectable` only ever suppresses the *computed* headline. See **hide-headline-when-not-selectable**.
 - **null/undefined children**: Component correctly skips rendering the children section entirely when not provided.
-- **selectable false with empty children**: Component hides the computed headline but does not render a fallback; only the icon and optional children are shown.
+- **selectable false with no children**: Component hides the computed headline and renders no fallback; only the icon is shown.
 - **Very long noun or listTitle**: Component does not define text truncation; long values will wrap or overflow based on Card max-width constraint.
 
 ## Configuration
@@ -130,9 +130,9 @@ Not applicable: TopicSelectHint is a passive display component with no deep link
 
 ## Localization
 
-TopicSelectHint does not provide localization infrastructure: the computed headline's English scaffolding is hardcoded in source and is not exposed as translatable resource strings. Only prop values (`noun`, `listTitle`, `children`) pass through unmodified from the caller — the surrounding English sentence structure does not.
+TopicSelectHint does not provide localization infrastructure: the computed headline's English scaffolding is hardcoded in source and is not exposed as translatable resource strings. The "Fragment" column names each piece of the sentence for reference only; the `select-hint.*` names are descriptive labels, not resource keys that exist in source or that code can look up. Only prop values (`noun`, `listTitle`, `children`) pass through unmodified from the caller — the surrounding English sentence structure does not.
 
-| String Key | Default (en) | Context |
+| Fragment | Default (en) | Context |
 |-----------|-------------|---------|
 | `select-hint.prefix` | "Select" | Leads every computed headline |
 | `select-hint.article` | "a" / "an" | Chosen by a naive first-letter rule, not true English grammar — see **compute-headline-from-noun** |
@@ -163,18 +163,16 @@ Not applicable: TopicSelectHint does not collect, store, or transmit any data. I
 Not applicable: TopicSelectHint does not emit log events or debug output.
 
 ## Platform Notes
-
-- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/topic-select-hint.tsx`. Uses Tailwind CSS classes and lucide-react for the icon. Composed from the Card primitive. The component is a "use client" directive (Client Component in Next.js). Headline generation uses a custom `article()` helper function for naive English article selection (a/an, first-letter only).
-- **SwiftUI**: Adapt from SwiftUI's VStack and HStack for centering. Use the SF Symbol `"cursorarrow.click"` instead of lucide-react's MousePointerClick. Compose with a local Card equivalent or SwiftUI's built-in container shapes.
-- **Compose**: Use Compose's Column (vertically centered) and Row (icon circle). A Material 3 Card or ElevatedCard for the container. Use Compose Material icons (e.g., `Icons.Default.TouchApp` or custom pointer icon). Apply Compose Modifier chains for sizing, padding, and text styling.
+- **SwiftUI**: Adapt from SwiftUI's VStack and HStack for centering. Use the SF Symbol `"cursorarrow.click"` as the pointer/click glyph. Compose with a local Card equivalent or SwiftUI's built-in container shapes.
+- **Compose**: Use Compose's Column (vertically centered) and Row (icon circle). A Material 3 Card or ElevatedCard for the container. Use Compose Material icons as the pointer/click glyph (e.g., `Icons.Default.TouchApp` or custom pointer icon). Apply Compose Modifier chains for sizing, padding, and text styling.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/topic-select-hint.tsx`. Uses Tailwind CSS classes and lucide-react for the icon (`MousePointerClick`, 20px, inside the circular container). Composed from the Card primitive. The component is a "use client" directive (Client Component in Next.js). Headline generation uses a custom `article()` helper function for naive English article selection (a/an, first-letter only).
 - **AppKit / UIKit**: Use NSStackView (AppKit) or UIStackView (UIKit) for layout. NSImageView or UIImageView with an appropriately sized system or custom pointer icon. NSTextView or UILabel for headline and description. Position the Card in a centered view controller or container view. Apply Auto Layout constraints for centering.
-- **WinUI 3**: Use Grid with HorizontalAlignment and VerticalAlignment set to Center. WinUI 3 has no built-in Card control, so use a `Border` with a corner radius for the card container. A `FontIcon` or `SymbolIcon` for the pointer icon (WinUI 3 has no built-in Image/IconElement equivalent for system glyphs). TextBlock controls for headline and description. Apply grid Row and Column properties for layout; use StackPanel or RelativePanel for nested alignment.
-
+- **WinUI 3**: Use Grid with HorizontalAlignment and VerticalAlignment set to Center. WinUI 3 has no built-in Card control, so use a `Border` with a corner radius for the card container. A `FontIcon` or `SymbolIcon` for the pointer icon using a pointer/click glyph from Segoe Fluent Icons. TextBlock controls for headline and description. Apply grid Row and Column properties for layout; use StackPanel or RelativePanel for nested alignment.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/topic-select-hint.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/topic-select-hint.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -219,6 +217,7 @@ Statuses rest on `topic-select-hint.tsx`: headline/description sizes use relativ
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Lint fixes: stated exact nullish/truthy tests and the selectable gate for each headline, added vectors for empty children and title, made the icon requirement glyph-neutral, labeled localization fragments as non-keys, reordered platform notes, moved the article quirk to a non-normative limitation, and added Card to depends-on. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and dropped a duplicate; corrected the `title`/`selectable` precedence and the empty-string `noun`/`listTitle` fallthrough to match source; fixed the listTitle headline's missing edit-suffix in test 005; documented the `htd` test-hook prefix, the naive article rule, and hardcoded English strings as a Localization limitation; reformatted Design Decisions and Compliance to convention; added `related` links; added test vectors 015-018. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -52,5 +52,6 @@
 **Approved**: pending
 
 **Decision**: PKCE and `state` are left to AppAuth's defaults rather than set explicitly.
-**Rationale**: `OIDAuthorizationRequest` generates an S256 code challenge and a random `state` and checks the returned `state`, so the source never mentions them. `signin-pkce` and `signin-state` state them explicitly because a port without AppAuth would otherwise omit them.
+**Rationale**: `OIDAuthorizationRequest` generates an S256 code challenge and a random `state` and checks the returned `state`, so the source never mentions them. `signin-pkce` and `signin-state` state them explicitly because a port without AppAuth would otherwise omit them: AppAuth generates the S256 challenge and `state` by default and checks the returned `state`, and a port that does not use AppAuth must add all three.
 **Approved**: pending
+

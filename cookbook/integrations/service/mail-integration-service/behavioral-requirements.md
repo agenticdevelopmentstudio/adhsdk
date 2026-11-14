@@ -1,5 +1,5 @@
 
-Contract: `public actor MailIntegrationService` with `public init(store:secrets:signIn:tokenEndpoint:makeAPI:now:)`, `public func handle(_ request: MailRequest) async -> MailResponse`, `public nonisolated func handle(requestData: Data) async -> Data`, `public func start(tick: Duration = .seconds(60))`, `public func stop(timeout: Duration = .seconds(5)) async` and `public func runDueSyncs() async`. Internal members (`runningSyncCount`, `schedulerTask`, `setObserver`, `waitForIdle`, `MailServiceEvent`) exist for tests. Mutable state is `running` (one `RunningSync` per connection id), `scheduler`, `observer`, `lastAttempt`, `removing`, `pendingSignIn`, `providerGeneration` and `providerRemovals`.
+Contract: `public actor MailIntegrationService` with `public init(store:secrets:signIn:tokenEndpoint:makeAPI:now:)`, `public func handle(_ request: MailRequest) async -> MailResponse`, `public nonisolated func handle(requestData: Data) async -> Data`, `public func start(tick: Duration = .seconds(60))`, `public func stop(timeout: Duration = .seconds(5)) async` and `public func runDueSyncs() async`. Internal members (`runningSyncCount`, `schedulerTask` (a read of `scheduler`), `setObserver`, `waitForIdle`, `MailServiceEvent`) exist for tests. Mutable state is `running` (one `RunningSync` per connection id), `scheduler`, `observer`, `lastAttempt`, `removing`, `pendingSignIn`, `providerGeneration` and `providerRemovals`.
 
 ### Isolation and construction
 
@@ -15,7 +15,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **unknown-message-not-found**: An `IntegrationError.unknownMessage` MUST become `MailResponse.notFound(...)` with that error's `localizedDescription`, which is `.failure` with `notFound: true`.
 - **request-data-decoding**: `handle(requestData:)` MUST decode the bytes as a `MailRequest` with `JSONDecoder`, call `handle(_:)` and return the response encoded with `JSONEncoder`.
 - **bad-request**: `handle(requestData:)` MUST answer `.failure("bad request")` (the value of `MailClient.badRequest`) when the bytes do not decode as a `MailRequest`.
-- **encoding-fallback**: When the response cannot be encoded, `handle(requestData:)` MUST return the literal bytes of `{"failure":{"_0":"encoding failed"}}`.
+- **encoding-fallback**: When the response cannot be encoded, `handle(requestData:)` MUST return the literal bytes of `{"failure":{"_0":"encoding failed"}}`. This is Swift's synthesized `Codable` shape for the `failure` case with one unlabelled string payload; the full request and response schema is in the MailRPC artifact ([adhsdk.ingredient.integrations.service.mail-rpc](cookbook:fc9671be-170c-436e-9628-892624952191)), and a port must reproduce it.
 - **dispatch-providerStatus**: `.providerStatus` MUST answer `.providerStatus` with the current provider status.
 - **dispatch-importOAuthClient**: `.importOAuthClient(json:)` MUST answer `.providerStatus` with the status after the import.
 - **dispatch-removeProvider**: `.removeProvider` MUST answer `.ok` after the provider has been removed.
@@ -71,7 +71,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **remove-account-dedupe**: A removal of an account already being removed MUST return at once without a second removal.
 - **remove-account-no-sync**: A sync MUST NOT start for an account while its removal runs.
 - **remove-account-revoke-best-effort**: A failure to revoke at Google MUST NOT fail the removal.
-- **remove-account-keychain-failure**: A credential the secret store will not remove MUST fail the removal and leave the connection in place.
+- **remove-account-keychain-failure**: A credential the secret store will not remove MUST fail the removal and leave the connection in place. The service writes no status on this path, so the connection keeps the status it had; the revoke at Google is not undone, and the next sync records the outcome (`revoked` when Google reports the grant revoked).
 - **settings-validated**: `updateSettings` MUST validate the settings first and fail with `IntegrationError.invalidSettings` unless `windowDays` is in 1...3650 and `pollIntervalMinutes` is in 1...1440.
 - **settings-unchanged**: When the new settings equal the stored ones, `updateSettings` MUST return the current account without stopping or starting a sync.
 - **settings-quiesce**: Otherwise `updateSettings` MUST cancel and await the account's running sync before it changes anything.
@@ -98,12 +98,12 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **record-cancellation**: A sync that fails by cancellation MUST record nothing.
 - **record-revoked**: A sync that fails with `IntegrationError.revoked` MUST set the connection status to `revoked`.
 - **record-error**: Any other sync failure MUST set status `error` with the error's `localizedDescription` as `lastError`, preserving the stored cursor and `lastSyncAt`.
-- **status-write-errors**: The status write in `record` MUST swallow a store failure: a failure while recording `error` or `revoked` is neither logged nor signalled (see the Design Decision on swallowed store failures).
-- **scheduler-store-read**: `startDueSyncs` MUST start nothing when reading connections fails, without a log or signal (see the Design Decision on swallowed store failures).
+- **status-write-errors**: The status write in `record` MUST swallow a store failure, and a port MUST keep this behavior: a failure while recording `error` or `revoked` is neither logged nor signalled (see the Design Decision on swallowed store failures).
+- **scheduler-store-read**: A port MUST keep this behavior: `startDueSyncs` MUST start nothing when reading connections fails, without a log or signal (see the Design Decision on swallowed store failures).
 - **sync-now-targets**: `syncNow(account:)` MUST target the named account, or every syncable `gmail` connection when `account` is nil.
 - **sync-now-bypasses-due**: `syncNow` MUST start syncs regardless of due-ness.
 - **sync-now-joins**: When a sync is already running for a target, `syncNow` MUST notify the observer with `.joinedRunningSync(id)` and wait for that sync rather than start another.
-- **sync-now-not-syncable**: `syncNow` for a named account MUST fail with `IntegrationError.revoked` when its status is `revoked`, and with `account <email> is not ready to sync` for any other non-syncable status.
+- **sync-now-not-syncable**: `syncNow` for a named account MUST fail with `IntegrationError.revoked` when its status is `revoked`, and with `account <email> is not ready to sync` for a `pending` account (the only other non-syncable status, since the statuses are `active`, `error`, `revoked` and `pending`).
 - **sync-now-failures-in-status**: A sync that fails inside `syncNow` MUST NOT fail the request; the failure appears as the account's `status` and `lastError` in the returned accounts.
 
 ### Listing messages
@@ -170,7 +170,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **sync-serialised-per-connection**: Syncs MUST be serialised per connection (see one-sync-per-connection) and MAY run in parallel across connections.
 - **quiesce-loop**: Stopping one connection's sync MUST cancel it and await it, repeating until the `running` entry is gone.
 - **suspension-rechecks**: After any await that precedes a write to the store, the service MUST re-read the connection or provider generation it depends on, not rely on a snapshot taken before the await.
-- **fetch-tasks-parallel**: Message re-reads MAY run in parallel up to 8; every other operation within one request MUST run sequentially.
+- **fetch-tasks-parallel**: Message re-reads MAY run in parallel up to 8; every other operation within one connection's request path MUST run sequentially. The exceptions are syncs for different connections: `run-due-syncs` and `syncNow` with a nil account start several at once, and `sign-in-starts-sync` starts one without awaiting it.
 
 ### Persistence and side effects
 

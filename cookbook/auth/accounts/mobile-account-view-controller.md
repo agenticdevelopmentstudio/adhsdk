@@ -2,7 +2,7 @@
 id: f46b9323-7954-4f66-a476-970fcc9db372
 title: "MobileAccountViewController"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -17,7 +17,9 @@ platforms:
 tags:
   - accounts
   - ui
-depends-on: []
+depends-on:
+  - 86eccc6f-cd1b-4ac7-bb98-851eb7c54324
+  - 9cf9784d-48c9-4b29-b553-c72ffdfce7b9
 related: []
 references: []
 approved-by: ""
@@ -30,7 +32,7 @@ approved-date: ""
 
 MobileAccountViewController is the iOS twin of the macOS account detail panel. It shows one account's sign-in as a single-section inset-grouped table. While signed in it shows who is signed in and a Logout row. While signed out it shows a Login row and, when the account has a signup URL, a Signup row. While the stored login is being checked, or the account is busy, it shows a spinner row.
 
-What is visible comes from `AccountDisplay`, the platform-free rules shared with the macOS panel. The controller keeps no copy of the account's state beyond the last `AccountDisplay` and the rows derived from it. It is the account's one observer and asks the account to restore its stored login when the view first loads.
+What is visible comes from `AccountDisplay` ([AccountDisplay](cookbook:86eccc6f-cd1b-4ac7-bb98-851eb7c54324)), the platform-free rules shared with the macOS panel. The controller keeps no copy of the account's state beyond the last `AccountDisplay` and the rows derived from it. It is the account's one observer and asks the `Account` ([Account](cookbook:9cf9784d-48c9-4b29-b553-c72ffdfce7b9)) to restore its stored login when the view first loads.
 
 ## Behavioral Requirements
 
@@ -61,7 +63,8 @@ What is visible comes from `AccountDisplay`, the platform-free rules shared with
 - **message-footer**: When the display has a message, the section footer MUST be that message, whether or not a user is shown.
 - **summary-footer**: When there is no message, no shown user, and the account's summary is not empty, the section footer MUST be the account's summary.
 - **no-footer**: In every other case the section footer MUST be absent.
-- **open-url-injection**: The screen SHOULD accept an open-URL closure at creation so tests and hosts can intercept the signup page; the default MUST hand the URL to the system.
+- **open-url-injection**: The screen MUST accept an open-URL closure at creation so tests and hosts can intercept the signup page.
+- **open-url-default**: When no open-URL closure is given, the screen MUST hand the signup URL to the system.
 - **selection-style**: Rows MUST use no selection style except Login, Signup and Logout, which use the default selection style.
 - **accessibility-identifiers**: The table and each row type MUST carry the identifiers listed under Accessibility.
 - **no-coder-init**: Creating the screen from a decoder MUST be unavailable and, if called, MUST terminate with the message "init(coder:) is not supported".
@@ -98,12 +101,12 @@ Signed in: user row and Logout row, with no summary footer. An account message r
 
 ## Accessibility
 
-- **table-identifier**: The table carries the identifier `accounts.detail`.
-- **user-row-identifier**: The user row carries `accounts.detail.user`.
-- **spinner-row-identifier**: The status row carries `accounts.detail.spinner`.
-- **login-row-identifier**: The Login row carries `accounts.detail.login`.
-- **signup-row-identifier**: The Signup row carries `accounts.detail.signup`.
-- **logout-row-identifier**: The Logout row carries `accounts.detail.logout`.
+- **table-identifier**: The table MUST carry the identifier `accounts.detail`.
+- **user-row-identifier**: The user row MUST carry `accounts.detail.user`.
+- **spinner-row-identifier**: The status row MUST carry `accounts.detail.spinner`.
+- **login-row-identifier**: The Login row MUST carry `accounts.detail.login`.
+- **signup-row-identifier**: The Signup row MUST carry `accounts.detail.signup`.
+- **logout-row-identifier**: The Logout row MUST carry `accounts.detail.logout`.
 - **traits-and-labels**: NEEDS REVIEW: Not implemented in source. Behavior undefined. The source sets no accessibility labels, traits or hints; action rows read as plain table cells and a disabled action is distinguished only by color and by being unhighlightable. A review of VoiceOver output for a disabled action row would settle whether a not-enabled trait is needed.
 - **dynamic-type**: The screen MUST leave text sizing to the default list content configuration. It sets no font or text-style override, so the system text styles apply and scale with the user's text size setting.
 - **differentiate-without-color**: NEEDS REVIEW: Not implemented in source. Behavior undefined. Disabled actions differ from enabled ones only by text color; evidence from an increase-contrast and color-differentiation review would settle whether a second cue is needed.
@@ -119,12 +122,12 @@ Signed in: user row and Logout row, with no summary footer. An account message r
 | mobile-account-004 | status-row-spinner, status-row-text, disabled-action-color, highlight-gating | Signed in, then busy (test `busyWhileSignedIn_keepsTheUser_andAddsASpinner`) | Rows are the user row, a status row with no custom text (shown as "Working…"), then Logout; controls are disabled (the test asserts only this); by the source, Logout is not highlightable |
 | mobile-account-005 | message-footer | Account message "The hub turned the login down." and signed-out state (test `aMessage_replacesTheFooter`) | Footer is "The hub turned the login down." instead of the summary |
 | mobile-account-006 | login-action, signup-action | Call login and signup with an open-URL closure that records its argument (test `login_presentsTheAccountsSignIn_andSignupOpensItsURL`) | Sign-in presentation count is 1; the recorded URL equals the account's signup URL |
-| mobile-account-007 | signup-no-url, row-order | Signed-out account whose signup URL is nil | Rows are Login only; calling signup does not invoke the open-URL closure |
-| mobile-account-008 | select-gating, highlight-gating | Busy account with no earlier user; select the Login row | No sign-in is presented; the row does not highlight |
-| mobile-account-009 | inert-rows | Signed-in account; select the user row | No account action runs and the row is deselected |
-| mobile-account-010 | logout-action | Signed-in account; select Logout | The account's sign-out runs; the account moves to signed out and rows become Login and Signup |
-| mobile-account-011 | observe-account, no-reload-before-load | Create the controller and change the account state before loading the view | The account's callback is not yet set, so nothing re-renders; loading the view renders the current state once |
-| mobile-account-012 | no-coder-init | Create the screen from a decoder | Creation is unavailable at compile time; if forced at run time the process terminates with "init(coder:) is not supported" |
+| mobile-account-007 | signup-no-url, row-order | Signed-out account whose signup URL is nil (no test yet) | Rows are Login only; calling signup does not invoke the open-URL closure |
+| mobile-account-008 | select-gating, highlight-gating | Busy account with no earlier user; select the Login row (no test yet) | No sign-in is presented; the row does not highlight |
+| mobile-account-009 | inert-rows | Signed-in account; select the user row (no test yet) | No account action runs and the row is deselected |
+| mobile-account-010 | logout-action | Signed-in account; select Logout (no test yet) | The account's sign-out runs; the account moves to signed out and rows become Login and Signup |
+| mobile-account-011 | observe-account, no-reload-before-load | Create the controller and change the account state before loading the view (no test yet) | Creating the screen does not render, and the account's callback is not yet set, so the state change re-renders nothing; loading the view renders the current state once, then calls restore, and any callback restore fires renders again |
+| mobile-account-012 | no-coder-init | Create the screen from a decoder (no test yet) | Creation is unavailable at compile time; if forced at run time the process terminates with "init(coder:) is not supported" |
 
 ## Edge Cases
 
@@ -139,7 +142,7 @@ Signed in: user row and Logout row, with no summary footer. An account message r
 - **Sign-out failure**: The sign-out task discards any result. Any error is only visible through the account's message and state; the screen does nothing else with it.
 - **Concurrent access**: The screen is main-actor confined; render, selection handlers and the account's callback all run on the main actor, and the sign-out task starts from the selection handler.
 - **Offline or disconnected**: Not applicable: the screen performs no network calls itself; connectivity is the account's concern and reaches the screen only as account state and message.
-- **Boundary values**: Not applicable: the screen has no numeric or size inputs; row count is at most three, because the user row never appears with Login or Signup.
+- **Boundary values**: Not applicable: the screen has no numeric or size inputs; row count is at most three, because `AccountDisplay` shows the user only with Logout (never with Login or Signup), and shows the spinner status row with at most two of the others.
 - **Weakly held anchor**: The sign-in anchor wraps this screen weakly; if the screen is gone before the account uses it, the anchor holds nothing.
 
 ## Configuration
@@ -170,7 +173,7 @@ Not applicable in source: the strings are literals, not localized keys. The tabl
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: the screen defines no animation of its own other than the system's row deselect and the activity indicator. |
-| Increase Contrast | Not applicable: the source uses semantic system colors only and adds no contrast handling. |
+| Increase Contrast | The source uses semantic system colors only and adds no contrast handling. Disabled actions differ from enabled ones only by color, so the open question on `differentiate-without-color` also covers this. |
 | Differentiate Without Color | The open question on `differentiate-without-color` covers this. |
 
 ## Feature Flags
@@ -197,14 +200,14 @@ Not applicable: the source logs nothing.
 - **SwiftUI**: Start from a `List` with the inset-grouped style and a `Section` whose footer shows the message or summary. Drive it from an observable model wrapping the account; rows become `Button` views, disabled with the `disabled` modifier, and the signup row uses `openURL` from the environment. Unlike the source, SwiftUI re-renders from observed state, so there is no manual render and reload step.
 - **Compose**: Use a `LazyColumn` of list items inside a card-like container, with the footer as a trailing supporting-text item. Model the display as a state holder; action rows are `ListItem`s with `clickable(enabled = ...)`, and the status row uses a `CircularProgressIndicator` trailing content. Material 3 has no inset-grouped style; use a rounded surface.
 - **React/Web**: Use a `ul` or `div` with `role="list"`, buttons for the action rows with the `disabled` attribute, an element with `role="status"` for the spinner row, and a paragraph below the list for the footer. Follow WCAG 2.1 for contrast and target size.
-- **AppKit / UIKit**: Source platform. The code lives in `MobileAccountViewController.swift`, a `UITableViewController` subclass with the inset-grouped style. Rows are built per call with the subtitle cell style and the list content configuration, not reused. Display rules come from `AccountDisplay` in the shared SDK tier; the macOS panel `AccountDetailPanelViewController` draws the same rules with AppKit controls. The sign-in anchor is `AccountPresentationAnchor`.
+- **AppKit / UIKit**: Source platform. The code is a `UITableViewController` subclass with the inset-grouped style. Rows are built per call with the subtitle cell style and the list content configuration, not reused. Display rules come from `AccountDisplay` in the shared SDK tier; the macOS panel `AccountDetailPanelViewController` draws the same rules with AppKit controls. The sign-in anchor is `AccountPresentationAnchor`.
 - **WinUI 3**: Start from a `ListView` (single section) in a `Page`, with `SelectionMode="None"` and `IsItemClickEnabled="True"`. Use a `DataTemplateSelector` keyed on the row kind: a user template with `PersonPicture`, name and email; a status template with a `ProgressRing` (`IsActive="True"`) and text; action templates as `Button` or `HyperlinkButton` with `IsEnabled` bound to controls-enabled, which gives the Disabled visual state for free (use the `TextFillColorDisabledBrush` theme resource instead of a tertiary color). Show the footer in a `TextBlock` below the list using `TextFillColorSecondaryBrush`. Set `AutomationProperties.AutomationId` to the identifiers listed under Accessibility. Open the signup URL with `Launcher.LaunchUriAsync`. Because WinUI binds to properties, an `INotifyPropertyChanged` view model replaces the manual render and reload pair; keep the visibility rules in the shared display type, not in XAML triggers.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| ios | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Accounts/MobileAccountViewController.swift` | confirmed (1.0.0) |
+| ios | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Accounts/MobileAccountViewController.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -229,11 +232,11 @@ Not applicable: the source logs nothing.
 **Approved**: pending
 
 **Decision**: Row strings are literals, not localized resources, and the status literal "Working…" lives in the screen while "Checking sign-in…" lives in `AccountDisplay`.
-**Rationale**: Technical debt noted for fidelity: the source has no localization layer, so implementers on other platforms must add their own.
+**Rationale**: Technical debt noted for fidelity: the source has no localization layer, so implementers on other platforms must add their own. The debt is repaid when the SDK gains a localization layer; the literals then become keys.
 **Approved**: pending
 
-**Decision**: The open-URL closure SHOULD be injectable.
-**Rationale**: It lets tests record the signup URL without launching the system; a host may deviate by hard-wiring the system opener, at the cost of testability.
+**Decision**: The open-URL closure is injectable, with the system opener as the default.
+**Rationale**: It lets tests record the signup URL without launching the system, and vectors mobile-account-006 and mobile-account-007 depend on it; a host may deviate by hard-wiring the system opener, at the cost of testability.
 **Approved**: pending
 
 ## Compliance
@@ -252,3 +255,4 @@ The screen separates concerns well: visibility rules sit in the shared `AccountD
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Linked AccountDisplay and Account in depends-on and the overview, split the open-URL requirement into MUST injection and MUST default, made identifier bullets MUST, noted the debt repayment trigger, the Increase Contrast cross-reference, the render count in vector 011, untested vectors and the row-count invariant. |

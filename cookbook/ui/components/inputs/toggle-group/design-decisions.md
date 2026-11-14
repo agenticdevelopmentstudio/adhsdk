@@ -3,6 +3,10 @@
 **Rationale**: Reusing the Base UI primitive gives correct pressed semantics and roving-focus keyboard support for free and keeps the control consistent with the family's other base-ui primitives (radio/switch).
 **Approved**: pending
 
+**Decision**: Leave the single-select deselect guard (ignore the empty array) to each consumer instead of enforcing it inside the component.
+**Rationale**: Base UI owns the `string[]` value model and a multi-select group legitimately emits `[]`; forwarding Base UI's contract unchanged keeps one component for both modes. The cost is that each single-select caller repeats the one-line `next[0]` guard, which is accepted until a `required` or single-select wrapper is wanted.
+**Approved**: pending
+
 **Decision**: Build the group container on the shared `fieldShellClass`.
 **Rationale**: Borrowing the field shell lets a segmented control read as a peer of the other form fields rather than a loose row of buttons.
 **Approved**: pending

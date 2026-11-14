@@ -14,8 +14,8 @@
 
 Passed statuses rest on the source's explicit `aria-label`s on every input and
 button, `Dialog` focus-trap/restore plus the explicit Enter-key and tab-order
-handling, the minimal name/email/phone/note field set, and the `text-apt-gold`
-theme token (no raw hex). Partial statuses reflect that ARIA roles are
+handling, the minimal name/email/phone/note field set, and an accent
+theme token for the title (no raw hex). Partial statuses reflect that ARIA roles are
 delegated to the `Dialog`/`Field` primitives (not shown in this file), that
 React's default output escaping runs without any explicit email/phone format
 validation, and that button/column-header/empty-label strings are hardcoded

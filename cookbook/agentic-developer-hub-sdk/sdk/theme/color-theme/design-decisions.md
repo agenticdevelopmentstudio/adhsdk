@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: Do not validate the 16-color palette in the initializer or decoder; expose `hasValidPalette` and `ansiColorCount` instead.
-**Rationale**: Validation is offered as a query. `ThemeStore` rejects an invalid palette at import (`ThemeImportError.invalidPalette`), so the model can load any stored shape.
+**Rationale**: Validation is offered as a query, so the model can load any stored shape. The debt is that an invalid palette (and an unknown `roleOverrides` key) is accepted silently unless the caller asks. The only caller of `hasValidPalette` in source is `ThemeStore` import (`ThemeStore.swift`), which rejects an invalid palette with `ThemeImportError.invalidPalette`; theme builders such as `VSCodeThemeImporter` produce 16 colors by construction. Any new entry point that accepts a theme MUST check `hasValidPalette` itself.
 **Approved**: pending
 
 **Decision**: Imported themes are locked like built-ins but remain deletable.

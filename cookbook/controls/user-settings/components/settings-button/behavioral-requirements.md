@@ -8,4 +8,4 @@
 - **closed-variant-set**: Component's `variant` prop MUST be constrained to the closed set `'primary' | 'secondary' | 'destructive'` (the `SettingsButtonVariant` type), so no other string is assignable.
 - **default-type**: Component MUST default the HTML `type` attribute to `'button'` when not provided.
 - **merge-classname**: Component MUST combine `aws-button`, the variant class, and any custom `className` prop using whitespace separation, filtering out falsy values.
-
+- **consumer-accessible-label**: Consumers MUST give the button an accessible name, either as text content in `children` or through an `aria-label` (or `aria-labelledby`) attribute passed via rest props; the component does not supply one.

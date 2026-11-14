@@ -8,10 +8,10 @@
 **Approved**: pending
 
 **Decision**: Do not validate that `side` is one of the expected values (`'left'` or `'right'`).
-**Rationale**: Passing an invalid value renders a class like `lp-bleed--invalid` as-is (see **side-passthrough**). This delegates validation to the caller and keeps the component simple; TypeScript's `'left' | 'right'` type covers the supported surface, and a value outside it means the caller has bypassed the type.
+**Rationale**: TypeScript's `'left' | 'right'` type covers the supported surface, which keeps the component simple and delegates validation to the caller. What a value outside the type renders is unspecified (see the **Side values outside the typed union** edge case).
 **Approved**: pending
 
 **Decision**: Assume Bleed is rendered inside a container with `overflow-x: clip` (e.g. `.lp-band`, see the `Band` ingredient).
-**Rationale**: Without that ancestor clipping, the overhang widens the document instead of appearing cropped, defeating the visual intent; enforcing it inside Bleed itself is not possible without coupling Bleed to a specific parent component.
+**Rationale**: Enforcing the clip inside Bleed would couple Bleed to a specific parent component; see the **Missing clipping parent** edge case for what happens without it.
 **Approved**: pending
 

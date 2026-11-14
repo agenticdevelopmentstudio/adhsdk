@@ -1,5 +1,5 @@
 
-**Decision**: Use 8pt insets on all edges instead of the 6pt used by Apple's Quick Note and similar scratch fields.
+**Decision**: Use 8pt insets on all edges instead of the 6pt used by the toolkit's Quick Note field (per the comments in `MarkdownTextPane.swift`).
 **Rationale**: The wider gutter signals that the pane is a document surface intended for longer reading/editing sessions, not an ephemeral note; see **use-8pt-insets**. The difference is visually intentional and MUST NOT be "fixed" to match other components.
 **Approved**: pending
 
@@ -21,5 +21,13 @@
 
 **Decision**: Enable `allowsUndo` on macOS; on iOS, rely on `UITextView`'s default undo behavior rather than adding a custom undo stack.
 **Rationale**: The asymmetry reflects platform capabilities and macOS's deeper undo integration. The pane MUST NOT disable the default iOS undo manager; see **allow-undo-macos** and **preserve-default-undo-ios**.
+**Approved**: pending
+
+**Decision**: Accept that the pane exposes no accessible name for now: the text view is private and no label-forwarding member exists, so a caller cannot name it.
+**Rationale**: Adding one means a public API change (for example a member that forwards to the text view's accessibility label), which the source does not yet have. The gap is recorded as a failed screen-reader-support check in Compliance rather than hidden; the fix is a label-forwarding member, after which the check is re-evaluated.
+**Approved**: pending
+
+**Decision**: "Markdown" in the title, tag and class name refers to the content the pane edits, not to rendering.
+**Rationale**: The pane is plain-text only (**use-plain-text-mode**); rendering and preview belong to the controllers above it. The Overview and summary say so up front so readers do not expect a rendered view.
 **Approved**: pending
 

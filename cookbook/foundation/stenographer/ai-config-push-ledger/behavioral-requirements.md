@@ -9,10 +9,11 @@
 - **configured-means-held**: The `configured` argument is every configuration the host holds now, resolvable or not; a configuration that is configured but unresolvable this time MUST NOT be returned as removed.
 - **first-push-removes-nothing**: With an empty ledger, `removed(configured:)` MUST return an empty array.
 - **record-landed-union**: `recordLanded(_:)` MUST store the union of the ids in `sync.configs` and the previously pushed ids that the sync did not remove.
-- **record-landed-removals**: `recordLanded(_:)` MUST drop every id listed in `sync.removedConfigIds` from the stored set; a nil `removedConfigIds` drops nothing.
+- **record-landed-removals**: `recordLanded(_:)` MUST drop every id listed in `sync.removedConfigIds` from the previously pushed ids; a nil `removedConfigIds` drops nothing.
+- **record-landed-configs-win**: An id that appears in both `sync.configs` and `sync.removedConfigIds` MUST be stored, because `sync.configs` is always recorded.
 - **record-landed-keeps-unresolved**: A previously pushed id that is absent from `sync.configs` and not in `removedConfigIds` MUST remain in the ledger.
 - **record-landed-format**: `recordLanded(_:)` MUST store the ids as UUID strings sorted ascending, replacing the whole entry under the key.
 - **record-only-landed**: The ledger MUST be updated only by an explicit `recordLanded(_:)` call; `removed(configured:)` and `lastPushed()` MUST NOT write.
-- **caller-records-after-landing**: Callers MUST call `recordLanded(_:)` only for a push the daemon accepted; the type has no knowledge of delivery. The one caller in source records only when the send reports it landed.
-- **caller-serialises**: Callers MUST NOT call `recordLanded(_:)` concurrently on one key, because it reads then writes the entry with no lock. The one caller sends through a push engine that holds one push in flight at a time.
+- **caller-records-after-landing**: Callers MUST call `recordLanded(_:)` only for a push the daemon accepted; the type has no knowledge of delivery.
+- **caller-serialises**: Callers MUST NOT call `recordLanded(_:)` concurrently on one key, because it reads then writes the entry with no lock.
 

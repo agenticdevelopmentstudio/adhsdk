@@ -1,0 +1,20 @@
+
+- **drag-captures-pointer**: On pointer-down on the divider, the component MUST capture the pointer via `setPointerCapture()`.
+- **drag-maps-to-ratio**: On pointer-move while captured, the component MUST map `clientY` within the container bounding rect to a top-pane ratio (`(clientY - rect.top) / rect.height`).
+- **drag-clamps-ratio**: The component MUST clamp the ratio to `[minRatio, maxRatio]`.
+- **drag-releases-on-pointerup**: On pointer-up, the component MUST release the pointer capture via `releasePointerCapture()`.
+- **drag-cursor-and-no-select**: While dragging, the component MUST show `cursor: row-resize`. The header-bar variant additionally suppresses text selection via `user-select: none` (Tailwind `select-none`); both variants set `touch-action: none` on the drag surface to prevent touch-scroll interception during a drag.
+- **persist-ratio-when-keyed**: When `storageKey` is set, the component MUST write the ratio to `localStorage[storageKey]` on drag release and MUST restore it on mount, guarded for SSR contexts and parse errors.
+- **collapse-toggles-bottom**: Activating the divider chevron MUST toggle `collapsed`; collapsed MUST give the bottom pane height 0 via `flex-basis`, let the top fill, and flip the chevron icon.
+- **collapse-remembers-ratio**: The component MUST remember the last drag ratio while collapsed and restore it on expand.
+- **collapse-controlled-or-internal**: The component MUST be controlled whenever `collapsed !== undefined` — the visible state always reflects that prop; otherwise the visible state MUST come from internal state. Independently, `onCollapsedChange` MUST fire whenever it is provided, in both controlled and uncontrolled configurations.
+- **chevron-toggle-suppressed-by-drag**: A pointer-down/move/up sequence that moves more than 3px before release — even one that starts and ends on the chevron — MUST NOT trigger the collapse toggle; only a press-release with no motion past that threshold MUST toggle.
+- **keyboard-nudges-ratio**: When the divider handle is focused, `ArrowUp` MUST decrease the top-pane ratio by 0.03 (3%) and `ArrowDown` MUST increase it by 0.03, each clamped to `[minRatio, maxRatio]`; each nudge MUST persist immediately (not deferred to keyup).
+- **keyboard-toggles-collapse**: Enter/Space on the chevron button MUST toggle collapse (handled via native button behavior).
+- **header-bar-variant**: When `header` (or `headerActions`) is set, the divider MUST render as a header bar: `header` content left-aligned in a truncated flex column, `headerActions` then the disclosure chevron at the far right.
+- **header-bar-always-visible**: The header bar MUST stay visible while the bottom pane is collapsed — only the bar remains (the bar has no `inert` wrapper).
+- **header-bar-drag-anywhere**: Pointer-down anywhere on the header bar EXCEPT on its interactive controls (buttons, links, inputs, selects, textareas, or `[data-no-drag]` elements) MUST start a resize drag; while expanded the bar MUST show `cursor: row-resize`. While collapsed, pointer-down on the bar (other than the chevron) MUST be a no-op — no drag starts and the cursor is `default`; only the chevron reopens the pane.
+- **toggle-animates**: Collapse/expand MUST animate the shared boundary for 0.3s (ease-in-out) via `flex-basis` transition. It MUST NOT animate when the app-level appearance setting `html[data-reduce-motion="on"]` is active. Drags are direct manipulation and MUST never animate.
+- **expand-to-content**: With `expandToContent` (default on for the header-bar variant), expanding from collapsed MUST open the bottom pane exactly far enough to show ALL its content (via `scrollHeight`), clamped to `[minRatio, maxRatio]`; when the container/content can't be measured it MUST fall back to the last drag ratio.
+- **bottom-stays-mounted**: The bottom pane MUST stay mounted while collapsed (height 0 via flex-basis, clipped by `overflow-hidden`, marked `inert`) so its state survives a hide/show cycle and reveal-to-fit can measure the hidden content.
+

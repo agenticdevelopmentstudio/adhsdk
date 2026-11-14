@@ -2,11 +2,11 @@
 id: ca0fb28f-7f22-4fde-a291-ecfde846f5c3
 title: "Pagination"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,7 +34,7 @@ approved-date: ""
 
 The shared `Pagination` in `@adh-sdk/ui` — the list pager used above and below
 paged surfaces in the host application. It is a compact `Prev` / "Page X of Y" / `Next` control: a
-centered `nav` landmark holding two shared `Button`s (`variant="outline"`,
+centered `nav` landmark holding two shared `Button`s ([adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0)) (`variant="outline"`,
 `size="sm"`) around a mono caption.
 
 It is fully **controlled**: the host owns `page` and `totalPages` and receives
@@ -72,6 +72,7 @@ internal state — the displayed page is always the `page` prop.
   merge via `cn()` through `className`.
 - `Prev` / `Next`: the shared `Button` with `variant="outline"` and `size="sm"`, plain
   text labels.
+- Caption size: `text-xs` is 12px (0.75rem); every platform uses the same 12-unit caption size, derived from a text style where the platform has one.
 - Caption: `<span>` with `px-1 font-mono text-xs text-apt-text-muted`, reading
   `Page {page} of {totalPages}`.
 - Disabled edge buttons inherit `Button`'s disabled treatment (`opacity-50`,
@@ -114,9 +115,8 @@ internal state — the displayed page is always the `page` prop.
 | T8 | forwards-classname | `className="mt-4"` | `nav` element carries the `mt-4` class |
 | T9 | hides-when-single-page | `page={1} totalPages={0}` | renders nothing (empty container) |
 | T10 | shows-page-caption, disables-next-on-last | `page={5} totalPages={3}` | caption `"Page 5 of 3"`; `Next` button disabled |
-| T11 | disables-prev-on-first | `page={1} totalPages={3}` | `Next` button is enabled |
-| T12 | disables-next-on-last | `page={3} totalPages={3}` | `Prev` button is enabled |
-
+| T11 | disables-prev-on-first | negative case: `page={1} totalPages={3}` | `Next` button is enabled |
+| T12 | disables-next-on-last | negative case: `page={3} totalPages={3}` | `Prev` button is enabled || T13 | shows-page-caption, hides-when-single-page | `page={1} totalPages={NaN}` | renders the pager (`NaN <= 1` is false); caption `"Page 1 of NaN"`; `Prev` disabled, `Next` enabled |
 ## Edge Cases
 
 - `totalPages` of `1` or `0` collapses the whole pager to `null`; hosts must rely on
@@ -134,8 +134,7 @@ internal state — the displayed page is always the `page` prop.
   caption renders the literal text `"NaN"`; a negative or non-integer value is compared
   and displayed exactly as given (e.g. `page={-3}` disables `Prev` since `-3 <= 1`, and
   `page={2.5}` renders `"Page 2.5 of 5"`). Passing well-formed integers is the host's
-  responsibility.
-
+  responsibility.- Clicking `Next` onto the last page disables the button that was just clicked, and `Prev` likewise on the first page. Because the pager uses the native `disabled` attribute and does not move focus, keyboard focus does not stay on a usable control and may fall back to the document; the pager does not manage focus at the edges.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -191,19 +190,19 @@ No logging. `Pagination` is a presentational control; paging semantics and any e
 
 - **React/Web**: File `packages/web/packages/ui/src/components/pagination.tsx`. Carries `"use client"` because it composes the client `Button` and renders on the browser; holds no internal state. Composes the shared `Button` (outline/sm variant); no bespoke UI chrome. Layout is flexbox (`flex items-center justify-center gap-2`) with Tailwind utilities; token-driven via `apt-text-muted` for the caption. Demo in `ui-showcase` (Composite controls group); `PaginationDemo` component owns the page state.
 
-- **SwiftUI**: Start from an `HStack` containing two `Button` views and a `Text` view. The equivalent structure is a controlled component receiving `page`, `totalPages`, and an `onPageChange` closure. Buttons default to SwiftUI's native button style (e.g. `.buttonStyle(.bordered)`); the family `Button`'s outline/small look is available as an optional match to the web appearance, not the default. Collapse the entire stack to `EmptyView()` when `totalPages <= 1` — the render-nothing behavior every platform shares. Disable the leading (previous) button when `page <= 1` and the trailing (next) button when `page >= totalPages`, with each button's accessible name matching its visible text (`"Prev"` / `"Next"`), the same accessible-name convention every other platform uses. The caption displays `"Page \(page) of \(totalPages)"` in a monospace font with muted text color; it scales with Dynamic Type automatically through SwiftUI's default font styles, so no extra modifier is required.
+- **SwiftUI**: Start from an `HStack` containing two `Button` views and a `Text` view. The equivalent structure is a controlled component receiving `page`, `totalPages`, and an `onPageChange` closure. Buttons default to SwiftUI's native button style (e.g. `.buttonStyle(.bordered)`); the family `Button`'s outline/small look is available as an optional match to the web appearance, not the default. Collapse the entire stack to `EmptyView()` when `totalPages <= 1` — the render-nothing behavior every platform shares. Disable the leading (previous) button when `page <= 1` and the trailing (next) button when `page >= totalPages`, with each button's accessible name matching its visible text (`"Prev"` / `"Next"`), the same accessible-name convention every other platform uses. The caption displays `"Page \(page) of \(totalPages)"` in a monospace font with muted text color; specify `.font(.caption.monospaced())` so the caption is derived from a text style and scales with Dynamic Type, at the same caption size as the other platforms (see Appearance).
 
-- **Compose**: Build from a `Row` composable containing two `Button` composables (using the family Button style or Material Button) and a `Text` displaying the page caption. The pattern is identical to React: fully controlled, host owns state. Return `null` when `totalPages <= 1`. Buttons are disabled based on page bounds (`page <= 1` for back, `page >= totalPages` for forward), with each button's accessible name matching its visible text (`"Prev"` / `"Next"`). Use `Modifier.fillMaxWidth()` and `horizontalArrangement = Arrangement.Center` for centering. Caption uses monospace font (`FontFamily.Monospace`) and muted text color. The `onClick` lambdas call the `onPageChange` callback with `page - 1` or `page + 1` respectively.
+- **Compose**: Build from a `Row` composable containing two `Button` composables (using the family Button style or Material Button) and a `Text` displaying the page caption. The pattern is identical to React: fully controlled, host owns state. Emit nothing (an early `return`) when `totalPages <= 1`. Buttons are disabled based on page bounds (`page <= 1` for back, `page >= totalPages` for forward), with each button's accessible name matching its visible text (`"Prev"` / `"Next"`). Use `Modifier.fillMaxWidth()` and `horizontalArrangement = Arrangement.Center` for centering. Caption uses monospace font (`FontFamily.Monospace`) at 12sp and muted text color. The `onClick` lambdas call the `onPageChange` callback with `page - 1` or `page + 1` respectively.
 
-- **AppKit / UIKit**: Assemble an `NSStackView` (macOS) or `UIStackView` (iOS) with `axis = .horizontal`, `alignment = .center`, `distribution = .fill`, and `spacing = 8pt`; center the stack view itself within its container via Auto Layout constraints (matching the web row's `justify-center`). Add two `NSButton` / `UIButton` instances defaulting to the platform's native bordered button style — the family `Button`'s outline appearance is available as an optional match to the web look, not the default — separated by an `NSTextField` / `UILabel` showing the page caption. The component is fully controlled: update the button `isEnabled` state based on page bounds, hide the entire stack (`isHidden = true`) when `totalPages <= 1`, and update the label text when `page` changes; because stack views remove hidden subviews from layout, this behaves like the render-nothing behavior on every other platform, taking no space. Avoid custom `drawRect` styling; use the platform's standard button appearance APIs for a native look and correct accessibility behavior. The caption uses a monospace system font (e.g., `NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)` on macOS) at 11pt with muted text color.
+- **AppKit / UIKit**: Assemble an `NSStackView` (macOS) or `UIStackView` (iOS) with `axis = .horizontal`, `alignment = .center`, `distribution = .fill`, and `spacing = 8pt`; center the stack view itself within its container via Auto Layout constraints (matching the web row's `justify-center`). Add two `NSButton` / `UIButton` instances defaulting to the platform's native bordered button style — the family `Button`'s outline appearance is available as an optional match to the web look, not the default — separated by an `NSTextField` / `UILabel` showing the page caption. The component is fully controlled: update the button `isEnabled` state based on page bounds, hide the entire stack (`isHidden = true`) when `totalPages <= 1`, and update the label text when `page` changes; because stack views remove hidden subviews from layout, this behaves like the render-nothing behavior on every other platform, taking no space. Avoid custom `drawRect` styling; use the platform's standard button appearance APIs for a native look and correct accessibility behavior. The caption uses a monospace system font (e.g., `NSFont.monospacedSystemFont(ofSize: NSFont.preferredFont(forTextStyle: .caption1).pointSize, weight: .regular)` on macOS) sized from the caption text style, matching the 12-unit caption size on the other platforms, with muted text color.
 
-- **WinUI 3**: Build from a `StackPanel` with `Orientation="Horizontal"` and `HorizontalAlignment="Center"`. Include two `Button` elements defaulting to the standard Fluent `Button` appearance — the outline appearance is available as an optional match to the web look, not the default — and a `TextBlock` for the page caption. Bind button `IsEnabled` to computed properties based on page bounds. Use `Visibility.Collapsed` when `totalPages <= 1`; unlike hiding via opacity, `Collapsed` removes the element from layout entirely, matching the render-nothing behavior on every other platform (it does not "preserve layout"). Set each button's `AutomationProperties.Name` to match its visible text (`"Prev"` / `"Next"`) — the same accessible-name convention every other platform uses, not distinct strings like "Previous page" / "Next page". The caption renders as `"Page {page} of {totalPages}"` using `FontFamily="Cascadia Mono"` at 11pt with a muted text color token from the Fluent 2 palette. Bind `Text` and button states to backing properties so the host can drive page changes through property binding.
+- **WinUI 3**: Build from a `StackPanel` with `Orientation="Horizontal"` and `HorizontalAlignment="Center"`. Include two `Button` elements defaulting to the standard Fluent `Button` appearance — the outline appearance is available as an optional match to the web look, not the default — and a `TextBlock` for the page caption. Bind button `IsEnabled` to computed properties based on page bounds. Use `Visibility.Collapsed` when `totalPages <= 1`; unlike hiding via opacity, `Collapsed` removes the element from layout entirely, matching the render-nothing behavior on every other platform (it does not "preserve layout"). Set each button's `AutomationProperties.Name` to match its visible text (`"Prev"` / `"Next"`) — the same accessible-name convention every other platform uses, not distinct strings like "Previous page" / "Next page". The caption renders as `"Page {page} of {totalPages}"` using `FontFamily="Cascadia Mono"` at 12 epx with a muted text color token from the Fluent 2 palette. Bind `Text` and button states to backing properties so the host can drive page changes through property binding.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/pagination.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/components/pagination.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -226,12 +225,18 @@ No logging. `Pagination` is a presentational control; paging semantics and any e
 **Decision**: Compose the shared `Button` (outline/sm) for both controls rather than building bespoke buttons.
 **Rationale**: The pager inherits the family focus ring, disabled treatment, and press feel for free.
 **Approved**: pending
+**Decision**: The `"Prev"`, `"Next"` and `"Page {page} of {totalPages}"` strings stay hard-coded English, with no `labels` or formatter prop, as accepted debt.
+**Rationale**: Adding a label or formatter prop is a public API change that is better made together with the host application's localization approach; until then the host owns localization, and the string-externalization checks stay `failed` in Compliance.
+**Approved**: pending
 
+**Decision**: The component performs no validation of `page` or `totalPages`; the host owns well-formedness.
+**Rationale**: A pager that second-guessed its inputs would fork the truth the host already tracks (see the controlled-pager decision), so `NaN`, negative and non-integer values are compared and displayed exactly as given (see Edge Cases).
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |---|---|---|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
@@ -249,7 +254,7 @@ No logging. `Pagination` is a presentational control; paging semantics and any e
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 Statuses rest on: the source's native `nav`/`button` elements and visible-text button
-labels (`screen-reader-support`, `keyboard-navigable`, `semantic-markup`); its
+labels (`keyboard-navigable`, `semantic-markup`; `screen-reader-support` is `partial` because the caption has no `aria-live`, so a page change is not announced); its
 token-driven, hex-free styling that composes the shared `Button` rather than a bespoke
 control (`platform-theming`, `native-controls-preference`); the absence, in this file,
 of a computed pixel size, contrast value, or platform design-language audit for
@@ -262,7 +267,7 @@ behavior under `dir="rtl"` for `rtl-layout-support`; and the hard-coded `"Prev"`
 `locale-aware-formatting`. `separation-of-concerns` passes because `Pagination`
 does one thing — render Prev/label/Next for a controlled `page`/`totalPages` —
 composing the shared `Button` rather than duplicating its styling.
-`unit-test-coverage` passes because `stat.test.tsx`'s `Pagination` suite covers
+`unit-test-coverage` passes because the `Pagination` suite in `packages/web/packages/ui/src/__tests__/stat.test.tsx` covers
 rendering nothing for a single page, disabling Prev/Next at the boundaries, and
 paging both directions.
 
@@ -270,6 +275,7 @@ paging both directions.
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Linked Button in the Overview, recorded the hard-coded labels and no-validation choices as Design Decisions, added a focus-at-edges edge case, downgraded screen-reader-support to partial, unified the caption size, fixed Compose and SwiftUI notes, cited the test path and added vector T13. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 row (recipe); added best-practices Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct the Localization and caption-announcement claims to match the source; reformat Design Decisions and the Compliance table (add Internationalization and Platform Compliance checks); make platform-native controls the default in Platform Notes and align accessible names/collapse behavior across platforms; fix incorrect platform APIs; add edge case and T9–T12 test vectors for invalid/out-of-range input; shorten summary and generalize the Overview's app reference. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add all required template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy); expand Platform Notes to provide translation guidance for all five platforms (SwiftUI, Compose, React/Web, AppKit/UIKit, WinUI 3); update to review status. |

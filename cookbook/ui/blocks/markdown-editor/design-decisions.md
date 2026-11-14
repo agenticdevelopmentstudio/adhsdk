@@ -13,6 +13,13 @@ toolbars can add controls (e.g. a spell-check toggle) without forking the
 block.
 **Approved**: pending
 
+**Decision**: When `disabled`, the quick-reference control and `toolbarExtras`
+stay enabled.
+**Rationale**: The quick reference is read-only help that is harmless while the
+body is locked, and `MarkdownQuickReference` takes no `disabled` prop; the
+`toolbarExtras` content belongs to the consumer, who disables it themselves.
+**Approved**: pending
+
 **Decision**: The textarea id comes from `useId`, not a fixed string.
 **Rationale**: A shared component must support multiple instances per page
 without colliding the Label↔Textarea association.
