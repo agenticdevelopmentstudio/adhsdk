@@ -2,11 +2,11 @@
 id: 779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344
 title: "Git Client"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -60,6 +60,9 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitWorktreeParserTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitConfigEntryParserTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientConfigurationTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitActionTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientWriteTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -220,6 +223,62 @@ picker) is a consumer of this contract, not part of it.
   MUST check the size before reading anything and return nothing when the
   file is larger: the working file's size attribute, or `git cat-file -s
   <object id>` before `cat-file blob`. A file of exactly the maximum is read.
+
+### Write verbs
+
+- **write-actions**: Every write to a repository MUST be expressed as one
+  action value and run by the single perform verb; a caller names an intent
+  and never assembles flags. The actions are: stage paths, stage all,
+  unstage paths, unstage all, discard (tracked files' working-tree changes),
+  remove untracked, commit (message, amend), fetch (one remote or all),
+  pull, push, push setting upstream (remote, branch), create branch (name,
+  optional start point, optional checkout), checkout branch, checkout
+  tracking (a remote branch), checkout detached (commit), rename branch,
+  delete branch (optional force), delete remote branch, create tag (name,
+  commit, optional message), delete tag, push tag, stash save (optional
+  message), stash apply, stash pop and stash drop (each by index),
+  cherry-pick and revert (commit, optional mainline), and reset (commit,
+  soft, mixed or hard).
+- **write-action-mapping**: Each action MUST map to exactly this verb and
+  these arguments, every path list preceded by `--`: stage → `add -- <paths>`;
+  stage all → `add -A`; unstage → `reset -q -- <paths>`; unstage all →
+  `reset -q`; discard → `restore --worktree -- <paths>`; remove untracked →
+  `clean -f -d -- <paths>`; commit → `commit --cleanup=strip -m <message>`,
+  plus `--amend` when amending; fetch all → `fetch --all --prune`, fetch one
+  → `fetch --prune <remote>`; pull → `pull --no-edit`; push → `push`; push
+  setting upstream → `push --set-upstream <remote> <branch>`; create branch
+  → `branch <name> [<start>]`, or with checkout `switch -c <name> [<start>]`;
+  checkout → `switch <branch>`; checkout tracking → `switch --track
+  <remote>/<branch>`; checkout detached → `switch --detach <commit>`; rename
+  → `branch -m <from> <to>`; delete branch → `branch -d <name>`, or `-D`
+  forced; delete remote branch → `push <remote> --delete <name>`; create tag
+  → `tag <name> <commit>`, or with a message `tag -a <name> -m <message>
+  <commit>`; delete tag → `tag -d <name>`; push tag → `push <remote>
+  refs/tags/<name>`; stash save → `stash push --include-untracked`, plus `-m
+  <message>` only when the message is present and non-empty; stash apply,
+  pop and drop → `stash apply|pop|drop stash@{<index>}`; cherry-pick →
+  `cherry-pick [-m <mainline>] <commit>`; revert → `revert --no-edit [-m
+  <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`.
+- **write-budgets**: The perform verb MUST run through the same private
+  execution step as every read — logged, attributed and mapped onto the
+  same error outcomes — with its own wall-clock budget: the larger of the
+  configured timeout and 60 seconds for a local write, or 600 seconds for a
+  long-running one. The long-running actions are the ones that talk to a
+  remote (fetch, pull, push, push setting upstream, delete remote branch,
+  push tag) and commit, which runs the repository's hooks. Both budgets
+  MUST be exposed as constants. A read's budget is unchanged.
+- **write-editor-override**: The perform verb MUST run with `-c
+  core.editor=true`, so no write can stop to wait on an editor nobody is
+  watching; together with `GIT_TERMINAL_PROMPT=0` a write either finishes
+  or fails, and a write that cannot reach a remote (none configured)
+  surfaces as command-failed, not as a timeout.
+- **remotes-command**: The remotes verb MUST invoke `git remote` and return
+  the names, one per line, sorted.
+- **last-commit-message**: The last-commit-message verb MUST return HEAD's
+  full message (`git log -1 --no-color --no-show-signature --format=%B
+  <HEAD>`) with trailing whitespace and newlines trimmed, and MUST return
+  nothing on an unborn HEAD, detected by HEAD failing to resolve to a
+  commit before `log` runs, so it never throws for that case.
 
 ### Execution, configuration and attribution
 
@@ -958,3 +1017,4 @@ one.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and `core.editor=true`, the remotes verb and the last commit message. |

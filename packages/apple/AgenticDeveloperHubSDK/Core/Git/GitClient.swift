@@ -518,6 +518,66 @@ public actor GitClient {
         )
     }
 
+    // MARK: - Write verbs
+
+    /// The least time a local write is given: a minute, whatever the (read) timeout says.
+    public static let writeBudget: TimeInterval = 60
+
+    /// The least time a long-running write (`GitAction.isLongRunning`) is given: ten minutes.
+    public static let longWriteBudget: TimeInterval = 600
+
+    /// `core.editor=true`, so no verb can stop to wait on an editor nobody will see.
+    private static let writeConfigOverrides = ["core.editor=true"]
+
+    /// Runs `action` in `directory` and returns git's standard output.
+    ///
+    /// Goes through `execute` like every read, so each write is logged, attributed and
+    /// bounded; only the budget differs: `max(configuration.timeout, writeBudget)`, or
+    /// `longWriteBudget` for a long-running action.
+    @discardableResult
+    public func perform(_ action: GitAction, in directory: URL, caller: GitCaller = GitCaller()) async throws
+        -> String {
+        let configuration = await configurationProvider()
+        let floor = action.isLongRunning ? Self.longWriteBudget : Self.writeBudget
+        return try await execute(
+            verb: action.verb,
+            arguments: action.arguments,
+            directory: directory,
+            caller: caller,
+            configuration: configuration,
+            configOverrides: Self.writeConfigOverrides,
+            budget: max(configuration.timeout, floor)
+        )
+    }
+
+    /// The repository's remote names, sorted (`git remote`).
+    public func remotes(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [String] {
+        let output = try await execute(
+            verb: "remote",
+            arguments: [],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        return output.split(separator: "\n").map(String.init).filter { !$0.isEmpty }.sorted()
+    }
+
+    /// HEAD's full message (`%B`) with trailing whitespace and newlines trimmed, or nil on an
+    /// unborn HEAD — what an amend starts from.
+    public func lastCommitMessage(in directory: URL, caller: GitCaller = GitCaller()) async throws -> String? {
+        guard let head = try await resolveCommit("HEAD", in: directory, caller: caller) else { return nil }
+        let output = try await execute(
+            verb: "log",
+            arguments: ["-1", "--no-color", "--no-show-signature", "--format=%B", head],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        var message = Substring(output)
+        while let last = message.last, last.isWhitespace { message.removeLast() }
+        return String(message)
+    }
+
     // MARK: - Global configuration
 
     /// Everything in the user's global git configuration.
@@ -587,11 +647,12 @@ public actor GitClient {
         caller: GitCaller,
         configuration: GitClientConfiguration,
         configOverrides: [String] = [],
-        acceptedExitCodes: Set<Int32> = [0]
+        acceptedExitCodes: Set<Int32> = [0],
+        budget: TimeInterval? = nil
     ) async throws -> String {
         let result = try await executeRaw(verb: verb, arguments: arguments, directory: directory, caller: caller,
                                           configuration: configuration, configOverrides: configOverrides,
-                                          acceptedExitCodes: acceptedExitCodes)
+                                          acceptedExitCodes: acceptedExitCodes, budget: budget)
         return GitOutputDecoding.string(result.standardOutput)
     }
 
@@ -601,7 +662,8 @@ public actor GitClient {
     ///
     /// `configOverrides` are `key=value` pairs passed as `-c key=value` ahead of the verb and
     /// logged at the front of the arguments. An exit status outside `acceptedExitCodes`
-    /// throws `.commandFailed`.
+    /// throws `.commandFailed`. `budget` replaces `configuration.timeout` as the wall-clock
+    /// limit when given; only the write verbs pass one.
     private func executeRaw(
         verb: String,
         arguments verbArguments: [String],
@@ -609,7 +671,8 @@ public actor GitClient {
         caller: GitCaller,
         configuration: GitClientConfiguration,
         configOverrides: [String] = [],
-        acceptedExitCodes: Set<Int32> = [0]
+        acceptedExitCodes: Set<Int32> = [0],
+        budget: TimeInterval? = nil
     ) async throws -> SubprocessChannel.RunResult {
         let overrides = configOverrides.flatMap { ["-c", $0] }
         let arguments = overrides + verbArguments
@@ -641,7 +704,7 @@ public actor GitClient {
         let started = Date()
         let result: SubprocessChannel.RunResult
         do {
-            result = try await SubprocessChannel.run(channelConfiguration, budget: configuration.timeout)
+            result = try await SubprocessChannel.run(channelConfiguration, budget: budget ?? configuration.timeout)
         } catch is WallClockBudgetExceeded {
             GitCommandLog.record(
                 verb: verb, arguments: arguments, directory: directory, caller: caller,

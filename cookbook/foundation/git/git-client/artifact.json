@@ -4,11 +4,11 @@
     "id": "779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344",
     "title": "Git Client",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -63,12 +63,15 @@
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitBranchParserTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitWorktreeParserTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitConfigEntryParserTests.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientConfigurationTests.swift (adhsdk)"
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientConfigurationTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitActionTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientWriteTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "657f22d7a75e7081",
+  "synced": "22adae150bb057a7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

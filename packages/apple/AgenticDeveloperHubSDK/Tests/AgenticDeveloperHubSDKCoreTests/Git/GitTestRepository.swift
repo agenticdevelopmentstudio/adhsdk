@@ -43,6 +43,46 @@ struct GitTestRepository {
         }
     }
 
+    /// `git init --bare -b main`: a remote that lives in the temp directory, so push,
+    /// fetch and pull run against it with no network.
+    static func makeBare(prefix: String = "git-test-remote") async throws -> GitTestRepository {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(prefix)-\(UUID().uuidString).git")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let repository = GitTestRepository(root: root)
+        do {
+            try await repository.run(["init", "--bare", "-b", "main"])
+            return repository
+        } catch {
+            repository.tearDown()
+            throw error
+        }
+    }
+
+    /// A clone of `remote` (named `origin`) with the same identity and signing settings as
+    /// `make`. HEAD is pointed at `main` and `main` set to track `origin/main` whatever the
+    /// installed git does when it clones an empty repository, so a pull works from the start.
+    static func clone(of remote: GitTestRepository, prefix: String = "git-test-clone") async throws
+        -> GitTestRepository {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("\(prefix)-\(UUID().uuidString)")
+        let repository = GitTestRepository(root: root)
+        do {
+            try await repository.run(["clone", "--quiet", remote.root.path, root.path],
+                                     in: FileManager.default.temporaryDirectory)
+            try await repository.run(["symbolic-ref", "HEAD", "refs/heads/main"])
+            try await repository.run(["config", "branch.main.remote", "origin"])
+            try await repository.run(["config", "branch.main.merge", "refs/heads/main"])
+            try await repository.run(["config", "user.email", "test@example.com"])
+            try await repository.run(["config", "user.name", "Test"])
+            try await repository.run(["config", "commit.gpgsign", "false"])
+            try await repository.run(["config", "tag.gpgsign", "false"])
+            return repository
+        } catch {
+            repository.tearDown()
+            throw error
+        }
+    }
+
     func tearDown() {
         try? FileManager.default.removeItem(at: root)
     }

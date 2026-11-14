@@ -1,0 +1,120 @@
+import Foundation
+
+/// How far `git reset` moves: the branch only, the index too, or the working tree as well.
+public enum GitResetMode: String, Sendable, Hashable, CaseIterable {
+    case soft, mixed, hard
+}
+
+/// One write to a repository, as `GitClient.perform` runs it.
+///
+/// Each case is a fixed git command line: `verb` is the subcommand and `arguments` what
+/// follows it, so a caller names an intent and never assembles flags. Every path list is
+/// preceded by `--`, so a path that starts with a dash is never read as an option.
+public enum GitAction: Sendable, Hashable {
+    case stage(paths: [String])
+    case stageAll
+    case unstage(paths: [String])
+    case unstageAll
+    /// Restores tracked files' working-tree contents from the index (`restore --worktree`).
+    case discard(paths: [String])
+    /// Deletes untracked files and directories (`clean -f -d`).
+    case removeUntracked(paths: [String])
+    case commit(message: String, amend: Bool)
+    /// `nil` fetches every remote.
+    case fetch(remote: String?)
+    case pull
+    case push
+    case pushSettingUpstream(remote: String, branch: String)
+    case createBranch(name: String, startPoint: String?, checkout: Bool)
+    case checkout(branch: String)
+    /// `origin/x` becomes a local `x` that tracks it.
+    case checkoutTracking(remoteBranch: String)
+    case checkoutDetached(commit: String)
+    // swiftlint:disable:next identifier_name
+    case renameBranch(from: String, to: String)
+    case deleteBranch(name: String, force: Bool)
+    case deleteRemoteBranch(remote: String, name: String)
+    /// Lightweight without a message, annotated with one.
+    case createTag(name: String, commit: String, message: String?)
+    case deleteTag(name: String)
+    case pushTag(name: String, remote: String)
+    /// Always includes untracked files; an empty message is the same as none.
+    case stashSave(message: String?)
+    case stashApply(index: Int)
+    case stashPop(index: Int)
+    case stashDrop(index: Int)
+    case cherryPick(commit: String, mainline: Int?)
+    case revert(commit: String, mainline: Int?)
+    case reset(commit: String, mode: GitResetMode)
+
+    /// The git subcommand.
+    public var verb: String {
+        switch self {
+        case .stage, .stageAll: "add"
+        case .unstage, .unstageAll, .reset: "reset"
+        case .discard: "restore"
+        case .removeUntracked: "clean"
+        case .commit: "commit"
+        case .fetch: "fetch"
+        case .pull: "pull"
+        case .push, .pushSettingUpstream, .deleteRemoteBranch, .pushTag: "push"
+        case .createBranch(_, _, let checkout): checkout ? "switch" : "branch"
+        case .checkout, .checkoutTracking, .checkoutDetached: "switch"
+        case .renameBranch, .deleteBranch: "branch"
+        case .createTag, .deleteTag: "tag"
+        case .stashSave, .stashApply, .stashPop, .stashDrop: "stash"
+        case .cherryPick: "cherry-pick"
+        case .revert: "revert"
+        }
+    }
+
+    /// Everything after the verb.
+    public var arguments: [String] {
+        switch self {
+        case .stage(let paths): ["--"] + paths
+        case .stageAll: ["-A"]
+        case .unstage(let paths): ["-q", "--"] + paths
+        case .unstageAll: ["-q"]
+        case .discard(let paths): ["--worktree", "--"] + paths
+        case .removeUntracked(let paths): ["-f", "-d", "--"] + paths
+        case let .commit(message, amend): ["--cleanup=strip", "-m", message] + (amend ? ["--amend"] : [])
+        case .fetch(let remote): remote.map { ["--prune", $0] } ?? ["--all", "--prune"]
+        case .pull: ["--no-edit"]
+        case .push: []
+        case let .pushSettingUpstream(remote, branch): ["--set-upstream", remote, branch]
+        case let .createBranch(name, startPoint, checkout):
+            (checkout ? ["-c", name] : [name]) + (startPoint.map { [$0] } ?? [])
+        case .checkout(let branch): [branch]
+        case .checkoutTracking(let remoteBranch): ["--track", remoteBranch]
+        case .checkoutDetached(let commit): ["--detach", commit]
+        case let .renameBranch(oldName, newName): ["-m", oldName, newName]
+        case let .deleteBranch(name, force): [force ? "-D" : "-d", name]
+        case let .deleteRemoteBranch(remote, name): [remote, "--delete", name]
+        case let .createTag(name, commit, message):
+            message.map { ["-a", name, "-m", $0, commit] } ?? [name, commit]
+        case .deleteTag(let name): ["-d", name]
+        case let .pushTag(name, remote): [remote, "refs/tags/\(name)"]
+        case .stashSave(let message):
+            ["push", "--include-untracked"] + (message.flatMap { $0.isEmpty ? nil : ["-m", $0] } ?? [])
+        case .stashApply(let index): ["apply", "stash@{\(index)}"]
+        case .stashPop(let index): ["pop", "stash@{\(index)}"]
+        case .stashDrop(let index): ["drop", "stash@{\(index)}"]
+        case let .cherryPick(commit, mainline): Self.mainlineArguments(mainline) + [commit]
+        case let .revert(commit, mainline): ["--no-edit"] + Self.mainlineArguments(mainline) + [commit]
+        case let .reset(commit, mode): ["--\(mode.rawValue)", commit]
+        }
+    }
+
+    /// Whether the action can take far longer than a local write: anything that talks to a
+    /// remote, and a commit, which runs the repository's hooks.
+    public var isLongRunning: Bool {
+        switch self {
+        case .commit, .fetch, .pull, .push, .pushSettingUpstream, .deleteRemoteBranch, .pushTag: true
+        default: false
+        }
+    }
+
+    private static func mainlineArguments(_ mainline: Int?) -> [String] {
+        mainline.map { ["-m", String($0)] } ?? []
+    }
+}

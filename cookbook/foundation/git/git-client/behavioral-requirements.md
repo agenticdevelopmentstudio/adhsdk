@@ -56,8 +56,16 @@
   revision when other revisions remain, or returns no commits when none do.
 - **file-history-command**: The file history verb MUST invoke `git log` with a
   log request that follows the path and asks for name-status, with
-  `core.quotePath=false`, and MUST parse the output with the file history
+  `core.quotePath=false` and `core.precomposeUnicode=true`, and MUST parse the output with the file history
   rule; on exit status 128 with an unresolvable HEAD it returns no entries.
+  It reads at most the log request's default limit (500 commits) and MUST
+  expose that limit as a constant, so a caller can tell a capped history
+  from a complete one.
+- **path-precompose**: A verb handed one path to find (blame, file history)
+  MUST run with `-c core.precomposeUnicode=true`. Foundation hands arguments
+  over decomposed (NFD) and git stores names precomposed (NFC); without the
+  override a repository whose own configuration lacks the setting (made on
+  another system, or with it cleared) finds no non-ASCII path at all.
 - **refs-command**: The refs verb MUST invoke `git for-each-ref` with the
   ref format string against `refs/heads`, `refs/remotes` and `refs/tags`,
   and MUST parse the output with the ref parsing rule.
@@ -86,12 +94,26 @@
   their first parent — and a root commit uses the empty tree, computed with
   `git hash-object -t tree /dev/null` rather than spelled, so the repository's
   hash algorithm decides it.
+- **changed-files-command**: The changed-files verb MUST list the files a
+  commit changed without their patch: `git -c core.quotePath=false -c
+  diff.suppressBlankEmpty=false diff --name-status -z --no-color
+  --no-ext-diff --no-relative --find-renames --end-of-options <base>
+  <commit>`, against the same base the commit diff target uses (first
+  parent, or the empty tree), parsed with the name-status rule. A commit
+  view lists these and asks for one file's patch at a time, so a huge
+  commit costs one name per file rather than every line of its patch.
+- **name-status-parse**: Parsing `--name-status -z` output MUST read each
+  record as a status token and one path, or for a rename or copy (`R<n>`,
+  `C<n>`) a token, the old path and the new path, all NUL-terminated and
+  never quoted. `A`, `D`, `R`, `C` and `U` map to added, deleted, renamed,
+  copied and conflicted; anything else (including a type change) is
+  modified; a truncated last record MUST be dropped.
 - **diff-untracked**: The untracked target MUST run `git diff --no-index --
   /dev/null <path>` in the top level, accepting exit statuses 0 and 1
   (`--no-index` exits 1 when the files differ); an exit status of 1 with no
   output (git could not read the file) MUST surface as command-failed.
 - **blame-command**: The blame verb MUST run `git -c core.quotePath=false
-  blame --porcelain [<commit>] -- <path>` in the top level, omitting the
+  -c core.precomposeUnicode=true blame --porcelain [<commit>] -- <path>` in the top level, omitting the
   commit to blame the working tree, and MUST parse the output with the
   blame parsing rule. `git blame` does not accept `--end-of-options`, so a
   revision MUST first be resolved to a commit hash (which can never read as
@@ -112,6 +134,66 @@
   entry names exactly that path (a blob, or the requested stage), so a
   directory or a missing path gives nothing, and otherwise return the
   output of `git cat-file blob <object id>`.
+- **file-contents-cap**: Given a maximum byte count, the file-contents verb
+  MUST check the size before reading anything and return nothing when the
+  file is larger: the working file's size attribute, or `git cat-file -s
+  <object id>` before `cat-file blob`. A file of exactly the maximum is read.
+
+### Write verbs
+
+- **write-actions**: Every write to a repository MUST be expressed as one
+  action value and run by the single perform verb; a caller names an intent
+  and never assembles flags. The actions are: stage paths, stage all,
+  unstage paths, unstage all, discard (tracked files' working-tree changes),
+  remove untracked, commit (message, amend), fetch (one remote or all),
+  pull, push, push setting upstream (remote, branch), create branch (name,
+  optional start point, optional checkout), checkout branch, checkout
+  tracking (a remote branch), checkout detached (commit), rename branch,
+  delete branch (optional force), delete remote branch, create tag (name,
+  commit, optional message), delete tag, push tag, stash save (optional
+  message), stash apply, stash pop and stash drop (each by index),
+  cherry-pick and revert (commit, optional mainline), and reset (commit,
+  soft, mixed or hard).
+- **write-action-mapping**: Each action MUST map to exactly this verb and
+  these arguments, every path list preceded by `--`: stage → `add -- <paths>`;
+  stage all → `add -A`; unstage → `reset -q -- <paths>`; unstage all →
+  `reset -q`; discard → `restore --worktree -- <paths>`; remove untracked →
+  `clean -f -d -- <paths>`; commit → `commit --cleanup=strip -m <message>`,
+  plus `--amend` when amending; fetch all → `fetch --all --prune`, fetch one
+  → `fetch --prune <remote>`; pull → `pull --no-edit`; push → `push`; push
+  setting upstream → `push --set-upstream <remote> <branch>`; create branch
+  → `branch <name> [<start>]`, or with checkout `switch -c <name> [<start>]`;
+  checkout → `switch <branch>`; checkout tracking → `switch --track
+  <remote>/<branch>`; checkout detached → `switch --detach <commit>`; rename
+  → `branch -m <from> <to>`; delete branch → `branch -d <name>`, or `-D`
+  forced; delete remote branch → `push <remote> --delete <name>`; create tag
+  → `tag <name> <commit>`, or with a message `tag -a <name> -m <message>
+  <commit>`; delete tag → `tag -d <name>`; push tag → `push <remote>
+  refs/tags/<name>`; stash save → `stash push --include-untracked`, plus `-m
+  <message>` only when the message is present and non-empty; stash apply,
+  pop and drop → `stash apply|pop|drop stash@{<index>}`; cherry-pick →
+  `cherry-pick [-m <mainline>] <commit>`; revert → `revert --no-edit [-m
+  <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`.
+- **write-budgets**: The perform verb MUST run through the same private
+  execution step as every read — logged, attributed and mapped onto the
+  same error outcomes — with its own wall-clock budget: the larger of the
+  configured timeout and 60 seconds for a local write, or 600 seconds for a
+  long-running one. The long-running actions are the ones that talk to a
+  remote (fetch, pull, push, push setting upstream, delete remote branch,
+  push tag) and commit, which runs the repository's hooks. Both budgets
+  MUST be exposed as constants. A read's budget is unchanged.
+- **write-editor-override**: The perform verb MUST run with `-c
+  core.editor=true`, so no write can stop to wait on an editor nobody is
+  watching; together with `GIT_TERMINAL_PROMPT=0` a write either finishes
+  or fails, and a write that cannot reach a remote (none configured)
+  surfaces as command-failed, not as a timeout.
+- **remotes-command**: The remotes verb MUST invoke `git remote` and return
+  the names, one per line, sorted.
+- **last-commit-message**: The last-commit-message verb MUST return HEAD's
+  full message (`git log -1 --no-color --no-show-signature --format=%B
+  <HEAD>`) with trailing whitespace and newlines trimmed, and MUST return
+  nothing on an unborn HEAD, detected by HEAD failing to resolve to a
+  commit before `log` runs, so it never throws for that case.
 
 ### Execution, configuration and attribution
 
@@ -332,7 +414,9 @@ cannot read rather than failing the whole listing.
   `--max-count=<limit>` (default 500), `--skip=<skip>` (default 0), then
   `--author=<value>`, `--grep=<value>` with `--regexp-ignore-case`, and
   `-S<text>` for whichever of author, message search and pickaxe are set,
-  then the revisions (default `--branches --tags --remotes HEAD`), then
+  plus `--fixed-strings` whenever author or message search is set (what a
+  person types is text, not a pattern: `(x)` finds itself and a stray `[` is
+  no error; `-S` is already literal and adds nothing), then the revisions (default `--branches --tags --remotes HEAD`), then
   `--` and the path when a path is set. It MUST NOT pass `-z`.
 - **log-query-follow**: A log request that follows renames MUST end with
   `--follow -- <path>` and MUST omit its revisions, because `git log
