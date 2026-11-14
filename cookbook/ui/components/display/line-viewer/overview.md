@@ -1,0 +1,3 @@
+
+A read-only, virtualised view of many lines of text: each row is a text line or a header, with styled runs (colours from the [syntax highlighter](cookbook:6708bfd4-5b29-4bf9-b180-05904873906e) or anywhere else), a background role, and N gutter columns. It draws with Core Text, never TextKit, and asks its data source only for the rows it is drawing, so a 100 000-line file costs no more to show than a 100-line one. Diff and blame are configurations of it: inline diff is one viewer, side-by-side is two viewers whose vertical scroll is locked by `LineViewerScrollSync`. It knows nothing about git. Colours and the monospaced font come from the [theme engine](cookbook:0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6).
+

@@ -7767,119 +7767,21 @@
       "path": "status/service/monitor/types",
       "rdid": "adhsdk.ingredient.status.service.monitor.types"
     },
-    "5f18890e-5473-4315-9e69-dde7c64778bc": {
+    "5f9e0c63-382d-4803-bd50-a8fb90ea9e4d": {
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c4e01b2ec7b0368e3de25832e7effef4c94920e517e949e780ad96de623accee",
-            "state": "confirmed",
-            "version": "1.0.1"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PromptedToolCallingPlugin.swift",
-          "platform": "apple"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "web"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "android"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "windows"
-        }
-      ],
-      "kind": "ingredient",
-      "path": "ai/prompted-tool-calling-plugin",
-      "rdid": "adhsdk.ingredient.ai.prompted-tool-calling-plugin"
-    },
-    "5f54f265-0f62-49e6-a311-116863751eef": {
-      "implementations": [
-        {
-          "conformance": {
-            "hash": "sha256:192bd847b4b24804340ba37a96c68d223efd19fdc6e8b18500501e65721d7295",
+            "hash": "sha256:eb3ffa51d2e3c1ea53f6fdb7f65febe7342305f21f4e580f7070142d45bb9133",
             "state": "confirmed",
             "version": "1.0.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/FileBrowserExclusionState.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/",
           "platform": "apple"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "web"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "android"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "windows"
         }
       ],
       "kind": "ingredient",
-      "path": "workspace/files/file-browser-exclusion-state",
-      "rdid": "adhsdk.ingredient.workspace.files.file-browser-exclusion-state"
-    },
-    "5f832f45-b409-41db-b1ab-b360a0c7a1ea": {
-      "implementations": [
-        {
-          "conformance": {
-            "hash": "sha256:f4e423252f355735df351b4d7b90053d4ac8ec62dcc46b0cbd1ad004efc8cd88",
-            "state": "confirmed",
-            "version": "1.0.0"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ProjectWindowSplitViewController.swift",
-          "platform": "macos"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "apple"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "web"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "android"
-        },
-        {
-          "conformance": {
-            "state": "planned"
-          },
-          "platform": "windows"
-        }
-      ],
-      "kind": "ingredient",
-      "path": "ui/composable-tabs/project-window-split-view-controller",
-      "rdid": "adhsdk.ingredient.ui.composable-tabs.project-window-split-view-controller"
+      "path": "ui/components/display/line-viewer",
+      "rdid": "adhsdk.ingredient.ui.components.display.line-viewer"
     },
     "60a907a2-2cc8-4c0c-bb54-3b0516d280b6": {
       "implementations": [
