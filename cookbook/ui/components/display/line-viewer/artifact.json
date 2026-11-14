@@ -4,7 +4,7 @@
     "id": "5f9e0c63-382d-4803-bd50-a8fb90ea9e4d",
     "title": "Line Viewer",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7312ccd5308253ab",
+  "synced": "264fca407938dc28",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

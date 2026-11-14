@@ -12,6 +12,6 @@
 - A run's `highlight` paints that role behind the run's glyphs, full row height, with the same colours (an `emphasis` run on an added row is `.success` at 0.40).
 - Selected rows are overlaid with `.selection`.
 - Text: each run's `foreground`, or `.primaryText` where no run says; `fontStyle` maps bold and italic to font traits, underline and strikethrough to single lines.
-- Gutter: one column per `gutterColumnCount`, each `(max(3, digits(rowCount)) + 2)` advances of `0` wide, values right-aligned in `.secondaryText`, a 1 pt `.divider` line after the last column. Text starts one advance after the gutter.
+- Gutter: one column per `gutterColumnCount`, each `gutterColumnWidth(c) + 2` advances of `0` wide (default content width `max(3, digits(rowCount))`), values right-aligned in `.secondaryText` and clipped to their column, a 1 pt `.divider` line after the last column. The gutter is pinned to the visible left edge and carries each row's background and selection. Text starts one advance after the gutter.
 - With `foldsAtHeaders`, a header row draws a down chevron (expanded) or right chevron (folded) in `.secondaryText` before its text.
 
