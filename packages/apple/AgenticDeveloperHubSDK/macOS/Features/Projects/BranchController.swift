@@ -1,6 +1,7 @@
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKCoreUI
 import AppKit
+import os
 
 /// Owns one checkout: its status provider, its current branch, the commands
 /// that act on it and the tab panes that describe it. Vended by
@@ -12,6 +13,9 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
     public private(set) var currentBranch: String?
 
     private let gitClient: GitClient
+    /// The app's registry, held weakly: asked, on every read of `commands`,
+    /// whether the Git window's open-for-path command is there to offer.
+    private weak var commandRegistry: CommandRegistry?
     private let panes = NSHashTable<TabPaneViewController>.weakObjects()
     private var statusObservation: GitStatusObservation?
     private var sessionObserver: NSObjectProtocol?
@@ -26,9 +30,15 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
     /// badges, one answering `Refresh Status`. The project owns the per-
     /// directory cache both sides ask; see
     /// `ProjectWorkspace.gitStatusProvider(forDirectory:)`.
-    public init(checkout: ProjectCheckout, gitClient: GitClient, statusProvider: GitStatusProvider) {
+    public init(
+        checkout: ProjectCheckout,
+        gitClient: GitClient,
+        statusProvider: GitStatusProvider,
+        commandRegistry: CommandRegistry? = nil
+    ) {
         self.checkout = checkout
         self.gitClient = gitClient
+        self.commandRegistry = commandRegistry
         self.statusProvider = statusProvider
         self.currentBranch = checkout.branch
         statusObservation = statusProvider.observe { [weak self] result in
@@ -146,7 +156,7 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
         let suffix = checkout.identifier
         let directory = checkout.directory
         let category = "Branch — \(displayName)"
-        return [
+        var commands = [
             AppCommand(
                 id: "branch.action.refreshStatus.\(suffix)",
                 title: "Refresh Status",
@@ -177,6 +187,23 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
                 NSPasteboard.general.setString(directory.path, forType: .string)
             }
         ]
+        // Offered only while the Git window can take it, so a host without
+        // that feature shows no row that would do nothing.
+        let openForPath = GitWindowFeature.CommandID.openForPath
+        if let registry = commandRegistry, registry.command(id: openForPath) != nil {
+            commands.append(AppCommand(
+                id: "branch.action.openGitWindow.\(suffix)",
+                title: "Open in Git Window",
+                category: category
+            ) { [weak registry] in
+                do {
+                    try registry?.execute(id: openForPath, arguments: [directory.path])
+                } catch {
+                    Self.logger.error("Open in Git Window failed: \(String(describing: error), privacy: .public)")
+                }
+            })
+        }
+        return commands
     }
 
     // MARK: TabPaneDataSource
@@ -252,4 +279,8 @@ public final class BranchController: TabPaneDataSource, TabPaneDelegate {
         }
         return menu
     }
+}
+
+extension BranchController: Loggable {
+    public static nonisolated let logger = makeLogger()
 }

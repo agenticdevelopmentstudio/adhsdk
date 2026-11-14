@@ -2,11 +2,11 @@
 id: 92f11498-2cb2-4b04-92b9-560d9f2de6ee
 title: "Branch Management"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -62,7 +62,8 @@ menu). Every property and method is confined to a single execution context
   checkout, and MUST NOT read or mutate any other checkout's state.
 - **injected-dependencies-no-defaults**: Construction MUST require the
   checkout, the git client, and the git status provider as parameters with
-  no default value for any of them, and MUST NOT construct a git client or
+  no default value for any of them (the optional command registry, below, is
+  not one of them), and MUST NOT construct a git client or
   git status provider internally — a provider minted internally could
   never be the one a checkout's panes were already given before the
   component exists, which would leave one checkout served by two status
@@ -103,12 +104,20 @@ menu). Every property and method is confined to a single execution context
   after its branch-read attempt, regardless of whether that attempt
   succeeded, failed, or there were no panes to reload.
 - **commands-computed-per-access**: The commands MUST be computed fresh on
-  every access as a list of exactly three commands — Refresh Status,
-  Reveal in Finder, Copy Path, in that order — rather than cached from a
-  previous access.
+  every access as a list of Refresh Status, Reveal in Finder, Copy Path, in
+  that order, followed by Open in Git Window when the git window is
+  offered — rather than cached from a previous access.
+- **git-window-command-when-registered**: When the component was given a
+  command registry (held weakly) and that registry currently holds
+  `git.action.openWindowForPath`, the commands MUST end with Open in Git
+  Window (`branch.action.openGitWindow.<checkout-identifier>`); invoking it
+  MUST execute `git.action.openWindowForPath` with the checkout's directory
+  path, captured by value, as its one argument, and MUST log a failure
+  rather than throw. Without a registry, or without that command in it,
+  Open in Git Window MUST NOT be offered.
 - **command-id-namespacing**: Every command id MUST be
   `branch.action.<verb>.<checkout-identifier>` (`refreshStatus`,
-  `revealInFinder`, or `copyPath`), so that two checkouts — including two
+  `revealInFinder`, `copyPath`, or `openGitWindow`), so that two checkouts — including two
   worktrees of the same repository — MUST NOT produce colliding command
   ids.
 - **command-category-carries-checkout-name**: Every command's category
@@ -210,6 +219,7 @@ system, neither of which this component renders itself.
 | git-client-projects-branch-controller-011 | reveal-in-finder-command-effect, copy-path-command-effect, captured-directory-outlives-controller | Read the commands, discard the strong reference to the branch management component, then invoke the captured Reveal in Finder and Copy Path actions. | Revealing the directory in the system file browser, and the clipboard write, both still target the original checkout directory, even though the component that vended the commands is gone. |
 | git-client-projects-branch-controller-012 | context-menu-run-discards-arguments-and-result, context-menu-item-enablement-via-validation | Build the context menu for a checkout whose Refresh Status command reports itself disabled, then check that item's enabled state. | The disabled item's enabled check reads false and the other two read true; invoking the item's action still calls the command's run operation with an empty argument list — menu construction does not gate on the enabled state itself. |
 | git-client-projects-branch-controller-013 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| git-client-projects-branch-controller-014 | git-window-command-when-registered, commands-computed-per-access | Build a component with a command registry; read its commands; register a command `git.action.openWindowForPath` that records its arguments; read the commands again and run the last one. | The first read has three commands; the second has four, the last titled `Open in Git Window` with id `branch.action.openGitWindow.<suffix>`; running it executes `git.action.openWindowForPath` with the checkout directory's path as the only argument. |
 
 ## Edge Cases
 
@@ -538,3 +548,4 @@ subprocess runs.
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the refresh-ordering NEEDS REVIEW marker against source: overlapping refresh calls are not ordered or coalesced; restated as current behavior with a pending decision. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Open in Git Window command, offered while the Git window's open-for-path command is registered |

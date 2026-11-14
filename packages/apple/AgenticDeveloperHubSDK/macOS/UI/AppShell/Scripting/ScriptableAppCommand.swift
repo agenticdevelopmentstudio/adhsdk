@@ -86,12 +86,37 @@ public final class PerformAppCommandCommand: MainActorScriptCommand, @unchecked 
         else {
             return fail("No command matches “\(reference)”.")
         }
+        let arguments = Self.arguments(from: evaluatedArguments?["Arguments"])
         do {
-            try registry.execute(id: command.id)
+            try registry.execute(id: command.id, arguments: arguments)
         } catch {
             return fail(String(describing: error))
         }
         return nil
+    }
+
+    /// `with arguments {…}` as the command's argument list. A `type="any"`
+    /// parameter arrives undecoded, so a list descriptor becomes its items and
+    /// any other descriptor one item; text becomes a `String`, anything else
+    /// stays a descriptor. Already-decoded values pass through, a single value
+    /// as a one-element list.
+    static func arguments(from value: Any?) -> [Any] {
+        func decode(_ descriptor: NSAppleEventDescriptor) -> Any {
+            descriptor.stringValue ?? descriptor
+        }
+        switch value {
+        case .none:
+            return []
+        case let descriptor as NSAppleEventDescriptor where descriptor.descriptorType == DescType(typeAEList):
+            guard descriptor.numberOfItems > 0 else { return [] }
+            return (1...descriptor.numberOfItems).compactMap { descriptor.atIndex($0) }.map(decode)
+        case let descriptor as NSAppleEventDescriptor:
+            return [decode(descriptor)]
+        case let list as [Any]:
+            return list
+        case let .some(value):
+            return [value]
+        }
     }
 
     private func fail(_ message: String) -> Any? {

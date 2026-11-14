@@ -145,6 +145,13 @@ public final class GitRefsSidebarViewController: NSViewController {
         }
     }
 
+    /// Selects the working copy row without telling the delegate: the owner's
+    /// starting selection, so the sidebar shows what the window shows.
+    func selectWorkingCopy() {
+        selectedID = Self.workingCopyID
+        list.selectItem(withId: Self.workingCopyID)
+    }
+
     /// A remote branch's name less its `<remote>/` prefix, or the whole name
     /// when that would leave nothing (a ref directly under `refs/remotes/<x>`).
     private static func remoteBranchTitle(_ ref: GitRef, remote: String) -> String {

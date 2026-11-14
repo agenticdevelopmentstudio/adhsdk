@@ -4,7 +4,8 @@
   checkout, and MUST NOT read or mutate any other checkout's state.
 - **injected-dependencies-no-defaults**: Construction MUST require the
   checkout, the git client, and the git status provider as parameters with
-  no default value for any of them, and MUST NOT construct a git client or
+  no default value for any of them (the optional command registry, below, is
+  not one of them), and MUST NOT construct a git client or
   git status provider internally — a provider minted internally could
   never be the one a checkout's panes were already given before the
   component exists, which would leave one checkout served by two status
@@ -45,12 +46,20 @@
   after its branch-read attempt, regardless of whether that attempt
   succeeded, failed, or there were no panes to reload.
 - **commands-computed-per-access**: The commands MUST be computed fresh on
-  every access as a list of exactly three commands — Refresh Status,
-  Reveal in Finder, Copy Path, in that order — rather than cached from a
-  previous access.
+  every access as a list of Refresh Status, Reveal in Finder, Copy Path, in
+  that order, followed by Open in Git Window when the git window is
+  offered — rather than cached from a previous access.
+- **git-window-command-when-registered**: When the component was given a
+  command registry (held weakly) and that registry currently holds
+  `git.action.openWindowForPath`, the commands MUST end with Open in Git
+  Window (`branch.action.openGitWindow.<checkout-identifier>`); invoking it
+  MUST execute `git.action.openWindowForPath` with the checkout's directory
+  path, captured by value, as its one argument, and MUST log a failure
+  rather than throw. Without a registry, or without that command in it,
+  Open in Git Window MUST NOT be offered.
 - **command-id-namespacing**: Every command id MUST be
   `branch.action.<verb>.<checkout-identifier>` (`refreshStatus`,
-  `revealInFinder`, or `copyPath`), so that two checkouts — including two
+  `revealInFinder`, `copyPath`, or `openGitWindow`), so that two checkouts — including two
   worktrees of the same repository — MUST NOT produce colliding command
   ids.
 - **command-category-carries-checkout-name**: Every command's category

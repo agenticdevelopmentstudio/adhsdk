@@ -1,0 +1,2 @@
+
+A titled, closable, miniaturizable, resizable window, 1200 x 760 points by default and at least 720 x 440, with a unified toolbar: a flexible space, the search field (placeholder `Search history`), then Refresh (`arrow.clockwise`). The title bar shows the folder name over the branch as its subtitle. Columns: sidebar about 220 points (160-360), centre at least 360, right column at least 320; in the right column the commit detail takes about 40 % of the height. Every pane is the git views' own, themed by them.
