@@ -36,6 +36,9 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// no group yet, and raising it as an ungrouped window would put it on
     /// screen beside its group's.
     private var pendingLoads: Set<UUID> = []
+    /// Projects a script asked for: they are opened and shown without
+    /// activating the app, all the way through the deferred build.
+    private var quietRequests: Set<UUID> = []
 
     /// Language-service shutdowns started by a window close, still running.
     /// The controller is out of `controllers` by then, so
@@ -353,7 +356,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             // Asking for a project that is already open is still the user
             // asking for it, and a window raised behind the app that is
             // actually frontmost reads as nothing having happened.
-            activateApp()
+            if !quietRequests.contains(repo.id) { activateApp() }
             return
         }
         if let existing = controllers[repo.id] {
@@ -362,7 +365,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             existing.project.update(repo: repo)
             existing.showWindow(nil)
             existing.window?.makeKeyAndOrderFront(nil)
-            activateApp()
+            if !quietRequests.contains(repo.id) { activateApp() }
             return
         }
         load(repo, into: frontGroup ?? makeGroup())
@@ -391,6 +394,11 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// a click does. It never activates the app — a script runs while someone
     /// may be typing in another app (quiet development).
     public func openProjectForScripting(_ repo: GitRepo) {
+        quietRequests.insert(repo.id)
+        defer {
+            // Cleared at once unless a build is pending; `show` clears it then.
+            if !pendingLoads.contains(repo.id) { quietRequests.remove(repo.id) }
+        }
         if let group = frontGroup {
             loadProject(repo, into: group)
         } else {
@@ -688,7 +696,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         adoptSharedTabConfiguration(into: repo.id)
         group.activate(repo.id)
         present(repo.id, in: group)
-        activateApp()
+        if quietRequests.remove(repo.id) == nil { activateApp() }
         // After the window is on screen and the app offered activation, not
         // at registration: every consumer of `onOpenProjectsChanged` asks a
         // question about the window that just opened, and two of them read
