@@ -182,7 +182,7 @@ None of the three files calls `console.*` or any logger; `fetchPeers` and `fleet
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/peers/` | unverified |
+| web | `packages/web/packages/status-server/src/peers/` | confirmed (1.1.1) |
 
 ## Design Decisions
 

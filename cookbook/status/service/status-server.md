@@ -170,9 +170,9 @@ All logging is plain `console.error`; there is no logger subsystem or category.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/app.ts` | unverified |
-| web | `packages/web/packages/status-server/src/scheduler.ts` | unverified |
-| web | `packages/web/packages/status-server/src/types.ts` | unverified |
+| web | `packages/web/packages/status-server/src/app.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/status-server/src/scheduler.ts` | confirmed (1.1.0) |
+| web | `packages/web/packages/status-server/src/types.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

@@ -209,7 +209,7 @@ This component makes no logging call of its own — no console output and no str
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/worker-client.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/worker-client.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

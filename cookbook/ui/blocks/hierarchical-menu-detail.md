@@ -226,7 +226,7 @@ Not applicable: Source includes an internal debug log (gated behind a dev-only s
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/hierarchical-menu-detail.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/hierarchical-menu-detail.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

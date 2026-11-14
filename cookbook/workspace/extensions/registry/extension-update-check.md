@@ -295,7 +295,7 @@ Subsystem: the host's logging subsystem | Category: the update check's own categ
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionUpdateCheck.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

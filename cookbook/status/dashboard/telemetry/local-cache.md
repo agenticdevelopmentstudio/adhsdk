@@ -197,7 +197,7 @@ Not applicable: `stores/local-cache.ts` makes no log calls; both `catch` blocks 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/telemetry/stores/local-cache.ts` | unverified |
+| web | `packages/web/packages/status-web/src/telemetry/stores/local-cache.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

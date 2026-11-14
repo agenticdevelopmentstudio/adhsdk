@@ -210,7 +210,7 @@ Not applicable: Follow New Items makes no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-follow-new-items.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-follow-new-items.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -139,7 +139,7 @@ Not applicable: the module contains no logging calls. All errors (e.g., missing 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/lib/links.ts` | unverified |
+| web | `packages/web/packages/status-server/src/lib/links.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 

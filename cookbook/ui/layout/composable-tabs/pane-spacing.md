@@ -189,7 +189,7 @@ Not applicable: no logging call of any kind appears anywhere in this component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/PaneSpacing.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/PaneSpacing.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

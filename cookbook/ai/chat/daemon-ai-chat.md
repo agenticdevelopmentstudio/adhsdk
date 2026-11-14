@@ -227,7 +227,7 @@ Not applicable: this component contains no logging call; it is orchestration log
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonAIChat.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

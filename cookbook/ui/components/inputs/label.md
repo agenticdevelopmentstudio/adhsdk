@@ -138,7 +138,7 @@ Not applicable: Label does not perform any logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/label.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/label.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -210,7 +210,7 @@ Not applicable: the window performs no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailWindowController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailWindowController.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 

@@ -221,7 +221,7 @@ Not applicable: the operation calls no logging API; failures are reported only t
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/crud/src/useTablesWithRows.ts` | unverified |
+| web | `packages/web/packages/crud/src/useTablesWithRows.ts` | confirmed (1.0.0) |
 
 ## Design Decisions
 

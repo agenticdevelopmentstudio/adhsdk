@@ -256,7 +256,7 @@ Not applicable: Live Snapshot makes no log calls; failures surface only through 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-live-snapshot.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-live-snapshot.ts` | confirmed (1.2.3) |
 
 ## Design Decisions
 

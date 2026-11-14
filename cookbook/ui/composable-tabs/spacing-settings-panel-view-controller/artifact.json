@@ -1,0 +1,60 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "024921f5-3051-4b68-84d9-a0912a0cc51e",
+    "title": "Spacing Settings Panel View Controller",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The Settings > Appearance > Spacing panel: frame, pane divider and pane content spacing, each bound to the app-wide keys, with a Tab order joined across the groups.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "composable-tabs",
+      "settings",
+      "spacing",
+      "settings-panel"
+    ],
+    "depends-on": [],
+    "related": [
+      "4c528e38-b70a-4ed3-bedc-9009292ad908",
+      "92d66361-a16d-4c35-a0d3-4c1c8bbd5f52"
+    ],
+    "references": [
+      "https://developer.apple.com/design/human-interface-guidelines/layout"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "fdeda27995878f80",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

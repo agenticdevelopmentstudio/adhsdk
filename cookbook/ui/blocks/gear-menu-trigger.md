@@ -149,7 +149,7 @@ Not applicable. The component has no logging requirements.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/gear-menu-trigger.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/gear-menu-trigger.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

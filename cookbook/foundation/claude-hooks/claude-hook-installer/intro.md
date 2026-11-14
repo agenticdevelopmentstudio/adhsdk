@@ -1,0 +1,3 @@
+
+# Claude Hook Installer
+

@@ -159,7 +159,7 @@ Not applicable: this logic makes no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-build-progress.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-build-progress.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -178,7 +178,7 @@ Not applicable: the module contains no log call of any kind — it declares data
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/types.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/types.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -262,7 +262,7 @@ An autosave write failure is logged at error level (`Auto-save failed for <uri>:
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/FileEditorView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/FileEditorView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

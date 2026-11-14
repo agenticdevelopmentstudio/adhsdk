@@ -281,7 +281,7 @@ A fully successful poll (every page fetched cleanly, no unparseable `createdAt`,
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/fetch-vercel-projects.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

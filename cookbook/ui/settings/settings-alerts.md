@@ -127,7 +127,7 @@ Declined confirmations, window-less folder requests and window-less error report
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsAlerts.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/SettingsAlerts.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 

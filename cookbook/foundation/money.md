@@ -133,7 +133,7 @@ Not applicable: The money type calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/Money.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Money/Money.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

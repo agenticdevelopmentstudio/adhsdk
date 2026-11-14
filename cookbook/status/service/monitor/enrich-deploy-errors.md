@@ -190,7 +190,7 @@ No log line is emitted on a successful enrichment, an empty candidate set, or a 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

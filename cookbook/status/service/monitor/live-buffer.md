@@ -155,7 +155,7 @@ Not applicable: this file contains no `console.*` call or structured-logger call
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/live-buffer.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/live-buffer.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 

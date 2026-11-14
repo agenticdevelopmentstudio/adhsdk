@@ -254,7 +254,7 @@ Subsystem: the app's bundle identifier (falling back to a placeholder when unset
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Host/` | confirmed (1.2.0) |
 
 ## Design Decisions
 

@@ -139,7 +139,7 @@ No other event in this component is logged: `diagnosticsChanged(for:)` has exact
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/HostDiagnosticSink.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

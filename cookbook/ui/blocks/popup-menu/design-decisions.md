@@ -12,7 +12,7 @@
   **Approved**: pending
 
 - **Decision**: Always render an affordance icon (the default or a custom one); do not offer a prop to hide it.
-  **Rationale**: Keeps the API simpler and the dropdown affordance visually consistent — a design allowing the icon to be hidden was rejected for that reason. The icon is excluded from assistive-technology announcements to avoid redundant readback.
+  **Rationale**: Keeps the API simpler and the dropdown affordance visually consistent — a design allowing the icon to be hidden was rejected for that reason. The default icon is excluded from assistive-technology announcements to avoid redundant readback; a custom icon is rendered as supplied.
   **Approved**: pending
 
 - **Decision**: Make the "New…" entry's label a string prop (`newLabel`), not a `ReactNode` like `icon`.

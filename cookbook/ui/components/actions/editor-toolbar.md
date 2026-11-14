@@ -139,7 +139,7 @@ Not applicable: EditorToolbar has no logging. Debugging of toolbar child element
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/editor-toolbar.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/editor-toolbar.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

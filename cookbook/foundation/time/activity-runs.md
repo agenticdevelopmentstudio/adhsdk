@@ -132,7 +132,7 @@ Not applicable: The algorithms calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/ActivityRuns.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/ActivityRuns.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

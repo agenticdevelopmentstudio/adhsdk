@@ -1,0 +1,7 @@
+
+The Prompted Tool Calling Plugin gives tools to a plugin whose provider has no tool calling of its own, or whose plugin does not send the context's tools to the provider. It is a decorator over another plugin. It describes the tools in the system prompt and asks the model to request each call as a `<tool_call>` block of JSON in its reply text. A decoder holds the reply back until it ends, lifts those blocks out as tool-use events, and passes the rest on as text. Earlier calls and their results are written back into the conversation as text in the same format, so the history reads as one protocol.
+
+Holding the reply back costs streaming, which is why this is opt-in for a caller that needs tools rather than applied to every plugin. It conforms to the AI plugin contract ([adhsdk.ingredient.ai.ai-plugin](cookbook:47eb19ef-2c42-4a52-a60b-54b6f01c8791)), reads and writes the chat context ([adhsdk.ingredient.ai.chat-context](cookbook:613d7a36-d0cd-4415-97be-d983b3d6c644)), returns request descriptions ([adhsdk.ingredient.ai.request-spec](cookbook:72829b3b-ce4a-4730-877f-da7b48e7b3dd)) and emits stream events ([adhsdk.ingredient.ai.stream-event](cookbook:2067e249-4f97-4575-b8ed-8f55f6dc96df)). Where tools are served over MCP, see [adhsdk.ingredient.ai.mcp.mcp-plumbing](cookbook:52650804-a096-4b71-b4eb-da3afa95ac56).
+
+The source is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/PromptedToolCallingPlugin.swift`. It holds a public final class, `PromptedToolCallingPlugin`, and an internal `PromptedToolCallDecoder`.
+

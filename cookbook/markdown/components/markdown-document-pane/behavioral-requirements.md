@@ -1,0 +1,25 @@
+
+- **pane-root-slot**: The pane MUST render a root element carrying `data-slot="markdown-document-pane"`.
+- **pane-root-layout**: The pane root MUST be a full-height, vertical flex column that may shrink below its content size on both axes (classes `flex h-full min-h-0 min-w-0 flex-col`).
+- **bar-first**: When the bar is shown, the pane MUST render it as the first child of the root, before the body.
+- **bar-outside-body**: The pane MUST NOT render the bar inside the padded body.
+- **bar-when-editable**: The pane MUST show the Cancel/Save bar while `editable` is true.
+- **bar-hidden-read-only**: The pane MUST NOT show the bar when `editable` is false and the document is neither dirty nor in conflict.
+- **bar-kept-for-draft**: The pane MUST keep the bar while `document.dirty` is true, even when `editable` is false, so Cancel stays within reach.
+- **bar-kept-for-conflict**: The pane MUST keep the bar while `document.conflict` is not null, even when `editable` is false, so Reload theirs stays within reach.
+- **bar-document**: The pane MUST pass the `document` prop to the bar as the bar's document.
+- **bar-noun**: The pane MUST pass `noun` to the bar, and `noun` MUST default to `document` when omitted.
+- **bar-messages**: The pane MUST pass `messages` to the bar unchanged, so a host can replace any of the bar's notices.
+- **body-slot**: The body MUST render a root element carrying `data-slot="markdown-document-pane-body"`.
+- **body-padding**: The body MUST be padded with `p-4` (1rem on every side) and lay its children out in a vertical flex column with a `gap-3` (0.75rem) gap.
+- **body-fills-pane**: The body MUST fill the space below the bar (`flex-1`) and may shrink below its content size (`min-h-0 min-w-0`).
+- **host-children-first**: The pane MUST render the `children` prop inside the body, above the editor.
+- **editor-after-load**: The pane MUST render the editor only once `document.value` is not null.
+- **body-empty-before-load**: While `document.value` is null the pane MUST render no editor, leaving the body with only the host's children.
+- **editor-value**: The pane MUST give the editor the document's `value` as its `value`.
+- **editor-change**: The pane MUST give the editor `document.edit` as its `onChange`.
+- **editor-read-only**: The pane MUST give the editor `readOnly` set to the negation of `editable`.
+- **editor-forwarding**: The pane MUST forward every prop it does not consume (everything except `document`, `editable`, `noun`, `messages` and `children`) to the editor.
+- **editor-props-closed**: The pane MUST NOT accept `value`, `onChange` or `readOnly` from the host, because they are derived from `document` and `editable` (the props type omits them).
+- **body-export**: The module MUST export `MarkdownDocumentPaneBody` as a standalone component rendering the same padded body, for a host's loading, not-found or error states.
+

@@ -385,7 +385,7 @@ caller is the one that acts on the plan this file returns.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTabReconciler.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

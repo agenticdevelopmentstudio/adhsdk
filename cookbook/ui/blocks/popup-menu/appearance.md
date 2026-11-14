@@ -6,7 +6,7 @@
 - **Background (dropdown)**: `bg-apt-surface-2` (secondary surface token)
 - **Foreground/Text**: `text-apt-text` (semantic text token)
 - **Border**: width 1px, color `apt-border` (default), `apt-border-strong` on hover, `apt-gold` on focus
-- **Shadow**: none
+- **Shadow**: none on the trigger; the open dropdown takes its box-shadow, padding and radius from the shared dropdown-menu skin
 - **Gap between label and icon**: `gap-2` (8px)
 - **Min/Max size**: dropdown has minimum width `min-w-[12rem]` (192px)
 

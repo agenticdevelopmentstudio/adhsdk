@@ -340,7 +340,7 @@ written to a log by this component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelState.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelState.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

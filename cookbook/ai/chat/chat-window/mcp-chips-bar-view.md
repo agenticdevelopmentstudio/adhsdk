@@ -459,7 +459,7 @@ Not applicable: source contains no logging call (no `print`, `os_log`, or
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/MCPChipsBarView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/MCPChipsBarView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

@@ -514,7 +514,7 @@ Not applicable: source contains no logging call anywhere in source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandRowView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandRowView.swift` | confirmed (1.2.3) |
 
 ## Design Decisions
 

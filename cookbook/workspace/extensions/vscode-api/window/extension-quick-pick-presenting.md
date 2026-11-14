@@ -186,7 +186,7 @@ Not applicable: this component contains no logging call of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionQuickPickPresenting.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

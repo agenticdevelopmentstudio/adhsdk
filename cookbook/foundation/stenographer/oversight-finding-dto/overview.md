@@ -1,0 +1,3 @@
+
+`OversightFindingDTO` is one persisted observation the AI-oversight subsystem recorded about a live Claude Code session, for example "context 88% used, compact". The daemon's observers write findings into its database; the app (over XPC) and the CLI (over HTTP `GET /oversight/findings`) read and display them. The type is a plain immutable value with twelve string or integer fields. It lives in the shared package, not in the daemon, so the daemon's database layer and the app decode the identical shape. It carries no behavior: it does not validate, normalize, order or mutate anything. The lifecycle (`pending`, `acted`, `dismissed`, `stale`) and the writes that move a finding between states belong to the daemon.
+

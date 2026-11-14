@@ -537,7 +537,7 @@ Not applicable: this component contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPane/TabPaneView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

@@ -216,7 +216,7 @@ and any telemetry around it belong to the host, not the display element.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/stat.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/stat.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

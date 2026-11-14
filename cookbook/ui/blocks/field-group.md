@@ -159,7 +159,7 @@ export function FieldGroup(props: FieldGroupProps): React.ReactElement
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/field-group.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/field-group.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

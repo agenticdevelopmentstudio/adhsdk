@@ -309,7 +309,7 @@ Subsystem: the app's own identifier (or a fixed fallback literal when unset) | C
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/NSAlertMessagePresenter.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -284,7 +284,7 @@ Not applicable — this interface does not emit analytics events.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/storage/ports.ts` | unverified |
+| web | `packages/web/packages/status-server/src/storage/ports.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

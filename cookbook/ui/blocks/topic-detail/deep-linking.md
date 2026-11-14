@@ -1,3 +1,3 @@
 
-Not applicable: this component is a presentational primitive with no internal navigation. Deep linking is the responsibility of consumers that compose the component into a routing context.
+Not applicable: the component has no internal navigation or URLs; a row's `onLink` is a caller callback.
 

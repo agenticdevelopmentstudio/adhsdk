@@ -256,7 +256,7 @@ implementation.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/crud/src/CrudRecordForm.tsx` | unverified |
+| web | `packages/web/packages/crud/src/CrudRecordForm.tsx` | confirmed (1.4.2) |
 
 ## Design Decisions
 

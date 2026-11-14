@@ -124,7 +124,7 @@ Not applicable: The parser calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/TimestampParsing.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/TimestampParsing.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

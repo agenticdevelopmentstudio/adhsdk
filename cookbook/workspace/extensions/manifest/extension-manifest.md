@@ -528,7 +528,7 @@ writes no log line.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionManifest.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

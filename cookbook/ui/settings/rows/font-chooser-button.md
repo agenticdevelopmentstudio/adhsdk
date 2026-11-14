@@ -388,7 +388,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontChooserButton.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/FontChooserButton.swift` | confirmed (1.2.3) |
 
 ## Design Decisions
 

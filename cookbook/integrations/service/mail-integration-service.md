@@ -400,7 +400,7 @@ This is the only log call in the file. Sync failures are recorded on the connect
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailIntegrationService.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailIntegrationService.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

@@ -199,7 +199,7 @@ tone, not the dot.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/status-dot.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/status-dot.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

@@ -171,7 +171,7 @@ Not applicable: the pane performs no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailPanel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/RecordDetailPanel.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 

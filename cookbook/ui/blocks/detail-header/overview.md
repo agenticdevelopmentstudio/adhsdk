@@ -1,0 +1,5 @@
+
+Detail Header is the one header row of a details view, plus the small claim system that lets a pane far below the stack put its own controls into that row. Every details view, whether the hub shell's, a feature site's, a dialog's or a console's, shows the same shape on the right of its header: an `API` button and a `?` help button. The pane that knows the endpoint and the help text sits several components below the stack that draws the header, so it claims a slot and portals its control in; what nothing has claimed is drawn disabled, with a tooltip that says why.
+
+The block has four parts: `DetailHeaderProvider`, which a stack mounts around everything it draws and which owns the two slots and the claims on them; `DetailHeaderPortal`, which a pane uses to claim a slot and render a control into it; `DetailHeaderRow`, which draws the strip itself (lead control, tools, title, then the slots); and the two disabled fallbacks, `DisabledApiButton` and `DisabledHelpButton`. It is used by the hierarchical topic detail and hierarchical menu detail layouts and by the panes that put an API or help control in their header.
+

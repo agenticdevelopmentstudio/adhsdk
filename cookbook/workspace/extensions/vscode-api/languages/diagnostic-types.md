@@ -202,7 +202,7 @@ No other event in this component is logged: neither a constructor's error nor a 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/DiagnosticTypes.swift` | confirmed (1.1.3) |
 
 ## Design Decisions
 

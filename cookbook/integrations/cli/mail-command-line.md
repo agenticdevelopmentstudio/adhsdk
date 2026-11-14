@@ -255,7 +255,7 @@ Not applicable: the code makes no log calls. Failures are written to the `stderr
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

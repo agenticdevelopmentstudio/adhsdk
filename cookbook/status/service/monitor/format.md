@@ -282,7 +282,7 @@ This file makes no logging or console call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/format.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/format.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 

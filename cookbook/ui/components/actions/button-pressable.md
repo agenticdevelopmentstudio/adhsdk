@@ -200,7 +200,7 @@ forwarded pointer handler, not in this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/button-pressable.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/button-pressable.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

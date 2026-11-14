@@ -322,7 +322,7 @@ decode-failure-diagnostics for the one place this absence is a recorded gap.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/DaemonProviderResolver.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

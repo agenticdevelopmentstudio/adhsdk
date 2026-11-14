@@ -236,7 +236,7 @@ Not applicable: no logging call appears anywhere in this component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/ContentViewerView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/ContentViewerView.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

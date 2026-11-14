@@ -672,7 +672,7 @@ Not applicable: this component contains no logging calls of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/FileTreeOutlineViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/FileTreeOutlineViewController.swift` | confirmed (1.2.3) |
 
 ## Design Decisions
 

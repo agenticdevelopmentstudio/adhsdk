@@ -511,7 +511,7 @@ source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePreviewView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/ThemePreviewView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

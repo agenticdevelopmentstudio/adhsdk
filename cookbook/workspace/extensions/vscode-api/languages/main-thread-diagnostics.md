@@ -480,7 +480,7 @@ No other event in this component is logged: this component itself contains no di
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadDiagnostics.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

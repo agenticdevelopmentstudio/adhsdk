@@ -238,7 +238,7 @@ Not applicable: `EntityChooser` emits no structured log events. Logging of user 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/entity-chooser.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/entity-chooser.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

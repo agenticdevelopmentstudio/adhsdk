@@ -165,7 +165,7 @@ Composed shared primitives without their own recipe domains: `Input` and `Field`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/add-users-modal.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/add-users-modal.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

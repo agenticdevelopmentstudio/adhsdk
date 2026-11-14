@@ -495,7 +495,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHostView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/PanelHostView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

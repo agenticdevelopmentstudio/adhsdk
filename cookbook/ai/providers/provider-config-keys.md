@@ -302,7 +302,7 @@ Not applicable: this component contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigKeys.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

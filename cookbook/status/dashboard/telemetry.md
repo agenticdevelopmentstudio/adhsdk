@@ -204,9 +204,9 @@ Not applicable: no module in the subsystem logs. Source failures surface as reje
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/telemetry/client.ts` | unverified |
-| web | `packages/web/packages/status-web/src/telemetry/ports.ts` | unverified |
-| web | `packages/web/packages/status-web/src/telemetry/types.ts` | unverified |
+| web | `packages/web/packages/status-web/src/telemetry/client.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-web/src/telemetry/ports.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-web/src/telemetry/types.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

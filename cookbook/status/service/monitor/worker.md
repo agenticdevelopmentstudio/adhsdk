@@ -191,7 +191,7 @@ This file itself contains no `console.*` call and defines no logger of its own â
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/worker.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/worker.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

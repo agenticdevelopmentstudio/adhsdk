@@ -206,7 +206,7 @@ No other event in this file is logged: the failed cache-write `Object.defineProp
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/LanguageModelMessageVocabulary.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/LanguageModelMessageVocabulary.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

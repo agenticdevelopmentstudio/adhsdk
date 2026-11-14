@@ -289,7 +289,7 @@ with no side effects of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIRequestSpec.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIRequestSpec.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

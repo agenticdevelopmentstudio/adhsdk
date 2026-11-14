@@ -461,7 +461,7 @@ respectively.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Diagnostics/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

@@ -2,11 +2,11 @@
 id: 76eee228-2fd5-4524-a84e-d221c2e4c8ad
 title: "Category Gear Menu"
 type: ingredient
-version: 1.1.1
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,8 +36,8 @@ A dropdown menu triggered by a gear icon that presents five actions for managing
 ## Behavioral Requirements
 
 - **render-trigger**: Component MUST render a gear icon trigger labeled with "{Noun} actions" (noun is singular and capitalized; defaults to "Category actions").
-- **render-five-items**: Component MUST render five dropdown items corresponding to the actions: "Add {noun}…", "Rename…", "Move…", "Also file in…", and "Delete…".
-- **show-target-in-labels**: Component MUST include the target name in menu item labels when `targetName` is not null and `canEditTarget` is true. Label format is `{Verb} "{targetName}"…` for rename, move, and delete, and `{Verb} "{targetName}" in…` for the file action.
+- **render-five-items**: Component MUST render five dropdown items corresponding to the actions: "Add {noun}…", "Rename…", "Move…", "Also file in…", and "Delete…" (the bare verb forms shown when no target name is applied; see **show-target-in-labels**).
+- **show-target-in-labels**: Component MUST include the target name in menu item labels when `targetName` is not null and `canEditTarget` is true. Label format is `Rename “{targetName}”…`, `Move “{targetName}”…` and `Delete “{targetName}”…` for rename, move and delete, and `Also file “{targetName}” in…` for the file action.
 - **omit-target-when-not-editable**: Component MUST omit the target name from item labels when `canEditTarget` is false, even if `targetName` is not null; labels use the bare verb form ("Rename…", "Also file in…") in that case.
 - **disable-target-actions-when-no-target**: Component MUST disable "Rename", "Move", "File", and "Delete" menu items when `canEditTarget` is false.
 - **enable-add-always**: Component MUST keep the "Add {noun}…" item enabled regardless of `canEditTarget`.
@@ -68,7 +68,7 @@ A dropdown menu triggered by a gear icon that presents five actions for managing
 - **Role**: Trigger element MUST have a button role; menu MUST have a menu role and menu items MUST have menuitem role (provided by DropdownMenu and DropdownMenuItem components).
 - **Label**: Trigger MUST be labeled "{Noun} actions" to describe its purpose to assistive technology users.
 - **Disabled state announcement**: Disabled menu items MUST be announced as disabled to assistive technology.
-- **Touch target**: GearMenuTrigger MUST provide a minimum touch target of 44×44 CSS px on web, 44×44pt on iOS/macOS, or 48×48dp on Android.
+- **touch-target-size**: NEEDS REVIEW: Not implemented in source. `GearMenuTrigger` is 24×24 CSS px (`size-6`) with a 14px icon, below the 44×44 CSS px, 44×44pt and 48×48dp platform minimums; settling it needs a decision on whether this dense header control is held to those minimums (WCAG 2.2 sets 24×24 CSS px as its floor) or the trigger is enlarged.
 - **Keyboard navigation**: Menu MUST support arrow keys and Enter/Space to select items (delegated to DropdownMenu component).
 
 ## Conformance Test Vectors
@@ -76,14 +76,14 @@ A dropdown menu triggered by a gear icon that presents five actions for managing
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | cgm-001 | render-trigger | Default render | Trigger displays labeled "Category actions" |
-| cgm-002 | render-five-items | Menu opened | Five items are visible: "Add category…", "Rename…", "Move…", "Also file in…", "Delete…" |
-| cgm-003 | show-target-in-labels | targetName="Q3", canEditTarget=true | `Rename "Q3"…`, `Move "Q3"…`, `Also file "Q3" in…`, `Delete "Q3"…` |
+| cgm-002 | render-five-items | Menu opened, canEditTarget=false | Five items are visible: "Add category…", "Rename…", "Move…", "Also file in…", "Delete…" |
+| cgm-003 | show-target-in-labels | targetName="Q3", canEditTarget=true | `Rename “Q3”…`, `Move “Q3”…`, `Also file “Q3” in…`, `Delete “Q3”…` |
 | cgm-004 | omit-target-when-not-editable | targetName="Q3", canEditTarget=false | "Rename…", "Move…", "Also file in…", "Delete…" (target name omitted); "Add category…" unaffected |
 | cgm-005 | disable-target-actions-when-no-target | canEditTarget=false | "Rename", "Move", "File", "Delete" items are disabled; "Add" is enabled |
 | cgm-006 | enable-add-always | canEditTarget=false, no target | "Add category…" is enabled and clickable |
 | cgm-007 | render-separators | Menu opened | Two visual separators present: one after "Add", one before "Delete" |
 | cgm-008 | invoke-callback-on-action | Click "Add category…" | onAction("add") is called |
-| cgm-009 | invoke-callback-on-action | Click `Delete "Q3"…` with canEditTarget=true | onAction("delete") is called |
+| cgm-009 | invoke-callback-on-action | Click `Delete “Q3”…` with canEditTarget=true | onAction("delete") is called |
 | cgm-010 | respect-disabled-prop | disabled=true | Trigger is visually disabled and does not open menu |
 | cgm-011 | style-delete-destructive | Menu opened | "Delete" item uses the platform's destructive/error styling (e.g., red text via `text-apt-red` on web) |
 | cgm-012 | align-to-end | Menu opened, LTR locale | Menu content aligns to the right edge of the trigger |
@@ -92,20 +92,20 @@ A dropdown menu triggered by a gear icon that presents five actions for managing
 
 ## Edge Cases
 
-- **Null targetName**: When targetName is null (no selection), labels use the bare verb form without a target name reference (e.g., "Rename…" instead of `Rename "{name}"…`).
+- **Null targetName**: When targetName is null (no selection), labels use the bare verb form without a target name reference (e.g., "Rename…" instead of `Rename “{name}”…`).
 - **Omitted noun**: When the `noun` prop is not provided, the default parameter substitutes "category" (lowercase in item labels, capitalized to "Category" in the trigger label).
 - **Empty string noun**: When `noun=""` is passed explicitly, the default parameter does not apply (defaults only substitute for `undefined`, not for an empty string), so the noun stays empty: item labels read "Add …" and the trigger label reads " actions" (leading space, no noun).
 - **Custom noun**: When noun is provided (e.g., "tag", "note"), labels and trigger are updated accordingly (e.g., trigger reads "Tag actions", add reads "Add tag…").
 - **Disabled with no target**: When both disabled=true and canEditTarget=false, the trigger is disabled and all target-specific actions are also disabled in the UI.
-- **Rapid clicking**: The component does not debounce. Each click on an enabled item invokes `onAction` once, so clicking a menu item multiple times before the menu closes invokes the callback that many times; hosts MUST tolerate repeated identical calls.
+- **Rapid clicking**: The component does not debounce. Each activation of an enabled item invokes `onAction` once; whether an item can be activated twice before the menu closes is the dropdown primitive's behavior, not this component's.
 - **Dynamic targetName change**: If targetName prop changes while menu is open, labels reflect the new target immediately.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| targetName | string &#124; null | null | The name of the selected category row to display in action labels. When null, labels do not include a target. |
-| canEditTarget | boolean | false | Whether the target-specific actions (rename, move, file, delete) are available. Controls the disabled state of four menu items. |
+| targetName | string &#124; null | (required) | The name of the selected category row to display in action labels. When null, labels do not include a target. |
+| canEditTarget | boolean | (required) | Whether the target-specific actions (rename, move, file, delete) are available. Controls the disabled state of four menu items. |
 | noun | string | "category" | Singular, lowercase noun used in labels and trigger title. E.g., "tag", "item", "note". Capitalized in trigger label. |
 | onAction | (action: "add" &#124; "rename" &#124; "move" &#124; "file" &#124; "delete") => void | (required) | Callback invoked when any menu item is clicked. Receives the action type — the `CategoryGearAction` union: "add", "rename", "move", "file", or "delete". |
 | disabled | boolean | false | When true, the trigger is disabled and the menu cannot be opened. |
@@ -124,13 +124,13 @@ Applicable. The component currently builds every label by concatenating a verb, 
 | category_gear_menu.trigger_label | "{noun} actions" | Trigger label; `{noun}` is the capitalized noun |
 | category_gear_menu.add | "Add {noun}…" | Add item label |
 | category_gear_menu.rename | "Rename…" | Rename item label, no target |
-| category_gear_menu.rename_target | 'Rename "{target}"…' | Rename item label, with target |
+| category_gear_menu.rename_target | "Rename “{target}”…" | Rename item label, with target |
 | category_gear_menu.move | "Move…" | Move item label, no target |
-| category_gear_menu.move_target | 'Move "{target}"…' | Move item label, with target |
+| category_gear_menu.move_target | "Move “{target}”…" | Move item label, with target |
 | category_gear_menu.file | "Also file in…" | File item label, no target |
-| category_gear_menu.file_target | 'Also file "{target}" in…' | File item label, with target |
+| category_gear_menu.file_target | "Also file “{target}” in…" | File item label, with target |
 | category_gear_menu.delete | "Delete…" | Delete item label, no target |
-| category_gear_menu.delete_target | 'Delete "{target}"…' | Delete item label, with target |
+| category_gear_menu.delete_target | "Delete “{target}”…" | Delete item label, with target |
 
 The trigger label's initial-letter capitalization of `noun` is a casing transform and therefore locale-sensitive: implementations MUST apply the current locale's casing rules (e.g., a locale-aware title-case call), never an invariant-culture uppercasing call, since which letters change case — and whether capitalization applies at all — varies by language.
 
@@ -166,7 +166,10 @@ Not applicable: No logging is implemented in the component.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/category-gear-menu.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/category-gear-menu.tsx` | confirmed (2.0.0) |
+| apple | (planned) | planned |
+| android | (planned) | planned |
+| windows | (planned) | planned |
 
 ## Design Decisions
 
@@ -182,7 +185,7 @@ Not applicable: No logging is implemented in the component.
 **Rationale**: Add creates a new category at the list's own level (a new root in the root list), a question the current selection cannot answer, so there is no selection state that should ever disable it.
 **Approved**: pending
 
-**Decision**: Action labels include the target's name when one is available (e.g. `Rename "Q3"…`) rather than a bare verb.
+**Decision**: Action labels include the target's name when one is available (e.g. `Rename “Q3”…`) rather than a bare verb.
 **Rationale**: The menu can be opened from a header that is not the current selection; without the name, a bare "Rename…" would leave the user guessing whether the action applies to the header, the selected row, or something else.
 **Approved**: pending
 
@@ -202,12 +205,13 @@ Not applicable: No logging is implemented in the component.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-The screen-reader, keyboard, and semantic-markup statuses rest on the `DropdownMenu`/`DropdownMenuItem`/`GearMenuTrigger` primitives this component composes, each with its own recipe; touch-target-size and contrast-ratio are partial because the concrete size and color-token values live in those child recipes, not in this source; the internationalization statuses rest on `labelFor` and the JSX literals in `category-gear-menu.tsx`, which build every label from hardcoded English fragments with no localization resource lookup. Best-practices statuses rest on the component being, in the source's own words, "deliberately DUMB" — composing `DropdownMenu` primitives and reporting the chosen action via `onAction`, with no data access or business rule of its own (separation-of-concerns: passed) — and on `categoryGearMenu.test.tsx` directly rendering `CategoryGearMenu` and asserting its behavior (unit-test-coverage: passed).
+The screen-reader, keyboard, and semantic-markup statuses rest on the `DropdownMenu`/`DropdownMenuItem`/`GearMenuTrigger` primitives this component composes, each with its own recipe; touch-target-size is partial because the trigger is 24×24 CSS px, below the platform minimums (see the open question on touch-target-size), and contrast-ratio is partial because the color-token values live in the theme, not in this source; the internationalization statuses rest on `labelFor` and the JSX literals in `category-gear-menu.tsx`, which build every label from hardcoded English fragments with no localization resource lookup. Best-practices statuses rest on the component being, in the source's own words, "deliberately DUMB" — composing `DropdownMenu` primitives and reporting the chosen action via `onAction`, with no data access or business rule of its own (separation-of-concerns: passed) — and on `categoryGearMenu.test.tsx` directly rendering `CategoryGearMenu` and asserting its behavior (unit-test-coverage: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Verified against source: corrected behavior, states and platform notes |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case throughout (bullets, test vectors, edge cases); fixed the "file" and "delete" item label text to match `labelFor`'s actual output ("Also file in…" / "Delete…") and corrected the resulting States/Configuration/test-vector text; added the `omit-target-when-not-editable` requirement and test vector for the `targetName`-set-but-`canEditTarget`-false case; resolved the States "Default" contradiction with the Configuration default; reworded `style-delete-destructive` and `align-to-end` to name platform-native destructive styling and trailing-edge/RTL alignment instead of a hardcoded color or "(right)", and added an RTL test vector; corrected cgm-012's expectation and requirement mapping; restructured Design Decisions into Decision/Rationale/Approved form and clarified the Move-vs-File rationale; defined `CategoryGearAction` inline in Configuration; marked Localization applicable with whole-string templated keys and a note on locale-sensitive casing; added a Compliance table; dropped source-only implementation detail (Radix/relative-path mention, "no debouncing in source") from Platform Notes and Edge Cases in favor of spec language; corrected Platform Notes (SwiftUI/UIKit native destructive controls instead of ad hoc color, SwiftUI disables rather than conditionally renders, AppKit enable/destructive guidance, WinUI 3 `Placement`/theme-resource names); gave the touch-target minimum per platform; split the "Empty noun" edge case into omitted-prop vs. empty-string behavior; added `gear-menu-trigger` and `dropdown-menu` to `depends-on`. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -319,7 +319,7 @@ reference anywhere in source).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SecureTextEditView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SecureTextEditView.swift` | confirmed (1.3.2) |
 
 ## Design Decisions
 

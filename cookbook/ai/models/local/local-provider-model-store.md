@@ -437,7 +437,7 @@ Behavioral Requirements.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalProviderModelStore.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalProviderModelStore.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

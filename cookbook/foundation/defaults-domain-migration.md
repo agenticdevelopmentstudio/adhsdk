@@ -130,7 +130,7 @@ Not applicable: The migration calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/DefaultsDomainMigration.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/DefaultsDomainMigration.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

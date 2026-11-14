@@ -280,9 +280,8 @@ Not applicable: the source makes no log call; failures are thrown or returned.
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift` | unverified |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/MailReExport.swift` | unverified |
-| ios | `packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/MailReExport.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

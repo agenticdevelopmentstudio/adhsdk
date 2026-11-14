@@ -291,7 +291,7 @@ this component makes itself.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SecretStoring.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/SecretStoring.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

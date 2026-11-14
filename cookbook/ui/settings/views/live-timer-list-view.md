@@ -146,7 +146,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/LiveTimerListView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/LiveTimerListView.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 

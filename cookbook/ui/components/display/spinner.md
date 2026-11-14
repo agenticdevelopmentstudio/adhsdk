@@ -140,7 +140,7 @@ Not applicable: Component does not perform any logging. Callers may add logging 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/spinner.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/spinner.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

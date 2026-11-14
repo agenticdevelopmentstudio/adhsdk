@@ -442,7 +442,7 @@ in **load-tabs-corrupt-row-signal**.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase+Layout.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

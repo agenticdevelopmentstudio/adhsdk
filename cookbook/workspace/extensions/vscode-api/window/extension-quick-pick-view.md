@@ -483,7 +483,7 @@ logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionQuickPickViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionQuickPickViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

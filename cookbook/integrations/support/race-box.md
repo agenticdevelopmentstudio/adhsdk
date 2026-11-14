@@ -176,7 +176,7 @@ Not applicable: the source makes no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/RaceBox.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/RaceBox.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | windows | (planned) | planned |
 

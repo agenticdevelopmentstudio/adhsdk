@@ -164,7 +164,7 @@ Not applicable: this component makes no logging call of its own; the one branch 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/JSValueBridge.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

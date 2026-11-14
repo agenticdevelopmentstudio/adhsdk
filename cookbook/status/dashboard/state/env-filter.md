@@ -174,7 +174,7 @@ Not applicable: Environment Filter makes no log calls; both caught exceptions ar
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-env-filter.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-env-filter.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

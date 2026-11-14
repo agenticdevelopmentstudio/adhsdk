@@ -1,0 +1,9 @@
+
+- **Null and empty input**: An empty `href`, or one that does not parse as an absolute URL, MUST render the fallback and request nothing. An omitted `fallback` MUST render nothing.
+- **Boundary values**: After the last candidate (`/apple-icon`) fails, the component MUST stop and render the fallback; it MUST NOT loop back to the first candidate. A `size` of 0 or a negative size is passed to the image attributes unchanged; the source does not validate it.
+- **Opaque origins**: NEEDS REVIEW: Not implemented in source. For an `href` that parses but has an opaque origin (a `data:` or `mailto:` address), `URL.origin` is the string "null", so the first candidate address becomes `null/favicon.ico`, a relative address on the current page's origin; the source has no check for it. The owner of the component would settle whether such an address should go straight to the fallback.
+- **Changing href**: NEEDS REVIEW: Not implemented in source. The count of failed candidates is component state and is not reset when `href` changes, so a component that has already failed on one site starts the next site partway down the list, or at the fallback. The owner of the component would settle whether `href` change should restart the list.
+- **Concurrent access**: A failure that happens before hydration MUST be caught by the post-mount re-check, because the server-rendered image starts fetching as soon as the HTML arrives and React never sees its error event. Apart from that, the component holds only its own counter and image reference, and error events for a replaced image belong to an element that no longer exists.
+- **Error states**: A failed load of any candidate MUST advance to the next candidate; the component renders no error message and logs nothing.
+- **Offline or disconnected state**: When the network is unavailable every candidate fails in turn and the component MUST end on the fallback, with no retry once the list is exhausted.
+

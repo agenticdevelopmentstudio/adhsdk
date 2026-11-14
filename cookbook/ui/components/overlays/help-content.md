@@ -148,7 +148,7 @@ The `useHelpEntry` hook does not implement logging or console warnings itself; i
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/help-content.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/help-content.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

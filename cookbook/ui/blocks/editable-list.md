@@ -329,7 +329,7 @@ Subsystem: `adhsdk.ui.blocks` | Category: `EditableList`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/editable-list.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/editable-list.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

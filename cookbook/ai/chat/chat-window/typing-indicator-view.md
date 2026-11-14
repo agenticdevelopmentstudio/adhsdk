@@ -158,7 +158,7 @@ Not applicable: the source contains no logging calls (no `os_log`, `Logger`, or 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/TypingIndicatorView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/TypingIndicatorView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

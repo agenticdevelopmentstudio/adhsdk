@@ -2,11 +2,11 @@
 id: 1c826ac4-20e0-4089-870f-5d1fd4b59983
 title: "IntegrationsSettingsPanel"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -109,7 +109,7 @@ The panel also contributes help topics and search keywords to the settings windo
 - **keyboard-confirmation**: The removal confirmation MUST be operable by keyboard: Return activates Cancel and Esc declines.
 - **native-controls**: The add menu MUST be a standard menu so the platform supplies its keyboard and assistive-technology behavior.
 - **tooltips-as-labels**: The add and remove buttons SHOULD carry tooltips that describe their action, as the panel sets.
-- **symbol-descriptions**: Both symbol images SHOULD carry an accessibility description. NEEDS REVIEW: Not implemented in source. Both symbol images are created with no accessibility description, so what assistive technology announces for the sidebar icon and the Gmail row icon is whatever the shared panel base class composes; a VoiceOver pass over the sidebar would settle whether the row reads as "Gmail" alone.
+- **symbol-descriptions**: NEEDS REVIEW: Not implemented in source. Both symbol images SHOULD carry an accessibility description. Both symbol images are created with no accessibility description, so what assistive technology announces for the sidebar icon and the Gmail row icon is whatever the shared panel base class composes; a VoiceOver pass over the sidebar would settle whether the row reads as "Gmail" alone.
 - **footer-labels**: The footer's add and remove buttons MUST carry accessibility labels "Add" and "Remove", which the shared `AddRemoveFooterView` gives their symbol images, and the identifiers `integrations.add-remove.add` and `integrations.add-remove.remove`; the panel adds only the tooltips.
 - **target-size**: The panel MAY leave control sizing to the shared footer, as it does: it sets no control size, and the footer buttons come from the shared settings-panel footer, which owns their size.
 
@@ -218,7 +218,7 @@ Not applicable: the source writes no log entries.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/IntegrationsSettingsPanel.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/IntegrationsSettingsPanel.swift` | confirmed (1.0.1) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -271,4 +271,5 @@ Not applicable: the source writes no log entries.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Review markers in one-line form |
 | 1.0.0 | 2026-11-13 | mfullerton | Initial creation |

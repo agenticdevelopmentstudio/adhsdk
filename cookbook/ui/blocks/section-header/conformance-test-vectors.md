@@ -16,4 +16,12 @@
 | section-header-013 | display-help-popover | Help button present, user presses Space on focused help trigger | Popover opens (same as click/Enter) |
 | section-header-014 | display-help-popover | Popover open, user presses Escape | Popover closes and focus returns to the help trigger (per accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)), accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))) |
 | section-header-015 | display-help-popover | Help button activated a second time while the popover is open | Popover closes; toggle state is reflected via `aria-expanded` (per accessibility ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))) |
+| section-header-016 | pane-title-hoisted, pane-title-opt-in (test: "carries a SectionHeader marked paneTitle, and leaves an unmarked one where it is") | In a detail stack: `<SectionHeader paneTitle title="Providers" />` and `<SectionHeader title="Sign-in methods" />` | The strip's title cell holds "Providers"; the pane's text does not contain "Providers" but does contain "Sign-in methods" |
+| section-header-017 | pane-title-opt-in | `<SectionHeader title="Title" />` inside a detail stack | The h2 "Title" is drawn in the pane and the strip is not given it |
+| section-header-018 | hoisted-keeps-chrome | `paneTitle title="Providers" eyebrow="Auth" help={...}` in a detail stack | Strip holds "Providers"; the pane holds the eyebrow "Auth" and the help trigger, and no h2 |
+| section-header-019 | hoisted-bare-collapse | `paneTitle title="Providers"` alone in a detail stack | Nothing is drawn in the pane; the root flex container is absent |
+| section-header-020 | title-fallback-inline | `paneTitle title="Providers"` outside any stack | The h2 "Providers" is drawn inline |
+| section-header-021 | pane-title-hoisted | Two `paneTitle` headers registered in one stack | The last to register is in the strip; the other draws its h2 in place |
+
+The tests beside the source are in `detailTitle.test.tsx`, which covers only the `paneTitle` behavior (vectors 016 and 017's leave-in-place half, and 018 to 021 derive from the source); no test renders the help popover, eyebrow or actions.
 

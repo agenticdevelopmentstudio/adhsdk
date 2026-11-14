@@ -221,7 +221,7 @@ Not applicable: this module contains no logging call of any kind — every expor
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/deploy-status.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/deploy-status.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

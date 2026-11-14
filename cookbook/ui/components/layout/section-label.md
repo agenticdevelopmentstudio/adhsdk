@@ -192,7 +192,7 @@ no action.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/section-label.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/section-label.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

@@ -1,0 +1,3 @@
+
+A conversation is a live terminal session in which a person is talking to an agent. These types say the daemon's `SessionDTO` the way a conversation reader asks: `ConversationAgent` (the agent name), `ConversationStatus` (busy, idle, waiting, ended), `ConversationSummaryDTO` (one row of `steno conversations list`), `ConversationInfoDTO` (the row plus the rest of what the daemon knows, for `steno conversation info`) and `ConversationSendability` (the one answer `steno conversation send` acts on and `info`'s `canSend` reports). The session is the conversation; these types add no storage. Every session the daemon records is a Claude Code session, so the agent is stated as a field (`claude`) so that a second agent is a new value and not a new shape.
+

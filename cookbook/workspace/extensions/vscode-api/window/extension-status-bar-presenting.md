@@ -176,7 +176,7 @@ Not applicable: the source contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionStatusBarPresenting.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionStatusBarPresenting.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

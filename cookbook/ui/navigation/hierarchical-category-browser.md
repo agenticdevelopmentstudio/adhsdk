@@ -2,11 +2,11 @@
 id: e36ff99d-0ebd-42ca-87f0-2881a8bfedea
 title: "Hierarchical Category Browser"
 type: recipe
-version: 1.3.5
+version: 1.4.0
 status: review
 language: en
 created: 2026-08-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -80,7 +80,7 @@ about the rail itself differs between them (see Design Decisions).
 
 ## Ingredients
 
-| Name | Domain | Role | Required | Configuration |
+| Name | Ingredient | Role | Required | Configuration |
 |---|---|---|---|---|
 | Category Picker | [adhsdk.ingredient.ui.blocks.category-picker-dialog](cookbook:88d69611-4a12-4777-9509-8af6c0626dc7) | The dialog behind BOTH place-picking gear actions — browses the folded forest and returns a place to file the selected category under. | yes | Move: `confirmLabel="Move"`, `allowRoot`, `rootLabel` = "Top level" or "Remove from “<parent>”" (see #integration-requirements/not-call-an-unfiling-a-rooting), `disabledIds` = the moved category + its own descendants. Also file: `confirmLabel="File"`, `initialSelectedId={null}`, NO `allowRoot` (a root is a category with no parents, so there is nothing to add), `disabledIds` = the category + its descendants + every parent it is ALREADY filed under. |
 
@@ -119,7 +119,7 @@ Alert and Dialog ([adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9
   browsing the same forest does not sort — so a rail
   that re-sorted would discard a deliberate ordering and disagree with the picker
   about the same subtree in the same session.
-- **show-only-the-category-name**: A category row MUST render its name and
+- **show-only-the-category-name**: A category row MUST render its name (beside a folder icon) and
   nothing else — no sublabel, and in particular a subcategory count MUST NOT be
   shown on any row at any depth.
 
@@ -249,6 +249,26 @@ Alert and Dialog ([adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9
   not the whole chain: it walks up one level at a time, the same as the level
   walk went down.
 
+### The Add dialog and write failures
+
+- **add-dialog-guards-duplicates**: The one-field Add dialog MUST disable Create, and MUST ignore Enter, while the trimmed name is empty, while the name equals (case-insensitively) a category already in the vocabulary, and while a write is in flight; when the name is taken it MUST say so beside the field.
+- **add-dialog-titles-its-parent**: The Add dialog MUST read "New category in “<parent>”" for a level with a parent and "New category" at the root level, and a new category MUST be filed under that parent (no parent at the root).
+- **dialog-resets-on-open**: The Add and picker dialogs MUST reset their text, selection and expansion each time they open, by reacting to the open transition and not by remounting, so the exit animation survives.
+- **failure-belongs-to-its-dialog**: A write failure MUST be stored with the dialog that caused it and shown only while that same dialog instance is open, so a cancelled failed delete cannot print its message under an unrelated later dialog.
+- **rename-failure-reaches-the-dialog**: The Rename write MUST let a rejection reach the rename dialog, which stays open showing its reason; the picker, delete and add writes MUST capture the failure into the message they render and stay open.
+- **refresh-after-every-write**: Every successful write MUST await `onChanged` before closing its dialog.
+
+### The picker and gear labels
+
+- **picker-offers-tree-and-filter**: The picker MUST browse the folded forest as a tree with expandable branches, and a filter field MUST replace the tree with a flat list of matching categories (case-insensitive name match), each shown with the trail of ancestor names above it.
+- **picker-dedupes-filter-hits**: A category filed under several parents MUST appear once in the filtered list, at its first placement, since the id is what is confirmed.
+- **picker-refuses-forbidden-rows**: A row whose id is in `disabledIds` MUST be shown dimmed with `aria-disabled` and MUST refuse a click, so it never becomes the selection.
+- **picker-root-row-only-unfiltered**: The no-parent row MUST be offered only when `allowRoot` is set and MUST count as an answer only while it is on screen: under a filter, Confirm MUST stay disabled until a real row is picked.
+- **picker-selects-one-drawing**: In the tree, selection MUST be tracked by path key so that a category drawn under two parents highlights, and is announced as selected, in one row only.
+- **picker-roving-keyboard**: The tree and the filtered list MUST each hold one tab stop that arrow keys move together with focus: Down and Up step through visible rows, Right expands or enters a branch, Left collapses or leaves for the parent, Home and End jump to the ends.
+- **picker-tree-semantics**: Tree rows MUST carry the `treeitem` role with level, position, set size, selected and expanded state; filtered rows MUST carry the `option` role in a `listbox`; the expand twisty is a pointer-only affordance and MUST stay out of the tab sequence and accessibility tree.
+- **gear-labels-name-the-target**: The gear's target verbs MUST be labelled with the selected category's name ("Rename “Q3”…", "Also file “Q3” in…") and read "Rename…" when no editable target exists; the gear trigger's accessible name MUST be "<Noun> actions", and Delete MUST be drawn in the red accent.
+
 ## Layout
 
 The browser contributes N rail levels (N = the walked depth + 1) into an
@@ -281,7 +301,7 @@ own Layout section.
 
 | State | Source | Consumer | Direction | Mechanism |
 |---|---|---|---|---|
-| Raw category rows | the host's list fetch (`notesApi.categories`/research's equivalent) | `useCategoryLevels` | host → hook | `rows: CategoryTreeNode[] \| null` option |
+| Raw category rows | the host's category list fetch (the notebook corpus's `categories` call, or research's equivalent) | `useCategoryLevels` | host → hook | `rows: CategoryTreeNode[] \| null` option |
 | Resolved chain | `resolveCategoryChain(tree, chainSlugs)` inside the hook | the host's navigation, breadcrumbs, and the item-list scope | hook → host | `chain: CategoryNode[]` result field |
 | List scope | the resolved chain, via `scopeFor` | the host's item-list fetch | hook → host | `scope: CategoryScope` result field (`all` / `uncategorized` / `named`) — an EXACT-match name, not a descendant-inclusive filter |
 | Rail levels | the walk over `tree` + `chain` | the enclosing `HierarchicalDetailView`/`HierarchicalTopicDetail` | hook → HTDV | `levels: TopicLevel[]` result field, appended before the host's own (e.g. note/document) levels |
@@ -311,6 +331,12 @@ own Layout section.
 | T17 | disable-not-hide-an-invalid-file-target | open Also file for Q3 (filed under Work and Planning, holding child Budget) | Work, Planning, Q3 itself and Budget are all present but `aria-disabled`; Archive is enabled; Confirm is disabled until a real row is picked |
 | T18 | not-call-an-unfiling-a-rooting | Q3 filed under Work AND Planning; standing in `work/q3`, open Move | the no-parent row reads "Remove from “Work”"; confirming it removes only the Work edge, adds nothing, and does NOT navigate. With Q3 filed under Work alone, the same row reads "Top level" and the route becomes `["q3"]` |
 | T19 | follow-a-rename-to-the-new-slug | standing on the currently selected category, rename it to an uncontested name | the route swaps only that segment to the new slug and keeps the tail below it unchanged; renaming a category that is not the current selection leaves the route alone; a rename that fails leaves the route alone too |
+| T20 | add-dialog-guards-duplicates, add-dialog-titles-its-parent | open Add from the Work level, type "work" while a root named "Work" exists, then type "Archive" and press Enter | the title reads "New category in “Work”"; the first name shows the "already exists" line and Create is disabled; the second creates one category with `parentIds` holding Work's id |
+| T21 | failure-belongs-to-its-dialog | a delete rejects, the user cancels, then opens Add | the Add dialog shows no "Could not delete" text |
+| T22 | picker-dedupes-filter-hits | Budget is filed under Work and Planning; type "budget" in the picker | one option, with the trail of its first placement |
+| T23 | picker-root-row-only-unfiltered | Move picker with `allowRoot`; type "reports" without clicking a row | Confirm is disabled |
+| T24 | picker-roving-keyboard | focus the first tree row, press Right, Down, Left, End | a collapsed branch expands, focus moves to its first child, then back to the parent, then to the last visible row |
+| T25 | picker-selects-one-drawing | pick Q3 where it is drawn under both Work and Planning | exactly one row has `aria-selected="true"` |
 
 ## Edge Cases
 
@@ -358,9 +384,9 @@ own Layout section.
   `slugFor` derives the slug from the CURRENT name, a rename changes the slug the
   instant it lands — see
   #integration-requirements/follow-a-rename-to-the-new-slug. The hook re-selects
-  the chain under its new slug as soon as the write succeeds, in the same call
-  that also triggers `onChanged`'s refetch, so the already-open level never
-  resolves against a slug the rename just invalidated.
+  the chain under its new slug inside the write callback, as soon as the rename
+  lands and before `onChanged` is awaited, so the route is never left on the
+  slug the rename just invalidated.
 - **Deleting the currently-open category.** `chainAfterDelete` finds the deleted
   category ON the chain and truncates there, and the dialog's `onConfirm` navigates
   only once the write has landed. Dropping the LAST segment instead would be the
@@ -383,43 +409,26 @@ own Layout section.
   move changed, so reading it there is exact) and hands it to `onSelectChain` only
   after the write lands
   (#integration-requirements/follow-a-move-to-its-new-place).
-
+- **Moving to the place the walk came through.** A confirmed Move whose chosen
+  parent equals the level's own parent (or `null` at the root level) writes nothing
+  and does not navigate; the hook still awaits `onChanged` and closes the dialog.
 ## Platform Notes
 
-- **React / Web (TypeScript):** `packages/web/packages/features/categories/src/useCategoryLevels.tsx`, exported from `@adh-sdk/categories`. `"use client"`.
-- Built on `buildCategoryTree`/`resolveCategoryChain`/`categoryKey`/`chainAfterRename`/`chainAfterMove`/`chainAfterDelete` (which returns `null` for an unfiling that leaves the category filed elsewhere) (`packages/web/packages/ui/src/blocks/category-tree.ts`) and `CategoryGearMenu`/`CategoryPickerDialog`/`CategoryRenameDialog`/`CategoryDeleteDialog` (`packages/web/packages/ui/src/blocks/*`), all re-exported from `@adh-sdk/ui/blocks`.
-- The three route-following functions, `chainAfterRename`, `chainAfterMove` and
-  `chainAfterDelete`, sit in
-  `packages/web/packages/ui/src/blocks/category-tree.ts`
-  beside the forest and slug functions whose contracts they follow — pure functions over a
-  forest and a slug chain, with no notion of a notebook, a list query, or a network.
-  `packages/web/packages/features/categories/src/category-scope.ts` re-exports them, so the
-  import site every consumer already names still works, and anything that links only
-  `@adh-sdk/ui` (the showcase demo among them) calls the SAME function the hub does
-  rather than mirroring it.
-- `CategoryScope` and the `-all`/`-none` synthetic-row slugs live in
-  `packages/web/packages/features/categories/src/category-scope.ts`, imported by both hosts —
-  there is exactly one copy (`note-model.ts`'s former local copy was deleted when notebook
-  adopted the shared hook).
-- Consumers: `packages/web/packages/features/notebook/src/NotebookPane.tsx` (rail + note list, `itemNoun="notes"`) and `packages/web/packages/features/research/src/ResearchPane.tsx` (rail + document list, `itemNoun="documents"`), each supplying its own `rows` fetch, `idPrefix`, and `workspaceSlug`.
-- Demo: `local/ui-showcase/app/page.tsx` (Topic id `hierarchical-category-browser`) + the showcase source registry. The demo assembles the same `packages/web/packages/ui/src/blocks` primitives this hook composes — `buildCategoryTree`, `chainAfterRename`, `chainAfterMove`, `CategoryGearMenu`, `CategoryPickerDialog`, `CategoryRenameDialog`, `CategoryDeleteDialog` — against an in-memory `CategoryTreeNode[]` fixture, since `useCategoryLevels` itself reaches a real `taxonomyApi`/`markdownApi` the showcase has no backend for.
-- Responsive: verify via the ui-showcase demo at 375 / 768 / 1440 — the rail levels inherit
-  Hierarchical Topic Detail ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8))'s
-  own disclosure/narrow-mode behavior; this recipe adds no layout of its own to verify beyond
-  the gear menu and its dialogs at each width.
-- **SwiftUI**: Not applicable — web-only (platforms: typescript, web).
-- **Compose**: Not applicable — web-only (platforms: typescript, web).
-- **AppKit / UIKit**: Not applicable — web-only (platforms: typescript, web).
-- **WinUI 3**: A `NavigationView` or a row of `ListView` columns, one per walked depth, hosts the levels; the synthetic All and Uncategorized rows lead the root `ListView`, each level header carries a `DropDownButton` with a `MenuFlyout` for the gear actions, and the picker, rename and delete dialogs are `ContentDialog`s over a `TreeView`. The source implementation is web-only; this is translation guidance, not shipped code.
+- **SwiftUI**: Not applicable to the source, which is web-only. To translate it, hold the chain as a path of slugs in a `NavigationStack` path or an `@Observable` model, publish one `List(selection:)` per walked depth in an `HStack` or `NavigationSplitView` column, and put the five gear verbs in a `Menu` in each header; Move and Also file open a sheet containing an `OutlineGroup`.
+- **Compose**: Not applicable to the source. To translate it, keep the slug chain in a `ViewModel` `StateFlow`, draw one `LazyColumn` per depth in a `Row`, put the gear in a `DropdownMenu`, and build the picker as an `AlertDialog` over a tree built with `LazyColumn` whose rows expose `selected` and expanded state through `semantics`.
+- **React/Web**: The source is `useCategoryLevels` in `packages/web/packages/features/categories/src/useCategoryLevels.tsx` (`@adh-sdk/categories`, `"use client"`), built on `buildCategoryTree`, `resolveCategoryChain`, `categoryKey`, `chainAfterRename`, `chainAfterMove` and `chainAfterDelete` in `packages/web/packages/ui/src/blocks/category-tree.ts`, and on `CategoryGearMenu`, `CategoryPickerDialog`, `CategoryRenameDialog` and `CategoryDeleteDialog` in `packages/web/packages/ui/src/blocks`. The three route-following functions are pure functions over a forest and a slug chain, so any consumer that links only `@adh-sdk/ui` calls the same code. `CategoryScope` lives in `packages/web/packages/features/categories/src/category-scope.ts`, which re-exports the `-all` and `-none` slugs (and the three route-following functions) from their declarations in `chain.ts` beside it and in `@adh-sdk/ui/blocks`. Consumers are the notebook pane (`itemNoun` is the active corpus's `noun.many`, "notes" or "documents") and the research pane (`itemNoun="documents"`). Responsive behaviour is inherited from the Hierarchical Topic Detail stack ([adhsdk.recipe.ui.blocks.hierarchical-topic-detail](cookbook:0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8)).
+- **AppKit / UIKit**: Not applicable to the source. To translate it, use an `NSBrowser` or a row of `NSTableView` source lists, one per depth, with a header `NSPopUpButton` pull-down for the gear and an `NSOutlineView` in a sheet for the picker; on UIKit use a `UINavigationController` stack of `UITableViewController`s and a `UIMenu` on the header button.
+- **WinUI 3**: A row of `ListView` columns, one per walked depth, hosts the levels; the synthetic All and Uncategorized rows lead the root `ListView`, each level header carries a `DropDownButton` with a `MenuFlyout` for the gear actions, and the picker, rename, delete and add dialogs are `ContentDialog`s, the picker over a `TreeView` whose `SelectionMode="Single"` and `IsEnabled` on forbidden nodes carry the disabled-row rule. Hold the slug chain in a view model and rebuild the columns when it changes.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/features/categories/src/useCategoryLevels.tsx` | unverified |
-| web | `packages/web/packages/ui/src/blocks/category-picker-dialog.tsx` | unverified |
-| web | `packages/web/packages/ui/src/blocks/category-gear-menu.tsx` | unverified |
-| web | `packages/web/packages/ui/src/blocks/category-tree.ts` | unverified |
+| web | `packages/web/packages/features/categories/src/useCategoryLevels.tsx` | confirmed (1.4.0) |
+| web | `packages/web/packages/ui/src/blocks/category-tree.ts` | confirmed (1.4.0) |
+| apple | (planned) | planned |
+| android | (planned) | planned |
+| windows | (planned) | planned |
 
 ## Design Decisions
 
@@ -534,3 +543,4 @@ Separation-of-concerns is passed: tree shaping lives in `category-tree.ts`, the 
 | 1.3.3 | 2026-10-04 | Mike Fullerton | Filled Reference Implementations, WinUI 3 translation guidance and Compliance rows |
 | 1.3.4 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
 | 1.3.5 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
+| 1.4.0 | 2026-11-14 | Mike Fullerton | Verified against source: corrected behavior, states and platform notes |

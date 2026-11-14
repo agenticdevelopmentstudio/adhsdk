@@ -1,0 +1,19 @@
+
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| claude-hook-configuration-001 | default-hook-arguments, default-status-line-arguments, default-tap-only, default-bundled-dispatcher, default-legacy | `ClaudeHookConfiguration(name: "stenographer", marker: "# stenographer-hook", hookBinaryPath: "/h/steno", dropDirectory: "~/.claude/stenographer-events")` | `hookArguments == ["hook","--event"]`, `statusLineArguments == ["statusline"]`, `statusLineTapOnly == false`, `bundledDispatcher == nil`, `legacy == LegacyHookForms.none` |
+| claude-hook-configuration-002 | default-own-lock-name, default-status-line-entry-name | the same call as 001 | `ownLockName == ".stenographer-hooks.lock"`, `statusLineEntryName == "stenographer"` |
+| claude-hook-configuration-003 | explicit-own-lock-name, explicit-status-line-entry-name, name-derived-files | `name: "adkd"`, `ownLockName: ".adkd-hooks.lock"`, `statusLineEntryName: "adkd"` (the `adkdFixture` in `StatusLineTestSupport`) | stored unchanged; the installer's marker files are `.adkd-tracking-disabled` and `.adkd-status-line-off` and the lock is `.adkd-hooks.lock` (test `testTheMarkerFilesAreNamedAfterTheConfiguration`) |
+| claude-hook-configuration-004 | bundled-helper-from-macos-directory, bundled-helper-absolute-path | `bundledHelperPath(named: "steno", executable: /Applications/Stenographer.app/Contents/MacOS/stenographerd)` | `/Applications/Stenographer.app/Contents/Helpers/steno` (test `testBundledStenoPathFromDaemonExecutable`) |
+| claude-hook-configuration-005 | bundled-helper-from-helpers-directory | `bundledHelperPath(named: "steno", executable: /Applications/Stenographer.app/Contents/Helpers/steno)` | `/Applications/Stenographer.app/Contents/Helpers/steno` (test `testBundledStenoPathFromTheCLIItself`) |
+| claude-hook-configuration-006 | bundled-helper-resolves-symlinks | a symlink `stenographerd` to `real/Stenographer.app/Contents/MacOS/stenographerd` | the path under the real bundle's `Contents/Helpers/steno` (test `testASymlinkedExecutableResolvesToTheRealBundle`) |
+| claude-hook-configuration-007 | resolved-dispatcher-derived | `hookBinaryPath: "/Applications/Stenographer.app/Contents/Helpers/steno"`, `bundledDispatcher: nil` | `resolvedBundledDispatcher` is the file URL `/Applications/Stenographer.app/Contents/Resources/dispatch.sh` |
+| claude-hook-configuration-008 | resolved-dispatcher-explicit | `bundledDispatcher: file:///tmp/d.sh` | `resolvedBundledDispatcher == file:///tmp/d.sh` |
+| claude-hook-configuration-009 | default-hooked-events-list | `ClaudeHookConfiguration.defaultHookedEvents` | 25 events (`HookEventType.allCases` is 28, test `caseCountIsPinned`), none of `.worktreeCreate`, `.worktreeRemove`, `.statusLine`; contains `.preToolUse` |
+| claude-hook-configuration-010 | explicit-hooked-events-kept | `hookedEvents: [.stop, .statusLine]` | `hookedEvents == [.stop, .statusLine]`; the excluded type is removed later by the installer, not here |
+| claude-hook-configuration-011 | legacy-defaults, legacy-none | `LegacyHookForms()` | all optionals nil, all collections empty, and `== LegacyHookForms.none` |
+| claude-hook-configuration-012 | equality | two configurations built from the same arguments except `settingsURL` | `!=` |
+| claude-hook-configuration-013 | no-input-validation | `name: ""` | accepted; `ownLockName == ".-hooks.lock"` |
+| claude-hook-configuration-014 | default-settings-url | `defaultSettingsURL` | the file URL of `.claude/settings.json` under the home directory |
+| claude-hook-configuration-015 | marker-contract | the Stenographer fixture (`marker: "# stenographer-hook"`) installed by the installer | the registered command's first line is `# stenographer-hook` (test `HookInstallerBundleCommandTests`, command `# stenographer-hook\n<helper> hook --event SessionStart\nexit 0`) |
+

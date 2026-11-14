@@ -1,8 +1,9 @@
 
-- A stale or deleted `lastId` (no longer a live entity) resolves to the All view; the same fallback applies to a deep link built from a pre-rename rdid, since the resolver cannot distinguish "never existed" from "renamed away" (see **explicit-all-precedence**).
-- `{basePath}/all` is the **explicit** All view and always shows All regardless of the stored id (**explicit-all-precedence**).
-- Local storage is client-only; resolution happens after the list loads to avoid SSR hydration mismatch (**resolve-after-list-load**).
-- `PATCH /registry/identifiers/{rdid}` returns 404 if the old rdid is unknown (**rename-unknown-rdid-404**) and 409 on collision (**surface-identifier-collision**); `GET /registry/identifiers/{rdid}/exists` supports inline availability checks (**identifier-availability-check**).
-- The type-to-confirm match is exact (`===` rdid), case-sensitive, with no whitespace normalization; because the identifier is lowercased on input, the stored rdid — and so the value being matched against — is always already lowercase.
-- The filter empty result shows "No {entities} match \"{query}\".".
+- **Stale focus**: a deleted item's id falls back to the All view (MUST), because the id no longer matches.
+- **Empty items**: the selector still renders; the All view shows `allEmptyLabel`.
+- **No active topic**: with focus but no matching topic, the derived header cannot form, so it is omitted unless `title` is given.
+- **Id collision with the All row**: `PopupMenu` warns on the console when an item id collides with its All sentinel (`__all__`).
+- **Selector without All**: not reachable from this block, which always leaves the All row on.
+- **Disabled topic while focused**: a topic's own `disabled` is kept.
+- **Error and offline states**: not applicable; the block does no I/O and surfaces no errors. Loading and failure states belong to the consumer's pane content.
 

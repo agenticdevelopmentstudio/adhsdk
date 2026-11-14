@@ -459,7 +459,7 @@ Not applicable: this component contains no logging call of any kind — every di
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/RPC/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/RPC/` | confirmed (1.2.0) |
 
 ## Design Decisions
 

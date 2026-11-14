@@ -130,7 +130,7 @@ Not applicable: this logic logs no debug or warning messages.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-activity-ttl.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-activity-ttl.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

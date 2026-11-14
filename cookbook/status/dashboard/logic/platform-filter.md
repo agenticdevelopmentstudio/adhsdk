@@ -159,7 +159,7 @@ Not applicable: the logic has no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/platform-filter.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/platform-filter.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

@@ -1,0 +1,29 @@
+
+- **value-type**: The type MUST be a `Sendable` struct created with `init(filter:direction:)`, with no timer, thread or I/O of its own.
+- **direction-revealing**: With `Direction.revealing`, each pair's alias MUST be the pattern and its real text the replacement, which is what goes to the program.
+- **direction-concealing**: With `Direction.concealing`, each pair's real text MUST be the pattern and its alias the replacement, which is what comes back to the user.
+- **byte-matching**: Patterns MUST be matched as their UTF-8 bytes, and the stream MUST NOT be decoded to text.
+- **ascii-case-fold**: Bytes 0x41 to 0x5A (ASCII `A` to `Z`) MUST compare equal to their lowercase forms in both pattern and stream, and every other byte MUST compare exactly, so non-ASCII letters are never case-folded.
+- **replacement-as-given**: A replacement MUST be written exactly as stored in the filter, never recased to the matched text.
+- **longest-first**: At each position the longest pattern that matches MUST win, so `mike fullerton` is taken whole before `mike`.
+- **single-pass**: A replacement MUST NOT be scanned again, so with pairs that chain (`a` to `b`, `b` to `c`) one pass sends `a` as `b`.
+- **no-word-boundary**: A match MUST NOT depend on the bytes around it; a pattern inside a longer word is replaced.
+- **pass-through-bytes**: Any byte that is not the first byte of a pattern (compared lowercased) MUST be emitted unchanged without further matching.
+- **hold-partial**: When the unconsumed bytes from a position are a proper prefix (ASCII case-insensitive) of a longer pattern, `feed` MUST hold the bytes from that position to the end and emit only what precedes it.
+- **hold-over-shorter-match**: A held prefix MUST be held even when a shorter pattern already matches there, because a longer pattern may still complete (`mike` is held when `mike fullerton` is a pattern).
+- **hold-released**: Held bytes MUST be rescanned together with the next `feed`, so a completed pattern is replaced and a diverging stream releases the held bytes unchanged.
+- **emit-complete-match**: A pattern that matches completely and cannot be extended by a longer pattern MUST be replaced and emitted in the same `feed` call, without waiting for more input.
+- **flush**: `flush()` MUST emit everything held, replacing whatever already matches completely and passing a partial match through unchanged, and MUST leave nothing held.
+- **flush-empty**: `flush()` with nothing held MUST return an empty array.
+- **is-holding**: `isHolding` MUST be true exactly when bytes are held awaiting more input.
+- **no-patterns**: When the filter has no pairs, `feed` MUST return the held bytes followed by the new bytes unchanged and hold nothing.
+- **order-preserved**: Output bytes MUST come out in input order, and every input byte MUST be either emitted unchanged, replaced as part of a match, or held; none is dropped.
+- **binary-safe**: Bytes that are not valid UTF-8 (a lone 0xFF, half a character at the end of a read) MUST pass through unchanged unless they match a pattern byte for byte.
+- **generic-input**: `feed` MUST accept any `Sequence` of `UInt8`.
+- **hold-bound**: The held run MUST be shorter than the longest pattern, because only a proper prefix is held.
+- **empty-sides-dropped**: Pairs with an empty alias or real are dropped by `TextSubstitutionFilter.init(pairs:)` before the stream sees them, so every pattern is non-empty; the stream does not check this itself.
+- **pattern-order-ties**: The order among patterns of equal length is the order of a `sorted` call on byte count, which the source does not otherwise specify.
+- **no-retry-no-errors**: No operation throws or returns an error.
+- **owner-flushes-output**: The owner is responsible for calling `flush()` on the output side after a moment of quiet, so a prompt that ends in a pattern's prefix still appears; the type does not do it. `PrivateTerminalView` does this for its output instance only, with a one-shot timer of 0.15 seconds re-armed on each read while `isHolding` is true; its input instance is held until the stream diverges or a pattern completes, and both directions are flushed before swapping in new words.
+- **concurrency**: The type is a value with no internal locking; an instance MUST be used by one caller at a time. `PrivateTerminalView`, a `@MainActor` class, holds one instance per direction and calls them only from the main actor.
+

@@ -383,7 +383,7 @@ states).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSCodeEngineRange.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 

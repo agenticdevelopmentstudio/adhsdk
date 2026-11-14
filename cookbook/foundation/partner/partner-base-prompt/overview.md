@@ -1,0 +1,3 @@
+
+`PartnerBasePrompt` produces the text the Coding Partner runs on: one long-lived Claude Code session that does several jobs for the owner. It has three outputs. `text` is the fixed base prompt (who the partner is, the window the owner sees, the kinds of message that reach it, the tool table, and the rules for attention items, sessions, job steps and git). `systemPrompt(jobs:)` is that base followed by one `## Job:` section for each enabled `PartnerJob`, carrying its guidelines and a numbered list of its steps. `skillMarkdown(for:)` is the Claude Code skill file that carries one job's guidelines to the sessions the partner opens. It is a caseless `enum` of static members with no state, and its input types (`PartnerJob`, `PartnerJobStep`) are separate value types.
+

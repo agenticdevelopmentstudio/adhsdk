@@ -162,7 +162,7 @@ Not applicable: this component contains no logging call of its own. The one rela
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionMessagePresenting.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

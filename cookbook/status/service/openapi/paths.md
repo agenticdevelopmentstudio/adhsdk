@@ -213,7 +213,7 @@ Subsystem: n/a (status backend) | Category: n/a
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/openapi/paths/` | unverified |
+| web | `packages/web/packages/status-server/src/openapi/paths/` | confirmed (1.0.2) |
 
 ## Design Decisions
 

@@ -1,0 +1,3 @@
+
+`WorkTrackingUserSettings` is a `@MainActor` final class holding the four work-tracking knobs as live `UserSetting` values: `enabled`, `addedBundleIds`, `removedBundleIds` and `retentionDays`. Per its doc comment each is stored under `prefix + WorkTrackingSettingsKeys.*`, so "the app decides only the prefix", the same way `BillingUserSettings` does. Defaults come from `WorkTrackingPreferences.default`, the same values the daemon falls back to. The `preferences` property reads the four current values into one `WorkTrackingPreferences` and normalizes it, which is the value an app pushes to the daemon.
+

@@ -270,7 +270,7 @@ Not applicable: Alert.tsx contains no logging or console calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/alert.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/alert.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

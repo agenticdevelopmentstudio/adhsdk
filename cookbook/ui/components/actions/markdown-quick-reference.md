@@ -218,7 +218,7 @@ dismissing the reference is local UI state and is not reported to the consumer.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/markdown-quick-reference.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/markdown-quick-reference.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

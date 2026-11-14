@@ -209,7 +209,7 @@ any telemetry belong to the consumer's `onValueChange` handler, not the control.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/toggle-group.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/toggle-group.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

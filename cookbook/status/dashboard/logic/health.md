@@ -187,7 +187,7 @@ Not applicable: the module makes no log calls. The discarded `JSON.parse` failur
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/health.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/health.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

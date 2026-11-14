@@ -1,0 +1,5 @@
+
+`ClaudeHookInstaller` is a `Sendable` class that edits Claude Code's `settings.json` for one daemon, driven by a `ClaudeHookConfiguration` (name, marker, helper path, drop directory, settings URL, lock name, status-line entry name, hooked events and legacy forms). Each registration is a `command` hook that runs the configuration's helper (`<helper> hook --event <Event>`); the helper writes the payload as a drop file and exits 0, so no socket, port or running daemon is involved and a hook cannot fail because the daemon is down.
+
+Registrations are identified by the configuration's marker, so several daemons coexist in one file and each installs, updates and removes only its own entries. The installer also registers the daemon with the shared status-line dispatcher (`ClaudeStatusLine`), keeps two marker files beside `settings.json` (tracking disabled, status-line display off), replaces every earlier form of its own registrations, and exposes a locked read-modify-write for the daemon's other settings keys.
+

@@ -470,7 +470,7 @@ Subsystem: the host's logging subsystem | Category: this concept's own category
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXArchive.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/VSIXArchive.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

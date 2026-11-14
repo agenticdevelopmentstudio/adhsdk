@@ -145,7 +145,7 @@ Not applicable: the source contains no log call of any kind — it declares data
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/live-types.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/live-types.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

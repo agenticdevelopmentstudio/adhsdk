@@ -198,7 +198,7 @@ This is the only log line this file emits directly; every other outcome (DNS fai
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/probe.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/probe.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

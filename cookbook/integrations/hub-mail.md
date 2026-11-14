@@ -171,8 +171,7 @@ Not applicable: these types log nothing; sync failures surface as engine events.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/HubMail/` | confirmed (1.1.0) |
-| ios | `packages/apple/AgenticDeveloperHubSDK/HubMail/` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/HubMail/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

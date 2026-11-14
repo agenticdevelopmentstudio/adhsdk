@@ -228,7 +228,7 @@ Not applicable: the module makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/overview.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/overview.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

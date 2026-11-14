@@ -126,7 +126,7 @@ Not applicable: The stamp calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SetupStamp.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SetupStamp.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

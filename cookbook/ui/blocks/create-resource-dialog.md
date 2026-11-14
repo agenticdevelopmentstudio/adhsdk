@@ -217,7 +217,7 @@ Not implemented: Component does not emit logs. Errors from `create` are surfaced
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/create-resource-dialog.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/create-resource-dialog.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 

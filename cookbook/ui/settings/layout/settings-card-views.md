@@ -391,7 +391,7 @@ Not applicable: this vocabulary contains no logging calls anywhere.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SettingsCardViews.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/SettingsCardViews.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

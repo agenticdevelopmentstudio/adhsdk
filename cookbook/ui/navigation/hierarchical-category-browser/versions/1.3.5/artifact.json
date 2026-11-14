@@ -1,0 +1,62 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "e36ff99d-0ebd-42ca-87f0-2881a8bfedea",
+    "title": "Hierarchical Category Browser",
+    "type": "recipe",
+    "version": "1.3.5",
+    "status": "review",
+    "language": "en",
+    "created": "2026-08-23",
+    "modified": "2026-10-04",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Shared category rail: one HTDV level per walked depth, All/Uncategorized at root, per-level gear.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "hierarchical",
+      "category",
+      "rail",
+      "navigation",
+      "master-detail"
+    ],
+    "ingredients": [
+      "88d69611-4a12-4777-9509-8af6c0626dc7"
+    ],
+    "depends-on": [
+      "0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8"
+    ],
+    "related": [
+      "0bba1f5b-bc8d-4f76-b1c9-329b627f7ee8",
+      "8fa7aaae-df62-44ea-b10c-182f3094ed9f",
+      "88d69611-4a12-4777-9509-8af6c0626dc7",
+      "40827b84-406e-4091-951b-9498b2f78253",
+      "79f7ed30-3193-49bc-856b-d7dd01303baa",
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
+      "f679a77e-04f7-4e43-b898-6d78a637a760",
+      "550f00f7-bfb2-415e-9b15-bd5dce015500"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "1988a32a1af52732",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

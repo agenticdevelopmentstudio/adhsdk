@@ -302,7 +302,7 @@ progress indicator.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectScanProgressWindow.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectScanProgressWindow.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

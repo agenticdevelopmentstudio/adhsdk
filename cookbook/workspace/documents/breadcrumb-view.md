@@ -199,7 +199,7 @@ Not applicable: no logging call appears anywhere in source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

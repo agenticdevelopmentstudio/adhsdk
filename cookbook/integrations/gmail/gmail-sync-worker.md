@@ -242,7 +242,7 @@ Not applicable: the source makes no log call; failures reach the caller as throw
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailSyncWorker.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailSyncWorker.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

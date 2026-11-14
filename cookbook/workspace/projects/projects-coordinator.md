@@ -449,7 +449,7 @@ stopping's failed checkpoint, make no log call at all — see
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectsCoordinator.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

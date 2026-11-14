@@ -170,7 +170,7 @@ Not applicable; the component does not emit logs.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/help-popover.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/help-popover.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

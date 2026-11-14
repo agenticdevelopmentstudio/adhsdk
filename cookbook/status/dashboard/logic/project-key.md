@@ -171,7 +171,7 @@ Not applicable: this logic contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/project-key.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/project-key.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

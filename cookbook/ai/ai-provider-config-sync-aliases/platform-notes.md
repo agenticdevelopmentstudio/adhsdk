@@ -1,0 +1,7 @@
+
+- **SwiftUI**: not applicable to this file; it imports only the Core framework. A SwiftUI settings screen would use the aliased types as it would the Core types.
+- **Compose**: Kotlin has `typealias` with the same effect; declare `typealias AIProviderConfigSync = core.AIProviderConfigSync` in the plugin module only if call sites need the old name, and keep the `@Serializable` data classes in the lower module.
+- **React/Web**: use a re-export from the higher package's index, for example `export type { AIProviderConfigSync, ResolvedProviderConfig } from "<core-package>"`, so imports from the old path keep resolving while one declaration owns the shape.
+- **AppKit / UIKit**: this is the source. The file is `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIProviderConfigSyncAliases.swift`, two `public typealias` lines in the `AIPluginKit` framework that name the structs in `Core/Stenographer/AIProviderConfigSync.swift`. The Core structs are used by the HTTP client (`StenographerHTTPClient`) and by the daemon preferences service, which decodes the same type.
+- **WinUI 3**: C# has no cross-assembly type alias. Reach the same effect with a `global using AIProviderConfigSync = Company.Core.AIProviderConfigSync;` directive in the consuming project, which is file or project scoped, or by type forwarding with `[assembly: TypeForwardedTo(typeof(...))]` when a type moves between assemblies and compiled consumers must keep working. Keep the `record` types and their `System.Text.Json` attributes in the lower assembly only.
+

@@ -184,7 +184,7 @@ No logging. Combobox is a presentational form control; it emits no structured lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/combobox.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/combobox.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

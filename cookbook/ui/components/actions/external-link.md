@@ -203,7 +203,7 @@ Not applicable: ExternalLink is a presentational anchor with no lifecycle events
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/external-link.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/external-link.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

@@ -181,7 +181,7 @@ Not applicable: the source contains no log calls. Refetch outcomes are recorded 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-refresh-all.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-refresh-all.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

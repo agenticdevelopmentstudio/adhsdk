@@ -317,7 +317,7 @@ Subsystem: the app's own bundle identifier | Category: this component's tree-ren
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Tree/ExtensionTreeViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Tree/ExtensionTreeViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

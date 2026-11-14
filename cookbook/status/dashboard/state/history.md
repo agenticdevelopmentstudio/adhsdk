@@ -154,7 +154,7 @@ Not applicable: History makes no log calls; failures reach the caller only throu
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-history.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-history.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

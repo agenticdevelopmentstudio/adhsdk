@@ -232,7 +232,7 @@ A fully successful poll or a fully successful on-demand fetch produces no log ou
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/fetch-vercel.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/fetch-vercel.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

@@ -167,7 +167,7 @@ Not applicable: The component does not emit any structured logs; debugging relie
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/tooltip.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/tooltip.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

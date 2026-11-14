@@ -159,7 +159,7 @@ Not applicable: the given source contains no logging call of its own — diagnos
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionWebviewPresenting.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

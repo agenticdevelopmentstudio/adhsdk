@@ -174,7 +174,7 @@ Not applicable: TopicSelectHint does not emit log events or debug output.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/topic-select-hint.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/topic-select-hint.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -211,7 +211,7 @@ Not applicable: the concept contains no logging calls; failures surface only as 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-deploy-projects.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-deploy-projects.ts` | confirmed (1.2.1) |
 
 ## Design Decisions
 

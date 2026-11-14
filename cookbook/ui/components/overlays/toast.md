@@ -158,7 +158,7 @@ Not applicable: Toast component does not emit logs in source code.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/toast.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/toast.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 

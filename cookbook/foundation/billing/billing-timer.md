@@ -130,7 +130,7 @@ Not applicable: the timer makes no log calls; failures are thrown to the caller.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingTimer.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingTimer.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

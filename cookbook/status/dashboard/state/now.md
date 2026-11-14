@@ -138,7 +138,7 @@ Not applicable: Now contains no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-now.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-now.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

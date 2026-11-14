@@ -280,7 +280,7 @@ Not applicable: this concept contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginDescriptor.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginDescriptor.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

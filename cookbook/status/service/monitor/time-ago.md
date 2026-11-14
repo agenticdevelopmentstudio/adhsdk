@@ -243,7 +243,7 @@ function with no side effects of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/time-ago.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/time-ago.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

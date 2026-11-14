@@ -1,0 +1,22 @@
+
+- **link-destination**: The component MUST render a hyperlink whose destination is the `profileUrl` value.
+- **new-tab**: The component MUST open its destination in a new browsing context (`target="_blank"`).
+- **opener-isolation**: The component MUST set the link relationship to `noopener noreferrer`, so the opened page gets no reference to the opening page and no referrer.
+- **accessible-name**: The component MUST expose the `label` value as the link's accessible name (`aria-label`).
+- **tooltip**: The component MUST expose the `label` value as the hover tooltip (`title`).
+- **glyph**: The component MUST display the single lowercase character "i" as its only visible content.
+- **glyph-hidden**: The component MUST mark the glyph element as hidden from assistive technology (`aria-hidden="true"`), so the label is the only name announced.
+- **root-class**: The component MUST put the class `pc-profile-info` on its root element; the stylesheet selects on it.
+- **extra-class**: The component MUST append `className`, separated by one space, after `pc-profile-info`, and MUST omit it when it is undefined or empty.
+- **placement**: The stylesheet MUST position the button absolutely at `top: 0` and at a horizontal offset of `--pc-pi-inset` (default 21px) from the wrapper's left edge, translated by minus 50% on both axes, so the circle's center sits on the frame's top border.
+- **size**: The stylesheet MUST declare the circle's `width` and `height` as `--pc-pi-size` (default 22px) with a 50% border radius and a 1px border; it sets no `box-sizing`, so the outer diameter is that size plus the border unless the host applies border-box sizing.
+- **glyph-scale**: The stylesheet MUST set the glyph's font size to 0.6 times `--pc-pi-size`.
+- **stacking**: The stylesheet MUST give the button `z-index: 2`.
+- **opaque-face**: The stylesheet MUST fill the button with `--pc-surface` (fallback `#050805`), so it covers the frame border beneath it.
+- **theme-tokens**: The stylesheet MUST take the border color from `--pc-input-border` (fallback `rgba(255, 255, 255, 0.35)`), the glyph color from `--pc-persona-text` (fallback `#d0d0d0`), and the font from `--pc-font-mono` (fallback `ui-monospace, monospace`).
+- **hover-focus-highlight**: On hover and on keyboard focus (`:focus-visible`), the stylesheet MUST change the border color to the current text color and add a 6px glow of that color at 45% strength, with the browser's default outline removed.
+- **highlight-transition**: The stylesheet SHOULD animate the border color and box shadow over 0.18s with an ease curve.
+- **no-decoration**: The stylesheet MUST remove the link's text decoration.
+- **memoized**: The component SHOULD skip re-rendering while its props are unchanged.
+- **host-placement**: The host MUST render the button outside any ancestor that clips overflow within half of `--pc-pi-size` of the frame's top edge, and MUST import `css/components/profile-info.css`.
+

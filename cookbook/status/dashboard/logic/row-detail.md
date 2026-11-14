@@ -233,7 +233,7 @@ Not applicable: this logic has no logging calls and no failure path to log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/row-detail.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/row-detail.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

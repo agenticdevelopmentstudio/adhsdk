@@ -152,7 +152,7 @@ Not applicable: this concept makes no logging call of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionSettings.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionSettings.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -200,7 +200,7 @@ Not applicable: the module makes no log calls, and the guard reports its answer 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/issue-sources.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/issue-sources.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

@@ -298,7 +298,7 @@ Not applicable: the view writes no log output and has no logging subsystem; erro
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift` | confirmed (1.0.0) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |

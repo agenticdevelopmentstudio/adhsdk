@@ -1,0 +1,3 @@
+
+`AIFeature` is a string-backed enumeration with two cases, `summarize` and `oversight`. Its own doc comment states its purpose: "Which daemon feature asked for a completion — the `ai_interactions` log discriminator." A daemon caller passes one value to the logged completion overload of the daemon AI chat component, which uses it for two things: the `feature` column of the `ai_interactions` log row (the case's raw string), and the choice of which provider settings reader resolves the provider for that completion. The type carries no behavior of its own; it is a closed set of names shared between the caller, the provider settings lookup and the log writer. It performs no I/O.
+

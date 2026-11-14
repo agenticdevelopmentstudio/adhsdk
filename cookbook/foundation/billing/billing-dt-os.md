@@ -141,7 +141,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDTOs.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDTOs.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

@@ -20,7 +20,7 @@ contrast values and whether the `text-sm`/`text-xs` rem-based classes track
 system font scaling aren't verifiable from this file, hence partial; the
 expand/collapse toggle's `size-6` (24×24px) hit area and the row buttons'
 `px-2 py-1` padding both fall well short of the 44×44 target, so
-touch-target-size fails; and the hardcoded, non-overridable built-in strings
+touch-target-size fails (see the open question on touch-target-size); and the hardcoded, non-overridable built-in strings
 ("No categories yet.", the filter-match message, `aria-label="Filter
 categories"`/`"Categories"`, the placeholder, and the Expand/Collapse `title`)
 fail both internationalization checks. separation-of-concerns is partial

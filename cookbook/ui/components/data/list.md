@@ -129,7 +129,7 @@ Not applicable: List and ListItem do not emit any logs.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/list.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/list.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

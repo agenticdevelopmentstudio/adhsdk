@@ -297,7 +297,7 @@ Not applicable: none of the 8 parts call a logger of any kind — every failure 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AI/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AI/` | confirmed (1.2.0) |
 
 ## Design Decisions
 

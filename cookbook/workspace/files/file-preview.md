@@ -148,7 +148,7 @@ Not applicable — the source contains no logging call anywhere in this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/QuickLookPreview.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Views/QuickLookPreview.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

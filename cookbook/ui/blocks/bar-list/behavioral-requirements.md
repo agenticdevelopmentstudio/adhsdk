@@ -1,0 +1,31 @@
+
+- **row-order**: The component MUST render one row per shown item in the order of `items`, and MUST NOT sort or reorder them.
+- **list-accessible-name**: The component MUST expose `ariaLabel` as the accessible name of the list of rows.
+- **row-name**: Each row MUST show the item's `name`, left-aligned, on the same line as the value.
+- **row-value-text**: Each row MUST show the value as text to the right of the name, formatted with `formatValue` applied to the item's `value`.
+- **detail-replaces-value**: When an item has a `detail` string (any non-nullish string, including an empty one), the row MUST show `detail` in place of the formatted value, and MUST NOT call `formatValue` for that row.
+- **default-value-format**: When `formatValue` is not given, the component MUST format a value with the count formatter exported by the trend chart block: an English-locale whole number with digit grouping when the absolute value is below 10,000, and English compact notation with at most one fraction digit from 10,000 upward.
+- **name-wraps**: A name too long for the row MUST wrap onto further lines, breaking inside a word when necessary, and MUST NOT be truncated, ellipsized or clipped.
+- **value-keeps-width**: The value text MUST NOT shrink or wrap while a long name wraps beside it.
+- **bar-below-row**: Each row MUST draw its bar beneath the name and value line, 6px (0.375rem) tall, with a 4px (0.25rem) gap above it.
+- **bar-length-proportional**: The bar's width MUST equal the item's value divided by the largest value among ALL items, as a percentage, so a row hidden by the limit still counts toward the maximum.
+- **bar-zero-maximum**: When the largest value among all items is zero or less, every bar MUST have width 0%.
+- **bar-minimum-width**: A bar for an item whose value is greater than zero MUST be at least 2px wide; a bar for an item whose value is zero or less MUST have no minimum width.
+- **bar-color**: Every bar MUST be filled with the `color` prop, which defaults to the theme token `--color-apt-cat-blue`.
+- **bar-decorative**: The bar MUST be hidden from assistive technology, because the value text beside the name carries the same information.
+- **initial-row-limit**: The component MUST show only the first `maxItems` items until the overflow is opened; `maxItems` defaults to 8.
+- **expand-control-presence**: The component MUST render the expand button only when the number of items is greater than `maxItems`, and MUST render no button of any kind for an unselectable list whose rows all fit.
+- **expand-opens-in-place**: Activating the expand button MUST show every item in the same list, below the rows already shown, without navigation.
+- **expand-label**: While collapsed the expand button MUST read "Show all N", where N is the total number of items; while expanded it MUST read "Show fewer".
+- **expand-collapse**: Activating the button while expanded MUST return the list to its first `maxItems` items.
+- **expand-state-exposed**: The expand button MUST expose whether the overflow is open (false when collapsed, true when expanded) to assistive technology.
+- **empty-state**: When `items` is empty the component MUST render only the `emptyLabel` text, defaulting to "Nothing to show.", and MUST render no list and no button.
+- **rows-plain-without-select**: When `onSelect` is not given, rows MUST be non-interactive text: no row button and no focus stop.
+- **rows-are-buttons-with-select**: When `onSelect` is given, every shown row MUST be a button, full width of the list, with left-aligned content.
+- **select-reports-name**: Activating a row button MUST call `onSelect` once with that item's `name`, including when that row is already the selected one.
+- **pressed-state-exposed**: Each row button MUST expose a pressed state that is true exactly when `selected` equals the item's `name`.
+- **dim-unselected-rows**: While `selected` is not null, every row button whose name differs from `selected` MUST render at 55% opacity; while `selected` is null no row MUST be dimmed.
+- **focus-ring**: A row button or the expand button that receives keyboard focus MUST show a 2px ring in the gold accent at 40% opacity, with the browser's default outline removed.
+- **expand-state-local**: The component MUST keep the expanded or collapsed state itself, starting collapsed, and MUST NOT reset it when `items` changes.
+- **class-name-target**: `className` MUST be applied to the component's outermost element, and to the empty-state element when `items` is empty.
+

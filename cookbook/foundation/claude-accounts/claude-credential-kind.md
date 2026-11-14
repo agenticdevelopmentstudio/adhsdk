@@ -126,7 +126,7 @@ Not applicable: The kind type calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeCredentialKind.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeCredentialKind.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

@@ -216,7 +216,7 @@ Not applicable: none of `ExtensionSnippet.swift`, `SnippetFile.swift`, or `Snipp
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Snippets/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Language/Snippets/` | confirmed (1.0.3) |
 
 ## Design Decisions
 

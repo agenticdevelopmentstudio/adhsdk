@@ -802,7 +802,7 @@ outside this scope.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/HTDV/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/HTDV/` | confirmed (1.1.1) |
 
 ## Design Decisions
 

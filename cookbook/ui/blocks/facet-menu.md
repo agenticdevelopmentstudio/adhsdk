@@ -216,7 +216,7 @@ Not applicable: FacetMenu is a UI component and does not perform logging. Errors
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/facet-menu.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/facet-menu.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

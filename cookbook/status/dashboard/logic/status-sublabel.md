@@ -191,7 +191,7 @@ Not applicable: this logic makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/status-sublabel.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/status-sublabel.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

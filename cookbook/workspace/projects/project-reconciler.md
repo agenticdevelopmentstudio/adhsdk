@@ -375,7 +375,7 @@ failure after applying the plan this component produces.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectReconciler.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

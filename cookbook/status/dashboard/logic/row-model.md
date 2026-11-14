@@ -260,7 +260,7 @@ Not applicable: this logic contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/row-model.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/row-model.ts` | confirmed (1.2.0) |
 
 ## Design Decisions
 

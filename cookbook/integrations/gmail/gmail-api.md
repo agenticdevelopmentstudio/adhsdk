@@ -181,7 +181,7 @@ Not applicable: the file contains no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailAPI.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailAPI.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

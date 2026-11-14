@@ -267,7 +267,7 @@ Not applicable: a checkout makes no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectCheckout.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

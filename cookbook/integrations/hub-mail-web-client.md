@@ -2,7 +2,7 @@
 id: 6b0f3c52-8e47-4d1a-9a35-2f7c1d9e4a60
 title: "Hub Mail Web Client"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-11-14
@@ -144,28 +144,45 @@ None. Errors reach the caller as rejected promises.
 - **AppKit / UIKit**: Not applicable, for the same reason.
 - **Compose**: Not applicable: an Android client keeps a local mirror, as iOS does.
 - **React/Web**: Source: `packages/web/packages/hub-mail/src/` (`hub-mail-client.ts`, `snapshot.ts`, `types.ts`). The host builds one client per signed-in session with `createHubMailClient({ fetchJson })` and hands it to the web Email App. whatsnow's `fetchJson` prefixes `/api` (its Next rewrite forwards to the backend with no prefix) and adds the stored bearer token.
-- **WinUI 3**: Not applicable until a Windows host exists; it would keep a local mirror.
+- **WinUI 3**: A Windows host keeps a local mirror rather than reading this client: it pulls `/v1/sync/pull` into a local store and reads through a `MailClient`-shaped seam, as [adhsdk.ingredient.integrations.hub-mail-bridge](cookbook:e12914f0-3a3b-4fb7-ac0c-6332de37de4f) does on Apple. Only a WebView2-hosted web build would use this client, unchanged, with its own `fetchJson`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/hub-mail/src/` | confirmed (1.1.0) |
+| web | `packages/web/packages/hub-mail/src/` | confirmed (1.1.1) |
 
 ## Design Decisions
+**Decision**: No local database in the browser.
+**Rationale**: The plan settles that the web app reads through the hub API and keeps no local store, so there is no second sync engine. An in-memory snapshot built from `/v1/sync/pull` is that read: it lasts as long as the page and is never persisted.
+**Approved**: pending
 
-- **No local database in the browser.** The plan settles that the web app reads through the hub API and keeps no local store, so there is no second sync engine. An in-memory snapshot built from `/v1/sync/pull` is that read: it lasts as long as the page and is never persisted.
-- **`/v1/sync/pull` rather than a per-connection listing.** The hub's connection-data route does not serve email messages, and the sync pull already returns the caller's Gmail rows owner-scoped, with deletes. Pulling everything and filtering client-side costs more on the first read, but uses a route that exists and is the same contract the native mirrors follow.
-- **Accounts from `/v1/integrations/connections`.** The connection list carries the address, status and last error the accounts list shows. The native bridge derives the address from sent mail because its mirror has no connection table; the web client has the real list one request away.
-- **Injected fetch.** The client takes `fetchJson` rather than importing an auth package, so it sits in the lowest tier with no dependencies and works in any host's auth (dependency injection).
-- **The `/v1` surface, snake_case on the wire.** The hub's `/v1` routes are its stable public API (the signup form in `@adh-sdk/ui` moved to them too). They answer snake_case envelopes (`has_more`, `sync_version`, `service_type`) and a list envelope (`object: "list"`, `data`, `has_more`) for connections; the package's wire types say so, and the mapping to the camelCase `HubMail*` types happens once, in the client. A row's `data` keeps the backend's snake_case column names, exactly as the native projection reads them. With a customer token, `/v1/integrations/connections` is served by the end-user `/integrations/me/connections` route: the gateway tries the operator `/integrations` route first, which refuses a customer token with 403, and falls through.
+**Decision**: `/v1/sync/pull` rather than a per-connection listing.
+**Rationale**: The hub's connection-data route does not serve email messages, and the sync pull already returns the caller's Gmail rows owner-scoped, with deletes. Pulling everything and filtering client-side costs more on the first read, but uses a route that exists and is the same contract the native mirrors follow.
+**Approved**: pending
 
+**Decision**: Accounts from `/v1/integrations/connections`.
+**Rationale**: The connection list carries the address, status and last error the accounts list shows. The native bridge derives the address from sent mail because its mirror has no connection table; the web client has the real list one request away.
+**Approved**: pending
+
+**Decision**: Injected fetch.
+**Rationale**: The client takes `fetchJson` rather than importing an auth package, so it sits in the lowest tier with no dependencies and works in any host's auth (dependency injection).
+**Approved**: pending
+
+**Decision**: The `/v1` surface, snake_case on the wire.
+**Rationale**: The hub's `/v1` routes are its stable public API (the signup form in `@adh-sdk/ui` moved to them too). They answer snake_case envelopes (`has_more`, `sync_version`, `service_type`) and a list envelope (`object: "list"`, `data`, `has_more`) for connections; the package's wire types say so, and the mapping to the camelCase `HubMail*` types happens once, in the client. A row's `data` keeps the backend's snake_case column names, exactly as the native projection reads them. With a customer token, `/v1/integrations/connections` is served by the end-user `/integrations/me/connections` route: the gateway tries the operator `/integrations` route first, which refuses a customer token with 403, and falls through.
+**Approved**: pending
 ## Compliance
+| Check | Status | Category |
+|---|---|---|
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 
-Reads only the caller's own rows, which the hub scopes by owner. No data is stored at rest in the browser.
-
+The wire client, the snapshot and the types are separate modules, and the fetch is injected; `hub-mail-client.test.ts` covers the client. It reads only the caller's own rows, which the hub scopes by owner, and stores no data at rest in the browser.
 ## Change History
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Decision triples, compliance checks and WinUI 3 guidance |
 | 1.1.0 | 2026-11-14 | Mike Fullerton | Reads the hub's /v1 routes: sync pull and paged connections, snake_case wire types |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

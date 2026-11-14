@@ -151,7 +151,7 @@ None — a presentational primitive. Callers own any open/close telemetry.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/disclosure.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/disclosure.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

@@ -132,7 +132,7 @@ Not applicable: The memo calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Collections/ExpiringMemo.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Collections/ExpiringMemo.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

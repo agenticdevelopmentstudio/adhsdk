@@ -163,7 +163,7 @@ Not applicable: the state makes no log calls; failures reach the caller only thr
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-uptime.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-uptime.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -266,7 +266,7 @@ Not applicable: the component contains no logging calls of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Windows/WindowController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/Windows/WindowController.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

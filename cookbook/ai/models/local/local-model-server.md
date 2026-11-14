@@ -390,7 +390,7 @@ omission.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelServer.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalModelServer.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

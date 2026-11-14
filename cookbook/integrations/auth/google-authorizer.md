@@ -285,7 +285,7 @@ Subsystem: `com.agenticdeveloperhub.integrations` | Category: `GoogleTokens`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleAuthorizer.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleAuthorizer.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

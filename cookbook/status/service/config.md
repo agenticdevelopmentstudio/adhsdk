@@ -529,7 +529,7 @@ Not applicable: none of `env.ts`, `port.ts`, or `seed.ts` contains a logging cal
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/config/` | unverified |
+| web | `packages/web/packages/status-server/src/config/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

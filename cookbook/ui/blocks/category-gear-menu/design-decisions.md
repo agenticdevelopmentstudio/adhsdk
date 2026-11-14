@@ -11,7 +11,7 @@
 **Rationale**: Add creates a new category at the list's own level (a new root in the root list), a question the current selection cannot answer, so there is no selection state that should ever disable it.
 **Approved**: pending
 
-**Decision**: Action labels include the target's name when one is available (e.g. `Rename "Q3"…`) rather than a bare verb.
+**Decision**: Action labels include the target's name when one is available (e.g. `Rename “Q3”…`) rather than a bare verb.
 **Rationale**: The menu can be opened from a header that is not the current selection; without the name, a bare "Rename…" would leave the user guessing whether the action applies to the header, the selected row, or something else.
 **Approved**: pending
 

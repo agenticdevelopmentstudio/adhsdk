@@ -473,7 +473,7 @@ Not applicable: this component contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/FileBrowserViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/FileBrowserViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

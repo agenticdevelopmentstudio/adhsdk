@@ -240,7 +240,7 @@ This adaptor does not persist or transmit anything itself, but it is a conduit f
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadWindow.swift` | confirmed (1.0.4) |
 
 ## Design Decisions
 

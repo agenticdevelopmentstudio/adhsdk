@@ -396,7 +396,7 @@ source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Panels/FloatingChooserPanelController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Panels/FloatingChooserPanelController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

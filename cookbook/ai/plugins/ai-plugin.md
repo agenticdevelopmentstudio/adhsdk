@@ -212,7 +212,7 @@ Not applicable: this contract contains no logging call; it is a pure contract de
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPlugin.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPlugin.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

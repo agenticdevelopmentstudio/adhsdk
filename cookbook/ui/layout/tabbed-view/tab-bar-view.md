@@ -552,7 +552,7 @@ Not applicable: this concept contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabBarView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabBarView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

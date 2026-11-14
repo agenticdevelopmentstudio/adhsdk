@@ -362,7 +362,7 @@ Not applicable: the source contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/ThemedTerminalView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/ThemedTerminalView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

@@ -203,7 +203,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

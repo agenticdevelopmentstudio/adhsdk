@@ -238,7 +238,7 @@ Not applicable: the component makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/MCP/MailToolSource.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/MCP/MailToolSource.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

@@ -193,7 +193,7 @@ Not applicable: No logging is implemented in the source code.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/document-identity-field.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/document-identity-field.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

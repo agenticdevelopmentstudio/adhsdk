@@ -1,0 +1,40 @@
+
+- **row-structure**: The row MUST draw, left to right, the lead control (when given), the tools (when given), the title cell (when given) and then a right-hand group of the header slots.
+- **row-hook**: The row MUST carry the attribute `data-slot="detail-header"`.
+- **row-chrome**: The row MUST be a single line at least 2.15rem tall, with a bottom border in the theme border color and the navigation background color, and MUST NOT shrink vertically.
+- **row-padding**: The row MUST have 8px of padding on both sides, except that when `leadCell` is true and a lead is given it MUST have 8px on the right only, because the lead cell seats itself against the left edge.
+- **lead-optional**: The row MUST render no lead when `lead` is undefined, null or false.
+- **lead-cell**: When `leadCell` is true and a lead is given, the row MUST seat the lead in a fixed 32px (`w-8`) wide cell that centres it and does not shrink.
+- **title-cell**: When `title` is given, the row MUST render `title.cell` in its place in the row and MUST keep it mounted, because a pane's title portals into it.
+- **title-spacer**: When `title` is not given, the row MUST render an empty element that fills the free width (`flex-1`) so the slots stay on the far right.
+- **slot-group-right**: The row MUST draw the slots in a right-hand group that does not shrink, with 4px between its items.
+- **slot-order**: Within the right-hand group the order MUST be the stack's `actions` (when present), the API slot, then the help slot.
+- **actions-box**: When the stack supplies `actions` (anything other than undefined, null or false), the row MUST draw them in their own box carrying the attribute `data-adh-detail-actions`, with 4px between items, immediately before the API slot.
+- **actions-omitted**: When `actions` is undefined, null or false, the row MUST draw no actions box.
+- **actions-not-claimable**: The `actions` MUST be owned by the stack, so no pane can displace them.
+- **api-slot**: The row MUST draw an API slot carrying the attribute `data-adh-detail-api-slot` and MUST always draw it.
+- **help-slot**: The row MUST draw a help slot carrying the attribute `data-adh-detail-help-slot`, last in the row, and MUST always draw it.
+- **api-fallback**: While no pane has claimed the API slot, the API slot MUST hold a disabled API button.
+- **help-fallback**: While no pane has claimed the help slot, the help slot MUST hold the stack's `fallbackHelp` when it is given (not null or undefined), else a disabled help button.
+- **no-provider-fallback**: When the row is drawn outside any provider, it MUST draw a disabled API button and a disabled help button in the right-hand group, with no slot boxes and no actions.
+- **slots-are-state**: The provider MUST hold the two slot elements in state, not in refs, so a claimant re-renders once the slot exists.
+- **claim-by-kind**: The provider MUST keep claims separately for the API and help kinds, each as an ordered list of claimant ids.
+- **last-claimant-wins**: The owner of a kind MUST be the most recent claimant of that kind, or none when the list is empty.
+- **claim-idempotent**: Claiming a kind that the claimant already holds, or releasing one it does not hold, MUST change nothing and MUST NOT cause a re-render.
+- **claim-withdraw-own**: A claimant's release MUST remove only its own claim, so a closing pane never strips a control from the pane now open.
+- **host-published**: The provider MUST publish a host holding both slot elements, both owners and the claim function, and MUST keep the host object stable while none of those change.
+- **portal-claims**: A portal MUST claim its kind when it mounts inside a provider and release it when it unmounts or its kind changes.
+- **portal-id**: A portal MUST identify itself to the claim system with an id unique to that portal instance.
+- **portal-renders-in-slot**: A portal MUST render its children into the slot of its kind, through a portal, only while it is the owner and the slot element exists.
+- **portal-yields**: A portal that is not the owner MUST render nothing, so one header never shows two API buttons or two help buttons.
+- **portal-inline**: A portal outside any provider MUST render its children inline, where it is declared.
+- **has-header-hook**: `useHasDetailHeader` MUST return true inside a provider and false outside one.
+- **header-hook**: `useDetailHeader` MUST return the nearest provider's host, or null outside any provider.
+- **disabled-api-button**: The disabled API button MUST be a disabled outline button of the extra-small size, a code icon (14px, hidden from assistive technology) and the text "API".
+- **disabled-api-name**: The disabled API button's accessible name MUST be `API — ` followed by the reason, defaulting to "This view has no API endpoint".
+- **disabled-api-tooltip**: The disabled API button MUST show the reason as a tooltip on a wrapper element, because a disabled button swallows pointer events.
+- **disabled-help-button**: The disabled help button MUST be a disabled plain button carrying a 16px question-circle icon, built from the shared quiet control style, at 40% opacity with a not-allowed cursor and no hover colour change.
+- **disabled-help-name**: The disabled help button's accessible name MUST be `About this section — ` followed by the reason, defaulting to "No help for this view".
+- **disabled-help-tooltip**: The disabled help button MUST show the reason as a tooltip on a wrapper element.
+- **disabled-help-class**: The disabled help button MUST accept an extra `triggerClassName` that is merged last into its classes.
+

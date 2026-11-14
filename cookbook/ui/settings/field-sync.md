@@ -177,7 +177,7 @@ Not applicable: the component performs no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/FieldSync.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/FieldSync.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 

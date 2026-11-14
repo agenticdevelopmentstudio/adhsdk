@@ -154,7 +154,7 @@ None — a presentational primitive that emits no logs of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/dialog.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/dialog.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

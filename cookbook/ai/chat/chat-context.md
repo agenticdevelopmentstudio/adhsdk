@@ -374,7 +374,7 @@ Not applicable: this contract contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIChatContext.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

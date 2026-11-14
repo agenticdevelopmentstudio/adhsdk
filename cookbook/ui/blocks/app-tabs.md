@@ -148,7 +148,7 @@ Not applicable: No logging is implemented in the component source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/app-tabs.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/app-tabs.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

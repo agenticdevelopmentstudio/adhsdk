@@ -432,7 +432,7 @@ Not applicable: this component makes no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionInputBoxViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/UI/ExtensionInputBoxViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

@@ -168,7 +168,7 @@ Not applicable: Textarea does not emit structured logs. Debugging textarea state
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/textarea.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/textarea.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -454,7 +454,7 @@ Subsystem: matches the host's logging subsystem | Category: the bridge's own cat
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/VSCodeAPI.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

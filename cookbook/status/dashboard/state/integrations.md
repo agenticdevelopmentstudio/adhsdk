@@ -156,7 +156,7 @@ Not applicable: Integrations makes no log calls. Failures reach the caller only 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-integrations.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-integrations.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

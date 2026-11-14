@@ -221,7 +221,7 @@ Not applicable: `time-ago.ts` contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/time-ago.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/time-ago.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

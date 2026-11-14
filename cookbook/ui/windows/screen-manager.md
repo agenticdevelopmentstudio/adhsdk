@@ -267,7 +267,7 @@ Spurious notifications, touches, reconciles, loads and saves are not logged.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/ScreenManager/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/ScreenManager/` | confirmed (1.2.0) |
 
 ## Design Decisions
 

@@ -1,0 +1,5 @@
+
+The business logic of the status report. `buildReport` takes the seven source reads (each a payload or the reason there is none), a `now` date and a monitor version, and returns the `ReportResponse`: a verdict, severity counts, per-source coverage, a sorted list of findings and one section per source. The module is pure: no I/O, no clock (`now` is an input), so every rule is tested with fixtures. The reading half, which produces the inputs, is the report gather recipe.
+
+Two rules carry the rest. First, a missing source is never a healthy source: a failed read, an errored or still-refreshing dashboard section, and a monitor that stopped cycling each land in coverage and make `complete` false, so "no findings" with `complete` false means "don't know". A provider with no credentials is listed as `unconfigured` instead and does not clear `complete`, because it is a standing fact about the deployment. Second, every finding names where it came from (`source`) and, where there is one, where to look next (`link`, `issueKey`). The payload shapes are the report wire types recipe.
+

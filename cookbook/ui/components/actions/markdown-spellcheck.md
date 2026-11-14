@@ -300,7 +300,7 @@ is surfaced to the user via the error state rather than logged.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/markdown-spellcheck.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/markdown-spellcheck.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

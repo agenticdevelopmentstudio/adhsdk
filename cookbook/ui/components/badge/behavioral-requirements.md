@@ -1,0 +1,22 @@
+
+- **renders-span**: The component MUST render a `span` element.
+- **marks-slot**: The component MUST set `data-slot="badge"` on the rendered element.
+- **default-neutral**: With no `variant`, the component MUST apply the `neutral` variant (`border-apt-border text-apt-text-dim`).
+- **neutral-tone**: The `neutral` variant MUST use the `apt-border` border color and the `apt-text-dim` text color.
+- **accent-tone**: The `accent` variant MUST use `apt-gold` for both border and text.
+- **orange-tone**: The `orange` variant MUST use `apt-orange` for both border and text.
+- **blue-tone**: The `blue` variant MUST use `apt-blue` for both border and text.
+- **success-tone**: The `success` variant MUST use `apt-green` for both border and text.
+- **error-tone**: The `error` variant MUST use `apt-red` for both border and text.
+- **transparent-fill**: The component MUST have a transparent background in every variant.
+- **pill-shape**: The component MUST have fully rounded corners (`rounded-full`).
+- **hairline-border**: The component MUST draw a border whose width is the Tailwind `border` default of 1px.
+- **uppercase-mono-type**: The component MUST render its text in the mono font family, uppercase, at `0.6rem`, weight 500 (`font-medium`), line height 1.4 and letter spacing `0.08em`.
+- **no-wrap**: The component MUST NOT wrap its content onto a second line (`whitespace-nowrap`).
+- **inline-flex-layout**: The component MUST lay out as `inline-flex` with items centered and a `gap-1` gap between children.
+- **padding**: The component MUST pad its content `0.45rem` horizontally and `0.15rem` vertically.
+- **sizes-svg-children**: The component MUST size any descendant `svg` to `size-3` and MUST NOT let it shrink (`shrink-0`).
+- **merges-classname**: The component MUST pass `className` into the variant function so a consumer class is merged through `cn()` with the variant classes.
+- **spreads-props**: The component MUST spread all remaining `span` props onto the element.
+- **exports-variants**: The module MUST export `badgeVariants` alongside `Badge`.
+

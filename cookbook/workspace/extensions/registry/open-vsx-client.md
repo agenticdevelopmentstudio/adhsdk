@@ -531,7 +531,7 @@ Category: `OpenVSXClient`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/OpenVSXClient.swift` | confirmed (1.0.4) |
 
 ## Design Decisions
 

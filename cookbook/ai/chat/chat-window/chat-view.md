@@ -268,7 +268,7 @@ Not applicable: the source contains no logging calls in this file. (The view mod
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatView.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

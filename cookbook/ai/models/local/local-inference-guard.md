@@ -412,7 +412,7 @@ Subsystem: `com.agenticdevelopmentstudio.AIPluginKit` | Category: `LocalInferenc
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/LocalInferenceGuard.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

@@ -140,7 +140,7 @@ Not applicable: The push engine contains no analytics call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsSnapshotPush.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsSnapshotPush.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 

@@ -175,7 +175,7 @@ Not applicable: the module has no runtime code and logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/live-types.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/live-types.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

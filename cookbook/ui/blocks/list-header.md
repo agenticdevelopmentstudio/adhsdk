@@ -282,7 +282,7 @@ performance SHOULD add their own logging at the consumer level.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/list-header.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/list-header.tsx` | confirmed (1.2.1) |
 
 ## Design Decisions
 

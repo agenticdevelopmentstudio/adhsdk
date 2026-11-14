@@ -178,7 +178,7 @@ Not applicable: no logging is implemented in the source code.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/quick-reference.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/quick-reference.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

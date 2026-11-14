@@ -133,7 +133,7 @@ Not applicable: the operation makes no log call; errors it renders are surfaced 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/err.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/err.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

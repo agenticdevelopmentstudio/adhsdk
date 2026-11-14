@@ -122,7 +122,7 @@ Not applicable: The search helper calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/UTF8Search.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/UTF8Search.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

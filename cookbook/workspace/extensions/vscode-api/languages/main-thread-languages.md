@@ -212,7 +212,7 @@ No other event in this file is logged: a non-string `languageId`, an empty-match
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguages.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/MainThreadLanguages.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 

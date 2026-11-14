@@ -1,0 +1,29 @@
+
+- **main-actor-confined**: The provider MUST be confined to the main actor; the default prefix and the index name constants MUST remain readable from any context.
+- **default-prefix**: The default storage prefix MUST be `settings.`.
+- **index-name**: The index MUST be stored under the key made of the prefix followed by `__keys`.
+- **configurable-prefix**: The initializer MUST accept a store and an optional prefix, and every storage key MUST begin with that prefix.
+- **storage-key**: A setting MUST be stored under the key made of the prefix followed by the setting's name.
+- **value-encoding**: `set` MUST store the value as the JSON text of a one-element array holding the value.
+- **get-returns-stored**: `get` MUST return the stored value when the stored text decodes as a one-element array of the requested type.
+- **get-falls-back-to-default**: `get` MUST return the setting's default value when nothing is stored.
+- **undecodable-reads-absent**: `get` MUST return the setting's default value, and `contains` MUST return false, when the stored text does not decode as an array of the requested type.
+- **contains-by-decode**: `contains` MUST return true only when the stored text decodes as an array of the requested type.
+- **get-uses-first-element**: When the stored array holds more than one element, `get` MUST return the first.
+- **set-records-name**: `set` MUST add the setting's name to the index when the index does not already contain it.
+- **set-index-unique**: `set` MUST NOT add a name to the index a second time.
+- **set-publishes**: `set` MUST publish the setting's name on `changes` after storing it, every time it stores.
+- **set-encode-failure**: When the value cannot be encoded as JSON text, `set` MUST store nothing, MUST NOT publish, and MUST trip an assertion failure (active in debug builds only).
+- **remove-deletes-value**: `remove` MUST delete the stored value for the setting.
+- **remove-clears-index-name**: `remove` MUST take the setting's name out of the index.
+- **remove-empties-index**: When the index becomes empty, the provider MUST delete the index entry instead of storing an empty array.
+- **remove-publishes-when-present**: `remove` MUST publish the setting's name on `changes` only when a value, even a malformed one, was stored under the key.
+- **remove-silent-when-absent**: `remove` MUST NOT publish when nothing was stored under the key.
+- **keys-with-prefix**: `keys(withPrefix:)` MUST return the indexed names that start with the given prefix and still hold a stored value that is a one-element JSON array.
+- **keys-sorted**: `keys(withPrefix:)` MUST return names in ascending string order.
+- **keys-skip-malformed**: `keys(withPrefix:)` MUST leave out a name whose stored text is not a JSON array of exactly one element.
+- **keys-skip-unindexed**: `keys(withPrefix:)` MUST NOT return a name that is not in the index.
+- **index-survives-relaunch**: A provider built over a store that already holds an index MUST find, list and clear the names written by an earlier provider.
+- **corrupt-index-reads-empty**: When the index text is missing or is not a JSON array of strings, the provider MUST treat the index as empty.
+- **no-change-on-fallback**: The provider MUST NOT publish for a setting it was not asked to set or remove.
+

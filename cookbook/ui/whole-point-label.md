@@ -130,7 +130,7 @@ Not applicable: the component performs no logging of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/WholePointLabel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreUI/WholePointLabel.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

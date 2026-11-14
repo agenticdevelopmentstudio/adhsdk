@@ -235,7 +235,7 @@ Not applicable: the source contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/HorizontalStackView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/HorizontalStackView.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

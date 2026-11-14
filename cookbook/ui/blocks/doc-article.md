@@ -146,7 +146,7 @@ Not applicable: DocArticle does not produce debug or error logs.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/doc-article.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/doc-article.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

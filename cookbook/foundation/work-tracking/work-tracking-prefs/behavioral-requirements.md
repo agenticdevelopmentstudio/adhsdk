@@ -1,0 +1,28 @@
+
+- **store-protocol**: A settings store MUST provide `setting(for:)` returning the raw `String?` stored under a key (nil when never set), `setSetting(_:_:)`, and `transaction(_:)`.
+- **store-errors-propagate**: All three store requirements `throws`, and `WorkTrackingPrefs` MUST let a thrown store error reach the caller of `load`, `save`, `lastAccessibility`, `setLastAccessibility` and `trustedAccessibility`; it MUST NOT catch it.
+- **transaction-atomic**: `transaction` MUST run its body so that, per the protocol comment, every write lands or none does.
+- **load-default**: `load` MUST return `WorkTrackingPreferences.default` (disabled, no added ids, no removed ids, 90 retention days) for every key never set.
+- **load-enabled**: `load` MUST read `activity_enabled` with `RawSetting.bool`, falling back to the default `enabled` for an absent or unrecognized value.
+- **load-retention**: `load` MUST read `activity_retention_days` with `RawSetting.int`, falling back to 90 when the value is absent or not an integer and clamping into 7 through 3650.
+- **load-ids**: `load` MUST read `activity_added_bundle_ids` and `activity_removed_bundle_ids` as a JSON array of strings, and MUST treat an absent, empty or undecodable value as no ids.
+- **load-normalized**: `load` MUST return its result after `normalized()`, so ids are sorted ascending and de-duplicated.
+- **load-key-reads-separate**: NEEDS REVIEW: Not implemented in source. `load` reads four keys through four separate `setting(for:)` calls outside any `transaction`, so a `save` from another thread or process can land between the reads and `load` can return a mix of old and new values. `WorkTrackingSettingsStore` itself is not `Sendable`, but the host store `WorkTrackingController` passes in conforms through `WorkTrackingPersistence` to `ActivityPersistence`, which is `AnyObject, Sendable`, so one store instance can be shared; the source states no ordering rule. A statement from the host on whether its store serializes reads against `save`, or a test that interleaves them, would settle it.
+- **save-normalizes**: `save` MUST normalize the preferences before writing, so what is stored is already sorted, de-duplicated and clamped.
+- **save-keys**: `save` MUST write all four keys: `activity_enabled`, `activity_added_bundle_ids`, `activity_removed_bundle_ids` and `activity_retention_days`.
+- **save-enabled-text**: `save` MUST store `enabled` as the text `true` or `false`.
+- **save-ids-json**: `save` MUST store each id list as a JSON array of strings, with `[]` when the encoded bytes cannot be read back as a string.
+- **save-retention-text**: `save` MUST store the clamped retention as its decimal text.
+- **save-one-transaction**: `save` MUST perform its four writes inside one `transaction`, so a failure leaves none of them.
+- **save-encode-before-write**: `save` MUST encode both id lists before opening the transaction, so an encoding error is thrown with nothing written.
+- **last-accessibility-read**: `lastAccessibility` MUST read `activity_ax_last_status` and return the `WorkTrackingAccessibility` whose raw value (`granted`, `denied` or `unknown`) matches it.
+- **last-accessibility-default**: `lastAccessibility` MUST return `.unknown` when the key is absent or holds any other text.
+- **set-last-accessibility**: `setLastAccessibility` MUST write the answer's raw value to `activity_ax_last_status` and the signer to `activity_ax_signer` inside one `transaction`.
+- **nil-signer-stored-empty**: `setLastAccessibility` MUST store a nil signer as the empty string.
+- **trusted-non-granted**: `trustedAccessibility` MUST return a stored `.denied` or `.unknown` unchanged for any signer, including nil, because trusting a denial never calls Accessibility.
+- **trusted-granted-signature**: `trustedAccessibility` MUST return `.granted` only when the stored answer is `.granted`, the supplied signer is non-nil and non-empty, and it equals the signer stored under `activity_ax_signer`.
+- **trusted-granted-otherwise-unknown**: `trustedAccessibility` MUST return `.unknown` for a stored `.granted` when the signer is nil, empty, differs from the recorded one, or no signer was recorded, so an unrecorded signature matches nothing.
+- **raw-answer-kept**: `trustedAccessibility` MUST NOT change what `lastAccessibility` returns; the raw stored answer is kept.
+- **no-validation-of-ids**: `save` and `load` MUST NOT check that an id looks like a bundle identifier; any string, including an empty one, is stored and returned (an empty string survives de-duplication as one entry).
+- **no-logging-no-cache**: `WorkTrackingPrefs` MUST NOT cache or log; every call goes to the store.
+

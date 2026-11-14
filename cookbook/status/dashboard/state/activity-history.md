@@ -172,7 +172,7 @@ Not applicable: this logic makes no log calls; a caught fetch error, including i
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-activity-history.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-activity-history.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

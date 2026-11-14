@@ -167,7 +167,7 @@ Not applicable: the module makes no log calls, and `isEndpointKind` reports its 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/endpoint-kinds.ts` | unverified |
+| web | `packages/web/packages/status-web/src/lib/endpoint-kinds.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

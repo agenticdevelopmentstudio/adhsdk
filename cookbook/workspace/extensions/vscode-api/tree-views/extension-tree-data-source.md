@@ -154,7 +154,7 @@ Not applicable: this protocol contains no log call — it has no executable body
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionTreeDataSource.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/VSCodeAPI/ExtensionTreeDataSource.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

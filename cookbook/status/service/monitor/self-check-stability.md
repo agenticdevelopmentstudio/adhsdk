@@ -167,7 +167,7 @@ Not applicable: this file contains no `console.*` call or structured-logger call
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/self-check-stability.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/self-check-stability.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

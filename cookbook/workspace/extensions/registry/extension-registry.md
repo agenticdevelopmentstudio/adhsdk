@@ -208,7 +208,7 @@ Subsystem: `Bundle.main.bundleIdentifier` (falls back to `"nil"` if unset, via t
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ExtensionRegistry.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 

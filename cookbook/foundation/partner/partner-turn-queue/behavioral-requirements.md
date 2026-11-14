@@ -1,0 +1,21 @@
+
+- **value-type**: The queue MUST be a value type that is `Sendable` and starts empty from `init()`.
+- **count**: `count` MUST report the number of entries currently queued.
+- **fifo-order**: `enqueue` MUST append an inbound event at the back, and `next()` MUST remove and return the front entry, so events leave oldest first.
+- **next-on-empty**: `next()` MUST return `nil` and leave the queue empty when nothing is queued.
+- **coalesce-replaces-in-place**: `enqueue` MUST, when the inbound event has a non-nil `coalescingKey` equal to the key of an entry already queued, replace that entry with the new event at the same position and leave `count` unchanged.
+- **coalesce-first-match**: When more than one queued entry carries the inbound event's key, `enqueue` MUST replace only the first one (nearest the front).
+- **coalesce-keeps-position**: A replaced entry MUST keep its position, so a coalesced event does not move to the back.
+- **no-key-appends**: `enqueue` MUST append an event whose `coalescingKey` is nil, even when an equal event is already queued.
+- **key-scopes-coalescing**: Keys MUST be compared as whole strings, so events of different kinds or different identifiers never coalesce: a tick key is built from the job identifier, an idle key and an exit key from the session identifier, each under its own prefix.
+- **owner-and-lifecycle-never-coalesce**: Owner messages and lifecycle notices MUST NOT coalesce, because `PartnerInbound.coalescingKey` is nil for `.owner` and `.lifecycle`.
+- **enqueue-first**: `enqueueFirst` MUST insert the event at the front of the queue, ahead of every queued entry, and increase `count` by one.
+- **enqueue-first-no-coalesce**: `enqueueFirst` MUST NOT coalesce, even when its event carries a key equal to a queued entry's key; both entries remain.
+- **enqueue-first-order**: When `enqueueFirst` is called repeatedly, the most recent call MUST be returned first by `next()`.
+- **coalesce-targets-front-inserted**: An `enqueue` that follows an `enqueueFirst` MUST be able to coalesce into the front-inserted entry, because coalescing scans every queued entry.
+- **no-capacity-limit**: The queue MUST NOT drop entries to enforce a size limit; only coalescing and `next()` reduce `count`.
+- **no-persistence**: The queue MUST NOT persist its entries; they exist only as long as the value does.
+- **no-side-effects**: The queue MUST NOT perform file, network, process or notification side effects and MUST NOT fail; no operation throws or returns an error.
+- **ownership-and-concurrency**: The queue is a struct with a mutating API and no internal locking, so a caller MUST serialise access to one instance. Its sole production owner, `PartnerController`, is `@MainActor` and holds the queue as a stored property, mutating it only from that actor.
+- **caller-resend-pattern**: The owner uses `enqueueFirst` to re-queue a turn that went to a dead process, to put a `started` notice ahead of any waiting event, to put a `willQuit` notice ahead of the queue in `prepareForQuit`, and to put a `turnTimedOut` notice ahead of the queue when it abandons a timed-out turn; the queue itself carries no notion of an in-flight turn.
+

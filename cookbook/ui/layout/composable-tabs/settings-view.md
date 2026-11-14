@@ -502,7 +502,7 @@ Not applicable: this component contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsSettingsViewController.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

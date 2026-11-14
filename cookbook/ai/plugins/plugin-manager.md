@@ -217,7 +217,7 @@ Subsystem: the app's bundle identifier (falls back to a fixed placeholder if uns
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginManager.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/AIPluginKit/AIPluginManager.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

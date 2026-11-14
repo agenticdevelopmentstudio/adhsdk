@@ -242,7 +242,7 @@ Neither `integrations.ts` nor `self-check-stability.ts` calls `console.*` or any
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/integrations.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/integrations.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

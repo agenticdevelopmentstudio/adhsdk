@@ -164,7 +164,7 @@ Not applicable: Logging is a consumer concern. The underlying @base-ui/react/acc
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/accordion.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/accordion.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 

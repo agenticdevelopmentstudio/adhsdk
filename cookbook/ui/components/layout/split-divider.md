@@ -209,7 +209,7 @@ Not applicable: The component does not emit log entries, diagnostics, or debuggi
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/split-divider.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/split-divider.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

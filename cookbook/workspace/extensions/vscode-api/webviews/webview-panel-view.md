@@ -272,7 +272,7 @@ Subsystem: `{{bundle_id}}` | Category: `WebviewPanel`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Extensions/Webview/WebviewPanelViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 

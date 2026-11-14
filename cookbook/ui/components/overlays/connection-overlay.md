@@ -204,7 +204,7 @@ Not applicable: the component performs no logging. It declares no subsystem or c
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/connection-overlay.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/connection-overlay.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 

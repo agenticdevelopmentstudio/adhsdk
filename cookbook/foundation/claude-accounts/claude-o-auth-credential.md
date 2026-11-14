@@ -123,7 +123,7 @@ Not applicable: The credential type calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeOAuthCredential.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeOAuthCredential.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

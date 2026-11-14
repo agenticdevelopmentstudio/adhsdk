@@ -198,7 +198,7 @@ Not applicable: the source makes no log call; a migration failure surfaces only 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsSchema.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsSchema.swift` | confirmed (1.0.0) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

@@ -186,7 +186,7 @@ Subsystem: process `console` | Category: telemetry
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/fetchers/` | unverified |
+| web | `packages/web/packages/status-server/src/telemetry/fetchers/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

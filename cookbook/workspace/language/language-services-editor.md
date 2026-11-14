@@ -290,7 +290,7 @@ The hover controller and the jump-to-definition delegate conform to that logging
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Editor/` | confirmed (1.2.0) |
 
 ## Design Decisions
 

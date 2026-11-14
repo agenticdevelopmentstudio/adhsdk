@@ -525,7 +525,7 @@ once those verbs exist.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

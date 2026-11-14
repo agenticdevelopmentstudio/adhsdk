@@ -1,0 +1,3 @@
+
+`vercel-api.ts` is the Vercel REST client the telemetry readers share: Web Analytics (`dashboard/vercel-section.ts`) and runtime logs (`fetchers/vercel-runtime.ts`). It uses the same token as the deploy poll, so it shares that token's quota and honors the shared 429 cooldown from `@adh-sdk/deploy-platform/cooldown`. It exports one request primitive (`vercelRequest`), a JSON helper (`vercelGet`), a paged project lister (`listProjects`), two error classes (`VercelRateLimited`, `VercelHttpError`), and the rules that decide which projects are production sites (`productionDomain`, `isProductionProject`, `isNonProductionHost`). It performs network I/O only through the global `fetch`; it holds no state of its own, because the cooldown lives in the shared module.
+

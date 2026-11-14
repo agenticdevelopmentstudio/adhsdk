@@ -431,7 +431,7 @@ Not applicable: the component contains no logging calls of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/LoggingWindow/LogView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/LoggingWindow/LogView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

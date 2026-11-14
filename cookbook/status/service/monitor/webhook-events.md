@@ -193,7 +193,7 @@ Not applicable: this file makes no `console.error`, `console.warn`, or any other
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/webhook-events.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/webhook-events.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 

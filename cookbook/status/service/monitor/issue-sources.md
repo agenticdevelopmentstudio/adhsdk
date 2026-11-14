@@ -192,7 +192,7 @@ Not applicable: this file contains no logging call of any kind — every exporte
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/issue-sources.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/issue-sources.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

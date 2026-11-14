@@ -377,7 +377,7 @@ Not applicable: the source contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

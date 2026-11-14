@@ -349,7 +349,7 @@ kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/JSON/JSONCPreprocessor.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/JSON/JSONCPreprocessor.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

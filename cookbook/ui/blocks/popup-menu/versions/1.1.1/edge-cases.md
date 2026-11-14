@@ -1,0 +1,10 @@
+
+- **Empty items array**: When `items` is empty, the dropdown renders no selectable items (only "All" and/or "New…" if configured). Behavior is valid; the menu remains functional for "All" or "New" selection.
+- **Null selectedId with allLabel omitted**: `selectedId=null` and `allLabel=null` results in trigger displaying an empty string. This is intentional for a plain switcher where one item is always selected; the caller MUST ensure one item is always selected in this mode.
+- **selectedId with no matching item**: A `selectedId` absent from `items` falls back to the same display path as `selectedId=null` — the trigger shows `allLabel` (or an empty string if `allLabel` is null). No warning is logged for this case, unlike a sentinel collision (see **warn-on-sentinel-collision**). See test vector popup-024.
+- **Duplicate item ids**: The component does not deduplicate or warn when two entries in `items` share an `id` — only a collision with the internal `"__all__"` sentinel is flagged (see **warn-on-sentinel-collision**). Both entries render with the same selection value, so `onSelect` cannot distinguish which one was clicked. Callers MUST ensure item ids are unique. See test vector popup-025.
+- **Custom className merge behavior**: The `className` prop is merged such that utility classes in the prop override the component's built-in classes (e.g., `className="w-auto"` overrides `w-full`) — see **accept-trigger-class-name**. This is a feature enabling flexible trigger sizing.
+- **Both All and New… present**: Both "All" and "New…" can coexist; selecting "All" (null) followed by "New" calls `onNew()` independently.
+- **Rapid selection changes**: If `selectedId` changes between render cycles, the single-selection group updates; the new `selectedId` becomes the checked entry.
+- **ariaLabel is required**: The `ariaLabel` parameter is a required TypeScript function parameter with no default or optional marker; TypeScript enforces this at compile time, preventing callers from omitting it.
+

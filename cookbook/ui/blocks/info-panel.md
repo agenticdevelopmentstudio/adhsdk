@@ -245,7 +245,7 @@ inside the slots it renders.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/info-panel.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/info-panel.tsx` | confirmed (1.3.1) |
 
 ## Design Decisions
 

@@ -197,7 +197,7 @@ Not applicable: Component has no logging implementation in source code. Host is 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/category-rename-dialog.tsx` | unverified |
+| web | `packages/web/packages/ui/src/blocks/category-rename-dialog.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

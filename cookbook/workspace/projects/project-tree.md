@@ -363,7 +363,7 @@ including on the path where a degenerate repository is silently dropped
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTree.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectTree.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 

@@ -157,7 +157,7 @@ Not applicable: this file contains no logging call of any kind — no `console.*
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/deploy-view.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/deploy-view.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 

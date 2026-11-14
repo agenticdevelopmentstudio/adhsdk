@@ -1,0 +1,9 @@
+
+- **Null and empty input**: An empty `argv` MUST report status -1 and `empty command` without launching (`empty-command`). A command that writes nothing MUST return an empty string for each stream. A nil `environment` MUST mean inherit, while an empty dictionary MUST be applied as the child's whole (empty) environment, and with no `PATH` in it the lookup MUST use the default search directories.
+- **Boundary values**: A bare name found in no `PATH` directory MUST fall through to the launch failure path. An output of 200,000 bytes MUST be returned whole. A `backstop` of 0 or less is not validated by this type; it passes straight to the process runner, so such a run is treated as already out of time and reports status -1 with the timeout text unless the child has already exited.
+- **Concurrent access**: `ProcessCommandRunner` is a value type with one immutable property (`backstop`) and keeps no state between calls, so concurrent calls MUST be independent. Each call runs its own child on its own thread.
+- **Error states**: A launch error (missing file, no permission) MUST be reported as status -1 with the error text, never thrown. A timeout MUST be reported as status -1 with the timeout text appended. Both use the same status, so a caller can tell them apart only by the text.
+- **Undecodable output**: A stream that is not valid UTF-8 MUST be replaced by an empty string; the status is still reported, and the result does not say a stream was dropped.
+- **Cancellation**: There is no cancellation. Cancelling the awaiting task leaves the child running until it exits or the backstop fires (`no-cancellation`).
+- **Offline or disconnected state**: Not applicable — this type does no network access of its own; a command that does reports its own failure through its exit status and output.
+

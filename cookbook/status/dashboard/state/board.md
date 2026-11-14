@@ -210,7 +210,7 @@ Not applicable: this logic contains no log calls; failures surface only through 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-board.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-board.ts` | confirmed (1.1.0) |
 
 ## Design Decisions
 

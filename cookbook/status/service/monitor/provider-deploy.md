@@ -164,7 +164,7 @@ Subsystem: `status-server` | Category: `provider-deploy`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/provider-deploy.ts` | unverified |
+| web | `packages/web/packages/status-server/src/monitor/provider-deploy.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 

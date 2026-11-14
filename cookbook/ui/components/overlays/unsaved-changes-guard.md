@@ -142,7 +142,7 @@ Not applicable: Internal state changes (confirm pending, approval flag, sentinel
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/unsaved-changes-guard.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/unsaved-changes-guard.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

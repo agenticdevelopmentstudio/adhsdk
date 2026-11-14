@@ -1,7 +1,7 @@
 
 - **render-trigger**: Component MUST render a gear icon trigger labeled with "{Noun} actions" (noun is singular and capitalized; defaults to "Category actions").
-- **render-five-items**: Component MUST render five dropdown items corresponding to the actions: "Add {noun}…", "Rename…", "Move…", "Also file in…", and "Delete…".
-- **show-target-in-labels**: Component MUST include the target name in menu item labels when `targetName` is not null and `canEditTarget` is true. Label format is `{Verb} "{targetName}"…` for rename, move, and delete, and `{Verb} "{targetName}" in…` for the file action.
+- **render-five-items**: Component MUST render five dropdown items corresponding to the actions: "Add {noun}…", "Rename…", "Move…", "Also file in…", and "Delete…" (the bare verb forms shown when no target name is applied; see **show-target-in-labels**).
+- **show-target-in-labels**: Component MUST include the target name in menu item labels when `targetName` is not null and `canEditTarget` is true. Label format is `Rename “{targetName}”…`, `Move “{targetName}”…` and `Delete “{targetName}”…` for rename, move and delete, and `Also file “{targetName}” in…` for the file action.
 - **omit-target-when-not-editable**: Component MUST omit the target name from item labels when `canEditTarget` is false, even if `targetName` is not null; labels use the bare verb form ("Rename…", "Also file in…") in that case.
 - **disable-target-actions-when-no-target**: Component MUST disable "Rename", "Move", "File", and "Delete" menu items when `canEditTarget` is false.
 - **enable-add-always**: Component MUST keep the "Add {noun}…" item enabled regardless of `canEditTarget`.

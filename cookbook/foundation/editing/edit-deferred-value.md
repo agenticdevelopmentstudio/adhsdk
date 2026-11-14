@@ -124,7 +124,7 @@ Not applicable: The holder calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Editing/EditDeferredValue.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Editing/EditDeferredValue.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

@@ -235,7 +235,7 @@ Not applicable: this component contains no logging call of any kind — a caller
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunner.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunner.swift` | confirmed (1.1.0) |
 
 ## Design Decisions
 

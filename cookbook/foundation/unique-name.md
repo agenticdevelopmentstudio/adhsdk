@@ -122,7 +122,7 @@ Not applicable: The name rule calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/UniqueName.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/UniqueName.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 

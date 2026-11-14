@@ -373,7 +373,7 @@ Not applicable: none of the four units contains a logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/DebugAutomation/` | confirmed (1.1.0) |
 
 ## Design Decisions
 

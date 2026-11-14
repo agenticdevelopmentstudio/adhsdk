@@ -222,7 +222,7 @@ No logging. OptionMenu is a presentational form control; it emits no structured 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/option-menu.tsx` | unverified |
+| web | `packages/web/packages/ui/src/components/option-menu.tsx` | confirmed (1.1.1) |
 
 ## Design Decisions
 

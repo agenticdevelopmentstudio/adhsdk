@@ -160,7 +160,7 @@ Not applicable: Response History makes no log calls; failures reach the caller o
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-response-history.ts` | unverified |
+| web | `packages/web/packages/status-web/src/hooks/use-response-history.ts` | confirmed (1.1.1) |
 
 ## Design Decisions
 

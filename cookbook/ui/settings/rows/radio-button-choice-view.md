@@ -381,7 +381,7 @@ or logger reference anywhere in source).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/RadioButtonChoiceView.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/RadioButtonChoiceView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 

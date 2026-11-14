@@ -1,0 +1,7 @@
+
+- **SwiftUI**: Port as pure `struct` functions over `Codable` section models; use `Dictionary(grouping:)` and `sorted(by:)` with `localizedStandardCompare`, and `Locale.current.localizedString(forRegionCode:)` for country names (force the English locale to match). Model optional providers as `Optional`, never empty arrays.
+- **Compose**: Pure Kotlin functions over data classes; `groupingBy` and `sortedWith(compareByDescending...thenBy...)`; `Locale("", code).getDisplayCountry(Locale.ENGLISH)` for regions.
+- **React/Web**: This is the source platform: `views.ts` in the status-server, using `Intl.DisplayNames` for regions, `Map` for totals and `localeCompare` for ties. The website only renders the returned fields.
+- **AppKit / UIKit**: The same Swift port serves both; keep it off the main thread and hand the finished views to the UI.
+- **WinUI 3**: Port as a static C# class of pure methods over immutable records, with `Dictionary<string, T>` for totals, `OrderByDescending(...).ThenBy(x => x.Name, StringComparer.CurrentCulture)` for sorted lists, and `RegionInfo` (`new RegionInfo(code).EnglishName`, with a try/catch that returns the code unchanged when the code is unknown) for `countryName`. Use nullable reference types (`List<Marginal>?`) so a provider that has not answered stays null. Use `System.Text.Json` to carry the views to the page. Expose the result to XAML through a view model that raises `INotifyPropertyChanged` on the `DispatcherQueue`.
+

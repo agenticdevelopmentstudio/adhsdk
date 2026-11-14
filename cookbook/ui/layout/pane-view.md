@@ -305,7 +305,7 @@ Not applicable: no logging call of any kind appears anywhere in this concept.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/Panes/PaneViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/Panes/PaneViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 
