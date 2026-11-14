@@ -12,4 +12,13 @@ extension UserSettings {
         "git.status_includes_submodules",
         default: false
     )
+
+    /// The diff's layout: `inline` or `sideBySide`.
+    public static var gitDiffLayout = UserSetting<String>("git_diff_layout", default: "inline")
+
+    /// When true, the diff asks git to ignore whitespace changes.
+    public static var gitDiffIgnoreWhitespace = UserSetting<Bool>("git_diff_ignore_whitespace", default: false)
+
+    /// When true, the diff emphasises the changed words of each paired removed and added line.
+    public static var gitDiffWordHighlight = UserSetting<Bool>("git_diff_word_highlight", default: true)
 }

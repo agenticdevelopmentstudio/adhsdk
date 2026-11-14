@@ -30,3 +30,19 @@
 - **Unborn repository**: staged files are listed as added; nothing throws.
 - **Selected file moved or gone**: after a reload that no longer lists it in its list, nothing is selected and the delegate is told nil.
 
+### Diff
+
+- **Nothing shown**: before the first `show` and after `clear()`, no rows and the Blame and History buttons are disabled.
+- **Loading**: the previous file's rows stay until the new diff arrives; then the rows show uncoloured until both sides are coloured.
+- **Diff failed**: no rows and the error's description shown until the next `show` or `clear()`.
+- **Binary**: one header row `Binary file`.
+
+### Blame
+
+- **Blame failed**: no rows and the error's description shown until the next `show` or `clear()`.
+
+### File history
+
+- **No commits**: no rows; the diff is cleared.
+- **History failed**: no rows, the diff cleared, the error's description shown until the next `show`.
+
