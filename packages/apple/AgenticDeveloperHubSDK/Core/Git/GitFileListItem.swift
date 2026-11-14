@@ -38,6 +38,39 @@ public struct GitFileListItem: Sendable, Hashable, Identifiable {
         self.init(path: diff.path, oldPath: oldPath, status: status)
     }
 
+    /// The files of `git diff --name-status -z` output, in order. Each record is a status
+    /// token and a path, or for a rename or copy (`R087`, `C100`) a token, the old path and
+    /// the new one, all NUL-terminated and never quoted, so any byte a path can hold
+    /// survives. A type change counts as modified; a truncated last record is dropped.
+    public static func parse(nameStatus output: String) -> [GitFileListItem] {
+        var fields = output.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
+        if fields.last == "" { fields.removeLast() }
+        var items: [GitFileListItem] = []
+        var index = 0
+        while index < fields.count, let letter = fields[index].first {
+            let pathCount = letter == "R" || letter == "C" ? 2 : 1
+            guard index + pathCount < fields.count else { break }
+            let status: GitFileStatus
+            switch letter {
+            case "A": status = .added
+            case "D": status = .deleted
+            case "R": status = .renamed
+            case "C": status = .copied
+            case "U": status = .conflicted
+            default: status = .modified
+            }
+            if pathCount == 2 {
+                let oldPath = fields[index + 1]
+                let path = fields[index + 2]
+                items.append(GitFileListItem(path: path, oldPath: oldPath == path ? nil : oldPath, status: status))
+            } else {
+                items.append(GitFileListItem(path: fields[index + 1], oldPath: nil, status: status))
+            }
+            index += 1 + pathCount
+        }
+        return items
+    }
+
     /// `old → new` for a rename or copy, the path otherwise.
     public var title: String {
         guard let oldPath else { return path }

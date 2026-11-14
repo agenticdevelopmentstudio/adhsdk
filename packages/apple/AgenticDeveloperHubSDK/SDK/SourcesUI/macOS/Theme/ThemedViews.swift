@@ -105,6 +105,13 @@ public final class ThemedLabel: NSTextField, Themeable {
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return label
     }
+
+    /// An error label's one state change: shows `error`'s description, or empties and
+    /// hides the label for nil.
+    public func show(error: Error?) {
+        stringValue = error?.localizedDescription ?? ""
+        isHidden = error == nil
+    }
 }
 
 /// An SF Symbol tinted with a `ThemeRole`, the icon that goes in front of a

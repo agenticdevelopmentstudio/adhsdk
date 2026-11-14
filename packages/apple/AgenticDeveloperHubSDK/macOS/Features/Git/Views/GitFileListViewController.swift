@@ -202,7 +202,7 @@ final class GitFileListCellView: NSView {
     func configure(_ item: GitFileListItem) {
         statusLabel.stringValue = item.status.displayCharacter
         statusLabel.textColor = item.status.nsColor
-        statusLabel.setAccessibilityLabel(String(describing: item.status))
+        statusLabel.setAccessibilityLabel(item.status.displayName)
         iconView.symbolName = Self.iconName(for: item.path)
         titleLabel.stringValue = item.title
         titleLabel.toolTip = item.title

@@ -6,6 +6,7 @@ import Testing
 /// Stands in for FSEvents: records `start` and fires whatever change set a test hands it.
 private final class FakeWatcher: GitRepositoryWatching {
     private(set) var started = false
+    private(set) var stopped = false
     private var onChange: (@Sendable (Set<GitRepositoryChange>) -> Void)?
 
     func start(onChange: @escaping @Sendable (Set<GitRepositoryChange>) -> Void) {
@@ -14,6 +15,7 @@ private final class FakeWatcher: GitRepositoryWatching {
     }
 
     func stop() {
+        stopped = true
         onChange = nil
     }
 
@@ -163,6 +165,35 @@ struct GitRepositoryModelTests {
         #expect(changes == [.refs])
         #expect(model.refs.first { $0.name == "x" }?.isHead == true)
         #expect(model.refs.first { $0.name == "main" }?.isHead == false)
+    }
+
+    @Test("an orphan gitlink fails only the submodule list: refs, stashes and worktrees still load")
+    func orphanGitlinkKeepsTheOtherRefSources() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-repository-model")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "one.txt", at: 100)
+        let tip = try await repository.sha("HEAD")
+        // A gitlink with no .gitmodules entry: `git submodule status` exits non-zero on it.
+        try await repository.run(["update-index", "--add", "--cacheinfo", "160000,\(tip),vendor/orphan"])
+        try await repository.commit("orphan", at: Self.epoch + 200)
+        try await repository.run(["tag", "v1"])
+        try repository.write("stashed\n", to: "one.txt")
+        try await repository.run(["stash", "push", "-m", "kept"],
+                                 environment: GitTestRepository.dated(Self.epoch + 300))
+        await #expect(throws: GitClientError.self) { try await client.submodules(in: repository.root) }
+
+        let (model, _) = makeModel(repository)
+        var notified: [Set<GitRepositoryChange>] = []
+        let token = model.observe { notified.append($0) }
+        await model.start()
+        _ = token
+
+        #expect(model.refs.map(\.name) == ["main", "v1"])
+        #expect(model.stashes.count == 1)
+        #expect(model.worktrees.count == 1)
+        #expect(model.submodules.isEmpty)
+        #expect(model.refs(at: try await repository.sha("HEAD")).map(\.name) == ["main", "v1"])
+        #expect(notified.contains { $0.contains(.refs) })
     }
 
     @Test("an unborn repository loads an empty history and lists its files")
@@ -324,5 +355,59 @@ struct GitRepositoryModelTests {
         #expect(realGit.contains("\n"))
         #expect(gitDirectory.resolvingSymlinksInPath().path == realGit)
         #expect(common.resolvingSymlinksInPath().path == realGit)
+    }
+
+    /// The fakes a deferred watcher made, in order.
+    @MainActor
+    private final class MadeWatchers {
+        var all: [FakeWatcher] = []
+    }
+
+    /// A deferred watcher over `repository` whose watchers are fakes, kept in the box returned.
+    private func deferredWatcher(_ repository: GitTestRepository) -> (GitDeferredRepositoryWatcher, MadeWatchers) {
+        let made = MadeWatchers()
+        let watcher = GitDeferredRepositoryWatcher(root: repository.root, client: client) { _, _, _ in
+            let fake = FakeWatcher()
+            made.all.append(fake)
+            return fake
+        }
+        return (watcher, made)
+    }
+
+    @Test("a deferred watcher stopped and started again before git answers makes one watcher",
+          arguments: [true, false])
+    func deferredWatcherRestartMakesOne(stopsBetween: Bool) async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-deferred-restart")
+        defer { repository.tearDown() }
+        let (watcher, made) = deferredWatcher(repository)
+
+        watcher.start { _ in }
+        let first = watcher.beginTask
+        if stopsBetween { watcher.stop() }
+        watcher.start { _ in }
+        let second = watcher.beginTask
+        await first?.value
+        await second?.value
+
+        #expect(made.all.count == 1)
+        #expect(made.all.first?.started == true)
+        watcher.stop()
+    }
+
+    @Test("starting a deferred watcher that is already watching stops the old watcher first")
+    func deferredWatcherRestartStopsOld() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-deferred-replace")
+        defer { repository.tearDown() }
+        let (watcher, made) = deferredWatcher(repository)
+
+        watcher.start { _ in }
+        await watcher.beginTask?.value
+        watcher.start { _ in }
+        await watcher.beginTask?.value
+
+        #expect(made.all.count == 2)
+        #expect(made.all.first?.stopped == true)
+        #expect(made.all.last?.stopped == false)
+        watcher.stop()
     }
 }

@@ -104,24 +104,23 @@ public final class GitFileHistoryViewController: NSViewController {
     /// Lists `path`'s commits. The previous list stays until the history arrives; it lands
     /// only if no later `show` has been made, and then the newest commit is selected.
     public func show(path: String) {
-        load(path: path, keeping: nil)
+        load(path: path, keepsSelection: false)
     }
 
     /// Lists the shown path's commits again (new commits, or a Refresh), keeping the
-    /// selected commit selected when it is still listed, else the newest. The latest
-    /// `show` or `reload` wins. Nothing shown, nothing read.
+    /// commit selected when the history lands selected when it is still listed, else the
+    /// newest. The latest `show` or `reload` wins. Nothing shown, nothing read.
     public func reload() {
         guard let shownPath else { return }
-        let selected = entries.indices.contains(tableView.selectedRow) ? entries[tableView.selectedRow].commit.id : nil
-        load(path: shownPath, keeping: selected)
+        load(path: shownPath, keepsSelection: true)
     }
 
-    private func load(path: String, keeping selectedID: String?) {
+    private func load(path: String, keepsSelection: Bool) {
         shownPath = path
         generation += 1
         let generation = self.generation
         loadTask?.cancel()
-        showFailure(nil)
+        errorLabel.show(error: nil)
         loadTask = Task { [weak self, source] in
             let result: Result<[GitFileHistoryEntry], Error>
             do {
@@ -135,8 +134,13 @@ public final class GitFileHistoryViewController: NSViewController {
                 self.setEntries([])
                 let description = GitClientError.logDescription(of: error)
                 Self.logger.error("Git file history failed: \(description, privacy: .public)")
-                self.showFailure(error)
+                self.errorLabel.show(error: error)
             case .success(let entries):
+                // Read now, not when the reload was asked for: the user may have picked
+                // another commit while git was answering.
+                let row = self.tableView.selectedRow
+                let selectedID = keepsSelection && self.entries.indices.contains(row)
+                    ? self.entries[row].commit.id : nil
                 self.setEntries(entries, keeping: selectedID)
             }
         }
@@ -167,11 +171,6 @@ public final class GitFileHistoryViewController: NSViewController {
         }
         let entry = entries[row]
         diffViewController.show(target: .commit(entry.commit.id, paths: entry.paths), file: entry.path)
-    }
-
-    private func showFailure(_ error: Error?) {
-        errorLabel.stringValue = error?.localizedDescription ?? ""
-        errorLabel.isHidden = error == nil
     }
 }
 

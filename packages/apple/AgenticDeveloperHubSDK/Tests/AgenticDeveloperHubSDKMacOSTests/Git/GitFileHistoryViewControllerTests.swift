@@ -164,6 +164,27 @@ struct GitFileHistoryViewControllerTests {
         #expect(controller.tableView.numberOfRows == 1)
     }
 
+    @Test("a reload keeps the commit selected when it lands, not when it was asked for")
+    func reloadKeepsCurrentSelection() async {
+        let source = GitViewsFakeContentSource()
+        source.histories = ["a": Self.entries("a", Self.commit("a2", "C"), Self.commit("a1", "B"),
+                                              Self.commit("a0", "A"))]
+        let controller = Self.controller(source)
+        controller.show(path: "a")
+        await controller.loadTask?.value
+        controller.tableView.selectRowIndexes(IndexSet(integer: 1), byExtendingSelection: false)
+
+        source.holding = ["history:a"]
+        controller.reload()
+        let reload = controller.loadTask
+        await source.waitUntilHeld("history:a")
+        controller.tableView.selectRowIndexes(IndexSet(integer: 2), byExtendingSelection: false)
+        source.release("history:a")
+        await reload?.value
+
+        #expect(controller.tableView.selectedRow == 2)
+    }
+
     @Test("the latest show wins in either order of return", arguments: [true, false])
     func latestWins(laterReturnsFirst: Bool) async {
         let source = GitViewsFakeContentSource()

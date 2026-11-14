@@ -7,8 +7,9 @@ public struct GitLogQuery: Sendable, Hashable {
     public var path: String?
     /// Follow `path` across renames. `git log --follow` takes exactly one path and walks from `HEAD`.
     public var followRenames = false
+    /// Matched literally (`--fixed-strings`), like `messageGrep`.
     public var author: String?
-    /// Searched case-insensitively in commit messages.
+    /// Searched case-insensitively and literally in commit messages.
     public var messageGrep: String?
     /// Commits that change the number of occurrences of this text (`-S`).
     public var pickaxe: String?
@@ -33,6 +34,9 @@ public struct GitLogQuery: Sendable, Hashable {
         ]
         if let author { arguments.append("--author=" + author) }
         if let messageGrep { arguments += ["--grep=" + messageGrep, "--regexp-ignore-case"] }
+        // What a person types in the search field is text, not a pattern: `(x)` or `a.b`
+        // finds itself, and a stray `[` is not an error.
+        if author != nil || messageGrep != nil { arguments.append("--fixed-strings") }
         if let pickaxe { arguments.append("-S" + pickaxe) }
         if nameStatus { arguments.append("--name-status") }
         if let path {

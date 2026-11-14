@@ -205,11 +205,12 @@ public actor GitClient {
         query.path = path
         query.followRenames = true
         query.nameStatus = true
+        query.limit = Self.fileHistoryLimit
         let configuration = await configurationProvider()
         do {
             let output = try await execute(verb: "log", arguments: query.arguments(), directory: directory,
                                            caller: caller, configuration: configuration,
-                                           configOverrides: ["core.quotePath=false"])
+                                           configOverrides: Self.pathConfigOverrides)
             return GitFileHistoryEntry.parse(log: output, path: path)
         } catch let error as GitClientError {
             guard case .commandFailed(_, 128, _) = error,
@@ -282,12 +283,7 @@ public actor GitClient {
             arguments.append("--cached")
             paths = only
         case .commit(let commit, let only):
-            let base: String
-            if let parent = try await resolveCommit("\(commit)^1", in: directory, caller: caller) {
-                base = parent
-            } else {
-                base = try await emptyTree(in: directory, caller: caller)
-            }
+            let base = try await diffBase(of: commit, in: directory, caller: caller)
             arguments += ["--end-of-options", base, commit]
             paths = only
         case .range(let from, let until, let only):
@@ -303,6 +299,33 @@ public actor GitClient {
         let output = try await execute(verb: "diff", arguments: arguments, directory: directory, caller: caller,
                                        configuration: configuration, configOverrides: Self.diffConfigOverrides)
         return GitDiff.parse(patch: output)
+    }
+
+    /// The files `commit` changed, without the patch: `diff --name-status -z` against the
+    /// same base `diff(.commit)` uses (the first parent, or the empty tree for a root
+    /// commit), renames found. A commit view lists these and fetches one file's patch at
+    /// a time, so a huge commit costs one name per file rather than every line.
+    public func changedFiles(commit: String, in directory: URL, caller: GitCaller = GitCaller()) async throws
+        -> [GitFileListItem] {
+        let base = try await diffBase(of: commit, in: directory, caller: caller)
+        let output = try await execute(
+            verb: "diff",
+            arguments: ["--name-status", "-z", "--no-color", "--no-ext-diff", "--no-relative", "--find-renames",
+                        "--end-of-options", base, commit],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider(),
+            configOverrides: Self.diffConfigOverrides
+        )
+        return GitFileListItem.parse(nameStatus: output)
+    }
+
+    /// What a commit is diffed against: its first parent, or the empty tree for a root commit.
+    private func diffBase(of commit: String, in directory: URL, caller: GitCaller) async throws -> String {
+        if let parent = try await resolveCommit("\(commit)^1", in: directory, caller: caller) {
+            return parent
+        }
+        return try await emptyTree(in: directory, caller: caller)
     }
 
     /// Who last changed each line of `path` (top-level-relative) at `revision`, or in the
@@ -330,13 +353,15 @@ public actor GitClient {
         arguments += ["--", path]
         let output = try await execute(verb: "blame", arguments: arguments, directory: top, caller: caller,
                                        configuration: await configurationProvider(),
-                                       configOverrides: ["core.quotePath=false"])
+                                       configOverrides: Self.pathConfigOverrides)
         return GitBlame.parse(porcelain: output)
     }
 
     /// The bytes of `path` (top-level-relative), never decoded: at `revision` (`":0"` is the
     /// index entry, `":1"`–`":3"` a conflict's stages), or the working file when `revision`
-    /// is nil. Nil when the path is not a file there, including on an unborn HEAD.
+    /// is nil. Nil when the path is not a file there, including on an unborn HEAD, and nil
+    /// when `maximumBytes` is given and the file is larger: the size is checked first (the
+    /// file's attributes, or `cat-file -s`), so an oversized file is never read at all.
     ///
     /// The path never travels inside a `<rev>:<path>` argument. Foundation's `Process` hands
     /// arguments over decomposed (NFD), and `rev-parse` matches that path byte for byte
@@ -347,6 +372,7 @@ public actor GitClient {
         path: String,
         at revision: String?,
         in directory: URL,
+        maximumBytes: Int? = nil,
         caller: GitCaller = GitCaller()
     ) async throws -> Data? {
         let top = try await topLevel(of: directory, caller: caller)
@@ -355,6 +381,10 @@ public actor GitClient {
             var isDirectory: ObjCBool = false
             guard FileManager.default.fileExists(atPath: file.path, isDirectory: &isDirectory),
                   !isDirectory.boolValue else { return nil }
+            if let maximumBytes {
+                let size = try FileManager.default.attributesOfItem(atPath: file.path)[.size] as? Int ?? 0
+                guard size <= maximumBytes else { return nil }
+            }
             return try Data(contentsOf: file)
         }
         let configuration = await configurationProvider()
@@ -384,6 +414,12 @@ public actor GitClient {
                                         directory: top, caller: caller, configuration: configuration)
         }
         guard let object = Self.blobObject(in: listing, path: path, stage: stage) else { return nil }
+        if let maximumBytes {
+            let size = try await execute(verb: "cat-file", arguments: ["-s", object], directory: top,
+                                         caller: caller, configuration: configuration)
+            guard let bytes = Int(size.trimmingCharacters(in: .whitespacesAndNewlines)),
+                  bytes <= maximumBytes else { return nil }
+        }
         let result = try await executeRaw(verb: "cat-file", arguments: ["blob", object], directory: top,
                                           caller: caller, configuration: configuration)
         return result.standardOutput
@@ -408,7 +444,17 @@ public actor GitClient {
 
     /// The `-c` overrides every diff runs with: unquoted paths, and a blank context line kept
     /// as a space rather than written as an empty line.
+    /// The most commits `fileHistory` lists. A history this long may have been cut off,
+    /// so a caller that shows it says so in its log.
+    public static let fileHistoryLimit = 500
+
     private static let diffConfigOverrides = ["core.quotePath=false", "diff.suppressBlankEmpty=false"]
+
+    /// The `-c` overrides for a verb handed one path to find: unquoted output paths, and the
+    /// path argument precomposed. `Process` passes arguments decomposed (NFD) while git stores
+    /// names precomposed (NFC), so a repository without `core.precomposeUnicode` (made on
+    /// another system, or with the setting cleared) would find no non-ASCII path at all.
+    private static let pathConfigOverrides = ["core.quotePath=false", "core.precomposeUnicode=true"]
 
     /// The empty tree's object name in this repository's hash algorithm.
     private func emptyTree(in directory: URL, caller: GitCaller) async throws -> String {

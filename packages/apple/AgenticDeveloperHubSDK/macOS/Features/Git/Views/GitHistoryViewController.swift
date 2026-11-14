@@ -193,23 +193,44 @@ public final class GitHistoryViewController: NSViewController {
 
     // MARK: - Search
 
+    /// How long a new query waits before it is sent, so a burst of keystrokes runs one
+    /// `git log` rather than one per key. Tests may shorten it.
+    var searchDelay: Duration = .milliseconds(250)
+
     /// Applies the window's search text (`GitHistorySearch.parse(_:)`). A query that
-    /// differs from the one last sent is sent to the data source; a query equal to one
-    /// still in flight waits for it rather than being sent again. The latest call then
-    /// reloads the list and, for a `sha:` search, selects the first loaded commit with
-    /// that prefix. A call overtaken by a later one does neither.
+    /// differs from the one last sent is sent to the data source after `searchDelay`,
+    /// and cancels the send it replaces, so a superseded `git log` is terminated rather
+    /// than left to run; a query equal to one still in flight waits for it rather than
+    /// being sent again. Cancelling the latest caller cancels its send too, and the next
+    /// call with that query sends it afresh. The latest call then reloads the list and,
+    /// for a `sha:` search, selects the first loaded commit with that prefix. A call
+    /// overtaken by a later one does neither.
     public func setQuery(_ text: String) async {
         queryGeneration += 1
         let generation = queryGeneration
         let query = GitHistorySearch.parse(text)
-        if query != (sentQuery ?? source.query) {
+        if sendTask?.isCancelled == true || query != (sentQuery ?? source.query) {
+            sendTask?.cancel()
             sentQuery = query
-            sendTask = Task { [source] in await source.setQuery(query) }
+            let delay = searchDelay
+            sendTask = Task { [source] in
+                do { try await Task.sleep(for: delay) } catch { return }
+                await source.setQuery(query)
+            }
         }
-        if let sendTask {
-            await sendTask.value
-            guard generation == queryGeneration else { return }
-            self.sendTask = nil
+        if let task = sendTask {
+            await withTaskCancellationHandler {
+                await task.value
+            } onCancel: {
+                // Only the latest caller owns the send; an older one shares it with a
+                // newer call, which still wants it.
+                Task { @MainActor [weak self] in
+                    guard let self, generation == self.queryGeneration else { return }
+                    task.cancel()
+                }
+            }
+            guard generation == queryGeneration, !Task.isCancelled else { return }
+            sendTask = nil
             reload()
         }
         guard let prefix = GitHistorySearch.shaPrefix(text),

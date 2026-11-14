@@ -37,7 +37,7 @@ let gitViewsFailure = GitClientError.commandFailed(verb: "diff", exitStatus: 128
 
 /// A content source that behaves like the model: each call records its request, then
 /// awaits. A call whose key is in `holding` waits until a test releases it, in any order;
-/// one in `failing` throws `gitViewsFailure`. Keys: `diff:<target key>`,
+/// one in `failing` throws `gitViewsFailure`. Keys: `diff:<target key>`, `files:<commit id>`,
 /// `contents:<path>@<revision or "">`, `blame:<path>@<revision or "">`, `history:<path>`.
 @MainActor
 final class GitViewsFakeContentSource: GitContentSource {
@@ -48,7 +48,10 @@ final class GitViewsFakeContentSource: GitContentSource {
     var holding: Set<String> = []
     var failing: Set<String> = []
     private(set) var diffRequests: [(target: GitDiffTarget, options: GitDiffOptions)] = []
+    private(set) var changedFilesRequests: [String] = []
     private(set) var contentsRequests: [String] = []
+    /// Each contents request's `maximumBytes`, in order.
+    private(set) var contentsLimits: [Int?] = []
     private(set) var blameRequests: [String] = []
     private(set) var historyRequests: [String] = []
     private(set) var held: [String: CheckedContinuation<Void, Never>] = [:]
@@ -75,9 +78,17 @@ final class GitViewsFakeContentSource: GitContentSource {
         return diffs[key] ?? GitDiff(files: [])
     }
 
-    func contents(path: String, at revision: String?) async throws -> Data? {
+    /// A commit's file list: the files of `diffs[id]`, gated by `files:<id>`.
+    func changedFiles(commit: String) async throws -> [GitFileListItem] {
+        changedFilesRequests.append(commit)
+        try await gate("files:\(commit)")
+        return (diffs[commit]?.files ?? []).map(GitFileListItem.init(diff:))
+    }
+
+    func contents(path: String, at revision: String?, maximumBytes: Int?) async throws -> Data? {
         let key = Self.revisionKey(path, revision)
         contentsRequests.append(key)
+        contentsLimits.append(maximumBytes)
         try await gate("contents:\(key)")
         return files[key]
     }

@@ -13,7 +13,7 @@ import os
 public final class GitSyntaxColoring {
 
     /// Where one side of a diff is read from: nowhere (an untracked file has no old side),
-    /// a revision spec handed to `GitContentSource.contents(path:at:)` (`":0"` is the
+    /// a revision spec handed to `GitContentSource.contents(path:at:maximumBytes:)` (`":0"` is the
     /// index), or the working file.
     public enum Revision: Sendable, Hashable {
         case absent
@@ -39,9 +39,7 @@ public final class GitSyntaxColoring {
     /// A line that is not UTF-8 is decoded as ISO Latin-1, so it is coloured, not dropped.
     public func lines(for data: Data?, path: String) async -> [StyledLine]? {
         guard let data, data.count <= SyntaxHighlighter.maximumBytes,
-              let languageID = resolver.languageID(for: URL(fileURLWithPath: path)),
-              let scopeName = registry.scopeName(languageID: languageID),
-              registry.hasGrammar(scopeName: scopeName) else { return nil }
+              let scopeName = scopeName(for: path) else { return nil }
         let text = await Task.detached(priority: .userInitiated) { Self.decode(data) }.value
         let theme = self.theme()
         do {
@@ -50,6 +48,15 @@ public final class GitSyntaxColoring {
             Self.logger.error("Syntax colouring failed: \(String(describing: type(of: error)), privacy: .public)")
             return nil
         }
+    }
+
+    /// The grammar scope for `path`'s language; nil when the language is unknown or has no
+    /// grammar, so nothing about the file need be read.
+    private func scopeName(for path: String) -> String? {
+        guard let languageID = resolver.languageID(for: URL(fileURLWithPath: path)),
+              let scopeName = registry.scopeName(languageID: languageID),
+              registry.hasGrammar(scopeName: scopeName) else { return nil }
+        return scopeName
     }
 
     /// `GitOutputDecoding`, the decoding the diff and blame text get: each line UTF-8, else
@@ -81,8 +88,10 @@ public final class GitSyntaxColoring {
     }
 
     /// Both sides of `diff` read from `source` per `target` and coloured, old first. A side
-    /// with no path (an added file's old side, a deleted file's new side) is not read; a
-    /// read that fails is logged and that side is nil.
+    /// with no path (an added file's old side, a deleted file's new side) is not read, nor
+    /// is one whose language has no grammar; each read is capped at the highlighter's byte
+    /// limit, so a file too large to colour is never read whole. A read that fails is
+    /// logged and that side is nil.
     public func sides(of diff: GitFileDiff, target: GitDiffTarget,
                       source: GitContentSource) async -> (old: [StyledLine]?, new: [StyledLine]?) {
         let revisions = Self.revisions(for: target)
@@ -94,7 +103,7 @@ public final class GitSyntaxColoring {
     }
 
     private func side(path: String?, revision: Revision, source: GitContentSource) async -> [StyledLine]? {
-        guard let path else { return nil }
+        guard let path, scopeName(for: path) != nil else { return nil }
         let spec: String?
         switch revision {
         case .absent: return nil
@@ -103,7 +112,7 @@ public final class GitSyntaxColoring {
         }
         let data: Data?
         do {
-            data = try await source.contents(path: path, at: spec)
+            data = try await source.contents(path: path, at: spec, maximumBytes: SyntaxHighlighter.maximumBytes)
         } catch {
             let description = GitClientError.logDescription(of: error)
             Self.logger.error("Git contents for colouring failed: \(description, privacy: .public)")

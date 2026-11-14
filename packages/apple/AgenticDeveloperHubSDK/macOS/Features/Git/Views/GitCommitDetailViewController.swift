@@ -16,9 +16,9 @@ import os
 /// a header with the message, author and committer, sha and parent links, above the
 /// commit's changed files, read from a `GitContentSource`.
 ///
-/// `show(commit:)` fills the header at once and then awaits the commit's diff for the
-/// list; the latest call always wins, decided by the detail's own counter. A diff that
-/// fails is logged and shown as the error's description in place of the list, so it
+/// `show(commit:)` fills the header at once and then awaits the commit's file list
+/// (`changedFiles`, no patch); the latest call always wins, decided by the detail's own
+/// counter. A file list that fails is logged and shown as the error's description in place of the list, so it
 /// never reads as a commit with no changes. Used on the main thread.
 @MainActor
 public final class GitCommitDetailViewController: NSViewController {
@@ -136,11 +136,12 @@ public final class GitCommitDetailViewController: NSViewController {
     // MARK: - Showing a commit
 
     /// Shows `commit`, or nothing for nil. The header fills at once. A different commit
-    /// empties the list straight away; the same commit keeps it until its diff arrives.
-    /// The diff is then awaited, and lands only if no later call has been made: the
-    /// check is this detail's own counter, taken before it awaits, never state the
-    /// content source changes. A diff that throws is logged and leaves the list empty
-    /// under the error's description. Nil also cancels the diff in flight.
+    /// empties the list straight away; the same commit keeps it until its file list
+    /// arrives. The file list (names and statuses only, never the patch) is then
+    /// awaited, and lands only if no later call has been made: the check is this
+    /// detail's own counter, taken before it awaits, never state the content source
+    /// changes. A load that throws is logged and leaves the list empty under the error's
+    /// description. Nil also cancels the load in flight.
     ///
     /// The previous request is cancelled too, but only to stop its work early: a
     /// cancelled request that still returns is dropped by the counter alone.
@@ -154,38 +155,32 @@ public final class GitCommitDetailViewController: NSViewController {
         if newCommit?.id != commit?.id { fileList.files = [] }
         commit = newCommit
         fillHeader(newCommit)
-        showFailure(nil)
+        errorLabel.show(error: nil)
         guard let newCommit else { return }
-        let target = GitDiffTarget.commit(newCommit.id, paths: [])
+        let id = newCommit.id
         loadTask = Task { [weak self, source] in
-            let result: Result<GitDiff, Error>
+            let result: Result<[GitFileListItem], Error>
             do {
-                result = .success(try await source.diff(target, options: GitDiffOptions()))
+                result = .success(try await source.changedFiles(commit: id))
             } catch {
                 result = .failure(error)
             }
             guard let self, generation == self.generation else { return }
             switch result {
-            case .success(let diff):
-                self.fileList.files = diff.files.map(GitFileListItem.init(diff:))
+            case .success(let files):
+                self.fileList.files = files
             case .failure(let error):
                 self.fileList.files = []
                 self.logFailure(error)
-                self.showFailure(error)
+                self.errorLabel.show(error: error)
             }
         }
     }
 
-    /// Shows `error`'s description over the list, or hides it for nil.
-    private func showFailure(_ error: Error?) {
-        errorLabel.stringValue = error?.localizedDescription ?? ""
-        errorLabel.isHidden = error == nil
-    }
-
-    /// Logs a failed diff by its case and fields, never git's own output.
+    /// Logs a failed file list by its case and fields, never git's own output.
     private func logFailure(_ error: Error) {
         let description = GitClientError.logDescription(of: error)
-        Self.logger.error("Git commit diff failed: \(description, privacy: .public)")
+        Self.logger.error("Git commit file list failed: \(description, privacy: .public)")
     }
 
     // MARK: - Header

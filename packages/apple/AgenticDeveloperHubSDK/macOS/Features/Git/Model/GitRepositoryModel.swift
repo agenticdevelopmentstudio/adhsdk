@@ -184,26 +184,60 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
 
     // MARK: Refs
 
+    /// Loads the four sidebar sources independently, so one that fails (a submodule
+    /// list git refuses over an orphan gitlink, say) costs only itself: a failed source
+    /// is logged and keeps its last good value, except submodules, which a failure
+    /// leaves empty rather than stale. True when any source was applied.
     private func reloadRefs() async -> Bool {
         refsGeneration += 1
         let generation = refsGeneration
-        do {
-            async let refs = client.refs(in: root)
-            async let stashes = client.stashes(in: root)
-            async let submodules = client.submodules(in: root)
-            async let worktrees = client.worktrees(in: root)
-            let loaded = try await (refs, stashes, submodules, worktrees)
-            guard generation == refsGeneration else { return false }
-            self.refs = loaded.0
-            self.stashes = loaded.1
-            self.submodules = loaded.2
-            self.worktrees = loaded.3
-            refsByTarget = Dictionary(grouping: loaded.0, by: \.target)
-            return true
-        } catch {
-            logFailure("refs", error)
-            return false
+        let client = client
+        let root = root
+        async let refs = Self.load { try await client.refs(in: root) }
+        async let stashes = Self.load { try await client.stashes(in: root) }
+        async let submodules = Self.load { try await client.submodules(in: root) }
+        async let worktrees = Self.load { try await client.worktrees(in: root) }
+        let loaded = await (refs: refs, stashes: stashes, submodules: submodules, worktrees: worktrees)
+        guard generation == refsGeneration else { return false }
+
+        var applied = false
+        switch loaded.refs {
+        case .success(let value):
+            self.refs = value
+            refsByTarget = Dictionary(grouping: value, by: \.target)
+            applied = true
+        case .failure(let error): logFailure("refs", error)
         }
+        switch loaded.stashes {
+        case .success(let value):
+            self.stashes = value
+            applied = true
+        case .failure(let error): logFailure("stashes", error)
+        }
+        switch loaded.submodules {
+        case .success(let value):
+            self.submodules = value
+            applied = true
+        case .failure(let error):
+            logFailure("submodules", error)
+            if !self.submodules.isEmpty {
+                self.submodules = []
+                applied = true
+            }
+        }
+        switch loaded.worktrees {
+        case .success(let value):
+            self.worktrees = value
+            applied = true
+        case .failure(let error): logFailure("worktrees", error)
+        }
+        return applied
+    }
+
+    private nonisolated static func load<T: Sendable>(
+        _ body: @Sendable () async throws -> T
+    ) async -> Result<T, Error> {
+        do { return .success(try await body()) } catch { return .failure(error) }
     }
 
     // MARK: Working copy
@@ -229,8 +263,12 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         try await client.diff(target, options: options, in: root)
     }
 
-    public func contents(path: String, at revision: String?) async throws -> Data? {
-        try await client.fileContents(path: path, at: revision, in: root)
+    public func changedFiles(commit: String) async throws -> [GitFileListItem] {
+        try await client.changedFiles(commit: commit, in: root)
+    }
+
+    public func contents(path: String, at revision: String?, maximumBytes: Int?) async throws -> Data? {
+        try await client.fileContents(path: path, at: revision, in: root, maximumBytes: maximumBytes)
     }
 
     public func blame(path: String, at revision: String?) async throws -> GitBlame {
@@ -239,8 +277,14 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
 
     /// The commits that changed `path`, following it across renames, each with the
     /// file's path at that commit.
+    /// At most `GitClient.fileHistoryLimit` commits; a history that reaches it is logged,
+    /// since the list then stops there.
     public func fileHistory(path: String) async throws -> [GitFileHistoryEntry] {
-        try await client.fileHistory(path: path, in: root)
+        let entries = try await client.fileHistory(path: path, in: root)
+        if entries.count >= GitClient.fileHistoryLimit {
+            Self.logger.info("Git file history reached its limit of \(GitClient.fileHistoryLimit) commits")
+        }
+        return entries
     }
 
     /// A loaded commit by id; nil when it is not in the history loaded so far.
@@ -250,7 +294,13 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
 
     // MARK: Failures
 
+    /// Logs a failed load. A cancelled one (a search the window replaced, whose
+    /// `git log` was terminated) is not a failure and is logged at debug level only.
     private func logFailure(_ part: String, _ error: Error) {
+        if error is CancellationError {
+            Self.logger.debug("Git \(part, privacy: .public) load cancelled")
+            return
+        }
         let description = GitClientError.logDescription(of: error)
         Self.logger.error(
             "Git \(part, privacy: .public) reload failed, keeping the last state: \(description, privacy: .public)"

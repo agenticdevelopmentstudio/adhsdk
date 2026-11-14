@@ -45,6 +45,8 @@ public final class GitWindowFeature: AppFeature {
         }
     )
     private let openRoots: UserSetting<[String]>
+    /// The open the last Open Git Window for Path started; nil until one is.
+    private(set) var openTask: Task<Void, Never>?
 
     /// - Parameters:
     ///   - resources: the bundled TextMate resources; nil leaves every window uncoloured.
@@ -86,7 +88,7 @@ public final class GitWindowFeature: AppFeature {
             category: "Git",
             run: { [weak self] arguments in
                 guard let self, let path = Self.path(from: arguments) else { return nil }
-                Task { await self.open(path: URL(fileURLWithPath: path)) }
+                self.openTask = Task { await self.open(path: URL(fileURLWithPath: path)) }
                 return nil
             }
         ))

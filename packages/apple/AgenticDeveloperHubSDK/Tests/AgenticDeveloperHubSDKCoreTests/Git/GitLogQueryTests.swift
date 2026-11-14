@@ -61,6 +61,20 @@ struct GitLogQueryTests {
         #expect(arguments.contains("--grep=fix bug"))
         #expect(arguments.contains("--regexp-ignore-case"))
         #expect(arguments.contains("-Sneedle text"))
+        #expect(arguments.contains("--fixed-strings"))
+    }
+
+    @Test("author and message search are literal text, each on its own")
+    func literalSearch() {
+        var byAuthor = GitLogQuery()
+        byAuthor.author = "a.b"
+        #expect(byAuthor.arguments().contains("--fixed-strings"))
+        var byMessage = GitLogQuery()
+        byMessage.messageGrep = "(x)"
+        #expect(byMessage.arguments().contains("--fixed-strings"))
+        var byPickaxe = GitLogQuery()
+        byPickaxe.pickaxe = "needle"
+        #expect(!byPickaxe.arguments().contains("--fixed-strings"), "-S is already literal")
     }
 
     @Test("unset filters add no flags")
@@ -68,5 +82,6 @@ struct GitLogQueryTests {
         let arguments = GitLogQuery().arguments()
         #expect(!arguments.contains { $0.hasPrefix("--author") || $0.hasPrefix("--grep") || $0.hasPrefix("-S") })
         #expect(!arguments.contains("--regexp-ignore-case"))
+        #expect(!arguments.contains("--fixed-strings"))
     }
 }
