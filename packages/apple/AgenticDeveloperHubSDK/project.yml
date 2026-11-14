@@ -906,6 +906,18 @@ targets:
       - target: AgenticDeveloperHubSDKCore
       - target: AgenticDeveloperHubSDKIntegrations
       - target: AgenticDeveloperHubSDKHubMail
+      # HubMailService: sign-in drives the mirror, so it reaches the session
+      # (HubAuth), the sync engine and the hub client's sync API.
+      - target: AgenticDeveloperHubSDKHubAuth-macOS
+      - target: AgenticDeveloperHubSDKHubSync
+      - target: AgenticDeveloperHubSDKSync
+      - target: AgenticDeveloperHubSDKDatabase
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
     settings:
       base:
         MACOSX_DEPLOYMENT_TARGET: "26.0"
@@ -919,6 +931,12 @@ targets:
       - Tests/AgenticDeveloperHubSDKHubMailBridgeTests
     dependencies:
       - target: AgenticDeveloperHubSDKHubMailBridge
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubAuth-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDK-macOS
         embed: true
         codeSign: true
       - target: AgenticDeveloperHubSDKHubMail
@@ -950,6 +968,12 @@ targets:
         codeSign: true
       - package: GRDB
         product: GRDB
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+      - package: swift-openapi-urlsession
+        product: OpenAPIURLSession
     settings:
       base:
         MACOSX_DEPLOYMENT_TARGET: "26.0"

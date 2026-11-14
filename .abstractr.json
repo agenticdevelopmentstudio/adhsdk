@@ -281,10 +281,15 @@
       "depends_on": [
         "apple-core",
         "apple-integrations",
-        "apple-hubmail"
+        "apple-hubmail",
+        "apple-hubauth",
+        "apple-hubsync",
+        "apple-sync",
+        "apple-database",
+        "apple-hubclient"
       ],
       "shared": true,
-      "holds": "AgenticDeveloperHubSDKHubMailBridge. Answers the mail RPC (MailRequest/MailResponse) from the hub mail mirror, so the mail browser and Email App read hub-synced mail through MailClient; label writes go through the hub. macOS."
+      "holds": "AgenticDeveloperHubSDKHubMailBridge. Answers the mail RPC (MailRequest/MailResponse) from the hub mail mirror, so the mail browser and Email App read hub-synced mail through MailClient; label writes go through the hub. HubMailService ties the hub session to the mirror: open and sync on sign-in, purge on sign-out, one stable MailClient. macOS."
     },
     {
       "name": "apple-activity",

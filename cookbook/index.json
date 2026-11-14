@@ -10687,6 +10687,15 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:06c3a2375849afeca4a55eb062e3f7fcddf57e2f481cd99f3d0bc4815e12e332",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
+          "platform": "apple"
         }
       ],
       "kind": "ingredient",

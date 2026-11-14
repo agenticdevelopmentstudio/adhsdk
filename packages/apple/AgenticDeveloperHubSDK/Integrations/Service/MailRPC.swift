@@ -426,3 +426,22 @@ public struct MailClient: Sendable {
     /// What `MailIntegrationService` answers to a request it can't decode.
     static let badRequest = "bad request"
 }
+
+/// Where mail is read from: the Gmail integration this app runs itself, or
+/// the copy the Agentic Developer Hub mirrors for the signed-in user.
+public enum MailSource: String, Codable, Sendable, CaseIterable {
+    case direct
+    case hub
+}
+
+extension MailClient {
+    /// A client that asks `pick` which client to use for each request, so a
+    /// setting can switch the source while windows keep the client they were
+    /// given. The request's bytes pass through untouched, so a failure keeps
+    /// its `notFound` flag.
+    public static func routed(_ pick: @escaping @Sendable () async -> MailClient) -> MailClient {
+        MailClient { data in
+            try await pick().transport(data)
+        }
+    }
+}

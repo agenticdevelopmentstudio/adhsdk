@@ -2,11 +2,11 @@
 id: e12914f0-3a3b-4fb7-ac0c-6332de37de4f
 title: "Hub Mail Bridge"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -45,6 +45,7 @@ What it does with each request:
 - **Sync now** runs a pull.
 - **Administration** (the OAuth client, signing accounts in and out, sync settings) is refused: on the hub path those are managed on the hub.
 
+`HubMailService` keeps a bridge open while a hub identity is signed in. Its `client` is one stable `MailClient` for the app's lifetime: it answers through the current bridge when connected and refuses with a sign-in message otherwise, so windows can hold it from launch. Sign-in opens the mirror and pulls; sign-out purges it. `HubMailService.live` ties the service to a `HubAccount` over one shared session, so signing in from the accounts settings opens hub mail. `MailClient.routed` (in Integrations, with `MailSource`) picks the direct or hub client per request, which is how a host offers a source switch.
 ## Behavioral Requirements
 
 - **one-entry-point**: `respond(to:)` MUST answer every `MailRequest` with a `MailResponse` and never throw; a failure becomes `.failure(message)`, and a missing account, message or thread becomes `.notFound(message)`.
@@ -69,7 +70,13 @@ What it does with each request:
 - **write-failure**: When the hub refuses a label write or answers not ok, the bridge MUST answer `.failure` with the hub's reason and leave the mirror unchanged.
 - **mirror-write**: Writing a label change into the mirror MUST keep each row's sync version, so the next pull of that row from the hub replaces it.
 - **sync-now**: `syncNow` MUST run one pull through the hub sync, for any account argument, and answer `.ok`.
-
+- **service-stable-client**: `HubMailService.client` MUST be one `MailClient` for the service's lifetime: while connected it answers through the current bridge; otherwise every request MUST answer `.failure(HubMailService.signedOutMessage)`.
+- **service-sign-in**: `signedIn()` MUST call `connect` once, build a bridge over the sync's store, set `.connected`, attach a periodic trigger when `syncInterval` is set, and pull once. A call while connected MUST do nothing; a throwing `connect` MUST set `.failed` with its message and leave the client signed out.
+- **service-sign-out**: `signedOut()` MUST stop answering through the bridge at once, stop the trigger, set `.signedOut`, purge the mirror through `HubMailSync.signOut()` and stop the engine. A purge failure MUST set `.failed` saying the copy could not be cleared. Called while `.failed` with no sync, it MUST return to `.signedOut`.
+- **service-follows-session**: `follow(_:)` MUST sign in on `.signedIn`, sign out on `.signedOut`, and leave the mirror alone on `.restoring` and `.error`.
+- **service-status-callback**: `onChange` MUST be called on the main actor once for every change of `status`, and never when it is set to the value it already has.
+- **live-shares-session**: `HubMailService.live` MUST build one `SessionController` that both the returned `HubAccount` and the service follow, pull with the stored session's credentials, and send label writes through the hub client so its middleware refreshes an expired token. The database MUST open on the first sign-in, creating its folder, and stay open.
+- **routed-client**: `MailClient.routed(_:)` MUST call its picker for every request and send that request through the client it returns, so a source switch takes effect on the next request.
 ## Appearance
 
 Not applicable: the bridge draws nothing. The mail browser renders what it answers.
@@ -90,7 +97,8 @@ Not applicable: the bridge draws nothing. The mail browser renders what it answe
 | Empty mirror | Accounts and labels are empty lists; every account lookup is not found. |
 | Synced | Reads answer from the mirrored rows. |
 | Label write pending | Between the action and the worker's next sync, the mirror holds the bridge's own write. |
-
+| Service signed out | Every request answers the sign-in message. |
+| Service failed | Requests answer the sign-in message; settings show the failure. |
 ## Accessibility
 
 Not applicable: no visual or interactive element.
@@ -121,7 +129,13 @@ Not applicable: no visual or interactive element.
 | hub-mail-bridge-020 | write-failure | The writer throws | `.failure` with its message; the mirror unchanged |
 | hub-mail-bridge-021 | sync-now | `syncNow(account: nil)` | the pull ran once; `.ok` |
 | hub-mail-bridge-022 | client-transport | `MailClient` from `client` calls `accounts()` | the same accounts as `listAccounts` |
-
+| hub-mail-bridge-023 | service-stable-client | A service never signed in calls `accounts()` | `MailClientError.remote(signedOutMessage)`; status `.signedOut` |
+| hub-mail-bridge-024 | service-sign-in, service-status-callback | `signedIn()` over one pulled message, through a client taken before sign-in | status `.connected`, one `onChange`, accounts `c1` |
+| hub-mail-bridge-025 | service-sign-out | `signedIn()` then `signedOut()` | status `.signedOut`; requests refused again; the store has no connections |
+| hub-mail-bridge-026 | service-sign-in | `signedIn()` twice | `connect` called once |
+| hub-mail-bridge-027 | service-sign-in, service-sign-out | `connect` throws | status `.failed`; requests refused; `signedOut()` returns to `.signedOut` |
+| hub-mail-bridge-028 | service-follows-session | `follow(.restoring)`, sign in, `follow(.error)`, `follow(.signedOut)` | `.signedOut`, `.connected`, still `.connected` with accounts readable, `.signedOut` |
+| hub-mail-bridge-029 | routed-client | A routed client over a direct stub and a connected service, switched between requests | the stub's empty accounts, then `c1` |
 ## Edge Cases
 
 - A `from` with no angle brackets is used whole, trimmed and lowercased.
@@ -137,6 +151,14 @@ Not applicable: no visual or interactive element.
 | writeLabels | `@Sendable (HubMailLabelWrite) async throws -> Void` | required | Posts one `modify_labels` action; production passes `HubMailSender.modifyLabels`. |
 | syncNow | `@Sendable () async -> Void` | required | Runs one pull; production passes `HubMailSync.syncNow`. |
 
+`HubMailService`:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| syncInterval | `TimeInterval?` | 300 | Seconds between background pulls; nil for none (the `syncNow` request still pulls). |
+| connect | `@MainActor () throws -> Connection` | required | Builds the sync and label writer for the identity that just signed in. |
+
+`HubMailService.live(databaseURL:deviceId:syncInterval:sessionStore:configuration:)` defaults `sessionStore` to the Keychain store `HubAccount.live` uses (`adh.api`) and `configuration` to `.fromBundle()`.
 ## Deep Linking
 
 Not applicable: no URL is handled.
@@ -165,13 +187,11 @@ Not applicable: no event is recorded.
 - **Retention**: Not applicable: it keeps nothing.
 
 ## Logging
-
-Not applicable: the bridge logs nothing; failures are answered to the caller.
-
+The bridge logs nothing; failures are answered to the caller. `HubMailService` logs a failed connect and a failed purge at error level (subsystem `com.agenticdevelopmentstudio.hubmail`, category `service`), with the error message public and no mail content.
 ## Platform Notes
 
 - **SwiftUI**: Not applicable: iOS reads `HubMailStore` directly and has no mail RPC to answer.
-- **AppKit / UIKit**: Source platform: `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/`, macOS only. The host builds `HubMailBridge(store:writeLabels:syncNow:)` once per signed-in hub session and hands `bridge.client` to `MailBrowserViewController(client:)` and the settings panel in place of the daemon's client.
+- **AppKit / UIKit**: Source platform: `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/`, macOS only. The host builds `HubMailService.live(databaseURL:deviceId:)` once at launch, shows its `account` in the accounts settings, calls `start()` so a stored login reconnects, and hands `MailClient.routed { source == .hub ? live.service.client : daemonClient }` to the mail browser and the Email App. The Integrations settings panel keeps the daemon's client, because it administers the direct worker.
 - **Compose**: Not applicable: an Android client reads its mirror directly, as iOS does.
 - **React/Web**: Not applicable: the web app reads the hub API directly and has no local RPC.
 - **WinUI 3**: Not applicable until a Windows host shares one mail UI between two sources; it would follow this shape.
@@ -181,6 +201,7 @@ Not applicable: the bridge logs nothing; failures are answered to the caller.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | macos | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/HubMailBridge/` | confirmed (1.1.0) |
 
 ## Design Decisions
 
@@ -200,6 +221,17 @@ Not applicable: the bridge logs nothing; failures are answered to the caller.
 **Rationale**: Callers send Gmail search syntax (`from:`, `label:`, quoted phrases); a substring match would answer something different with no sign that it did.
 **Approved**: pending
 
+**Decision**: One stable client from `HubMailService`, swapped underneath on sign-in and sign-out.
+**Rationale**: Windows take a `MailClient` when they open and keep it. A client that answers "sign in first" while signed out, and the mirror once signed in, means no window has to be told about a sign-in.
+**Approved**: pending
+
+**Decision**: Sign-out purges the mirror; `.restoring` and `.error` do not.
+**Rationale**: A departing identity's mail must not stay readable on the machine. A failed refresh or a launch-time restore says nothing about who is signed in, so purging there would throw away mail for a user who is still signed in.
+**Approved**: pending
+
+**Decision**: `MailClient.routed` and `MailSource` live in Integrations, beside `MailClient`.
+**Rationale**: The router reaches the client's private transport, and the source names belong to the mail RPC, not to the hub. An app picks a source without linking anything new.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -213,4 +245,5 @@ Every vector has a named test in `AgenticDeveloperHubSDKHubMailBridgeTests`.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-13 | Mike Fullerton | HubMailService keeps the bridge open across sign-in and purges on sign-out; MailClient.routed and MailSource switch a window's source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

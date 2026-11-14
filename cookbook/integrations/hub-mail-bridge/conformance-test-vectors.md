@@ -23,4 +23,10 @@
 | hub-mail-bridge-020 | write-failure | The writer throws | `.failure` with its message; the mirror unchanged |
 | hub-mail-bridge-021 | sync-now | `syncNow(account: nil)` | the pull ran once; `.ok` |
 | hub-mail-bridge-022 | client-transport | `MailClient` from `client` calls `accounts()` | the same accounts as `listAccounts` |
-
+| hub-mail-bridge-023 | service-stable-client | A service never signed in calls `accounts()` | `MailClientError.remote(signedOutMessage)`; status `.signedOut` |
+| hub-mail-bridge-024 | service-sign-in, service-status-callback | `signedIn()` over one pulled message, through a client taken before sign-in | status `.connected`, one `onChange`, accounts `c1` |
+| hub-mail-bridge-025 | service-sign-out | `signedIn()` then `signedOut()` | status `.signedOut`; requests refused again; the store has no connections |
+| hub-mail-bridge-026 | service-sign-in | `signedIn()` twice | `connect` called once |
+| hub-mail-bridge-027 | service-sign-in, service-sign-out | `connect` throws | status `.failed`; requests refused; `signedOut()` returns to `.signedOut` |
+| hub-mail-bridge-028 | service-follows-session | `follow(.restoring)`, sign in, `follow(.error)`, `follow(.signedOut)` | `.signedOut`, `.connected`, still `.connected` with accounts readable, `.signedOut` |
+| hub-mail-bridge-029 | routed-client | A routed client over a direct stub and a connected service, switched between requests | the stub's empty accounts, then `c1` |

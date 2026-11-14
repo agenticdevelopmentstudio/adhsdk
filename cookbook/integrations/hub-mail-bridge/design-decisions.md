@@ -15,3 +15,14 @@
 **Rationale**: Callers send Gmail search syntax (`from:`, `label:`, quoted phrases); a substring match would answer something different with no sign that it did.
 **Approved**: pending
 
+**Decision**: One stable client from `HubMailService`, swapped underneath on sign-in and sign-out.
+**Rationale**: Windows take a `MailClient` when they open and keep it. A client that answers "sign in first" while signed out, and the mirror once signed in, means no window has to be told about a sign-in.
+**Approved**: pending
+
+**Decision**: Sign-out purges the mirror; `.restoring` and `.error` do not.
+**Rationale**: A departing identity's mail must not stay readable on the machine. A failed refresh or a launch-time restore says nothing about who is signed in, so purging there would throw away mail for a user who is still signed in.
+**Approved**: pending
+
+**Decision**: `MailClient.routed` and `MailSource` live in Integrations, beside `MailClient`.
+**Rationale**: The router reaches the client's private transport, and the source names belong to the mail RPC, not to the hub. An app picks a source without linking anything new.
+**Approved**: pending

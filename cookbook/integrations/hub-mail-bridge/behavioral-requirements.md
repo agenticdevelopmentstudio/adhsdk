@@ -21,4 +21,10 @@
 - **write-failure**: When the hub refuses a label write or answers not ok, the bridge MUST answer `.failure` with the hub's reason and leave the mirror unchanged.
 - **mirror-write**: Writing a label change into the mirror MUST keep each row's sync version, so the next pull of that row from the hub replaces it.
 - **sync-now**: `syncNow` MUST run one pull through the hub sync, for any account argument, and answer `.ok`.
-
+- **service-stable-client**: `HubMailService.client` MUST be one `MailClient` for the service's lifetime: while connected it answers through the current bridge; otherwise every request MUST answer `.failure(HubMailService.signedOutMessage)`.
+- **service-sign-in**: `signedIn()` MUST call `connect` once, build a bridge over the sync's store, set `.connected`, attach a periodic trigger when `syncInterval` is set, and pull once. A call while connected MUST do nothing; a throwing `connect` MUST set `.failed` with its message and leave the client signed out.
+- **service-sign-out**: `signedOut()` MUST stop answering through the bridge at once, stop the trigger, set `.signedOut`, purge the mirror through `HubMailSync.signOut()` and stop the engine. A purge failure MUST set `.failed` saying the copy could not be cleared. Called while `.failed` with no sync, it MUST return to `.signedOut`.
+- **service-follows-session**: `follow(_:)` MUST sign in on `.signedIn`, sign out on `.signedOut`, and leave the mirror alone on `.restoring` and `.error`.
+- **service-status-callback**: `onChange` MUST be called on the main actor once for every change of `status`, and never when it is set to the value it already has.
+- **live-shares-session**: `HubMailService.live` MUST build one `SessionController` that both the returned `HubAccount` and the service follow, pull with the stored session's credentials, and send label writes through the hub client so its middleware refreshes an expired token. The database MUST open on the first sign-in, creating its folder, and stay open.
+- **routed-client**: `MailClient.routed(_:)` MUST call its picker for every request and send that request through the client it returns, so a source switch takes effect on the next request.
