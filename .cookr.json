@@ -1238,6 +1238,12 @@
       "group": "agentic-developer-hub-sdk/sdk/theme"
     },
     {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Text",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "agentic-developer-hub-sdk/sdk/text"
+    },
+    {
       "path": "packages/web/packages/themes/src",
       "platform": "web",
       "kind": "logic",
@@ -1287,6 +1293,12 @@
     },
     {
       "path": "packages/apple/AgenticDeveloperHubSDK/Integrations",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "integrations"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/Mail",
       "platform": "apple",
       "kind": "logic",
       "group": "integrations"

@@ -2,7 +2,7 @@ import Foundation
 import os
 import AgenticDeveloperHubSDKDatabase
 import AgenticDeveloperHubSDKSync
-import AgenticDeveloperHubSDKIntegrations
+import AgenticDeveloperHubSDKMail
 import AgenticDeveloperHubSDKHubMail
 
 /// Keeps Hub Mail open while a hub identity is signed in, and purges it when
