@@ -3,7 +3,7 @@
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 | [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
@@ -18,12 +18,10 @@ presentation code, `wire.ts` is a type-only file, and `index.ts`'s own comment d
 as the public surface of a data domain, consumed by a separate presentation layer.
 `explicit-error-handling` **passed**: nothing in either file swallows an error — every failure
 either throws `AuthHttpError` (via the shared `authedFetch`) or one of the two hand-authored
-friendly `Error`s this recipe documents. `unit-test-coverage` **failed**: no `__tests__` directory
-or `*.test.ts` file exists next to `organizations.ts`/`members.ts` in this checkout, and the
-consumer feature tests found elsewhere in the repository (`NewOrganizationModal.test.tsx`,
-`orgRenameSavePath.test.tsx`) mock `@adh-sdk/data/organizations` wholesale rather than
-exercising this module's own request-building or error-mapping logic — none of the requirements
-above is exercised by a dedicated test in this checkout. `server-side-authorization` **passed**:
+friendly `Error`s this recipe documents. `unit-test-coverage` **partial**: `organizations/__tests__/organizations.test.ts`
+exercises every conformance vector except `hub-domain-organizations-013` and
+`hub-domain-organizations-023`, which describe server-side behavior (the row set per workspace kind,
+and one roster row per customer) that the client cannot assert on its own and are skipped. `server-side-authorization` **passed**:
 neither module performs a client-side permission check of any kind, per
 `authorization-enforced-server-side`, deferring the workspace-kind and field-level authorization
 splits, the archive role set, and the roster membership gate entirely to the backend.

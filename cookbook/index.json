@@ -2033,7 +2033,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:e18c1c71a921475b792227b5d0f12838e3083c8a4c0c16455ef40b41addaf66e",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/web/packages/data/src/security/",
           "platform": "web"
@@ -3316,7 +3318,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c82ba2545b56b6c25dbf9c5f4d4bf5378b7269d78bbf3fa7aca7579a5fc180cb",
+            "state": "confirmed",
+            "version": "1.4.2"
           },
           "location": "packages/web/packages/adh/src/marketing/SiteWordmark.tsx",
           "platform": "web"
@@ -5923,7 +5927,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:9b4908a638d3e8291fe8b6b78d848f0820901f873871bebf1d212e11e0e14b2a",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/data/src/integrations/",
           "platform": "web"
@@ -6160,7 +6166,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:eba723aa9633a3e4390a3dc68ed9610f2031b180d70c4db3cd1f72f932bee9f5",
+            "state": "confirmed",
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/data/src/docs/docs.ts",
           "platform": "web"
@@ -7142,7 +7150,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:fd762133d689677c91ecd4cf2a014019e9932144c4c65f05b128679a741a4dcc",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/viewport/src/ViewportSpacer.tsx",
           "platform": "web"
@@ -12131,7 +12141,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:41aa55a1a3b76051c9c5de494f0f81289b4eb0b126513f3237e6dc94a2eb2695",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/messaging/src/hooks/",
           "platform": "web"
@@ -13153,7 +13165,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:122b9afa5a615743add415c8480d26fbf77c7bfca98771e3ef2d4a458e39700a",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/organizations/",
           "platform": "web"
@@ -13525,7 +13539,7 @@
           "conformance": {
             "hash": "sha256:0a6e405275e533c02b99998bc7b870541d5eb013d75d0223bc50ea7d6fd9268b",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/Account.swift",
           "platform": "apple"
@@ -15320,7 +15334,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:ac5f9aec219065976ef3b90996ba5e45515017b0b00aa2a5519a69e058337bde",
+            "state": "confirmed",
+            "version": "1.2.3"
           },
           "location": "packages/web/packages/adh-ui/src/blocks/notes-and-history.tsx",
           "platform": "web"
@@ -16953,7 +16969,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:ce5c47a24e77fab263a5fb6e368f8f05402e794db5d32e8e330efa1e92ea23e5",
+            "state": "confirmed",
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/data/src/notes/notes.ts",
           "platform": "web"
@@ -17558,7 +17576,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:506977ca07a6240afcaff8a4a43bb89e3955ffe5d0bcea12ae62693c3727e651",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/data/src/gamification/",
           "platform": "web"

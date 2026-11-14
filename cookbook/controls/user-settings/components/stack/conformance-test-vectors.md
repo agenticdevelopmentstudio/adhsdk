@@ -14,7 +14,7 @@
 | stack-011 | render-children (undefined children) | VStack with `children={undefined}` | Root `<div>` renders with the layout classes and no child nodes |
 | stack-012 | render-children (empty array) | VStack with `children={[]}` | Root `<div>` renders with the layout classes and no child nodes |
 | stack-013 | apply-gap-prop (zero, number) | VStack with `gap={0}` | Inline style has `gap: "0px"` |
-| stack-014 | apply-gap-prop (zero, string) | VStack with `gap="0"` | Inline style has `gap: "0"` |
+| stack-014 | apply-gap-prop (zero, string) | VStack with `gap="0"` | The string `"0"` is passed through unchanged; the CSSOM serializes the inline style as `gap: "0px"` |
 | stack-015 | apply-inline-styles (conflicting style) | VStack with `gap={8}`, `align="center"`, `style={{ gap: '2rem', alignItems: 'flex-start' }}` | Inline style has `gap: "2rem"` and `alignItems: "flex-start"` |
 | stack-016 | apply-class-names (empty className) | VStack with `className=""` | Class attribute is `"aws-stack aws-stack--v"` with no empty or extra whitespace tokens |
 | stack-017 | no-rest-prop-forwarding | VStack rendered with an unsupported prop forced onto it (e.g. `{ id: 'x' } as any`) | Root element has no `id` attribute |

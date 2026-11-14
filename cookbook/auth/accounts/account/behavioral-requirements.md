@@ -1,7 +1,7 @@
 
 - **account-declaration**: The protocol MUST be declared as `@MainActor public protocol Account: AnyObject` with get-only `id`, `displayName`, `summary` (`String`), `state` (`AccountState`), `message` (`String?`) and `signupURL` (`URL?`); a get-set `onChange` of type `@MainActor () -> Void`; a synchronous `func restore()`; a synchronous `func presentSignIn(from anchor: AccountPresentationAnchor)`; and `func signOut() async`.
 - **account-protocol-main-actor**: `Account` MUST be a class-bound protocol (`AnyObject`) isolated to `@MainActor`, so every property read and verb call happens on the main actor.
-- **account-id**: An `Account` MUST expose a `String` `id`.
+- **account-id**: An `Account` MUST expose a `String` `id`. The `id` SHOULD stay the same for the life of the account and SHOULD be unique among the accounts an app holds, because an account registry ([adhsdk.ingredient.auth.accounts.account-registry](cookbook:98226063-be5d-4fa8-a980-02227df3418b)) treats two accounts with equal `id` strings as the same account.
 - **account-display-name**: An `Account` MUST expose a `String` `displayName`, the account's title.
 - **account-summary**: An `Account` MUST expose a `String` `summary`, one line shown under the title while the account is signed out.
 - **account-state**: An `Account` MUST expose its current `AccountState` through `state`.

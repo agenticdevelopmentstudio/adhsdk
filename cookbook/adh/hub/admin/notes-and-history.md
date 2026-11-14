@@ -2,11 +2,11 @@
 id: b2c3bfad-cfd1-4a0f-bfbf-89f5d3712700
 title: "Notes and History"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -360,7 +360,7 @@ synchronously from its parameters with no side effect to log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-ui/src/blocks/notes-and-history.tsx` | unverified |
+| web | `packages/web/packages/adh-ui/src/blocks/notes-and-history.tsx` | confirmed (1.2.3) |
 
 ## Design Decisions
 
@@ -411,7 +411,7 @@ synchronously from its parameters with no side effect to log.
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.internationalization.locale-aware-formatting](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c87ff1f1-9d77-5167-b0c4-f13f2aae5acb) | partial | Internationalization |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `platform-theming`/`separation-of-concerns` pass on every color in source
 using the `apt-*` token vocabulary with no raw hex value or `!important`,
@@ -428,7 +428,7 @@ strings are English JSX literals with no translation call;
 arrive pre-formatted from `invitations-types.ts` (see Types) and the
 component itself performs no formatting of its own.
 
-`unit-test-coverage` fails: no test file for `notes-and-history.tsx` exists under the `adh-ui` test targets (`packages/web/packages/adh-ui/src/__tests__/` holds tests for other blocks only).
+`unit-test-coverage` passes: `packages/web/packages/adh-ui/src/__tests__/notesAndHistory.test.tsx` holds one passing test for each of the nine conformance vectors (notes-and-history-001 to notes-and-history-009).
 
 ## Change History
 
@@ -441,3 +441,4 @@ component itself performs no formatting of its own.
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/admin/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
+| 1.2.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (notesAndHistory.test.tsx, 9 of 9 vectors); unit-test-coverage now passed. |
