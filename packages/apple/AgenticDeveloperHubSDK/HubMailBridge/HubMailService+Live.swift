@@ -60,6 +60,15 @@ extension HubMailService {
         return LiveHubMail(account: HubAccount(session: session), service: service)
     }
 
+    /// `live(databaseURL:deviceId:)` at `location`, e.g.
+    /// `HubMailService.live(at: .app("Temporal"))`.
+    public static func live(
+        at location: HubMailLocation,
+        syncInterval: TimeInterval? = 300
+    ) -> LiveHubMail {
+        live(databaseURL: location.databaseURL, deviceId: location.deviceId, syncInterval: syncInterval)
+    }
+
     /// Opens on sign-in, purges on sign-out. `.restoring` and `.error` leave
     /// the mirror as it is: neither says who the user is.
     public func follow(_ state: SessionState) async {

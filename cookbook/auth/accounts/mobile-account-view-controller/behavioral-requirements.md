@@ -1,0 +1,34 @@
+
+- **title-from-account**: The screen MUST set its title to the account's display name when it is created.
+- **grouped-single-section**: The screen MUST present one section in the inset-grouped table style.
+- **observe-account**: The screen MUST set the account's change callback when its view loads, replacing any earlier observer, and MUST re-render on every callback.
+- **restore-on-load**: The screen MUST call the account's restore operation once when its view loads, after the first render.
+- **render-from-display**: On every render the screen MUST recompute its display from the account's current state, message and signup URL, passing the previously shown user as the last user.
+- **no-reload-before-load**: Rendering before the view is loaded MUST recompute the display and rows without reloading the table.
+- **reload-after-load**: Rendering after the view is loaded MUST reload the table data.
+- **row-order**: The rows MUST appear in this order, each only when the display calls for it: user, status, Login, Signup, Logout.
+- **user-row**: When the display has a shown user, the screen MUST show a row with the user's name as the primary text, the user's email as the secondary text in the secondary label color, and a filled person-circle symbol image.
+- **status-row-spinner**: When the display shows a spinner, the screen MUST show a status row with an animating medium activity indicator as its accessory.
+- **status-row-text**: The status row MUST read "Checking sign-in…" while the display shows status text, and "Working…" otherwise.
+- **status-row-color**: The status row text MUST use the secondary label color.
+- **login-row**: When the display shows Login, the screen MUST show a row titled "Login" in the tint color.
+- **signup-row**: When the display shows Signup, the screen MUST show a row titled "Signup" in the tint color.
+- **logout-row**: When the display shows Logout, the screen MUST show a row titled "Logout" in the system red color.
+- **disabled-action-color**: While controls are disabled, Login, Signup and Logout rows MUST use the tertiary label color instead of their normal color.
+- **highlight-gating**: A row MUST highlight on touch only when controls are enabled and the row is Login, Signup or Logout.
+- **select-gating**: Selecting a row MUST do nothing while controls are disabled.
+- **deselect-on-select**: Selecting any row MUST deselect it with animation before any action runs.
+- **login-action**: Selecting Login MUST ask the account to present its sign-in UI, anchored on this screen.
+- **signup-action**: Selecting Signup MUST hand the account's signup URL to the injected open-URL closure.
+- **signup-no-url**: Signup MUST NOT call the open-URL closure when the account has no signup URL.
+- **logout-action**: Selecting Logout MUST start the account's asynchronous sign-out in a task.
+- **inert-rows**: Selecting the user row or the status row MUST do nothing.
+- **message-footer**: When the display has a message, the section footer MUST be that message, whether or not a user is shown.
+- **summary-footer**: When there is no message, no shown user, and the account's summary is not empty, the section footer MUST be the account's summary.
+- **no-footer**: In every other case the section footer MUST be absent.
+- **open-url-injection**: The screen SHOULD accept an open-URL closure at creation so tests and hosts can intercept the signup page; the default MUST hand the URL to the system.
+- **selection-style**: Rows MUST use no selection style except Login, Signup and Logout, which use the default selection style.
+- **accessibility-identifiers**: The table and each row type MUST carry the identifiers listed under Accessibility.
+- **no-coder-init**: Creating the screen from a decoder MUST be unavailable and, if called, MUST terminate with the message "init(coder:) is not supported".
+- **main-actor**: The screen MUST be confined to the main actor.
+

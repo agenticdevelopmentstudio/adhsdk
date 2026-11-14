@@ -1,0 +1,29 @@
+
+- **account-protocol-main-actor**: `Account` MUST be a class-bound protocol (`AnyObject`) isolated to `@MainActor`, so every property read and verb call happens on the main actor.
+- **account-id**: An `Account` MUST expose a `String` `id`.
+- **account-display-name**: An `Account` MUST expose a `String` `displayName`, the account's title.
+- **account-summary**: An `Account` MUST expose a `String` `summary`, one line shown under the title while the account is signed out.
+- **account-state**: An `Account` MUST expose its current `AccountState` through `state`.
+- **account-message**: An `Account` MUST expose `message` as an optional `String`: an error or status line, `nil` when there is none.
+- **account-signup-url**: An `Account` MUST expose `signupURL` as an optional `URL`; `nil` means the account has no web sign-up and Signup is hidden.
+- **account-on-change-fires**: An `Account` MUST call `onChange` after any change to `state` or `message`.
+- **account-on-change-single-slot**: `onChange` is a single settable slot of type `@MainActor () -> Void`; assigning it again MUST replace the earlier observer. The accounts UI that shows the account is its one observer.
+- **account-restore-purpose**: `restore()` MUST start finding out whether a stored login is still good and MUST leave `.restoring` when done.
+- **account-restore-lazy**: The accounts UI calls `restore()` when it first shows the account, so the check (a Keychain read, a network call) is paid only when someone looks.
+- **account-restore-idempotent**: Calling `restore()` again MUST do nothing.
+- **account-present-sign-in**: `presentSignIn(from:)` MUST take an `AccountPresentationAnchor` and let the account present its own sign-in UI from it; the protocol takes no credentials.
+- **account-sign-out**: `signOut()` MUST be `async` and non-throwing; it returns when sign-out work finishes. The protocol declares no error return and names no other failure channel.
+- **account-state-cases**: `AccountState` MUST have exactly four cases: `restoring`, `signedOut`, `busy` and `signedIn(AccountUser)`.
+- **account-state-busy**: `busy` MUST mean work the account is doing on its own, such as signing in through a browser sheet or signing out.
+- **account-state-equatable**: `AccountState` MUST be `Sendable` and `Equatable`; `signedIn` states compare equal when their `AccountUser` values are equal.
+- **account-user-fields**: `AccountUser` MUST carry `id`, `name` and `email` as `String` and `avatarURL` as an optional `URL`, all immutable, set by `init(id:name:email:avatarURL:)`.
+- **account-user-sendable-equatable**: `AccountUser` MUST be `Sendable` and `Equatable`.
+- **account-user-initials-words**: `AccountUser.initials` MUST be the uppercased first character of each of the name's first two whitespace-separated words, joined in order.
+- **account-user-initials-email**: When the name has no words, `initials` MUST be the uppercased first character of `email`.
+- **account-user-initials-placeholder**: When the name has no words and `email` is empty, `initials` MUST be `"?"`, so the value is never empty.
+- **anchor-weak-reference**: `AccountPresentationAnchor` MUST hold its `object` weakly and type-erased (`AnyObject`), so the Foundation-only tier does not import AppKit or UIKit and the anchor does not extend the presenter's lifetime.
+- **anchor-nil-after-release**: `AccountPresentationAnchor.object` MUST read `nil` once the presenter is released.
+- **anchor-platform-object**: The platform MUST supply an `NSWindow` or `NSViewController` on macOS and a `UIViewController` on iOS as the anchor's object, per the type's documentation comment.
+- **no-validation**: The types MUST NOT validate their inputs: `AccountUser` accepts any strings, and `AccountPresentationAnchor.init` accepts any object.
+- **no-persistence**: The contract performs no file, network, process or notification side effects; those belong to conformers.
+
