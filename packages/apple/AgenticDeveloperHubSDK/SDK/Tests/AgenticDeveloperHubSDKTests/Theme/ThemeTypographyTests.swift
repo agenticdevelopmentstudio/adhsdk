@@ -68,4 +68,13 @@ struct ThemeTypographyTests {
         let decoded = try JSONDecoder().decode(ColorTheme.self, from: data)
         #expect(decoded.typography.sizeScale == 1.4)
     }
+
+    @Test("clampedSizeScale falls back to 1.0 for non-finite values")
+    func clampNonFinite() {
+        #expect(ThemeTypography.clampedSizeScale(.nan) == 1.0)
+        #expect(ThemeTypography.clampedSizeScale(.infinity) == 1.0)
+        #expect(ThemeTypography.clampedSizeScale(-.infinity) == 1.0)
+        #expect(ThemeTypography.clampedSizeScale(9) == 4)
+        #expect(ThemeTypography.clampedSizeScale(0.1) == 0.5)
+    }
 }
