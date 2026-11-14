@@ -1,0 +1,58 @@
+
+- **main-actor-isolation**: The model and the tracker MUST be isolated to the main actor.
+- **injected-client**: The model MUST send every service call through the `MailClient` given at initialization.
+- **shared-tracker-default**: The model MUST use `GmailSignInTracker.shared` when no tracker is given at initialization.
+- **reload-after-every-action**: After every action that goes through the shared call path, the model MUST read the provider status from the client.
+- **accounts-only-when-configured**: The model MUST read the account list only when the provider status reports `configured` as true, and MUST set the account list to empty otherwise.
+- **error-cleared-at-call-start**: The model MUST set `errorMessage` to nil when a call starts.
+- **error-from-first-failure**: When the action fails, the model MUST set `errorMessage` to the failure's `localizedDescription` and MUST still perform the reload.
+- **reload-failure-reported-if-none**: When the reload fails and `errorMessage` is nil, the model MUST set `errorMessage` to the reload failure's `localizedDescription`.
+- **reload-failure-keeps-first-error**: When the reload fails and `errorMessage` is already set, the model MUST keep the earlier message.
+- **busy-while-in-flight**: `busy` MUST be true while at least one call is in flight and false when none is.
+- **busy-counts-overlap**: `busy` MUST stay true until every overlapping call has finished.
+- **selection-defaults-to-first**: After a reload, when `selectedAccountId` matches no loaded account, the model MUST set it to the first account's id, or nil when there are no accounts.
+- **selection-kept-when-valid**: After a reload, when `selectedAccountId` matches a loaded account, the model MUST leave it unchanged.
+- **selected-account**: `selectedAccount` MUST return the account whose id equals `selectedAccountId`, or nil when none matches.
+- **dismiss-error**: `dismissError` MUST set `errorMessage` to nil without making a service call.
+- **import-file-read-in-call**: `importClientJSON(from:)` MUST read the file inside the call, so a read failure becomes `errorMessage`.
+- **import-file-bytes**: `importClientJSON(from:)` MUST send the file's bytes unchanged as an import-OAuth-client request.
+- **client-draft-gate**: `canSaveClientDraft` MUST be true only when both `clientIdDraft` and `clientSecretDraft` are non-empty after trimming whitespace and newlines.
+- **client-draft-incomplete**: When `canSaveClientDraft` is false, `saveClientDraft` MUST set `errorMessage` to "Enter both the client ID and the client secret." and MUST NOT send a request.
+- **client-draft-trimmed**: `saveClientDraft` MUST send the trimmed client id and trimmed client secret as installed-app OAuth client JSON.
+- **client-draft-cleared-on-success**: `saveClientDraft` MUST clear both drafts once the service accepts the client.
+- **client-draft-kept-on-failure**: `saveClientDraft` MUST leave both drafts unchanged when the service rejects the client, so a typo can be corrected.
+- **add-account-ticket**: `addAccount` MUST take a new ticket from the tracker before it sends the sign-in request.
+- **signing-in-flag**: `signingIn` MUST be true from the start of `addAccount` until it returns.
+- **started-latest-sign-in**: `startedLatestSignIn` MUST be true only when this model's last ticket is the tracker's latest ticket, and false when the model has never started a sign-in.
+- **reconnect-is-add-account**: Reconnecting an account MUST use `addAccount`; the service matches the account by email and reuses it.
+- **cancel-sign-in**: `cancelSignIn` MUST send a cancel-sign-in request.
+- **cancel-sign-in-error**: When the cancel request fails, `cancelSignIn` MUST set `errorMessage` to the failure's `localizedDescription`.
+- **cancel-sign-in-no-reload**: `cancelSignIn` MUST NOT reload and MUST NOT change `busy`; the pending `addAccount` call fails with "Sign-in was cancelled", reports that failure and reloads.
+- **remove-account**: `remove(accountId:)` MUST send a remove-account request for that account.
+- **sync-now**: `syncNow(accountId:)` MUST send a sync-now request for that account.
+- **remove-integration**: `removeIntegration` MUST send a remove-provider request.
+- **update-applies-locally**: `update(accountId:_:)` MUST set the account's settings in `accounts` before any request is sent.
+- **update-coalesces**: While a settings send for an account is in flight, a further `update` for that account MUST only replace the pending value, and the running send MUST deliver the latest pending value when its current request finishes.
+- **update-no-restart**: A further `update` made during a send MUST NOT start a second concurrent send for the same account.
+- **update-failure-restores**: When a settings send fails, the model MUST drop the pending value for that account, set `errorMessage`, and show the service's settings from the reload that follows.
+- **reload-keeps-chosen-settings**: A reload that finishes while a settings send is in flight MUST show the newest settings the user chose for that account rather than the service's previous value.
+- **chosen-settings-released**: When the sends for an account finish, the model MUST stop overriding that account's settings with the user's choice.
+- **account-error-alert**: After a reload, when an account has status error and a non-nil `lastError` that has not been alerted, and no alert is showing, the model MUST set `accountError` to an alert for the first such account in list order.
+- **account-error-once**: The model MUST NOT alert again about the same message for the same account while the account stays in error.
+- **account-error-new-message**: The model MUST alert again when an account in error reports a different message than the one last alerted.
+- **account-error-after-recovery**: The model MUST forget an account once it is no longer in error, so a later failure alerts even when the message is identical.
+- **account-error-one-at-a-time**: The model MUST NOT replace an alert that is showing.
+- **dismiss-account-error**: `dismissAccountError` MUST clear `accountError` and then raise the next account error not yet shown.
+- **show-error**: `showError(accountId:)` MUST set `accountError` for that account when it is in error with a `lastError`, and MUST do nothing otherwise.
+- **show-error-marks-alerted**: `showError(accountId:)` MUST record the message as alerted so the next reload does not repeat it.
+- **client-imported**: `isClientImported` MUST be true only when the provider status is loaded and `configured` is true.
+- **oauth-client-text**: `oauthClientText` MUST be "Checking for an OAuth client…" before the first load, the instruction to enter or import a client when not configured, and the replace-client text when configured.
+- **current-client-id**: `currentClientId` MUST return the provider's client id when a client is imported, and nil otherwise.
+- **masked-secret**: `maskedClientSecret` MUST return ten "•" characters followed by the provider's secret suffix when a client is imported and the suffix is non-empty.
+- **masked-secret-hidden**: `maskedClientSecret` MUST return "Stored (hidden)" when a client is imported and the suffix is nil or empty, and nil when no client is imported.
+- **masked-secret-fixed-length**: The mask MUST be a fixed ten characters so it does not reveal the secret's length.
+- **status-text**: `statusText` MUST map active to "Connected", error to "Error", revoked to "Reconnect needed" and pending to "Pending".
+- **last-synced-text**: `lastSyncedText` MUST return "Last synced " followed by the full-style relative date from the formatter in the given locale, relative to the given clock.
+- **last-synced-never**: `lastSyncedText` MUST return "Never synced" when the timestamp is nil or is not an ISO 8601 date with fractional seconds.
+- **last-synced-defaults**: The overload without clock and locale MUST use the current date and the current locale.
+

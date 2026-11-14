@@ -26,6 +26,7 @@ import {
   FlaskConical,
   FolderKanban,
   ScrollText,
+  RefreshCw,
 } from "lucide-react";
 import { useDetailTitle } from "@adh-sdk/ui/blocks/detail-title";
 import type { TopicLeaf } from "@adh-sdk/resource";
@@ -48,6 +49,7 @@ import {
   FeatureFlagsPane,
   ServerBagsPane,
   StorageTokensPanel,
+  SyncTablesPane,
 } from "@adh-sdk/ecosystem-config";
 import { AccessPane } from "@adh-sdk/authentication";
 import { helpFor } from "@adh-sdk/adh/help/store";
@@ -103,6 +105,7 @@ const ICONS: Record<string, ReactNode> = {
   gamification: <Trophy size={16} aria-hidden />,
   "feature-flags": <Flag size={16} aria-hidden />,
   "server-bags": <Server size={16} aria-hidden />,
+  sync: <RefreshCw size={16} aria-hidden />,
   billing: <CreditCard size={16} aria-hidden />,
   // The ones that came down from the hub's workspace rail. Each wears the glyph its SITE wears
   // in the site menu (adh/header/menu-icons), which is where the hub's own rail row got its icon
@@ -232,6 +235,17 @@ export function productTopicPaneRenderer({
             ecosystemId={ctx.ecosystemId}
             title={ctx.title}
             help={helpFor("ecosystems/server-bags")}
+          />
+        );
+      case "sync":
+        // Offline sync: which catalog tables this product's apps keep on the device. Keyed on
+        // the product so a selection never survives a switch to another one.
+        return (
+          <SyncTablesPane
+            key={ctx.ecosystemId}
+            ecosystemId={ctx.ecosystemId}
+            title={ctx.title}
+            help={helpFor("ecosystems/sync")}
           />
         );
       case "gaming":

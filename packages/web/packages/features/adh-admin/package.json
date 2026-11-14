@@ -47,6 +47,7 @@
     "@adh-sdk/api-explorer": "workspace:*",
     "@adh-sdk/auth": "workspace:*",
     "@adh-sdk/data": "workspace:*",
+    "@adh-sdk/ecosystem-config": "workspace:*",
     "@adh-sdk/resource": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "clsx": "^2.1.1",

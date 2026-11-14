@@ -39,3 +39,10 @@
   **dual-scoping-channels** documents that the rail always leaves the body field
   unset and relies on the parameter/query channel exclusively.
 
+
+- **A follower turned on while its parent is off**: the sync-tables write succeeds
+  and the row comes back `overridden` but not `enabled`. The pane shows the server's
+  answer rather than the requested state.
+- **Switching ecosystems with rows selected**: the admin console clears the
+  selection with the ecosystem, because resource ids are the same in every
+  ecosystem and a kept selection would write to one the user has not looked at.

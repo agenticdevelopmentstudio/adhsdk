@@ -1,0 +1,71 @@
+
+- **main-actor-isolation**: The model MUST be isolated to the main actor.
+- **injected-client**: The model MUST send every service call through the `MailClient` given at initialization.
+- **page-size-default**: The model MUST use `MailMessageFilter.defaultLimit` as the page size when none is given at initialization.
+- **published-state**: The model MUST publish `accounts`, `mailboxes`, `selectedMailbox`, `messages`, `hasMore`, `selectedMessageId`, `openedMessage`, `loading` and `errorMessage`, and MUST allow them to be set only from inside the model.
+- **reload-provider-status**: `reload` MUST read the provider status from the client before reading accounts.
+- **reload-accounts-only-when-configured**: `reload` MUST read the account list only when the provider status reports `configured` as true, and MUST set `accounts` to empty otherwise.
+- **reload-mailboxes-per-account**: `reload` MUST read the labels of every loaded account and replace `mailboxes` with one list per account id.
+- **reload-loading-flag**: `loading` MUST be true from the start of `reload` until it returns, including when it fails.
+- **reload-failure-reported**: When the status, account or label read fails during `reload`, the model MUST set `errorMessage` to the failure's `localizedDescription` and MUST still continue to the selection step.
+- **reload-keeps-valid-selection**: When `selectedMailbox` still matches a mailbox after `reload`, the model MUST keep it and MUST reload its first page without closing the open message (the open message still closes when the refreshed list lacks it, as `#requirements/first-page-drops-missing-selection` says).
+- **reload-default-selection**: When nothing is selected, or the selection no longer matches a mailbox, `reload` MUST select the first account's Inbox, or its first mailbox when it has no Inbox, or All Mail when that account has no mailboxes loaded.
+- **reload-no-accounts**: When `reload` finds no accounts and nothing valid is selected, the model MUST set `selectedMailbox` to nil and MUST clear the list and the open message.
+- **mailbox-order**: The mailboxes for an account MUST be ordered Inbox, Starred, Important, Sent, Drafts, then All Mail, then user labels, then Spam, then Trash.
+- **mailbox-system-present-only**: A system mailbox MUST appear only when the account's labels include its id.
+- **mailbox-all-mail**: All Mail MUST always appear, with a nil label id, the title "All Mail", depth 0 and a nil unread count.
+- **mailbox-attribute-labels-omitted**: Labels that are neither one of the seven system mailboxes nor of type "user" (for example `UNREAD`, `CATEGORY_*`, `CHAT`) MUST NOT appear as mailboxes.
+- **mailbox-user-sorted**: User labels MUST be sorted ascending by name using localized standard comparison.
+- **mailbox-nested-title**: A user label's title MUST be the last part of its name split on "/", and its depth MUST be the number of parts minus one.
+- **mailbox-duplicate-label**: When two labels share an id, the model MUST use the first one for the system mailbox lookup.
+- **mailbox-unread-count**: A system or user mailbox MUST carry its label's `messagesUnread` as its unread count.
+- **select-mailbox-first-page**: `select(mailbox:)` MUST set `selectedMailbox`, empty the list, close the open message and load the mailbox's first page.
+- **select-mailbox-noop**: `select(mailbox:)` MUST do nothing when the mailbox is already selected and the list is not empty.
+- **select-mailbox-reselect-empty**: `select(mailbox:)` MUST reload when the mailbox is already selected and the list is empty.
+- **all-mail-no-label-filter**: Listing All Mail MUST send a message filter with no labels.
+- **mailbox-label-filter**: Listing any other mailbox MUST send a message filter with that mailbox's label id as its only label.
+- **filter-account**: Every list request MUST name the selected mailbox's account id.
+- **first-page-limit**: A first page loaded by selecting a mailbox MUST request `pageSize` messages.
+- **refresh-keeps-row-count**: A first page loaded by `reload` while `selectedMailbox` still matches a mailbox MUST request the larger of `pageSize` and the number of messages showing.
+- **first-page-replaces**: A loaded first page MUST replace `messages`, `nextCursor` and `hasMore`, with `hasMore` true only when the page has a next cursor.
+- **first-page-drops-missing-selection**: When the open message's id is not in a refreshed list, the model MUST close the open message.
+- **first-page-failure**: When the first page fails, the model MUST set `errorMessage` to the failure's `localizedDescription`.
+- **stale-list-dropped**: A page, or a page failure, that answers a list replaced since the request began MUST be discarded without changing the model.
+- **load-more-appends**: `loadMore` MUST request the page named by the stored cursor and append its messages to `messages`.
+- **load-more-dedupes**: `loadMore` MUST NOT append a message whose id is already in `messages`.
+- **load-more-cursor**: After `loadMore`, `hasMore` MUST be true only when the page has a next cursor.
+- **load-more-noop**: `loadMore` MUST do nothing when `hasMore` is false, when a `loadMore` is already running, when no mailbox is selected, when there is no cursor, or when no account in `accounts` has the selected mailbox's account id.
+- **load-more-failure**: When the next page fails and the list is unchanged, `loadMore` MUST set `errorMessage` to the failure's `localizedDescription`.
+- **select-message-noop**: `select(messageId:)` MUST do nothing when the id equals `selectedMessageId`.
+- **select-message-clears-open**: `select(messageId:)` MUST set `selectedMessageId` and set `openedMessage` to nil before loading.
+- **select-message-load**: `select(messageId:)` MUST load the full message from the client for the listed message's account and set `openedMessage` to it.
+- **select-message-account-by-email**: `select(messageId:)` MUST find the account by matching the listed message's account email, and MUST fall back to the selected account when none matches.
+- **select-message-unlisted**: `select(messageId:)` MUST leave `openedMessage` nil, and MUST NOT call the client, when the id is nil, is not in `messages`, or no account can be found for the listed message.
+- **select-message-failure**: When the message load fails and the selection has not changed, the model MUST set `errorMessage` to the failure's `localizedDescription`.
+- **stale-message-dropped**: A message, or a message failure, that answers a selection replaced since the request began MUST be discarded without changing the model.
+- **mark-read-on-open**: When the opened message carries the `UNREAD` label, the model MUST send a modify-labels request for that message that removes `UNREAD` and adds nothing.
+- **mark-read-no-request-when-read**: When the opened message does not carry `UNREAD`, the model MUST NOT send a modify-labels request.
+- **mark-read-updates-copies**: After marking read, the model MUST copy the returned labels and label names onto the matching message in `messages` and onto `openedMessage`.
+- **mark-read-lowers-counts**: After marking read, the model MUST lower by one the unread count of each of the account's mailboxes whose label id is among the opened message's labels.
+- **unread-count-floor**: A lowered unread count MUST NOT go below zero.
+- **unread-count-nil-untouched**: A mailbox with a nil label id (All Mail) or a nil unread count MUST be left unchanged when counts are lowered.
+- **mark-read-superseded**: A modify-labels answer that arrives after another message was opened MUST still be copied onto the matching message in `messages` and lowered into the counts, and MUST be copied onto `openedMessage` only when that is the same message. A failure of that request MUST still set `errorMessage`, because the mark-read call carries no generation check.
+- **mark-read-failure**: When the modify-labels request fails, the model MUST set `errorMessage` to the failure's `localizedDescription` and MUST keep the message open.
+- **refresh-if-synced**: `refreshIfSynced` MUST call `reload` when any account's `lastSyncAt`, or the set of account ids, differs from the values recorded by the last `reload`.
+- **refresh-if-synced-unchanged**: `refreshIfSynced` MUST NOT call `reload` when every account's `lastSyncAt` and the set of account ids match the recorded values.
+- **refresh-if-synced-local-only**: `refreshIfSynced` MUST read only the account list from the client.
+- **refresh-if-synced-silent**: When reading the accounts fails, `refreshIfSynced` MUST return without setting `errorMessage`.
+- **dismiss-error**: `dismissError` MUST set `errorMessage` to nil without making a service call.
+- **selected-account**: `selectedAccount` MUST return the account whose id equals the selected mailbox's account id, or nil when none matches.
+- **sender-name**: `senderName` MUST return the display name before the last "<", trimmed of whitespace and surrounding double quotes.
+- **sender-name-address-only**: `senderName` MUST return the address inside the angle brackets when the display name is empty, and the trimmed input when it has no "<".
+- **sender-name-unclosed**: `senderName` MUST return the text after the last "<" with ">" and spaces trimmed from both ends when the display name before it is empty, whether or not a closing bracket follows.
+- **list-date-today**: `listDate` MUST show only the hour and minute for a date on the same calendar day as now.
+- **list-date-this-year**: `listDate` MUST show the abbreviated month and day for a date in the same year as now but a different day.
+- **list-date-older**: `listDate` MUST show the year, abbreviated month and day for a date in a different year from now (earlier or later).
+- **list-date-locale**: `listDate` MUST format with the calendar's time zone and the given locale.
+- **date-parse-fractional**: The date helpers MUST accept ISO 8601 text with or without fractional seconds.
+- **date-unparseable**: `listDate` and `fullDate` MUST return the input text unchanged when it is not ISO 8601.
+- **full-date**: `fullDate` MUST return the complete date with the short time (`Date.FormatStyle` date `.complete`, time `.shortened`). It takes no locale or calendar and uses the current ones, so unlike `listDate` it cannot be tested deterministically.
+- **is-unread**: `isUnread` MUST be true only when the message's labels contain `UNREAD`.
+

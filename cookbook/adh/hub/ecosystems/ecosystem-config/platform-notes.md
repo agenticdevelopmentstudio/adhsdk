@@ -38,7 +38,9 @@
   from `SignupMode.help` (declared in `EcosystemConfigModels.swift`).
   `AuthSettings.allowedProviders: [String]?` decodes from
   `AuthSettingsDataSource.get`'s response but `AuthSettingsTopic.detail`'s form
-  specification never surfaces it, and `AuthSettingsUpdate` has no field for it.
+  specification never surfaces it, and `AuthSettingsUpdate` has no field for it. The
+  login allow-list (`login_allowed_customer_ids`) is not decoded on Apple at all
+  yet; that editor is planned.
 
   `SigninApp.leaf(in:)` implements leaf computation; the duplicate check compares
   against it case-insensitively; the `clientId` field validates against
@@ -87,6 +89,24 @@
   `bag-dialog-state.ts`, `flag-dialog-state.ts`, `ApplicationClientAuthSection.tsx`) are not
   among this recipe's given sources, but see Design Decisions for the
   validation-layering split observed there.
+  The login allow-list (**auth-login-allow-list-edit**,
+  **auth-login-allow-list-bounds**) is the exception: its editor lives in
+  `packages/web/packages/features/ecosystem-config/src/` — `ClientAuthFields.tsx`
+  draws the section, `client-auth-model.ts` holds `cleanCustomerList`,
+  `policyPatch`, `samePolicy` and `policyError`, and `ClientAuthSettingsPane.tsx`
+  blocks Save on `policyError` and re-keys the rows editor on each re-seed.
+  There is no customer picker: the hub has no owner-scoped customer listing, so
+  ids are typed.
+  The sync-tables topic is web-only. `sync-tables.ts` in the same data folder is
+  the client (`syncTablesApi(family)`, `schemaOf`). `SyncTablesPane.tsx` in the
+  features package holds `SyncTablesEditor` (the list and its progress modal, no
+  chrome, `family` defaulting to `"ecosystem"`) and `SyncTablesPane` (the hub's
+  `DetailsPane` around it); the hooks are in `sync-tables-hooks.ts`, keyed by
+  family and ecosystem. Bulk actions run through `useBatchRun` from
+  `@adh-sdk/data/query`. The admin console's `SyncPane` adds a picker over every
+  ecosystem and mounts `SyncTablesEditor` with `family="admin"`, keyed on the
+  ecosystem id; the hub's `[workspace]/sync` page mounts `SyncTablesPane`. Apple,
+  Android and Windows have no sync-tables editor; it is planned.
 - **Compose**: model each Apple protocol as a Kotlin `interface` with `suspend
   fun`s (e.g. `interface FeatureFlagsDataSource { suspend fun list(ecosystemId:
   String): List<FeatureFlag> }`); represent the shared token rail's revealed-secrets

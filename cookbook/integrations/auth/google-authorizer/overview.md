@@ -1,0 +1,5 @@
+
+Google Authorizer is the Google OAuth layer for the Gmail integration. It has four parts that a port reproduces together. `GoogleCredential` is the token triple for one connected Google account. `GoogleSignInFlow` and its implementation `AppAuthGoogleSignIn` run the interactive sign-in through the default browser and a loopback listener on 127.0.0.1. `GoogleTokenEndpoint` and `URLSessionGoogleTokenEndpoint` exchange a refresh token for a new access token and revoke a token at Google. `GoogleTokenProvider` is an actor that hands out fresh access tokens, refreshes shortly before expiry, shares one refresh among concurrent callers per connection, and persists each credential as JSON in a `SecretStoring` Keychain abstraction under a per-connection key. A free function, `withSignInDeadline`, bounds the sign-in with a timeout and maps cancellation to a typed error.
+
+The OAuth client (`GoogleOAuthClientConfig`, with `clientId` and `clientSecret`) and the error type (`IntegrationError`) live in sibling files and are inputs to this component, not part of it. This component only reads `clientId` and `clientSecret` from the config.
+

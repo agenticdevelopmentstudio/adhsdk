@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "39a27113-5478-468c-8417-a291d587aab6",
+    "title": "IntegrationsSchema",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The local SQLite schema and one-shot migration for the five integration tables (provider configs, connections, email messages, email labels, action logs).",
+    "platforms": [
+      "swift",
+      "macos",
+      "ios"
+    ],
+    "tags": [
+      "integrations",
+      "persistence",
+      "schema"
+    ],
+    "depends-on": [
+      "ea580796-8b16-4832-b11d-ad3cae991ecd"
+    ],
+    "related": [
+      "888b7ba2-61f6-4251-88df-3586c5c86b1f"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "d66eefafe4d56325",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

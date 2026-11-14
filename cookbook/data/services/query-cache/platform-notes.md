@@ -1,5 +1,7 @@
 
-- **React/Web**: This is the reference implementation.
+- **React/Web**: This is the reference implementation. `useBatchRun` is in
+  `src/query/use-batch-run.ts` and exported from `@adh-sdk/data/query`; it reads
+  the context's client through `useQueryClient`, like the feature panes' own hooks.
   `@tanstack/react-query` v5's `QueryClient`/`QueryClientProvider`/
   `useQueryClient` back the cache and its React binding; a module-scope
   `let` binding backs the one-per-tab singleton; `window.addEventListener

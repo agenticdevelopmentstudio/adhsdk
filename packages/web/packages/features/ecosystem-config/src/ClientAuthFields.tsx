@@ -51,21 +51,27 @@ function SettingRow({
 }
 
 /**
- * The sign-in POLICY controls: sign-in, email + password, sign-up mode, and a switch per OAuth
- * provider. The ecosystem's Settings pane draws these; the policy is the ecosystem's alone.
- * Controlled; `idPrefix` keeps two sets on one page from sharing element ids.
+ * The sign-in POLICY controls: sign-in, email + password, who may sign in, sign-up mode, and a
+ * switch per OAuth provider. The ecosystem's Settings pane draws these; the policy is the
+ * ecosystem's alone. Controlled; `idPrefix` keeps two sets on one page from sharing element ids.
+ *
+ * The customer-id editor keeps its own rows (see UrlRowsEditor). `generation` is part of its key,
+ * so a Cancel or a save that re-seeds the draft also resets the rows.
  */
 export function ClientAuthPolicyFields({
   policy,
   providers,
   onChange,
   idPrefix,
+  generation = 0,
 }: {
   policy: ClientAuthPolicy;
   providers: readonly AuthProviderChoice[];
   onChange: (patch: Partial<ClientAuthPolicy>) => void;
   idPrefix: string;
+  generation?: number;
 }) {
+  const listed = policy.loginAllowedCustomerIds;
   const onCount = providers.filter((p) => providerOn(policy, p.slug)).length;
   return (
     <>
@@ -94,6 +100,41 @@ export function ClientAuthPolicyFields({
                 onCheckedChange={(passwordEnabled) => onChange({ passwordEnabled })}
               />
             </SettingRow>
+          </CardContent>
+        </Card>
+      </DetailSection>
+
+      <DetailSection title="Who can sign in">
+        <Card>
+          <CardContent className="flex flex-col gap-5">
+            <SettingRow
+              id={`${idPrefix}-allow-list`}
+              label="Only listed customers"
+              help={
+                listed === null
+                  ? "Every customer can sign in."
+                  : "Only the customers listed here can sign in. An empty list lets no one in."
+              }
+            >
+              <Switch
+                id={`${idPrefix}-allow-list`}
+                checked={listed !== null}
+                // On starts with one blank row to type into; a blank row saves as nobody.
+                onCheckedChange={(on) => onChange({ loginAllowedCustomerIds: on ? [""] : null })}
+              />
+            </SettingRow>
+            {listed !== null && (
+              <UrlRowsEditor
+                key={`allow-list-${generation}`}
+                label="Customers"
+                helpText="Customer ids. Someone you invite who is not listed still joins, but can't sign in until you add them."
+                placeholder="Customer id"
+                addLabel="Add customer"
+                removeLabel="Remove customer"
+                values={listed}
+                onChange={(loginAllowedCustomerIds) => onChange({ loginAllowedCustomerIds })}
+              />
+            )}
           </CardContent>
         </Card>
       </DetailSection>
