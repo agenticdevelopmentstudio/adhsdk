@@ -124,6 +124,7 @@ struct LineViewerTests {
         #expect(viewer.scrollView.documentView === viewer.documentView)
         #expect(viewer.scrollView.accessibilityIdentifier() == "test.lineViewer")
         #expect(viewer.documentView.accessibilityIdentifier() == "test.lineViewer.text")
+        #expect(viewer.documentView.gutterView.accessibilityIdentifier() == "test.lineViewer.gutter")
         // Default gutter width: max(3, digits of rowCount) characters plus one of padding each side.
         let charWidth = viewer.documentView.charWidth
         #expect(viewer.documentView.gutterColumnFrame(0).width == 5 * charWidth)
@@ -212,21 +213,71 @@ struct LineViewerTests {
         withExtendedLifetime((sync, leftSource, rightSource)) {}
     }
 
-    @Test func longLineLaysOutOnlyTheVisibleSlice() throws {
+    @Test func longLineDrawsOnlyTheGlyphsUnderTheRect() throws {
         let line = String(repeating: "x", count: 1_000_000)
         let source = FakeSource(rows: [LineViewerRow(text: line)])
         let viewer = makeViewer(source)
         let document = viewer.documentView
 
         try draw(document, NSRect(x: 0, y: 0, width: 400, height: viewer.rowHeight))
-        #expect(document.laidOutLength > 0)
-        #expect(document.laidOutLength < 1000)
+        #expect(document.drawnGlyphCount > 0)
+        #expect(document.drawnGlyphCount < 1000)
+        #expect(document.cachedLineCount == 1)
 
-        // Far along the line: still only the slice under the rect.
+        // Far along the line: still only the glyphs under the rect, from the same cached layout.
         let farX = document.textOriginX + 600_000 * document.charWidth
         try draw(document, NSRect(x: farX, y: 0, width: 400, height: viewer.rowHeight))
-        #expect(document.laidOutLength > 0)
-        #expect(document.laidOutLength < 1000)
+        #expect(document.drawnGlyphCount > 0)
+        #expect(document.drawnGlyphCount < 1000)
+        #expect(document.cachedLineCount == 1)
+
+        viewer.reloadData()
+        #expect(document.cachedLineCount == 0)
+        withExtendedLifetime(source) {}
+    }
+
+    /// Draws each of `rects` of `document`, clipped to it as AppKit clips a
+    /// dirty rect, into one `width`-wide, one-row bitmap, and returns its bytes.
+    private func render(_ document: LineViewerView, width: Int, height: CGFloat, rects: [NSRect]) throws -> Data {
+        let bitmap = try #require(NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: width, pixelsHigh: Int(height.rounded(.up)),
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        let context = try #require(NSGraphicsContext(bitmapImageRep: bitmap))
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        for rect in rects {
+            context.cgContext.saveGState()
+            context.cgContext.clip(to: rect)
+            document.draw(rect)
+            context.cgContext.restoreGState()
+        }
+        NSGraphicsContext.restoreGraphicsState()
+        let data = try #require(bitmap.bitmapData)
+        return Data(bytes: data, count: bitmap.bytesPerRow * bitmap.pixelsHigh)
+    }
+
+    @Test func longLineWithWideCharactersDrawsTheSameSplitOrWhole() throws {
+        // Tabs, a CJK ideograph and an emoji (a surrogate pair) all advance more than one column.
+        let line = String(repeating: "ab\tc\u{4E2D}d\u{1F600}ef", count: 300)
+        #expect((line as NSString).length > 2000)
+        let source = FakeSource(rows: [LineViewerRow(
+            text: line, runs: [LineViewerRun(range: NSRange(location: 40, length: 200), fontStyle: .underline)])])
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+        let height = viewer.rowHeight
+
+        let whole = try render(document, width: 900, height: height,
+                               rects: [NSRect(x: 0, y: 0, width: 900, height: height)])
+        // Seams that fall at different points of the repeating pattern.
+        let split = try render(document, width: 900, height: height, rects: [
+            NSRect(x: 0, y: 0, width: 333, height: height),
+            NSRect(x: 333, y: 0, width: 284, height: height),
+            NSRect(x: 617, y: 0, width: 283, height: height)
+        ])
+        #expect(Set(whole).count > 1)
+        #expect(split == whole)
+        withExtendedLifetime(source) {}
     }
 
     @Test func gutterColumnsHonourSuppliedWidthsAndClipWideValues() throws {

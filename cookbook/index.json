@@ -4035,9 +4035,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:8a018a065830a7ddb89db14b902aec51003fbe2d0867d9121cdd1c760c5801c0",
+            "hash": "sha256:1a465e47ba3b6f65b236280a0fcdccc5f0285d1e03abb6f3512ce074191465e9",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.1.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/",
           "platform": "apple"

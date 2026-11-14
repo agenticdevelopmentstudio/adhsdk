@@ -5,8 +5,8 @@ import AgenticDeveloperHubSDKLanguage
 
 /// The `LineViewerViewController`'s document view: flipped, exactly
 /// `displayedRowCount × rowHeight` tall, drawing only the rows that intersect
-/// the dirty rect with Core Text, and of a long line only the stretch under the
-/// dirty rect. The gutter is a subview (`gutterView`) pinned to the visible
+/// the dirty rect with Core Text, and of a long line only the glyphs under the
+/// dirty rect, from a layout cached per row. The gutter is a subview (`gutterView`) pinned to the visible
 /// left edge. Selection, folding and copy live here because they are all row
 /// geometry; the controller forwards to it.
 @MainActor
@@ -37,9 +37,30 @@ final class LineViewerView: NSView {
     private var xHeight: CGFloat = 0
     /// The advance of "0" in the code font: one column of a monospaced line.
     private(set) var charWidth: CGFloat = 0
-    /// UTF-16 units laid out by the last `draw(_:)`; the seam that shows long
-    /// lines are sliced rather than laid out whole.
-    private(set) var laidOutLength = 0
+    /// Glyphs of long rows drawn by the last `draw(_:)`; the seam that shows a
+    /// long row draws only what the dirty rect crosses.
+    private(set) var drawnGlyphCount = 0
+
+    /// A long row's layout, built once and drawn a glyph range at a time.
+    private struct CachedLine {
+        /// Held so the runs' storage outlives them.
+        let line: CTLine
+        let runs: [CTRun]
+        /// Each run's left edge (runs are in visual order).
+        let runMinX: [CGFloat]
+        /// The furthest right edge of each run and every run before it, so it
+        /// never decreases.
+        let runMaxX: [CGFloat]
+        let width: CGFloat
+        let length: Int
+    }
+
+    /// Long rows' layouts by data row; `lineCacheOrder` lists them least
+    /// recently drawn first.
+    private var lineCache: [Int: CachedLine] = [:]
+    private var lineCacheOrder: [Int] = []
+    /// How many long rows' layouts are cached.
+    var cachedLineCount: Int { lineCache.count }
 
     private var rowCount = 0
     private var gutterColumnCount = 0
@@ -56,12 +77,17 @@ final class LineViewerView: NSView {
     private static let emphasisAlpha: CGFloat = 0.40
     private static let diffAlpha: CGFloat = 0.18
     private static let hatchSpacing: CGFloat = 6
-    /// Lines longer than this (UTF-16 units) are laid out only where the dirty
-    /// rect crosses them, treating each unit as one monospaced column.
-    private static let sliceThreshold = 1024
-    /// Columns laid out beyond each side of the dirty rect, so glyphs cut by
-    /// its edges still draw whole.
-    private static let slicePadding = 8
+    /// Rows longer than this (UTF-16 units) are laid out once into the cache
+    /// and drawn only where the dirty rect crosses them.
+    private static let longRowThreshold = 1024
+    /// The cache holds at most this many rows, and at most
+    /// `lineCacheUnitBudget` UTF-16 units across them (a CTLine costs about
+    /// 40 bytes a glyph), always keeping the row just drawn.
+    private static let lineCacheCapacity = 8
+    private static let lineCacheUnitBudget = 4_000_000
+    /// Columns beyond each side of the dirty rect whose glyphs are drawn too,
+    /// so glyphs that overhang their advance into the rect still draw.
+    private static let overhangColumns: CGFloat = 4
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -86,6 +112,7 @@ final class LineViewerView: NSView {
     private func apply(_ palette: SemanticPalette) {
         self.palette = palette
         font = palette.font(.code)
+        clearLineCache()
         measure()
         updateFrameSize()
         invalidate()
@@ -160,8 +187,14 @@ final class LineViewerView: NSView {
         selectedRows = []
         anchorRow = nil
         widestRow = 0
+        clearLineCache()
         updateFrameSize()
         invalidate()
+    }
+
+    private func clearLineCache() {
+        lineCache = [:]
+        lineCacheOrder = []
     }
 
     /// Shows the rows of the fold that hides data row `row`, if any.
@@ -252,7 +285,7 @@ final class LineViewerView: NSView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
-        laidOutLength = 0
+        drawnGlyphCount = 0
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         palette.windowBackgroundColor.setFill()
         dirtyRect.fill()
@@ -291,9 +324,9 @@ final class LineViewerView: NSView {
         }
     }
 
-    /// Draws one row's text, laying out only the stretch of a long line that
-    /// the horizontal extent of `span` crosses, and answers the width the row
-    /// needs.
+    /// Draws one row's text and answers the width the row needs. A short row
+    /// is laid out whole; a long one comes from the cache, drawing only the
+    /// glyphs the horizontal extent of `span` crosses.
     private func drawText(_ row: LineViewerRow, index: Int, in rect: NSRect, span: NSRect,
                           context: CGContext) -> CGFloat {
         var textX = textOriginX
@@ -307,53 +340,168 @@ final class LineViewerView: NSView {
             textX += 2 * charWidth
         }
 
-        let text = row.text as NSString
-        let length = text.length
-        let slice = visibleSlice(of: text, length: length, textX: textX, span: span)
-        laidOutLength += slice.length
-        let sliceX = textX + CGFloat(slice.location) * charWidth
-        let runs = row.runs.compactMap { run -> (range: NSRange, run: LineViewerRun)? in
-            let local = Self.localRange(run.range, length: length, slice: slice)
-            return local.length > 0 ? (local, run) : nil
+        let length = (row.text as NSString).length
+        let origin = CGPoint(x: textX, y: baseline)
+        if length > Self.longRowThreshold {
+            return drawLongText(row, index: index, length: length, origin: origin, rect: rect, span: span,
+                                context: context)
         }
-        let line = CTLineCreateWithAttributedString(attributedText(text.substring(with: slice), runs: runs))
-        for (range, run) in runs {
+        let styled = clippedRuns(of: row, length: length)
+        let line = CTLineCreateWithAttributedString(attributedText(row.text, runs: styled))
+        var extents: [RunExtent] = []
+        for (range, run) in styled {
             let start = CTLineGetOffsetForStringIndex(line, range.location, nil)
             let end = CTLineGetOffsetForStringIndex(line, NSMaxRange(range), nil)
-            if let role = run.highlight, let fill = color(for: role, rowTone: row.background) {
-                fill.setFill()
-                NSRect(x: sliceX + start, y: rect.minY, width: end - start, height: rect.height).fill()
-            }
+            extents.append(RunExtent(run: run, minX: textX + start, maxX: textX + end))
         }
-        context.textPosition = CGPoint(x: sliceX, y: baseline)
+        drawHighlights(extents, rowTone: row.background, rect: rect)
+        context.textPosition = origin
         CTLineDraw(line, context)
-        drawDecorations(runs, line: line, textX: sliceX, baseline: baseline)
-        if slice.length < length {
-            return textX + CGFloat(length) * charWidth + charWidth
-        }
+        drawDecorations(extents, baseline: baseline)
         return textX + CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil)) + charWidth
     }
 
-    /// The whole line when it is short; otherwise the UTF-16 range under the
-    /// horizontal extent of `span` (each unit one monospaced column), padded
-    /// and widened so it neither starts nor ends inside a composed character
-    /// sequence or surrogate pair.
-    private func visibleSlice(of text: NSString, length: Int, textX: CGFloat, span: NSRect) -> NSRange {
-        guard length > Self.sliceThreshold, charWidth > 0 else { return NSRange(location: 0, length: length) }
-        let first = Int(floor((span.minX - textX) / charWidth)) - Self.slicePadding
-        let last = Int(ceil((span.maxX - textX) / charWidth)) + Self.slicePadding
-        let lower = min(max(0, first), length)
-        let upper = min(max(lower, last), length)
-        guard upper > lower else { return NSRange(location: lower, length: 0) }
-        return text.rangeOfComposedCharacterSequences(for: NSRange(location: lower, length: upper - lower))
+    /// A run and the horizontal extent of its glyphs, in document coordinates.
+    private struct RunExtent {
+        let run: LineViewerRun
+        let minX: CGFloat
+        let maxX: CGFloat
     }
 
-    /// `range` clipped to the line, then to `slice`, relative to the slice.
-    private static func localRange(_ range: NSRange, length: Int, slice: NSRange) -> NSRange {
-        let clipped = clip(range, to: length)
-        let start = max(clipped.location, slice.location)
-        let end = min(NSMaxRange(clipped), NSMaxRange(slice))
-        return end > start ? NSRange(location: start - slice.location, length: end - start) : NSRange()
+    /// `row`'s runs clipped to its text, empty ones dropped.
+    private func clippedRuns(of row: LineViewerRow, length: Int) -> [(range: NSRange, run: LineViewerRun)] {
+        row.runs.compactMap { run in
+            let range = Self.clip(run.range, to: length)
+            return range.length > 0 ? (range, run) : nil
+        }
+    }
+
+    /// A long row: its cached layout, drawn run by run with `CTRunDraw` over
+    /// only the glyphs between the edges of `span` (plus a few columns of
+    /// overhang), so every glyph sits where the whole line puts it whichever
+    /// dirty rects the row is drawn in. Highlights and decorations are
+    /// measured from the drawn glyphs.
+    private func drawLongText(_ row: LineViewerRow, index: Int, length: Int, origin: CGPoint, rect: NSRect,
+                              span: NSRect, context: CGContext) -> CGFloat {
+        let cached = cachedLine(for: row, index: index, length: length)
+        let margin = Self.overhangColumns * charWidth
+        let minX = span.minX - origin.x - margin
+        let maxX = span.maxX - origin.x + margin
+        var pieces: [(run: CTRun, range: CFRange)] = []
+        var glyphs: [(index: Int, minX: CGFloat, maxX: CGFloat)] = []
+        // From the first run that reaches minX, while runs start before maxX.
+        var runIndex = Self.partition(cached.runs.count) { cached.runMaxX[$0] >= minX }
+        while runIndex < cached.runs.count, cached.runMinX[runIndex] <= maxX {
+            let run = cached.runs[runIndex]
+            runIndex += 1
+            let range = Self.glyphRange(of: run, from: minX, to: maxX)
+            guard range.length > 0 else { continue }
+            pieces.append((run, range))
+            var positions = [CGPoint](repeating: .zero, count: range.length)
+            var advances = [CGSize](repeating: .zero, count: range.length)
+            var indices = [CFIndex](repeating: 0, count: range.length)
+            CTRunGetPositions(run, range, &positions)
+            CTRunGetAdvances(run, range, &advances)
+            CTRunGetStringIndices(run, range, &indices)
+            for glyph in 0..<range.length {
+                let left = origin.x + positions[glyph].x
+                glyphs.append((indices[glyph], left, left + advances[glyph].width))
+            }
+        }
+        drawnGlyphCount += glyphs.count
+
+        var extents: [RunExtent] = []
+        if let lowest = glyphs.map(\.index).min(), let highest = glyphs.map(\.index).max() {
+            for (range, run) in clippedRuns(of: row, length: length)
+            where range.location <= highest && NSMaxRange(range) > lowest {
+                let inside = glyphs.filter { NSLocationInRange($0.index, range) }
+                guard let left = inside.map(\.minX).min(), let right = inside.map(\.maxX).max() else { continue }
+                extents.append(RunExtent(run: run, minX: left, maxX: right))
+            }
+        }
+        drawHighlights(extents, rowTone: row.background, rect: rect)
+        for piece in pieces {
+            context.textPosition = origin
+            CTRunDraw(piece.run, context, piece.range)
+        }
+        drawDecorations(extents, baseline: origin.y)
+        return origin.x + cached.width + charWidth
+    }
+
+    /// Data row `index`'s cached layout, building it (and evicting the least
+    /// recently drawn rows past the cache's limits) when it is missing or stale.
+    private func cachedLine(for row: LineViewerRow, index: Int, length: Int) -> CachedLine {
+        lineCacheOrder.removeAll { $0 == index }
+        lineCacheOrder.append(index)
+        if let cached = lineCache[index], cached.length == length { return cached }
+
+        let styled = clippedRuns(of: row, length: length)
+        let line = CTLineCreateWithAttributedString(attributedText(row.text, runs: styled))
+        let runs = (CTLineGetGlyphRuns(line) as? [CTRun]) ?? []
+        var runMinX: [CGFloat] = []
+        var runMaxX: [CGFloat] = []
+        var reach = -CGFloat.greatestFiniteMagnitude
+        for run in runs {
+            let last = max(0, CTRunGetGlyphCount(run) - 1)
+            var firstPoint = CGPoint.zero
+            var lastPoint = CGPoint.zero
+            CTRunGetPositions(run, CFRange(location: 0, length: 1), &firstPoint)
+            CTRunGetPositions(run, CFRange(location: last, length: 1), &lastPoint)
+            let left = min(firstPoint.x, lastPoint.x)
+            reach = max(reach, left + CGFloat(CTRunGetTypographicBounds(run, CFRange(), nil, nil, nil)))
+            runMinX.append(left)
+            runMaxX.append(reach)
+        }
+        let cached = CachedLine(line: line, runs: runs, runMinX: runMinX, runMaxX: runMaxX,
+                                width: CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil)), length: length)
+        lineCache[index] = cached
+        var units = lineCache.values.reduce(0) { $0 + $1.length }
+        while lineCacheOrder.count > 1,
+              lineCacheOrder.count > Self.lineCacheCapacity || units > Self.lineCacheUnitBudget {
+            units -= lineCache.removeValue(forKey: lineCacheOrder.removeFirst())?.length ?? 0
+        }
+        return cached
+    }
+
+    /// The glyphs of `run` whose origins lie between `minX` and `maxX` (line
+    /// coordinates), plus the one before `minX`, whose advance may cross it.
+    /// Glyph origins run one way through a run, either way round.
+    private static func glyphRange(of run: CTRun, from minX: CGFloat, to maxX: CGFloat) -> CFRange {
+        let count = CTRunGetGlyphCount(run)
+        guard count > 0 else { return CFRange() }
+        func originX(_ glyph: Int) -> CGFloat {
+            var point = CGPoint.zero
+            CTRunGetPositions(run, CFRange(location: glyph, length: 1), &point)
+            return point.x
+        }
+        let reversed = originX(0) > originX(count - 1)
+        // `visual` counts glyphs left to right.
+        func visualX(_ visual: Int) -> CGFloat { originX(reversed ? count - 1 - visual : visual) }
+        let start = max(0, partition(count) { visualX($0) > minX } - 1)
+        let end = partition(count) { visualX($0) > maxX }
+        guard end > start else { return CFRange() }
+        return CFRange(location: reversed ? count - end : start, length: end - start)
+    }
+
+    /// The first index in `0..<count` for which `isAfter` holds, given that it
+    /// holds for every index after one where it does; `count` when none.
+    private static func partition(_ count: Int, _ isAfter: (Int) -> Bool) -> Int {
+        var low = 0
+        var high = count
+        while low < high {
+            let mid = (low + high) / 2
+            if isAfter(mid) { high = mid } else { low = mid + 1 }
+        }
+        return low
+    }
+
+    /// Paints each run's highlight role behind its extent, across `rect`'s height.
+    private func drawHighlights(_ extents: [RunExtent], rowTone: LineViewerBackground, rect: NSRect) {
+        for extent in extents {
+            guard let role = extent.run.highlight, let fill = color(for: role, rowTone: rowTone) else { continue }
+            fill.setFill()
+            NSRect(x: extent.minX, y: rect.minY, width: extent.maxX - extent.minX, height: rect.height).fill()
+        }
     }
 
     /// Draws the gutter's rows in `gutterView` coordinates (y is the document's):
@@ -389,19 +537,19 @@ final class LineViewerView: NSView {
         NSRect(x: gutterWidth - 1, y: dirtyRect.minY, width: 1, height: dirtyRect.height).fill()
     }
 
-    /// Core Text draws no underline or strikethrough, so those are drawn here.
-    /// `runs` carry ranges relative to `line`.
-    private func drawDecorations(_ runs: [(range: NSRange, run: LineViewerRun)], line: CTLine, textX: CGFloat,
-                                 baseline: CGFloat) {
-        for (range, run) in runs where run.fontStyle.contains(.underline) || run.fontStyle.contains(.strikethrough) {
-            let start = CTLineGetOffsetForStringIndex(line, range.location, nil)
-            let end = CTLineGetOffsetForStringIndex(line, NSMaxRange(range), nil)
-            (run.foreground.map { NSColor($0) } ?? palette.primaryTextColor).setFill()
-            if run.fontStyle.contains(.underline) {
-                NSRect(x: textX + start, y: baseline + 1, width: end - start, height: 1).fill()
+    /// Core Text draws no underline or strikethrough, so those are drawn here,
+    /// across each run's extent.
+    private func drawDecorations(_ extents: [RunExtent], baseline: CGFloat) {
+        for extent in extents {
+            let style = extent.run.fontStyle
+            guard style.contains(.underline) || style.contains(.strikethrough) else { continue }
+            (extent.run.foreground.map { NSColor($0) } ?? palette.primaryTextColor).setFill()
+            let width = extent.maxX - extent.minX
+            if style.contains(.underline) {
+                NSRect(x: extent.minX, y: baseline + 1, width: width, height: 1).fill()
             }
-            if run.fontStyle.contains(.strikethrough) {
-                NSRect(x: textX + start, y: baseline - xHeight / 2, width: end - start, height: 1).fill()
+            if style.contains(.strikethrough) {
+                NSRect(x: extent.minX, y: baseline - xHeight / 2, width: width, height: 1).fill()
             }
         }
     }
