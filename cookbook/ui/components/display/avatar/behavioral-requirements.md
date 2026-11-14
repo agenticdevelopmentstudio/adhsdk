@@ -13,7 +13,9 @@ These three class names are the public theming surface quoted in Overview — st
 AppKit `AvatarView`:
 
 - **appkit-content**: `content` (`AvatarContent?`) MUST drive the view: setting a different value MUST cancel any load in flight, show the initials and start a load for `imageURL`; setting an equal value MUST do nothing.
-- **appkit-initials**: The initials MUST be the uppercased first letters of `name`'s first two whitespace-separated words, else the uppercased first letter of `seed`, else `?`.
+- **appkit-initials**: The initials MUST be `PersonInitials.of(name:fallback: seed)`: the uppercased first letters of `name`'s first two whitespace-separated words, else the uppercased first letter of `seed`, else `?`. `AccountUser` and `HubUser` use the same function with the email as the fallback.
+- **appkit-initials-size**: The initials MUST be set at `side × 0.4` points in the theme's heading family, semibold, so they fit the circle at every side.
+- **appkit-initials-ink**: The initials MUST be drawn in `SemanticPalette.laneTextColor(i)` for the circle's lane `i`: opaque black or white, whichever has the higher WCAG contrast against the fill, reaching 4.5:1 wherever either can.
 - **appkit-no-url-no-fetch**: An `imageURL` of `nil` MUST never call the fetch.
 - **appkit-picture**: A fetch answering 2xx (or a non-HTTP response) with bytes that decode as an image MUST replace the initials with the picture; an error, a non-2xx answer (even one that decodes) or undecodable bytes MUST leave the initials up and log at debug level.
 - **appkit-retry**: Moving into a window while no picture is showing MUST retry the load; a picture already showing MUST NOT be fetched again.

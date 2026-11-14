@@ -22,4 +22,6 @@
 | avatar-107 | appkit-initials | name `ada lovelace byron`; name blank, seed `zed@b.c`; both empty | `AL`; `Z`; `?`. |
 | avatar-108 | appkit-colour | seeds ``, `ada@x.y`, `b` | palette indices 5, 6, 1. |
 | avatar-109 | appkit-side | `side` 20 | fitting size 20 × 20. |
+| avatar-110 | appkit-initials-size | `side` 20, name `Mary Wollstonecraft` | initials `MW`, 8 pt, label no wider or taller than 20. |
+| avatar-111 | appkit-initials-ink | every lane of Solarized Light and Dracula | ink is black or white, contrast is the higher of the two and ≥ 4.5:1 where either reaches it. |
 

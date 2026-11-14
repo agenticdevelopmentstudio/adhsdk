@@ -9,11 +9,13 @@
   context, so either one MUST throw ("Base UI: AvatarRootContext is
   missing. Avatar parts must be placed within `<Avatar.Root>`.") when
   rendered standalone, regardless of what other props it receives.
-- **Boundary values**: Not applicable: Component defines no numeric, length, or size-constrained props of its own (e.g. no `size`, `min`, `max`); any such constraints belong to the underlying Base UI `Avatar.Root`/`Image`/`Fallback` API.
-- **Concurrent access**: Not applicable: `Avatar`, `AvatarImage`, and `AvatarFallback` are stateless functional components with no internal state, refs, or module-level mutable data; each render is an independent, pure function call.
+- **Boundary values** (web): Not applicable: the React wrapper defines no numeric, length, or size-constrained props of its own (e.g. no `size`, `min`, `max`); any such constraints belong to the underlying Base UI `Avatar.Root`/`Image`/`Fallback` API.
+- **Concurrent access** (web): Not applicable: `Avatar`, `AvatarImage`, and `AvatarFallback` are stateless functional components with no internal state, refs, or module-level mutable data; each render is an independent, pure function call.
 - **Error states**: `AvatarImage` MUST unmount when its underlying `<img>` fails to load, which is what reveals `AvatarFallback`; this load-failure-to-fallback handoff is Base UI's `Avatar.Image`/`Avatar.Fallback` behavior (`@base-ui/react/avatar`), not logic this wrapper adds.
 - **Offline or disconnected state**: `AvatarImage` MUST fall back the same way whether a load failure is caused by an offline network or any other image-load error, because Base UI's Avatar has no separate retry or timeout path for network failures — a failed load unmounts `Avatar.Image` and reveals `Avatar.Fallback` exactly as in Error states above.
 
 <!-- appkit-avatar -->
 - **AppKit — replaced content mid-load**: setting new content cancels the old load, and a cancelled load never writes its picture or clears the new load's task.
+- **AppKit — boundary values**: the initials are sized at `side × 0.4` points, so two wide capitals (`MW`) fit a 20 pt circle; a smaller side shrinks them with it.
+- **AppKit — concurrent access**: `AvatarView` is `@MainActor`; only its fetch runs off the main actor, and its result is applied back on it.
 

@@ -9,6 +9,10 @@
 
 <!-- appkit-avatar -->
 - **Decision**: The AppKit view takes an `AvatarContent` (`name`, `seed`, `imageURL`) rather than `AccountUser`.
-  **Rationale**: Accounts and commit authors are different people models; a value type of exactly what the view draws lets both share one view, and `seed` keeps the colour stable without exposing an id.
+  **Rationale**: Accounts and commit authors are different people models; a value type of exactly what the view draws lets both share one view, and `seed` keeps the colour stable without exposing an id. `AvatarContent` is Foundation only (in `AgenticDeveloperHubSDK`, beside `AccountUser` and `PersonInitials`) so a view model builds one without AppKit.
+  **Approved**: pending
+
+- **Decision**: The initials are black or white by WCAG contrast against the lane, not a theme role.
+  **Rationale**: `onAccentText` is contrasted against `accent` only; the lanes are twelve ANSI hues, bright yellow and cyan among them, on which no single role reads in every theme.
   **Approved**: pending
 

@@ -10,7 +10,7 @@ modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Thin wrapper around Base UI's Avatar primitive (Root/Image/Fallback) exposing stable adh-avatar* classes as a public theming surface."
+summary: "Web: a thin wrapper around Base UI's Avatar primitive (Root/Image/Fallback) exposing stable adh-avatar* classes as a public theming surface. AppKit: AvatarView, a round picture-or-initials view over a Foundation-only AvatarContent."
 platforms:
   - macos
   - typescript
@@ -65,7 +65,9 @@ These three class names are the public theming surface quoted in Overview — st
 AppKit `AvatarView`:
 
 - **appkit-content**: `content` (`AvatarContent?`) MUST drive the view: setting a different value MUST cancel any load in flight, show the initials and start a load for `imageURL`; setting an equal value MUST do nothing.
-- **appkit-initials**: The initials MUST be the uppercased first letters of `name`'s first two whitespace-separated words, else the uppercased first letter of `seed`, else `?`.
+- **appkit-initials**: The initials MUST be `PersonInitials.of(name:fallback: seed)`: the uppercased first letters of `name`'s first two whitespace-separated words, else the uppercased first letter of `seed`, else `?`. `AccountUser` and `HubUser` use the same function with the email as the fallback.
+- **appkit-initials-size**: The initials MUST be set at `side × 0.4` points in the theme's heading family, semibold, so they fit the circle at every side.
+- **appkit-initials-ink**: The initials MUST be drawn in `SemanticPalette.laneTextColor(i)` for the circle's lane `i`: opaque black or white, whichever has the higher WCAG contrast against the fill, reaching 4.5:1 wherever either can.
 - **appkit-no-url-no-fetch**: An `imageURL` of `nil` MUST never call the fetch.
 - **appkit-picture**: A fetch answering 2xx (or a non-HTTP response) with bytes that decode as an image MUST replace the initials with the picture; an error, a non-2xx answer (even one that decodes) or undecodable bytes MUST leave the initials up and log at debug level.
 - **appkit-retry**: Moving into a window while no picture is showing MUST retry the load; a picture already showing MUST NOT be fetched again.
@@ -78,7 +80,7 @@ AppKit `AvatarView`:
 Not applicable: Component applies only semantic class names; styling values are defined externally in `../styles/components.css` and are outside this wrapper's scope.
 
 <!-- appkit-avatar -->
-AppKit `AvatarView`: a `side × side` circle; initials in the theme's `onAccentText` role, `heading` text role, semibold, centred, on the lane colour for `seed`; the picture fills the circle, scaled proportionally, clipped round.
+AppKit `AvatarView`: a `side × side` circle; initials in the theme's `heading` family, semibold, at `side × 0.4` points, centred, on the lane colour for `seed`, in black or white, whichever has the higher WCAG contrast against that lane (`SemanticPalette.laneTextColor`); the picture fills the circle, scaled proportionally, clipped round.
 
 ## States
 
@@ -126,6 +128,8 @@ AppKit `AvatarView`: role `image`, label `Avatar for <name>`, default identifier
 | avatar-107 | appkit-initials | name `ada lovelace byron`; name blank, seed `zed@b.c`; both empty | `AL`; `Z`; `?`. |
 | avatar-108 | appkit-colour | seeds ``, `ada@x.y`, `b` | palette indices 5, 6, 1. |
 | avatar-109 | appkit-side | `side` 20 | fitting size 20 × 20. |
+| avatar-110 | appkit-initials-size | `side` 20, name `Mary Wollstonecraft` | initials `MW`, 8 pt, label no wider or taller than 20. |
+| avatar-111 | appkit-initials-ink | every lane of Solarized Light and Dracula | ink is black or white, contrast is the higher of the two and ≥ 4.5:1 where either reaches it. |
 
 ## Edge Cases
 
@@ -139,13 +143,15 @@ AppKit `AvatarView`: role `image`, label `Avatar for <name>`, default identifier
   context, so either one MUST throw ("Base UI: AvatarRootContext is
   missing. Avatar parts must be placed within `<Avatar.Root>`.") when
   rendered standalone, regardless of what other props it receives.
-- **Boundary values**: Not applicable: Component defines no numeric, length, or size-constrained props of its own (e.g. no `size`, `min`, `max`); any such constraints belong to the underlying Base UI `Avatar.Root`/`Image`/`Fallback` API.
-- **Concurrent access**: Not applicable: `Avatar`, `AvatarImage`, and `AvatarFallback` are stateless functional components with no internal state, refs, or module-level mutable data; each render is an independent, pure function call.
+- **Boundary values** (web): Not applicable: the React wrapper defines no numeric, length, or size-constrained props of its own (e.g. no `size`, `min`, `max`); any such constraints belong to the underlying Base UI `Avatar.Root`/`Image`/`Fallback` API.
+- **Concurrent access** (web): Not applicable: `Avatar`, `AvatarImage`, and `AvatarFallback` are stateless functional components with no internal state, refs, or module-level mutable data; each render is an independent, pure function call.
 - **Error states**: `AvatarImage` MUST unmount when its underlying `<img>` fails to load, which is what reveals `AvatarFallback`; this load-failure-to-fallback handoff is Base UI's `Avatar.Image`/`Avatar.Fallback` behavior (`@base-ui/react/avatar`), not logic this wrapper adds.
 - **Offline or disconnected state**: `AvatarImage` MUST fall back the same way whether a load failure is caused by an offline network or any other image-load error, because Base UI's Avatar has no separate retry or timeout path for network failures — a failed load unmounts `Avatar.Image` and reveals `Avatar.Fallback` exactly as in Error states above.
 
 <!-- appkit-avatar -->
 - **AppKit — replaced content mid-load**: setting new content cancels the old load, and a cancelled load never writes its picture or clears the new load's task.
+- **AppKit — boundary values**: the initials are sized at `side × 0.4` points, so two wide capitals (`MW`) fit a 20 pt circle; a smaller side shrinks them with it.
+- **AppKit — concurrent access**: `AvatarView` is `@MainActor`; only its fetch runs off the main actor, and its result is applied back on it.
 
 ## Configuration
 
@@ -201,7 +207,7 @@ Not applicable: Component performs no analytics tracking.
 
 ## Logging
 
-Not applicable: Component performs no logging.
+Web: not applicable, the React wrapper performs no logging.
 
 <!-- appkit-avatar -->
 AppKit `AvatarView` logs failed loads, non-2xx answers and undecodable bytes at debug level through its `Loggable` logger; the URL is never logged.
@@ -220,6 +226,8 @@ AppKit `AvatarView` logs failed loads, non-2xx answers and undecodable bytes at 
 |----------|----------|-------------|
 | web | `packages/web/packages/ui/src/components/avatar.tsx` | unverified |
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Avatar/AvatarView.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AvatarContent.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/PersonInitials.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -233,7 +241,11 @@ AppKit `AvatarView` logs failed loads, non-2xx answers and undecodable bytes at 
 
 <!-- appkit-avatar -->
 - **Decision**: The AppKit view takes an `AvatarContent` (`name`, `seed`, `imageURL`) rather than `AccountUser`.
-  **Rationale**: Accounts and commit authors are different people models; a value type of exactly what the view draws lets both share one view, and `seed` keeps the colour stable without exposing an id.
+  **Rationale**: Accounts and commit authors are different people models; a value type of exactly what the view draws lets both share one view, and `seed` keeps the colour stable without exposing an id. `AvatarContent` is Foundation only (in `AgenticDeveloperHubSDK`, beside `AccountUser` and `PersonInitials`) so a view model builds one without AppKit.
+  **Approved**: pending
+
+- **Decision**: The initials are black or white by WCAG contrast against the lane, not a theme role.
+  **Rationale**: `onAccentText` is contrasted against `accent` only; the lanes are twelve ANSI hues, bright yellow and cyan among them, on which no single role reads in every theme.
   **Approved**: pending
 
 ## Compliance
@@ -254,7 +266,7 @@ AppKit `AvatarView` logs failed loads, non-2xx answers and undecodable bytes at 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.3.0 | 2026-11-13 | Mike Fullerton | Added the AppKit AvatarView (moved from Accounts, made public): AvatarContent input, initials rule, no fetch without an imageURL, retry on show, seed-hashed lane colour, configurable side. |
+| 1.3.0 | 2026-11-13 | Mike Fullerton | Added the AppKit AvatarView (moved from Accounts, made public): AvatarContent input, initials rule, no fetch without an imageURL, retry on show, seed-hashed lane colour, configurable side; initials sized at side x 0.4 in black or white by WCAG contrast against the lane; one PersonInitials rule shared with AccountUser and HubUser; Foundation-only AvatarContent; web-only statements scoped to the web part. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | avatar-003/006 vectors and the no-props Edge Case corrected: AvatarFallback/AvatarImage throw outside <Avatar> (Base UI AvatarRootContext), so vectors now nest them inside <Avatar>. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: dropped invented Base UI retry/timeout behavior in favor of the actual load-failure-to-fallback handoff; quoted the in-source comment once with its location instead of repeating unquoted references to it; replaced "refer to the source for details" pointers with inline behavior statements; documented the consumer-facing accessibility contract (required `alt`, decorative fallback) instead of marking Accessibility not applicable; deleted the duplicate class-name-stability requirement and folded its rationale into a note under the three class requirements; renamed all requirement names to subject-only kebab-case; fixed avatar-002/005/008 to nest `AvatarImage` inside `Avatar` with a loaded stub; moved the client-module check out of the conformance table to a static-check note and removed the source-text-only avatar-010 vector; reformatted Design Decisions into the three-line Decision/Rationale/Approved form; replaced the prose Compliance section with a checks table; rewrote MUST-tagged edge cases as normative MUST clauses; fixed the WinUI 3 bullet's "this recipe" noun; added reference URLs for Base UI Avatar and WinUI 3 PersonPicture |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise Phase 1: replace library-delegation markers with plain statements; update status to review |

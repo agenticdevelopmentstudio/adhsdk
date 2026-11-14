@@ -182,11 +182,3 @@ final class AccountDetailPanelViewController: ComposableSettings.SettingsPanelVi
 extension AccountDetailPanelViewController: Loggable {
     static nonisolated let logger = makeLogger()
 }
-
-extension AvatarContent {
-    /// An account user's avatar: the email seeds the colour and stands in for
-    /// a blank name's initials.
-    init(user: AccountUser) {
-        self.init(name: user.name, seed: user.email, imageURL: user.avatarURL)
-    }
-}
