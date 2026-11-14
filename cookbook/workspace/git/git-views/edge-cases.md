@@ -15,3 +15,16 @@
 - **History, typing while a search is in flight**: `fix` then `fix ` (or `sha:a` then `sha:ab` while a filter clears) parse to the query already in flight; the later call waits for it, then reloads and selects.
 - **History, non-UTF-8 messages**: shown as the model decoded them (lossily), never dropped.
 
+- **Files, awkward paths**: spaces, unicode and tabs are shown as they are; a path holding a newline stays on one row (single-line label) and its tooltip holds the whole path.
+- **Files, a path with no extension** (`Makefile`) or a dot file (`.gitignore`, whose extension is empty): the `doc` icon.
+- **Files, the same path twice**: the id is the path, so the selection kept across a `files` change is the first row with that path.
+- **Commit detail, a merge**: one parent link per parent; the list is the diff against the first parent.
+- **Commit detail, a root commit**: no parents row; the list is the diff against the empty tree.
+- **Commit detail, a stash**: a stash is a commit and shows as one, its list the diff against its first parent.
+- **Commit detail, quick selection changes**: each `show(commit:)` bumps the detail's own counter before awaiting; a diff that returns for an older call is dropped, so arrow-keying down the history never leaves an earlier commit's files under a later header.
+- **Commit detail, a binary file**: one row like any other; the diff view decides how to show it.
+- **Commit detail, non-UTF-8 message**: shown as the model decoded it (lossily).
+- **Working copy, unborn HEAD**: staged files list as added; selecting one reports `.staged`, which the client diffs against the empty tree.
+- **Working copy, a conflicted file**: listed unstaged with `U` in purple; selecting it reports `.unstaged`.
+- **Working copy, a file both staged and modified**: listed in both lists; each selection reports its own target.
+

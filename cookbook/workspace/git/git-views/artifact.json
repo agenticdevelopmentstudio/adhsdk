@@ -4,7 +4,7 @@
     "id": "bdd3a72d-8810-439b-bad7-ec16233cb2a3",
     "title": "Git Views",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "The git window's AppKit views, each reading one data-source protocol of the repository model and reporting to an injected delegate: the refs sidebar (working copy, branches with ahead/behind, remotes by remote, tags, stashes, submodules, worktrees) and the history list (graph, subject with ref badges, author, date, short sha; paging; search).",
+    "summary": "The git window's AppKit views, each reading one data-source protocol of the repository model and reporting to an injected delegate: the refs sidebar (working copy, branches with ahead/behind, remotes by remote, tags, stashes, submodules, worktrees) the history list (graph, subject with ref badges, author, date, short sha; paging; search), the shared changed-files list, the commit detail (message, people, sha, parent links, changed files) and the working copy (staged and unstaged lists).",
     "platforms": [
       "swift",
       "macos"
@@ -22,7 +22,9 @@
       "ui",
       "sidebar",
       "history",
-      "search"
+      "search",
+      "commit-detail",
+      "working-copy"
     ],
     "depends-on": [
       "a2394ca0-3988-410b-9fc8-e0c9e253fc94",
@@ -37,12 +39,13 @@
     ],
     "references": [
       "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/ (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift (adhsdk)"
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3cb8a8d147e28086",
+  "synced": "0aafe634048182ee",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -22,3 +22,29 @@
 - **history-set-query**: `setQuery(_:)` MUST parse the text, and when the parsed query differs from the one the list last sent (applied or in flight; the data source's query before the first search), send it to the data source. A parsed query equal to one still in flight MUST wait for that request rather than skip or resend it, because the data source takes a new query before its results arrive. The latest call then reloads. For the `sha:` form it MUST then select the first loaded commit whose id starts with the prefix (case-insensitively), as `select(commitID:)` does; no match selects nothing. A `setQuery` overtaken by a later one MUST NOT select.
 - **history-ui-thread**: The history list MUST be used on the UI thread; every data-source call that waits is awaited, never blocked on.
 
+### Changed-files list
+
+- **file-list-item**: A `GitFileListItem` made from a `GitFileChange` MUST take its path and status and have no old path. One made from a `GitFileDiff` MUST take the diff's `path` (the new path, or the old one for a deleted file) and the status of its change (added `A`, deleted `D`, modified and type-changed `M`, renamed `R`, copied `C`), and an old path only for a rename or copy whose old path differs from its new one. Its `title` MUST be `<old> → <new>` when it has an old path and the path otherwise; its id is its path.
+- **file-list-rows**: The list MUST show one row per item of `files`, in order, each with the status letter (`GitFileStatus.displayCharacter`) in the status's colour (`GitFileStatus.nsColor`), the SF Symbol `FileTypeIcons.builtInIcon(for:)` names for the path's extension (`doc` when it names none), and the title, truncated in the middle with the whole title as its tooltip.
+- **file-list-selection**: Selecting a row MUST call the delegate's `fileList(_:didSelect:)` once with that item; clearing the selection calls it once with nil. `clearSelection()` MUST deselect without calling the delegate.
+- **file-list-files**: Setting `files` MUST keep a selected item whose path is still listed selected without calling the delegate; when the selected path is gone, the list MUST deselect and call the delegate once with nil.
+- **file-list-ui-thread**: The changed-files list MUST be used on the UI thread.
+
+### Commit detail
+
+- **detail-header**: `show(commit:)` with a commit MUST fill the header at once: the subject (heading); the body, wrapped, hidden when empty; an author row and a committer row, each an `AvatarView` of side 28 showing initials seeded by the person's email with no picture URL, the name followed by `<email>`, and the date as `date.formatted(date: .abbreviated, time: .shortened)` with `RelativeDateFormatting.string(for:)` as its tooltip; the full sha in the theme's code font beside a copy button; and a parents row with one link per parent, in order, titled with the parent's first eight characters, hidden for a root commit.
+- **detail-copy-sha**: The copy button MUST put the full sha on the pasteboard as a string, replacing what was there.
+- **detail-parent-link**: Pressing a parent link MUST call the delegate's `commitDetail(_:didSelectCommit:)` once with that parent's full sha.
+- **detail-files**: After the header, the detail MUST ask the content source for `diff(.commit(<sha>, paths: []), options: GitDiffOptions())` and list each of its files, in order, as `GitFileListItem(diff:)` in its changed-files list (context `commit`). Showing a different commit MUST empty the list at once, so it never lists another commit's files; showing the same commit again keeps the list (and its selection) until the new diff arrives. A diff that throws leaves the list empty.
+- **detail-latest-wins**: The latest `show(commit:)` MUST win: a diff requested by an earlier call never changes the list, whichever order the diffs finish in. The check is the detail's own call counter, taken before it awaits, never state the content source changes.
+- **detail-file-selection**: Selecting a file MUST call the delegate's `commitDetail(_:didSelectFile:in:)` once with that item and the shown commit; clearing the selection, or a list change that removes the selected file, calls it once with nil.
+- **detail-clear**: `show(commit: nil)` MUST empty the header and the list and cancel any diff in flight.
+- **detail-ui-thread**: The commit detail MUST be used on the UI thread; the diff is awaited, never blocked on.
+
+### Working copy
+
+- **wc-lists**: The working copy MUST show two changed-files lists, `Staged` (context `staged`) over the data source's `staged` files and `Unstaged` (context `unstaged`) over its `unstaged` files, in the data source's order, each item `GitFileListItem(change:)`, each under a header titled `Staged (<count>)` or `Unstaged (<count>)`.
+- **wc-selection**: Selecting a file MUST call the delegate's `workingCopy(_:didSelect:)` once with its diff target: a staged file `.staged(paths: [path])`, an untracked unstaged file `.untracked(path:)`, any other unstaged file `.unstaged(paths: [path])`. Selecting in one list MUST clear the other without a delegate call for the clearing. Clearing the selection calls the delegate once with nil.
+- **wc-reload**: `reload()` MUST re-read both lists from the data source. A selected file still in its list stays selected without a delegate call; one that left its list is deselected and the delegate is called once with nil.
+- **wc-ui-thread**: The working copy MUST be used on the UI thread.
+
