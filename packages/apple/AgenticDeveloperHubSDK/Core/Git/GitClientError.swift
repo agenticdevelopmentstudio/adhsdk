@@ -50,6 +50,12 @@ public enum GitClientError: Error, LocalizedError, Equatable {
     /// rule is that OSLog records what was called, never what git said.
     /// `errorDescription` is unsafe for logging for exactly this reason: it
     /// interpolates `standardError` for `.commandFailed`.
+    /// `error`'s `logDescription` when it is a `GitClientError`, else only its type name:
+    /// any other error's description could carry git's output too.
+    public static func logDescription(of error: Error) -> String {
+        (error as? GitClientError)?.logDescription ?? String(describing: type(of: error))
+    }
+
     public var logDescription: String {
         switch self {
         case let .commandFailed(verb, exitStatus, _):

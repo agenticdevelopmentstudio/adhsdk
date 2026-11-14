@@ -12,6 +12,8 @@ public struct GitLogQuery: Sendable, Hashable {
     public var messageGrep: String?
     /// Commits that change the number of occurrences of this text (`-S`).
     public var pickaxe: String?
+    /// List each commit's changed paths and their status after its record (`--name-status`).
+    public var nameStatus = false
     public var limit = 500
     public var skip = 0
 
@@ -32,6 +34,7 @@ public struct GitLogQuery: Sendable, Hashable {
         if let author { arguments.append("--author=" + author) }
         if let messageGrep { arguments += ["--grep=" + messageGrep, "--regexp-ignore-case"] }
         if let pickaxe { arguments.append("-S" + pickaxe) }
+        if nameStatus { arguments.append("--name-status") }
         if let path {
             if followRenames {
                 arguments += ["--follow", "--", path]

@@ -31,9 +31,11 @@
 - **Diff, a whitespace-only change with Ignore Whitespace on**: the diff lists no file; the viewer is empty, with no error.
 - **Diff, a pure rename or mode change**: no hunks, so no rows.
 - **Diff, huge or minified files**: over 1 MB, or a line over 10,000 UTF-16 units, the side is uncoloured; the viewer draws only visible rows.
-- **Diff, non-UTF-8 content**: decoded as ISO Latin-1, so it is coloured rather than dropped; the diff's own lines are decoded by the model.
-- **Diff, a lone `\r` line ending**: the highlighter splits on it but git does not, so colours after it can land a line off; text is never lost.
+- **Diff, non-UTF-8 content**: each line decoded as UTF-8 else ISO Latin-1, as the diff's own lines are, so a stray byte leaves every other line coloured on the right columns.
+- **Diff, a lone `\r` line ending**: git does not split on it but the highlighter would, so colouring sees it as a space and every later line keeps its colours; the diff text itself is unchanged.
 - **Diff, awkward paths**: the language comes from the path's file name and extension; spaces, unicode and newlines are passed through to the content source as they are.
 - **Blame, uncommitted lines**: the all-zero id shows as `00000000` with the `Not Committed Yet` author; clicking it selects nothing.
-- **File history, renames**: the history follows renames, but each commit's diff is asked for the current path, so a commit from before a rename shows no rows.
+- **File history, renames**: the history follows renames, and each commit's diff is asked for the file's path at that commit (both paths for the rename itself), so a commit from before a rename shows its change.
+- **Diff, Blame or History while a file loads**: they act on the file just requested, never on the diff still on screen.
+- **Diff, the file is not in the diff**: no rows, never another file's change.
 

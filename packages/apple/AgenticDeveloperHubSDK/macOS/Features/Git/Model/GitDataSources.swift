@@ -32,6 +32,6 @@ import AgenticDeveloperHubSDKCore
     func diff(_ target: GitDiffTarget, options: GitDiffOptions) async throws -> GitDiff
     func contents(path: String, at revision: String?) async throws -> Data?
     func blame(path: String, at revision: String?) async throws -> GitBlame
-    func fileHistory(path: String) async throws -> [GitCommit]
+    func fileHistory(path: String) async throws -> [GitFileHistoryEntry]
     func commit(_ id: String) -> GitCommit?
 }

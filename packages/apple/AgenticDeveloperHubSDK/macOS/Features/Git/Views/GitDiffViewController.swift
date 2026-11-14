@@ -57,7 +57,10 @@ public final class GitDiffViewController: NSViewController {
     /// The target and file shown, or nil.
     private var request: (target: GitDiffTarget, file: String)?
     /// The shown file's diff, once read; nil while nothing is shown or after a failure.
+    /// It stays on screen while a later request loads, so it may answer an older one.
     private var fileDiff: GitFileDiff?
+    /// The request `fileDiff` answers.
+    private var fileDiffRequest: (target: GitDiffTarget, file: String)?
     private var colouredSides: (old: [StyledLine]?, new: [StyledLine]?)?
     /// The viewers hold their data sources weakly; these keep them alive.
     private var inlineModel: GitInlineDiffModel?
@@ -121,9 +124,10 @@ public final class GitDiffViewController: NSViewController {
     /// Shows `file`'s change in `target`. The previous rows stay until the diff arrives;
     /// it lands only if no later `show` or `clear` has been made, then shows uncoloured
     /// until both sides are read and coloured, which land under the same check. The file
-    /// is the diff's entry whose new path is `file`, else whose old path is, else its
-    /// first. A diff that throws is logged and leaves the viewer empty under the error's
-    /// description.
+    /// is the diff's entry whose new path is `file`, else whose old path is; with neither,
+    /// no rows. A diff that throws is logged and leaves the viewer empty under the error's
+    /// description. Blame and History act on `file` from this call on, whatever is still
+    /// on screen.
     public func show(target: GitDiffTarget, file: String) {
         request = (target, file)
         showFailure(nil)
@@ -172,6 +176,7 @@ public final class GitDiffViewController: NSViewController {
             case .success(let diff):
                 let fileDiff = Self.file(request.file, in: diff)
                 self.fileDiff = fileDiff
+                self.fileDiffRequest = request
                 self.colouredSides = nil
                 self.render()
                 guard let fileDiff, let coloring, !fileDiff.isBinary else { return }
@@ -184,7 +189,7 @@ public final class GitDiffViewController: NSViewController {
     }
 
     static func file(_ path: String, in diff: GitDiff) -> GitFileDiff? {
-        diff.files.first { $0.newPath == path } ?? diff.files.first { $0.oldPath == path } ?? diff.files.first
+        diff.files.first { $0.newPath == path } ?? diff.files.first { $0.oldPath == path }
     }
 
     /// Rebuilds the shown layout's rows from the diff and colours already read.
@@ -290,8 +295,17 @@ public final class GitDiffViewController: NSViewController {
         historyButton.isEnabled = request != nil
     }
 
+    /// The diff read for the current request; nil while it loads, so the buttons never act
+    /// on the previous file still on screen.
+    private var requestedFileDiff: GitFileDiff? {
+        guard let request, let answered = fileDiffRequest,
+              answered.target == request.target, answered.file == request.file else { return nil }
+        return fileDiff
+    }
+
     @objc private func blamePressed(_ sender: Any?) {
         guard let request else { return }
+        let fileDiff = requestedFileDiff
         let deleted = fileDiff?.change == .deleted
         let path = deleted ? (fileDiff?.oldPath ?? request.file) : (fileDiff?.newPath ?? request.file)
         delegate?.diff(self, didRequestBlameFor: path, at: Self.blameRevision(for: request.target, deleted: deleted))
@@ -299,6 +313,7 @@ public final class GitDiffViewController: NSViewController {
 
     @objc private func historyPressed(_ sender: Any?) {
         guard let request else { return }
+        let fileDiff = requestedFileDiff
         delegate?.diff(self, didRequestHistoryFor: fileDiff?.newPath ?? fileDiff?.oldPath ?? request.file)
     }
 
@@ -323,7 +338,7 @@ public final class GitDiffViewController: NSViewController {
 
     /// Logs a failed diff by its case and fields, never git's own output.
     private func logFailure(_ error: Error) {
-        let description = (error as? GitClientError)?.logDescription ?? String(describing: type(of: error))
+        let description = GitClientError.logDescription(of: error)
         Self.logger.error("Git diff failed: \(description, privacy: .public)")
     }
 }

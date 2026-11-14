@@ -136,6 +136,10 @@ picker) is a consumer of this contract, not part of it.
   does not resolve to a commit, it MUST NOT throw: a follow-mode request
   returns no commits, and any other request is retried without the `HEAD`
   revision when other revisions remain, or returns no commits when none do.
+- **file-history-command**: The file history verb MUST invoke `git log` with a
+  log request that follows the path and asks for name-status, with
+  `core.quotePath=false`, and MUST parse the output with the file history
+  rule; on exit status 128 with an unresolvable HEAD it returns no entries.
 - **refs-command**: The refs verb MUST invoke `git for-each-ref` with the
   ref format string against `refs/heads`, `refs/remotes` and `refs/tags`,
   and MUST parse the output with the ref parsing rule.
@@ -178,11 +182,18 @@ picker) is a consumer of this contract, not part of it.
 - **file-contents**: The file-contents verb MUST return raw bytes, never
   decoded text. With no revision it MUST read the working file at the top
   level joined with the path, returning nothing when it does not exist.
-  With a revision it MUST name the object `<revision>:<path>` (so the
-  revision `:0` names the index entry `:0:<path>`), return nothing when
-  `git rev-parse --verify --quiet` reports it absent (exit status 1,
-  including on an unborn HEAD), and otherwise return the output of `git
-  cat-file blob <object id>`.
+  With a revision it MUST NOT pass the path inside a `<revision>:<path>`
+  argument: Foundation hands arguments to git decomposed (NFD) and that
+  form matches the index's precomposed names byte for byte, so a
+  non-ASCII path would read as absent. For an index stage (`:0`-`:3`) it
+  MUST find the entry with `git ls-files --stage -z -- :(literal)<path>`;
+  for any other revision it MUST resolve `<revision>^{tree}` with `git
+  rev-parse --verify --quiet --end-of-options`, returning nothing when it
+  is absent (exit status 1, including on an unborn HEAD), then list `git
+  ls-tree -z <tree> -- :(literal)<path>`. It MUST return nothing unless an
+  entry names exactly that path (a blob, or the requested stage), so a
+  directory or a missing path gives nothing, and otherwise return the
+  output of `git cat-file blob <object id>`.
 
 ### Execution, configuration and attribution
 
@@ -408,6 +419,16 @@ cannot read rather than failing the whole listing.
 - **log-query-follow**: A log request that follows renames MUST end with
   `--follow -- <path>` and MUST omit its revisions, because `git log
   --follow` takes exactly one path and walks from `HEAD`.
+- **log-query-name-status**: A log request that asks for name-status MUST
+  add `--name-status` ahead of its path part; one that does not MUST NOT.
+- **file-history-parse**: Parsing a name-status follow log MUST read each
+  commit's status lines from the text after its record terminator and
+  before the next record, and MUST give each commit the file's path at
+  that commit, carried from newest to oldest starting at the requested
+  path: a rename or copy (`R`/`C` with two paths) has the new path and
+  the old path, and hands the old path to older commits; any other status
+  names the path; a commit with no status line (a merge) keeps the
+  carried path. Quoted paths are unquoted.
 - **history-output-decoding**: Captured history output MUST be decoded with
   the same ladder as the execution step — UTF-8, then ISO Latin-1, segment
   by segment (below) — and never yield nothing.
@@ -543,7 +564,10 @@ component.
 | git-client-048 | error-description-vs-log-description | Produce the log-facing description of an executable-not-found outcome carrying path `"/Users/secret/bin/git"`. | Excludes `"secret"`. |
 | git-client-049 | status-staged-unstaged-columns | Parse status output `MM both.txt`, `A  new.txt`, ` D gone.txt`, `?? loose.txt`. | Staged: `both.txt` modified, `new.txt` added. Unstaged: `both.txt` modified, `gone.txt` deleted, `loose.txt` untracked. |
 | git-client-050 | status-staged-unstaged-columns | Parse status output `UU fight.txt`, `RM new.txt` (origin `old.txt`), `!! ignored.txt`. | Staged: `new.txt` renamed. Unstaged: `fight.txt` conflicted, `new.txt` modified. `ignored.txt` is in neither; `old.txt` is in neither. |
-
+| git-client-051 | file-history-parse | Records `c4` (`M new name.txt`), `c3` (no status), `c2` (`R087 mid.txt new name.txt`), `c1` (`C100 old.txt mid.txt`), `c0` (`A old.txt`), requested `new name.txt` | Paths `new name.txt`, `new name.txt`, `new name.txt`, `mid.txt`, `old.txt`; old paths none, none, `mid.txt`, `old.txt`, none. |
+| git-client-052 | file-history-command | A repository where `a b.txt` was renamed to `c d.txt`, then edited; file history of `c d.txt` | Edit at `c d.txt`; rename at `c d.txt` from `a b.txt`; initial at `a b.txt`. |
+| git-client-053 | log-query-name-status | A follow request for `a b.txt` with name-status | Ends `--name-status --follow -- a b.txt`. |
+| git-client-054 | file-contents | A repository with `dir é/naïve file.swift` committed as `let a = 1`, then `let a = 2`, and `let a = 3` staged | Contents at `second^1`, `second` and `:0` are the three versions; `dir é` at `second` and `dir é/missing` at `:0` are nothing. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -768,6 +792,7 @@ once those verbs exist.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | confirmed (1.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileHistoryEntry.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

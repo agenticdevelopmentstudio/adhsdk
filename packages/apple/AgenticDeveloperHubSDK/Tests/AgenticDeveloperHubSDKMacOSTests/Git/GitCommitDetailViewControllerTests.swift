@@ -44,7 +44,7 @@ private final class FakeContentSource: GitContentSource {
 
     func contents(path: String, at revision: String?) async throws -> Data? { nil }
     func blame(path: String, at revision: String?) async throws -> GitBlame { GitBlame(lines: [], commits: [:]) }
-    func fileHistory(path: String) async throws -> [GitCommit] { [] }
+    func fileHistory(path: String) async throws -> [GitFileHistoryEntry] { [] }
     func commit(_ id: String) -> GitCommit? { nil }
 }
 

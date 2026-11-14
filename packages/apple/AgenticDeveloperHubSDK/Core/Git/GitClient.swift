@@ -196,6 +196,30 @@ public actor GitClient {
         }
     }
 
+    /// `path`'s history across renames, newest first, each commit with the file's path at
+    /// that commit (`--follow --name-status`, paths unquoted by `core.quotePath=false`). An
+    /// unborn HEAD is an empty history.
+    public func fileHistory(path: String, in directory: URL, caller: GitCaller = GitCaller()) async throws
+        -> [GitFileHistoryEntry] {
+        var query = GitLogQuery()
+        query.path = path
+        query.followRenames = true
+        query.nameStatus = true
+        let configuration = await configurationProvider()
+        do {
+            let output = try await execute(verb: "log", arguments: query.arguments(), directory: directory,
+                                           caller: caller, configuration: configuration,
+                                           configOverrides: ["core.quotePath=false"])
+            return GitFileHistoryEntry.parse(log: output, path: path)
+        } catch let error as GitClientError {
+            guard case .commandFailed(_, 128, _) = error,
+                  try await resolveCommit("HEAD", in: directory, caller: caller) == nil else {
+                throw error
+            }
+            return []
+        }
+    }
+
     /// Every local branch, remote-tracking branch and tag, with each tag peeled to its commit.
     public func refs(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [GitRef] {
         let output = try await execute(
@@ -311,8 +335,14 @@ public actor GitClient {
     }
 
     /// The bytes of `path` (top-level-relative), never decoded: at `revision` (`":0"` is the
-    /// index entry), or the working file when `revision` is nil. Nil when the path does not
-    /// exist there, including on an unborn HEAD.
+    /// index entry, `":1"`–`":3"` a conflict's stages), or the working file when `revision`
+    /// is nil. Nil when the path is not a file there, including on an unborn HEAD.
+    ///
+    /// The path never travels inside a `<rev>:<path>` argument. Foundation's `Process` hands
+    /// arguments over decomposed (NFD), and `rev-parse` matches that path byte for byte
+    /// against the precomposed (NFC) names git stores, so any non-ASCII name would read as
+    /// absent. `ls-tree` and `ls-files` precompose their path arguments, so the blob is
+    /// found through them, by a literal pathspec, and its id read with `cat-file`.
     public func fileContents(
         path: String,
         at revision: String?,
@@ -328,22 +358,52 @@ public actor GitClient {
             return try Data(contentsOf: file)
         }
         let configuration = await configurationProvider()
-        let object: String
-        do {
-            object = try await execute(
-                verb: "rev-parse",
-                arguments: ["--verify", "--quiet", "--end-of-options", "\(revision):\(path)"],
-                directory: top,
-                caller: caller,
-                configuration: configuration
-            ).trimmingCharacters(in: .whitespacesAndNewlines)
-        } catch GitClientError.commandFailed(_, 1, _) {
-            return nil
+        let pathspec = ":(literal)" + path
+        let listing: String
+        let stage: String?
+        if revision.count == 2, revision.first == ":", let digit = revision.last, ("0"..."3").contains(digit) {
+            stage = String(digit)
+            listing = try await execute(verb: "ls-files", arguments: ["--stage", "-z", "--", pathspec],
+                                        directory: top, caller: caller, configuration: configuration)
+        } else {
+            stage = nil
+            let tree: String
+            do {
+                tree = try await execute(
+                    verb: "rev-parse",
+                    arguments: ["--verify", "--quiet", "--end-of-options", revision + "^{tree}"],
+                    directory: top,
+                    caller: caller,
+                    configuration: configuration
+                ).trimmingCharacters(in: .whitespacesAndNewlines)
+            } catch GitClientError.commandFailed(_, 1, _) {
+                return nil
+            }
+            guard !tree.isEmpty else { return nil }
+            listing = try await execute(verb: "ls-tree", arguments: ["-z", tree, "--", pathspec],
+                                        directory: top, caller: caller, configuration: configuration)
         }
-        guard !object.isEmpty else { return nil }
+        guard let object = Self.blobObject(in: listing, path: path, stage: stage) else { return nil }
         let result = try await executeRaw(verb: "cat-file", arguments: ["blob", object], directory: top,
                                           caller: caller, configuration: configuration)
         return result.standardOutput
+    }
+
+    /// The blob id for exactly `path` in `ls-tree -z` output (`<mode> <type> <id>\t<path>`),
+    /// or, given a `stage`, in `ls-files --stage -z` output (`<mode> <id> <stage>\t<path>`).
+    /// A literal pathspec also lists what is under a directory of that name, so the path must
+    /// match whole; Swift's `==` compares canonically, so NFC and NFD spellings are equal.
+    static func blobObject(in listing: String, path: String, stage: String?) -> String? {
+        for entry in listing.split(separator: "\0") {
+            guard let tab = entry.firstIndex(of: "\t"), entry[entry.index(after: tab)...] == path else { continue }
+            let fields = entry[..<tab].split(separator: " ")
+            if let stage {
+                if fields.count == 3, fields[2] == stage { return String(fields[1]) }
+            } else if fields.count == 3, fields[1] == "blob" {
+                return String(fields[2])
+            }
+        }
+        return nil
     }
 
     /// The `-c` overrides every diff runs with: unquoted paths, and a blank context line kept

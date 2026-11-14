@@ -45,7 +45,7 @@ public struct GitCommit: Sendable, Hashable, Identifiable {
         }
     }
 
-    private static func parse(record: Substring) -> GitCommit? {
+    static func parse(record: Substring) -> GitCommit? {
         // The leading fields come from the front; the rest is subject and body, split at the
         // *last* unit separator so one inside a subject survives (one inside a body cannot).
         var fields = record.split(

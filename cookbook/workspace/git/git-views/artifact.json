@@ -4,11 +4,11 @@
     "id": "bdd3a72d-8810-439b-bad7-ec16233cb2a3",
     "title": "Git Views",
     "type": "ingredient",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -45,7 +45,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cdf62cfdbb2fba42",
+  "synced": "91eea8f3c431a87b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

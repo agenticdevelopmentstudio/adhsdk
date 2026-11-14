@@ -54,6 +54,10 @@
   does not resolve to a commit, it MUST NOT throw: a follow-mode request
   returns no commits, and any other request is retried without the `HEAD`
   revision when other revisions remain, or returns no commits when none do.
+- **file-history-command**: The file history verb MUST invoke `git log` with a
+  log request that follows the path and asks for name-status, with
+  `core.quotePath=false`, and MUST parse the output with the file history
+  rule; on exit status 128 with an unresolvable HEAD it returns no entries.
 - **refs-command**: The refs verb MUST invoke `git for-each-ref` with the
   ref format string against `refs/heads`, `refs/remotes` and `refs/tags`,
   and MUST parse the output with the ref parsing rule.
@@ -96,11 +100,18 @@
 - **file-contents**: The file-contents verb MUST return raw bytes, never
   decoded text. With no revision it MUST read the working file at the top
   level joined with the path, returning nothing when it does not exist.
-  With a revision it MUST name the object `<revision>:<path>` (so the
-  revision `:0` names the index entry `:0:<path>`), return nothing when
-  `git rev-parse --verify --quiet` reports it absent (exit status 1,
-  including on an unborn HEAD), and otherwise return the output of `git
-  cat-file blob <object id>`.
+  With a revision it MUST NOT pass the path inside a `<revision>:<path>`
+  argument: Foundation hands arguments to git decomposed (NFD) and that
+  form matches the index's precomposed names byte for byte, so a
+  non-ASCII path would read as absent. For an index stage (`:0`-`:3`) it
+  MUST find the entry with `git ls-files --stage -z -- :(literal)<path>`;
+  for any other revision it MUST resolve `<revision>^{tree}` with `git
+  rev-parse --verify --quiet --end-of-options`, returning nothing when it
+  is absent (exit status 1, including on an unborn HEAD), then list `git
+  ls-tree -z <tree> -- :(literal)<path>`. It MUST return nothing unless an
+  entry names exactly that path (a blob, or the requested stage), so a
+  directory or a missing path gives nothing, and otherwise return the
+  output of `git cat-file blob <object id>`.
 
 ### Execution, configuration and attribution
 
@@ -326,6 +337,16 @@ cannot read rather than failing the whole listing.
 - **log-query-follow**: A log request that follows renames MUST end with
   `--follow -- <path>` and MUST omit its revisions, because `git log
   --follow` takes exactly one path and walks from `HEAD`.
+- **log-query-name-status**: A log request that asks for name-status MUST
+  add `--name-status` ahead of its path part; one that does not MUST NOT.
+- **file-history-parse**: Parsing a name-status follow log MUST read each
+  commit's status lines from the text after its record terminator and
+  before the next record, and MUST give each commit the file's path at
+  that commit, carried from newest to oldest starting at the requested
+  path: a rename or copy (`R`/`C` with two paths) has the new path and
+  the old path, and hands the old path to older commits; any other status
+  names the path; a commit with no status line (a merge) keeps the
+  carried path. Quoted paths are unquoted.
 - **history-output-decoding**: Captured history output MUST be decoded with
   the same ladder as the execution step — UTF-8, then ISO Latin-1, segment
   by segment (below) — and never yield nothing.

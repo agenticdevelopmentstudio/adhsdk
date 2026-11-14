@@ -44,14 +44,30 @@ struct GitSyntaxColoringTests {
         #expect(await coloring.lines(for: data, path: "a.swift") == nil)
     }
 
-    @Test("non-UTF-8 content is decoded as Latin-1 and still coloured")
+    @Test("content is decoded line by line as the diff text is, UTF-8 else Latin-1, and still coloured")
     func latin1() async throws {
         let coloring = try GitTextMateFixture.coloring()
         let data = try #require("let é = 1".data(using: .isoLatin1))
         #expect(String(data: data, encoding: .utf8) == nil)
+        #expect(GitSyntaxColoring.decode(data) == "let é = 1")
+        // One Latin-1 line leaves a UTF-8 line beside it decoded as UTF-8, so its
+        // multi-byte characters keep the columns the diff text gives them.
+        var mixed = Data("let ü = 1\n".utf8)
+        mixed.append(data)
+        #expect(GitSyntaxColoring.decode(mixed) == "let ü = 1\nlet é = 1")
         let lines = try #require(await coloring.lines(for: data, path: "a.swift"))
         #expect(lines.count == 1)
         #expect(!(lines.first?.runs.isEmpty ?? true))
+    }
+
+    @Test("a lone carriage return stays inside its line, as in the diff, so later lines keep their colours")
+    func loneCarriageReturn() async throws {
+        // The diff splits on newlines only; the highlighter also breaks at a lone CR.
+        #expect(GitSyntaxColoring.decode(Data("let a = 1\rx\nlet b = 2\r\n".utf8)) == "let a = 1 x\nlet b = 2\r\n")
+        let coloring = try GitTextMateFixture.coloring()
+        let lines = try #require(await coloring.lines(for: Data("let a = 1\rx\nlet b = 2".utf8), path: "a.swift"))
+        #expect(lines.count == 2)
+        #expect(lines.last?.runs.first?.range == NSRange(location: 0, length: 3))
     }
 
     // MARK: - Revisions
