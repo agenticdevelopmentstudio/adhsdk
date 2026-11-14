@@ -4778,6 +4778,22 @@
       "path": "workspace/extensions/vscode-api/languages/host-diagnostic-sink",
       "rdid": "adhsdk.ingredient.workspace.extensions.vscode-api.languages.host-diagnostic-sink"
     },
+    "6a830cf8-0b95-4ffd-b175-f5cf481490c4": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:cf1fec547b19814057f49220d9a2e6b98bad955539565d9a1c374554737b2c70",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/git/git-window",
+      "rdid": "adhsdk.ingredient.workspace.git.git-window"
+    },
     "6a84b15a-5e4e-4b1c-9d73-0ae8a8b602af": {
       "implementations": [
         {
@@ -6670,7 +6686,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6c339b2daf1cc8357794ff41b800326c087be29a1ff071b015506ab179950084",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/BranchController.swift",
           "platform": "apple"

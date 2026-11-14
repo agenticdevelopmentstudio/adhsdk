@@ -8,3 +8,4 @@
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the refresh-ordering NEEDS REVIEW marker against source: overlapping refresh calls are not ordered or coalesced; restated as current behavior with a pending decision. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Open in Git Window command, offered while the Git window's open-for-path command is registered |

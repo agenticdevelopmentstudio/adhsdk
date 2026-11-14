@@ -4,11 +4,11 @@
     "id": "92f11498-2cb2-4b04-92b9-560d9f2de6ee",
     "title": "Branch Management",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -46,7 +46,7 @@
     "approved-date": ""
   },
   "names_hosts": "The pane's agent name is the literal string `Claude` the source returns; the spec states that value.",
-  "synced": "c2c816a1458b737f",
+  "synced": "8ac23f16111050b9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

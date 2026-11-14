@@ -132,4 +132,39 @@ final class BranchControllerTests: XCTestCase {
         XCTAssertNotNil(menu?.items.first?.target)
         XCTAssertTrue(menu?.items.allSatisfy { $0.target != nil } ?? false)
     }
+
+    /// "Open in Git Window" is offered only while the Git window's
+    /// open-for-path command is registered, and hands it the checkout's
+    /// directory, captured by value.
+    func testBranchControllerOffersGitWindowWhenRegistered() throws {
+        let registry = CommandRegistry()
+        let checkout = ProjectCheckout(directory: tempRoot, branch: "main", isMain: true)
+        let controller = BranchController(
+            checkout: checkout,
+            gitClient: GitClient(configuration: .default),
+            statusProvider: GitStatusProvider(repoRoot: tempRoot),
+            commandRegistry: registry
+        )
+        XCTAssertEqual(controller.commands.count, 3)
+
+        var received: [Any] = []
+        registry.register(AppCommand(
+            id: GitWindowFeature.CommandID.openForPath,
+            title: "Open Git Window for Path",
+            run: { arguments in
+                received = arguments
+                return nil
+            }
+        ))
+        let commands = controller.commands
+        XCTAssertEqual(commands.count, 4)
+        let open = try XCTUnwrap(commands.last)
+        XCTAssertEqual(open.id, "branch.action.openGitWindow.\(checkout.identifier)")
+        XCTAssertEqual(open.title, "Open in Git Window")
+        XCTAssertEqual(open.category, "Branch — main")
+
+        _ = open.run([])
+        XCTAssertEqual(received.compactMap { $0 as? String }, [tempRoot.path])
+        XCTAssertEqual(received.count, 1)
+    }
 }

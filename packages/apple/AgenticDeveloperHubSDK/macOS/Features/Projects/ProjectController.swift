@@ -283,7 +283,8 @@ public final class ProjectController: ComposableTabsTabItemDataSource {
             let controller = existing ?? BranchController(
                 checkout: checkout,
                 gitClient: gitClient,
-                statusProvider: workspace.gitStatusProvider(forDirectory: checkout.directory)
+                statusProvider: workspace.gitStatusProvider(forDirectory: checkout.directory),
+                commandRegistry: commandRegistry
             )
             next[checkout] = controller
             if existing == nil {

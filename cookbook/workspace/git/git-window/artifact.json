@@ -1,0 +1,65 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "6a830cf8-0b95-4ffd-b175-f5cf481490c4",
+    "title": "Git Window",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "One window per repository, keyed by its canonical top level: the refs sidebar, the history or the working copy, and the commit detail over the diff, with search and Refresh in the toolbar; the feature that opens, remembers and restores those windows, shares one syntax highlighter between them and registers the commands that open them.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "git",
+      "window",
+      "ui",
+      "history",
+      "diff",
+      "syntax-highlighting"
+    ],
+    "depends-on": [
+      "bdd3a72d-8810-439b-bad7-ec16233cb2a3",
+      "a2394ca0-3988-410b-9fc8-e0c9e253fc94",
+      "274f0727-b9b3-4fd3-9dea-b7e1bfbe92fc",
+      "6708bfd4-5b29-4bf9-b180-05904873906e",
+      "add92e9b-94e5-412c-970f-5ea8e2eb9eed"
+    ],
+    "related": [
+      "92f11498-2cb2-4b04-92b9-560d9f2de6ee"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "42357e6f5a504a1f",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}
