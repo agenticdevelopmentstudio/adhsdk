@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-11-13
@@ -62,10 +62,10 @@ The **history list** (`GitHistoryViewController`) is a paged table of the [commi
 - **history-graph-width**: The graph column MUST be as wide as the widest loaded graph row (`width × CommitGraphCellView.columnWidth`), and never narrower than one graph column.
 - **history-ref-badges**: The subject cell MUST carry one badge per ref the data source reports at the commit (`refs(at:)`), titled with the ref's name (`main`, `origin/main`, `v1`), ordered local branches, then remote branches, then tags, keeping the data source's order within a kind. A local branch is a filled badge in the accent colour; a remote branch an outlined badge in the accent colour; a tag an outlined badge in the warning colour. A commit with no refs has no badges.
 - **history-selection**: Selecting a row MUST call the delegate's `history(_:didSelect:)` once with that commit; clearing the selection calls it once with nil. `select(commitID:)` MUST select the loaded commit with exactly that id, scroll it into view and call the delegate the same way; an id that is not loaded changes nothing.
-- **history-reload**: `reload()` MUST re-read the data source. A selected commit that is still loaded stays selected without a delegate call; a selected commit that is gone is deselected and the delegate is called once with nil, so the owner never keeps showing a commit that left the list.
-- **history-paging**: When the table asks for a row in the last 50 loaded rows (index ≥ count − 50), the list MUST call the data source's `loadMore()` once, then reload, and MUST NOT call it again until the number of loaded commits or the data source's query has changed, so the end of the history does not loop and a new search whose first page is the same size still pages.
+- **history-reload**: `reload()` MUST re-read the data source: commits, graph rows, query, and the refs at each commit; rows and badges show only that snapshot until the next reload. A selected commit that is still loaded stays selected without a delegate call; a selected commit that is gone is deselected and the delegate is called once with nil, so the owner never keeps showing a commit that left the list.
+- **history-paging**: When the table asks for a row in the last 50 loaded rows (index ≥ count − 50), the list MUST call the data source's `loadMore()` once, then reload, and MUST NOT call it again until the number of loaded commits or the data source's query has changed, so the end of the history does not loop and a new search whose first page is the same size still pages. The count and query are the ones as of the last `reload()`, so a data source that cleared its commits for a search in flight does not page.
 - **history-search-parse**: `GitHistorySearch.parse(_:)` MUST be pure and return a `GitLogQuery` with the default revisions, limit and skip and at most one filter, from the text trimmed of whitespace: empty → no filter; `author:<x>` (prefix in any case) → `author` `x`; `sha:<x>` (prefix in any case) → no filter; `-S <x>` or `-S<x>` → `pickaxe` `x`; anything else → `messageGrep`, the whole trimmed text. A prefix with nothing after it is no filter. `GitHistorySearch.shaPrefix(_:)` MUST return the lowercased `x` of the `sha:` form and nil for every other form.
-- **history-set-query**: `setQuery(_:)` MUST parse the text, and when the parsed query differs from the data source's current query, await the data source's `setQuery` and reload. For the `sha:` form it MUST then select the first loaded commit whose id starts with the prefix (case-insensitively), as `select(commitID:)` does; no match selects nothing. A `setQuery` overtaken by a later one MUST NOT select.
+- **history-set-query**: `setQuery(_:)` MUST parse the text, and when the parsed query differs from the one the list last sent (applied or in flight; the data source's query before the first search), send it to the data source. A parsed query equal to one still in flight MUST wait for that request rather than skip or resend it, because the data source takes a new query before its results arrive. The latest call then reloads. For the `sha:` form it MUST then select the first loaded commit whose id starts with the prefix (case-insensitively), as `select(commitID:)` does; no match selects nothing. A `setQuery` overtaken by a later one MUST NOT select.
 - **history-ui-thread**: The history list MUST be used on the UI thread; every data-source call that waits is awaited, never blocked on.
 
 ## Appearance
@@ -101,7 +101,7 @@ The sidebar's root view carries the identifier `git.sidebar`. Rows are the topic
 
 ### History list
 
-The root view carries `git.history`, the table `git.history.table`. Cells carry `git.history.subject`, `git.history.author`, `git.history.date` and `git.history.sha`; the graph cell keeps its own `commitGraph.cell` and the avatar `avatar`. Badges carry `git.history.badge.local`, `git.history.badge.remote` or `git.history.badge.tag`. Rows are table rows, so `dev.py ax --nth` picks one.
+The root view carries `git.history`, its scroll view `git.history.scroll`, the table `git.history.table`, each row view `git.history.row`. Cells carry `git.history.subject`, `git.history.author`, `git.history.date` and `git.history.sha`; the graph cell keeps its own `commitGraph.cell` and the avatar `avatar`. Badges carry `git.history.badge.local`, `git.history.badge.remote` or `git.history.badge.tag`. Rows are table rows, so `dev.py ax --nth` picks one.
 
 ## Conformance Test Vectors
 
@@ -125,6 +125,10 @@ The root view carries `git.history`, the table `git.history.table`. Cells carry 
 | git-views-016 | history-selection, history-reload | Select commit `c1`; reload with `c1` still loaded; reload without it | Delegate `c1` once; nothing on the first reload; nil once on the second. |
 | git-views-017 | history-set-query | `setQuery("sha:C1")` on an unfiltered source holding `c1…`; then `setQuery("author:Ann")` | First: the source's query is not replaced and `c1…` is selected. Second: the source receives author `Ann`. |
 | git-views-018 | history-graph-width | Graph rows of width 1 and 3 | The graph column is 3 × `columnWidth` wide. |
+| git-views-019 | history-set-query | A source that takes the query before it suspends; `setQuery("fix")` held, then `setQuery("fix ")`; the source then returns one commit and is released | The source receives messageGrep `fix` once; after both calls the list shows one row. |
+| git-views-020 | history-set-query | Source filtered by author `Someone`; `setQuery("sha:a")` held, then `setQuery("sha:ab")`; the cleared list holds `c000…`, `ab12…`, `c002…` | The source receives the default query once; row 1 (`ab12…`) is selected and the delegate hears it once. |
+| git-views-021 | history-paging, history-reload | 120 commits shown; the source clears its commits; row 10 appears | No `loadMore`; the table still has 120 rows. |
+| git-views-022 | history-reload | Tag `v1` added at a commit after the last reload | No badge until `reload()`; then `v1`. |
 
 ## Edge Cases
 
@@ -140,6 +144,8 @@ The root view carries `git.history`, the table `git.history.table`. Cells carry 
 - **History, end reached**: a `loadMore` that adds nothing is not repeated until the count or the query changes.
 - **History, ambiguous sha prefix**: the first (newest) loaded match is selected.
 - **History, search text with regex characters**: plain text is passed to git as `--grep` (a regular expression, case-insensitive); `-S` is a literal string.
+- **History, text starting with `-S`**: any text that starts with `-S` (case-sensitive) is a pickaxe search for the rest, as git's own `-S<x>`: `-Something` searches for `omething`; `-s x` is a message search.
+- **History, typing while a search is in flight**: `fix` then `fix ` (or `sha:a` then `sha:ab` while a filter clears) parse to the query already in flight; the later call waits for it, then reloads and selects.
 - **History, non-UTF-8 messages**: shown as the model decoded them (lossily), never dropped.
 
 ## Configuration
@@ -192,8 +198,8 @@ Not applicable: the views log nothing; the model logs failed loads.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.1.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -225,6 +231,14 @@ Not applicable: the views log nothing; the model logs failed loads.
 **Rationale**: The table only requests rows it is about to show, so the request is the visibility signal; the count guard keeps a finished history from reloading in a loop.
 **Approved**: pending
 
+**Decision**: After a page arrives the list reloads itself; the owner's reload on the model's history notification is a second, harmless one.
+**Rationale**: The list must not depend on its owner to show the pages it asked for; the owner's reload is still needed for changes the list did not ask for (refresh, refs).
+**Approved**: pending
+
+**Decision**: `setQuery` tracks the query it sent and the task sending it, never the data source's query after the first search.
+**Rationale**: The model takes the new query before it awaits the log, so its query says nothing about whether results have arrived.
+**Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -241,3 +255,4 @@ Not applicable: the views log nothing; the model logs failed loads.
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation: the refs sidebar |
 | 1.0.1 | 2026-11-13 | Mike Fullerton | Reload falls back to the working copy when the selected ref or stash vanishes; directory rows restore the selection; remote title fallback; vectors 007-011 |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | History list: graph, subject with ref badges, author, date, short sha; paging; selection and reload; search parsing and setQuery; vectors 012-018 |
+| 1.1.1 | 2026-11-13 | Mike Fullerton | setQuery tracks the query it sent and waits for one in flight; paging and badges read the reload snapshot; scroll and row identifiers; vectors 019-022 |

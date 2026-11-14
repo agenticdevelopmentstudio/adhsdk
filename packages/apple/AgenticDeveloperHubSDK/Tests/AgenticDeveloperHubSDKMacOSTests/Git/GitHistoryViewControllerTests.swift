@@ -339,4 +339,110 @@ struct GitHistoryViewControllerTests {
         #expect(delegate.events.isEmpty)
         #expect(history.tableView.selectedRow == -1)
     }
+
+    /// Waits until `history` has started `count` `setQuery(_:)` calls.
+    private func waitForGeneration(_ history: GitHistoryViewController, _ count: Int) async {
+        while history.queryGeneration < count { await Task.yield() }
+    }
+
+    @Test("setQuery: a second text with the same query while the first is in flight still reloads")
+    func setQuerySameQueryInFlight() async {
+        let source = Self.source(count: 3)
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+
+        // The fake, like the model, takes the new query before it suspends.
+        source.holdsSetQuery = true
+        let first = Task { await history.setQuery("fix") }
+        while source.held.isEmpty { await Task.yield() }
+        let second = Task { await history.setQuery("fix ") }
+        await waitForGeneration(history, 2)
+        for _ in 0..<5 { await Task.yield() }
+
+        source.commits = [Self.commit("f001", subject: "fix one")]
+        source.graphRows = [Self.row(width: 1)]
+        source.releaseHeld()
+        await first.value
+        await second.value
+
+        var expected = GitLogQuery()
+        expected.messageGrep = "fix"
+        #expect(source.setQueries == [expected])
+        #expect(history.numberOfRows(in: history.tableView) == 1)
+    }
+
+    @Test("setQuery: a longer sha: prefix while the filter is clearing selects in the cleared list")
+    func setQueryShaPrefixWhileClearing() async {
+        let source = Self.source(count: 3)
+        source.query.author = "Someone"
+        let delegate = RecordingHistoryDelegate()
+        let history = GitHistoryViewController(source: source)
+        history.delegate = delegate
+        history.loadViewIfNeeded()
+
+        source.holdsSetQuery = true
+        let first = Task { await history.setQuery("sha:a") }
+        while source.held.isEmpty { await Task.yield() }
+        let second = Task { await history.setQuery("sha:ab") }
+        await waitForGeneration(history, 2)
+        for _ in 0..<5 { await Task.yield() }
+
+        source.commits = [Self.commit("c000"), Self.commit("ab12"), Self.commit("c002")]
+        source.graphRows = source.commits.map { _ in Self.row(width: 1) }
+        source.releaseHeld()
+        await first.value
+        await second.value
+
+        #expect(source.setQueries == [GitLogQuery()])
+        #expect(history.tableView.selectedRow == 1)
+        #expect(delegate.events == [Self.sha("ab12")])
+    }
+
+    @Test("a row added to the table is what asks for the next page")
+    func pagingFromDidAdd() async {
+        let source = Self.source(count: 3)
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+        history.tableView(history.tableView, didAdd: NSTableRowView(), forRow: 0)
+        await history.pagingTask?.value
+        #expect(source.loadMoreCount == 1)
+    }
+
+    @Test("paging follows the rows on screen, not a data source cleared by a search in flight")
+    func pagingUsesSnapshot() async {
+        let source = Self.source(count: 120)
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+
+        // The model clears its commits while a search fetches; the table still shows 120.
+        source.commits = []
+        source.graphRows = []
+        history.rowWillAppear(10)
+        await history.pagingTask?.value
+        #expect(source.loadMoreCount == 0)
+        #expect(history.numberOfRows(in: history.tableView) == 120)
+    }
+
+    @Test("badges come from the refs as of the last reload")
+    func badgesFromSnapshot() throws {
+        let source = Self.source(count: 1)
+        let history = GitHistoryViewController(source: source)
+        history.loadViewIfNeeded()
+        source.refsByCommit[Self.sha("c000")] = [Self.ref(.tag, "v1", at: "c000")]
+
+        let before: GitHistorySubjectCellView = try #require(cell(history, "subject", row: 0))
+        #expect(before.badges.isEmpty)
+        history.reload()
+        let after: GitHistorySubjectCellView = try #require(cell(history, "subject", row: 0))
+        #expect(after.badges == [GitHistoryRefBadge(title: "v1", kind: .tag)])
+    }
+
+    @Test("the scroll view and the row views carry identifiers")
+    func identifiers() {
+        let history = GitHistoryViewController(source: Self.source(count: 1))
+        history.loadViewIfNeeded()
+        #expect(history.tableView.enclosingScrollView?.accessibilityIdentifier() == "git.history.scroll")
+        let rowView = history.tableView(history.tableView, rowViewForRow: 0)
+        #expect(rowView?.accessibilityIdentifier() == "git.history.row")
+    }
 }
