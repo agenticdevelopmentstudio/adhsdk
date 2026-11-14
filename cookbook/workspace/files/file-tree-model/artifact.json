@@ -4,11 +4,11 @@
     "id": "1b64553a-ab58-4154-b9d5-30f34eb33caf",
     "title": "File Tree Model",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-13",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -42,7 +42,7 @@
     "approved-date": ""
   },
   "names_hosts": "`.claude` is named as a literal dotfile directory the tree must include.",
-  "synced": "522cf6c566ad22c9",
+  "synced": "acc7830487c2d3f0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -143,4 +143,28 @@ struct GitStatusParserTests {
         let status = GitStatus.parse(porcelain: " M ///\u{0}")
         #expect(status.directories.isEmpty)
     }
+
+    @Test("each column is kept on its own: staged from the index, unstaged from the work tree")
+    func stagedAndUnstagedColumns() {
+        let status = GitStatus.parse(porcelain: "MM both.txt\u{0}A  new.txt\u{0} D gone.txt\u{0}?? loose.txt\u{0}")
+        #expect(status.stagedFiles == ["both.txt": .modified, "new.txt": .added])
+        #expect(status.unstagedFiles == ["both.txt": .modified, "gone.txt": .deleted, "loose.txt": .untracked])
+    }
+
+    @Test("a conflict is unstaged only, a rename stages under the new path, and ignored is in neither")
+    func conflictRenameAndIgnoredColumns() {
+        let status = GitStatus.parse(
+            porcelain: "UU fight.txt\u{0}RM new.txt\u{0}old.txt\u{0}!! ignored.txt\u{0}T  kind.txt\u{0}"
+        )
+        #expect(status.stagedFiles == ["new.txt": .renamed, "kind.txt": .modified])
+        #expect(status.unstagedFiles == ["fight.txt": .conflicted, "new.txt": .modified])
+    }
+
+    @Test("a change list orders by path and marks untracked files")
+    func fileChangesAreSortedByPath() {
+        let changes = GitFileChange.list(["b.txt": .untracked, "a.txt": .modified])
+        #expect(changes == [GitFileChange(path: "a.txt", status: .modified),
+                            GitFileChange(path: "b.txt", status: .untracked)])
+        #expect(changes.map(\.isUntracked) == [false, true])
+    }
 }

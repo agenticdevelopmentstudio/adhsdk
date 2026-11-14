@@ -295,6 +295,15 @@ picker) is a consumer of this contract, not part of it.
   record as conflicted when its two-character status pair is exactly one
   of `DD`, `AU`, `UD`, `UA`, `DU`, `AA`, `UU`, ahead of the
   modified/added/deleted ladder.
+- **status-staged-unstaged-columns**: Parsing status MUST also keep each
+  column on its own, in the same pass over the same records: a staged map
+  from the index column and an unstaged map from the work-tree column,
+  each keyed by the new path. `M` and `T` MUST read as modified, `A` as
+  added, `D` as deleted, `R` as renamed and `C` as copied; a space MUST
+  leave the path out of that column's map. An unmerged pair MUST appear as
+  conflicted in the unstaged map only, `??` as untracked in the unstaged
+  map only, and `!!` in neither. A path changed in both columns MUST appear
+  in both maps.
 - **status-byte-accurate-path-decode**: Parsing status MUST slice and
   count each record in UTF-8 bytes rather than by character, and MUST drop
   a record whose remaining bytes fail to decode as UTF-8 or decode to an
@@ -532,6 +541,8 @@ component.
 | git-client-046 | error-description-vs-log-description | Produce the log-facing description of a command-failed outcome carrying verb `status`, exit status `128`, and standard-error text `"fatal: ... '/Users/secret/repo'"`. | Excludes `"secret"`; includes `"status"` and `"128"`. |
 | git-client-047 | error-description-vs-log-description | Produce the log-facing description of a launch-failed outcome carrying reason `"secret-path-in-the-reason"`. | Excludes `"secret"`. |
 | git-client-048 | error-description-vs-log-description | Produce the log-facing description of an executable-not-found outcome carrying path `"/Users/secret/bin/git"`. | Excludes `"secret"`. |
+| git-client-049 | status-staged-unstaged-columns | Parse status output `MM both.txt`, `A  new.txt`, ` D gone.txt`, `?? loose.txt`. | Staged: `both.txt` modified, `new.txt` added. Unstaged: `both.txt` modified, `gone.txt` deleted, `loose.txt` untracked. |
+| git-client-050 | status-staged-unstaged-columns | Parse status output `UU fight.txt`, `RM new.txt` (origin `old.txt`), `!! ignored.txt`. | Staged: `new.txt` renamed. Unstaged: `fight.txt` conflicted, `new.txt` modified. `ignored.txt` is in neither; `old.txt` is in neither. |
 
 ## Edge Cases
 
