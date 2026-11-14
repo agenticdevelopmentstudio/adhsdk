@@ -45,8 +45,7 @@ describe('SendIcon conformance vectors', () => {
     expect(svg(container).getAttribute('height')).toBe('20')
   })
 
-  // BUG: SendIcon.tsx sets no aria-hidden or focusable attribute, contradicting the decorative-hidden requirement
-  it.skip('send-icon-006 aria-hidden true and focusable false are present, no role', () => {
+  it('send-icon-006 aria-hidden true and focusable false are present, no role', () => {
     const { container } = render(<SendIcon />)
     expect(svg(container).getAttribute('aria-hidden')).toBe('true')
     expect(svg(container).getAttribute('focusable')).toBe('false')

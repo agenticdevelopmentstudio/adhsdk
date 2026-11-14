@@ -45,10 +45,10 @@
   on a `401`, the single inherited refresh-and-retry); nothing in this recipe retries a network
   failure or a non-401 error status, and no exponential backoff exists anywhere in this recipe —
   the poll fallback is a fixed interval, not a backoff schedule.
-- **thread-message-bleed-on-chatid-switch**: if the send action (or its returned promise) is still
-  pending when `chatId` changes, the DM thread state's `messages` is a single array not
-  partitioned by chat id, and neither the send action nor the mark-read action carries a
-  generation guard analogous to the history load's own cancellation flag or the DM conversation
-  list's generation counter; the resolved message MAY merge into whatever thread is displayed when
-  it settles rather than the one it was sent for.
+- **thread-message-bleed-on-chatid-switch**: if the send action is still pending when `chatId`
+  changes, its resolved message is dropped rather than merged into the newly displayed thread
+  (`dm-thread-send-merge-guarded`), and the new thread starts from an empty `messages` list
+  (`dm-thread-reset-on-chatid-change`). The message is still stored server-side and appears when
+  the original chat is opened again. The mark-read action needs no guard: it updates no thread
+  state, only the server's read cursor for the chat it was called for.
 

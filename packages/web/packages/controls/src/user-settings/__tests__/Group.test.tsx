@@ -57,14 +57,12 @@ describe('Group', () => {
     expect(body).not.toBeNull()
     expect(body?.innerHTML).toBe('')
   })
-  // BUG: `hint && <p>` leaks a bare "0" text node into the section when hint is 0
-  it.skip('group-013 hint={0} renders no hint and no stray 0', () => {
+  it('group-013 hint={0} renders no hint and no stray 0', () => {
     const { container } = render(<Group hint={0 as unknown as string} />)
     expect(container.querySelector('p.aws-group__hint')).toBeNull()
     expect(root(container).textContent).not.toContain('0')
   })
-  // BUG: `title && <h3>` leaks a bare "0" text node into the section when title is 0
-  it.skip('group-014 title={0} renders no h3 and no stray 0', () => {
+  it('group-014 title={0} renders no h3 and no stray 0', () => {
     const { container } = render(<Group title={0 as unknown as string} />)
     expect(container.querySelector('h3')).toBeNull()
     expect(root(container).textContent).not.toContain('0')

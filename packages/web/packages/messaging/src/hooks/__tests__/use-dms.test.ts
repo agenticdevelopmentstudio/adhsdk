@@ -300,8 +300,7 @@ describe('useDmThread', () => {
     signedIn.unmount()
   })
 
-  // BUG: send() merges the POST response into whatever thread is current when it settles, so a message sent in "c1" lands under "c2" if chatId switches before the POST resolves.
-  it.skip('hub-domain-hooks-033 a send resolving after a chat switch does not merge into the new thread', async () => {
+  it('hub-domain-hooks-033 a send resolving after a chat switch does not merge into the new thread', async () => {
     mocks.listV1Page.mockResolvedValueOnce(list([])).mockResolvedValueOnce(list([]))
     const post = deferred<unknown>()
     mocks.authedJson.mockReturnValue(post.promise)
@@ -318,6 +317,16 @@ describe('useDmThread', () => {
       await sending
     })
     expect(hook.result.current.messages.map((m) => m.chatId)).not.toContain('c1')
+    hook.unmount()
+  })
+
+  it('hub-domain-hooks-034 a chatId change clears the previous thread before the new one loads', async () => {
+    mocks.listV1Page.mockResolvedValueOnce(list([msgWire('m1', 1, 'u1', 'c1')])).mockResolvedValueOnce(list([]))
+    const hook = renderHook((id: string) => useDmThread(id), 'c1')
+    await waitFor(() => expect(hook.result.current.messages.map((m) => m.id)).toEqual(['m1']))
+    hook.rerender('c2')
+    await waitFor(() => expect(hook.result.current.loading).toBe(false))
+    expect(hook.result.current.messages).toEqual([])
     hook.unmount()
   })
 

@@ -31,17 +31,12 @@ request headers); a live-connection client on another platform that can set a he
 replicate this deviation.
 **Approved**: pending
 
-**Decision**: `send` and `markRead` carry no chatId-generation guard, while the thread's own history
-load and `useDmConversations`' window load both do.
-**Rationale**: recorded as observed source behavior, not smoothed over — see the
-`thread-message-bleed-on-chatid-switch` marker; a port MUST decide deliberately whether to add
-a matching guard to these two callbacks or to preserve the current behavior, since the current
-checkout does not settle which is intended.
-**Approved**: pending
-
-**Decision**: a send that settles after a `chatId` switch can merge its message into the newly displayed thread; the send and mark-read actions have no generation guard.
-
-**Rationale**: the thread's `messages` is one array not partitioned by chat id, unlike the history load's cancellation flag and the conversation list's generation counter; closing the gap takes a generation guard (or per-chat partitioning) on send and mark-read, and it is undecided whether product intent tolerates the bleed-through during a fast switch.
-
+**Decision**: a send that settles after a `chatId` switch is dropped from local state instead of
+merged into the newly displayed thread, and a `chatId` change clears `messages` first.
+**Rationale**: `messages` is one array not partitioned by chat id, so without the guard a message
+sent in one chat appeared under another during a fast switch, and without the reset the previous
+chat's messages stayed in the new thread. A ref holding the current `chatId` is the smallest guard;
+the dropped message is not lost, because the server stored it and the original chat's history
+load returns it. `markRead` stays unguarded because it changes no local thread state.
 **Approved**: pending
 

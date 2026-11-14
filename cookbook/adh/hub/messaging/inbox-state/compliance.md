@@ -17,11 +17,10 @@
 
 `separation-of-concerns` passes: both files contain zero JSX or DOM code — they export hooks and
 plain functions consumed by a separate presentation layer. `unit-test-coverage` is `partial`:
-`hooks/__tests__/use-notifications.test.ts` and `hooks/__tests__/use-dms.test.ts` cover 30 of the 33
+`hooks/__tests__/use-notifications.test.ts` and `hooks/__tests__/use-dms.test.ts` cover 32 of the 34
 conformance vectors with passing tests. Vectors `hub-domain-hooks-031` (401 refresh waterfall) and
 `-032` (`access_token` query parameter) belong to the shared `authedFetch` and `connectSse`
-transport and are skipped; `-033` (a send resolving after a chat switch merges into the new
-thread) is a source bug and is skipped with a `BUG` note. `explicit-error-handling` is
+transport and are skipped. `explicit-error-handling` is
 `partial`: every plain HTTP failure either throws (`AuthHttpError`/`Error`) or lands in an exposed
 `error` field, but several catches (`fetchPresenceMap`, the SSE malformed-frame handler, and both
 poll-fallback refetches) discard the error with no signal at all beyond a silent fallback.
