@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "274f0727-b9b3-4fd3-9dea-b7e1bfbe92fc",
+    "title": "Keyed Window Set",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "One window per key: opening an open key brings its window forward, opened keys persist in order in a UserSetting, a closed window's key is forgotten, and restore reopens the list quietly, dropping keys that fail.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "window-management",
+      "restore",
+      "user-settings"
+    ],
+    "depends-on": [],
+    "related": [
+      "61c7b509-78d1-4407-9a4e-25b155f06fbb",
+      "7f1b8bef-e78e-4cac-be55-c948fe9062e5"
+    ],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/KeyedWindowSet.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "161dae8c5beedda0",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}
