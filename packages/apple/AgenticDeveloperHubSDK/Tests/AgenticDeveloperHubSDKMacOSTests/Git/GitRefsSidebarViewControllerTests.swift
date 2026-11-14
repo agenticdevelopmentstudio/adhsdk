@@ -174,6 +174,93 @@ struct GitRefsSidebarViewControllerTests {
         #expect(delegate.events.isEmpty)
     }
 
+    /// Selects the row with `id` the way a click does: in the list, then reported.
+    private func click(_ sidebar: GitRefsSidebarViewController, _ id: String) {
+        sidebar.list.selectItem(withId: id)
+        let item = sidebar.sections.flatMap(\.items).first { $0.id == id }
+        sidebar.list.onSelect?(item)
+    }
+
+    @Test("reload keeps a selected row that survives, without calling the delegate")
+    func reloadKeepsSurvivingSelection() {
+        let source = FakeRefsSource()
+        source.refs = [Self.branch("main", head: true), Self.branch("dev")]
+        let sidebar = GitRefsSidebarViewController(source: source)
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        _ = sidebar.view
+        click(sidebar, "refs/heads/dev")
+
+        source.refs.insert(Self.branch("aaa"), at: 0)
+        source.refs[2] = Self.branch("dev", ahead: 3)
+        sidebar.reload()
+
+        #expect(delegate.events == [.ref("refs/heads/dev")])
+        #expect(sidebar.list.selectedItem?.id == "refs/heads/dev")
+    }
+
+    @Test("reload that drops the selected ref or stash falls back to the working copy and says so")
+    func reloadDropsRemovedSelection() {
+        let source = Self.fullSource()
+        let sidebar = GitRefsSidebarViewController(source: source)
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        _ = sidebar.view
+
+        click(sidebar, "stash:s0")
+        source.stashes.removeFirst()
+        sidebar.reload()
+        #expect(delegate.events == [.stash("s0"), .workingCopy])
+        #expect(sidebar.list.selectedItem?.id == "workspace.working-copy")
+
+        click(sidebar, "refs/heads/dev")
+        source.refs.removeAll { $0.fullName == "refs/heads/dev" }
+        sidebar.reload()
+        #expect(delegate.events == [.stash("s0"), .workingCopy, .ref("refs/heads/dev"), .workingCopy])
+        #expect(sidebar.list.selectedItem?.id == "workspace.working-copy")
+
+        // Nothing selected stays a no-op on reload.
+        sidebar.reload()
+        #expect(delegate.events.count == 4)
+    }
+
+    @Test("opening a submodule or worktree restores the previous selection")
+    func directoryRowIsAnAction() {
+        let source = Self.fullSource()
+        let sidebar = GitRefsSidebarViewController(source: source)
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        _ = sidebar.view
+
+        click(sidebar, "refs/tags/v1")
+        click(sidebar, "worktree:/w/feature")
+        #expect(sidebar.list.selectedItem?.id == "refs/tags/v1")
+
+        // A reload after the action does not treat the directory as the selection.
+        sidebar.reload()
+        #expect(delegate.events == [
+            .ref("refs/tags/v1"), .directory(URL(fileURLWithPath: "/w/feature", isDirectory: true))
+        ])
+    }
+
+    @Test("a remote ref with nothing after its remote keeps its whole name")
+    func remoteTitleFallback() {
+        let source = FakeRefsSource()
+        source.refs = [Self.remote("origin/main"), Self.remote("odd")]
+        let sidebar = GitRefsSidebarViewController(source: source)
+        #expect(titles(sidebar) == ["Workspace", "Remotes · origin", "Remotes · odd"])
+        #expect(Array(rows(sidebar).dropFirst()) == [["main"], ["odd"]])
+    }
+
+    @Test("an unborn repository with a worktree lists Workspace and Worktrees")
+    func unbornWithWorktree() {
+        let source = FakeRefsSource()
+        source.worktrees = [Self.worktree("/repo", main: true)]
+        let sidebar = GitRefsSidebarViewController(source: source)
+        #expect(titles(sidebar) == ["Workspace", "Worktrees"])
+        #expect(rows(sidebar) == [["Working Copy"], ["repo"]])
+    }
+
     @Test("the root view carries git.sidebar and hosts the topic list")
     func identifier() {
         let sidebar = GitRefsSidebarViewController(source: FakeRefsSource())

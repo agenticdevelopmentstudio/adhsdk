@@ -31,6 +31,11 @@ public final class GitRefsSidebarViewController: NSViewController {
     /// What each row id names, rebuilt with the sections.
     private var targets: [String: Target] = [:]
 
+    /// The id of the row last reported to the delegate as selected. A
+    /// submodule or worktree row is an action, not a place, so it never
+    /// becomes the selection.
+    private var selectedID: String?
+
     private enum Target {
         case workingCopy
         case ref(GitRef)
@@ -70,7 +75,9 @@ public final class GitRefsSidebarViewController: NSViewController {
     }
 
     /// Rebuilds every section from the data source. The list keeps the selected
-    /// row when its id survives, without reporting it again.
+    /// row when its id survives, without reporting it again; when the selected
+    /// ref or stash is gone, the selection falls back to the working copy and
+    /// the delegate is told, so the owner never keeps showing what vanished.
     public func reload() {
         var targets: [String: Target] = [Self.workingCopyID: .workingCopy]
         var sections = [TopicListSection(title: "Workspace", items: [
@@ -98,10 +105,8 @@ public final class GitRefsSidebarViewController: NSViewController {
         }
         for remote in remotes {
             add("Remotes · \(remote)", remoteBranches.filter { $0.remote == remote }.map { ref in
-                (TopicListItem(
-                    id: ref.fullName, title: String(ref.name.dropFirst(remote.count + 1)),
-                    icon: Self.symbol("network")
-                ), .ref(ref))
+                (TopicListItem(id: ref.fullName, title: Self.remoteBranchTitle(ref, remote: remote),
+                               icon: Self.symbol("network")), .ref(ref))
             })
         }
 
@@ -132,6 +137,20 @@ public final class GitRefsSidebarViewController: NSViewController {
         self.targets = targets
         self.sections = sections
         list.setSections(sections)
+
+        if let selectedID, targets[selectedID] == nil {
+            self.selectedID = Self.workingCopyID
+            list.selectItem(withId: Self.workingCopyID)
+            delegate?.sidebarDidSelectWorkingCopy(self)
+        }
+    }
+
+    /// A remote branch's name less its `<remote>/` prefix, or the whole name
+    /// when that would leave nothing (a ref directly under `refs/remotes/<x>`).
+    private static func remoteBranchTitle(_ ref: GitRef, remote: String) -> String {
+        let prefix = remote + "/"
+        guard ref.name.hasPrefix(prefix), ref.name.count > prefix.count else { return ref.name }
+        return String(ref.name.dropFirst(prefix.count))
     }
 
     /// `↑n ↓m`, each half only when its count is non-zero; nil when both are zero.
@@ -143,7 +162,15 @@ public final class GitRefsSidebarViewController: NSViewController {
     }
 
     private func select(itemID: String) {
-        guard let target = targets[itemID], let delegate else { return }
+        guard let target = targets[itemID] else { return }
+        if case .directory = target {
+            // An action: the previous selection comes back, so clicking the
+            // same row again opens the window again.
+            if let selectedID { list.selectItem(withId: selectedID) }
+        } else {
+            selectedID = itemID
+        }
+        guard let delegate else { return }
         switch target {
         case .workingCopy: delegate.sidebarDidSelectWorkingCopy(self)
         case .ref(let ref): delegate.sidebar(self, didSelect: ref)
