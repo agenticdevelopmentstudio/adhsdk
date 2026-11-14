@@ -5124,6 +5124,22 @@
       "path": "ui/blocks/list-with-details-pane",
       "rdid": "adhsdk.recipe.ui.blocks.list-with-details-pane"
     },
+    "6b0f3c52-8e47-4d1a-9a35-2f7c1d9e4a60": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:ff184af97e33639007d68d16b40710a8219500278d961c0e748853c060c9f948",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/hub-mail/src/",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/hub-mail-web-client",
+      "rdid": "adhsdk.ingredient.integrations.hub-mail-web-client"
+    },
     "6b796310-ff12-4d38-a1a9-1d3af3f1e87f": {
       "implementations": [
         {

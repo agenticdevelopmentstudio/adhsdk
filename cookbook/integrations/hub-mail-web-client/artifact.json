@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "6b0f3c52-8e47-4d1a-9a35-2f7c1d9e4a60",
+    "title": "Hub Mail Web Client",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-14",
+    "modified": "2026-11-14",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Reads a signed-in customer's hub-synced Gmail in the browser: lists their mail connections and pages the hub's /sync/pull into an in-memory, per-session snapshot, answering accounts, messages and one message with no local database.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "integrations",
+      "mail",
+      "hub",
+      "web"
+    ],
+    "depends-on": [
+      "a6442464-e17d-451e-b47a-3be23a2dc753"
+    ],
+    "related": [
+      "e12914f0-3a3b-4fb7-ac0c-6332de37de4f"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "bae1138b099cbff8",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}
