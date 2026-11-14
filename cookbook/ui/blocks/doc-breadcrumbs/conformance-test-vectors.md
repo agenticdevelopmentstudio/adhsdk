@@ -14,3 +14,6 @@
 | breadcrumb-011 | accept-crumbs-array | `crumbs={[{label:"Docs", path:"/docs"}, {label:"Guides", path:"/docs/guides"}]}` | Both crumbs render in correct order |
 | breadcrumb-012 | forward-html-attributes | `crumbs={[{label:"Docs", path:"/docs"}]} data-testid="breadcrumb"` | `<nav>` element has `data-testid="breadcrumb"` |
 
+| breadcrumb-013 | render-current-as-text | `crumbs={[{label:"Docs", path:"/docs"}]}` | Single crumb "Docs" renders as plain text after the home link, not as a link |
+| breadcrumb-014 | accept-crumbs-array | `crumbs={[{label:"", path:"/docs"}, {label:"API", path:"/docs/api"}]}` | First crumb renders an empty link between separators; no error |
+| breadcrumb-015 | render-ancestors-as-links | `crumbs={[{label:"Docs", path:""}, {label:"API", path:"/docs/api"}]}` | First crumb link receives `to=""` unchanged |

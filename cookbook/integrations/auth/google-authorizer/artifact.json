@@ -4,15 +4,15 @@
     "id": "fafeef0d-c283-4ecf-92fb-b5de35d71f79",
     "title": "Google Authorizer",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Google OAuth for a desktop app: loopback browser sign-in under a deadline, form-encoded token refresh and revoke, and a coalescing, Keychain-backed token provider.",
+    "summary": "Gmail-only Google OAuth for a desktop app: loopback browser sign-in under a deadline, form-encoded token refresh and revoke, and a coalescing, Keychain-backed token provider.",
     "platforms": [
       "swift",
       "macos"
@@ -34,19 +34,16 @@
       "aed9acc9-6340-487b-acfb-b7b13f14e59a"
     ],
     "references": [
-      "https://developers.google.com/identity/protocols/oauth2/native-app (Google OAuth 2.0 for installed apps)",
-      "https://accounts.google.com/o/oauth2/v2/auth (Google authorization endpoint)",
-      "https://oauth2.googleapis.com/token (Google token endpoint)",
-      "https://oauth2.googleapis.com/revoke (Google revoke endpoint)",
-      "https://www.rfc-editor.org/rfc/rfc8252 (RFC 8252, OAuth 2.0 for Native Apps)",
-      "https://www.rfc-editor.org/rfc/rfc7636 (RFC 7636, PKCE)",
-      "https://www.rfc-editor.org/rfc/rfc3986#section-2.3 (RFC 3986, unreserved characters)",
-      "https://github.com/openid/AppAuth-iOS (AppAuth)"
+      "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "https://www.rfc-editor.org/rfc/rfc8252",
+      "https://www.rfc-editor.org/rfc/rfc7636",
+      "https://www.rfc-editor.org/rfc/rfc3986#section-2.3",
+      "https://github.com/openid/AppAuth-iOS"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a0368c6bfa28ed33",
+  "synced": "e3523bc1b9f67364",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

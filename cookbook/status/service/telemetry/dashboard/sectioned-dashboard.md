@@ -2,7 +2,7 @@
 id: af0bacb9-bc1f-4773-85f5-35e33ae590ab
 title: "Sectioned Dashboard"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -21,10 +21,7 @@ tags:
   - caching
 depends-on: []
 related: []
-references:
-  - packages/web/packages/status-server/src/telemetry/dashboard/sectioned-dashboard.ts (adhsdk)
-  - packages/web/packages/status-server/test/telemetry-sectioned-dashboard.test.ts (adhsdk)
-  - packages/web/packages/deploy-platform/src/util/map-limit.ts (adhsdk)
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -67,8 +64,8 @@ The module exports `sectionedDashboard`, `emptySections` and the types `Dashboar
 - **loaders-built-per-refresh**: `opts.loaders(key)` MUST be called once at the start of each refresh, so loaders can compute a time window from the current time.
 - **only-due-loaders-run**: A refresh MUST call only the loaders of the sections that were due when it started.
 - **concurrency-default**: Due sections MUST run strictly one after another unless `concurrency` is set. The default is 1.
-- **concurrency-limit**: With `concurrency` greater than 1, at most that many loaders MUST run at once. The work is done by `mapLimit` from `@adh-sdk/deploy-platform/util`, which starts `min(limit, count)` workers that take items in order.
-- **section-publish-on-finish**: Each section MUST be published to state as soon as its own loader settles, before later sections start.
+- **concurrency-limit**: With `concurrency` greater than 1, at most that many loaders MUST run at once, taken in order.
+- **section-publish-on-finish**: Each section MUST be published to state as soon as its own loader settles; with the default `concurrency` of 1 that is before the next section starts.
 - **success-publish**: When a loader resolves, the section MUST become `{ data, error: null, updatedAt }` where `updatedAt` is `new Date(now()).toISOString()`.
 - **failure-keeps-data**: When a loader rejects, the section MUST keep its prior `data` and `updatedAt` and take `error` set to the error's `message`, or `String(err)` for a non-`Error` value.
 - **failure-isolated**: A failing loader MUST NOT stop the remaining due sections from running.
@@ -85,7 +82,7 @@ The module exports `sectionedDashboard`, `emptySections` and the types `Dashboar
 - **incomplete-short-answer**: When `incomplete(name, data)` returns true for a resolved answer, the section MUST be published as a success (`error` null, data kept) but scheduled and counted like a failure, so it is retried after the backoff instead of the full TTL. The Vercel dashboard uses this when `data.failed > 0 || data.incomplete > 0`.
 - **incomplete-optional**: When `incomplete` is not given, every resolved answer MUST count as complete.
 - **loaders-builder-throws**: If `opts.loaders(key)` throws, the failure MUST be logged with `console.warn` as `[telemetry] dashboard refresh (<key>) failed: <message>`, every due section that did not settle MUST be scheduled as a failure, and `refreshing` MUST return to false. The builder runs before the first `await` of the refresh, so all of this happens inside the `read` call that triggered it and that `read` already returns `refreshing` false.
-- **wedge-guard**: A refresh MUST NOT leave a key `refreshing` forever. Whatever happens, the refresh's `finally` step clears the flag.
+- **wedge-guard**: A refresh that ends, whether its loaders resolved, rejected or the builder threw, MUST clear the `refreshing` flag in its `finally` step. A loader that never settles is the loader's own responsibility (see the edge case "Loader that never settles").
 
 **settle**
 
@@ -122,7 +119,7 @@ Not applicable — this is a cache and scheduler, not a visual component.
 
 ## Conformance Test Vectors
 
-The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 10,000, `retryMs` 1,000, sections `a` and `b`, a fake clock starting at 1,000,000.
+The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 10,000, `retryMs` 1,000, sections `a` and `b`, a fake clock starting at 1,000,000. Vectors 001 to 014 are backed by tests in that file; vectors 015 to 020 follow the source and have no test yet.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -145,16 +142,16 @@ The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 1
 | sectioned-017 | retry-clamp | `ttlMs` 500, `retryMs` 1,000, a loader that fails | Next attempt is due at 500 ms, not 1,000 ms |
 | sectioned-018 | failure-keeps-data, success-publish | A section fails after a success, then succeeds again | After the failure `error` is set with old `data` and `updatedAt`; after the success `error` is `null` and `updatedAt` is the new time |
 | sectioned-019 | concurrency-limit | `concurrency` 2 with three due sections and pending loaders | Two loaders start at once; the third starts when one finishes |
-| sectioned-020 | failure-logged | A non-`Error` rejection such as the string `"boom"` | `error` is `"boom"` |
+| sectioned-020 | failure-keeps-data | A non-`Error` rejection such as the string `"boom"` | `error` is `"boom"` |
 
 ## Edge Cases
 
-- **Empty or missing input**: `sections` is a list of names; with an empty list nothing is ever due, so `read` returns `{ refreshing: false, sections: {} }`. This is not exercised by a test. MUST hold from the due filter.
+- **Empty or missing input**: `sections` is a list of names; with an empty list nothing is ever due, so `read` returns `{ refreshing: false, sections: {} }`. This is not exercised by a test; it follows from the due filter.
 - **Unknown key**: Any `K` value creates state on first read. The type `K extends string` bounds the set at compile time only; a caller outside the type system can grow the map without limit. Callers MUST use a bounded enum, as the source comment says.
-- **Failure before any success**: A section that has never loaded and fails keeps `data` `null` with `error` set and `updatedAt` `null`. MUST hold.
-- **Repeated failures**: The wait doubles each time and is capped at `ttlMs`; after a success the count resets to 0. MUST hold.
+- **Failure before any success**: A section that has never loaded and fails keeps `data` `null` with `error` set and `updatedAt` `null`.
+- **Repeated failures**: The wait doubles each time and is capped at `ttlMs`; after a success the count resets to 0.
 - **Backoff exponent**: `2 ** (failures - 1)` grows without bound in the exponent but the result is capped by `Math.min` with `ttlMs`, so a long failure run cannot overflow the interval.
-- **Incomplete answer repeated**: A section that keeps coming back incomplete is retried on the backoff schedule. Its `data` is replaced each time since each attempt publishes as a success. MUST hold.
+- **Incomplete answer repeated**: A section that keeps coming back incomplete is retried on the backoff schedule. Its `data` is replaced each time since each attempt publishes as a success.
 - **`concurrency` of 0 or less**: `mapLimit` starts no workers, so no loader runs and the refresh ends at once. The `finally` step then marks every due section as a failure, so each is retried after the backoff and no section ever loads. The source does not validate `concurrency`. The caller owns passing a positive value; the callers in the dashboard set pass none or rely on the default of 1.
 - **Loader not a function**: Calling `loaders[name]()` on a missing entry throws a `TypeError`, which the per-section handler catches as a failure of that section. Not exercised by a test.
 - **Loader that never settles**: The refresh never ends, `refreshing` stays true, and later reads never start another refresh for that key. The source has no per-loader timeout; loaders own their own deadlines (the PostHog and Vercel loaders use provider cooldowns and HTTP failure handling in their own modules). `settle` still returns `false` at its deadline.
@@ -163,7 +160,7 @@ The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 1
 - **Concurrent settle calls**: Several `settle` calls on one key MAY wait on the same in-flight promise; each has its own timer, cleared on return.
 - **Settle after the refresh ended but before cleanup**: `settle` returns `!state.refreshing`, which is `true` once the refresh's `finally` step has run.
 - **Offline or provider unavailable**: The module has no network code. An unreachable provider shows as a rejecting loader, handled by failure-keeps-data and backoff.
-- **Process restart**: State is in memory only, so a restart makes every section cold again and the first read refreshes all of them. MUST hold.
+- **Process restart**: State is in memory only, so a restart makes every section cold again and the first read refreshes all of them.
 - **Clock moves backwards**: `dueAt` is compared with `now()`, so a clock set back delays the next refresh; the module does not guard against it. Not exercised by a test.
 
 ## Configuration
@@ -217,9 +214,9 @@ The module logs failures with `console.warn` and nothing at other levels.
 
 ## Platform Notes
 
-- **SwiftUI**: Port as a Swift `actor` (or a `@MainActor` class) holding a dictionary from key to state. `read` becomes a synchronous method that returns a struct of sections and a flag, and starts a detached `Task` for the refresh. Run due sections with a `TaskGroup` limited to `concurrency`, or sequentially with a `for` loop for the default of 1. Use `ContinuousClock` or an injected `() -> Date` for `now`. A SwiftUI view polls the read while `refreshing` is true, for example with a `.task` loop and `Task.sleep`.
+- **SwiftUI**: Port as a Swift `actor` (or a `@MainActor` class) holding a dictionary from key to state. `read` becomes a synchronous method that returns a struct of sections and a flag, and starts a detached `Task` for the refresh. Run due sections with a `TaskGroup` limited to `concurrency`, or sequentially with a `for` loop for the default of 1. Schedules (`dueAt`) MAY use a monotonic clock such as `ContinuousClock`, but `updatedAt` MUST come from an injected `() -> Date` wall-clock source. A SwiftUI view polls the read while `refreshing` is true, for example with a `.task` loop and `Task.sleep`.
 - **Compose**: Port as a class holding a `ConcurrentHashMap` of key state, with refreshes launched in a `CoroutineScope` and `Semaphore(concurrency)` for the limit. `settle` is `withTimeoutOrNull(timeoutMs) { job.join() }` returning whether the job completed. Expose sections as `StateFlow` if the UI collects them, instead of polling.
-- **React/Web**: This is the source platform. `sectioned-dashboard.ts` in `packages/web/packages/status-server/src/telemetry/dashboard/` is plain TypeScript. It depends on `mapLimit` from `@adh-sdk/deploy-platform/util`. Client code polls the dashboard route while `refreshing` is true.
+- **React/Web**: This is the source platform. `sectioned-dashboard.ts` in `packages/web/packages/status-server/src/telemetry/dashboard/` is plain TypeScript. It depends on `mapLimit` from `@adh-sdk/deploy-platform/util`, which starts `min(limit, count)` workers that take items in order; that is how `concurrency-limit` is met. Client code polls the dashboard route while `refreshing` is true.
 - **AppKit / UIKit**: Use the same Swift port. Poll on a `Timer` or `Task.sleep` loop while `refreshing`, and update the views on the main actor. Keep the refresh work off the main thread.
 - **WinUI 3**: Port as a C# class with a `ConcurrentDictionary<string, KeyState>` and per-section schedule records. `read` returns a snapshot record and starts the refresh with `Task.Run`. Use `SemaphoreSlim` for the concurrency limit, or a plain `foreach` with `await` for 1. `settle` is `await Task.WhenAny(inflight, Task.Delay(Math.Max(0, timeoutMs), cts.Token))` with the `CancellationTokenSource` cancelled afterwards (the equivalent of `clearTimeout`), then `return !state.Refreshing`. Replace the 2 to the power of failures with `Math.Min(retryMs * Math.Pow(2, failures - 1), ttlMs)` and keep it in `double` to avoid integer overflow. The clock is `Func<DateTimeOffset>`, defaulting to `DateTimeOffset.UtcNow`, and `updatedAt` is `ToString("o", CultureInfo.InvariantCulture)` or a JavaScript-style ISO string. Log with `ILogger.LogWarning`. In an ASP.NET Core host, register it as a singleton service; if a UI polls it, expose the sections through `INotifyPropertyChanged` or an `ObservableCollection` on a `DispatcherQueue`-marshalled view model. Because .NET tasks run on multiple threads, the check-and-start in `read` and every schedule update MUST be guarded with a lock, which the single-threaded JavaScript source does not need.
 
@@ -227,61 +224,53 @@ The module logs failures with `console.warn` and nothing at other levels.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/dashboard/sectioned-dashboard.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/telemetry/dashboard/sectioned-dashboard.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| web | `packages/web/packages/status-server/test/telemetry-sectioned-dashboard.test.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/deploy-platform/src/util/map-limit.ts` | confirmed (1.0.1) |
 
 ## Design Decisions
 
 **Decision**: `read` never waits; it returns what is known and starts a refresh when one is due.
 **Rationale**: The source comment explains the cold dashboard can take a minute, which is past the rewrite proxy's limit, and holding a request open would delay sections that could already be on screen. Each section publishes as it finishes and the client polls while `refreshing`.
-
 **Approved**: pending
 
 **Decision**: Refreshes are driven by reads, not timers.
 **Rationale**: The source comment states "an idle dashboard costs no provider quota". A timer would keep calling PostHog and Vercel whether or not anyone is looking.
-
 **Approved**: pending
 
 **Decision**: Each section has its own schedule, and a refresh re-runs only due sections.
 **Rationale**: The source comment says one failing section is retried on its own "rather than dragging every healthy one back to the provider with it".
-
 **Approved**: pending
 
 **Decision**: Failure backoff doubles from `retryMs` up to `ttlMs`.
 **Rationale**: The source comment says retries back off "rather than hitting a provider that keeps failing once a minute for as long as it fails". A one-off blip costs `retryMs` and not a whole TTL; the doubling stops at the TTL so a failing section is never retried less often than a healthy one.
-
 **Approved**: pending
 
 **Decision**: A failed section keeps its last good `data` and `updatedAt`, and only `error` changes.
 **Rationale**: The `DashboardSection` comment says the last good answer "survives a later failure, so stale data stays on screen".
-
 **Approved**: pending
 
 **Decision**: An `incomplete` answer is published as a success with no error but is retried on the failure schedule.
 **Rationale**: The option comment says it is "shown but known to be short (some of its calls failed)". The partial data is still useful on screen; holding it for the whole TTL would leave a chart flat after one project timed out.
-
 **Approved**: pending
 
 **Decision**: Sections run strictly one after another by default.
 **Rationale**: The source comment says PostHog's API 503s under concurrency. Sections therefore queue unless the caller opts into a higher `concurrency`.
-
 **Approved**: pending
 
 **Decision**: `settle` exists apart from `read` and never starts a refresh.
 **Rationale**: The `settle` comment says a server-side reader such as `/report` must not push the polling that `read` implies onto its own client; it reads, settles, and reads again.
-
 **Approved**: pending
 
 **Decision**: State per key is kept forever, so keys must come from a bounded enum.
 **Rationale**: Stated in the source header comment. Bounded keys (the analytics ranges, or the single key `all`) keep the map small without an eviction policy.
-
 **Approved**: pending
 
 **Decision**: A `loaders` builder that throws counts as a failure of every due section that did not settle.
 **Rationale**: The source comment says this lets such sections be "retried rather than left due on every read"; without it a throwing builder would be called on every read.
-
 **Approved**: pending
 
 ## Compliance
@@ -289,15 +278,16 @@ The module logs failures with `console.warn` and nothing at other levels.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | passed | access-patterns |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 | [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | performance |
 
-Separation of concerns passes: the file owns scheduling, caching and publishing, and every provider call is a loader supplied from outside. Unit-test coverage passes: `telemetry-sectioned-dashboard.test.ts` covers the cold read, per-section publishing, the TTL, failure with kept data, backoff, the incomplete answer, key separation, a throwing builder and all four `settle` cases. Not covered by a test are `concurrency` above 1, `retryMs` clamping, `emptySections` and non-`Error` rejections. Retry with backoff passes: failures double the wait from `retryMs` up to `ttlMs` and a success resets it. Graceful degradation passes: a failed section keeps its stale data and the other sections load. Timeout handling is partial: `settle` has a deadline, but a loader that never settles has no timeout in this module and holds its key refreshing; loaders own their own deadlines. Caching strategy passes: stale-while-revalidate with a per-section TTL and read-driven refresh.
+Separation of concerns passes: the file owns scheduling, caching and publishing, and every provider call is a loader supplied from outside. Unit-test coverage is partial: `telemetry-sectioned-dashboard.test.ts` covers the cold read, per-section publishing, the TTL, failure with kept data, backoff, the incomplete answer, key separation, a throwing builder and all four `settle` cases. Vectors 015 to 020 have no test. Not covered by a test are `concurrency` above 1, `retryMs` clamping, `emptySections` and non-`Error` rejections. Retry with backoff passes: failures double the wait from `retryMs` up to `ttlMs` and a success resets it. Graceful degradation passes: a failed section keeps its stale data and the other sections load. Timeout handling is partial: `settle` has a deadline, but a loader that never settles has no timeout in this module and holds its key refreshing; loaders own their own deadlines. Caching strategy passes: stale-while-revalidate with a per-section TTL and read-driven refresh.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the mapLimit detail to the React/Web note, narrowed wedge-guard and section-publish-on-finish to what the source does, remapped vector 020, marked unit-test-coverage partial with vectors 015 to 020 flagged untested, dropped bare MUST tags from edge cases, clarified the SwiftUI clock note and emptied references. |

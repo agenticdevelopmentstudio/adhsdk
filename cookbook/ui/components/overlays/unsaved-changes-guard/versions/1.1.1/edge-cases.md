@@ -1,0 +1,8 @@
+
+- **Navigation after mount disarm**: If `when` transitions from true to false before any navigation event fires, all listeners clean up and no state persists.
+- **Multiple confirms pending**: A popstate fires while an anchor click's confirm is open. Only one confirm can be pending at a time; `setConfirm` overwrites the prior one. The prior resolver never fires — see **register-with-registry** for the caller-visible consequence.
+- **Disarm mid-navigation**: If `when` becomes false while a confirm is displayed, cleanup removes the event listeners and unregisters from the registry, but it does not touch `confirm` state: the alert stays open and the user's eventual Discard/Stay choice still resolves and navigates or stays exactly as if `when` were still true.
+- **Sentinel URL changes before re-arm**: Page navigates to a new URL while guard is still armed. The stored sentinel URL no longer matches `window.location.href`, so the next re-arm pushes a fresh sentinel.
+- **beforeunload suppressed only by approval**: The `beforeunload` handler returns without prompting in exactly one case regardless of primary/non-primary status: `approvedRef.current` is true (this guard just approved its own exit) or `isNavigationApproved()` is true (module-scoped — another guard, or the calling app, called `approveNavigation()` for a just-completed save). With neither true, the handler always calls `preventDefault()`, per **block-beforeunload**.
+- **Anchor with hash-only href change from current location**: Anchor href is `#section` when page is already at `/path?q=1#other`. Same pathname and search match; guard does not prompt.
+

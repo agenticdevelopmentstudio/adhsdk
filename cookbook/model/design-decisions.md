@@ -6,18 +6,7 @@ requirements.
 uppercase only each word's first character, join with a space); treating
 them as one shared behavior avoids stating conflicting requirements for what
 is, in the source, unshared duplicated code — a maintenance liability worth
-noting even though this recipe does not change it.
-**Approved**: pending
-
-**Decision**: Callers SHOULD memoize the `SearchIndex` passed into
-`useSearchState`, and SHOULD memoize the `entries` array passed to
-`createSearchIndex` and `buildNavTree`.
-**Rationale**: `results-track-query`'s `useMemo` depends on the referential
-identity of `index`; passing a newly constructed `SearchIndex` on every
-render defeats that memoization and rebuilds the underlying Fuse instance on
-every re-render, even though `index.query`'s selection of matches would be
-identical either way. This is a caller-side performance recommendation, not
-a contract the five sources themselves enforce.
+noting even though this ingredient does not change it.
 **Approved**: pending
 
 **Decision**: Preserve `intermediate-segment-nodes`'s exact reuse condition

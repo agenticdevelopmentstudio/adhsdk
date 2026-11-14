@@ -6,6 +6,9 @@
   once, not "status" twice, the same pattern StatusDot's own
   unlabeled-is-decorative ([adhsdk.ingredient.ui.components.display.status-dot](cookbook:1a044d34-d585-46b4-b703-dea3fb9b9642))
   requirement documents for an unlabeled dot.
+- **Tone is color-only**: the dot's tone is conveyed by color alone and never reaches
+  text, so screen-reader and color-blind users do not get it unless the caller puts
+  the status into `label` or `trailing`.
 - **`labelTitle` vs `label`**: pass the plain-text form as `labelTitle` so the native
   tooltip works even when `label` is rich `ReactNode`.
 - **Multiple trailing bits**: wrap them in the `trailing` prop (a fragment); the

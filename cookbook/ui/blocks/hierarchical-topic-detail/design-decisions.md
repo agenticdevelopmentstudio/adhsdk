@@ -21,8 +21,9 @@
   (dry).
   **Approved**: pending
 - **Decision**: Off-screen drilling isn't a special small-screen mode bolted on — it is the same
-  single-controller fit math, so phones simply start with every list drilled off and the detail full-width,
-  Back walking up.
+  single-controller fit math that runs in wide mode as the window shrinks, one whole list at a time, with
+  Back walking up; phones and windows past the end of that sequence use the narrow navigation stack
+  instead (see #requirements/exhaust-wide-before-narrow).
   **Rationale**: The manual disclosure toggle coexists (a collapsed list counts as its icon width, then
   hides), so one fit controller serves both wide and phone layouts (optimize-for-change).
   **Approved**: pending
@@ -76,7 +77,7 @@
   affordances spending room that no longer exists — and on a phone there is no pointer at all — so shrinking
   them further would be affordances masquerading as functionality. The same stack, selections,
   `onSelect`/`onClear` and unsaved guard continue underneath; nothing about a feature is phone-aware
-  (native-controls, optimize-for-change). See **exhaust-wide-before-narrow** for the exact trigger.
+  (native-controls, optimize-for-change). See #requirements/exhaust-wide-before-narrow for the exact trigger.
   **Approved**: pending
 - **Decision**: In the stack the selection is shown by a root dash + parent→child elbow connectors rather
   than a per-list left-bar.
@@ -93,4 +94,9 @@
   lifted. T18 and T51, which assert reduced-motion behavior, are marked suspended rather than deleted so
   they can be re-enabled the moment the gates return.
   **Approved**: pending
-
+- **Decision**: `TopicLevel.overview` is a `boolean`, and a level can never replace the select nudge with a card grid or any other index of its own rows; a level that needs to explain its rows uses the nudge's `overviewHelp` blurb, and a level with a real landing of its own uses `overview: false`.
+  **Rationale**: A grid of one card per row repeats the very rows the rail beside it already shows, so it is a second navigation surface competing with the rail (simplicity, principle-of-least-astonishment). Test vector T55 covers it.
+  **Approved**: pending
+- **Decision**: RTL layout is not supported today and is recorded as accepted debt, not as an oversight: the layout is computed in literal left/right terms (the covered peek's leading control, the narrow slide's right-edge push/pop, `translateX` percentages).
+  **Rationale**: Remediation is to replace each literal left/right with logical start/end terms and mirror the slide direction under `dir="rtl"`; until then the Compliance row for `rtl-layout-support` stays `failed` (deliberate-prudent-debt).
+  **Approved**: pending

@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: dropped RFC-2119 prefixes from requirement names; rewrote test-vector assertions as platform-neutral observable behavior/tokens and moved literal Tailwind classes into the React/Web platform note; reworded the forward-div-props-* requirements to reflect that className is merged rather than dropped; added boundary-value, attribute-override-quirk, and no-icon-baseline test vectors; corrected the boundary-value edge case to state cva's single actual outcome; fixed the alert-018 gap-y-0.5 assertion to target the root node; corrected the SwiftUI/Compose/AppKit-UIKit platform notes' accessibility API citations; collapsed duplicate icon-detection prose into cross-references to Design Decisions; reformatted Design Decisions into the three-line Decision/Rationale/Approved form; replaced the empty Localization table with its sentence; added the alert-and-dialog domain to related; replaced "This recipe" with "ingredient"; and replaced the Compliance section's "Not applicable" with an evaluated checks table |
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |

@@ -12,14 +12,15 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Shared query-cache runtime: a singleton cache client, provider, and consumer accessor every toolkit data hook fetches through, with whole-cache clearing when the signed-in principal changes.",
+    "summary": "Shared query-cache runtime: a singleton cache client, provider, and consumer accessor every toolkit data hook fetches through, with whole-cache clearing when the signed-in principal changes, plus a sequential batch runner that refetches the cache after a run.",
     "platforms": [
       "typescript",
       "web"
     ],
     "tags": [
       "cache",
-      "session"
+      "session",
+      "batch"
     ],
     "depends-on": [
       "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
@@ -27,16 +28,11 @@
     "related": [
       "ec6e6ca5-8780-4ce2-8b3a-087adc50ed35"
     ],
-    "references": [
-      "packages/web/packages/data/src/query/index.tsx (adhsdk)",
-      "packages/web/packages/data/src/query/__tests__/toolkit-query-provider.test.tsx (adhsdk)",
-      "packages/web/packages/data/src/__tests__/query-client.test.tsx (adhsdk)",
-      "packages/web/packages/auth/src/tokens.ts (adhsdk)"
-    ],
+    "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b2be319cef4f23a1",
+  "synced": "fd702ba7d5a3dc76",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

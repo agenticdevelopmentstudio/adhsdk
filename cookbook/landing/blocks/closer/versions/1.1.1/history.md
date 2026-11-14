@@ -1,0 +1,6 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: cite the real `lp-closer`/`lp-closer h2` CSS in Appearance instead of an unsupported source-comment claim, correct the Border description (a border-top is applied) and drop the false CSS-specificity claim from the className design decision, reformat Design Decisions into Decision/Rationale/Approved form, add a Compliance table (accessibility + internationalization), replace the web-only "CSS class name string" platform-note pattern with each native platform's own styling hook and add heading-semantics guidance, fix the WinUI StackPanel/TextAlignment mismatch and the Compose ColumnScope type, rename requirements to subject-only kebab-case and fold filter-empty-strings into merge-optional-classname, add test vectors for null children and ReactNode title, soften the empty-title edge case to a caller SHOULD NOT, and move "positioned after hero content" out of Overview into a usage note. |
+| 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation (drafted by Claude Haiku 4.5) |

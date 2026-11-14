@@ -1,7 +1,7 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
@@ -17,5 +17,5 @@
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on the source: `Progress` sets an explicit `role="progressbar"` with `aria-valuemin`/`max`/`now`, `Dialog` (Base UI) renders native ARIA dialog semantics and traps focus, and Continue/Stop/Close buttons carry their own text as their accessible name — but nothing in the source moves focus on halt/finish, defines `apt-*` token contrast values, or sizes the `sm` buttons, and every visible string except `okLabel`/`failedLabel` is a hardcoded English JSX literal with no locale-aware formatting or confirmed RTL handling. `ProgressModal` is transport-agnostic — it renders state and emits decisions, and the host owns the batch loop and any network calls (separation-of-concerns passed); `progressModal.test.tsx` exercises the percentage calculation, the halted/finished/healthy button states, Continue/Stop/Close handlers, and the running log directly (unit-test-coverage passed).
+Statuses rest on the source (screen-reader-support is partial because nothing announces a halt, an error or a finish: there is no `aria-live` region, no `role="alert"` and no focus move): `Progress` sets an explicit `role="progressbar"` with `aria-valuemin`/`max`/`now`, `Dialog` (Base UI) renders native ARIA dialog semantics and traps focus, and Continue/Stop/Close buttons carry their own text as their accessible name — but nothing in the source moves focus on halt/finish, defines `apt-*` token contrast values, or sizes the `sm` buttons, and every visible string except `okLabel`/`failedLabel` is a hardcoded English JSX literal with no locale-aware formatting or confirmed RTL handling. `ProgressModal` is transport-agnostic — it renders state and emits decisions, and the host owns the batch loop and any network calls (separation-of-concerns passed); `progressModal.test.tsx` exercises the percentage calculation, the halted/finished/healthy button states, Continue/Stop/Close handlers, and the running log directly (unit-test-coverage passed).
 

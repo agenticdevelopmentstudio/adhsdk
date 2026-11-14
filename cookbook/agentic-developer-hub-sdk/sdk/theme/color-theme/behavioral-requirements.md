@@ -11,10 +11,10 @@
 - **identity-fields**: `ColorTheme` MUST carry `id` (String), `name` (String), `appearance` (`ThemeAppearance`), `isBuiltIn` (Bool), `isImported` (Bool) and `attribution` (optional String).
 - **palette-fields**: `ColorTheme` MUST carry `foreground`, `background`, `cursor` and `selection` as `RGBAColor`, and `ansi` as an array of `RGBAColor` holding indices 0 to 15 (0 to 7 normal, 8 to 15 bright).
 - **role-overrides-field**: `ColorTheme` MUST carry `roleOverrides` as a dictionary from `ThemeRole.rawValue` strings to `RGBAColor`.
-- **role-overrides-precedence**: A role present in `roleOverrides` MUST win over the value derived from the palette. `ColorTheme` only stores the overrides; the derivation and the precedence are implemented by `SemanticPalette`, named in the source doc comment.
+- **role-overrides-precedence**: `ColorTheme` MUST store `roleOverrides` exactly as given and MUST NOT drop, reorder or rewrite entries. Note (non-normative): that an override wins over the palette-derived value is implemented by `SemanticPalette` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.semantic-palette](cookbook:1f80f43d-5aa4-42cf-bc3e-fb742662b615)), not by this type.
 - **typography-field**: `ColorTheme` MUST carry `typography` as a `ThemeTypography`, defaulting to `ThemeTypography.system`.
 - **feature-override-fields**: `ColorTheme` MUST carry `terminal` (optional `ThemeTerminalOptions`) and `project` (optional `ThemeProjectOptions`). `nil` MUST mean the Terminal or Projects settings panel decides.
-- **color-encoding**: Every color field MUST encode as an `#RRGGBBAA` hex string through `RGBAColor`, and a malformed hex string MUST fail decoding with a data-corrupted error (behavior of `RGBAColor`, which clamps constructed components to the range 0 to 1).
+- **color-encoding**: Every color field MUST encode as an `#RRGGBBAA` hex string through `RGBAColor`, and a malformed hex string MUST fail decoding with a data-corrupted error. Hex parsing and component clamping are owned by RGBAColor ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d)) and are not specified here.
 
 ### Initialization
 
@@ -31,6 +31,7 @@
 - **decode-typography-default**: Decoding MUST treat an absent `typography` as `.system`, so themes persisted before typography existed still load.
 - **decode-feature-options-absent**: Decoding MUST treat an absent `terminal` or `project` as `nil`. Absent is the meaningful state, not a migration fallback.
 - **decode-no-palette-validation**: Decoding MUST NOT reject an `ansi` array whose length is not 16; length is checked by callers through `hasValidPalette`.
+- **encode-omits-nil**: Encoding MUST omit `attribution`, `terminal` and `project` when they are `nil`, and MUST NOT write a null for them.
 - **codable-round-trip**: Encoding a theme and decoding the result MUST yield an equal theme, provided each color sits on the 8-bit grid.
 
 ### Derived properties
@@ -41,9 +42,9 @@
 - **is-editable**: `isEditable` MUST be `true` exactly when `isBuiltIn` and `isImported` are both `false`.
 - **is-locked**: `isLocked` MUST be the inverse of `isEditable`.
 - **is-deletable**: `isDeletable` MUST be `true` exactly when `isBuiltIn` is `false`, so imported and custom themes can be deleted and built-ins never can.
-- **duplicate-is-custom**: A duplicate of a locked theme is a plain custom theme (`isBuiltIn == false`, `isImported == false`) and is editable. `ColorTheme` expresses this only through the flag logic; the duplicate operation lives in the caller.
+- **duplicate-is-custom**: A theme with `isBuiltIn == false` and `isImported == false` MUST be editable and deletable, however it was made. A caller that duplicates a locked theme and clears both flags therefore gets an editable theme. The duplicate operation itself lives in the caller.
 
 ### Ordering and side effects
 
-- **no-side-effects**: Every operation of `ColorTheme` MUST be synchronous and free of side effects (no files, network, notifications or logging). Persistence is the job of `ThemeStorage`.
+- **no-side-effects**: Every operation of `ColorTheme` MUST be synchronous and free of side effects (no files, network, notifications or logging). Persistence is the job of `ThemeStorage` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-storage](cookbook:62abe97d-75f7-48c0-83cd-6df02a48515e)).
 

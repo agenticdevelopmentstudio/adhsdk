@@ -13,8 +13,8 @@
 | field-value-010 | unresolvable-image-renders-nothing | `{ type: 'image', value: 'missing-id', label: 'Photo' }`, resolveImageUrl returns null | `null` |
 | field-value-011 | address-comma-separated, address-value-as-object | `{ type: 'address', value: { line1: '123 Main St', city: 'Springfield', country: 'USA' }, label: 'Address' }` | `<span class="rp-field__text">123 Main St, Springfield, USA</span>` |
 | field-value-012 | empty-address-renders-nothing | `{ type: 'address', value: { line1: '', line2: '', city: '', region: '', postalCode: '', country: '' }, label: 'Address' }` | `null` |
-| field-value-013 | markdown-as-text | `{ type: 'markdown', value: '# Hello\nWorld', label: 'Bio' }` | `<p class="rp-field__prose"># Hello\nWorld</p>` |
-| field-value-014 | textarea-as-text | `{ type: 'textarea', value: 'Line 1\nLine 2', label: 'Notes' }` | `<p class="rp-field__prose">Line 1\nLine 2</p>` |
+| field-value-013 | markdown-as-text | `{ type: 'markdown', value: '# Hello\nWorld', label: 'Bio' }` (the `\n` is a real newline character) | `<p class="rp-field__prose"># Hello<newline>World</p>`, where `<newline>` is a real newline character; the line break shows because `.rp-field__prose` sets `white-space: pre-wrap` |
+| field-value-014 | textarea-as-text | `{ type: 'textarea', value: 'Line 1\nLine 2', label: 'Notes' }` (the `\n` is a real newline character) | `<p class="rp-field__prose">Line 1<newline>Line 2</p>`, where `<newline>` is a real newline character |
 | field-value-015 | delivery-label-lookup | `{ type: 'text', value: 'in_person', label: 'Delivery' }` | `<span class="rp-field__text">In person</span>` |
 | field-value-016 | delivery-label-lookup, unmapped-values-as-is | `{ type: 'text', value: 'custom-value', label: 'Delivery' }` | `<span class="rp-field__text">custom-value</span>` |
 | field-value-017 | nullish-values-as-empty-string | `{ type: 'text', value: null, label: 'Optional' }` | `null` |
@@ -30,5 +30,9 @@
 | field-value-027 | markdown-as-text | `{ type: 'markdown', value: '<script>alert(1)</script>', label: 'Bio' }` | `<p class="rp-field__prose">&lt;script&gt;alert(1)&lt;/script&gt;</p>` |
 | field-value-028 | boolean-as-yes-no | `{ type: 'boolean', value: 'false', label: 'Active' }` | `<span class="rp-field__text">Yes</span>` |
 | field-value-029 | boolean-as-yes-no | `{ type: 'boolean', value: null, label: 'Active' }` | `<span class="rp-field__text">No</span>` |
-| field-value-030 | url-as-link | `{ type: 'url', value: 'javascript:alert(1)', label: 'Website' }` | `<a class="rp-field__link" href="javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')" rel="noopener noreferrer nofollow" target="_blank">javascript:alert(1)</a>` |
-
+| field-value-030 | url-as-link | `{ type: 'url', value: 'javascript:alert(1)', label: 'Website' }` | An `<a class="rp-field__link" rel="noopener noreferrer nofollow" target="_blank">` whose displayed text is `javascript:alert(1)` and whose rendered `href` MUST NOT run script when followed (on React, a blocking stub; see Platform Notes) |
+| field-value-031 | empty-url-renders-nothing | `{ type: 'url', value: '', label: 'Website' }` | `null` |
+| field-value-032 | empty-prose-renders-empty-paragraph | `{ type: 'markdown', value: '', label: 'Bio' }` | `<p class="rp-field__prose"></p>` |
+| field-value-033 | empty-prose-renders-empty-paragraph | `{ type: 'textarea', value: null, label: 'Notes' }` | `<p class="rp-field__prose"></p>` |
+| field-value-034 | unknown-type-as-text | `{ type: 'unrecognized', value: 'abc', label: 'Other' }` | `<span class="rp-field__text">abc</span>` |
+| field-value-035 | url-protocol-stripped | `{ type: 'url', value: 'HTTPS://Example.com', label: 'Website' }` | `<a class="rp-field__link" href="HTTPS://Example.com" rel="noopener noreferrer nofollow" target="_blank">HTTPS://Example.com</a>` (not stripped) |

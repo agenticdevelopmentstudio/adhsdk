@@ -2,7 +2,7 @@
 id: 9d6600fa-7b75-40fd-8beb-ab5ad3d1bc3b
 title: "Terminal Text Injector"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -30,7 +30,7 @@ approved-date: ""
 
 ## Overview
 
-`TerminalTextInjector` types a line of text (for example `/compact`) into the live terminal pane a session is running in, by scripting iTerm2 or Terminal.app through `NSAppleScript`. It runs only in a process that holds a user's GUI session and the TCC Automation grant: the app, or `steno` from a terminal. A daemon can drive neither.
+`TerminalTextInjector` types a line of text (for example `/compact`) into the live terminal pane a session is running in, by scripting iTerm2 or Terminal.app through `NSAppleScript`. It runs only in a process that holds a user's GUI session and the TCC Automation grant: the app, or the command-line tool from a terminal. A daemon can drive neither.
 
 It targets the exact pane so it never types into the wrong session. iTerm2 is matched by session id (from `TERM_SESSION_ID`) or, failing that, by the pane's TTY. Terminal.app is matched by the tab's TTY. A terminal it cannot target precisely fails with `unsupportedTerminal` instead of a guess. The pane resolution and the AppleScript builders are pure `static` functions, unit-tested without driving a terminal; only `inject` and `run` execute AppleScript. `SessionWatcher.SessionWatcherActionHandler` shares the same builders, passing `text: nil`, for its select-and-raise click actions.
 
@@ -38,7 +38,7 @@ It targets the exact pane so it never types into the wrong session. iTerm2 is ma
 
 - **namespace**: The component MUST be a caseless public `enum` named `TerminalTextInjector` with no stored instance state.
 - **supported-terminals**: `isSupported(termProgram:)` MUST return true for exactly `iTerm.app` and `Apple_Terminal`, and false for every other value, including the empty string.
-- **supported-kept-in-step**: The set of terminals `isSupported` accepts MUST stay equal to the set `resolveTarget` can resolve; the source documents them as "kept in lock-step".
+- **supported-kept-in-step**: The set of terminals `isSupported` accepts MUST stay equal to the set `resolveTarget` can resolve: for each `termProgram` that `isSupported` accepts, `resolveTarget` returns non-nil given a non-empty session id (iTerm) or a live pid, and for every other value it returns nil.
 - **target-cases**: `Target` MUST have three cases: `iTermSession(uuid:)`, `iTermTTY(tty:)` and `terminalTTY(tty:)`; it is `Equatable` and `Sendable`.
 - **target-app**: `Target.app` MUST return `("iTerm2", "com.googlecode.iterm2")` for both iTerm cases and `("Terminal", "com.apple.Terminal")` for `terminalTTY`.
 - **resolve-iterm-session**: For `iTerm.app`, `resolveTarget` MUST take the text after the last `:` of `termSessionId` as the uuid, and return `iTermSession(uuid:)` when that text is non-empty.
@@ -48,7 +48,7 @@ It targets the exact pane so it never types into the wrong session. iTerm2 is ma
 - **resolve-unsupported**: For any other `termProgram`, `resolveTarget` MUST return nil.
 - **tty-for-pid**: `ttyForPid` MUST return the controlling-terminal device path (`/dev/` plus the `devname` of the process's `e_tdev`) read with the `proc_pidinfo` libproc call (`PROC_PIDTBSDINFO`), with no subprocess.
 - **tty-for-pid-nil**: `ttyForPid` MUST return nil for a pid of 0 or below, for a failed or short `proc_pidinfo` read, for a process whose `e_tdev` is 0, and when `devname` yields no name.
-- **tty-main-thread-safe**: `ttyForPid` MUST NOT fork a subprocess, so it is safe to call on the main thread; the source records that a forked `ps` with `waitUntilExit` would block the caller.
+- **tty-main-thread-safe**: `ttyForPid` MUST NOT fork a subprocess, so it is safe to call on the main thread.
 - **normalize-tty**: `normalizeTTY` MUST return its argument unchanged when it starts with `/dev/`, and otherwise prefix `/dev/`.
 - **escape-order**: `escape` MUST double every backslash first and then turn every double quote into a backslash and a quote, so its own escapes are not escaped twice.
 - **escape-line-breaks**: `escape` MUST replace every character for which `Character.isNewline` is true (a `\r\n` pair is one character) with one space, never delete it, so that adjacent words are not glued.
@@ -56,7 +56,7 @@ It targets the exact pane so it never types into the wrong session. iTerm2 is ma
 - **escape-controls**: `escape` MUST drop every other character whose Unicode scalars are all in the `.control` general category (NUL, ESC, ^C, ^D, DEL), because each would reach the pane as a keystroke.
 - **escape-text-kept**: `escape` MUST leave non-control text, including accented letters, symbols and CJK characters, unchanged.
 - **script-iterm**: For an iTerm target, `script(for:text:raising:)` MUST build a script that begins with `tell application id "com.googlecode.iterm2"`, searches every session of every tab of every window, and tests `id of s is "<escaped uuid>"` or `tty of s is "<escaped normalized tty>"`.
-- **script-iterm-bundle-id**: The iTerm script MUST address iTerm by bundle id, not by the name "iTerm" or "iTerm2", which the source says has varied across versions.
+- **script-iterm-bundle-id**: The iTerm script MUST address iTerm by bundle id, not by the name "iTerm" or "iTerm2".
 - **script-terminal**: For a `terminalTTY` target, `script(for:text:raising:)` MUST build a script that begins with `tell application "Terminal"`, searches every tab of every window, and tests `tty of t is "<escaped normalized tty>"`.
 - **script-sentinels**: Every built script MUST return the string `found` from inside the matching branch and fall through to return the string `not_found` when no pane matches.
 - **script-iterm-typing**: With a non-nil `text`, the iTerm script MUST write `tell s to write text "<escaped text>" newline no`, so the text is typed without a newline.
@@ -65,12 +65,12 @@ It targets the exact pane so it never types into the wrong session. iTerm2 is ma
 - **script-text-nil**: With `text: nil` the script MUST contain no `write text` and no `do script`, and so MUST NOT type into or run anything in the pane.
 - **script-no-delay**: A typing script MUST NOT contain an AppleScript `delay`, because a `delay` inside the script froze the caller's UI.
 - **script-raising-off**: With `raising: false` the script MUST NOT select, activate or bring forward the pane or its application: for iTerm no `select s`, `select t` or `activate`; for Terminal no `set selected tab`, `set frontmost` or `activate`.
-- **script-raising-on-iterm**: With `raising: true` the iTerm script MUST run `select s`, `select t` and `activate` before the write.
-- **script-raising-on-terminal**: With `raising: true` the Terminal.app script MUST run `set selected tab of w to t`, `set frontmost of w to true` and `activate` before the run.
+- **script-raising-on-iterm**: With `raising: true` the iTerm script MUST run `select s`, `select t` and `activate` inside the matching branch only, before any write.
+- **script-raising-on-terminal**: With `raising: true` the Terminal.app script MUST run `set selected tab of w to t`, `set frontmost of w to true` and `activate` inside the matching branch only, before any run.
 - **return-script**: `returnScript(for:)` MUST build a script that finds the same pane and presses Return alone: `tell s to write text ""` for iTerm and `do script "" in t` for Terminal.app.
 - **return-never-raises**: `returnScript(for:)` MUST NOT raise the terminal.
 - **return-delay**: `returnDelay` MUST be 300 milliseconds, so the Return lands as its own keystroke after the paste rather than inside it.
-- **split-submit**: The typing script MUST NOT include the Return. The newline-no option exists because a newline handed in the same write arrives inside the same paste and Claude Code's input box keeps it as part of the paste, so the line is typed but never submitted.
+- **split-submit**: The typing script MUST NOT include the Return. The text is typed without a newline so that the Return arrives as its own keystroke (see Design Decisions).
 - **terminal-return-extra**: For Terminal.app, which has no `newline no`, Return MUST still follow as a separate `do script ""`; after a line that did submit, it meets an empty prompt, which ignores it.
 - **inject-order**: `inject(_:termProgram:termSessionId:pid:raising:)` MUST, in order, check `isSupported`, resolve the target, run the typing script, wait `returnDelay`, then run the Return script, and return the result of the Return script.
 - **inject-unsupported**: `inject` MUST return `.failure(.unsupportedTerminal(name))` when the terminal is unsupported, where name is `termProgram`, or `an unknown terminal` when `termProgram` is empty.
@@ -136,16 +136,23 @@ Not applicable — this is a scripting helper, not a visual component.
 | terminal-text-injector-026 | permission-detection, permission-payload | An AppleScript error with number -1743, then one with number -1 and message `Privilege Violation occurred`, against a Terminal target (derived from the source; no test). | Both give `.permissionDenied(message, targetBundleID: "com.apple.Terminal")` with the message `Automation permission is required to control Terminal. Grant it in System Settings ▸ Privacy & Security ▸ Automation.` |
 | terminal-text-injector-027 | error-descriptions | `InjectionError.unsupportedTerminal("WarpTerminal").errorDescription` (derived from the source; no test). | `Injecting text isn't supported for WarpTerminal yet — only iTerm2 and Terminal.app.` |
 | terminal-text-injector-028 | tty-for-pid-nil | `ttyForPid(0)` and `ttyForPid(-5)` (derived from the source; no test). | nil for both. |
-
+| terminal-text-injector-029 | supported-kept-in-step | `resolveTarget` for `iTerm.app` with session id `x:ABC` and for `Apple_Terminal` with pid 0 (derived from the source; no test). | `iTermSession(uuid: "ABC")`, and nil because no TTY resolves for pid 0; `isSupported` is true for both. |
+| terminal-text-injector-030 | permission-detection | An AppleScript error with number -1744, then one with number -1 and message `Not authorized to send Apple events` (derived from the source; no test). | Both map to `permissionDenied`. |
+| terminal-text-injector-031 | run-error-message | An AppleScript error dictionary with `NSAppleScript.errorMessage` `boom`, then one with no message key (derived from the source; no test). | `.failure(.scriptFailed("boom"))`, then `.scriptFailed` carrying the dictionary's description. |
+| terminal-text-injector-032 | inject-stops-on-first-failure | `inject` where the typing script returns `not_found` (derived from the source; no test). | `.failure(.paneNotFound)` at once; no wait and no Return script. |
+| terminal-text-injector-033 | inject-fresh-lookup, run-not-found | `inject` where the pane exists for the typing script and is closed before the Return script (derived from the source; no test). | `.failure(.paneNotFound)` from the Return half. |
+| terminal-text-injector-034 | error-descriptions | `errorDescription` of `paneUnresolvable`, `paneNotFound` and `scriptFailed("boom")` (derived from the source; no test). | `Couldn't identify the session's terminal pane.`; `The session's terminal pane wasn't found — it may have been closed.`; `Terminal automation failed: boom`. |
+| terminal-text-injector-035 | inject-order | `inject("", ...)` against a resolvable pane (derived from the source; no test). | The typing script runs with an empty string, then the Return script runs; the result is the Return script's result. |
 ## Edge Cases
 
-- **Null / empty input**: An empty `termProgram` is unsupported and reports the name `an unknown terminal` (MUST). An empty `text` (non-nil) produces a script that writes an empty string: for Terminal.app `do script "" in t` is a Return, while for iTerm `write text "" newline no` types nothing and presses nothing; `escape("")` is empty. A `termSessionId` that is empty or only colons yields no uuid and falls back to the TTY (MUST).
+- **Null / empty input**: An empty `termProgram` is unsupported and reports the name `an unknown terminal` (MUST). An empty `text` (non-nil) produces a script that writes an empty string: for Terminal.app `do script "" in t` is a Return, while for iTerm `write text "" newline no` types nothing. Through `inject` the Return half still runs on both terminals, so an empty `text` presses Return once and submits whatever the pane's prompt holds; `escape("")` is empty. A `termSessionId` that is empty or only colons yields no uuid and falls back to the TTY (MUST).
 - **Boundary values**: A pid of 0 or below has no TTY (MUST). When `resolveTarget` needs the TTY (iTerm with no uuid, or Terminal.app) it converts the `Int` pid with `Int32(pid)` and no range check, so a pid above `Int32.max` traps; real pids never reach that, and the signature leaves the range to the caller.
 - **Line breaks in text**: Any line break becomes a single space, so a multi-line message is sent as one line and submitted once (MUST).
 - **Embedded control keys**: ESC, ^C, ^D, DEL and NUL are dropped so they cannot interrupt, clear or exit the agent (MUST).
 - **Pane closed between halves**: The Return half finds the pane afresh and fails `paneNotFound`; the text already typed stays in the pane's input (MUST).
 - **Cancellation**: `try? await Task.sleep` discards the cancellation error, so a cancelled caller still presses Return immediately without the 300 ms wait. The source has no other cancellation path; this is a fact about the code, not a contract it declares.
 - **Concurrent access**: `inject` and `run` are `@MainActor`, so calls are serialised on the main actor; the `await` between the halves lets other main-actor work, including another `inject`, interleave between one call's typing and its Return. The source adds no lock or per-pane queue.
+- **Retry and logging**: The component never retries a failed script, applies no timeout and logs nothing; each caller decides what to do with the returned `InjectionError`.
 - **Error states**: Every failure is returned as an `InjectionError` in a `Result`; none is thrown or logged. A compile failure, an AppleScript error and a miss each surface as a distinct case.
 - **Automation denied**: An error with number -1743 or -1744, or a "not authorized" or "privilege violation" message, becomes `permissionDenied` carrying the terminal's bundle id (MUST).
 - **Unsupported terminal**: Warp, VS Code and unknown terminals fail with `unsupportedTerminal` and nothing is typed (MUST).
@@ -217,7 +224,7 @@ Not applicable: The source calls no logging API; failures are returned as `Injec
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalTextInjector.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalTextInjector.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -252,10 +259,13 @@ Not applicable: The source calls no logging API; failures are returned as `Injec
 **Rationale**: The string assembly and escaping are the risky part and are unit-tested without a real terminal; the app, the CLI and the session click actions share one copy.
 **Approved**: pending
 
-**Decision**: The component has no retry, timeout or cancellation, and reports failures through `Result` without logging them.
-**Rationale**: The source gives no reason; each caller decides what to do with a returned `InjectionError`. This is recorded as a fact about the code, not a gap.
+**Decision**: Address iTerm2 by its bundle id `com.googlecode.iterm2`, not by the application name.
+**Rationale**: The application's name has varied across versions, while the bundle id has not.
 **Approved**: pending
 
+**Decision**: Error descriptions are English literals; callers localise by matching the `InjectionError` case, and a later version may move the texts to string keys.
+**Rationale**: This is a Foundation-tier helper with no localization bundle, and the typed cases give an app everything it needs to show its own text.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -274,4 +284,5 @@ separation-of-concerns passes: the type resolves a pane, builds scripts and runs
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Restated several requirements as plain contract statements, replaced a rationale-free decision with a Retry and logging edge case, added a localization decision and a bundle-id decision, clarified empty-text injection, and added seven test vectors. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

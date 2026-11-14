@@ -4,7 +4,7 @@
     "id": "1d48ed86-5704-4631-b643-36f7450c1c83",
     "title": "ADKD Identifiers",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,13 +24,15 @@
       "paths"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "f5e78b423c32af06",
+  "synced": "bd9d78b937deac22",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: f5d2eb1c-fb0e-48e3-b124-7e730ac8231c
 title: "Markdown Quick Reference"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -67,6 +67,10 @@ its own and takes no value.
   pointer interaction occurs outside it.
 - **restore-focus**: The control MUST return focus to the trigger when the
   popover closes.
+- **forward-localizable-strings**: The control SHOULD forward `title` and
+  `ariaLabel` to `SyntaxQuickReference` as its own props, and SHOULD accept
+  localized row labels while keeping the markdown snippets fixed. It does not
+  today (see Localization).
 - **honor-custom-trigger-label**: The control MUST render `triggerLabel` as
   the visible trigger text while keeping the fixed `Markdown quick reference`
   accessible name.
@@ -109,7 +113,7 @@ its own and takes no value.
 | State | Appearance change |
 |---|---|
 | Closed (default) | Only the outline trigger button is shown; no popover content in the DOM |
-| Trigger hover/focus | Standard outline-Button hover + gold focus ring (`focus-visible`) |
+| Trigger hover/focus | Standard outline-Button hover + accent focus-ring token (`focus-visible`) |
 | Open | `aria-expanded="true"` on the trigger; the portalled popover lists the syntax |
 | Dismissed (Escape / outside-click) | Popover unmounts; focus returns to the trigger |
 
@@ -117,8 +121,10 @@ its own and takes no value.
 
 - The trigger is a real `<button>` with `aria-label="Markdown quick reference"`,
   so the accessible name is stable even when the visible label changes.
-- Open/closed state is conveyed via the Popover's `aria-expanded` /
-  `aria-controls` wiring on the trigger (from the shared primitive).
+- The trigger's `aria-label` and the `<dl>` below come from the shared
+  `SyntaxQuickReference` shell. Open/closed state is conveyed via the
+  Popover's `aria-expanded` / `aria-controls` wiring on the trigger (from the
+  shared primitive).
 - Escape closes the popover; focus is restored to the trigger (handled by the
   shared `Popover`).
 - The reference content is a semantic `<dl>` (term/description pairs), so the
@@ -135,7 +141,8 @@ its own and takes no value.
 | T3 | dismiss-on-escape, restore-focus | Open, then press Escape | The popover content is removed; focus returns to the trigger |
 | T4 | honor-custom-trigger-label | Render with `triggerLabel="Syntax"` | The trigger shows `Syntax` but is still named `Markdown quick reference` |
 | T5 | dismiss-on-outside-click, restore-focus | Open, then click a point outside the popover | The popover content is removed; focus returns to the trigger |
-
+| T6 | open-on-trigger | Focus the trigger and press Enter, then Space | The popover opens and lists the syntax each time |
+| T7 | open-on-trigger | Render with `side="top"` and `align="start"`, then open | The popover positioner receives `top` and `start` instead of the defaults |
 ## Edge Cases
 
 - The syntax list is a fixed, hard-coded reference (no props feed it), so the
@@ -209,16 +216,16 @@ dismissing the reference is local UI state and is not reported to the consumer.
 ## Platform Notes
 
 - **React / Web (TypeScript)**: Component at `packages/web/packages/ui/src/components/markdown-quick-reference.tsx`. It composes (does not re-export) the shared `SyntaxQuickReference` shell (`components/quick-reference.tsx`), passing it the authoritative `MARKDOWN_SYNTAX` array; `SyntaxQuickReference` itself is built on the `Popover` + `Button` primitives. Demo lives in `ui-showcase` (Overlays group); re-run `gen-sources.py` after edits.
-- **SwiftUI**: Start with a `Popover` anchored to a `Button` trigger. The reference list renders as a scrollable container of label–snippet pairs, each pair using a two-column layout (label on the left in secondary foreground color, snippet on the right in monospace font `Font.system(.body, design: .monospaced)`). Dismissal via the popover's auto-dismiss on outside tap and keyboard handling with `.onKeyPress(.escape)`.
-- **Compose**: Start with a `Popup` (or `DropdownMenu` for a simpler alternative) anchored to an `IconButton` trigger, using its `onDismissRequest` for outside-tap/Escape dismissal and an `Alignment`/offset for anchoring — Material 3 has no `Popover` component. Render the syntax list as a `LazyColumn` of rows, each holding a label and a monospace code snippet using `fontFamily = FontFamily.Monospace`.
-- **AppKit / UIKit**: macOS uses an `NSPopover` anchored to the trigger button in the toolbar; iOS uses a `UIPopoverPresentationController`-presented view controller (a popover-style sheet, not a `UIMenu` — the content is a reference to read, not a set of selectable commands). On both platforms, render the list as a scrollable container with term–snippet pairs displayed in rows. Use monospace fonts via `NSFont.monospacedSystemFont(ofSize:weight:)` on macOS and `UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)` on iOS, so both platforms get the same Dynamic Type–friendly system monospace behavior. Dismissal on outside tap, on both platforms.
+- **SwiftUI**: Start with a `Button` trigger carrying the `.popover(isPresented:attachmentAnchor:arrowEdge:)` modifier (SwiftUI has no `Popover` view). The reference list renders as a scrollable container of label–snippet pairs, each pair using a two-column layout (label on the left in secondary foreground color, snippet on the right in monospace font `Font.system(.body, design: .monospaced)`). The popover dismisses itself on an outside tap, and macOS also dismisses it with Escape without extra handling.
+- **Compose**: Start with a `Popup` (or `DropdownMenu` for a simpler alternative) anchored to an `OutlinedButton` trigger with a leading icon and a text label (an `IconButton` would drop the visible label that **honor-custom-trigger-label** relies on), with `Modifier.semantics { contentDescription = "Markdown quick reference" }` for the fixed accessible name, using its `onDismissRequest` for outside-tap/Escape dismissal and an `Alignment`/offset for anchoring — Material 3 has no `Popover` component. Render the syntax list as a `LazyColumn` of rows, each holding a label and a monospace code snippet using `fontFamily = FontFamily.Monospace`.
+- **AppKit / UIKit**: macOS uses an `NSPopover` anchored to the trigger button in the toolbar; iOS uses a `UIPopoverPresentationController`-presented view controller (a popover-style sheet, not a `UIMenu` — the content is a reference to read, not a set of selectable commands). On both platforms, render the list as a scrollable container with term–snippet pairs displayed in rows. Use monospace fonts via `NSFont.monospacedSystemFont(ofSize:weight:)` on macOS and `UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)` on iOS, wrapped in `UIFontMetrics.default.scaledFont(for:)` so it responds to Dynamic Type (the unwrapped font does not). On iOS, return `.none` from `adaptivePresentationStyle(for:)`, or an iPhone presents a sheet instead of a popover. Dismissal on outside tap, on both platforms.
 - **WinUI 3**: Start with a `Flyout` anchored to the trigger `Button` and opened via `Flyout.ShowAt(sender)`. Render the syntax reference as an `ItemsRepeater` or `Grid` within the Flyout, with rows containing a `TextBlock` pair — the label in a secondary-brush proportional font (matching the web spec's muted, proportional labels) and only the snippet in monospace `FontFamily="Cascadia Mono"`. Light-dismiss is built-in; map web outside-click dismissal to `Flyout.IsLightDismissEnabled="true"` and Escape key dismissal to the Flyout's keyboard handling.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/markdown-quick-reference.tsx` | confirmed (1.3.1) |
+| web | `packages/web/packages/ui/src/components/markdown-quick-reference.tsx` | confirmed (1.3.2) |
 
 ## Design Decisions
 
@@ -239,6 +246,9 @@ lightweight, non-modal reference should not trap focus or dim the page.
 even when a consumer shortens the visible label.
 **Approved**: pending
 
+**Decision**: Keep the markdown snippets fixed, but let a consumer override the labels, `title` and `ariaLabel`.
+**Rationale**: The snippets are literal markdown and must not diverge between consumers, while the labels are prose a locale must translate; tying both to one fixed constant makes the localization gap permanent. The trade-off is a wider props surface.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -249,26 +259,28 @@ even when a consumer shortens the visible label.
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-The trigger carries `aria-label="Markdown quick reference"` and the reference
-content is a semantic `<dl>`, both driven by the shared `Popover` primitive's
-`aria-expanded`/`aria-controls` wiring and keyboard (click or Escape)
-handling — the source shows nothing that would make any of these `partial` or
+The trigger's `aria-label="Markdown quick reference"` and the semantic `<dl>`
+come from `SyntaxQuickReference`; the shared `Popover` primitive supplies the
+`aria-expanded`/`aria-controls` wiring and the Escape and outside-click
+dismissal — the source shows nothing that would make any of these `partial` or
 `failed`. `no-hardcoded-strings` is `failed` because the title, aria-label,
 default trigger text, and all nine row labels are fixed English strings with
 no override or localization path from this component. `separation-of-concerns`
 passes because `MarkdownQuickReference` only supplies the markdown-specific
 `MARKDOWN_SYNTAX` entries and props to the shared `SyntaxQuickReference` shell,
 with no popover, dismissal, or rendering logic of its own. `unit-test-coverage`
-passes because `markdownQuickReference.test.tsx` exercises the collapsed
-default, opening/listing the syntax entries, Escape dismissal, and a custom
-trigger label.
+is `partial` because `markdownQuickReference.test.tsx` exercises only the
+collapsed default, opening/listing the syntax entries, Escape dismissal, and
+the default and custom trigger labels. Nothing yet covers outside-click
+dismissal (T5), keyboard activation (T6) or `side`/`align` forwarding (T7).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.2 | 2026-11-14 | Mike Fullerton | Downgraded unit-test-coverage to partial, credited aria-label and dl to SyntaxQuickReference, added localization requirement and decision, new vectors T6/T7, and corrected SwiftUI, UIKit and Compose notes. |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 row (recipe, period); added best-practices Compliance rows. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: correct Overview/Appearance/Platform Notes to describe composing the shared SyntaxQuickReference shell instead of re-exporting it; fix title casing; replace the non-existent iOS UIMenu with UIPopoverPresentationController; fix the macOS/Compose/WinUI platform notes; ground Appearance in fieldCaptionClass and the shell's column width; add a dismiss-on-outside-click test vector and cover all nine labels in T2; reformat Design Decisions with Approved lines; rebuild Compliance as linked, source-grounded accessibility/internationalization checks; flag the hard-coded-strings localization gap as a known review item; correct the 1.0.0 row to say "ingredient"; and rename requirements to subject-only names |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Rewrite Platform Notes with concrete translation guidance for SwiftUI, Compose, AppKit/UIKit, and WinUI 3 |

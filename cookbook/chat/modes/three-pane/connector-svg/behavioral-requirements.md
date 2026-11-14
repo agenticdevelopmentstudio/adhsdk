@@ -9,15 +9,17 @@
 - **unresolved-pair-omission**: If either element in a pair cannot be resolved from the registry, that connection MUST be omitted from the rendered output.
 - **endpoint-circles**: Component MUST render a circle at each line endpoint (source and target).
 - **source-color**: The stroke color of each connector line, and the fill color of its endpoint circles, MUST be derived from the source element's computed CSS `color` property.
+- **circle-radius**: Each endpoint circle MUST render with a radius of 3 pixels.
 - **stroke-width**: Each connector line MUST render with a 1 pixel stroke width.
 - **connector-opacity**: Each connector line's stroke and each endpoint circle's fill MUST render at 0.4 opacity.
 - **resize-observer-updates**: Component MUST recompute connector positions whenever any tracked element is resized, detected via ResizeObserver.
 - **window-resize-updates**: Component MUST recompute connector positions whenever the window resizes.
-- **scroll-updates**: Component MUST recompute connector positions when the window or any ancestor element scrolls, including scroll during the capture phase.
-- **recompute-on-input-change**: Whenever the `pairs` input or the registry snapshot changes, the component MUST recompute connector geometry and re-establish position tracking for the current tracked set. The tracked set is the container element plus every element currently resolvable via the registry snapshot's identifiers.
+- **scroll-updates**: Component MUST recompute connector positions when any element scrolls. The component MUST listen for `scroll` on the window in the capture phase, so that scrolling of any element, not only an ancestor of the container, triggers recomputation.
+- **recompute-on-input-change**: Whenever the `pairs` input or the registry snapshot changes, the component MUST recompute connector geometry and re-establish position tracking for the current tracked set. The tracked set is the container element plus every element currently resolvable via the registry snapshot's identifiers, whether or not the current `pairs` name it.
 - **raf-batching**: Component MUST batch position recomputation requests using `requestAnimationFrame` to avoid redundant calculations during rapid layout changes.
 - **raf-cancellation**: If a scheduled animation frame is still pending when the component unmounts, the component MUST cancel it.
 - **teardown**: Component MUST disconnect the ResizeObserver and remove its resize and scroll event listeners when unmounting.
+- **duplicate-and-degenerate-pairs**: Each entry in `pairs` MUST be drawn independently: duplicate pairs produce duplicate lines, and a pair whose `from` and `to` are the same identifier produces a zero-length line with both circles at the same point. The component MUST use the source element's computed `color` value as given, even when it is transparent or empty.
 - **empty-pairs**: When `pairs` is an empty array, the component MUST render an empty SVG (no lines or circles).
 - **null-container-ref**: When the container reference is not available (`null`), the component MUST abort computation and render an empty SVG.
 

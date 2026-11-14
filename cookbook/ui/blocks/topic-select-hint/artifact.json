@@ -4,11 +4,11 @@
     "id": "86b4d53c-8122-480c-9a33-43e08b063469",
     "title": "TopicSelectHint",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -22,16 +22,17 @@
       "placeholder",
       "empty-state"
     ],
-    "depends-on": [],
-    "related": [
-      "e86eb195-1ec2-4b12-8a24-79f8c03f65ce",
+    "depends-on": [
       "ea565474-df7a-42bd-9613-5dd0cd861911"
+    ],
+    "related": [
+      "e86eb195-1ec2-4b12-8a24-79f8c03f65ce"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dff45816b2c62808",
+  "synced": "677abf76ab16f8b0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

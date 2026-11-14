@@ -4,11 +4,11 @@
     "id": "c19280fd-b80c-46f3-a6a7-0b60a0c90d91",
     "title": "Integrations Store",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3043348c42a47df3",
+  "synced": "faf8bf86eb121b3a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

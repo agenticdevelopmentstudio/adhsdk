@@ -2,11 +2,11 @@
 id: 169da1b6-2a22-4fec-9f01-8118e5242bd5
 title: "ReactionBar"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-08-08
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -48,9 +48,10 @@ reaction back; pressing one you are not adds it. Both directions call the same `
 the same argument, because the caller can already tell which way it goes from the `mine` flag it
 supplied — two callbacks would be two chances for them to disagree.
 
-Two exports ship from `@adh-sdk/ui/components/reaction-bar`: the `ReactionBar`
-component and `DEFAULT_REACTIONS`, the default palette, exported so a host starts from one
-fact rather than restating a literal per surface.
+Three exports ship from `@adh-sdk/ui/components/reaction-bar`: the `ReactionBar`
+component, `DEFAULT_REACTIONS`, the default palette (exported so a host starts from one
+fact rather than restating a literal per surface), and the `ReactionBarItem` type, which a
+consumer needs in order to type `reactions`.
 
 ## Behavioral Requirements
 
@@ -135,7 +136,8 @@ fact rather than restating a literal per surface.
 | T9 | renders-one-chip-per-tally | `reactions=[]` | no chip; the palette trigger alone |
 | T10 | glyph-is-decorative | inspect a chip's glyph | the emoji `<span>` carries `aria-hidden` |
 | T11 | names-the-subject (Playwright) | two bars with different `subjectLabel` | each bar's chips are addressable by name without ambiguity |
-
+| T12 | palette-offers-choices, palette-offers-everything | `choices=["🔥","🚀"]`; open the palette | exactly those two emoji are offered, in that order |
+| T13 | busy-goes-inert, disabled-hides-the-way-in | click a chip under `busy`, then under `disabled` | `onToggle` is not called in either case |
 ## Edge Cases
 
 - **A count reaching zero is the consumer's problem.** The bar renders what it is given; a
@@ -211,15 +213,16 @@ No logging. `ReactionBar` is presentational; what a toggle means, and any teleme
 - **SwiftUI**: `VStack`/`HStack` do not wrap, so use a custom flow `Layout` for the chip row.
   Each reaction is a SwiftUI `Button` with its pressed state driven from the `mine` input, not
   from local state, and announced via `.accessibilityAddTraits(mine ? .isSelected : [])` — the
-  equivalent of `aria-pressed`. The palette could be a `Menu` or custom `Popup`/`Popover` with
-  emoji buttons. Count display uses `Text` with `.monospacedDigit()` font modifier. `@State` is
+  equivalent of `aria-pressed`. The palette could be a `Menu` or a `.popover(isPresented:)` with
+  emoji buttons (SwiftUI has no `Popup`). Count display uses `Text` with `.monospacedDigit()` font modifier. `@State` is
   used only for whether the palette is open or closed.
 
 - **Compose**: `Row` with `Modifier.fillMaxWidth()` does not wrap, so use `FlowRow` for the chip
-  row. Each reaction is a `Button` composable with the pressed state exposed via
-  `Modifier.toggleable(value = mine, onValueChange = { ... })` or
-  `Modifier.semantics { selected = mine }` — the equivalent of `aria-pressed` — plus a separate
-  trigger `Button` styled as a circular icon for the palette. Palette is a `Popup` or
+  row. Each reaction is a `FilterChip(selected = mine)`, or a `Button` with
+  `Modifier.semantics { toggleableState = ToggleableState(mine) }` — the equivalent of
+  `aria-pressed`. Do not stack `Modifier.toggleable` on a `Button`: that creates two competing
+  click handlers, and `semantics { selected }` is selection semantics, not a pressed state. A
+  separate trigger `Button` styled as a circular icon opens the palette. Palette is a `Popup` or
   `DropdownMenu`. Counts display in `Text` with `style = TextStyle(fontFeatureSettings = "tnum")`
   for monospaced digits (`fontFeatureSettings` is a `TextStyle` parameter, not a modifier). Use
   `remember { mutableStateOf(false) }` only for palette open state.
@@ -229,12 +232,16 @@ No logging. `ReactionBar` is presentational; what a toggle means, and any teleme
   with a flow layout. Each chip is an `NSButton` (AppKit) with `.pushOnPushOff` for toggle
   semantics, or a `UIButton` (UIKit) with the `.selected` trait bound to `mine`. The palette is
   an `NSPopover` (AppKit) or a `UIMenu`/`UIAction` presented via a
-  `UIPopoverPresentationController` (UIKit; `UIMenuActions` does not exist). Accessibility via
-  `NSAccessibilityRole` (AppKit) or `accessibilityTraits` (UIKit) set to `.button`, with custom
-  `NSAccessibilityElement` / `accessibilityLabel` construction for each chip and trigger.
+  `UIPopoverPresentationController` (UIKit; `UIMenuActions` does not exist). Accessibility: on AppKit give
+  each chip a toggle role (`NSAccessibility.Role.checkBox`) or an `accessibilityValue` that
+  states the pressed state; on UIKit add `.selected` to `accessibilityTraits` alongside
+  `.button`, driven from `mine`. Either way, a plain `.button` role alone drops the pressed
+  state that `announces-own-reaction` requires. Build `accessibilityLabel` for each chip and
+  trigger.
 
 - **WinUI 3**: `StackPanel` has no `TextWrapping` property, so use an `ItemsRepeater` with a
-  `WrapLayout` (or a `WrapPanel`) for the row. Each reaction is a `ToggleButton` with `IsChecked`
+  `WrapLayout` (or a `WrapPanel`) for the row; both come from the Windows Community Toolkit, not the
+  platform, so the port takes that dependency. Each reaction is a `ToggleButton` with `IsChecked`
   bound to `mine` (`Button` has no `IsToggled` property), styled per the Fluent 2 Design System.
   The palette is a `Flyout` or `MenuFlyout` attached to a `Button` trigger. Count display uses
   `TextBlock` with `FontFamily="Segoe UI Variable"` and `Typography.NumeralAlignment="Tabular"`
@@ -246,7 +253,7 @@ No logging. `ReactionBar` is presentational; what a toggle means, and any teleme
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/reaction-bar.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/components/reaction-bar.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -283,6 +290,9 @@ short because a long grid is a picker, and a picker is a different component.
 result.
 **Approved**: pending
 
+**Decision**: Ship the accessible-name phrasing and the count text as hardcoded English, and accept that as known debt.
+**Rationale**: The strings are built around `subjectLabel` inside the component, so a non-English UI cannot change them without forking. The remedy is to expose the name builders and a count formatter as optional props (defaulting to today's English and a plain number) or to route them through the package's i18n seam. Adding either later is not a breaking change.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -295,7 +305,7 @@ result.
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.internationalization.locale-aware-formatting](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c87ff1f1-9d77-5167-b0c4-f13f2aae5acb) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Statuses rest on the source: it styles every element through `apt-*` tokens with no raw hex and
 composes only the shared `Button`/`Popover` primitives (no bespoke controls); it sets
@@ -305,12 +315,13 @@ it builds its accessible-name and count text as hardcoded English template liter
 is explicitly presentational — the caller fetches tallies and performs the toggle, never the bar
 itself (separation-of-concerns passed); `reactionBar.test.tsx` directly exercises chip labeling,
 pressed state, toggle/take-back, the palette, busy inertness, and the disabled/empty-reactions
-cases (unit-test-coverage passed).
+cases. T11 is a Playwright vector and no Playwright spec exists for it in the repo, so unit-test-coverage is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Listed ReactionBarItem as a third export, added vectors T12 and T13, recorded the hardcoded-English i18n debt as a Design Decision, marked unit-test-coverage partial (no Playwright spec for T11), and corrected the Compose, AppKit/UIKit, SwiftUI and WinUI 3 notes. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: fix Compliance table statuses/links and add the Internationalization checks the Localization gap fails; reformat Design Decisions to the Decision/Rationale/Approved triple; correct WinUI 3, Compose, SwiftUI and AppKit/UIKit platform-note API errors; drive the SwiftUI pressed state from `mine` instead of local state; require chips to be disabled under `disabled`; list the exact `DEFAULT_REACTIONS` array in Configuration; rewrite Localization to describe the component's hardcoded English strings and unformatted counts. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Add platform notes for SwiftUI, Compose, AppKit/UIKit, WinUI 3; mark inapplicable sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy). |

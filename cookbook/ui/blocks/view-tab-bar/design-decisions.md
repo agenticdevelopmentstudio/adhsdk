@@ -16,6 +16,6 @@
   **Approved**: pending
 
 - **Decision**: `links` is optional and defaults to an empty array.
-  **Rationale**: Route navigation is not needed by every tab bar. Some use cases have tabs only, links only, or both.
+  **Rationale**: Route navigation is not needed by every tab bar. Some use cases have tabs only, links only, or both. A links-only caller still passes `tabs=[]`, a `value` and an `onChange`, which the component ignores.
   **Approved**: pending
 

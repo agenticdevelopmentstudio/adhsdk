@@ -2,7 +2,7 @@
 id: 345bb44b-1a4b-46ce-be8f-0796edbf70c9
 title: "Theme Tokens"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -38,21 +38,22 @@ approved-date: ""
 
 The header comment records that the token-classification, grouping and serialisation helpers that once lived in this file were dropped when the editor moved to free-form CSS, so the module is parsing only. The parser is regular-expression based; it is not a CSS parser, and the contract below describes exactly what those expressions accept. The themes package exposes the module as its `./tokens` export, and the ADH package imports it as `@adh-sdk/themes/tokens`: `AdhThemeStyle` calls both functions, and `themes-client` uses `ThemeDelta` for the stored theme `data` field and the theme write payload.
 
+For orientation, the consumer behaviour around this module: the ADH theme style injector (its theme-switcher assets) parses the default theme's `:root` block, then for each switcher theme splits off the imports; a full-palette theme ships its remaining CSS whole with no delta, while any other theme ships a `:root` block of only the entries whose value differs from the base value. This module does not compute deltas.
 ## Behavioral Requirements
 
 ### Public surface
 
 - **exports**: The module MUST export `ThemeDelta`, `splitImports` and `parseRootProps`, and MUST export nothing else.
 - **theme-delta-shape**: `ThemeDelta` MUST be `Record<string, string>`, a map from custom-property name to value; the module attaches no validation to it.
-- **pure**: Both functions MUST be pure: they MUST NOT read or write the DOM, storage, the network or module state, and the same input MUST give the same output.
-- **no-throw**: Neither function MUST throw on any string input; input that does not match yields an empty result, never an error.
+- **pure**: Both functions MUST be pure: they MUST NOT read or write the DOM, storage or the network, MUST NOT depend on or leave observable state, and the same input MUST give the same output.
+- **no-throw**: Both functions MUST NOT throw on any string input; input that does not match yields an empty result, never an error.
 
 ### splitImports
 
 - **imports-pattern**: `splitImports` MUST recognise an import rule as `@import`, whitespace, `url(`, optional whitespace, an optional single or double quote, the href, the same quote again, optional whitespace, `)`, optional whitespace and an optional `;`.
 - **imports-href**: The href captured MUST be the text between the quotes (or between the parentheses when unquoted), up to the first `'`, `"` or `)`; for an unquoted href, any whitespace before the closing parenthesis is part of the captured text.
 - **imports-order**: The returned `imports` array MUST list hrefs in the order the rules appear in the CSS, with duplicates kept.
-- **imports-removed**: Every matched rule, including the whitespace and the `;` that follow its closing parenthesis, MUST be replaced by an empty string in `rest`; all other text, including whitespace before the rule, MUST be left unchanged.
+- **imports-removed**: Every matched rule, including the whitespace between `)` and `;` and the `;` itself (whitespace after the `;` remains), MUST be replaced by an empty string in `rest`; all other text, including whitespace before the rule, MUST be left unchanged.
 - **imports-url-only**: The string form of an import (an `@import` followed by a quoted string rather than `url(`) MUST NOT be matched: it stays in `rest` and adds nothing to `imports`.
 - **imports-none**: When no rule matches, `splitImports` MUST return an empty `imports` array and a `rest` equal to the input.
 - **imports-everywhere**: Matching MUST NOT depend on position or context: a rule is removed wherever it appears in the string, including inside a comment.
@@ -71,18 +72,13 @@ The header comment records that the token-classification, grouping and serialisa
 - **prop-ordered**: The `Map` MUST iterate in order of first appearance.
 - **prop-duplicates**: When a name is declared twice, the later value MUST replace the earlier one, and the entry MUST keep the position of the first declaration.
 - **prop-empty-value-kept**: A declaration whose value is only whitespace MUST still be read and stored as the empty string (the guard skips a match only when a capture is the empty string, and the value pattern cannot capture nothing).
-- **non-custom-ignored**: Declarations that are not custom properties (names not starting with `--`) MUST be ignored.
+- **non-custom-ignored**: Declarations that are not custom properties (names not starting with `--`) MUST be ignored. The match is not anchored, so a name that merely contains `--` (for example `x--y:1;`) is read as the custom property `--y`.
 - **comments-not-parsed**: The parser MUST NOT recognise CSS comments: a custom property written inside a comment within the block is read as if it were live.
 
 ### Ordering and concurrency
 
 - **no-shared-state**: The shared module-level global regular expressions MUST NOT leak a match position between calls; `String.replace` and `matchAll` each start from the beginning of the string, so repeated and re-entrant calls give identical results.
 - **synchronous**: Both functions MUST be synchronous and perform no I/O.
-
-### Consumers
-
-- **consumer-delta**: Consumer behaviour, recorded for orientation: the ADH theme style injector (its theme-switcher assets) parses the default theme's `:root` block, then for each switcher theme splits off the imports; a full-palette theme ships its remaining CSS whole with no delta, while any other theme ships a `:root` block of only the entries whose value differs from the base value. This module does not compute deltas.
-
 ## Appearance
 
 Not applicable — this is a pure string-parsing module, not a visual component.
@@ -122,6 +118,7 @@ No test sits beside `tokens.ts`. The themes package tests (`appearanceScope.test
 | tokens-019 | comments-not-parsed | `parseRootProps(":root{/* --a:1; */--b:2;}")` | Map has `--a` to `1` and `--b` to `2` |
 | tokens-020 | prop-pattern | `parseRootProps(":root{--é:1;--a_b-c:2;}")` | Map has only `--a_b-c` to `2`; the non-ASCII name is not matched |
 | tokens-021 | no-shared-state, pure | Call `splitImports` twice on the same string containing an import | Both calls return equal results |
+| tokens-022 | non-custom-ignored | `parseRootProps(":root{x--y:1;}")` | Map has `--y` to `1`; the match is not anchored |
 
 ## Edge Cases
 
@@ -132,12 +129,13 @@ No test sits beside `tokens.ts`. The themes package tests (`appearanceScope.test
 - **Last declaration without a semicolon**: Dropped silently (MUST). Generated theme CSS ends every declaration with `;`; free-form CSS from the editor may not, and its last property is then missing from the map.
 - **Value containing a semicolon**: Cut at the first `;` (MUST). A data URL or other value with an interior semicolon is truncated and the remainder discarded.
 - **Value containing a closing brace**: The block ends at the first `}` anywhere inside it, including inside a quoted string or a function value, so later declarations are lost (MUST).
+- **Name containing `--` after other characters**: The property pattern is not anchored, so `x--y:1;` yields `--y` (MUST).
 - **Duplicate property names**: The last value wins and the first position is kept (MUST).
 - **Whitespace-only value**: Stored as the empty string (MUST).
 - **Multiple `:root` blocks**: Only the first is read (MUST); the comment on the block pattern says the first `:root` block of a generated theme is its token block and what follows is theme-independent.
 - **Concurrent access**: Not a concern; the functions are synchronous and pure, and JavaScript runs them one at a time. The module-level regular expressions carry the global flag but are used only through `replace` and `matchAll`, which do not depend on a prior match position.
 - **Error states, offline and cancellation**: Not applicable; there is no I/O, no dependency that can fail and no long-running work to cancel. Malformed CSS never raises; it yields fewer entries.
-- **Very large input**: The source sets no size limit and no timeout; the patterns are single linear scans.
+- **Very large input**: The source sets no size limit and no timeout; the patterns are not guaranteed linear. An unclosed `:root{` makes the block pattern rescan to the end of the input from each `:root{`, and a `--x:` with no later `;` makes the property pattern do the same, so the worst case on such input is O(n²).
 
 ## Configuration
 
@@ -173,7 +171,7 @@ Not applicable: the source contains no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Start from a small struct with two static functions, using `NSRegularExpression` or Swift `Regex` for the same patterns, and an array of name and value pairs for the property map, since a `Dictionary` does not keep insertion order. A native app would normally not parse CSS at all; it would hold tokens as a typed theme struct injected through the SwiftUI `Environment`, with `Color` and `Font` values instead of strings. Keep a parser only when it must read the shared theme CSS.
+- **SwiftUI**: Start from a small struct with two static functions, using `NSRegularExpression` or Swift `Regex` for the same patterns, and an array of name and value pairs (or `OrderedDictionary` from swift-collections, or `KeyValuePairs`) for the property map, since a `Dictionary` does not keep insertion order; either gives first-position, last-value-wins behaviour when you update an existing key in place. A native app would normally not parse CSS at all; it would hold tokens as a typed theme struct injected through the SwiftUI `Environment`, with `Color` and `Font` values instead of strings. Keep a parser only when it must read the shared theme CSS.
 - **Compose**: Use Kotlin `Regex` with `findAll` and a `LinkedHashMap<String, String>`; `put` on an existing key keeps the first position and replaces the value, which matches the duplicate rule. A native app would map tokens onto `MaterialTheme` colorScheme, typography and shapes rather than parse CSS.
 - **React/Web**: The source is `packages/web/packages/themes/src/tokens.ts`, exported as `@adh-sdk/themes/tokens` and used by the ADH package's `AdhThemeStyle.tsx` and `themes-client.ts`. It has no `"use client"` directive and imports nothing, so it runs unchanged in server components, the browser and Node. A port keeps the regular expressions as written; a browser could read the same data through `getComputedStyle`, but that needs a DOM and would break the server-side use.
 - **AppKit / UIKit**: Same as SwiftUI for the parsing itself. Apply the result to `NSColor` and `UIColor` assets or one theme object consulted by views; there is no CSS cascade, and `NSAppearance` or `UITraitCollection` chooses the light or dark variants.
@@ -186,7 +184,7 @@ Not applicable: the source contains no log calls.
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/tokens.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/themes/src/tokens.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -225,4 +223,5 @@ The module does one thing, string parsing with no DOM, React or I/O, so separati
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Reworded the purity, no-throw, imports-removed and very-large-input claims to match tokens.ts, added the unanchored-name case with vector tokens-022, named an ordered Swift type, and moved the consumer note into the Overview. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |

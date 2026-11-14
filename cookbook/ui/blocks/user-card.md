@@ -2,11 +2,11 @@
 id: db6178e1-c613-4358-a0b4-8c6f5bfaaff9
 title: "UserCard"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -49,10 +49,7 @@ authenticated hub members (HUB+PUBLIC card with more fields).
 Two exports are provided: `UserCard` (the main card) and `UserCardSkeleton`
 (a placeholder for the loading state).
 
-**Known consumers**: the Agentic Developer Hub (ADH) uses this component on
-its public profile route (`/<slug>`) and in its profile-settings live
-preview; ADH's social-links settings editor also imports `PLATFORM_LABELS`
-from this module for its own platform picker.
+`PLATFORM_LABELS` is a public export of this module.
 
 ## Behavioral Requirements
 
@@ -66,7 +63,11 @@ from this module for its own platform picker.
   corresponding collection is empty.
 - **show-separator-when-gated**: A `<Separator>` MUST appear between the
   identity header and the gated sections when at least one gated section is
-  populated, and MUST be absent when all collections are empty.
+  populated, and MUST be absent when all collections are empty. It is the
+  only divider the card draws; the gated sections are not separated from one
+  another by dividers.
+- **order-gated-sections**: The populated gated sections MUST render in this
+  order, top to bottom: Social, Email, Phone, Address, Personas.
 - **link-social-externally**: Each social link MUST open in a new tab
   (`target="_blank" rel="noopener noreferrer"`) with the platform label and
   handle displayed.
@@ -76,7 +77,10 @@ from this module for its own platform picker.
 - **show-initials-fallback**: When `avatarUrl` is null or the image fails
   to load, the `AvatarFallback` MUST show up to two initials derived from
   `displayName`, falling back to the slug, falling back to a generic
-  `UserIcon`.
+  `UserIcon`. The initials are built by splitting the name on whitespace,
+  dropping empty parts, taking the first two remaining words (the first and
+  the second, so "Ada King Lovelace" gives "AK"), taking the first character
+  of each, and uppercasing the result. A one-word name gives one initial.
 - **use-displayname-or-slug**: The heading MUST display `displayName` when
   non-null, and `slug` otherwise. (See **Edge Cases** for the empty-string
   `displayName` case — the check is for null/undefined, not emptiness.)
@@ -97,26 +101,25 @@ from this module for its own platform picker.
 │  [avatar]  Display Name                      │
 │            @slug                             │
 │            MEMBER SINCE <Month Year>         │
-├──────────────────────────────────────────────┤  ← separator (only when gated content)
+├──────────────────────────────────────────────┤  ← the only divider (only when gated content)
 │  SOCIAL                                      │
 │  ↗ Platform @handle   ↗ Platform @handle     │  ← wrapping flex row
-├──────────────────────────────────────────────┤
 │  EMAIL                                       │
 │  ✉ email@example.com                         │
-├──────────────────────────────────────────────┤
 │  PHONE / ADDRESS / PERSONAS …               │
 └──────────────────────────────────────────────┘
 ```
 
-- Root: `rounded-xl border border-apt-border bg-apt-bg text-apt-text`.
-- Avatar: `size-16` mobile, `size-20` sm+, with a fallback initials ring.
-- Display name: `font-serif text-2xl` mobile, `text-3xl` sm+.
-- Slug: `font-mono text-sm text-apt-text-muted`.
-- Member since: `font-mono text-[0.7rem] uppercase tracking-[0.08em] text-apt-text-dim`.
-- Section labels: `font-mono text-[0.6rem] uppercase tracking-[0.1em] text-apt-text-dim`.
-- Social links: inline flex, `text-apt-text-muted hover:text-apt-text`, focus ring `apt-gold/40`.
-- Persona items: `rounded-lg border border-apt-border bg-apt-surface p-3`; badge for `visibility`.
+- Root: rounded corners, a 1px border in the border color, the page background, and primary text color.
+- Avatar: 64px on small screens, 80px from the small breakpoint up, with a fallback initials ring.
+- Display name: serif, 24px on small screens, 30px from the small breakpoint up.
+- Slug: monospace, 14px, muted text color.
+- Member since: monospace, small uppercase text with wide letter spacing, dim text color.
+- Section labels: monospace, extra-small uppercase text with wide letter spacing, dim text color.
+- Social links: inline flex, muted text color that becomes primary text color on hover, and a focus ring in the accent color at 40% opacity.
+- Persona items: rounded, bordered, on the raised surface color, with a badge for `visibility`.
 
+The React/Web classes behind these roles are listed in Platform Notes.
 ## States
 
 | State | Appearance change |
@@ -174,7 +177,8 @@ from this module for its own platform picker.
 | T19 | show-initials-fallback | `avatarUrl` set to a URL whose image fails to load | `AvatarImage` transitions to its error state and `AvatarFallback` renders, resolving through the same initials-then-slug-then-`UserIcon` chain as a null `avatarUrl` |
 | T20 | native-contact-links | DTO with one email | `<a href="mailto:<email>">` rendered with the email as link text |
 | T21 | native-contact-links | DTO with one phone | `<a href="tel:<phone>">` rendered with the phone number as link text |
-
+| T22 | show-initials-fallback | `avatarUrl: null`, `displayName: "Ada King Lovelace"` | AvatarFallback shows "AK" (first two words, uppercased) |
+| T23 | order-gated-sections | DTO with all five collections populated | Sections render in the order Social, Email, Phone, Address, Personas; the only divider is under the identity header |
 ## Edge Cases
 
 - **Single-word display name**: `initialsOf("Alice")` returns "A" (one initial; see **show-initials-fallback**, "up to two initials").
@@ -192,7 +196,7 @@ from this module for its own platform picker.
   transitions to its error state and reveals `AvatarFallback`, which resolves
   through the same fallback chain (initials, then slug, then `UserIcon`) as a
   null `avatarUrl` (see **show-initials-fallback**).
-- **Large persona list**: each persona item wraps text; no truncation; the `<ul>` is scrollable by the parent container.
+- **Large persona list**: each persona item wraps text; no truncation; the card grows to fit its content with no height cap and never scrolls itself; scrolling long lists is the consumer's job.
 - **createdAt edge case**: `formatMemberSince` returns the locale-specific month+year. An invalid date string renders as "Invalid Date" — callers should validate upstream.
 
 ## Configuration
@@ -223,12 +227,42 @@ import { UserCard, UserCardSkeleton, type UserCardDto } from '@adh-sdk/ui/blocks
 | `addresses` | `UserCardAddress[]` | Visible physical addresses. |
 | `personas` | `UserCardPersona[]` | Visible personas (public or unlisted). |
 
+**`UserCardSocialLink` shape:**
+
+| Field | Type | Description |
+|---|---|---|
+| `platform` | `string` | Platform key, looked up case-insensitively in `PLATFORM_LABELS`. An unknown key is shown as-is (the raw `platform` string). |
+| `url` | `string` | Link target, used as the `href` unchanged. |
+| `handle` | `string` | Handle shown beside the label in monospace; omitted from the DOM when empty. |
+
+**`PLATFORM_LABELS`** maps lowercase platform keys to display names: `instagram` (Instagram), `facebook` (Facebook), `x` (X), `tiktok` (TikTok), `bluesky` (Bluesky), `linkedin` (LinkedIn), `substack` (Substack), `github` (GitHub), `youtube` (YouTube), `mastodon` (Mastodon), `threads` (Threads), `twitch` (Twitch), `discord` (Discord), `website` (Website).
+
+**`UserCardAddress` shape:**
+
+| Field | Type | Description |
+|---|---|---|
+| `label` | `string` | Optional heading above the address (for example "Home"); omitted when empty. |
+| `line1`, `line2` | `string` | Street lines, each shown as its own line when non-empty. |
+| `city`, `region`, `postalCode` | `string` | Non-empty values are joined with `", "` into one line (for example `Austin, TX, 78701`). |
+| `country` | `string` | Shown as the last line when non-empty. |
+
+Lines render in the order line1, line2, city/region/postal line, country; empty fields are skipped.
+
+**`UserCardPersona` shape:**
+
+| Field | Type | Description |
+|---|---|---|
+| `slug` | `string` | Unique persona slug, used as the list key. |
+| `name` | `string` | Persona name. |
+| `description` | `string \| null` | Shown under the name when non-empty. |
+| `visibility` | `'public' \| 'hub'` | Shown in a badge; `public` uses the success style and `hub` the neutral style. |
+| `createdAt` | `string` | Part of the type; the card does not render it. |
+
 **`UserCardSkeleton` props:**
 
 | Prop | Type | Required | Description |
 |---|---|---|---|
 | `className` | `string` | no | Extra classes on the skeleton root. |
-
 ## Deep Linking
 
 Not applicable: The component is a pure presentational render with no integrated navigation. Deep linking is the responsibility of the page or layout that wraps this component.
@@ -280,7 +314,7 @@ handling (it transitions to error and reveals `Avatar.Fallback`).
 
 - **SwiftUI**: Build a view composition from `VStack` + `HStack`, using `AsyncImage` for the avatar with a fallback symbol (`Image(systemName: "person.circle")`). Render sections conditionally based on collection emptiness. Use SwiftUI's `@Environment` to access design token colors. Member since date formatting uses `Date.FormatStyle.dateTime.month(.wide).year()`, not `.abbreviated` — `.abbreviated` produces a full month/day/year date, not month and year alone.
 - **Compose**: Use `Column` for the layout with `AsyncImage` from Coil for avatar loading. Conditional rendering via Kotlin's `if` within the composable. Social links render as an `AnnotatedString` carrying a `LinkAnnotation.Url`, opened via the composition-local `LocalUriHandler` (`ClickableText` is deprecated, and there is no `navigateToExternalUrl()` API in Compose). Section visibility determined by collection checks.
-- **React/Web**: Source is `packages/web/packages/ui/src/blocks/user-card.tsx` using Base UI's `@base-ui/react/avatar`, Lucide React icons, and Tailwind CSS (`apt-*` tokens). Conditional rendering suppresses empty sections. `UserCardSkeleton` uses the `Skeleton` component from the same package for the loading state.
+- **React/Web**: Source is `packages/web/packages/ui/src/blocks/user-card.tsx` using Base UI's `@base-ui/react/avatar`, Lucide React icons, and Tailwind CSS (`apt-*` tokens). Conditional rendering suppresses empty sections. Appearance classes: root `rounded-xl border border-apt-border bg-apt-bg text-apt-text`; avatar `size-16 sm:size-20`; display name `font-serif text-2xl sm:text-3xl`; slug `font-mono text-sm text-apt-text-muted`; member since `font-mono text-[0.7rem] uppercase tracking-[0.08em] text-apt-text-dim`; section labels `font-mono text-[0.6rem] uppercase tracking-[0.1em] text-apt-text-dim`; social links `text-apt-text-muted hover:text-apt-text` with focus ring `apt-gold/40`; persona items `rounded-lg border border-apt-border bg-apt-surface p-3`. `UserCardSkeleton` uses the `Skeleton` component from the same package for the loading state.
 - **AppKit / UIKit**: Implement as a `UIViewController` on iOS (wrapped in a SwiftUI `UIViewControllerRepresentable` only when hosted from SwiftUI) or an `NSViewController` on macOS, with `NSImageView`/`UIImageView` + `NSTextField`/`UILabel` composition. Use `URLSession` or the system's own image-loading facilities for async avatar loading — no third-party dependency is needed. Render the fixed set of static sections as a vertical stack view (`NSStackView`/`UIStackView`), not a table view, since the section list isn't a dynamically scrolling collection. Focus ring uses the system focus appearance rather than a hardcoded `UIColor.systemBlue`.
 - **WinUI 3**: Implement using WinUI `Grid` for layout, and the built-in `PersonPicture` control for the avatar — it already handles the image/initials/fallback-glyph chain in one control, instead of hand-building an `Image` plus a Segoe MDL2 glyph. Use `TextBlock` for text with automatic wrapping. Section visibility via `Visibility` property (Collapsed/Visible). Apply Fluent 2 theme resources for colors and spacing. Social links use `HyperlinkButton` with `NavigateUri` binding.
 
@@ -288,7 +322,7 @@ handling (it transitions to error and reveals `Avatar.Fallback`).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/user-card.tsx` | confirmed (1.3.1) |
+| web | `packages/web/packages/ui/src/blocks/user-card.tsx` | confirmed (1.3.2) |
 
 ## Design Decisions
 
@@ -340,21 +374,19 @@ import the same map instead of duplicating it.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-These statuses rest on the source's native `<a>`/`<address>` elements and
-rem-based Tailwind text sizes for the passed accessibility checks, the
-`apt-*` design tokens whose actual color values live outside this file for
-the partial `contrast-ratio`, the total absence of any logging call for the
-passed `no-pii-in-logs`, the hardcoded `Social`/`Email`/`Phone`/`Address`/
-`Personas`/`Member since` strings and the `PLATFORM_LABELS` map for the
-failed internationalization checks, `formatMemberSince`'s use of
-`toLocaleDateString` plus the non-truncating wrapping layout for the passed
-internationalization checks, and the untested RTL flex ordering together
-with `initialsOf`'s single-UTF-16-code-unit character slicing for the
-partial internationalization checks. `separation-of-concerns` passes because
-`initialsOf`, `platformLabel`, `formatMemberSince`, and `addressLines` are
-pure helper functions kept apart from the render body; `unit-test-coverage`
-fails because no test exercises `UserCard`.
+Each status rests on the source as follows:
 
+- **screen-reader-support, keyboard-navigable, semantic-markup** (passed): the card uses native `<a>` and `<address>` elements.
+- **dynamic-type-support** (passed): text sizes are rem-based Tailwind classes.
+- **contrast-ratio** (partial): the `apt-*` design tokens' color values live outside this file.
+- **no-pii-in-logs** (passed): the component makes no logging call.
+- **string-externalization, no-hardcoded-strings** (failed): the `Social`, `Email`, `Phone`, `Address`, `Personas` and `Member since` strings and the `PLATFORM_LABELS` map are hardcoded.
+- **locale-aware-formatting** (passed): `formatMemberSince` uses `toLocaleDateString`.
+- **text-expansion-tolerance** (passed): the layout wraps and never truncates.
+- **rtl-layout-support** (partial): the RTL flex ordering is untested.
+- **unicode-support** (partial): `initialsOf` slices a single UTF-16 code unit per word.
+- **separation-of-concerns** (passed): `initialsOf`, `platformLabel`, `formatMemberSince`, and `addressLines` are pure helper functions kept apart from the render body.
+- **unit-test-coverage** (failed): no test exercises `UserCard`.
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -364,3 +396,4 @@ fails because no test exercises `UserCard`.
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) with proper "not applicable" explanations; restructure Platform Notes into five-platform format with concrete implementation guidance for each platform; correct domain URI; set status to review. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case (no `must-` prefix); fix the member-since and initials-count requirement/vector contradictions; formalize `native-contact-links` and add vectors for field-passthrough, per-section suppression, avatar load failure, contact links, and the empty-slug/displayName edge case; correct Platform Notes APIs (WinUI `PersonPicture`, Compose `LinkAnnotation`/`LocalUriHandler`, AppKit/UIKit stack view + `URLSession`, SwiftUI `.dateTime.month(.wide).year()`); mark Localization and Privacy applicable; reformat Design Decisions and rebuild Compliance from the actual catalog; add `depends-on` for the composed avatar/skeleton/separator/badge/external-link/section-label pieces; generalize ADH-specific wording into a Known Consumers note. |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.3.2 | 2026-11-14 | Mike Fullerton | Lint fixes: defined the social link, address and persona types and the platform label map, stated the exact initials rule, section order and single divider, made Appearance token-based with classes moved to the React/Web note, split the compliance rationale per check, and trimmed Known consumers. |

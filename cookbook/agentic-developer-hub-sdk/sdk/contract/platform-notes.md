@@ -1,7 +1,7 @@
 
 - **SwiftUI**: Sources live under
   `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/{Attachments,Backend,Chat,Commands,Configuration,Hooks,Media,Messages,Orchestrator,Participants,Permissions}/`.
-  `ChatViewModel` is `@MainActor, AnyObject, Sendable`; the two given actor
+  `ChatViewModel` is `@MainActor, AnyObject, Sendable`; the two actor
   conformers (`ScriptedBackend`, and `PersonaChatCoordinator` referenced from
   its doc comments) hold `inboundEvents`/its continuation as `nonisolated
   let`, so a `SwiftUI` view can start consuming the stream without waiting on

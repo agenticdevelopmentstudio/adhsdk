@@ -20,4 +20,14 @@
 | T17 | arrow-nav-clamps | open (no `allowOther`), ArrowUp while the first item is highlighted | highlight stays on the first item (no wrap) |
 | T18 | arrow-nav-clamps | open (no `allowOther`), ArrowDown while the last item is highlighted | highlight stays on the last item (no wrap) |
 | T19 | open-initializes-selection | open with a committed item, before any key press | that item is highlighted immediately (independent of T9's check) |
-
+| T20 | click-outside-closes-without-commit | open, press the pointer outside the surface | no `onChange`; surface closes |
+| T21 | disabled-blocks-interaction | `disabled`, click the trigger and press Enter on it | surface stays closed; `aria-expanded` stays `false` |
+| T22 | tab-unsupported | open with `allowOther`, press Tab | focus moves per native order and is not trapped in the surface; selection unchanged |
+| T23 | home-end-unsupported | open, ArrowDown once, press Home then End | highlight stays on the second row; no `onChange` |
+| T24 | typeahead-unsupported | open, type "S" with the surface focused | highlight does not move; no `onChange` |
+| T25 | focus-returns-on-close | open, click a row | `onChange` fires; DOM focus returns to the trigger |
+| T26 | keys-act-on-selection | open with `allowOther` and no committed value (input focused, first item highlighted), Enter | commits the first item with `isOther:false`, not the empty Other input |
+| T27 | keys-act-on-selection | open with `allowOther` (input focused, first item highlighted), ArrowDown | selection moves to the second item |
+| T28 | no-items-no-op-navigation | `items=[]`, `allowOther` false, open, ArrowDown, ArrowUp, Enter | no rows; no `onChange`; surface stays open |
+| T29 | other-row-label-inert | open with `allowOther`, click the "Other" label text | no `onChange`; selection and check unchanged |
+| T30 | resolves-committed-value | `value` is the Other free text and `allowOther`, open | Other is highlighted and checked; input prefilled with `value` |

@@ -2,11 +2,11 @@
 id: cfb09ec6-c38f-474a-bd79-be8f67ab523c
 title: "Chat Coordinator Projection"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-24
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,7 +19,9 @@ tags:
   - projection
   - view-model
 depends-on: []
-related: []
+related:
+  - 447d0e33-c66e-4bf9-8511-e7823bdbcf9b
+  - 259f4a99-1b18-44a2-a102-e14e0fd8e30f
 references: []
 approved-by: ""
 approved-date: ""
@@ -29,9 +31,9 @@ approved-date: ""
 
 ## Overview
 
-`chat-coordinator-projection` is the read-only translation layer between the chat package's portable contract (`ChatViewModel`, `Message`, `ActiveDraft`, `ActiveCommand`, `Attachment`) and the web transcript's display model (`ChatMessage`). It has two responsibilities, implemented as pure functions with no I/O of their own:
+This ingredient is the read-only translation layer between the chat package's portable contract (`ChatViewModel`, `Message`, `ActiveDraft`, `ActiveCommand`, `Attachment`) and the web transcript's display model (`ChatMessage`). It has two responsibilities, implemented as pure functions with no I/O of their own:
 
-- `projection/toChatMessages.ts` — `projectMessages` flattens `ChatViewModel.messages` and `ChatViewModel.activeDrafts` into a single ordered `ChatMessage[]`, folding in `activeCommands` for a still-open draft's tool-call display; `draftMessageID` gives a draft's projected id a stable, participant-keyed form.
+- `projection/toChatMessages.ts` — `projectMessages` flattens `ChatViewModel.messages` and `ChatViewModel.activeDrafts` into a single ordered `ChatMessage[]`, folding in `activeCommands` for a still-open draft's tool-call display through `toToolCallInfo` (a module-private helper in the same file, not exported);  `draftMessageID` gives a draft's projected id a stable, participant-keyed form.
 - `projection/richContent.ts` — `encodeRichDisplay`/`decodeRichDisplay` carry web-only display extras (`content`, `popover`, `toolCalls`) through the portable `Attachment` vocabulary under the vendor media type `RICH_DISPLAY_MEDIA_TYPE`, so a backend can attach transcript-only data without the contract itself knowing about it.
 
 Its only caller is `hooks/useChatSession.ts`, which supplies the `StampFor` clock and re-runs the projection on every `ChatUpdate`.
@@ -47,7 +49,6 @@ Its only caller is `hooks/useChatSession.ts`, which supplies the `StampFor` cloc
 - **non-rich-display-attachment-coexistence**: A `Message`'s or `ActiveDraft`'s `attachments` MAY contain attachments other than the rich-display payload; `decodeRichDisplay` MUST ignore every attachment whose `mediaType.identifier` is not `RICH_DISPLAY_MEDIA_TYPE`.
 - **projection-ordering**: `projectMessages` MUST return committed messages from `view.messages`, in their given order, followed by entries derived from `view.activeDrafts`, in their given order.
 - **committed-message-identity**: For each committed message `m`, `projectMessages` MUST set the projected `id` to `m.id` when present, otherwise to `m.localID`.
-
 - **duplicate-resolved-ids**: NEEDS REVIEW: Not implemented in source. `projectMessages` resolves a committed message's id as `m.id ?? m.localID` (`projection/toChatMessages.ts`, `projectMessages`) with no uniqueness check. If two entries in `view.messages` resolve to the same id — for example a server-assigned `id` that happens to collide with another message's `localID` — `projectMessages` emits two `ChatMessage` entries sharing one id, and downstream consumers keyed on id (list rendering, `stampFor` lookups) have undefined behavior. Resolving this requires either a documented invariant that `ChatViewModel.messages` never yields colliding ids upstream, or de-duplication logic here — neither of which the given source states. This would need input from whoever owns the `ChatViewModel` implementation that produces `messages`.
 - **committed-message-sender**: `projectMessages` MUST set the projected `sender` to `parts.user` when `m.senderID === parts.localParticipantID`, otherwise to `parts.persona`.
 - **committed-message-persona-flag**: `projectMessages` MUST set the projected `isPersona` to `true` when `m.senderID !== parts.localParticipantID`, otherwise to `false`.
@@ -55,7 +56,7 @@ Its only caller is `hooks/useChatSession.ts`, which supplies the `StampFor` cloc
 - **committed-message-rich-display**: `projectMessages` MUST decode `m.attachments` with `decodeRichDisplay` and set the projected `content`, `popover`, and `toolCalls` to the decoded `RichDisplay`'s `content`, `popover`, and `toolCalls` respectively.
 - **committed-message-timestamp**: `projectMessages` MUST set the projected `timestamp` to `m.timestamp` when present, otherwise to `stampFor(id)`, using the resolved projected `id` as the key.
 - **committed-message-failure**: `projectMessages` MUST set the projected `failure` to `m.deliveryStatus.reason` when `m.deliveryStatus.kind === 'failed'`, otherwise leave `failure` `undefined`.
-- **delivery-status-projection**: `projectMessages` MUST carry no `MessageDeliveryStatus` kind other than `failed` into the projection: `composing`, `sending`, `sent`, `delivered` and `received` all project to a `ChatMessage` with `failure` `undefined`, so a port MUST NOT infer send progress from the projected message.
+- **delivery-status-projection**: `projectMessages` MUST carry no `MessageDeliveryStatus` kind other than `failed` into the projection: `composing`, `sending`, `sent`, `delivered` and `received` all project to a `ChatMessage` with `failure` `undefined`, so send progress cannot be inferred from the projected message.
 - **committed-message-not-streaming**: `projectMessages` MUST NOT set `isStreaming` on a committed message's projection; the field is omitted, leaving it `undefined`.
 - **draft-identity**: `draftMessageID` MUST return the string `draft:` concatenated with `participantID` for a given `participantID`, deterministically and without side effects.
 - **draft-projection-id**: For each entry in `view.activeDrafts`, `projectMessages` MUST set the projected `id` to `draftMessageID(draft.participantID)`.
@@ -63,13 +64,13 @@ Its only caller is `hooks/useChatSession.ts`, which supplies the `StampFor` cloc
 - **draft-projection-timestamp**: `projectMessages` MUST set a draft's projected `timestamp` to `stampFor(draftMessageID(draft.participantID))` unconditionally; `ActiveDraft` carries no timestamp field of its own.
 - **draft-projection-streaming-flag**: `projectMessages` MUST set `isStreaming: true` on every entry derived from `view.activeDrafts`.
 - **draft-projection-no-failure**: `projectMessages` MUST NOT set a `failure` value on a draft-derived projection.
-- **draft-tool-call-precedence**: For a draft, `projectMessages` MUST set the projected `toolCalls` to the mapped result of filtering `view.activeCommands` to entries whose `participantID` equals `draft.participantID`, when that filtered list is non-empty.
+- **draft-tool-call-precedence**: For a draft, `projectMessages` MUST set the projected `toolCalls` to the result of filtering `view.activeCommands` to entries whose `participantID` equals `draft.participantID` and mapping each through `toToolCallInfo`, preserving `activeCommands` order, when that filtered list is non-empty.
 - **draft-tool-call-fallback**: For a draft, when no entry in `view.activeCommands` has a matching `participantID`, `projectMessages` MUST set the projected `toolCalls` to the decoded `RichDisplay.toolCalls` from `draft.attachments`.
 - **active-command-to-tool-call-running**: `toToolCallInfo` MUST map an `ActiveCommand` whose `result` is `undefined` to `{ name: invocation.commandName, arguments: invocation.argumentsJSON, status: 'started' }`.
 - **active-command-to-tool-call-finished**: `toToolCallInfo` MUST map an `ActiveCommand` whose `result` is defined to `{ name: invocation.commandName, arguments: invocation.argumentsJSON, status: result.ok ? 'completed' : 'failed', ok: result.ok, result: result.resultJSON ?? result.errorMessage ?? '' }`.
 - **projection-purity**: `projectMessages`, `decodeRichDisplay`, `encodeRichDisplay`, `draftMessageID`, and `toToolCallInfo` MUST NOT mutate `view.messages`, `view.activeDrafts`, `view.activeCommands`, or any `Attachment`, `Message`, `ActiveDraft`, or `ActiveCommand` passed to them; every one of those types is declared with `Readonly`/`ReadonlyArray` members in the contract.
 - **projection-one-directional**: `projectMessages` MUST NOT call any mutating `ChatViewModel` method (`submitMessage`, `markRead`, `setLocalTyping`, `respondToWidget`, `respondToPermission`); it is a read-only projection in one direction only.
-- **stamp-for-stability**: A `StampFor` implementation MUST return the same `Date` for a given key on every call within a session; `projectMessages` may run once per render, and a fresh timestamp per call would advance every untimed message's or draft's displayed time on each pass.
+- **stamp-for-stability**: Integration requirement on the caller: the `StampFor` it supplies MUST return the same `Date` for a given key on every call within a session; `projectMessages` can run once per render, and a fresh timestamp per call would advance every untimed message's or draft's displayed time on each pass.
 - **synchronous-execution**: `projectMessages`, `encodeRichDisplay`, `decodeRichDisplay`, `draftMessageID`, and `toToolCallInfo` MUST execute synchronously and MUST NOT perform any asynchronous, network, or file-system operation.
 
 ## Appearance
@@ -89,18 +90,22 @@ Not applicable — this is a data projection module, not a visual component; it 
 | ID | Requirements | Input | Expected |
 |----|--------------|-------|----------|
 | ccp-001 | empty-display-encoding | `encodeRichDisplay({}, "m1:display")` | Returns `null`. |
-| ccp-002 | rich-display-attachment-shape | `encodeRichDisplay({ popover: { title: "Info" } }, "m1:display")` | Returns an `Attachment` with `id: "m1:display"`, `mediaType.identifier` equal to `RICH_DISPLAY_MEDIA_TYPE`, `source: { kind: "inline", data: <UTF-8 bytes of the JSON string `{"popover":{"title":"Info"}}`> }`, `presentation: "inline"`. |
+| ccp-002 | rich-display-attachment-shape | `encodeRichDisplay({ popover: { title: "Info" } }, "m1:display")` | Returns an `Attachment` with `id: "m1:display"`, `mediaType.identifier` equal to `RICH_DISPLAY_MEDIA_TYPE`, ``source: { kind: "inline", data: <UTF-8 bytes of the JSON string {"popover":{"title":"Info"}}> }``, `presentation: "inline"`. |
 | ccp-003 | rich-display-lookup-by-media-type, non-rich-display-attachment-coexistence | `decodeRichDisplay` on an array of two attachments: one with `mediaType.identifier: "image/png"`, then one produced by `encodeRichDisplay({ content: [{ type: "link", url: "https://x" }] }, "a2")` | Returns `{ content: [{ type: "link", url: "https://x" }] }`. |
 | ccp-004 | rich-display-decode-fallthrough, rich-display-decode-non-throwing | `decodeRichDisplay` on one attachment whose `mediaType.identifier` equals `RICH_DISPLAY_MEDIA_TYPE`, `source.kind: "inline"`, and `source.data` is the UTF-8 bytes of the text `not json` | Returns `{}` and does not throw. |
 | ccp-005 | rich-display-decode-default | `decodeRichDisplay([])` | Returns `{}`. |
 | ccp-006 | projection-ordering, draft-projection-streaming-flag | `projectMessages` with `view.messages` holding one message `m1` (`senderID: "local"`, `localID: "m1"`) and `view.activeDrafts` holding one draft (`participantID: "bot"`) | Returns a 2-entry array: index 0 has `id: "m1"` and `isStreaming: undefined`; index 1 has `id: "draft:bot"` and `isStreaming: true`. |
 | ccp-007 | committed-message-timestamp | `projectMessages` with `m1` carrying no `timestamp` and resolving to `id: "abc"`; `stampFor` is a stub that always returns a fixed `Date` `D` and records the keys it was called with | The projected message's `timestamp` is `D`, and `stampFor` was called with `"abc"`. |
 | ccp-008 | committed-message-failure | `projectMessages` with `m1.deliveryStatus = { kind: "failed", reason: "network error" }` | The projected message's `failure` is `"network error"`. |
-| ccp-009 | draft-tool-call-precedence | `projectMessages` with a draft for `participantID: "bot"` whose `attachments` decode to `toolCalls: [{ name: "old", arguments: "{}", status: "completed" }]`, and `view.activeCommands` holding one entry for `participantID: "bot"` with `invocation: { commandName: "search", argumentsJSON: "{}", ... }` and `result: undefined` | The projected draft's `toolCalls` is `[{ name: "search", arguments: "{}", status: "started" }]`. |
+| ccp-009 | draft-tool-call-precedence, active-command-to-tool-call-running | `projectMessages` with a draft for `participantID: "bot"` whose `attachments` decode to `toolCalls: [{ name: "old", arguments: "{}", status: "completed" }]`, and `view.activeCommands` holding one entry for `participantID: "bot"` with `invocation: { commandName: "search", argumentsJSON: "{}", ... }` and `result: undefined` | The projected draft's `toolCalls` is `[{ name: "search", arguments: "{}", status: "started" }]`. |
 | ccp-010 | draft-tool-call-fallback | Same draft as ccp-009, but `view.activeCommands` has no entry for `"bot"` | The projected draft's `toolCalls` is the decoded `[{ name: "old", arguments: "{}", status: "completed" }]`. |
 | ccp-011 | active-command-to-tool-call-finished | `toToolCallInfo` on `{ participantID: "p", invocation: { commandName: "run", argumentsJSON: "{}", ... }, result: { invocationID: "i1", ok: false, errorMessage: "boom", completedAt: D } }` | Returns `{ name: "run", arguments: "{}", status: "failed", ok: false, result: "boom" }`. |
 | ccp-012 | draft-identity | `draftMessageID("bot-42")` | Returns `"draft:bot-42"`. |
-
+| ccp-013 | committed-message-sender, committed-message-persona-flag | `projectMessages` with `parts.localParticipantID: "local"` and two committed messages, one with `senderID: "local"` and one with `senderID: "bot"` | First: `sender` is `parts.user`, `isPersona` is `false`. Second: `sender` is `parts.persona`, `isPersona` is `true`. |
+| ccp-014 | committed-message-rich-display | `projectMessages` with one committed message whose `attachments` holds `encodeRichDisplay({ popover: { title: "Info" } }, "a1")` | The projected message's `popover` equals `{ title: "Info" }`; `content` and `toolCalls` are `undefined`. |
+| ccp-015 | delivery-status-projection | `projectMessages` with committed messages whose `deliveryStatus.kind` is `sending`, `sent`, and `delivered` | Every projected message has `failure: undefined`. |
+| ccp-016 | draft-projection-sender, draft-projection-no-failure | `projectMessages` with `parts.localParticipantID: "local"` and one draft with `participantID: "local"` | The draft's projection has `sender` equal to `parts.user`, `isPersona: false`, and `failure: undefined`. |
+| ccp-017 | projection-purity | Deep-copy a `view` holding a message, a draft, and an active command; call `projectMessages` on the original | The original `view` is deeply equal to the copy afterward. |
 ## Edge Cases
 
 - **Empty view (null/empty input)**: `view.messages: []` and `view.activeDrafts: []` — `projectMessages` MUST return `[]`.
@@ -113,7 +118,8 @@ Not applicable — this is a data projection module, not a visual component; it 
 - **Error states (dependency unavailable/error)**: Not applicable in the network/database/file-system sense — this module calls no dependency of that kind. The one internal error path, a malformed inline attachment payload, is handled by `decodeRichDisplay` catching the `JSON.parse` failure and continuing rather than throwing, per **rich-display-decode-non-throwing**; no error is surfaced to the caller.
 - **Offline/disconnected state**: Not applicable — this module makes no network call of its own; it operates entirely on data already resolved into `ChatViewModel`/`Attachment` values by its caller.
 - **Duplicate resolved message ids**: see the open question on **duplicate-resolved-ids**.
-- **Structurally valid but unrecognized JSON shape (malformed input)**: a matching attachment's payload parses to a JSON array, or to an object with none of `content`/`popover`/`toolCalls` — `decodeRichDisplay`'s `typeof parsed !== 'object' || parsed === null` check accepts it unchanged (an array is `typeof "object"` and not `null`), so the projected `content`, `popover`, and `toolCalls` end up `undefined` with no distinct error signaled; documented further under Design Decisions.
+- **Draft id collision**: a committed message whose `id` or `localID` is `draft:<participantID>` resolves to the same projected id as that participant's draft entry, and `stampFor` is then keyed identically for the two. The source does no check for this; it is a case of the open question on **duplicate-resolved-ids**.
+- **Structurally valid but unrecognized JSON shape (malformed input)**: a matching attachment's payload parses to a JSON array, to an object with none of `content`/`popover`/`toolCalls`, or to an object whose `content`, `popover`, or `toolCalls` has the wrong type (for example `{"toolCalls":"x"}`; the source checks no field shapes, so the wrong-typed value is carried through unchanged) — `decodeRichDisplay`'s `typeof parsed !== 'object' || parsed === null` check accepts it unchanged (an array is `typeof "object"` and not `null`), so the projected `content`, `popover`, and `toolCalls` end up `undefined` with no distinct error signaled; documented further under Design Decisions.
 
 ## Configuration
 
@@ -167,7 +173,7 @@ Not applicable: neither `richContent.ts` nor `toChatMessages.ts` calls a console
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/projection/` | unverified |
+| web | `packages/web/packages/chat/src/projection/` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -204,7 +210,7 @@ Not applicable: neither `richContent.ts` nor `toChatMessages.ts` calls a console
 **Approved**: pending
 
 **Decision**: `decodeRichDisplay` accepts any non-null value of type `object` from a matching attachment's JSON, including a JSON array, rather than validating against the `RichDisplay` shape.
-**Rationale**: `typeof parsed !== 'object'` is JavaScript's coarsest possible type check, but the cost of accepting an unrecognized shape is benign — the decoded value simply carries none of `content`, `popover`, or `toolCalls`, and every dependent field renders as absent, which is indistinguishable from "no extras." The source accepts this rather than adding a schema validator for a payload only its own encoder ever produces.
+**Rationale**: `typeof parsed !== 'object'` is JavaScript's coarsest possible type check, but an unrecognized object with none of `content`, `popover`, or `toolCalls` is benign, because every dependent field renders as absent, indistinguishable from "no extras." The source does not check the shape of `content`, `popover`, or `toolCalls` themselves, so a wrong-typed field passes through typed as `RichDisplay`; it accepts this rather than adding a schema validator for a payload only its own encoder ever produces.
 **Approved**: pending
 
 ## Compliance
@@ -224,3 +230,4 @@ Not applicable: neither `richContent.ts` nor `toChatMessages.ts` calls a console
 |---------|------|--------|---------|
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
 | 1.0.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Added toToolCallInfo to the Overview, five test vectors and a draft-id-collision edge case, fixed the nested code span in ccp-002, tightened RFC 2119 wording, named the mapping in draft-tool-call-precedence, corrected the decode-shape rationale to say field shapes are unchecked, and listed related recipes. |

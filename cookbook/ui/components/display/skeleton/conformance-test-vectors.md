@@ -9,4 +9,4 @@
 | skeleton-006 | pulsing-animation | Render `<Skeleton />` and read the computed `animation-name` and its `@keyframes` | `animation-name` resolves to a pulse keyframe whose rule cycles opacity `1 → 0.5 → 1`, with `animation-iteration-count: infinite` |
 | skeleton-007 | reduced-motion-support | Render `<Skeleton className="motion-reduce:animate-none" />` under a `prefers-reduced-motion: reduce` media context | Computed `animation-name` is `"none"` |
 | skeleton-008 | aria-hidden-while-loading, html-passthrough | Render `<Skeleton aria-hidden="true" />` inside a parent with `aria-busy="true"` | The skeleton element has `aria-hidden="true"`; the parent's `aria-busy="true"` is unaffected |
-
+| skeleton-009 | empty-class-default, class-passthrough-unvalidated | Render `<Skeleton className="" />`, then `<Skeleton className={undefined} />` | Both render with only the built-in pulsing animation, corner radius, and surface background; an unrecognized class string such as `className="no-such-class"` is applied to the element without error |

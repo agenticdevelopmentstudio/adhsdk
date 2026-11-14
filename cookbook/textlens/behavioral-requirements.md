@@ -55,7 +55,10 @@
   and `toColor` together or omit both; `resolveRamp` MUST throw an `Error`
   (`"textlens: fromColor and toColor go together — give both, or
   neither."`) when exactly one is supplied, and MUST return `null` (no
-  tinting) when neither is supplied.
+  tinting) when neither is supplied. `resolveRamp` runs in `start()`, not in
+  `createLens`, and only after the empty-target check, so a mismatched pair
+  throws from `start()` and never from `createLens`; a lens over no
+  characters never throws.
 - **idempotent-character-split**: `createLens` MUST replace each target
   element's text with one `<span>` per character exactly once per element,
   guarded by a `textlensSplit` dataset flag; calling `createLens` again over
@@ -69,6 +72,9 @@
 - **space-preservation**: a plain space character MUST be rendered as a
   non-breaking space (` `) in its character span, so the span does not
   collapse to zero width under `display: inline-block`.
+- **inline-block-spans**: the split MUST write `display: inline-block` on
+  every character span itself, so a caller's CSS does not have to; without
+  it a `transform` has no effect on an inline span.
 - **frozen-glyph-width**: after every character span for an element is
   appended to the document, each span's `width` style MUST be set to its
   measured `getBoundingClientRect().width` (one decimal place, `px`), and
@@ -165,9 +171,11 @@
 - **pause-rests-without-resetting-the-clock**: while `paused` is `true`,
   each scheduled frame MUST call `restChars` (rest appearance for every
   measured span) and MUST return without calling `apply`, but MUST still
-  reschedule the next animation frame; the sweep's `elapsed` clock (measured
-  from `start()`'s captured `startedAt`) is NOT paused — it continues to
-  advance for the duration of the pause.
+  reschedule the next animation frame. The sweep's `elapsed` clock
+  (measured from `start()`'s captured `startedAt`) is not paused and
+  continues to advance for the duration of the pause. This is what the
+  implementation does, not a behavior anyone chose; a port MAY pause the
+  clock (see Edge Cases, "pause outlives the clock").
 
 **React binding (`useTextLens`)**
 
@@ -201,25 +209,25 @@
 
 **Ordering, concurrency, and side effects**
 
-- **single-caller-main-thread-only**: the given sources declare no locking,
-  actor isolation, or `Sendable`-equivalent annotation; `createLens`,
-  `Lens.start/stop/destroy`, and the DOM they mutate are usable only from
-  the single JavaScript main thread they run on — there is no concurrency
+- **single-caller-main-thread-only**: `createLens`, `Lens.start/stop/destroy`,
+  and the DOM they mutate MUST be used only from the single JavaScript main
+  thread they run on. The implementation declares no locking, actor
+  isolation, or `Sendable`-equivalent annotation, and there is no concurrency
   concern beyond the ordinary single-threaded browser event loop.
 - **independent-lens-instances**: two `Lens` instances created over
-  overlapping elements run fully independently, each with its own
-  `requestAnimationFrame` chain and closed-over state; the source performs
-  no coordination between instances, so overlapping lenses write
+  overlapping elements MUST run fully independently, each with its own
+  `requestAnimationFrame` chain and closed-over state, and MUST NOT
+  coordinate with each other. Overlapping lenses therefore write
   conflicting inline styles to the same spans rather than one yielding to
-  the other.
+  the other, so a caller SHOULD start at most one lens per element.
 - **no-persistence-or-caching**: neither `createLens` nor `useTextLens`
-  persists any state across page loads or between `Lens` instances; all
-  state (`chars`, `ramp`, `frameId`, `running`, `paused`, `swept`) lives only
-  in memory for the instance's lifetime.
-- **side-effects-are-dom-only**: the only side effects performed are:
+  MUST persist any state across page loads or between `Lens` instances; all
+  state (`chars`, `ramp`, `frameId`, `running`, `paused`, `swept`) MUST live
+  only in memory for the instance's lifetime.
+- **side-effects-are-dom-only**: the only side effects MUST be:
   mutating the DOM (splitting text into spans, writing inline styles),
   reading computed style (`getComputedStyle`, `getBoundingClientRect`), and
   scheduling/cancelling timers (`requestAnimationFrame`,
-  `cancelAnimationFrame`, `setTimeout`, `clearTimeout`). There is no network,
-  file, process, or storage I/O anywhere in the given sources.
+  `cancelAnimationFrame`, `setTimeout`, `clearTimeout`). It MUST NOT perform
+  network, file, process, or storage I/O.
 

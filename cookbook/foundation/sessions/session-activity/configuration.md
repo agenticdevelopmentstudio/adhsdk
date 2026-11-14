@@ -1,7 +1,1 @@
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `isActive` | `Bool` | none | Whether the session's process is alive; `false` forces `idle`. The macOS caller passes `status == .active`. |
-| `lastEventType` | `String` | none | The last hook event recorded for the main agent's turn. |
-| `subagentWorking` | `Bool` | none | The daemon's verdict that a subagent was busy just now. |
-
+Not applicable: `SessionActivity` has no options. `derive` and `turnActivity` take inputs, not configuration; the inputs are described in the Overview.

@@ -10,3 +10,4 @@
 | className | string | undefined | Additional CSS class(es) to apply to the root container |
 | maxHeight | string \| number \| undefined | undefined | CSS max-height value for the scrollable body container |
 
+`LogLevel` values: `info`, `warn`, `error`, `success`, `debug`, `dim`, `accent` (see the Level Colors table in Appearance).

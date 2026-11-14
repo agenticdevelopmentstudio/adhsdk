@@ -26,17 +26,18 @@ No test in the repository exercises `HookEnvelopeBuilder` or `HookEnvCache` dire
 | builder-021 | wire-header-lines | `Stop`, newline, `---`, newline, payload (a one-line header) | nil |
 | builder-022 | wire-ppid-lenient | Header lines `Stop` and `abc` | ppid 0 |
 | builder-023 | wire-env-lines | Env lines `A=b=c`, `NOEQ`, an empty line, `A=d` | env is `A` = `d` only |
-| builder-024 | wire-payload-verbatim | A payload that itself contains the separator, or is empty | Returned unchanged, or empty |
+| builder-024 | wire-payload-verbatim | A payload that itself contains the separator | Returned unchanged |
 | builder-025 | wire-header-utf8 | Header bytes that are not valid UTF-8 | nil |
 | builder-026 | wire-empty-event | First line empty | event is the empty string; passing it to `build` returns nil |
 | builder-027 | cache-ttl, cache-nil-pid, default-resolvers | Two `HookEnvCache.pid(inCwd:)` calls for one directory within three seconds | The underlying resolver runs once, including when it returned nil |
 | builder-028 | cache-pid-key | `pid(inCwd:)` for an existing directory `/tmp/x` then for `/private/tmp/x` on macOS | One resolution |
 | builder-029 | cache-empty-env | `env(forPid:)` twice within three seconds where the read fails | One read; both return the empty dictionary |
-| builder-030 | cache-eviction | 129 distinct cwds resolved, then a 130th after the first entries have expired | The expired entries are removed; unexpired entries remain |
+| builder-030 | cache-eviction | 128 distinct cwds resolved and left to expire (more than three seconds), then a 129th cwd resolved | The insert of the 129th takes the map past 128 entries, so the 128 expired entries are removed and only the 129th remains |
 | builder-031 | cache-thread-safety | Concurrent `env(forPid:)` calls for different pids | No crash; each caller receives a dictionary |
 | builder-032 | daemon-cwd-once | Read `daemonWorkingDirectory`, change the working directory, read again | The same value both times |
 | builder-033 | timestamp-format | Any built event | `timestamp` matches `YYYY-MM-DDTHH:MM:SSZ` |
 | builder-034 | context-built, context-system | Any built event | `context` equals `buildContext(event, ppid, env)` and `context.system` has `hostname`, `os`, `arch` |
+| builder-035 | wire-payload-verbatim | A message whose payload after the separator is empty | The payload is empty `Data` |
 
-SHOULD requirements: the document contains none. The open question on `ppid-range` has no vector because the behavior it asks about is undefined. `http-payload-parsed-once` and `context-event-unused` are not separately vectored: the first is an internal efficiency fact verified by `builder-011`, the second by `builder-034`.
+SHOULD requirements: the document contains none. The open question on `ppid-range` has no vector because the behavior it asks about is undefined. The payload is parsed once on the http path and the parsed object is handed to the inner build; that is an internal efficiency detail, not a requirement.
 

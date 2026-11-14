@@ -12,10 +12,10 @@
 **Approved**: pending
 
 **Decision**: The caller's environment is applied with the replace policy.
-**Rationale**: The caller hands over the child's whole environment, so a variable it removed stays removed rather than being re-inherited.
+**Rationale**: The caller hands over the child's whole environment, so a variable it removed stays removed rather than being re-inherited; this is the replace policy of the channel the process runs over.
 **Approved**: pending
 
 **Decision**: A stdout read error finishes the stream rather than throwing from it.
-**Rationale**: The stream type has no error channel; the consumer learns the cause from `standardErrorText()` and `isRunning`.
+**Rationale**: The `AsyncStream` type has no error channel; the consumer learns the cause from `standardErrorText()` and `isRunning`. The alternatives weighed are an `AsyncThrowingStream`, which would carry the error but make every consumer handle a throw, and a terminal `ended(reason)` message value, which would carry the reason in-band but change the message type; neither was chosen, so this decision stays pending.
 **Approved**: pending
 

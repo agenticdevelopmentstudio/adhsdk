@@ -26,8 +26,11 @@
 - **AppKit / UIKit**: split the label into one `NSTextField`/`UILabel` (or
   `CATextLayer`) per character, frozen at its measured width in an
   `NSStackView`/`UIStackView` (or manual frame layout) the same way the web
-  split freezes span widths, and drive `transform`/`shadowRadius`/
-  `textColor` per frame from a `CADisplayLink`; gate the sweep on
+  split freezes span widths, and drive `transform`/`textColor` per frame from a
+  `CADisplayLink`, and blur with a `CIGaussianBlur` in the layer's
+  `CALayer.filters` on macOS (UIKit has no layer filters: use a snapshot
+  blurred with `CIGaussianBlur`, or a `UIVisualEffectView` whose effect is
+  animated); gate the sweep on
   `NSWorkspace.shared.accessibilityDisplayShouldReduceMotion` (AppKit) or
   `UIAccessibility.isReduceMotionEnabled` (UIKit) in place of the web's
   `prefers-reduced-motion` query.
@@ -37,7 +40,7 @@
   `CompositionTarget.Rendering` handler (the closest analogue to
   `requestAnimationFrame`) writing each `TextBlock`'s `ScaleTransform`,
   a `Composition` `GaussianBlurEffect` via Win2D, and `Foreground` from a
-  linear channel interpolation matching **colour-interpolation**. Gate the
+  linear channel interpolation matching `#requirements/colour-interpolation`. Gate the
   sweep on `Windows.UI.ViewManagement.UISettings.AnimationsEnabled` (the
   Windows equivalent of `prefers-reduced-motion`) in place of the web's
   media query, and resolve the colour ramp from an

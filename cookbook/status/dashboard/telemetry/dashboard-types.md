@@ -2,7 +2,7 @@
 id: e8f3cd4d-e208-49db-a500-24d6f7b978f9
 title: "Dashboard Wire Types"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -14,10 +14,15 @@ summary: "The response shapes of the analytics and errors dashboards: sections t
 platforms:
   - typescript
   - web
-tags: []
+tags:
+  - dashboard
+  - telemetry
+  - wire-types
+  - analytics
 depends-on: []
 related:
   - 564c6102-e100-41ad-9c92-14606a33c394
+  - c861465b-50c8-49d1-93cc-00d9e062ad5f
 references: []
 approved-by: ""
 approved-date: ""
@@ -37,7 +42,7 @@ A response has three parts:
 - **Sections** — the raw data per source, each wrapped as a section that keeps its last good answer next to the latest failure (`DashboardSection`).
 - **Views** — what the pages draw, already joined, sorted, thresholded and rated by the server. The pages only lay them out.
 
-The constant lists are the analytics ranges (`ANALYTICS_RANGES`), the breakdown dimensions (`DIMENSIONS`), the Vercel breakdowns (`VERCEL_BREAKDOWNS`) and the web vitals (`VITALS`). The dashboard queries recipe consumes the responses, and the dashboard formatting recipe consumes `AnalyticsRange`, `Vital` and the site list. For number and time wording see Format ([adhsdk.ingredient.status.dashboard.logic.format](cookbook:564c6102-e100-41ad-9c92-14606a33c394)).
+The constant lists are the analytics ranges (`ANALYTICS_RANGES`), the breakdown dimensions (`DIMENSIONS`), the Vercel breakdowns (`VERCEL_BREAKDOWNS`) and the web vitals (`VITALS`). The dashboard queries recipe consumes the responses, and the formatting module, Dashboard Formatting ([adhsdk.ingredient.status.dashboard.lib.dashboard-format](cookbook:c861465b-50c8-49d1-93cc-00d9e062ad5f)), consumes `AnalyticsRange`, `Vital` and the site list. For number and time wording see Format ([adhsdk.ingredient.status.dashboard.logic.format](cookbook:564c6102-e100-41ad-9c92-14606a33c394)).
 
 ## Behavioral Requirements
 
@@ -61,28 +66,30 @@ The constant lists are the analytics ranges (`ANALYTICS_RANGES`), the breakdown 
 
 ### Envelope
 
-- **envelope-common**: Both responses MUST carry `generatedAt` (a timestamp string), `refreshing` (a boolean), `configured` (a flag per source) and `views`.
+- **envelope-common**: Both responses MUST carry `generatedAt` (a timestamp string), `refreshing` (a boolean), `configured` (a flag per source) and `views` (the type requires it; `views-absent-older-backend` covers a backend that sends none).
+- **views-absent-older-backend**: A client MUST tolerate a response with no `views`, as an older backend sends, by treating it as "nothing to show" and not throwing; the formatting module's site-list helper does this for `sites`.
 - **analytics-envelope**: The analytics response MUST carry its `range` and `configured` flags for `posthog` and `vercel`.
 - **errors-envelope**: The errors response MUST carry `refreshingSources` with a flag each for `glitchtip` and `posthog`, and `refreshing` MUST be true when either is true; `configured` MUST carry flags for `glitchtip`, `posthog` and `vercel`.
 
 ### Counts and series
 
-- **series-per-bucket**: Every series on a response (`pageviews`, `sessions`, `visitors`, `series`, `errors`, `failures`) MUST have one value per entry of the `buckets` list beside it, in the same order, except that on an `incomplete` Vercel project (and on the Vercel section when `incomplete` is nonzero) `series` may be short.
-- **sessions-sum**: A traffic `sessions` total MUST be read as a sum of per-bucket unique counts, so a session spanning two buckets counts twice.
+- **series-per-bucket**: Every series on a response (`pageviews`, `sessions`, `visitors`, `series`, `errors`, `failures`) MUST have one value per entry of the `buckets` list beside it, in the same order, except as `vercel-incomplete-series` allows.
+- **vercel-incomplete-series**: The `series` of a `VercelProjectTraffic` MAY be shorter than the Vercel section's `buckets` when that project's `incomplete` is `true`; a client MUST NOT assume a full-length series while the section's `incomplete` count is nonzero.
+- **sessions-sum**: A client MUST read a traffic `sessions` total as a sum of per-bucket unique counts (the `TrafficSection.totals` doc comment), so a session spanning two buckets counts twice.
 - **null-is-not-zero**: Fields typed as nullable numbers (a vitals measure, `p95Ms`, a roster's `pageviews` and `visitors`, `resolved`) MUST be read as "unknown or not applicable", never as zero; the source says a roster count is null when analytics is off or the count could not be read.
 - **failed-request-status-zero**: A failed-request `status` of `0` MUST be read as a request that never got a response.
 - **truncated-flags**: A `truncated` flag (dimensions, per-site error detail) MUST be read as "a row cap was hit, so the tail is missing from every breakdown."
 - **incomplete-flags**: `incomplete` on a Vercel project, `incomplete` and `failed` counts on the Vercel section, `vercelIncomplete` on a site report and `complete: false` on the errors summary and the runtime report MUST each be read as "totals or lists may be short".
-- **vercel-production-only**: The Vercel section MUST count production projects only; staging and testing are never counted.
+- **vercel-production-only**: A client MUST read the Vercel section's counts as production projects only; staging and testing are never counted.
 
 ### Errors
 
-- **active-rule**: An error issue is `active` by the same test that puts an error on the board: error or fatal level, seen in the last 24 hours.
+- **active-rule**: A client MUST read an error issue's `active` flag as the same test that puts an error on the board: error or fatal level, seen in the last 24 hours.
 - **runtime-window**: The runtime report's `window` MUST be the literal `"24h"`, and the runtime section of the errors dashboard MUST have the same body as the runtime errors endpoint.
-- **runtime-group-message**: A runtime group's `message` MUST be the first line of the message, at most 200 characters.
-- **runtime-group-path**: A runtime group's `path` MUST have numeric, uuid and hash segments replaced by `:id`.
-- **runtime-group-key**: A runtime group's `key` MUST be a stable hash of its grouping fields (project, source, method, normalized path, status and first message line).
-- **runtime-group-deployment**: A runtime group's `deploymentId` MUST name the deployment the group was last seen on.
+- **runtime-group-message**: A client MUST read a runtime group's `message` as the first line of the message, at most 200 characters.
+- **runtime-group-path**: A client MUST read a runtime group's `path` as having numeric, uuid and hash segments replaced by `:id`.
+- **runtime-group-key**: A client MUST read a runtime group's `key` as a stable hash of its grouping fields (project, source, method, normalized path, status and first message line).
+- **runtime-group-deployment**: A client MUST read a runtime group's `deploymentId` as naming the deployment the group was last seen on.
 - **posthog-no-text**: Site error rows MUST carry error names only, because PostHog holds no message text.
 
 ### Views
@@ -96,7 +103,7 @@ The constant lists are the analytics ranges (`ANALYTICS_RANGES`), the breakdown 
 - **views-null-sections**: View fields typed as nullable (`pages`, `dimensions`, `vercelProjects`, `vercelBreakdowns`, `vitals`) MUST be read as "the section has no data to show".
 - **site-error-ids**: Site error and failed-request views MUST carry an `id`.
 - **views-failures**: `failures` (analytics) and `siteFailures` (errors) MUST list each section failure with its source (`"PostHog"` or `"Vercel"`), what failed and the error text.
-- **most-errors-limit**: `mostErrorsLimit` MUST be the cap applied to `mostErrors`; the server derives both.
+- **most-errors-limit**: A client MUST read `mostErrorsLimit` as the cap the server applied to `mostErrors`; the server derives both.
 
 ### Parity
 
@@ -136,13 +143,28 @@ Vectors 001 and 002 are the runtime assertions in `dashboard-types-parity.test.t
 | dtypes-012 | runtime-window | runtime report | `window` is `"24h"` |
 | dtypes-013 | rated-vitals | rated vitals row with a vital that has no sample | that vital's rating is `null` |
 
+| dtypes-014 | section-shape | analytics response | `sections` holds `traffic`, `dimensions`, `paths`, `vitals`, `health` and `vercel`, each with `data`, `error` and `updatedAt` |
+| dtypes-015 | analytics-sections | analytics response | exactly the six sections `traffic`, `dimensions`, `paths`, `vitals`, `health`, `vercel` |
+| dtypes-016 | errors-sections | errors response | exactly the four sections `issues`, `sites`, `detail`, `runtime` |
+| dtypes-017 | envelope-common | either response | carries `generatedAt`, `refreshing`, `configured` and `views` |
+| dtypes-018 | analytics-envelope | analytics response | carries `range` and `configured` flags for `posthog` and `vercel` |
+| dtypes-019 | truncated-flags | dimensions section with `truncated` true | read as "the tail is missing from every breakdown" |
+| dtypes-020 | incomplete-flags | Vercel project with `incomplete` true | `series` and lists may be short; `pageviews` is still whole |
+| dtypes-021 | rated-health | rated health row | a site health row plus `failureRateHigh` |
+| dtypes-022 | views-null-sections | views built while the vitals section has no data | `vitals` is `null`, read as "nothing to show" |
+| dtypes-023 | site-error-ids | site error and failed-request views | each row carries an `id` |
+| dtypes-024 | views-failures | a failed PostHog section | `failures` lists an entry with source `"PostHog"`, what failed and the error text |
+| dtypes-025 | types-only | importing the module | only the four lists exist at run time; nothing else runs at load |
+| dtypes-026 | series-per-bucket | traffic for the `24h` range | 25 buckets, and `pageviews` and `sessions` each have 25 values |
+| dtypes-027 | views-absent-older-backend | response from an older backend with no `views` | the client shows nothing for views and does not throw |
+| dtypes-028 | vercel-incomplete-series | Vercel project with `incomplete` true | its `series` may be shorter than `buckets` |
 ## Edge Cases
 
 - **Null and empty input — sections**: a section with `data` `null` is a first load or a source that has never answered; a client reads `error` to tell a failure from "not yet".
 - **Null and empty input — views**: nullable view fields are `null` when their section has no data; lists such as `sites` may be empty, and `siteReports` may be an empty object.
 - **Boundary — row caps**: the dimensions and site error detail sections set `truncated` when a row cap is hit; the runtime report's `groups` may be shorter than `total`.
 - **Boundary — series length**: a series is one value per bucket, so the `24h` range, which the server buckets hourly (25 buckets, counting the partial first hour), has 25 values and a daily range has one per day.
-- **Malformed input — versions**: a backend older than `views` sends no `views`; the shape here says `views` is required, so a client must tolerate its absence at the call site (the formatting module's site-list helper does this).
+- **Malformed input — versions**: a backend older than `views` sends no `views`; the shape here says `views` is required, so `views-absent-older-backend` makes a client tolerate its absence at the call site (the formatting module's site-list helper does this).
 - **Malformed input — unknown names**: a site name in a URL need not be in `siteReports`; a client looks it up with an own-key check.
 - **Concurrent access**: not applicable — the module holds only immutable constants and types.
 - **Error states**: a failed source shows as a section `error` and as an entry in the views' failure list; other sections stay usable.
@@ -150,16 +172,7 @@ Vectors 001 and 002 are the runtime assertions in `dashboard-types-parity.test.t
 - **Drift**: if the server adds or renames a field, the parity check fails until the web copy is updated; a field the web copy lacks is not visible to the pages.
 
 ## Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `ANALYTICS_RANGES` | constant list | `24h`, `7d`, `30d` | Time ranges the analytics dashboard accepts. Not configurable. |
-| `DIMENSIONS` | constant list | `country`, `device`, `browser`, `referrer` | Breakdown dimensions of page views. Not configurable. |
-| `VERCEL_BREAKDOWNS` | constant list | `countries`, `referrers`, `paths`, `devices` | Vercel breakdown names. Not configurable. |
-| `VITALS` | constant list | `lcp`, `inp`, `cls`, `fcp` | Web vitals the server measures. Not configurable. |
-
-The module reads no environment variables or settings and takes no injected dependency. The runtime window (`24h`) and the active-issue test are fixed by the server.
-
+Not applicable: this module has no configurable options. The four constant lists are fixed and specified by `ranges-list`, `dimensions-list`, `vercel-breakdowns-list` and `vitals-list` under Behavioral Requirements. The module reads no environment variables or settings and takes no injected dependency. The runtime window (`24h`) and the active-issue test are fixed by the server.
 ## Deep Linking
 
 Not applicable: the module registers no route. Site names and ranges that appear in URLs are typed here (`AnalyticsRange`, the keys of `siteReports`).
@@ -190,8 +203,8 @@ Not applicable: the module logs nothing.
 
 ## Platform Notes
 
-- **SwiftUI**: Model the shapes as `Codable` structs with `let` properties, optional types for every nullable field, and `enum`s with `String` raw values for `AnalyticsRange`, `Dimension`, `Vital`, `VitalRating` and `BreakdownTopic` (conform to `CaseIterable` for the lists). `DashboardSection<T: Codable>` is a generic struct. `siteReports` is `[String: SiteReport]`. Timestamps stay `String` or decode with `ISO8601DateFormatter` including fractional seconds. A fixed list of cases gives the same drift check through a test that decodes a server fixture.
-- **Compose**: Kotlin `@Serializable` data classes with nullable types for nullable fields; enums with `@SerialName` for the lists; a generic `DashboardSection<T>`. Use `Map<String, SiteReport>` for `siteReports`. Enable `ignoreUnknownKeys = false` in tests so a field the server adds fails the parity test, and `true` in production so an extra field does not break the app.
+- **SwiftUI**: Model the shapes as `Codable` structs with `let` properties, optional types for every nullable field, and `enum`s with `String` raw values for `AnalyticsRange`, `Dimension`, `Vital`, `VitalRating`, `VercelBreakdown` and `BreakdownTopic` (conform to `CaseIterable` for the lists). `DashboardSection<T: Codable>` is a generic struct. `siteReports` is `[String: SiteReport]`. Timestamps stay `String` or decode with `ISO8601DateFormatter` including fractional seconds. A fixed list of cases gives the same drift check through a test that decodes a server fixture.
+- **Compose**: Kotlin `@Serializable` data classes with nullable types for nullable fields; enums with `@SerialName` for the lists; a generic `DashboardSection<T>`. Use `Map<String, SiteReport>` for `siteReports`. Set `ignoreUnknownKeys = false` in tests so a field the server adds fails the parity test, and `true` in production so an extra field does not break the app.
 - **React/Web**: Source platform. `packages/web/packages/status-web/src/telemetry/dashboard-types.ts` is the file, and `dashboard-types-parity.test.ts` beside it is the drift guard: the runtime half compares the four lists, and the type half is a tuple of `Exact` mutual-assignability checks that only compiles while both copies agree. Because `pnpm test` transpiles without type checking, the type half is caught by the type check, not by the test run. The lists use `as const` so each type is a union of its literals.
 - **AppKit / UIKit**: The same Swift `Codable` model as SwiftUI, shared from a framework target. Decode with `JSONDecoder`; there is no `DateFormatter` need unless a screen shows a timestamp.
 - **WinUI 3**: C# `record` types in a .NET class library, deserialised with `System.Text.Json` and `JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }`. Use nullable reference types (`string?`) and nullable value types (`int?`, `double?`) for every nullable field, so `null` reads as unknown and never as zero. Model the lists as `enum`s with `JsonStringEnumConverter` and camel-case naming, but note `24h`, `7d` and `30d` are not valid C# identifiers: map them with a custom converter or keep the range as a string constant list. `DashboardSection<T>` is a generic record. Use `IReadOnlyDictionary<string, SiteReport>` for `siteReports`. No `INotifyPropertyChanged` is needed here; the view model that owns the response raises change notifications.
@@ -200,7 +213,7 @@ Not applicable: the module logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/telemetry/dashboard-types.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-web/src/telemetry/dashboard-types.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -208,23 +221,23 @@ Not applicable: the module logs nothing.
 ## Design Decisions
 
 **Decision**: The web package keeps a hand mirror of the server's types instead of importing them.
-**Rationale**: The source header: the package has the server only as a development dependency, so it cannot import the types at run time. A drift test stops the copies diverging.
+**Rationale**: The header comment of `dashboard-types.ts`: the package has the server only as a development dependency, so it cannot import the types at run time. A drift test stops the copies diverging.
 **Approved**: pending
 
 **Decision**: A section keeps its last good `data` beside the latest `error`.
-**Rationale**: Doc comment: the last good answer survives a later failure, so stale data stays on screen instead of the page going blank when one source fails.
+**Rationale**: The `DashboardSection` doc comment in `dashboard-types.ts`: the last good answer survives a later failure, so stale data stays on screen instead of the page going blank when one source fails.
 **Approved**: pending
 
 **Decision**: The server derives the views and the pages only lay them out.
-**Rationale**: Source comment: every join, sort, threshold and rating lives in the server's views module, so every client shows the same answer and a port copies shapes, not logic.
+**Rationale**: The section comment above the views in `dashboard-types.ts`: every join, sort, threshold and rating lives in the server's views module, so every client shows the same answer and a port copies shapes, not logic.
 **Approved**: pending
 
 **Decision**: Unknown numbers are `null`, not zero.
-**Rationale**: Doc comments on the Vercel roster: null when analytics is off or the count could not be read, which is not a zero. A zero would read as "measured, and none".
+**Rationale**: The `VercelRosterEntry.pageviews` doc comment in `dashboard-types.ts`: null when analytics is off or the count could not be read, which is not a zero. A zero would read as "measured, and none".
 **Approved**: pending
 
 **Decision**: Parity is checked by mutual assignability, with the lists compared at run time.
-**Rationale**: Test comment: a renamed field, a nullability change or a union member stops the check being true. It catches drift that a transpile-only test run would not.
+**Rationale**: The `Exact` type comment in `dashboard-types-parity.test.ts`: a renamed field, a nullability change or a union member stops the check being true. It catches drift that a transpile-only test run would not.
 **Approved**: pending
 
 ## Compliance
@@ -234,7 +247,7 @@ Not applicable: the module logs nothing.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | best-practices |
-| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
 **Separation of Concerns**: The module holds shapes and four constants only; derivation lives on the server and layout in the pages.
 
@@ -248,4 +261,5 @@ Not applicable: the module logs nothing.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Rephrased server-derived requirements as client reads, added views-absent-older-backend and vercel-incomplete-series, linked the formatting recipe, cited source files in rationales, added tags, fixed the privacy category, replaced the configuration table, and added vectors dtypes-014 to dtypes-028. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial recipe extracted from `dashboard-types.ts` |

@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: Default `noAccess()` to deny-all; provide `readOnly()` as a convenience default for read-only access.
-**Rationale**: This follows the principle of least privilege — a newly constructed or reset permission should assume no access until explicitly granted. `readOnly()` reduces boilerplate for the common read-only pattern.
+**Rationale**: This follows the principle of least privilege — a caller that needs a starting value uses `noAccess()` and so assumes no access until something is explicitly granted. `readOnly()` reduces boilerplate for the common read-only pattern.
 **Approved**: pending
 
 **Decision**: `clampToParent()` combines child and parent capabilities with logical AND, and returns a new object without mutating either input.

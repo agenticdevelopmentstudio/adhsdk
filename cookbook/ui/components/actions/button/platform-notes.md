@@ -10,14 +10,14 @@
   (native, unlike the DOM pointer tracking this component hand-rolls); use
   `Modifier.defaultMinSize()`, set from a `CompositionLocal`, as the counterpart
   to the CSS custom-property floor.
-- **React/Web**: This recipe's home platform — `button.tsx` (variants,
+- **React/Web**: This ingredient's home platform — `button.tsx` (variants,
   server-safe) plus `button-pressable.tsx` (`"use client"` pointer tracking),
   as documented above.
 - **AppKit / UIKit**: Start from `NSButton`/`UIButton`. `UIControl` already
   tracks touch-down/drag-exit/drag-enter natively, so the
   leave-while-held/reenter-while-held semantics this component re-implements
   for the DOM map directly to `.touchDragExit`/`.touchDragEnter` instead of
-  custom pointer-event listeners. The 44×44pt Apple HIG minimum this recipe's
+  custom pointer-event listeners. The 44×44pt Apple HIG minimum this ingredient's
   `--adh-button-min-height`/`--adh-button-min-width` vars exist to opt into on
   the web is the default expectation here.
 - **WinUI 3**: Start from the `Button` control restyled via a `Style`/

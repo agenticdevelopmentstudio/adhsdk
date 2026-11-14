@@ -5,7 +5,7 @@ Spacing values below use the Tailwind spacing scale (1 unit = 0.25rem).
 - **Progress bar**: Full width, default height per Progress component spec.
 - **Status section**: Flex row with baseline alignment, gap of 3 units (0.75rem).
 - **Status text**: Extra-small font size, muted text color. Item label truncated on overflow.
-- **Count text**: Monospace font, extra-small size, muted text color, no shrink.
+- **Count text**: Monospace font (`font-mono`), extra-small size, muted text color, no shrink.
 - **Error box**: Rounded border, `apt-red` border color at 40% opacity, `apt-red` background at 5% opacity, padding 2 units (0.5rem), text extra-small.
 - **Error item label**: Medium font weight, normal text color.
 - **Error message**: `apt-red` text color.

@@ -33,8 +33,9 @@
   (`closed` is checked and the method returns immediately).
 - **event-queue-push-after-close-noop**: `push(value)` MUST silently discard
   `value` once the queue is closed, rather than buffering it or throwing.
-- **event-queue-single-consumer**: `EventQueue` is documented and designed as
-  single-consumer: `drain()` returns a fresh `AsyncGenerator` each call, but
+- **event-queue-single-consumer**: A caller MUST NOT rely on `EventQueue`
+  for multiple concurrent consumers: it is documented and designed as
+  single-consumer. `drain()` returns a fresh `AsyncGenerator` each call, but
   nothing in `push`/`close` fans a value out to more than one waiter, so a
   second concurrent `drain()` iterator competes with the first for buffered
   values and pushes rather than receiving its own copy.

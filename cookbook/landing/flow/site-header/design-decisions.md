@@ -16,7 +16,7 @@
 **Approved**: pending
 
 **Decision**: Navigation links are real `<a>` elements that stay in the DOM even where CSS hides them, rather than being removed or duplicated.
-**Rationale**: Below the breakpoint, the bar's `<nav>` stays in the DOM and is hidden purely by the CSS media query (see **bar-nav-visible-at-breakpoint**), so a crawler or an assistive-technology link rotor can still discover the destinations. Under `bar='drawer'`, the links are not rendered in the bar at all — a JSX conditional, not a CSS hide — so the drawer's copy is the only destination discovered, avoiding duplicate in-page links.
+**Rationale**: Below the breakpoint, the bar's `<nav>` stays in the DOM and is hidden purely by the CSS media query (see **bar-nav-visible-at-breakpoint**), so a crawler can still discover the destinations (a CSS-hidden link is out of the accessibility tree, so assistive technology below the breakpoint reaches them through the drawer instead). Under `bar='drawer'`, the links are not rendered in the bar at all — a JSX conditional, not a CSS hide — so the drawer's copy is the only destination discovered, avoiding duplicate in-page links.
 **Approved**: pending
 
 **Decision**: `barLinks` is optional and defaults to `links`.

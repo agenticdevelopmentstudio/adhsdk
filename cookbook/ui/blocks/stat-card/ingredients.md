@@ -1,5 +1,5 @@
 
-| Name | Domain | Role | Required | Configuration |
+| Name | rdid | Role | Required | Configuration |
 |---|---|---|---|---|
 | InfoPanel | [adhsdk.ingredient.ui.blocks.info-panel](cookbook:2ad7c681-6a9e-43ae-a9d9-b448939d3455) | The card shell — bordered/rounded frame with the standard header (icon + title) and a content-sized body | yes | `title`, `icon`, `actions` (the link + extra `actions`), `className` and remaining host attributes forwarded; default content-sized (no `scroll`) |
 | StatRow | [adhsdk.ingredient.ui.components.display.stat](cookbook:bba42d5f-8a52-487f-88c5-4f988dfa714b) | One label/value figure per `stats[]` entry, in the body stack | yes (when `stats[]` non-empty) | `label`, `value`, `tone` passed through from each `StatCardStat` |

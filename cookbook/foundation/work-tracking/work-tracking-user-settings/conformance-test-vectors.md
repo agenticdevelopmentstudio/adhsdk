@@ -1,5 +1,5 @@
 
-Derived from `testUserSettingsSnapshotIsNormalized` in `WorkTrackingXPCClientTests` and from the source.
+Only vector 002 is backed by an existing test (`testUserSettingsSnapshotIsNormalized` in `WorkTrackingXPCClientTests`); every other vector is derived from the source and has no test yet.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -11,5 +11,5 @@ Derived from `testUserSettingsSnapshotIsNormalized` in `WorkTrackingXPCClientTes
 | work-tracking-user-settings-006 | no-separator | prefix `p` | `enabled.name` is `pactivity_enabled` |
 | work-tracking-user-settings-007 | prefix-isolation | Two instances with prefixes `a_` and `b_`; set `enabled` true on the first | the second `enabled.value` stays false |
 | work-tracking-user-settings-008 | preferences-snapshot | Read `preferences`, change `enabled`, read again | the second read shows the new value |
-| work-tracking-user-settings-009 | four-settings | Inspect the class | exactly `enabled`, `addedBundleIds`, `removedBundleIds`, `retentionDays` |
+| work-tracking-user-settings-009 | four-settings | Compile-time check that lists the class's public stored properties of type `UserSetting` | exactly `enabled`, `addedBundleIds`, `removedBundleIds`, `retentionDays` |
 

@@ -9,7 +9,11 @@
   corresponding collection is empty.
 - **show-separator-when-gated**: A `<Separator>` MUST appear between the
   identity header and the gated sections when at least one gated section is
-  populated, and MUST be absent when all collections are empty.
+  populated, and MUST be absent when all collections are empty. It is the
+  only divider the card draws; the gated sections are not separated from one
+  another by dividers.
+- **order-gated-sections**: The populated gated sections MUST render in this
+  order, top to bottom: Social, Email, Phone, Address, Personas.
 - **link-social-externally**: Each social link MUST open in a new tab
   (`target="_blank" rel="noopener noreferrer"`) with the platform label and
   handle displayed.
@@ -19,7 +23,10 @@
 - **show-initials-fallback**: When `avatarUrl` is null or the image fails
   to load, the `AvatarFallback` MUST show up to two initials derived from
   `displayName`, falling back to the slug, falling back to a generic
-  `UserIcon`.
+  `UserIcon`. The initials are built by splitting the name on whitespace,
+  dropping empty parts, taking the first two remaining words (the first and
+  the second, so "Ada King Lovelace" gives "AK"), taking the first character
+  of each, and uppercasing the result. A one-word name gives one initial.
 - **use-displayname-or-slug**: The heading MUST display `displayName` when
   non-null, and `slug` otherwise. (See **Edge Cases** for the empty-string
   `displayName` case — the check is for null/undefined, not emptiness.)

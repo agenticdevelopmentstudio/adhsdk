@@ -15,4 +15,5 @@
 | T12 | tone-sets-currentcolor | render `<StatusDot tone="orange" />` | className contains `text-apt-orange` |
 | T13 | unlabeled-is-decorative, passes-label-through-verbatim | `<StatusDot tone="success" label="" />` | span has `aria-hidden="true"` and no `role` attribute (empty string is falsy) |
 | T14 | scales-glow-with-size | `size={10}` | inline `boxShadow` contains `6px` (round(10 × 0.55) = 6, exactly at the floor) |
-
+| T15 | passes-label-through-verbatim | `<StatusDot label="Down – 3 nodes" />` | `aria-label` is exactly `Down – 3 nodes`, unchanged |
+| T16 | memoizes-render | the exported `StatusDot` | the export is a `React.memo` wrapper; re-rendering the parent with identical props does not re-render the dot (render-count spy) |

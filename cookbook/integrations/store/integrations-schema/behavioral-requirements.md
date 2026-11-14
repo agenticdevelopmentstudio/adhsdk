@@ -2,9 +2,8 @@
 ### Migration
 
 - **migrate-entry-point**: `IntegrationsSchema` MUST expose `migrate(_ database: BoundedDatabase) throws` as its only public operation.
-- **migrate-runs-on-writer**: `migrate` MUST run the migrator against `database.writer`, the underlying GRDB writer of the `BoundedDatabase`.
-- **migration-name**: The migrator MUST register exactly one migration, named `integrations-v1`.
-- **migration-creates-five-tables**: The `integrations-v1` migration MUST create `integration_provider_configs`, `integration_connections`, `integration_email_messages`, `integration_email_labels` and `integration_action_logs`, in that order.
+- **migration-name**: The migrator MUST register exactly one migration, named `integrations-v1`. The name is fixed and not configurable; GRDB records it once the migration has run.
+- **migration-creates-five-tables**: The `integrations-v1` migration MUST create `integration_provider_configs`, `integration_connections`, `integration_email_messages`, `integration_email_labels` and `integration_action_logs`.
 - **migration-single-transaction**: Each table's DDL MUST run inside the one `integrations-v1` migration, so GRDB applies and records the migration as a unit.
 - **migrate-idempotent**: Calling `migrate` again on a database that already ran `integrations-v1` MUST NOT recreate tables or change data, because GRDB records the applied migration by name and skips it.
 - **migrate-propagates-errors**: `migrate` MUST declare `throws` and MUST let any GRDB or SQLite error propagate to the caller unchanged; it has no catch and no recovery path.
@@ -55,7 +54,6 @@
 
 ### Concurrency and side effects
 
-- **writer-serialised**: The Swift `migrate` is a synchronous call that blocks until the migration finishes, and a port MUST complete the migration before its store accepts writes; ordering against other writes is the serialisation GRDB's writer provides (a serial `DatabaseQueue` in memory, a `DatabasePool` writer for a file).
+- **writer-serialised**: The migration MUST complete before the store accepts writes.
 - **only-side-effect**: The only side effect of `migrate` MUST be the schema change and GRDB's own migration bookkeeping in the target database; it does no logging, network call or file access of its own.
-- **migrator-internal**: `migrator()` MUST stay internal (not public), so only `migrate` and `@testable` tests can build it.
 

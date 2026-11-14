@@ -2,11 +2,11 @@
 id: c5703986-6d14-4341-8719-b89e44f2ab80
 title: "Label"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,27 +32,27 @@ approved-date: ""
 
 ## Overview
 
-The Label component is a reusable HTML `label` element wrapper that applies default Tailwind CSS styling for typography and layout. It is designed as a primitive form label that pairs with form controls via the `htmlFor` attribute or nesting. The component accepts all standard HTML label properties and supports class merging for additional customization.
+The Label component is a reusable HTML `label` element wrapper that applies default styling for typography and layout (the concrete utility classes are listed in the React/Web platform note). It is designed as a primitive form label that pairs with form controls via the `htmlFor` attribute or nesting. The component accepts all standard HTML label properties and supports class merging for additional customization.
 
 ## Behavioral Requirements
 
 - **renders-label-element**: Component MUST render as an HTML `label` element.
 - **forwards-label-props**: Component MUST accept and forward all standard HTML label attributes (`htmlFor`, `id`, event handlers, etc.) via prop spreading.
 - **default-typography**: Component MUST render its text at medium weight, small size, with a line-height of 1 (no extra leading), and MUST NOT allow that text to be user-selected.
+- **row-layout**: Component MUST lay its children out in a horizontal row, vertically centered on the cross-axis, with an 8px gap between children.
+- **default-text-color**: Component MUST render its text in the design system's primary text color token.
 - **merges-classname**: Component MUST accept a `className` prop and merge it with its default styling using a class merging utility, such that a consumer-supplied class overrides the corresponding default class.
 - **peer-disabled-style**: When the label is rendered as a sibling immediately following a peer form control (a control carrying the `peer` class) and that control is disabled, the label MUST render with 50% opacity and a not-allowed cursor. A control nested inside the label, or a peer control that comes after the label rather than before it, does not trigger this style.
 - **focuses-associated-control**: Clicking the label's rendered text MUST move focus to (and, for a checkbox or radio control, toggle) the form control it is associated with via `htmlFor` or nesting. This follows from rendering a native `label` element (**renders-label-element**); the component adds no click handling of its own.
 
 ## Appearance
-
 - **Corner radius**: None
-- **Padding**: None (explicit padding not applied; flexbox layout provides spacing)
-- **Font**: Medium weight (font-medium), small size (text-sm), line-height 1 (leading-none)
-- **Foreground/Text**: `text-apt-text`, a design system color token defined as `--color-apt-text` in `packages/web/packages/themes/src/tailwind.css` and mapped per theme (e.g. to `--color-text-primary` or `--color-on-surface`)
-- **Gap between children**: 2 units (via `gap-2` flex gap)
+- **Padding**: None (explicit padding not applied; a horizontal flex layout provides spacing)
+- **Font**: Medium weight (500), 14px size (0.875rem at the default root size), line-height 1 (no extra leading)
+- **Foreground/Text**: the primary text color token, mapped per theme (e.g. to a primary-text or on-surface color)
+- **Gap between children**: 8px
 - **User select**: None (text is not user-selectable)
-- **Text alignment**: Flexbox centered vertically on the cross-axis (items-center)
-
+- **Child alignment**: Children laid out in a row, vertically centered on the cross-axis
 ## States
 
 | State | Appearance change |
@@ -75,18 +75,20 @@ The component renders a native `label` element, providing semantic meaning for a
 |----|-------------|-------|----------|
 | label-001 | renders-label-element | Render with no props | HTML `label` element in DOM |
 | label-002 | forwards-label-props | Pass `htmlFor="input-id"` and `id="label-1"` | Label renders with matching `htmlFor` and `id` attributes |
-| label-003 | default-typography | Render with default props | Computed `font-weight: 500`, small-size `font-size`, `line-height: 1`, and `user-select: none` |
+| label-003 | default-typography | Render with default props | Computed `font-weight: 500`, `font-size: 14px` (0.875rem at the default root size), `line-height: 1`, and `user-select: none` |
 | label-004 | merges-classname | Pass `className="custom-class"` | Rendered element has both default classes and `custom-class` |
 | label-005 | peer-disabled-style | Render label as a sibling immediately after a peer input; input becomes disabled | Label's computed `opacity` becomes `0.5` and `cursor` becomes `not-allowed` |
 | label-006 | peer-disabled-style | Render label as a sibling immediately after a peer input; input is not disabled | Label's computed `opacity` remains `1` and `cursor` remains the default |
+| label-008 | row-layout | Render with two children | Computed `display: flex`, `align-items: center`, `column-gap: 8px` |
+| label-009 | default-text-color | Render with default props | Computed `color` equals the resolved primary text color token |
 | label-007 | focuses-associated-control | Click the label's text when `htmlFor` references an `<input type="checkbox">`'s `id` | The checkbox receives focus and its checked state toggles |
 
 ## Edge Cases
 
 - **Missing htmlFor or nesting**: Component renders; however, the label is not semantically associated with a control. This is a consumer error, not a component failure.
 - **Empty label text**: Component renders as an empty label element; flexbox layout applies but with no visible content.
-- **Multiple children**: Component layout supports multiple children via flexbox with `gap-2` spacing between them.
-- **className collision**: The class-merging utility (`cn()`, wrapping `tailwind-merge`) resolves conflicting classes by override, not deduplication: a consumer-supplied class such as `text-lg` replaces the default `text-sm` rather than both being applied.
+- **Multiple children**: Component layout supports multiple children via flexbox with an 8px gap between them.
+- **className collision**: The class-merging utility (`cn()`, wrapping `tailwind-merge`) resolves conflicting classes by override, not deduplication: a consumer-supplied class such as `text-lg` replaces the default text size class rather than both being applied.
 - **Control nested in label / control after label**: See **peer-disabled-style** — the CSS `:peer` mechanism only matches a later sibling, so a control nested inside the label, or a peer control placed after the label in markup, never triggers the disabled style.
 
 ## Configuration
@@ -108,7 +110,10 @@ Not applicable: Label component contains no user-facing strings; localization is
 
 ## Accessibility Options
 
-Not applicable: Label responds only to the native disabled state of peer elements, which is handled by the form control itself. No additional accessibility display options (Reduce Motion, Increase Contrast, Differentiate Without Color) are directly managed by this component.
+Label responds only to the native disabled state of peer elements, which is handled by the form control itself. Reduce Motion and Differentiate Without Color do not apply, because the component has no animation and conveys no state by color alone. Two options are expected of consumers and ports:
+
+- **Dynamic Type**: Label text SHOULD scale with the system or browser text size. The 14px default is expressed in `rem` so it follows the root font size.
+- **Increase Contrast**: The primary text color token SHOULD resolve to the theme's high-contrast value when the system requests increased contrast. The source delegates this to the theme (see the partial `contrast-ratio` row in Compliance).
 
 ## Feature Flags
 
@@ -116,7 +121,7 @@ Not applicable: Label is a primitive component with no feature flags.
 
 ## Analytics
 
-Not applicable: Label is a non-interactive primitive; no analytics events are emitted.
+Not applicable: Label emits no analytics events of its own; its clicks are handled natively by the associated control.
 
 ## Privacy
 
@@ -128,21 +133,21 @@ Not applicable: Label does not perform any logging.
 
 ## Platform Notes
 
-- **SwiftUI**: Use `LabeledContent`, or a `Form` row's built-in label, to pair label text with a control; for a freestanding label, use plain `Text` in an `HStack` rather than SwiftUI's `Label` view (which is an icon-plus-title view, not a form-control label). Apply `.fontWeight(.medium)` and a small `.font` size. Read the paired control's disabled state from `@Environment(\.isEnabled)` and reduce opacity to match.
-- **Compose (Kotlin)**: Use Jetpack Compose's `Text` composable within a `Row` for alignment, gap, and text style. `Text` is not selectable by default — selection requires wrapping it in a `SelectionContainer` — so no extra modifier is needed to prevent selection. Disabled state styling responds to the paired control's enabled state.
-- **React/Web**: Direct implementation from the source. Files: `packages/web/packages/ui/src/components/label.tsx`. Exports a named `Label` function component that accepts `React.ComponentProps<"label">`. Applies the Tailwind utility classes `flex items-center gap-2 text-sm font-medium leading-none text-apt-text select-none` plus `peer-disabled:cursor-not-allowed peer-disabled:opacity-50`, merged with a consumer `className` via the `cn()` utility from a sibling `../lib/utils` module.
-- **AppKit / UIKit**: Use `NSTextField(labelWithString:)` (macOS), which creates a non-editable, non-selectable label field, or `UILabel` (iOS). Configure font as system font with medium weight and small size. Apply text color to match the design system token. For disabled state, observe the associated control's enabled property and update opacity to match; there is no cursor to manage on iOS, and a plain label needs none on macOS either.
-- **WinUI 3**: Use `TextBlock` or a custom `Label` control. Set `FontWeight` to `FontWeights.Medium` (not `Bold`), `FontSize` to a small value (e.g., 12pt), and `Foreground` to the design system text color. `TextBlock` has no `Cursor` property; omit the not-allowed cursor, or, if a custom control needs one, expose it via `ProtectedCursor` in a custom control template. Bind `Opacity` to the associated input control's `IsEnabled` state via a converter or code-behind logic.
+- **SwiftUI**: Use `LabeledContent`, or a `Form` row's built-in label, to pair label text with a control; for a freestanding label, use plain `Text` in an `HStack` rather than SwiftUI's `Label` view (which is an icon-plus-title view, not a form-control label). Apply `.fontWeight(.medium)`; the 14px default maps most closely to `.subheadline`. Read the paired control's disabled state from `@Environment(\.isEnabled)` and reduce opacity to match.
+- **Compose (Kotlin)**: Use Jetpack Compose's `Text` composable within a `Row` for alignment, gap, and text style (14.sp equivalent size, medium weight). `Text` is not selectable by default — selection requires wrapping it in a `SelectionContainer` — so no extra modifier is needed to prevent selection. Disabled state styling responds to the paired control's enabled state.
+- **React/Web**: Direct implementation from the source. Files: `packages/web/packages/ui/src/components/label.tsx`. Exports a named `Label` function component that accepts `React.ComponentProps<"label">`. Applies the Tailwind utility classes `flex items-center gap-2 text-sm font-medium leading-none text-apt-text select-none` plus `peer-disabled:cursor-not-allowed peer-disabled:opacity-50`, merged with a consumer `className` via the `cn()` utility from a sibling `../lib/utils` module. The text color is the `text-apt-text` token, defined as `--color-apt-text` in `packages/web/packages/themes/src/tailwind.css` and mapped per theme.
+- **AppKit / UIKit**: Use `NSTextField(labelWithString:)` (macOS), which creates a non-editable, non-selectable label field, or `UILabel` (iOS). Configure font as system font with medium weight at 14pt. Apply text color to match the design system token. For disabled state, observe the associated control's enabled property and update opacity to match; there is no cursor to manage on iOS, and a plain label needs none on macOS either.
+- **WinUI 3**: Use `TextBlock` or a custom `Label` control. Set `FontWeight` to `FontWeights.Medium` (not `Bold`), `FontSize` to 14 (effective pixels), and `Foreground` to the design system text color. `TextBlock` has no `Cursor` property; omit the not-allowed cursor, or, if a custom control needs one, expose it via `ProtectedCursor` in a custom control template. Bind `Opacity` to the associated input control's `IsEnabled` state via a converter or code-behind logic.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/label.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/label.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
-**Decision**: Use flexbox (`flex items-center gap-2`) rather than block or inline layout.
+**Decision**: Use a horizontal flex layout (vertically centered, 8px gap) rather than block or inline layout.
 **Rationale**: Supports flexible alignment of children and spacing, accommodating common patterns like icon + text within a label.
 **Approved**: pending
 
@@ -152,6 +157,10 @@ Not applicable: Label does not perform any logging.
 
 **Decision**: Respond to a peer element's disabled state via the CSS `:peer-disabled` selector rather than accepting a `disabled` prop.
 **Rationale**: Avoids double-managing disabled state between the label and its control, and keeps the label primitive simple. See **peer-disabled-style** for the sibling-order precondition this implies.
+**Approved**: pending
+
+**Decision**: Do not style the label as disabled when a nested control is disabled; only a preceding peer control triggers the disabled style.
+**Rationale**: The CSS `:peer` mechanism matches only later siblings, and adopting a `:has(:disabled)` style would widen the primitive's contract. Native ports that mirror the disabled state for nested controls will therefore differ from the web; this is an accepted limitation (see **peer-disabled-style**).
 **Approved**: pending
 
 **Decision**: Accept `htmlFor` without enforcing the association.
@@ -180,3 +189,4 @@ The source renders a native `label` element with `htmlFor`/nesting-based focus-f
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-based names and updated all citations; restated styling/disabled requirements and test vectors as behavior, moving Tailwind class names into the React/Web platform note; corrected inaccurate SwiftUI, Compose, AppKit, and WinUI 3 platform APIs and reordered Platform Notes to convention order; added peer-disabled-style sibling-order preconditions, a nested/after-label edge case, and a focuses-associated-control requirement with test vector; reformatted Design Decisions into Decision/Rationale/Approved form and added a Compliance table; corrected the className-collision edge case to override semantics, linked the text-apt-text token to its source, fixed the ESLint provenance reference, rewrote the summary to drop implementation detail, and added sibling recipes to related |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected --color-apt-text source path to packages/web/packages/themes/src/tailwind.css. |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Moved Tailwind class names out of Appearance and Overview into neutral values, added row-layout and default-text-color requirements with vectors, fixed the analytics wording and the child-alignment label, stated Dynamic Type and Increase Contrast expectations, and added a nested-control disabled design decision. |

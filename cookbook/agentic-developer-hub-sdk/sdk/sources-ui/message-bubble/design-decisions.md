@@ -27,3 +27,7 @@
 **Rationale**: Every role resolves to *some* color when a theme omits it, so checking the resolved color alone would draw a hairline border around every bubble in every theme; checking declaration instead limits the border to themes (`charcoal`, `techy`, `fishlamp`, `mikefullerton`) that opted in.
 **Approved**: pending
 
+**Decision**: iOS's `MobileMessageBubbleView` has no flat-theme handling and no optional theme border, which makes it a known non-conformance to **flat-theme-fill** and **optional-theme-border**, to be brought in line with `MessageBubbleView` on macOS.
+**Rationale**: `MessageBubbleView` checks `fill.alpha <= 0.001` and `palette.declares(borderRole)`; `MobileMessageBubbleView` checks neither and applies only the failure border, so a flat or bordered theme renders differently on iOS. This is a gap, not a second valid behavior.
+**Approved**: pending
+

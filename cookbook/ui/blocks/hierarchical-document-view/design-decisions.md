@@ -235,4 +235,9 @@
   how far the column can stick to the wrapper's own bounds, and both columns would
   stop holding position with no error to explain it (`explicit-over-implicit`).
   **Approved**: pending
-
+- **Decision**: `scroll-mt-20` and `useScrollSpy`'s `rootMargin` (`-80px 0px -60% 0px`) stay as literals rather than reading `--adh-header-height`.
+  **Rationale**: They are a recorded exception to the "never restate the header height" rule the sticky columns follow: the extraction is a move, not a redesign, and both numbers carry over from the cookbook site unchanged. They agree with each other (80px) but not with the `3.5rem` (56px) fallback of the sticky offsets. A host whose header height differs MUST pass its own `rootMargin` to `useScrollSpy` and a `scroll-mt` override through the prose `className`; deriving both from the custom property is later work on a green base (`dry`).
+  **Approved**: pending
+- **Decision**: Reduced motion is not honoured: the chevron transitions and the smooth `scrollIntoView` calls run regardless of `prefers-reduced-motion`.
+  **Rationale**: The source contains no such check and the extraction is a move, not a redesign, so adding one would be a behavior change the byte-match rule forbids. It is recorded here, and in Accessibility Options, so it reads as a known gap rather than an oversight.
+  **Approved**: pending

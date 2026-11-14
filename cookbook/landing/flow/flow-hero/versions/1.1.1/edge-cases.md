@@ -1,0 +1,8 @@
+
+- **Null headline or sub**: The component requires both `headline` and `sub` as mandatory props (not optional in the type signature); passing null or undefined violates the type contract. Behavior is undefined if coerced to render.
+- **Empty content slots**: `children`, `meta`, and `shot` are gated with `!== undefined`, so only an omitted prop (or an explicit `undefined`) hides its container. `null` and `""` are both `!== undefined`, so they still render an (empty) container — see **not-render-actions-when-children-undefined**, **not-render-metadata-when-undefined**, **not-render-shot-when-undefined**, and vectors flow-hero-013 through flow-hero-015. Hosts that want a section hidden must pass `undefined`, not `null` or `""`.
+- **Nested components in mark**: The `mark` prop is rendered as-is; if the host provides complex nested React elements, they render without modification. No validation is performed on the mark's content or structure.
+- **Very long text**: Headline and subheading text that exceeds single-line length will wrap per CSS (managed by stylesheet). The component imposes no text truncation or ellipsis.
+- **Rich content in headline and sub**: Both `headline` and `sub` accept ReactNode, allowing the host to embed spans, links, or other elements. The component renders them as-is without sanitization.
+- **Accessibility opt-out for uppercase meta**: The `meta` text is uppercased by stylesheet CSS on the `<p>` the component renders. Hosts cannot opt out at the component level (there is no prop for it); a host that needs non-uppercase content wraps that content in its own child element with an inline style resetting `text-transform`, since the property is inherited and a descendant can override it.
+

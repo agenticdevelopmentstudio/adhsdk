@@ -4,7 +4,7 @@
     "id": "9d6600fa-7b75-40fd-8beb-ab5ad3d1bc3b",
     "title": "Terminal Text Injector",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "d72144c82eb1249b",
+  "synced": "9a258d8c5e954d98",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

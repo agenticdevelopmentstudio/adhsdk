@@ -12,8 +12,8 @@
 - **summary-id**: `id` MUST be the session id, the id every `steno conversation` verb takes.
 - **summary-terminal**: `terminal` MUST be the terminal's name from `KnownTerminals` for the session's `termProgram` (for example `iTerm2`), else the raw `termProgram`.
 - **summary-cwd**: `cwd` MUST be the session's working directory written `~`-relative when it is under the home directory.
-- **summary-session-name**: `sessionName` MUST be the session's `transcriptTitle`, and MUST be an empty string when the session is unnamed.
-- **summary-git-branch**: `gitBranch` MUST be the session's `gitBranch` unchanged.
+- **summary-session-name**: `sessionName` MUST be the session's `transcriptTitle`, and MUST be an empty string, never nil, when the session is unnamed.
+- **summary-git-branch**: `gitBranch` MUST be the session's `gitBranch` unchanged, and MUST be an empty string, never nil, when the session is not in a repository.
 - **summary-last-activity**: `lastActivity` MUST be `UTCTimestamp.canonical` of the session's `lastActivityAt`, and MUST fall back to the raw `lastActivityAt` when that does not parse.
 - **summary-home-default**: `ConversationSummaryDTO.init(session:homeDirectory:)` MUST default `homeDirectory` to `NSHomeDirectory()`.
 - **home-relative-equal**: `homeRelative(_:homeDirectory:)` MUST return `~` when the path equals the home directory.
@@ -32,21 +32,21 @@
 - **info-fields**: A `ConversationInfoDTO` MUST carry `id`, `agent`, `terminal`, `termProgram`, `cwd`, `projectRoot`, `sessionName`, `gitBranch`, `model`, `startedAt`, `lastActivity`, `status`, `lastEvent`, `lastTool`, `summary`, `pid`, `canSend` and `sendRefusal`.
 - **info-from-summary**: `ConversationInfoDTO.init` MUST take `id`, `agent`, `terminal`, `cwd`, `sessionName`, `gitBranch`, `lastActivity` and `status` from the `ConversationSummaryDTO` built from the same session.
 - **info-raw-fields**: `ConversationInfoDTO.init` MUST copy `termProgram`, `model`, `lastTool`, `summary` and `pid` from the session, and `lastEvent` from the session's `lastEventType`.
-- **info-project-root**: `projectRoot` MUST be the session's `projectRoot` written `~`-relative, and is an empty string until resolved.
+- **info-project-root**: `projectRoot` MUST be the session's `projectRoot` written `~`-relative, and MUST be an empty string when the session has no `projectRoot`.
 - **info-started-at**: `startedAt` MUST be `UTCTimestamp.canonical` of the session's `startedAt`, falling back to the raw value when it does not parse.
 - **info-can-send**: `canSend` MUST be true exactly when `ConversationSendability.refusal` returns nil.
 - **info-send-refusal**: `sendRefusal` MUST be the refusal sentence, and MUST be an empty string when `canSend` is true.
 - **info-live-sessions**: `ConversationInfoDTO.init` MUST take the active sessions as `liveSessions`, which the pane-sharing check reads.
 - **info-attachment-probe**: `ConversationInfoDTO.init` MUST take an `attachment` probe that defaults to `ConversationSendability.processAttachment`, so a test can inject the answer.
-- **refusal-ended**: `refusal` MUST return `conversation <id> has ended.` for an `ended` conversation.
-- **refusal-waiting**: `refusal` MUST refuse a `waiting` conversation with a sentence beginning `conversation <id> is waiting on a prompt`, because its pane holds a permission or question prompt and the Return that follows typed text would pick the highlighted choice.
+- **refusal-ended**: `refusal` MUST return exactly `conversation <id> has ended.` for an `ended` conversation.
+- **refusal-waiting**: `refusal` MUST refuse a `waiting` conversation with exactly `conversation <id> is waiting on a prompt (a permission or a question); answer it in its terminal. A message typed now would land in the prompt, and its Return would pick the highlighted choice.`, because its pane holds a permission or question prompt and the Return that follows typed text would pick the highlighted choice.
 - **refusal-order**: `refusal` MUST test in this order: ended, waiting, unsupported terminal, detached process, pane sharer; the first match wins.
-- **refusal-terminal**: `refusal` MUST refuse a session whose terminal `TerminalTextInjector.isSupported` rejects, with a sentence naming the `termProgram`, or `an unknown terminal` when it is empty.
-- **refusal-detached**: `refusal` MUST refuse a session whose process the probe reports as `detached`, with a sentence saying it is a headless claude that never reads a terminal.
-- **refusal-pane-sharer**: `refusal` MUST refuse a session when another active session's pane resolves to the same `TerminalTextInjector.Target`, naming the sharer's id first and then the session's id.
+- **refusal-terminal**: `refusal` MUST refuse a session whose terminal `TerminalTextInjector.isSupported` rejects, with exactly `typing into a conversation needs iTerm2 or Terminal.app; <id> runs in <termProgram>.`, where `<termProgram>` is `an unknown terminal` when it is empty.
+- **refusal-detached**: `refusal` MUST refuse a session whose process the probe reports as `detached`, with exactly `conversation <id> is a headless claude (claude -p, run by a script or shell), which reads its prompt once and never a terminal, so nothing typed into a pane can reach it.`
+- **refusal-pane-sharer**: `refusal` MUST refuse a session when another active session's pane resolves to the same `TerminalTextInjector.Target`, with exactly `conversation <sharer id> runs in the same terminal pane as <id> (a nested or headless claude shares its parent's), so a message can't be aimed at <id> alone.`
 - **refusal-sharer-excused**: A pane sharer whose probe reports `detached` MUST NOT block the session.
 - **refusal-sharer-unknown**: A pane sharer whose probe returns nil MUST still block the session, because an unreadable process might be on the pane.
-- **refusal-sharer-active-only**: Only a sharer whose `status` is the raw value of `SessionStatus.active` MAY block; an ended sharer MUST NOT.
+- **refusal-sharer-active-only**: A sharer whose `status` is not the raw value of `SessionStatus.active` MUST NOT block the session.
 - **refusal-busy-idle**: `refusal` MUST return nil for a `busy` or `idle` conversation that passes the later checks, so a busy conversation's message queues.
 - **refusal-no-pane**: `refusal` MUST NOT run the pane-sharer check for a session whose pane does not resolve.
 - **attachment-probe-type**: `AttachmentProbe` MUST be a `@Sendable` function from `SessionDTO` to an optional `ProcessLiveness.TerminalAttachment`, where nil means the process cannot be read.

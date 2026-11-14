@@ -48,6 +48,7 @@
 - **message-upsert-revives**: `upsertMessages(_:)` MUST set `isDeleted` to false and `deletedAt` to nil on every row it stores, so a tombstoned message comes back live.
 - **message-upsert-stamps**: `upsertMessages(_:)` MUST set `updatedAt` to the current time on every row it stores.
 - **message-upsert-batch**: `upsertMessages(_:)` MUST store the whole array in one transaction.
+- **message-upsert-batch-last-wins**: When one `upsertMessages(_:)` call holds two messages with the same `externalId`, the later one MUST be the stored row, and one row remains.
 - **tombstone-ids**: `tombstoneMessages(connectionId:externalIds:)` MUST tombstone the live messages of that connection whose `external_id` is among `externalIds`.
 - **tombstone-ids-dedupe**: `tombstoneMessages(connectionId:externalIds:)` MUST ignore repeated ids in `externalIds`.
 - **tombstone-ids-empty**: `tombstoneMessages(connectionId:externalIds:)` MUST return 0 and touch nothing when `externalIds` is empty.
@@ -73,8 +74,7 @@
 - **query-labels-combine**: `messages(_:)` MUST apply `labelIds` and `anyLabelIds` together, so a message must satisfy both.
 - **query-order**: `messages(_:)` MUST order results by `internal_date` descending, then `id` ascending.
 - **query-after**: When `after` is set, `messages(_:)` MUST return only messages that follow that key in the query order: `internal_date` less than `after.internalDate`, or equal to it with `id` greater than `after.id`.
-- **message-upsert-batch-last-wins**: When one `upsertMessages(_:)` call holds two messages with the same `externalId`, the later one MUST be the stored row, and one row remains.
-- **query-after-stable**: A page resumed with `after` set to the last row of the previous page MUST NOT skip or repeat rows when rows ahead of that key are tombstoned or removed from the filter.
+- **query-after-stable**: A page resumed with `after` set to the last row of the previous page MUST NOT skip or repeat rows when rows ahead of that key are tombstoned, or leave the filter because a label change drops them from `labelIds` or `anyLabelIds` or a re-upsert gives them a new `internal_date`.
 - **query-limit**: `messages(_:)` MUST return at most `max(limit, 0)` rows.
 - **query-offset**: `messages(_:)` MUST skip `max(offset, 0)` rows of the ordered result before it returns any.
 
@@ -94,13 +94,13 @@
 - **log-insert**: `insertActionLog(_:)` MUST insert the given `ActionLog` unchanged as a new row.
 - **log-insert-duplicate**: `insertActionLog(_:)` MUST throw the database's error when a row with that `id` exists.
 - **log-finish**: `finishActionLog(id:status:result:error:)` MUST set `status`, `result`, `error` and `updated_at` on the row with that `id`.
-- **log-finish-unknown**: NEEDS REVIEW: Not implemented in source. `finishActionLog(id:status:result:error:)` changes no row and returns without a signal when no row has that `id`, unlike `updateSyncState`, which throws `IntegrationError.unknownAccount`; a caller cannot tell a finished entry from a lost one, and the call sites in `MailIntegrationService` plus the intended behavior would settle it.
+- **log-finish-unknown**: `finishActionLog(id:status:result:error:)` MUST change no row and MUST return without a signal when no row has that `id`; the statement is an `UPDATE` with no row-count check. Unlike `updateSyncState`, which throws `IntegrationError.unknownAccount`, a caller cannot tell a finished entry from a lost one (see the Design Decision on the silent finish).
 
 ### Concurrency and errors
 
 - **isolation-by-connection**: A message, label or tombstone operation scoped to one `connectionId` MUST NOT change rows of any other connection.
 - **sendable**: `IntegrationsStore` MUST be `Sendable` and MUST hold no mutable state of its own; it MAY be called from any thread.
-- **writes-serialised**: The store MUST route every write through `BoundedDatabase.write`, which runs writes one at a time on the single writer connection.
-- **reads-parallel**: The store MUST route every read through `BoundedDatabase.read`, which runs on a pooled reader connection and does not wait for the writer on a file database.
+- **writes-serialised**: The store MUST route every write through `BoundedDatabase.write`; how writes are serialised is the database wrapper's behavior, not the store's.
+- **reads-parallel**: The store MUST route every read through `BoundedDatabase.read`; which connection serves it is the database wrapper's behavior, not the store's.
 - **errors-unwrapped**: The store MUST let database errors and `BoundedDatabaseError.deadlineExceeded` reach the caller unchanged; it does not wrap, retry or log them.
 

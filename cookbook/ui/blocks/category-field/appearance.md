@@ -2,7 +2,8 @@
 - **Container**: Vertical flex layout (`flex-col`) with 0.5rem gap (`gap-2`) between combobox/chooser row and breadcrumbs.
 - **Breadcrumb row**: Horizontal flex layout, wrappable with `flex-wrap`, `items-center`, 0.25rem horizontal gap (`gap-x-1`), 0.125rem vertical gap (`gap-y-0.5`).
 - **List items**: Flex row with 0.25rem gap (`gap-1`), `items-center`, `min-w-0` to allow truncation.
-- **Chevrons**: 12px size, `shrink-0` (no flex), `text-apt-text-dim` color.
+- **Breadcrumb nav**: The `<nav>` has no layout classes of its own, so its `<ol>` trails stack vertically as block elements with no gap between them; `flex-wrap` applies only to the crumbs inside one trail.
+- **Chevrons**: 12px size (the only place the size is stated), `shrink-0` (no flex), `text-apt-text-dim` color.
 - **Breadcrumb text**: Font monospace, 12px size (`text-xs`), 2% letter spacing (`tracking-[0.02em]`), truncated.
 - **Parent breadcrumbs**: `text-apt-text-muted` color.
 - **Leaf breadcrumbs**: `text-apt-gold` color.

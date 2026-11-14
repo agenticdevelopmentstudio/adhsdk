@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "57e33900-ca06-474e-abb1-d904c27a6336",
+    "title": "Log Panel",
+    "type": "ingredient",
+    "version": "1.2.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A scrollable, column-based display for structured log lines with configurable columns, follow-tail behavior, and interactive cells.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "logging",
+      "display",
+      "data-table"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html",
+      "https://www.w3.org/WAI/WCAG21/Understanding/target-size-enhanced.html"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "ea1584bda63c7c48",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

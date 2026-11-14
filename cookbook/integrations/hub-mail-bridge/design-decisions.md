@@ -26,3 +26,8 @@
 **Decision**: `MailClient.routed` and `MailSource` live in the Mail framework, beside `MailClient`.
 **Rationale**: The router reaches the client's private transport, and the source names belong to the mail RPC, not to the hub. An app picks a source without linking anything new.
 **Approved**: pending
+
+**Decision**: Deliberate prudent debt: accept that a stale pull can briefly put old labels back over a label change the bridge wrote into the mirror.
+**Rationale**: The hub's action changes Gmail, not the hub's row, so until the worker syncs, a pull that carries an older copy of the row replaces the local write. The window is short and the next pull corrects it, so the bridge does not hold back or re-apply writes. Retire it when the hub's action updates its own row, so a pull can never carry the old labels, or when the stale window shows up in a test or a user report.
+**Approved**: pending
+

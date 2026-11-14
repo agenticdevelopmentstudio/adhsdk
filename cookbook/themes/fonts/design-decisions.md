@@ -12,6 +12,6 @@
 **Approved**: pending
 
 **Decision**: The module does no validation of the manifest or of file presence.
-**Rationale**: The generator owns the manifest and the consumer test in the adh package asserts shape, css agreement and file presence, so a second check here would duplicate it. The cost is that a missing byte file is silent in the page (see Stale paths in Edge Cases).
+**Rationale**: The generator owns the manifest and the consumer test in the adh package asserts shape, css agreement and file presence, so a second check here would duplicate it. The cost is that a missing byte file is silent in the page (see Stale paths in Edge Cases), and a face without a string `file` yields an `undefined` href instead of a thrown error, which trades fail-fast behavior for a single owner of validation.
 **Approved**: pending
 

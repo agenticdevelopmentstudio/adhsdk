@@ -1,3 +1,4 @@
+The keys below are proposed: none of them exists in source, where every string is a literal set directly on the control with no localization lookup.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|

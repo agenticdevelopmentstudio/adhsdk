@@ -2,7 +2,7 @@
 id: c861465b-50c8-49d1-93cc-00d9e062ad5f
 title: "Dashboard Formatting"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -14,7 +14,10 @@ summary: "Presentation helpers for the analytics and errors pages: UTC bucket la
 platforms:
   - typescript
   - web
-tags: []
+tags:
+  - dashboard
+  - formatting
+  - analytics
 depends-on: []
 related:
   - 564c6102-e100-41ad-9c92-14606a33c394
@@ -24,6 +27,8 @@ approved-date: ""
 ---
 
 # Dashboard Formatting
+
+Dashboard Formatting words the values the status server derived for the Analytics and Errors pages, as pure functions.
 
 ## Overview
 
@@ -40,6 +45,14 @@ It exports:
 
 The callers are the analytics and errors pages and the board shell, which feeds the site rail from `listedSites` and `withSite`. For general number and duration formatting see Format ([adhsdk.ingredient.status.dashboard.logic.format](cookbook:564c6102-e100-41ad-9c92-14606a33c394)); this module covers only the dashboard-specific wording.
 
+### API
+
+- `bucketLabel(iso: string, range: AnalyticsRange): string` — `iso` is an ISO 8601 timestamp for the start of a bucket; `range` is `"24h"`, `"7d"` or `"30d"`, and `"24h"` chooses the hour format while any other value takes the day format.
+- `bucketDetail(iso: string, range: AnalyticsRange): string` — the same parameters as `bucketLabel`.
+- `formatVital(vital: Vital, value: number): string` — `vital` is `"lcp"`, `"inp"`, `"cls"` or `"fcp"` and picks the unit; `value` is the raw measurement.
+- `listedSites(body: { views?: { sites?: string[] } } | undefined): string[] | null` — a dashboard response body, or the absence of one.
+- `withSite(sites: readonly string[], site: string | null): string[]` — the server's list and the site the URL names.
+- `siteReportFor<T>(reports: Readonly<Record<string, T>>, site: string, none: T): T` — the server's per-site reports, the URL's site, and what to return when there is none.
 ## Behavioral Requirements
 
 ### Bucket labels
@@ -50,7 +63,7 @@ The callers are the analytics and errors pages and the board shell, which feeds 
 - **detail-24h**: The bucket-detail function MUST return the day label, a comma and a space, the 24-hour time and the suffix ` UTC` (for example `Nov 4, 14:00 UTC`) when the range is `"24h"`.
 - **detail-days**: The bucket-detail function MUST return the day label followed by ` (UTC)` (for example `Nov 4 (UTC)`) when the range is `"7d"` or `"30d"`.
 - **label-locale**: Both bucket functions MUST use English month names regardless of the viewer's locale.
-- **label-invalid-date**: Both bucket functions MUST throw when the timestamp does not parse to a valid date, because the underlying date formatter throws a range error for an invalid date; the module does not guard against it.
+- **label-invalid-date**: Both bucket functions MAY throw when the timestamp does not parse to a valid date; the source does so because the underlying date formatter throws a range error for an invalid date, and the module does not guard against it. Callers MUST NOT rely on the error type.
 
 ### Vital values
 
@@ -58,7 +71,7 @@ The callers are the analytics and errors pages and the board shell, which feeds 
 - **vital-ms**: The vital-formatting function MUST return the value rounded to the nearest whole number followed by `ms` (for example `180` becomes `180ms`) when the vital is not `"cls"` and the value is below 1000.
 - **vital-seconds**: The vital-formatting function MUST return the value divided by 1000, with exactly one decimal place, followed by `s` (for example `2400` becomes `2.4s`) when the vital is not `"cls"` and the value is 1000 or more.
 - **vital-threshold-before-rounding**: The vital-formatting function MUST compare the raw value against 1000 before rounding, so a value of `999.6` is written `1000ms` and not `1.0s`.
-- **vital-no-validation**: The vital-formatting function MUST NOT validate the value; a negative number is written in milliseconds (`-5` becomes `-5ms`), and `NaN` is written as the text `NaN` for `"cls"` and `NaNms` for the other vitals.
+- **vital-no-validation**: The vital-formatting function SHOULD NOT validate the value; as observed in the source, a negative number is written in milliseconds (`-5` becomes `-5ms`), and `NaN` is written as the text `NaN` for `"cls"` and `NaNms` for the other vitals.
 
 ### Site list
 
@@ -67,9 +80,9 @@ The callers are the analytics and errors pages and the board shell, which feeds 
 - **listed-empty-list**: The listed-sites function MUST return an empty list as an empty list, not `null`, when the server sent `sites: []`.
 - **with-copy**: The with-site function MUST return a new list and MUST NOT mutate or return the list it was given.
 - **with-none-or-listed**: The with-site function MUST return a copy of the list in its original order when the site is `null` or already in the list.
-- **with-unlisted**: The with-site function MUST add a site that is not in the list and sort the whole result alphabetically using the platform's locale comparison, so a deep-linked site the server has no data for yet is still shown as selected.
+- **with-unlisted**: The with-site function MUST add a site that is not in the list and sort the whole result alphabetically using the platform's locale comparison (the order across runtimes is unspecified, because the source passes no locale), so a deep-linked site the server has no data for yet is still shown as selected.
 - **with-exact-match**: The with-site function MUST treat a site as listed only on an exact, case-sensitive match.
-- **with-sort-whole-list**: Because the sort runs over the whole result, the with-site function MUST reorder the server's entries too when it adds a site and the server's order differs from the locale order.
+- **with-sort-whole-list**: Because the sort runs over the whole result, the with-site function MAY reorder the server's entries too when it adds a site and the server's order differs from the locale order; this is observed behavior, not a requirement ports must copy.
 
 ### Site report
 
@@ -82,7 +95,7 @@ The callers are the analytics and errors pages and the board shell, which feeds 
 
 - **pure-functions**: Every exported function MUST be pure: it MUST NOT mutate its arguments, read the clock, use storage or the network, or log.
 - **synchronous**: Every exported function MUST return synchronously and MUST NOT depend on call order; the module holds no state, so concurrent calls cannot interleave.
-- **module-formatters**: The two date formatters MUST be created once when the module loads and reused on every call, not rebuilt per call.
+- **module-formatters**: The two date formatters SHOULD be created once when the module loads and reused on every call, not rebuilt per call.
 
 ## Appearance
 
@@ -118,9 +131,13 @@ Vectors 001–011 are the assertions in `dashboard-format.test.ts`; the rest are
 | dfmt-014 | vital-threshold-before-rounding | `("lcp", 999.6)` and `("lcp", 1000)` | `1000ms` and `1.0s` |
 | dfmt-015 | vital-no-validation | `("inp", -5)` and `("cls", NaN)` | `-5ms` and `NaN` |
 | dfmt-016 | label-invalid-date | bucket-label of `not-a-date` with `"7d"` | throws a range error |
-| dfmt-017 | with-sort-whole-list | `(["c.com","a.com"], "b.com")` | `["a.com","b.com","c.com"]` |
-| dfmt-018 | with-exact-match | `(["a.com"], "A.com")` | `["a.com","A.com"]` under the default English ICU collation, which puts lowercase first (the lookup is case-sensitive, so the site is added; another collation may order the two differently) |
+| dfmt-017 | with-sort-whole-list | `(["c.com","a.com"], "b.com")` | `["a.com","b.com","c.com"]` (ASCII names sort the same under any sensible collation) |
+| dfmt-018 | with-exact-match | `(["a.com"], "A.com")` | `["a.com","A.com"]` under the default English ICU collation, which puts lowercase first (the lookup is case-sensitive, so the site is added; the order of the two is unspecified across runtimes, so a port MAY order them differently) |
 
+| dfmt-019 | vital-ms | `("lcp", 999.4)` | `999ms` |
+| dfmt-020 | label-days | bucket-label of `2026-11-04T00:00:00.000Z` with an unknown range `"1y"` | `Nov 4`, the day format |
+| dfmt-021 | bucket-utc | bucket-label of `2026-11-04T23:59:59.999Z` with `"7d"` | `Nov 4`, the earlier day |
+| dfmt-022 | report-none | empty reports object, site `""`, a `none` value | the `none` value itself |
 ## Edge Cases
 
 - **Null and empty input — site list**: a `null` site and an empty list MUST give an empty copy; `undefined` body and a body with no `views` MUST give `null` from the listed-sites function, which callers read as "nothing to show."
@@ -136,28 +153,20 @@ Vectors 001–011 are the assertions in `dashboard-format.test.ts`; the rest are
 - **Locale**: the sort in the with-site function uses the runtime's default locale, so the order of non-ASCII or mixed-case names can differ between runtimes; the date formatters are fixed to English and UTC.
 
 ## Configuration
-
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `iso` (bucket functions) | string | none — required | An ISO 8601 timestamp for the start of a bucket. |
-| `range` (bucket functions) | `"24h"`, `"7d"` or `"30d"` | none — required | Chooses the hour format (`"24h"`) or the day format (the others). |
-| `vital`, `value` (vital-formatting function) | a web vital (`"lcp"`, `"inp"`, `"cls"`, `"fcp"`) and a number | none — required | The vital picks the unit; the value is the raw measurement. |
-| `body` (listed-sites function) | an object that may carry `views.sites`, or `undefined` | none — required | A dashboard response body, or the absence of one. |
-| `sites`, `site` (with-site function) | a read-only list of strings and a string or `null` | none — required | The server's list and the site the URL names. |
-| `reports`, `site`, `none` (site-report function) | a read-only record, a string and a fallback value | none — required | The server's per-site reports, the URL's site and what to return when there is none. |
 | Hour format | constant | English, two-digit hour and minute, 24-hour cycle, UTC | Fixed in the module. Not configurable. |
 | Day format | constant | English, short month and numeric day, UTC | Fixed in the module. Not configurable. |
 | Seconds threshold | constant | `1000` | Values at or above this are written in seconds. Not configurable. |
 
-The module reads no environment variables or settings keys and takes no injected dependency.
-
+The module reads no environment variables or settings keys and takes no injected dependency. The function parameters are in the API section of the Overview.
 ## Deep Linking
 
 Not applicable: the module registers no route or URL; it only copes with a site name that a URL happens to carry.
 
 ## Localization
 
-The module formats dates with fixed English month names and a fixed UTC zone, and writes the literal suffixes ` UTC`, ` (UTC)`, `ms` and `s`. These are hardcoded English strings that are not externalised, so a viewer with another locale still sees English month names. The fixed zone is deliberate (see Design Decisions); the fixed language is not stated as a decision in the source. Sorting in the with-site function follows the runtime's default locale.
+The module formats dates with fixed English month names and a fixed UTC zone, and writes the literal suffixes ` UTC`, ` (UTC)`, `ms` and `s`. These are hardcoded English strings that are not externalised, so a viewer with another locale still sees English month names. The fixed zone is deliberate (see Design Decisions); the fixed language is recorded as a pending Design Decision, though the source states no reason for it. Sorting in the with-site function follows the runtime's default locale.
 
 ## Accessibility Options
 
@@ -183,15 +192,15 @@ Not applicable: no function in the module logs.
 
 - **SwiftUI**: Port as free functions or static members of an `enum DashboardFormat`. Build the two date formats once with `Date.FormatStyle` (or `DateFormatter`) fixed to `Locale(identifier: "en")` and `TimeZone(identifier: "UTC")` with `.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)` for `HH:mm`, and `.dateTime.month(.abbreviated).day()` for `Nov 4`; parse the ISO string with `ISO8601DateFormatter` including fractional seconds. Write `formatVital` with `String(format: "%.2f")` and `.rounded()`; compare against `1000` before rounding. `withSite` is `(sites + [site]).sorted { $0.localizedCompare($1) == .orderedAscending }`. `siteReportFor` is a plain dictionary lookup, which is already own-key only, so the inherited-name guard is not needed. Return `[String]?` from `listedSites`.
 - **Compose**: Kotlin top-level functions in an `object DashboardFormat`. Use `java.time.format.DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH).withZone(ZoneOffset.UTC)` and `"MMM d"` for the labels, parsing with `Instant.parse`. `String.format(Locale.ROOT, "%.2f", value)` writes the vital; note that `%.1f` rounds half up where JavaScript's `toFixed` works on the binary value, so edge digits can differ. `withSite` uses `(sites + site).sortedWith(String.CASE_INSENSITIVE_ORDER)` only if locale parity is not required; use `java.text.Collator` to approximate `localeCompare`. Use a `Map<String, T>` lookup for reports, which has no inherited keys.
-- **React/Web**: Source platform. `packages/web/packages/status-web/src/lib/dashboard-format.ts` holds the functions and `dashboard-format.test.ts` beside it is the Vitest suite behind vectors 001–011. The two `Intl.DateTimeFormat` instances are module constants with `timeZone: "UTC"` and `hourCycle: "h23"`; `Intl` throws a range error for an invalid date, which is where label-invalid-date comes from. `siteReportFor` uses `Object.hasOwn`, the guard against `constructor` and `__proto__` that a plain index lookup lacks; `toFixed` and `Math.round` follow JavaScript rules (halves round toward positive infinity). Callers are `AnalyticsParts.tsx`, `ErrorsView.tsx`, `ErrorsSitePage.tsx`, `AnalyticsSitePage.tsx` and `BoardShell.tsx`. The module has no `"use client"` directive because it uses no React.
+- **React/Web**: Source platform. `packages/web/packages/status-web/src/lib/dashboard-format.ts` holds the functions and `dashboard-format.test.ts` beside it is the Vitest suite behind vectors 001–011. The two `Intl.DateTimeFormat` instances are module constants with `timeZone: "UTC"` and `hourCycle: "h23"`; `Intl` throws a range error for an invalid date, which is where label-invalid-date comes from. `siteReportFor` uses `Object.hasOwn`, the guard against `constructor` and `__proto__` that a plain index lookup lacks; `toFixed` works on the binary value, and `Math.round` rounds halves toward positive infinity. Callers are `AnalyticsParts.tsx`, `ErrorsView.tsx`, `ErrorsSitePage.tsx`, `AnalyticsSitePage.tsx` and `BoardShell.tsx`. The module has no `"use client"` directive because it uses no React.
 - **AppKit / UIKit**: The same Swift port as SwiftUI; share it from a framework target. Use `DateFormatter` with a fixed `en` locale, `UTC` zone and format strings `HH:mm` and `MMM d`, and keep the formatters as static properties because `DateFormatter` is expensive to build, mirroring the module-level constants in the source.
-- **WinUI 3**: A C# `static class DashboardFormat` in a .NET class library. Parse with `DateTimeOffset.Parse(iso, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal)` (it throws `FormatException` where the source throws a range error), and format with `ToUniversalTime().ToString("HH:mm", CultureInfo.InvariantCulture)` and `"MMM d"` using `new CultureInfo("en-US")`. `FormatVital` uses `value.ToString("F2", CultureInfo.InvariantCulture)` for CLS and `Math.Round(value, MidpointRounding.AwayFromZero)` for milliseconds; the default `Math.Round` rounds halves to even and would differ from JavaScript on halves. `ListedSites` returns `IReadOnlyList<string>?`. `WithSite` copies into a `List<string>` and sorts with `StringComparer.CurrentCulture`, close to `localeCompare`. `SiteReportFor` is `reports.TryGetValue(site, out var report) ? report : none` on an `IReadOnlyDictionary<string, T>`, which holds only its own keys. Nothing here needs `Task`/`async`, `ObservableCollection` or `INotifyPropertyChanged`; expose the results as bound properties from the view model that owns the dashboard response. Deserialise the response with `System.Text.Json` and map `views` and `sites` to nullable types so a missing `views` reads as `null`.
+- **WinUI 3**: A C# `static class DashboardFormat` in a .NET class library. Parse with `DateTimeOffset.Parse(iso, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal)` (it throws `FormatException` where the source throws a range error), and format with `ToUniversalTime().ToString("HH:mm", CultureInfo.InvariantCulture)` and `"MMM d"` using `new CultureInfo("en-US")`. `FormatVital` uses `value.ToString("F2", CultureInfo.InvariantCulture)` for CLS and `Math.Floor(value + 0.5)` for milliseconds, which matches JavaScript's `Math.round` on negative halves (`-2.5` gives `-2`); `MidpointRounding.AwayFromZero` would give `-3`, and the default `Math.Round` rounds halves to even. `ListedSites` returns `IReadOnlyList<string>?`. `WithSite` copies into a `List<string>` and sorts with `StringComparer.CurrentCulture`, close to `localeCompare`. `SiteReportFor` is `reports.TryGetValue(site, out var report) ? report : none` on an `IReadOnlyDictionary<string, T>`, which holds only its own keys. Nothing here needs `Task`/`async`, `ObservableCollection` or `INotifyPropertyChanged`; expose the results as bound properties from the view model that owns the dashboard response. Deserialise the response with `System.Text.Json` and map `views` and `sites` to nullable types so a missing `views` reads as `null`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/dashboard-format.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-web/src/lib/dashboard-format.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -219,9 +228,13 @@ Not applicable: no function in the module logs.
 **Approved**: pending
 
 **Decision**: Vitals use milliseconds below 1000 and seconds with one decimal above, and CLS has two decimals and no unit.
-**Rationale**: Doc comment: "CLS is unitless, the rest are milliseconds." The seconds form keeps long values short. The threshold compares the raw value, so a value that rounds up to 1000 reads `1000ms`, a small inconsistency kept as the source behaves.
+**Rationale**: Doc comment: "CLS is unitless, the rest are milliseconds." The seconds form keeps long values short. The threshold compares the raw value, so a value that rounds up to 1000 reads `1000ms`, a small inconsistency kept as the source behaves. Known debt: the source does not record the inconsistency as a defect; the remedy is to compare after rounding, so `999.6` reads `1.0s`.
 **Approved**: pending
 
+
+**Decision**: Month names and the literal suffixes (` UTC`, ` (UTC)`, `ms`, `s`) are fixed English strings.
+**Rationale**: The source builds both date formatters with the `"en"` locale and writes the suffixes as literals, so every viewer sees the same wording. It is a choice that affects what ports show, so it is recorded here for review rather than left implicit.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -246,4 +259,5 @@ Not applicable: no function in the module logs.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Added tags and an intro sentence, recorded the 999.6 debt and a fixed-English decision, softened incidental MUSTs, corrected the WinUI and React rounding notes, moved function signatures into an Overview API section, and added vectors dfmt-019 to dfmt-022. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial recipe extracted from `dashboard-format.ts` |

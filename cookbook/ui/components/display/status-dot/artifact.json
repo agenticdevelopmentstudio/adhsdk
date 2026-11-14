@@ -4,11 +4,11 @@
     "id": "1a044d34-d585-46b4-b703-dea3fb9b9642",
     "title": "StatusDot",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-07-03",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "78f800220d94395c",
+  "synced": "d50aeb7adbde5695",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -29,7 +29,7 @@ The model's display helpers have tests in `MailBrowserModelTests`; the view cont
 | mail-list-024 | model-injection | Inspect the controller's coder initializer (inspection-only) | `init(coder:)` calls `fatalError("init(coder:) has not been implemented")`; the only working initializer takes a `MailBrowserModel`. |
 | mail-list-025 | inset-style | Inspect the table | Table style is inset. |
 | mail-list-026 | row-count, reload-on-messages | Model `messages` changes from two entries to four | The table has four rows in the model's order, the selection is re-applied and the empty label is refreshed. |
-| mail-list-027 | main-queue-hop | Model `messages` changes from a background thread | The reload and every view update run on the main actor. |
+| mail-list-027 | main-queue-hop | Model `messages` changes, made on the main actor | The table reloads one main-queue hop later, and the reload and every view update run on the main actor. |
 | mail-list-028 | row-snippet | Message snippet is `Your receipt` | Snippet text is `Your receipt` in the small system font and the secondary label color. |
 | mail-list-029 | row-truncation, row-date-priority | Sender, subject and snippet are longer than the row is wide | Each shows on one line cut at the tail with an ellipsis; the date stays whole and the sender shrinks first. |
 | mail-list-030 | row-reuse | Show row 0, scroll it out, then show row 3 in the reused view | The view has the `MessageRow` identifier and shows row 3's sender, date, subject, snippet, dot and weights with nothing left from row 0. |
@@ -37,4 +37,6 @@ The model's display helpers have tests in `MailBrowserModelTests`; the view cont
 | mail-list-032 | selection-single | Select row 1, then row 2 | Only row 2 is selected. |
 | mail-list-033 | selection-no-op | Model selects the id of the row already selected | The table selection is not touched. |
 | mail-list-034 | selection-out-of-range | Table reports selected row 7 with three messages | The model's `select(messageId:)` is called with no message. |
+| mail-list-035 | selection-to-model | User deselects the selected row so the table selection clears | The model's `select(messageId:)` is called with no message. |
+| mail-list-036 | reload-on-messages, selection-from-model, selection-echo-guard | A row is selected, then the model's `messages` reloads without the selected message | The table selection clears and the model receives no `select(messageId:)` call from the list. |
 

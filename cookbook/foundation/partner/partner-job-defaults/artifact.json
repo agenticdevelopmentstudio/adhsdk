@@ -4,7 +4,7 @@
     "id": "294285ac-403a-44fe-9840-8ad9f3cf1eba",
     "title": "Partner Job Defaults",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,14 +23,19 @@
       "defaults",
       "code-review"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "79810488-c613-4f9b-af2a-4ba9d8ee1c26"
+    ],
+    "related": [
+      "211ef664-01fc-45d5-996b-1a0a4167a748",
+      "2a298bb0-d8af-40aa-8fec-42dd3b1d8f43"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "6013932b2cf4db21",
+  "synced": "43922f41915f574d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

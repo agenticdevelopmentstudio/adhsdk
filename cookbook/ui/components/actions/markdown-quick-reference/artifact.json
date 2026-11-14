@@ -4,11 +4,11 @@
     "id": "f5d2eb1c-fb0e-48e3-b124-7e730ac8231c",
     "title": "Markdown Quick Reference",
     "type": "ingredient",
-    "version": "1.3.1",
+    "version": "1.3.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "60aac75b71e538d7",
+  "synced": "92e2215c11356373",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

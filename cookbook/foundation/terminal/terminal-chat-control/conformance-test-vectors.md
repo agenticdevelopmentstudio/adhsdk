@@ -23,4 +23,8 @@ No test covers `TerminalChatControl` itself; `TerminalChatSessionTests` covers t
 | terminal-chat-control-018 | running-hosts | sockets for two running pids | both hosts, the lower pid first |
 | terminal-chat-control-019 | send-wait-margin | `send` of a `run` with `timeout` 30 against a host that answers after 40 seconds, `wait` not given | a decoded reply, because the wait is 45 seconds |
 | terminal-chat-control-020 | send-errors | `send` to a socket path where nothing listens | throws |
-
+| terminal-chat-control-021 | resolve-error-type | `resolve("zz", in: [])` | a failure whose `ResolveError.message` is `No Terminal Chat with id zz.`, equal to another `ResolveError` with the same message |
+| terminal-chat-control-022 | prepare-error | `prepareSocketDirectory` on a path whose parent is a regular file | throws |
+| terminal-chat-control-023 | running-test | `runningHosts(in:)` for a directory holding a socket named for pid 1 | pid 1 is listed, because `kill(1, 0)` fails with `EPERM` for a non-root user and that still counts as running |
+| terminal-chat-control-024 | request-chat-field | `resolve("", in: [two chats])` | the many-match failure, because an empty string is a prefix of every id |
+| terminal-chat-control-025 | response-init-defaults | `Response(output: "ok")` | every field but `output` is nil |

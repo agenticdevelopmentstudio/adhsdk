@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: Launch failure and timeout both report status -1, with the cause in the text.
-**Rationale**: The result is a simple pair, and launch jobs treat any non-zero status as failure. The source states "a timeout is never success", because a child that traps `SIGTERM` can still exit 0. The cost is that a caller must read the text to tell a launch failure from a timeout.
+**Rationale**: The result is a simple pair, and launch jobs treat any non-zero status as failure. The source states "a timeout is never success", because a child that traps `SIGTERM` can still exit 0. The cost is that a caller must read the text to tell a launch failure from a timeout, and an undecodable stream becomes an empty string with no signal. This is accepted debt; it is revisited with a typed outcome on the result when a caller needs to branch on the cause instead of reading text.
 **Approved**: pending
 
 **Decision**: The backstop is 600 seconds and is a constructor setting, not a per-call argument.

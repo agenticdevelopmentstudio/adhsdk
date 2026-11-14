@@ -2,7 +2,7 @@
 id: 24b45917-4361-44d8-a3dc-224cc2807aa9
 title: "Status Report Gather"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,8 @@ tags:
   - fail-soft
   - parallel-reads
   - timeouts
-depends-on: []
+depends-on:
+  - 581dbca7-c086-48ee-a6e9-e4b80536aa1f
 related:
   - 77587f0b-5a27-44d9-a507-46bb90c9046a
 references: []
@@ -32,7 +33,7 @@ approved-date: ""
 
 ## Overview
 
-The module that reads every source behind `GET /report` and the MCP tool `get_report`, then hands the results to `buildReport` (specified by the report rules recipe) to make the report. It owns four things: `parseReportParams` (the validated query), `reportSources` (the production reads, built from the app's shared services), `gatherReport` (the parallel, fail-soft read) and `logTail` (the log excerpt). It judges nothing itself. A source that throws or hangs past its deadline becomes a failed read, and the report goes on without it; the rules module turns that into coverage and a finding. The two telemetry dashboards are given up to `wait` seconds to finish a cold refresh, so a CLI or an MCP agent gets a finished answer instead of a "poll me" flag.
+The module that reads every source behind `GET /report` and the MCP tool `get_report`, then hands the results to `buildReport` (specified by [adhsdk.ingredient.status.service.report.report-rules](cookbook:581dbca7-c086-48ee-a6e9-e4b80536aa1f)) to make the report. It owns four things: `parseReportParams` (the validated query), `reportSources` (the production reads, built from the app's shared services), `gatherReport` (the parallel, fail-soft read) and `logTail` (the log excerpt). It judges nothing itself. A source that throws or hangs past its deadline becomes a failed read, and the report goes on without it; the rules module turns that into coverage and a finding. The two telemetry dashboards are given up to `wait` seconds to finish a cold refresh, so a CLI or an MCP agent gets a finished answer instead of a "poll me" flag.
 
 ## Behavioral Requirements
 
@@ -67,7 +68,7 @@ The public surface is `ReportServices`, `ReportSources`, `LOG_DEPLOY_CAP`, `LOG_
 
 ### Gathering
 
-- **gather-parallel**: `gatherReport` MUST start the monitor, deploys, integrations, errors-dashboard, runtime-errors, analytics-dashboard and uptime reads together and wait for all of them.
+- **gather-parallel**: `gatherReport` MUST start the monitor, deploys, integrations, errors-dashboard, runtime-errors, analytics-dashboard and uptime reads together and wait for all of them. The deploys read is a compound read: the deploy feed first, then (when `logs` is true) the log reads in parallel, so its time is the feed time plus the log time, and the time of the whole answer follows from the slowest of the seven.
 - **gather-fail-soft**: `gatherReport` MUST turn a source that throws into `{ ok: false, error: <message> }` and MUST still read and report every other source.
 - **gather-source-deadline**: `gatherReport` MUST fail a non-dashboard source that has not settled within `SOURCE_TIMEOUT_MS` (20 seconds) with the error `<what> timed out after 20s`, where `<what>` is `monitor read`, `deploy feed`, `integrations check`, `runtime errors read` or `uptime read`.
 - **gather-dashboard-deadline**: `gatherReport` MUST give each dashboard read `params.wait` seconds plus `SOURCE_TIMEOUT_MS` before failing it with `errors dashboard timed out after <n>s` or `analytics dashboard timed out after <n>s`.
@@ -104,7 +105,7 @@ Not applicable — this is a data-gathering module, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors are derived from `report-gather.test.ts` in the status-server `test` directory, by test name, plus direct readings of the source where the tests are silent (vectors 007 and 019 to 025).
+Vectors are derived from `report-gather.test.ts` in the status-server `test` directory, by test name, plus direct readings of the source where the tests are silent. Vectors 007 and 019 to 027 have no test: they are read from the source and are untested.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -133,6 +134,8 @@ Vectors are derived from `report-gather.test.ts` in the status-server `test` dir
 | report-gather-023 | sources-deploy-log-missing, sources-deploy-log-tail, sources-deploy-log-error | `fetchDeploymentLog` returns null; returns a row with a null log; returns a log; throws `boom` | `{ error: 'deployment is not in the monitored feed' }`; `{ error: 'no build log for <platform> (or no token)' }`; the `logTail` of the log; `{ error: 'boom' }` |
 | report-gather-024 | sources-runtime-errors, sources-delegated | The `vercel-runtime` fact is configured and not ok with streak 3 at `sampledAtMs` 99 | `failing` is `{ streak: 3, atMs: 99 }`; with the fact ok or absent it is null; `monitorVersion` equals `config.gitCommitSha` |
 | report-gather-025 | deploys-log-no-monitor | Monitor read fails, `logs` true | No `deployLog` call; the deploys read is `{ ok: true, data: { live, logs: {} } }` |
+| report-gather-026 | params-error-type | `{ range: '1y', logs: 'yes', days: '0', wait: '99' }`, then `{ logs: 'yes', days: '0', wait: '99' }`, then `{ days: '0', wait: '99' }` | Each throws status 400; the messages are the range message, the logs message and the days message in turn, so the check order is range, logs, days, wait |
+| report-gather-027 | integer-forms, params-defaults, log-tail-empty, log-tail-count | `{ days: '+5' }`, `{ days: ' 5' }`, `{ days: '1e1' }` (each rejected); `{ days: '007' }` (accepted as 7); `{ range: null, days: null, wait: null, logs: null }` (all defaults); then `logTail('  \n \t ')` and `logTail('x  ')` | The first three throw status 400 with the days message; `days` is 7 for `'007'`; the null fields give `{ range: '24h', days: 7, wait: 20, logs: false }`; the whitespace-only log gives `{ tail: [], lines: 0 }` and `'x  '` gives `{ tail: ['x'], lines: 1 }` |
 
 The `whole-answer-deadline` bullet carries an open question and has no vector.
 
@@ -146,33 +149,43 @@ The `whole-answer-deadline` bullet carries an open question and has no vector.
 - **Source hangs** (MUST): the deadline rejects after 20 seconds (dashboards: `wait` plus 20). The deadline does not cancel the underlying work, which may keep running after the report is returned; the code has no cancellation.
 - **Dashboard still refreshing** (MUST): the second read is used even when settle returned false or timed out; the rules module records the note.
 - **Dashboard settle throws** (MUST): the throw fails that dashboard read like any other source error.
-- **Concurrent access** (MUST): the sources are read concurrently with `Promise.all` on single-threaded JavaScript, and the only shared promise is the monitor read, awaited by the deploy-log selection after the feed read. Each call to `gatherReport` is independent; the dashboards and integrations caches are shared with the routes and own their own ordering.
+- **Concurrent access**: the sources are read concurrently with `Promise.all` on single-threaded JavaScript, and the only shared promise is the monitor read, awaited by the deploy-log selection after the feed read. Each call to `gatherReport` is independent; the dashboards and integrations caches are shared with the routes and own their own ordering.
 - **Failed or empty board** (MUST): with `logs` true and a monitor read that failed, or a board with no failing deploys, no log is read.
 - **More than five failing deploys** (MUST): only the first five by the board's order have logs; the rest are listed without log fields.
 - **Log source unavailable** (MUST): a missing deployment, a missing token, a provider error or a timeout is recorded as that deploy's `{ error }`; it never fails the report.
-- **Storage unavailable** (MUST): a storage error inside a source read is the same as any thrown error and becomes a failed read.
-- **Offline or disconnected state** (MUST): the module makes no network call itself; it awaits reads that do (providers, dashboards, log fetch). A disconnect during one of them surfaces as that source's error or its deadline, and the report is still built from the rest. With no scheduler, `lastCycleAt` comes from the stored probe, so a monitor running elsewhere is judged by data, not by liveness.
+- **Storage unavailable**: a storage error inside a source read is the same as any thrown error and becomes a failed read.
+- **Offline or disconnected state**: the module makes no network call itself; it awaits reads that do (providers, dashboards, log fetch). A disconnect during one of them surfaces as that source's error or its deadline, and the report is still built from the rest. With no scheduler, `lastCycleAt` comes from the stored probe, so a monitor running elsewhere is judged by data, not by liveness.
 
 ## Configuration
+Request parameters, which a caller can set:
+
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
 | `range` | `24h`, `7d` or `30d` | `24h` | Analytics dashboard range |
 | `days` | integer 1 to 365 | 7 | Window of the uptime read |
 | `wait` | integer 0 to 60 seconds | 20 | How long each dashboard may finish a cold refresh |
 | `logs` | boolean | false | Attach the log tail of failing deploys |
-| `LOG_DEPLOY_CAP` | constant | 5 | Failing deploys whose log is read |
-| `LOG_TAIL_LINES` | constant | 40 | Lines of each log kept |
+
+Internal constants, which a caller cannot set and a port must not expose as settings:
+
+| Constant | Type | Value | Description |
+|----------|------|-------|-------------|
+| `LOG_DEPLOY_CAP` | exported constant | 5 | Failing deploys whose log is read |
+| `LOG_TAIL_LINES` | exported constant | 40 | Lines of each log kept |
 | `LOG_TIMEOUT_MS` | constant, not exported | 10000 | Each log read, plus 1000 ms on the outer deadline |
 | `SOURCE_TIMEOUT_MS` | constant, not exported | 20000 | Any non-dashboard source; dashboards add `wait` |
+
+Injected dependencies and test seams, supplied by the host code or a test and never by a request:
+
+
+| Option | Type | Default | Description |
 | `ReportServices` | `storage`, `config`, `dashboards`, `integrations`, optional `scheduler` | injected | Built once in `createApp` and shared with MCP |
 | `ReportSources` | seam of seven reads | `reportSources(services)` | Tests swap any read |
 | `now` | function returning a `Date` | `() => new Date()` | Injected clock |
 | `config.gitCommitSha`, `config.probeIntervalSeconds` | `StatusConfig` | from config | Report version and the no-loop stale window |
-
 ## Deep Linking
 
-Not applicable: the module has no routes or URLs of its own; the routes that call it are specified by the routes recipe.
+Not applicable: the module has no routes or URLs of its own; the routes that call it are specified by [adhsdk.ingredient.status.service.routes](cookbook:77587f0b-5a27-44d9-a507-46bb90c9046a).
 
 ## Localization
 
@@ -215,7 +228,7 @@ Not applicable: the module has no log call. A failure is returned in the failed 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/report/report-gather.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/report/report-gather.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -262,4 +275,5 @@ Reading, validating and judging are separate: this module reads and validates, a
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Linked the report-rules and routes recipes and added the rules recipe to depends-on, marked vectors 007 and 019 to 027 as untested, added vectors 026 and 027 for check order and param forms, split Configuration into request params, internal constants and seams, said deploys is a compound read, and removed (MUST) from the descriptive edge cases. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

@@ -2,7 +2,7 @@
 id: ba4dcadb-1225-4bcc-afca-bbb617e6e6c9
 title: "Work Tracking User Settings"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -18,7 +18,8 @@ tags:
   - work-tracking
   - foundation
   - settings
-depends-on: []
+depends-on:
+  - aa775836-5679-4a22-9ff3-b2bdcb09cc20
 related:
   - c1caa827-f7f1-4e69-b4c6-adbfef22e636
   - 0175f0bb-f4bd-4f72-94c2-57b087ad9df9
@@ -38,17 +39,17 @@ approved-date: ""
 - **main-actor**: The class MUST be isolated to the main actor; every access, including `init`, MUST happen there.
 - **four-settings**: The class MUST expose exactly four settings: `enabled` (`UserSetting<Bool>`), `addedBundleIds` (`UserSetting<[String]>`), `removedBundleIds` (`UserSetting<[String]>`) and `retentionDays` (`UserSetting<Int>`).
 - **init-prefix**: `init(prefix:)` MUST take the key prefix as its only argument.
-- **key-enabled**: `enabled` MUST be stored under `prefix` followed by `activity_enabled`.
-- **key-added**: `addedBundleIds` MUST be stored under `prefix` followed by `activity_added_bundle_ids`.
-- **key-removed**: `removedBundleIds` MUST be stored under `prefix` followed by `activity_removed_bundle_ids`.
-- **key-retention**: `retentionDays` MUST be stored under `prefix` followed by `activity_retention_days`.
+- **key-enabled**: `enabled` MUST be stored under `prefix` followed by `WorkTrackingSettingsKeys.enabled` (currently `activity_enabled`).
+- **key-added**: `addedBundleIds` MUST be stored under `prefix` followed by `WorkTrackingSettingsKeys.addedBundleIds` (currently `activity_added_bundle_ids`).
+- **key-removed**: `removedBundleIds` MUST be stored under `prefix` followed by `WorkTrackingSettingsKeys.removedBundleIds` (currently `activity_removed_bundle_ids`).
+- **key-retention**: `retentionDays` MUST be stored under `prefix` followed by `WorkTrackingSettingsKeys.retentionDays` (currently `activity_retention_days`).
 - **no-separator**: The class MUST concatenate prefix and key with no separator of its own; the caller supplies any separator in the prefix.
 - **defaults-shared**: Each setting's default MUST be the matching field of `WorkTrackingPreferences.default`: `enabled` false, both id lists empty, `retentionDays` 90.
 - **settings-public-live**: Each setting MUST be a `public let` `UserSetting`, so a caller reads and writes its `value` and the setting reflects changes the shared user-settings store publishes.
 - **preferences-snapshot**: `preferences` MUST build a `WorkTrackingPreferences` from the four current `value`s on each read.
 - **preferences-normalized**: `preferences` MUST return the snapshot after `normalized()`: ids sorted ascending and de-duplicated, retention clamped into 7 through 3650.
 - **stored-values-raw**: The settings MUST hold exactly what a caller assigns; normalization applies only in `preferences`, not when a value is written.
-- **accessibility-keys-excluded**: The class MUST NOT expose the Accessibility answer or signer keys; they are not user settings.
+- **accessibility-keys-excluded**: The class MUST NOT expose the `WorkTrackingSettingsKeys.accessibilityLastStatus` (`activity_ax_last_status`) or `WorkTrackingSettingsKeys.accessibilitySigner` (`activity_ax_signer`) keys; they are not user settings.
 - **prefix-isolation**: Two instances built with different prefixes MUST NOT share values.
 
 ## Appearance
@@ -65,7 +66,7 @@ Not applicable — this is a non-visual settings holder, not a visual component.
 
 ## Conformance Test Vectors
 
-Derived from `testUserSettingsSnapshotIsNormalized` in `WorkTrackingXPCClientTests` and from the source.
+Only vector 002 is backed by an existing test (`testUserSettingsSnapshotIsNormalized` in `WorkTrackingXPCClientTests`); every other vector is derived from the source and has no test yet.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -77,23 +78,30 @@ Derived from `testUserSettingsSnapshotIsNormalized` in `WorkTrackingXPCClientTes
 | work-tracking-user-settings-006 | no-separator | prefix `p` | `enabled.name` is `pactivity_enabled` |
 | work-tracking-user-settings-007 | prefix-isolation | Two instances with prefixes `a_` and `b_`; set `enabled` true on the first | the second `enabled.value` stays false |
 | work-tracking-user-settings-008 | preferences-snapshot | Read `preferences`, change `enabled`, read again | the second read shows the new value |
-| work-tracking-user-settings-009 | four-settings | Inspect the class | exactly `enabled`, `addedBundleIds`, `removedBundleIds`, `retentionDays` |
+| work-tracking-user-settings-009 | four-settings | Compile-time check that lists the class's public stored properties of type `UserSetting` | exactly `enabled`, `addedBundleIds`, `removedBundleIds`, `retentionDays` |
 
 ## Edge Cases
 
-- **Empty prefix**: An empty prefix MUST store under the bare keys, which are the daemon's own `settings` keys; the source does not forbid it.
+- **Empty prefix**: Known hazard: an empty prefix stores under the bare keys, which are the daemon's own `settings` keys, and the source does not forbid it. Callers SHOULD pass a non-empty prefix.
 - **Duplicate and unsorted ids**: Assigned lists MUST be stored as given and only the `preferences` snapshot MUST sort and de-duplicate them.
 - **Out-of-range retention**: A value below 7 or above 3650 MUST be stored unchanged and clamped in `preferences`.
 - **Stored text that does not decode**: Not decided here; decoding and fallback to the default belong to `UserSetting` and `UserSettings.shared`, outside the given source.
 - **Concurrent access**: The class is `@MainActor`, so the compiler keeps access on the main actor and calls from elsewhere need `await`; there is no other ordering rule to state.
-- **Cleanup**: Each setting can be removed (the test calls `remove()` on all four), which returns it to its default.
+- **Cleanup**: Each setting can be removed (the test calls `remove()` on all four), which returns it to its default; that reset belongs to `UserSetting`, outside the given source, so it is not a requirement here.
 - **Errors, timeouts, offline, cancellation**: Not applicable — the class is synchronous, throws nothing and does no I/O of its own.
 
 ## Configuration
 
+Constructor options:
+
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `prefix` | `String` | required | Namespace prepended to every key; the app's only decision. |
+| `prefix` | `String` | required | Namespace prepended to every key; the app's only decision. Not itself a stored value. |
+
+Stored settings:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
 | `enabled` | `Bool` | `false` | Whether tracking is on. |
 | `addedBundleIds` | `[String]` | `[]` | Bundle ids the user added. |
 | `removedBundleIds` | `[String]` | `[]` | Bundle ids the user removed. |
@@ -134,17 +142,17 @@ Not applicable: this code makes no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform. The file is `WorkTrackingUserSettings.swift` under `Core/WorkTracking`. `UserSetting` is an `ObservableObject`, so a SwiftUI settings view observes each setting individually or wraps the holder in its own view model; the holder itself is not observable.
+- **SwiftUI**: The source is platform-neutral Swift in `Core/WorkTracking`, not a SwiftUI type. `UserSetting` is an `ObservableObject`, so a SwiftUI settings view observes each setting individually or wraps the holder in its own view model; the holder itself is not observable.
 - **Compose**: A ViewModel exposing four `StateFlow`s backed by a `DataStore<Preferences>` with keys built from a prefix, plus a `preferences` function normalizing on read; collect on the main dispatcher.
 - **React/Web**: A hook returning four `useState`-like values synchronized with `localStorage` keys built from a prefix, and a `useMemo` selector sorting with `Array.from(new Set(ids)).sort()` and clamping with `Math.min(Math.max(n, 7), 3650)`.
-- **AppKit / UIKit**: Same Swift type on macOS and iOS; a preferences window binds controls to the settings' `value`s and pushes `preferences` through the work-tracking service.
+- **AppKit / UIKit**: Same Swift type; a preferences window binds controls to the settings' `value`s and pushes `preferences` through the work-tracking service.
 - **WinUI 3**: A class implementing `INotifyPropertyChanged` with four properties backed by `Windows.Storage.ApplicationData.Current.LocalSettings` (values keyed by prefix plus key; lists stored as JSON strings through `System.Text.Json`, since `ApplicationDataContainer` holds only simple types). Create it on the UI thread and mark main-thread access with `DispatcherQueue`; XAML binds with `x:Bind ... Mode=TwoWay`. A `Preferences` property builds a record, sorts with `StringComparer.Ordinal` after `Distinct()` and clamps with `Math.Clamp`. Unlike Swift's compiler-enforced main actor, nothing stops a background thread touching the properties, so check `DispatcherQueue.HasThreadAccess`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingUserSettings.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingUserSettings.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -174,9 +182,10 @@ Not applicable: this code makes no log calls.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
-Separation of concerns passes: the class only names the keys, supplies defaults and builds a snapshot; storage and change publishing belong to `UserSetting`, and clamping to `WorkTrackingPreferences.normalized()`. Unit coverage is partial: `testUserSettingsSnapshotIsNormalized` covers the snapshot's sorting, de-duplication and low-end clamp, but no test asserts the key names, the defaults, the high-end clamp or prefix isolation.
+Separation of concerns passes: the class only names the keys, supplies defaults and builds a snapshot; storage and change publishing belong to `UserSetting`, and clamping to `WorkTrackingPreferences.normalized()`. Unit coverage is partial (only vector 002 is test-backed): `testUserSettingsSnapshotIsNormalized` covers the snapshot's sorting, de-duplication and low-end clamp, but no test asserts the key names, the defaults, the high-end clamp or prefix isolation.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Named the excluded accessibility keys, tied the keys to WorkTrackingSettingsKeys, restated the empty-prefix case as a hazard, split the configuration tables, fixed the platform notes, marked which vectors are test-backed and added the WorkTrackingModels dependency. |

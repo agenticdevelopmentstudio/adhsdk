@@ -1,3 +1,4 @@
+Test coverage for this module is indirect. `clearAppearance.test.ts` exercises `applyAppearance` and `clearAppearance` directly (appearance-016 and appearance-017), and `appearanceScope.test.ts` and `AppearanceScope.test.tsx` exercise them through the store. No test file targets `normalizeAppearance`, the storage functions or the pre-paint script, so the other vectors are derived from the source and unverified by a test.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -16,8 +17,8 @@
 | appearance-013 | apply-enum-attributes, apply-bool-attributes | `applyAppearance(el, defaults, false)` | `el` has only `data-color-mode="auto"`; no other `data-*` attribute |
 | appearance-014 | apply-enum-attributes, apply-bool-attributes | `applyAppearance(el, { ...defaults, reduceMotion: "on", contrast: "extra-high", spacing: "spacious", underlineLinks: true }, false)` | `data-reduce-motion="on"`, `data-contrast="extra-high"`, `data-spacing="spacious"`, `data-underline-links="always"`; no `data-focus-outlines` |
 | appearance-015 | apply-enum-attributes | Apply a non-default `contrast`, then apply `contrast: default` | `data-contrast` is removed |
-| appearance-016 | clear-undoes-apply | Test `clearAppearance leaves the element as it was before applyAppearance` | Element with classes `font-a font-b` and `lang="en"` has identical `outerHTML` after apply-then-clear of every attribute |
-| appearance-017 | clear-undoes-prepaint, clear-removes-all | Test `clearAppearance removes the attributes the pre-paint script writes for the defaults too` | `data-color-mode` and the `dark` class are gone |
+| appearance-016 | clear-undoes-apply | An `html` element with class `font-a font-b` and `lang="en"`; `applyAppearance(el, { colorMode: "dark", reduceMotion: "on", contrast: "high", textSize: "large", spacing: "spacious", focusOutlines: true, underlineLinks: true }, true)`, then `clearAppearance(el)` | After apply `outerHTML` differs from the original; after clear it equals the original `<html class="font-a font-b" lang="en"></html>` |
+| appearance-017 | clear-undoes-prepaint, clear-removes-all | An `html` element with `data-color-mode="auto"` and class `dark`; `clearAppearance(el)` | `data-color-mode` is absent and the `dark` class is gone |
 | appearance-018 | prepaint-resolve-dark, prepaint-colormode-attribute | Run the script with `{"colorMode":"dark"}` stored | `dark` class on `<html>`, `data-color-mode="dark"` |
 | appearance-019 | prepaint-resolve-dark, prepaint-colormode-attribute | Run the script with nothing stored and `matchMedia` reporting dark | `dark` class on `<html>`, `data-color-mode="auto"` |
 | appearance-020 | prepaint-attributes | Run the script with `{"contrast":"default","textSize":"large","focusOutlines":false}` stored | `data-text-size="large"` only; no `data-contrast`, no `data-focus-outlines` |
@@ -25,4 +26,9 @@
 | appearance-022 | prepaint-no-validation | Run the script with `{"contrast":"bogus"}` stored | `data-contrast="bogus"` is written |
 | appearance-023 | prepaint-position, prepaint-plugin-name | `appearancePrepaint().transformIndexHtml()` | One tag, `script`, `children` equal to `APPEARANCE_PREPAINT_SCRIPT`, `injectTo: "head"`; plugin `name` is `adh-appearance-prepaint` |
 | appearance-024 | enum-pref-defaults-shared, bool-prefs-shared | `Object.isFrozen` on each of the two exports | `true` for both |
-
+| appearance-025 | read-ssr-guard, write-ssr-guard, clear-stored | No `window`; `readStoredAppearance()`, `writeStoredAppearance(prefs)`, `clearStoredAppearance()` | The read returns a value equal to the defaults but not the same object as `APPEARANCE_DEFAULTS`; the write and clear do nothing and do not throw |
+| appearance-026 | apply-idempotent | `applyAppearance(el, prefs, true)` called twice with the same `el` and `prefs` (`colorMode: "dark"`, `contrast: "high"`) | `outerHTML` after the second call equals `outerHTML` after the first |
+| appearance-027 | apply-system-injected | `matchMedia` replaced with a function that throws; `applyAppearance(el, { ...defaults, colorMode: "auto" }, true)` | No exception; `el` has class `dark` |
+| appearance-028 | colormode-not-in-enum-list | `Object.keys(ENUM_PREF_DEFAULTS)` | `["reduceMotion", "contrast", "textSize", "spacing"]`, with no `colorMode` |
+| appearance-029 | write-does-not-normalize | `writeStoredAppearance({ ...defaults, colorMode: "bogus" })`, then read the raw `localStorage` value and call `readStoredAppearance()` | The raw value contains `"colorMode":"bogus"`; the read returns `colorMode: auto` |
+| appearance-030 | normalize-returns-copy | `const a = normalizeAppearance({ colorMode: "dark" }); a.spacing = "spacious"`, then `normalizeAppearance(null)` | `APPEARANCE_DEFAULTS.spacing` is still `compact`, and the second result's `spacing` is `compact` |

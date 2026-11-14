@@ -7,7 +7,7 @@
 - **theme-fallback**: Component MUST use `'github-dark'` as the fallback theme when `theme` prop is not provided and `--scp-shiki-theme` is not set or empty.
 - **watch-theme-changes**: Component MUST observe mutations to the `adh-sdk-theme` style element and re-read the theme CSS property when it changes, provided `theme` prop is not set.
 - **header-when-content**: Component MUST display a header when filename is provided OR showCopy is true.
-- **display-filename**: Component MUST display the filename in the header if provided; if filename is not provided, display the language code instead.
+- **display-filename**: Component MUST display the filename in the header if provided; if filename is not provided (`undefined`), display the language code instead. An empty-string filename is not replaced by the language code (see the edge case **Empty filename**).
 - **show-copy-button**: Component MUST display a "Copy" button when `showCopy` is true.
 - **copy-on-click**: Component MUST copy the code string to clipboard when the copy button is clicked, using `navigator.clipboard.writeText`.
 - **show-copied-state**: Component MUST display "Copied" text in the button for 1200ms after a successful copy operation.
@@ -20,4 +20,8 @@
 - **discard-stale-highlight-results**: Component MUST discard the result of an in-progress highlight operation if `code`, `lang`, or `theme` changes before it resolves, or if the component unmounts; no state update is applied for a stale result.
 - **support-maxheight**: Component MUST accept a `maxHeight` prop and apply it as inline CSS `max-height` style on the body container if provided; a numeric value is interpreted as pixels.
 - **support-classname**: Component MUST accept a `className` prop and apply it to the root div; root element always has `scp-root` class, and provided className is appended.
-
+- **announce-copy-result**: Component SHOULD announce a successful copy to assistive technology through a polite live region. The source does not do this yet.
+- **expose-use-source-code**: The package MUST export a `useSourceCode({ code, lang = 'tsx', theme })` hook that returns `{ html, loading, error }`: `html` is the highlighted HTML or `null` while loading, `loading` is `true` until the highlighter and grammar resolve, and `error` is a non-null `Error` when highlighting fails. The hook re-runs when `code`, `lang` or `theme` changes.
+- **shared-highlighter**: The package MUST use one lazily created Shiki highlighter per page, shared by every panel. It also exports `getHighlighter`, `ensureLanguage` and `ensureTheme` for callers that need to preload.
+- **default-languages-and-themes**: The shared highlighter MUST load these languages eagerly: `ts`, `tsx`, `js`, `jsx`, `css`, `json`, `bash`, `sh`, `md`, `html`, `swift`, `objective-c`, `sql`; and these themes: `github-light`, `github-dark`.
+- **load-on-demand**: Any other language or theme MUST be loaded on first use, and concurrent requests for the same language or theme MUST share one in-flight load rather than starting several.

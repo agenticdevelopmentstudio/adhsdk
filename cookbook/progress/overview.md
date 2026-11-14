@@ -1,5 +1,5 @@
 
-This recipe covers two independent components that cookr's name-only grouping merges
+This ingredient covers two independent components that cookr's name-only grouping merges
 under one "progress" row, because they share no source and no API:
 
 - **UI** (`Progress`, source: `packages/web/packages/ui/src/components/progress.tsx`):

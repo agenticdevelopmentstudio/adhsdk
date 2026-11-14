@@ -1,10 +1,9 @@
 
-- **Corner radius**: `min(var(--radius-md), 12px)` — contributed by the icon-sm size variant, not the ghost variant (ghost adds no radius override; the base button class's `rounded-lg` is overridden by icon-sm's radius utility).
-- **Padding**: Gap between buttons is 0.5 (2px in Tailwind spacing scale — `gap-0.5` = 0.125rem).
+- **Corner radius**: set by the icon-sm size variant of the shared Button (`min(var(--radius-md), 12px)`), not by the ghost variant.
+- **Gap**: 2px between the two buttons.
 - **Font**: Inherited from Button component (not directly styled)
 - **Background**: Transparent (ghost variant)
-- **Foreground/Text**: text-apt-text-muted (muted color applied to icons)
+- **Foreground/Text**: The muted foreground color role, applied to the icons.
 - **Border**: None (ghost variant)
 - **Shadow**: None
-- **Min/Max size**: 28×28px, fixed by the icon-sm Button variant's `size-7` utility.
-
+- **Min/Max size**: 28×28px per button, fixed by the icon-sm Button size.

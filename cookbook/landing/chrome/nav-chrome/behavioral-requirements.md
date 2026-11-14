@@ -1,15 +1,15 @@
 
 - **render-bar**: Component MUST render a fixed bar containing a burger menu button and an optional brand container.
-- **render-burger**: Component MUST render a button that opens the drawer, labeled via `openLabel` prop (default: 'Open menu'). The button only ever opens the drawer; it does not close it (see **drawer-toggle-controls**).
+- **render-burger**: Component MUST render a button that opens the drawer, labeled via `openLabel` prop (default: 'Open menu'). The button only ever opens the drawer; it does not close it (see #requirements/drawer-toggle-controls).
 - **render-drawer**: Component MUST render a navigation drawer containing an array of anchor links passed via the `links` prop.
 - **render-close-button**: Component MUST render a close button inside the drawer, labeled via `closeLabel` prop (default: 'Close menu').
 - **render-scrim**: Component MUST render a scrim overlay that covers the page when the drawer is open.
 - **render-optional-brand**: Component MUST render the `brand` prop content in the bar if provided; MUST NOT render a brand container if `brand` is undefined.
 - **render-optional-footer**: Component MUST render the `footer` prop content in the drawer if provided; MUST NOT render a footer container if `footer` is undefined.
 - **set-nav-label**: Component MUST set `aria-label` on the `<nav>` element to the `navLabel` prop (default: 'Site').
-- **drawer-toggle-controls**: The burger button MUST only open the drawer (clicking it while the drawer is already open MUST have no effect — it does not close the drawer). The scrim, the drawer's close button, Escape, and clicking a navigation link MUST close the drawer when clicked/pressed while it is open. The close button sits in the same visual position the burger occupied, so closing reads as if the control itself changed, even though no single control both opens and closes.
+- **drawer-toggle-controls**: The burger button MUST only open the drawer (clicking it while the drawer is already open MUST have no effect — it does not close the drawer). The scrim and the drawer's close button MUST close the drawer when clicked while it is open. Escape and navigation links also close it (see #requirements/close-on-escape and #requirements/close-on-link-click).
 - **close-on-link-click**: Component MUST close the drawer when any navigation link is clicked, regardless of whether the link resolves to a same-page fragment, an off-page URL, or no target at all.
-- **trap-tab-inside-drawer**: While the drawer is open, Tab focus MUST stay inside it: pressing Tab on the last focusable element wraps focus to the first; pressing Shift+Tab on the first wraps focus to the last; and if focus is ever outside the drawer while it is open (for example, on the scrim), pressing Tab MUST bring focus back inside, to the first focusable element.
+- **trap-tab-inside-drawer**: While the drawer is open, Tab focus MUST stay inside it: pressing Tab on the last focusable element wraps focus to the first; pressing Shift+Tab on the first wraps focus to the last; and if focus is ever outside the drawer while it is open (for example, on `body` after a programmatic blur), pressing Tab MUST bring focus back inside, to the first focusable element.
 - **close-on-escape**: Component MUST close the drawer when the Escape key is pressed while the drawer is open.
 - **return-focus-to-burger**: Component MUST return focus to the burger button when the drawer is closed, provided the drawer was previously open (not on initial render).
 - **move-focus-to-close-button**: Component MUST move focus to the close button inside the drawer immediately after the drawer opens.
@@ -24,6 +24,6 @@
 - **aria-expand-burger**: Component MUST set `aria-expanded` on the burger button to `true` when the drawer is open, `false` when closed.
 - **aria-hide-scrim**: Component MUST set `aria-hidden="true"` on the scrim.
 - **use-button-type**: Component MUST render burger and close buttons with `type="button"` to prevent form submission.
-- **support-custom-labels**: Component MUST accept `openLabel`, `closeLabel`, and `navLabel` props; MUST use default values ('Open menu', 'Close menu', 'Site') when props are undefined.
+- **support-custom-labels**: Component MUST accept `openLabel`, `closeLabel`, and `navLabel` props and use them as the accessible names of the burger, the close button and the drawer; the defaults when a prop is undefined are those given in #requirements/render-burger, #requirements/render-close-button and #requirements/set-nav-label.
 - **prevent-focus-steal-on-load**: Component MUST NOT move focus on the initial render.
 

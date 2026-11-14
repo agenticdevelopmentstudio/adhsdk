@@ -32,6 +32,6 @@
 **Approved**: pending
 
 **Decision**: `decodeRichDisplay` accepts any non-null value of type `object` from a matching attachment's JSON, including a JSON array, rather than validating against the `RichDisplay` shape.
-**Rationale**: `typeof parsed !== 'object'` is JavaScript's coarsest possible type check, but the cost of accepting an unrecognized shape is benign — the decoded value simply carries none of `content`, `popover`, or `toolCalls`, and every dependent field renders as absent, which is indistinguishable from "no extras." The source accepts this rather than adding a schema validator for a payload only its own encoder ever produces.
+**Rationale**: `typeof parsed !== 'object'` is JavaScript's coarsest possible type check, but an unrecognized object with none of `content`, `popover`, or `toolCalls` is benign, because every dependent field renders as absent, indistinguishable from "no extras." The source does not check the shape of `content`, `popover`, or `toolCalls` themselves, so a wrong-typed field passes through typed as `RichDisplay`; it accepts this rather than adding a schema validator for a payload only its own encoder ever produces.
 **Approved**: pending
 

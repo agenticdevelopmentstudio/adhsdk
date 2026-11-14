@@ -4,7 +4,7 @@
     "id": "f03325ef-f4c6-43ab-9a88-1a0bf3daa002",
     "title": "Dashboard Set",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,7 +23,10 @@
       "dashboard",
       "cache"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "af0bacb9-bc1f-4773-85f5-35e33ae590ab",
+      "967202ce-c607-4115-9f63-466a4004e7f3"
+    ],
     "related": [
       "a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f",
       "8648272e-2da3-46fc-b9e8-5148dacdbcff",
@@ -35,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dd1eaddf58364cfd",
+  "synced": "66f89ec640ded09d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

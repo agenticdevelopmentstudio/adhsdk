@@ -2,11 +2,11 @@
 id: 471eb7b8-6821-4fd3-ab89-022c56757421
 title: "Avatar Engine Math"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,7 +24,8 @@ tags:
   - animation
   - deterministic
 depends-on: []
-related: []
+related:
+  - c708a65f-4d6c-40e4-b1b8-a24584cd45a1
 references: []
 approved-by: ""
 approved-date: ""
@@ -262,12 +263,12 @@ matrix, and PRNG functions), not a visual component.
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | avatar-engine-math-001 | hex-length-expansion, hex-serialization | `parseHex`/`toHex` round trip on `"#00ff41"`, `"#ff9500"`, `"#ffd400"`, `"#fffce0"`, `"#ff2d2d"`, `"#4f7cff"`, `"#5f7a64"`, `"#4f6e57"`, `"#33ccff"`, `"#06140d"` | Each hex parses and re-emits identically — `ColorTests.testParsesAndReEmitsEveryPaletteEntry`, `color.test.ts` "parses and re-emits every palette entry" |
-| avatar-engine-math-002 | hex-charset-validation, hex-parse-failure | `parseHex("#\u{FF10}0ff41")` (fullwidth digit U+FF10) | Throws `Color.Failure.badHex`, does not trap — `ColorTests.testRejectsANonAsciiHexDigitInsteadOfCrashing` |
+| avatar-engine-math-002 | hex-charset-validation, hex-parse-failure | `parseHex("#\u{FF10}0ff41")` (fullwidth digit U+FF10) | Throws `Color.Failure.badHex`, does not trap — `ColorTests.testRejectsANonAsciiHexDigitInsteadOfCrashing`. No `color.test.ts` case covers this input yet, so web coverage of the ASCII-only check is missing |
 | avatar-engine-math-003 | nan-channel-clamped | `toHex((Double.nan, Double.nan, Double.nan))` and `toHex((Double.nan, 1, 0))` | `"#000000"` and `"#00ff00"` respectively — `ColorTests.testRendersANaNChannelAsBlackRatherThanCrashing`, `color.test.ts` "renders a NaN channel as black" |
 | avatar-engine-math-004 | oklab-srgb-round-trip | `oklabToSrgb(srgbToOklab(parseHex(hex)))` for `"#00ff41"`, `"#ff2d2d"`, `"#4f7cff"`, `"#000000"`, `"#ffffff"` | Each channel within `1e-5` of the original — `ColorTests.testRoundTripsSrgbThroughOklab`, `color.test.ts` "round-trips sRGB through OKLab" |
-| avatar-engine-math-005 | srgb-oklab-conversion | `srgbToOklab(parseHex("#ffffff"))` and `srgbToOklab(parseHex("#000000"))` | `L` channel within `1e-6` of `1` and within `1e-9` of `0` respectively — `ColorTests.testPinsOklabLForWhiteAndBlack` |
-| avatar-engine-math-006 | mix-endpoint-exactness | `mix("#00ff41", "#ff2d2d", 0)` and `mix("#00ff41", "#ff2d2d", 1)` | `"#00ff41"` and `"#ff2d2d"` exactly — `ColorTests.testMixesEndpointsExactly` |
-| avatar-engine-math-007 | mix-color-space | `mix("#00ff41", "#ff2d2d", 0.5)` | `"#cead37"` exactly — the pinned OKLab midpoint that catches a transposed matrix coefficient — `ColorTests.testAgreesWithTheWebOnTheMidpointHex`; saturation check `ColorTests.testKeepsGreenToRedSaturatedAtTheMidpoint` (chroma `> 0.55`, vs. `0.35` for a naive sRGB lerp) |
+| avatar-engine-math-005 | oklab-srgb-round-trip | `srgbToOklab(parseHex("#ffffff"))` and `srgbToOklab(parseHex("#000000"))` | `L` channel within `1e-6` of `1` and within `1e-9` of `0` respectively — `ColorTests.testPinsOklabLForWhiteAndBlack`, `color.test.ts` "pins OKLab L for white and black" |
+| avatar-engine-math-006 | mix-endpoint-exactness | `mix("#00ff41", "#ff2d2d", 0)` and `mix("#00ff41", "#ff2d2d", 1)` | `"#00ff41"` and `"#ff2d2d"` exactly — `ColorTests.testMixesEndpointsExactly`, `color.test.ts` "mixes endpoints exactly" |
+| avatar-engine-math-007 | mix-color-space | `mix("#00ff41", "#ff2d2d", 0.5)` | `"#cead37"` exactly — the pinned OKLab midpoint that catches a transposed matrix coefficient — `ColorTests.testAgreesWithTheWebOnTheMidpointHex`; saturation check `ColorTests.testKeepsGreenToRedSaturatedAtTheMidpoint` (chroma `> 0.55`, vs. `0.35` for a naive sRGB lerp); web: `color.test.ts` "keeps green-to-red saturated at the midpoint" asserts the chroma check only, so the exact `#cead37` midpoint is pinned on Swift alone |
 | avatar-engine-math-008 | ease-vocabulary-closed, ease-endpoint-pinning | `resolve(name)` for each of the 24 vocabulary names, sampled at `t=0` and `t=1` | Every name resolves; `e(0)` within `1e-12` of `0`, `e(1)` within `1e-12` of `1` — `EaseTests.testResolvesEveryNameInTheVocabularyAndPinsTheEndpoints` |
 | avatar-engine-math-009 | power-family-formula, sine-family-formula, back-out-formula | `resolve(name)(t)` at `t = 0, 0.25, 0.5, 0.75, 1` for `"none"`, `"power1.in"`, `"power1.out"`, `"power1.inOut"`, `"power2.in"`, `"power2.out"`, `"power3.inOut"`, `"sine.in"`, `"sine.out"`, `"back.out"` | Matches the pinned sample table exactly within `1e-12`, e.g. `power1.in` → `[0, 0.0625, 0.25, 0.5625, 1]`, `back.out` → `[0, 0.8174096875, 1.0876975, 1.0641365625, 1]` — `EaseTests.testMatchesTheWebAtPinnedSamplePoints` |
 | avatar-engine-math-010 | ease-unknown-name-rejected | `resolve("elastic.out")`, `resolve("back.in(2)")`, `resolve("power2")`, `resolve("back.out(2.2)")` | All four throw — `EaseTests.testRejectsAnythingOutsideTheVocabulary` |
@@ -281,9 +282,14 @@ matrix, and PRNG functions), not a visual component.
 | avatar-engine-math-018 | prng-float-bounds | `float()` called 10,000 times on `Prng(seed: 42)` | Every value `>= 0` and `< 1` — `MathTests.testFloatsStayInTheUnitInterval`, `prng.test.ts` "floats stay in [0,1)" |
 | avatar-engine-math-019 | prng-range-formula, prng-signed-formula | `signed(4)` averaged over 20,000 draws from `Prng(seed: 7)`; `range(2,5)` over 1,000 draws | Mean of `signed(4)` within `0.1` of `0`; every `range(2,5)` value in `[2, 5)` — `MathTests.testRangeAndSignedAreCentredCorrectly`, `prng.test.ts` "range and signed are centred correctly" |
 | avatar-engine-math-020 | prng-pick-nonempty | `pick(["a","b","c"])` called 5,000 times on `Prng(seed: 3)` | Every result is one of `"a"`, `"b"`, `"c"` — `MathTests.testPickNeverIndexesOutOfBounds`, `prng.test.ts` "pick never indexes out of bounds" |
-| avatar-engine-math-021 | prng-pick-or-nil-empty | `pickOrNil` on an empty `[Int]` array and an empty `[String]` array, both on `Prng(seed: 3)`, then `next()` | Both calls return `nil`; the following `next()` equals `Prng(seed: 3).next()` on a fresh instance — `MathTests.testPickOrNilAnswersNilForAnEmptyArrayAndDrawsNothing` |
-| avatar-engine-math-022 | prng-pick-or-nil-draw, prng-pick-nonempty | 200 parallel calls to `pick(items)` on one `Prng(seed: 7)` and `pickOrNil(items)` on a second `Prng(seed: 7)`, `items = ["a","b","c","d","e"]` | Both sequences agree at every step — `MathTests.testPickOrNilConsumesTheSameStreamAsPick` |
-
+| avatar-engine-math-021 | prng-pick-or-nil-empty | `pickOrNil` on an empty `[Int]` array and an empty `[String]` array, both on `Prng(seed: 3)`, then `next()` | Both calls return `nil`; the following `next()` equals `Prng(seed: 3).next()` on a fresh instance — `MathTests.testPickOrNilAnswersNilForAnEmptyArrayAndDrawsNothing`, `prng.test.ts` "pickOrUndefined answers undefined for an empty array and draws nothing" |
+| avatar-engine-math-022 | prng-pick-or-nil-draw, prng-pick-nonempty | 200 parallel calls to `pick(items)` on one `Prng(seed: 7)` and `pickOrNil(items)` on a second `Prng(seed: 7)`, `items = ["a","b","c","d","e"]` | Both sequences agree at every step — `MathTests.testPickOrNilConsumesTheSameStreamAsPick`, `prng.test.ts` "pickOrUndefined consumes the same stream as pick" |
+| avatar-engine-math-023 | hex-input-normalization (Swift) | `parseHex("abc#def")` and `parseHex("\n#fff")` on Swift | Both throw `Color.Failure.badHex`: only spaces and tabs are trimmed, and a `#` that is not leading is not stripped. Platform-scoped to Swift; web accepts both (vector 024) |
+| avatar-engine-math-024 | hex-input-normalization (web) | `parseHex("abc#def")` and `parseHex("\n#fff")` on the web | Both parse: `.trim()` removes the newline and `.replace("#", "")` removes the first `#` wherever it sits, giving `abcdef` and `fff`. Platform-scoped to the web; Swift rejects both (vector 023) |
+| avatar-engine-math-025 | prng-pick-nonempty, prng-pick-or-nil-empty | `createPrng(3).pick([])` on the web | Throws an `Error` whose message matches `Prng.pick on an empty array` — `prng.test.ts` "pick names the broken contract instead of returning undefined as a T". Platform-scoped: Swift `pick([])` hits `preconditionFailure` and cannot be tested |
+| avatar-engine-math-026 | mat-apply-point | `Mat(a:2,b:0,c:0,d:3,e:10,f:20).apply(x:1, y:1)` | `(2*1 + 0*1 + 10, 0*1 + 3*1 + 20)` = `(12, 23)` |
+| avatar-engine-math-027 | prng-chance-formula | `chance(p)` and `float() < p` called in lockstep on two `Prng(seed: 3)` instances for `p = 0.5`, 1,000 draws | Both return the same boolean at every step |
+| avatar-engine-math-028 | mix-error-propagation | `mix("#00ff41", "zz", 0.5)` | Throws the `parseHex` error for `"zz"` rather than substituting a color |
 ## Edge Cases
 
 - **Malformed hex input (empty, wrong length, non-hex characters, non-ASCII
@@ -306,9 +312,8 @@ matrix, and PRNG functions), not a visual component.
 - **`mix` at or beyond the unit interval boundary** (`t <= 0`, `t >= 1`,
   including negative `t` or `t > 1`): MUST short-circuit to the corresponding
   endpoint color without an OKLab conversion, per `mix-endpoint-exactness`.
-  The source does not clamp `t` to `[0,1]` for the values it forwards to
-  `parseHex`/`toHex` in the interpolated case (`0 < t < 1`); any `t` in that
-  open interval is used as given.
+  The source does not clamp `t` in the interpolated case; any `t` in the
+  open interval `(0,1)` is used unclamped as the OKLab interpolation weight.
 - **Ease name outside the closed vocabulary, including near-misses**
   (`"power2"` bare, `"back.out(2.2)"`, `"back.in(2)"`, `"elastic.out"`): MUST
   throw, per `ease-unknown-name-rejected`. The table is a fixed lookup, not a
@@ -327,15 +332,10 @@ matrix, and PRNG functions), not a visual component.
   caught by a Swift caller or a test — a documented, intentional
   cross-platform divergence in failure severity for the same misuse (see
   Design Decisions), not an oversight.
-- **Concurrent access to a single `Prng` instance**: `Prng` is a Swift
-  `final class` with four mutable `var` state words and is not declared
-  `Sendable`; `createPrng`'s returned object closes over mutable `let`
-  bindings. Both source comments state the caller obligation that draws
-  happen "ONLY at scheduled events, never per tick" (`prng-scheduled-draw-
-  only`), but neither the Swift type nor the TypeScript type enforces
-  single-writer access — there is no lock, actor isolation, or atomic
-  compare-and-swap around `s0`..`s3` — see **prng-concurrency**
-  below.
+- **Concurrent access to a single `Prng` instance**: draws on one instance
+  are serialized by construction — see **prng-concurrency** below. Callers
+  still MUST draw only at scheduled events, never once per tick
+  (`prng-scheduled-draw-only`), which no type enforces.
 - **prng-concurrency**: The Swift `Prng` is a non-`Sendable` `public final class` with no lock or actor, so strict concurrency confines each instance to one isolation domain and a second thread cannot draw from it; the TypeScript `Prng` runs on the single-threaded JS event loop, where each draw completes synchronously. Draws on one instance are therefore serialized by construction, and the stream order is the order of the caller's calls.
 - **Degenerate/non-finite `Mat` transform inputs** (`NaN` or `Infinity` in
   `rotation`, `scaleX`, `scaleY`, `x`, `y`, or a pivot coordinate): unlike
@@ -441,7 +441,7 @@ errors or rejected TypeScript `Error`s (`hex-parse-failure`,
   view model owns a `Prng` instance and confines its draws to one call site
   per `prng-scheduled-draw-only`.
 - **Compose**: Kotlin has no built-in xoshiro128**, so a port MUST hand-write
-  it with `kotlin.math` (`kotlin.math.cbrt`, `pow`, `sin`, `cos`) for `Color`
+  it. Use `kotlin.math` (`kotlin.math.cbrt`, `pow`, `sin`, `cos`) for `Color`
   and `Mat`, and explicit `UInt`/`Int` bit operations
   (`rotateLeft`/`ushr`/`shl`, all already 32-bit-wrapping under Kotlin's
   `UInt`) for `Prng` — `kotlin.random.Random` is NOT a substitute, since it
@@ -451,7 +451,7 @@ errors or rejected TypeScript `Error`s (`hex-parse-failure`,
 - **React/Web**: The source files (`color.ts`, `ease.ts`, `mat.ts`,
   `prng.ts`, under
   `packages/web/packages/avatar-engine/src/math/`) are the other reference
-  implementation this recipe specifies verbatim; a React host imports them
+  implementation this ingredient specifies verbatim; a React host imports them
   as ordinary modules with no framework coupling (no React import in any of
   the four files).
 - **AppKit / UIKit**: Same Swift source files as the SwiftUI bullet — the
@@ -488,68 +488,73 @@ errors or rejected TypeScript `Error`s (`hex-parse-failure`,
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AvatarAnimationEngine/Sources/Math/` | unverified |
-| web | `packages/web/packages/avatar-engine/src/math/` | unverified |
+| apple | `packages/apple/AvatarAnimationEngine/Sources/Math/` | confirmed (1.0.3) |
+| web | `packages/web/packages/avatar-engine/src/math/` | confirmed (1.0.3) |
 
 ## Design Decisions
 
-- **Decision**: Interpolate color mixing in OKLab space rather than
-  componentwise sRGB.
-  **Rationale**: An sRGB lerp between two fully saturated colors dips
-  through grey at the midpoint (chroma `~0.35` for `#00ff41`/`#ff2d2d`); the
-  OKLab midpoint stays saturated (chroma `> 0.55`, pinned exactly to
-  `#cead37`). Both endpoints are identical in either color space, so only
-  the interpolated interior differs — traced to the doc comments in
-  `Color.swift`/`color.ts` and `ColorTests.testAgreesWithTheWebOnTheMidpointHex`.
-  **Approved**: pending
-- **Decision**: Clamp a `NaN` color channel to `0` instead of propagating it
-  or crashing.
-  **Rationale**: A naive min/max clamp lets `NaN` through (every comparison
-  against `NaN` is `false`). On Swift this reaches `Int(Double.nan.
-  rounded())`, which traps the process on the per-frame render path; on the
-  web it reaches `Math.round(NaN).toString(16)`, which silently emits the
-  string `"#NaNNaNNaN"`. Clamping to `0` makes both platforms answer black
-  for the same malformed input instead of one crashing and one lying —
-  traced to `clamp01`'s doc comment in both `Color.swift` and `color.ts`.
-  **Approved**: pending
-- **Decision**: Validate hex-digit characters with an explicit ASCII-only
-  predicate on Swift instead of `Character.isHexDigit`.
-  **Rationale**: `Character.isHexDigit` follows Unicode's `Hex_Digit`
-  property, which is also true for fullwidth digit/letter code points
-  (U+FF10-FF19, U+FF21-FF26, U+FF41-FF46) that the web's ASCII-only regex
-  `/[^0-9a-fA-F]/` rejects. Using the Unicode-aware test would let a string
-  the web rejects pass Swift's guard and then fail the subsequent
-  `UInt8(_:radix:)` parse in a way not covered by the explicit `badHex`
-  error path — traced to `isAsciiHexDigit`'s doc comment in `Color.swift`.
-  **Approved**: pending
-- **Decision**: `Mat` stores its six components as `Double`, never
-  `CGAffineTransform`.
-  **Rationale**: `CGAffineTransform`'s `CGFloat` storage is 32-bit `Float`
-  on some Apple architectures, which would quietly violate the `1e-6`
-  golden-comparison tolerance shared with the TypeScript implementation —
-  traced to `Mat.swift`'s top-of-file doc comment.
-  **Approved**: pending
-- **Decision**: `Prng.pick`/`pick` on an empty array fails differently on
-  the two platforms — Swift traps the process via `preconditionFailure`;
-  the web throws a catchable `Error`.
-  **Rationale**: Both source comments treat an empty candidate list as a
-  configuration fault that `CharacterConfig.load`/`loadConfig` should have
-  already rejected — reaching `pick` with an empty array means that upstream
-  contract was already broken, so each platform names the responsible
-  validator rather than failing anonymously. The severity differs because
-  Swift's `preconditionFailure` cannot be caught by XCTest or a caller,
-  while the web's `throw` can be — an intentional, documented asymmetry
-  rather than a bug, but a genuine platform divergence a port must be aware
-  of (see **prng-concurrency**, which this same trade-off touches).
-  **Approved**: pending
-- **Decision**: A caller MUST draw from a `Prng` instance only at scheduled
-  events, never once per rendered frame.
-  **Rationale**: A 120 Hz display would otherwise consume roughly twice as
-  many random values per second of wall-clock time as a 60 Hz display for
-  the same animation, breaking the determinism the pinned seed-1 stream
-  test depends on — traced to the top-of-file doc comments in both
-  `Prng.swift` and `prng.ts`.
-  **Approved**: pending
+**Decision**: Interpolate color mixing in OKLab space rather than
+componentwise sRGB.
+**Rationale**: An sRGB lerp between two fully saturated colors dips
+through grey at the midpoint (chroma `~0.35` for `#00ff41`/`#ff2d2d`); the
+OKLab midpoint stays saturated (chroma `> 0.55`, pinned exactly to
+`#cead37`). Both endpoints are identical in either color space, so only
+the interpolated interior differs — traced to the doc comments in
+`Color.swift`/`color.ts` and `ColorTests.testAgreesWithTheWebOnTheMidpointHex`.
+**Approved**: pending
+
+**Decision**: Clamp a `NaN` color channel to `0` instead of propagating it
+or crashing.
+**Rationale**: A naive min/max clamp lets `NaN` through (every comparison
+against `NaN` is `false`). On Swift this reaches `Int(Double.nan.
+rounded())`, which traps the process on the per-frame render path; on the
+web it reaches `Math.round(NaN).toString(16)`, which silently emits the
+string `"#NaNNaNNaN"`. Clamping to `0` makes both platforms answer black
+for the same malformed input instead of one crashing and one lying —
+traced to `clamp01`'s doc comment in both `Color.swift` and `color.ts`.
+**Approved**: pending
+
+**Decision**: Validate hex-digit characters with an explicit ASCII-only
+predicate on Swift instead of `Character.isHexDigit`.
+**Rationale**: `Character.isHexDigit` follows Unicode's `Hex_Digit`
+property, which is also true for fullwidth digit/letter code points
+(U+FF10-FF19, U+FF21-FF26, U+FF41-FF46) that the web's ASCII-only regex
+`/[^0-9a-fA-F]/` rejects. Using the Unicode-aware test would let a string
+the web rejects pass Swift's guard and then fail the subsequent
+`UInt8(_:radix:)` parse in a way not covered by the explicit `badHex`
+error path — traced to `isAsciiHexDigit`'s doc comment in `Color.swift`.
+**Approved**: pending
+
+**Decision**: `Mat` stores its six components as `Double`, never
+`CGAffineTransform`.
+**Rationale**: `CGAffineTransform`'s `CGFloat` storage is 32-bit `Float`
+on some Apple architectures, which would quietly violate the `1e-6`
+golden-comparison tolerance shared with the TypeScript implementation —
+traced to `Mat.swift`'s top-of-file doc comment.
+**Approved**: pending
+
+**Decision**: `Prng.pick`/`pick` on an empty array fails differently on
+the two platforms — Swift traps the process via `preconditionFailure`;
+the web throws a catchable `Error`.
+**Rationale**: Both source comments treat an empty candidate list as a
+configuration fault that `CharacterConfig.load`/`loadConfig` should have
+already rejected — reaching `pick` with an empty array means that upstream
+contract was already broken, so each platform names the responsible
+validator rather than failing anonymously. The severity differs because
+Swift's `preconditionFailure` cannot be caught by XCTest or a caller,
+while the web's `throw` can be — an intentional, documented asymmetry
+rather than a bug, but a genuine platform divergence a port must be aware
+of.
+**Approved**: pending
+
+**Decision**: A caller MUST draw from a `Prng` instance only at scheduled
+events, never once per rendered frame.
+**Rationale**: A 120 Hz display would otherwise consume roughly twice as
+many random values per second of wall-clock time as a 60 Hz display for
+the same animation, breaking the determinism the pinned seed-1 stream
+test depends on — traced to the top-of-file doc comments in both
+`Prng.swift` and `prng.ts`.
+**Approved**: pending
 
 ## Compliance
 
@@ -560,16 +565,16 @@ errors or rejected TypeScript `Error`s (`hex-parse-failure`,
 | [adc.check.artifact-formatting.ingredient-formatting.if-platform-notes](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90c2d8c2-cf79-5465-bffd-54f9fb1453bc) | passed | Artifact Formatting |
 | [adc.check.artifact-formatting.ingredient-formatting.if-design-decisions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f5b5cbe6-22e8-5954-a18d-0362ee387941) | passed | Artifact Formatting |
 | [adc.check.artifact-formatting.ingredient-formatting.if-change-history](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/14bf2d1d-875b-5e58-b43d-be492c9f941a) | passed | Artifact Formatting |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 
 `explicit-error-handling` is `partial`: `parseHex`/`resolve`/`mix` all raise
 catchable errors, but `Prng.pick` on Swift fails via an uncatchable
 `preconditionFailure` rather than a catchable error for the same misuse the
-web's `pick` throws for — see Design Decisions and the concurrency/ordering
-open question in Edge Cases.
+web's `pick` throws for — see Design Decisions.
 
+`unit-test-coverage` is `partial`: no test vector pins `prng-zero-state-avoidance` (seed `0`) or `ease-table-built-once`, and `mat-non-finite-input` is unresolved (see Edge Cases). The platform-divergent cases of `hex-input-normalization` and `pick` on an empty array are pinned by platform-scoped vectors 023-025 and each is exercised on only one platform's tests.
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -577,3 +582,4 @@ open question in Edge Cases.
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | hex-input-normalization split into platform-specific rules (Swift vs web trim/strip differ) with a new Edge Case for divergent acceptance; fixed a malformed code-span split in vector 021. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Pinned platform-divergent and uncovered behaviors with new test vectors, downgraded unit-test-coverage to partial, cited web tests, merged the concurrency edge cases, and removed stale cross-references. |

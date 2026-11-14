@@ -50,7 +50,12 @@
   existing child node of the current node when that child's label equals
   `titleCase(segment)` and the child already has at least one child of its
   own; otherwise it MUST create a new child node with that label and the
-  accumulated path.
+  accumulated path. The accumulated path includes the section segment: for
+  the slug `/guides/install/linux/x`, the `install` node's path is
+  `/guides/install` and the `linux` node's path is `/guides/install/linux`.
+  Known source behavior: because a leaf is never reused, a leaf followed by a
+  same-label folder yields two sibling nodes with that label (site-model-027);
+  a port is not required to treat that as a design goal.
 - **leaf-node-creation**: `buildNavTree` MUST append a leaf `NavNode` for the
   entry's final path segment, using `entry.frontmatter.title` as the label,
   `entry.slug` as the path, and `entry.domain` as the domain.
@@ -75,6 +80,10 @@
 - **search-result-shape**: For a non-blank query, `SearchIndex.query` MUST
   return an array of `{ entry, score }` pairs, one per match, where `score`
   is the underlying match score, or `0` when no score is provided.
+- **search-result-order**: `SearchIndex.query` MUST return its pairs in the
+  order Fuse.js returns them: ascending `score`, where `score` is Fuse's
+  weighted match score between `0` (exact match) and `1` (no match), so a
+  lower score is a better match and the best match comes first.
 
 ### Search state hook (`hooks/useSearchState.ts`)
 
@@ -97,7 +106,16 @@
 - **unhandled-key-no-op**: For any key other than `ArrowDown`, `ArrowUp`, or
   `Escape`, `handleKey` MUST leave `query`, `results`, and `selectedIndex`
   unchanged.
-- **selected-index-direct-set-unclamped**: `setSelectedIndex` MAY be called
-  directly by the caller to set `selectedIndex` to any value; `useSearchState`
-  MUST NOT clamp that value against `results.length`.
+- **memoize-search-inputs**: Callers SHOULD memoize the `SearchIndex` passed
+  into `useSearchState`, and the `entries` array passed to `createSearchIndex`
+  and `buildNavTree`. `results-track-query`'s `useMemo` depends on the
+  referential identity of `index`, so a newly constructed `SearchIndex` on
+  every render rebuilds the underlying Fuse instance on every re-render. This
+  is a caller-side performance recommendation, not a contract the sources
+  enforce.
+- **selected-index-direct-set-unclamped**: `setSelectedIndex` is the raw state
+  setter, and `useSearchState` applies no clamp to it: a value past
+  `results.length - 1` is stored as given. Known source behavior, pinned by
+  site-model-024; a port may clamp out-of-range values without breaking any
+  other requirement.
 

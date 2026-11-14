@@ -6,7 +6,7 @@
 - **Foreground/Text**: `apt-text` token (primary text color)
 - **Border**: 1px solid, `apt-border` token
 - **Shadow**: Medium drop shadow (shadow-md)
-- **Arrow**: 8px × 8px diamond (size-2), rotated 45deg, 1px border on right and bottom edges, inherits background and border from content, positioned to touch the edge of the trigger element
+- **Arrow**: 8px × 8px diamond (size-2), rotated 45deg, 2px corner radius (`rounded-[2px]`), 1px border on right and bottom edges, inherits background and border from content, positioned to touch the edge of the trigger element
 - **Max width**: 320px (max-w-xs)
 - **Z-index**: 50 (z-50)
 

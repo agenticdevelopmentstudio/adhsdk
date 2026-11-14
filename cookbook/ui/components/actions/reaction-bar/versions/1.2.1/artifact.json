@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "169da1b6-2a22-4fec-9f01-8118e5242bd5",
+    "title": "ReactionBar",
+    "type": "ingredient",
+    "version": "1.2.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-08-08",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The emoji reactions on one subject — count chips that toggle plus a small palette; presentational, so the caller owns the tallies and the write.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "component",
+      "reactions",
+      "emoji",
+      "toggle",
+      "ui"
+    ],
+    "depends-on": [],
+    "related": [
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
+      "c61a220c-b63e-4dcd-a12b-715de20f7b5d"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "f43f0a5ec8a45ecf",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

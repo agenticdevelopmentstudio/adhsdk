@@ -30,19 +30,3 @@
   review unnoticed, so an unresolvable colour is made to fail loudly, on
   the first frame, instead.
   **Approved**: pending
-- **Decision**: pausing the sweep (via `pointerenter`) rests every glyph
-  immediately but does not adjust the sweep's `startedAt` reference, so
-  `elapsed` keeps advancing in real time for the whole duration of the
-  pause.
-  **Rationale**: not stated in the source — the pause's own comment
-  addresses only that a glyph being read or about to be clicked should not
-  keep swelling and blurring, and says nothing about whether resuming
-  should catch up or continue smoothly. Compensating for paused time would
-  require tracking accumulated pause duration, which the source does not
-  do; the observable consequence is that a long hover can make the sweep
-  resume mid-leg, or on a different leg entirely, rather than where it
-  visually left off. This is carried here as a documented, deliberate-or-not
-  fact about the current implementation (see the Edge Cases entry "pause
-  outlives the clock"), not as a claim that it is the intended behavior.
-  **Approved**: pending
-

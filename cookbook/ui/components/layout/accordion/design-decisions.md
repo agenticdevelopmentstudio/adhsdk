@@ -4,7 +4,7 @@
    **Approved**: pending
 
 2. **Decision**: Rotate the chevron 180 degrees via Tailwind's `rotate-180` utility (which sets the CSS `rotate` property, not `transform`) to indicate open/closed state, rather than swapping icons.
-   **Rationale**: A recognizable UI pattern that gives clear visual feedback and animates more smoothly than swapping images.
+   **Rationale**: A recognizable UI pattern that gives clear visual feedback.
    **Approved**: pending
 
 3. **Decision**: Wrap panel content in an inner `div` with fixed bottom padding (`pb-3`, 12px) rather than leaving spacing to consumers.
@@ -20,6 +20,6 @@
    **Approved**: pending
 
 6. **Decision**: Ship `transition-colors` and `transition-transform` on the trigger and chevron unconditionally, without checking `prefers-reduced-motion`.
-   **Rationale**: Smooth transitions are the intended default feedback, but shipping them unconditionally means the component does not honor `prefers-reduced-motion` (see **animate-transitions**); fixing that means conditionally disabling the transitions inside the component, not asking consumers to patch around them with their own media-query overrides.
+   **Rationale**: This is acknowledged debt, not a goal: the intended behavior is **respect-reduced-motion**, and the component does not meet it today. The fix is to disable the transitions inside the component when Reduce Motion is on, not to ask consumers to patch around them with their own media-query overrides.
    **Approved**: pending
 

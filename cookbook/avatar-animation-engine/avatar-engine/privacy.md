@@ -6,8 +6,8 @@
 - **Storage**: None. Nothing in `Engine.swift`/`Environment.swift`/
   `engine.ts`/`env.ts` writes to disk, `UserDefaults`, `localStorage`, or any
   other persistence layer.
-- **Transmission**: None. The engine performs no network I/O; none of the
-  four given sources imports a networking type.
+- **Transmission**: None. The engine performs no network I/O; none of `Engine.swift`,
+  `Environment.swift`, `engine.ts` or `env.ts` imports a networking type.
 - **Retention**: Speech text set via `say(text)` is held only until
   `speech.until` elapses — a few seconds, per the character's configured
   bubble timing — then dropped (`Arbiter.swift`'s `say`/`evaluate`;

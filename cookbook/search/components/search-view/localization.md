@@ -34,3 +34,4 @@
 
 Only `searchLabel`, `searchPlaceholder`, and `searchLandmarkLabel` are exposed as overridable props; every other string above is hardcoded in the component with no override seam, and the "String Key" column for those rows is a descriptive identifier assigned for this table, not a key that exists in source.
 
+The two inactive-prompt strings (`emptyStateInactiveTitle`, `emptyStateInactiveDescription`) carry app-specific wording ("research documents", "every researcher") that a generic component should not hardcode. This is a known defect in the source: a port SHOULD use neutral copy, and the strings are not yet overridable.

@@ -4,7 +4,7 @@
     "id": "391a4eef-9872-432f-a049-eac4af00938d",
     "title": "Theme Manifest",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "The theme registry: a closed ThemeKey union, a themes record of id, label and stylesheet text for 39 themes, and themeIds, the key list in declaration order.",
+    "summary": "The theme registry: a closed ThemeKey union, a themes record of id, label and stylesheet text for every registered theme, and themeIds, the key list in declaration order.",
     "platforms": [
       "typescript",
       "web"
@@ -22,13 +22,17 @@
       "manifest",
       "appearance"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "6ddafe05-a417-498d-90b1-00f69c89f7ac"
+    ],
+    "related": [
+      "54b48020-df78-4b41-853c-268ad0ea6b84"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6bb894e7ca7b830d",
+  "synced": "f674f3af61a0cd8a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

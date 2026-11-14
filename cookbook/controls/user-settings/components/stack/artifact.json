@@ -4,11 +4,11 @@
     "id": "fcc6d4c4-d83e-402a-857c-fbd0aff91113",
     "title": "Stack",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,7 +27,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2a8edaab61f4e602",
+  "synced": "6dd2d8e9b8e750d6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

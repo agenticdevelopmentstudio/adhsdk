@@ -9,7 +9,7 @@
 | List pinned hidden | Hidden despite autoHide being false; toggle shows pin state. |
 | List pinned disclosed | Disclosed despite autoHide being true; toggle shows pin state. |
 | Covered style — covered list | List clipped to a 40px icon-only peek, occluded by its child list with a left drop-shadow (see **covered-peek**); header stays visible. |
-| Cascading mode — revealed branch (hover) | All ancestor lists above hovered row expanded to full width for duration of pointer presence. |
+| Covered or cascading mode — revealed branch (hover) | All ancestor lists above hovered row expanded to full width for duration of pointer presence. |
 | Narrow mode — alternate panes | One full-width pane visible; others hidden. Back button shows to navigate up. |
 | Breadcrumb crumb hovered | Crumb colour changes to the primary text colour (lighter than the muted default). |
 | Breadcrumb crumb focused | Focus-visible ring applied. |

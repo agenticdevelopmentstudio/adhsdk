@@ -1,3 +1,3 @@
 
-# Hub Client Sync
+# ADH Sync API Client
 

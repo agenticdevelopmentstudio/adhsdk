@@ -78,7 +78,7 @@
 - **select-value-off-the-option-list-is-an-error**: A `select` field holding
   a non-empty value that is not `Object.is`-equal to any of its declared
   `options[].value` MUST report `"<value>" is not one of the available
-  choices."` even when the field declares no `validate`, so a retired option
+  choices.` even when the field declares no `validate`, so a retired option
   still stored on a row is surfaced rather than silently accepted
   (`validation.ts` `fieldError`, `unlistedChoiceMessage`; `validation.test.ts`
   "reports the stored value instead of passing it as valid").
@@ -130,7 +130,9 @@
   that does not exist").
 - **layout-faults-logged-and-rendered**: Each layout fault MUST be logged via
   `console.error` prefixed `[@adh-sdk/editing]` and rendered
-  in a `role="alert"` block above the sections; rendering MUST continue
+  in a `role="alert"` block above the sections; the log MUST fire once each time the set of faults changes (an effect
+  keyed on the memoized fault list, which recomputes when `sections` or
+  `fields` change identity), not on every render; rendering MUST continue
   rather than throwing (`container.tsx` `layoutFaults` effect + JSX;
   `container.test.tsx` "says nothing about a layout that covers every field
   exactly once" as the negative case).
@@ -205,8 +207,8 @@
   context)`) exactly once for each distinct baseline identity, not once per
   render (`container.tsx` `inspectedRef` effect; `repair-flow.test.tsx`
   "prompts once, not once per render").
-- **repair-plan-defines-broken**: A field counts as broken in the repair
-  plan when it declares a `repair` function, its loaded value is non-empty,
+- **repair-plan-defines-broken**: A field MUST count as broken in the repair
+  plan when, and only when, it declares a `repair` function, its loaded value is non-empty,
   and `fieldError` for that value is non-null (`repair.ts` `planRepairs`;
   `repair.test.ts` "repairs the stored value that made Save unreachable").
 - **repair-skips-empty-values**: `planRepairs` MUST NOT attempt to repair a
@@ -214,7 +216,8 @@
   `validate`/`repair`, since repairing "" would invent a value never entered
   (`repair.ts` `planRepairs`; `repair.test.ts` "never repairs an empty value
   into an invented one").
-- **repair-skips-required-empty-fields**: A `required` field left empty MUST
+- **repair-skips-required-empty-fields**: This is **repair-skips-empty-values**
+  applied to a `required` field: a `required` field left empty MUST
   NOT be treated as broken by the repair pass — there is nothing to derive
   the missing value from, and it stays a visible field error the user must
   fill in themselves (`descriptors.ts` `RequirableFieldOptions.required`;
@@ -263,7 +266,8 @@
   never `onSave` (`container.tsx` `onRepair = props.onRepair ?? onSave`;
   `repair-flow.test.tsx` "sends the repair write to onRepair when the
   caller separates the two").
-- **repair-suppressed-in-read-only**: The repair-inspection effect MUST NOT
+- **repair-suppressed-in-read-only**: This is the repair clause of
+  **read-only-suppresses-save-bar-and-repair**: the repair-inspection effect MUST NOT
   run at all when the container is `readOnly` (`container.tsx`
   `if (readOnly) return`; `container.test.tsx` "offers no Save bar, arms no
   guard, and repairs nothing").
@@ -317,6 +321,15 @@
   !readOnly)`, comment above `isRoot && <host.UnsavedChangesGuard>`;
   `nesting.test.tsx` "still guards an editable row inside a read-only
   pane").
+
+- **guard-transport**: The root container MUST render the host's
+  `UnsavedChangesGuard` with `when` equal to the aggregate dirtiness, so that
+  while any container under it is dirty, closing the page and an in-app link
+  click raise the platform's one unsaved-changes prompt, and once the work is
+  saved, cancelled or unmounted neither is intercepted (`container.tsx`
+  `isRoot && <host.UnsavedChangesGuard when={aggregateDirty} />`;
+  `guard.test.tsx` "raises the platform's one unsaved-changes prompt", "is
+  clear once the work is saved").
 
 ### Read-only containers
 
@@ -398,13 +411,13 @@
 
 ### Execution context, persistence and side effects
 
-- **single-threaded-execution**: The container performs no locking or actor
+- **single-threaded-execution**: The container MUST NOT perform locking or actor
   isolation of its own; every file in the package (`container.tsx`,
   `controls.tsx`, `host.tsx`, `scope.tsx`) is marked `"use client"` and runs
   entirely on the browser's single JS thread through React's `useState`/
   `useEffect` scheduler, so overlapping user interactions are serialized by
   the event loop, not by this code.
-- **no-own-persistence**: The container itself persists nothing; `draft` and
+- **no-own-persistence**: The container itself MUST NOT persist anything; `draft` and
   `baseline` live in React state only and are discarded on unmount.
   Persisting the record is entirely the responsibility of the caller-
   supplied `onSave`/`onRepair` functions, which the container treats as

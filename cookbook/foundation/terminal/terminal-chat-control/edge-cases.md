@@ -12,8 +12,9 @@
 - **Other user's process**: `kill(pid, 0)` failing with `EPERM` still counts as running.
 - **Stalled host**: a host that never answers holds only its own call, when the caller passes a short `wait`.
 - **Malformed request or reply**: the host answers `Not a Terminal Chat request.` and the client throws on an undecodable reply.
-- **Concurrent access**: one request per connection; the chat session ends a previous wait with what it had when a new one starts, as its source says, so two clients driving the same chat can cut each other's wait short.
+- **Concurrent access**: one request per connection; the chat session ends a previous wait with what it had when a new one starts, so two clients driving the same chat can cut each other's wait short.
 - **Error and offline states**: with the app not running, no socket is live and the client finds no host.
 - **Oversized request**: a request longer than the socket server's 1 MiB limit is dropped unanswered, so the client's call fails.
 - **Different user**: the socket server closes a connection whose peer user id is not its own, so another user's client gets no reply.
 - **Shutdown**: a request that arrives as the host is shutting down is answered `The app is shutting down.`.
+

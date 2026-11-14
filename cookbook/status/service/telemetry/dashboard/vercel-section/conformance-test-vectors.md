@@ -1,5 +1,5 @@
 
-Vectors come from the "Vercel section" block of `telemetry-dashboard-sections.test.ts`, which stubs `fetch` per URL. `w` is the 7d window at 2026-11-04T15:30:20Z.
+Vectors vercel-001 to vercel-017 come from the "Vercel section" block of `telemetry-dashboard-sections.test.ts`, which stubs `fetch` per URL. Vectors vercel-018, vercel-019 and vercel-020 are not yet covered by tests there; they follow from the requirements. `w` is the 7d window at 2026-11-04T15:30:20Z.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -22,4 +22,5 @@ Vectors come from the "Vercel section" block of `telemetry-dashboard-sections.te
 | vercel-017 | breakdown-rate-limit, rate-limit-ends-load | Test "a 429 in a breakdown fails the section and stops the calls not yet made": 8 busy projects, `b0` answers 429 | Rejects with `rate limited`; no aggregate calls for `b6` or `b7` |
 | vercel-018 | count-none-enabled | Projects listed but none with analytics on | Resolves with `failed` 0, `projectsEnabled` 0, totals 0 |
 | vercel-019 | roster-sort | Two projects with equal pageviews named `b` and `a` | Roster order `a`, `b` |
+| vercel-020 | no-projects | The project list is empty | Empty roster, `projectsTotal` 0, zero totals, no error |
 

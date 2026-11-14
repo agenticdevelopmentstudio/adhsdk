@@ -4,15 +4,15 @@
     "id": "aaebd90e-991f-4133-a12d-0783586eae5a",
     "title": "Hierarchical Menu Detail",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "A nested-menu framework rendering hierarchical lists with three disclosure styles and optional detail pane.",
+    "summary": "A nested-menu framework rendering hierarchical lists with three disclosure styles and a required detail pane.",
     "platforms": [
       "typescript",
       "web"
@@ -25,14 +25,12 @@
     "depends-on": [
       "8fa7aaae-df62-44ea-b10c-182f3094ed9f"
     ],
-    "related": [
-      "8fa7aaae-df62-44ea-b10c-182f3094ed9f"
-    ],
+    "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9a04c4fa833248e2",
+  "synced": "091f3a46f2a78059",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

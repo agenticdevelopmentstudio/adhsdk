@@ -9,9 +9,9 @@ Contract: `public actor GmailQuotaPacer` with `public init(unitsPerSecond: Doubl
 - **drain-advance**: Each reservation MUST set `drainedAt` to `max(previous drainedAt, current time)` plus `units / unitsPerSecond` seconds, where a nil `drainedAt` counts as the current time.
 - **idle-credit-capped**: Time spent idle MUST NOT build up credit beyond the burst allowance, because a `drainedAt` already in the past is replaced by the current time on the next reservation.
 - **zero-units**: Reserving 0 units MUST leave `drainedAt` unchanged when it is at or after the current time, and MUST return the wait that backlog still implies.
-- **nanosecond-rounding**: Each conversion of units, or of the burst allowance, to a `Duration` MUST round to the nearest whole unit of the platform's `Duration` resolution (a whole nanosecond in Swift).
+- **nanosecond-rounding**: Each conversion of units, or of the burst allowance, to a `Duration` MUST round to the nearest whole unit of the platform's `Duration` resolution (a whole nanosecond in Swift), with a tie rounding away from zero, as Swift's `.rounded()` does.
 - **units-nonnegative**: NEEDS REVIEW: Not implemented in source. `reserve(_:)` takes an `Int` and never checks its sign, so a negative `units` moves `drainedAt` earlier and shortens the backlog; the only callers pass `GmailQuotaCost` constants, which are all positive. Settling it needs a decision whether a negative reservation is a caller error to trap, clamp or accept as a refund.
-- **reservation-final**: The pacer MUST offer no cancel or release operation, so a call that fails, is retried, or is cancelled while its caller sleeps keeps the units it reserved. A negative `units` is not a designed release; see the open question on `units-nonnegative`.
+- **reservation-final**: The pacer MUST offer no cancel or release operation, so a call that fails, is retried, or is cancelled while its caller sleeps keeps the units it reserved. A negative `units` is not a designed release; see #requirements/units-nonnegative.
 - **serialised-reservations**: Concurrent `reserve(_:)` calls MUST be serialised by the actor so each one reads and updates `drainedAt` as a single step and no two calls read the same prior value.
 
 ### Configuration and clock

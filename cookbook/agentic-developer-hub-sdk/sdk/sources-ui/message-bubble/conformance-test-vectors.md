@@ -29,4 +29,6 @@
 | bubble-026 | composing-caret, failed-state-indicator | Message re-rendered with deliveryStatus changing from .composing to .failed | Caret is no longer present; failure border and reason appear instead |
 | bubble-027 | failure-announced-on-web | Web: message with deliveryStatus .failed("Network error") | Failure reason renders inside `role="alert"`; screen reader announces it when it appears |
 | bubble-028 | failed-state-indicator, optional-theme-border | Theme declares a bubble border role and deliveryStatus is .failed | Border renders in the danger color; the declared border role is not applied while failed |
-
+| bubble-029 | timestamp-display | Message timestamp 2026-09-22T14:30:00 in de_DE locale (macOS, Web) | Displays as "14:30": the locale's 24-hour cycle |
+| bubble-030 | tool-call-pills | Message with one tool call named "search", status "completed" | A pill reading "search ✓" renders inline |
+| bubble-031 | tool-call-pills | Message with one tool call named "search", status "failed" | A pill reading "search ✗" renders inline |

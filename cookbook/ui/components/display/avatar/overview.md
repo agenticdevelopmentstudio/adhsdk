@@ -7,9 +7,5 @@ the reference implementation for this ingredient's delegated behavior. It export
 one of the semantic classes `adh-avatar`, `adh-avatar__image`, or
 `adh-avatar__fallback` (merged with any consumer-supplied `className`) and
 forward every other prop unchanged to the underlying Base UI primitive. The
-module is a client component (`'use client'`). The source comment at
-`avatar.tsx` documents why the class names must stay stable: "Base UI
-avatar styled through the SEMANTIC `adh-avatar*` classes (skinned in
-`../styles/components.css`): the class names are a public theming surface for
-the theme editor and user CSS themes, so they stay stable hooks in the DOM."
+module is a client component (`'use client'`). The source (`packages/web/packages/ui/src/components/avatar.tsx`) skins the three classes in `packages/web/packages/ui/src/styles/components.css`. The class names are a public theming surface, so they must stay stable; the first Design Decision gives the reason.
 

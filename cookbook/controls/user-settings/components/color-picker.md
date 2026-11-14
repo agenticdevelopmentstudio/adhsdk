@@ -2,11 +2,11 @@
 id: f8b8792e-12f2-4ca1-80a8-9ae7f2c5b31d
 title: "Color Picker"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,8 +39,8 @@ The Color Picker is a form field component that wraps the native HTML5 `<input t
 - **render-hex-display**: The component MUST display the `value` prop verbatim, as text adjacent to the picker; this text is not normalized by the native input — only the input element itself receives the browser's lowercase `#rrggbb` sanitization.
 - **support-disabled**: The component MUST respect a `disabled` prop and prevent interaction when `true`.
 - **render-hint**: The component MUST render hint text when a `hint` prop is provided.
-- **generate-id**: The component MUST generate a unique `id` for the color input if no `id` prop is provided.
-- **hide-hex-from-assistive-tech**: The component MUST mark the hex value display with `aria-hidden="true"` to prevent duplicate announcements by screen readers.
+- **generate-id**: The component MUST generate a unique `id` for the color input if no `id` prop is provided, and that generated id MUST be stable across server and client rendering (the reference implementation uses React `useId`).
+- **hide-hex-from-assistive-tech**: The component SHOULD mark the hex value display with `aria-hidden="true"` to prevent duplicate announcements by screen readers. This rests on an unverified assumption (see Accessibility); a port MAY instead point `aria-describedby` on the input at the hex text.
 - **accept-classname**: The component MAY accept a `className` prop to allow custom CSS classes to be applied to the field container.
 
 ## Appearance
@@ -86,15 +86,24 @@ The Color Picker is a form field component that wraps the native HTML5 `<input t
 
 ## Edge Cases
 
-- **Empty or invalid value**: The component performs no validation or parsing of `value`; it passes the prop straight through to the native `<input type="color">`. Per the HTML value-sanitization algorithm, any value that is not a valid 6-digit lowercase hex color — including an empty string — is reset to `#000000` by the browser itself; the component does not detect or surface this fallback. The hex text display is unaffected by this sanitization: it always shows the raw `value` prop (see **render-hex-display**), so an empty or non-lowercase `value` renders a swatch showing `#000000` next to hex text that does not match it, until a controlled parent updates `value` from `onChange`'s already-lowercased argument.
+- **Empty or invalid value**: The component performs no validation or parsing of `value`; it passes the prop straight through to the native `<input type="color">`. Per the HTML value-sanitization algorithm, any value that is not a valid simple color (`#` plus 6 hex digits, in any case; 3-digit shorthand and named colors are rejected) — including an empty string — is reset to `#000000` by the browser itself; the component does not detect or surface this fallback. The hex text display is unaffected by this sanitization: it always shows the raw `value` prop (see **render-hex-display**), so an empty, uppercase or otherwise non-lowercase `value` renders a swatch showing `#000000` (or the lowercased color) next to hex text that does not match it, until a controlled parent updates `value` from `onChange`'s already-lowercased argument.
 - **Null or undefined label/hint**: Component gracefully skips rendering label or hint if props are not provided; no error or empty placeholder is shown.
 - **Disabled with active focus**: On some platforms, a disabled input may retain focus; the browser's native input handles this state.
 - **Rapid value changes**: Multiple onChange calls in quick succession (e.g., from drag in the picker) are all propagated immediately; the component does not debounce.
 
 ## Configuration
 
-Not applicable. The component accepts configuration through its props (`label`, `hint`, `value`, `onChange`, `disabled`, `className`, `id`); no separate configuration object is used.
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `value` | `string` | yes | Hex color, for example `#ff0000`. |
+| `onChange` | `(hex: string) => void` | yes | Called with the new lowercase `#rrggbb` string. |
+| `label` | `ReactNode` | no | Label associated with the input. |
+| `hint` | `ReactNode` | no | Hint text below the field. |
+| `disabled` | `boolean` | no | Disables the input. |
+| `id` | `string` | no | Id for the input; generated when omitted. |
+| `className` | `string` | no | Extra class on the field container. |
 
+The component takes no configuration beyond these props.
 ## Deep Linking
 
 Not applicable. This is a form field component within a larger form or dialog; deep linking is not a relevant use case.
@@ -106,7 +115,7 @@ The component itself contains no hardcoded strings. The `label` and `hint` props
 ## Accessibility Options
 
 - **Reduce Motion**: Not applicable. The component does not use motion or animations; it relies on the native color input's behavior, which respects system motion preferences via the user agent.
-- **Increase Contrast**: Applicable. The hex value text (`.aws-color__hex`) must meet at least the WCAG AA minimum contrast ratio of 4.5:1 against its background; the component itself sets no color and depends entirely on the `.aws-color__hex` CSS class to meet this minimum.
+- **Increase Contrast**: Applicable. The hex value text must meet at least the WCAG AA minimum contrast ratio of 4.5:1 against its background; the component itself sets no color and depends entirely on the hex text's text-color token to meet this minimum.
 - **Differentiate Without Color**: Not applicable. The component does not use color alone to convey state; the disabled state is enforced by the native input's disabled attribute.
 
 ## Feature Flags
@@ -132,7 +141,7 @@ Not applicable. The component does not emit diagnostic logs; browser DevTools an
 
 - **SwiftUI**: On iOS and macOS, use `ColorPicker` from SwiftUI (`ColorPicker(_ label:, selection:)`) to wrap SwiftUI's native color picker. Bind the selection to a `@State` variable and handle `onChange` semantics via SwiftUI's reactive model. Label and value are natively supported.
 - **Compose**: Jetpack Compose has no built-in color-picker composable. Implement one with a custom composable (e.g., a color wheel or swatch grid built from `Canvas`/`Box`) or a third-party library. Bind state via `remember { mutableStateOf(...) }`, expose an `onValueChange` callback, and render the label and hex text as sibling `Text` composables.
-- **React/Web**: The web implementation uses the native HTML5 `<input type="color">` in `packages/web/packages/controls/src/user-settings/components/ColorPicker.tsx`. The component is a controlled React component; it renders `.aws-field` and `.aws-color` container classes, associates the label via `htmlFor`, and displays the hex value in `.aws-color__hex`. CSS classes are applied from the `aws-*` namespace (AgenticWebStack design system).
+- **React/Web**: The web implementation uses the native HTML5 `<input type="color">` inside a controlled React component. It associates the label via `htmlFor` and displays the hex value in a separate text element. Its styling comes from `aws-*` classes (`.aws-field`, `.aws-color`, `.aws-color__hex`), which the implementation owns; the text-color token of the hex text is what the contrast requirement in Accessibility Options applies to.
 - **AppKit / UIKit**: On macOS with AppKit, use `NSColorWell` for system color picking; bind its `.color` property and handle its action when the user changes the color. On iOS with UIKit (14+), use `UIColorWell` for a compact well control, or `UIColorPickerViewController` for a full color-picker sheet, and handle changes via `UIColorPickerViewControllerDelegate` (`colorPickerViewControllerDidSelectColor:`) or the well's `.selectedColor`. Implement the label and hex value display in custom views.
 - **WinUI 3**: On Windows with WinUI 3, use the native `ColorPicker` control from `Microsoft.UI.Xaml.Controls`. Bind the `Color` property with a two-way binding, handle the `ColorChanged` event for `onChange` semantics, and display the hex value in a separate `TextBlock`. Apply Fluent 2 design system styling via theme resources.
 
@@ -140,7 +149,7 @@ Not applicable. The component does not emit diagnostic logs; browser DevTools an
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/ColorPicker.tsx` | unverified |
+| web | `packages/web/packages/controls/src/user-settings/components/ColorPicker.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -148,7 +157,7 @@ Not applicable. The component does not emit diagnostic logs; browser DevTools an
   **Rationale**: Hex is the standard representation for web colors, matches developer expectations, and is more compact in the form than an RGB triplet.
   **Approved**: pending
 
-- **Decision**: Mark the hex value display (`.aws-color__hex`) with `aria-hidden="true"`.
+- **Decision**: Mark the hex value display with `aria-hidden="true"`.
   **Rationale**: The value duplicates state already exposed through the color input itself, so hiding the plain-text span avoids a redundant announcement in browsers/AT pairs where the input's accessible state already conveys the value on change. This assumes typical Chromium/WebKit + VoiceOver/NVDA behavior and has not been verified against every browser/AT combination.
   **Approved**: pending
 
@@ -160,6 +169,9 @@ Not applicable. The component does not emit diagnostic logs; browser DevTools an
   **Rationale**: Keeps the parent in full control of color state, enabling validation, side effects, and multi-field coordination without the component owning any internal state.
   **Approved**: pending
 
+- **Decision**: Display the raw `value` prop as the hex text rather than the browser-normalized value the input holds.
+  **Rationale**: The component is controlled, so the parent's `value` is the single source of truth and the text shows exactly what the parent passed; the input's own lowercase `#rrggbb` form is only seen through `onChange`. The cost is that `#FF0000` can sit next to a swatch holding `#ff0000`, and an empty `value` shows blank text beside a black swatch (see **render-hex-display** and Edge Cases).
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -172,13 +184,14 @@ Not applicable. The component does not emit diagnostic logs; browser DevTools an
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Statuses rest on the source: the native input is keyboard-focusable and operable with no custom handling needed (passed); the ambiguous ARIA role and the unverified `aria-hidden` assumption on the hex text mean screen-reader and ARIA semantics are only partially certain (partial); text color, contrast, and control sizing all depend on the external `.aws-*` CSS classes that the component references but does not define, so those cannot be confirmed from the source alone (partial); and the component's `label`/`hint` props are plain `ReactNode` with no string literals in the source (passed). separation-of-concerns passes because `ColorPicker.tsx` is pure presentation over its `value`/`onChange`/`label`/`hint` props with no logic beyond an id fallback and a class-name join, and unit-test-coverage passes because `components.test.tsx`'s `ColorPicker` suite exercises the `onChange` emission with a meaningful assertion.
+Statuses rest on the source: the native input is keyboard-focusable and operable with no custom handling needed (passed); the ambiguous ARIA role and the unverified `aria-hidden` assumption on the hex text mean screen-reader and ARIA semantics are only partially certain (partial); text color, contrast, and control sizing all depend on the external `.aws-*` CSS classes that the component references but does not define, so those cannot be confirmed from the source alone (partial); and the component's `label`/`hint` props are plain `ReactNode` with no string literals in the source (passed). separation-of-concerns passes because `ColorPicker.tsx` is pure presentation over its `value`/`onChange`/`label`/`hint` props with no logic beyond an id fallback and a class-name join, and unit-test-coverage is partial because the `ColorPicker` suite in `packages/web/packages/controls/src/user-settings/__tests__/components.test.tsx` has one test, `emits new color`, which finds the input by its label (color-001) and asserts `onChange` is called with `#00ff00` (color-003); color-002 and color-004 to color-009 have no test.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Downgraded hide-hex-from-assistive-tech to SHOULD, marked unit-test-coverage partial and cited the one test, recorded raw hex display as a Design Decision, made the id stable across SSR, corrected the color-validity edge case, added a props table, and removed the file path and aws-* class names from Platform Notes and Accessibility Options. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected render-hex-display: shows raw value prop verbatim, not native-input-normalized lowercase. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case names and updated every citation, corrected the ARIA role and aria-hidden announcement claims in Accessibility, corrected the Compose/AppKit-UIKit/WinUI 3 platform notes to name real native APIs, specified the accepted hex format and the native fallback for empty/invalid values, normalized hex casing across requirements and test vectors, added a disabled-state onChange assertion and dropped an unstated layout claim in the test vectors, reworded the Disabled state row, marked Increase Contrast applicable, replaced the CSS-coupled Appearance section with platform-neutral tokens, reformatted Design Decisions into Decision/Rationale/Approved form, added a Compliance table, and added tags |

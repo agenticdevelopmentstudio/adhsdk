@@ -6,4 +6,5 @@
 | T3 | dismiss-on-escape, restore-focus | Open, then press Escape | The popover content is removed; focus returns to the trigger |
 | T4 | honor-custom-trigger-label | Render with `triggerLabel="Syntax"` | The trigger shows `Syntax` but is still named `Markdown quick reference` |
 | T5 | dismiss-on-outside-click, restore-focus | Open, then click a point outside the popover | The popover content is removed; focus returns to the trigger |
-
+| T6 | open-on-trigger | Focus the trigger and press Enter, then Space | The popover opens and lists the syntax each time |
+| T7 | open-on-trigger | Render with `side="top"` and `align="start"`, then open | The popover positioner receives `top` and `start` instead of the defaults |

@@ -2,11 +2,11 @@
 id: 259f4a99-1b18-44a2-a102-e14e0fd8e30f
 title: "Chat Coordinator Hooks"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -31,9 +31,10 @@ approved-by: ""
 approved-date: ""
 ---
 
+# Chat Coordinator Hooks
 ## Overview
 
-This recipe covers the thirteen React hooks in `@adh-sdk/chat`'s
+This ingredient covers the thirteen React hooks in `@adh-sdk/chat`'s
 `src/hooks/` directory: `useAllImagesLoaded`, `useBlockCursor`, `useCaretGaze`,
 `useCaretTracker` (which also exports the standalone `caretMetrics` function),
 `useChatSession`, `useChatSizing`, `useConnectRitual`,
@@ -103,8 +104,9 @@ built on top of `useCaretTracker`/`useMouseGaze`/`useCaretGaze`.
 - **session-teardown**: On unmount, the hook MUST remove its observer and
   MUST call `session.destroyBackend()`, which for an owned, adapter-wrapped
   session MUST call `destroy()` on the wrapped backend (the adapter itself),
-  never directly on the raw backend, so the adapter's own teardown (its
-  `AbortController` and event queue) runs.
+  never directly on the raw backend; the adapter's own teardown (its
+  `AbortController` and event queue) runs, and the adapter forwards
+  `destroy()` to the raw backend.
 - **session-draft-stamp-eviction**: Before each projection, the hook MUST
   evict any cached `draft:`-prefixed timestamp whose draft no longer exists
   among the orchestrator's active drafts.
@@ -423,6 +425,8 @@ built on top of `useCaretTracker`/`useMouseGaze`/`useCaretGaze`.
 
 **Input focus reclaim (`useInputFocusReclaim`)**
 
+- **focus-reclaim-no-match**: If no element matches `selector`, the hook MUST
+  install its listeners as usual but MUST NOT claim focus, and MUST NOT throw.
 - **focus-reclaim-disabled-noop**: With `enabled` `false`, the hook MUST
   install no listeners and MUST NOT claim focus.
 - **focus-reclaim-immediate**: On enable, the hook MUST attempt to reclaim
@@ -484,11 +488,11 @@ whatever host component consumes these hooks' return values.
 | chat-coordinator-hooks-009 | session-select-message | `selectMessage(0)` | `selectedIndex` goes from `-1` to `0` |
 | chat-coordinator-hooks-010 | session-default-participants | `sendMessage('hi')` with no explicit user participant | `messages[0].sender.name === 'You'` |
 | chat-coordinator-hooks-011 | session-teardown | `unmount()` on an owned, raw-backend session | Raw backend's `destroy()` is called |
-| chat-coordinator-hooks-012 | session-teardown | `unmount()` on an owned, adapter-wrapped session | Both `ChatBackendAdapter.prototype.destroy` AND the raw backend's `destroy()` are called |
+| chat-coordinator-hooks-012 | session-teardown | `unmount()` on an owned, adapter-wrapped session | `ChatBackendAdapter.prototype.destroy` is called, and the adapter forwards `destroy()` to the raw backend, so both are called |
 | chat-coordinator-hooks-013 | session-say-landing-on-teardown | `say('a line long enough to still be mid-word')`, advance `100ms`, then `unmount()` | Timer count is `> 0` before unmount, `=== 0` immediately after |
 | chat-coordinator-hooks-014 | session-say-landing-on-teardown | Same `say(...)` call, `unmount()`, then `advanceTimersByTimeAsync(0)` | The line's promise, unsettled at `+100ms`, becomes settled after unmount |
 | chat-coordinator-hooks-015 | caret-metrics-geometry | `caretMetrics(input)` with `fontSize:'20px'` | `box.height === 13`, `box.width === 8` |
-| chat-coordinator-hooks-016 | caret-metrics-clamping | `caretMetrics(input)` with a very long value | `box.x` stays within `[rect.left, rect.right]` |
+| chat-coordinator-hooks-016 | caret-metrics-clamping | `caretMetrics(input)` with a very long value | `box.x` stays within `[rect.left, rect.right - box.width]` |
 | chat-coordinator-hooks-017 | caret-metrics-mirror | Any `caretMetrics(input)` call | `document.body.childElementCount` is unchanged after the call returns |
 | chat-coordinator-hooks-018 | caret-tracker-disabled | `useCaretTracker(ref, false, onMeasure)` | `onMeasure` is called with `null` immediately |
 | chat-coordinator-hooks-019 | caret-tracker-teardown | `useCaretTracker(ref, true, onMeasure)` then `unmount()` | `onMeasure` is called with `null` on unmount |
@@ -545,6 +549,7 @@ whatever host component consumes these hooks' return values.
 | chat-coordinator-hooks-070 | ritual-engage-on-element | `engageOn:` an element ref; `pointerdown` inside it (never a window pointer move or the give-up timeout, even after `60000ms`) | Engages only from the deliberate `pointerdown`/`focusin` |
 | chat-coordinator-hooks-071 | images-loaded-empty-set | `content:[]` | Returns `true` immediately (traced to source; no dedicated test file exists for this hook) |
 | chat-coordinator-hooks-072 | images-loaded-tracking, images-loaded-return-value | Two image items; one `Image` fires `onload`, the other fires `onerror` | Both are marked loaded; hook returns `true` (traced to source) |
+| chat-coordinator-hooks-073 | focus-reclaim-no-match | `useInputFocusReclaim(wrapperRef, true)` where no element in the wrapper matches the selector | No element is focused and nothing throws (traced to source; no dedicated test) |
 
 Vectors 001–014 are traced to `useChatSession.test.ts`; 015–017 to
 `useCaretTracker.test.ts`'s `caretMetrics` block; 018–020 to the same
@@ -683,11 +688,21 @@ flags, or persisted files involved anywhere in this source.
 | `useCaretTracker` | `enabled` | `boolean` | — | Whether tracking is active |
 | `useCaretTracker` | `onMeasure` | `(input: HTMLInputElement \| null) => void` | — | Reports the focused input, or `null` |
 | `useCaretTracker` | `selector` | `string` | `CHAT_INPUT_SELECTOR` (`'.pc-input'`) | CSS selector for the input |
+| `useBlockCursor` | `wrapperRef` | `RefObject<HTMLElement>` | — | Container searched for the input via `selector` |
+| `useBlockCursor` | `enabled` | `boolean` | — | Whether the block cursor is active (hides the native caret) |
 | `useBlockCursor` | `resetKey` | `unknown` | — | Value whose change forces a re-measure while focused |
+| `useBlockCursor` | `selector` | `string` | `CHAT_INPUT_SELECTOR` | CSS selector for the input |
+| `useCaretGaze` | `anchorRef` | `RefObject<HTMLElement>` | — | Element whose center is the gaze origin |
+| `useCaretGaze` | `onGaze` | `(gaze: GazeVector \| null) => void` | — | Receives the caret-driven gaze, or `null` |
 | `useCaretGaze` | `downBias` | `number` | `0.9` | Fixed `y` reported for caret-driven gaze |
 | `useCaretGaze` | `selector` | `string` | `CHAT_INPUT_SELECTOR` | CSS selector for the input |
 | `useMouseGaze` | `anchorRef` | `RefObject<HTMLElement>` | — | Element whose center is the gaze origin |
 | `useMouseGaze` | `enabled` | `boolean` | — | Whether the `pointermove` listener is installed |
+| `useMouseGaze` | `onGaze` | `(gaze: GazeVector) => void` | — | Receives the mouse-driven gaze |
+| `usePersonaGaze` | `wrapperRef` | `RefObject<HTMLElement>` | — | Container searched for the input |
+| `usePersonaGaze` | `engaged` | `boolean` | — | While `true`, caret gaze is forwarded and mouse gaze is silenced; while `false`, the reverse |
+| `usePersonaGaze` | `anchorRef` | `RefObject<HTMLElement>` | — | Element whose center is the gaze origin |
+| `usePersonaGaze` | `onGaze` | `(gaze: GazeVector \| null) => void` | — | Receives the arbitrated gaze |
 | `usePersonaMood` | `responding` / `composing` | `boolean` | — | Engagement inputs; `responding` takes priority |
 | `usePersonaMood` | `flightMoods` / `typingMoods` | `E[]` | — | Mood pools rotated while responding/composing |
 | `usePersonaMood` | `answerBeat` | `{mood: E, ms: number}` | none | Optional one-shot mood shown when `responding` ends |
@@ -727,20 +742,23 @@ ships the same string and localizes it in its own resource table.
 
 ## Accessibility Options
 
-Not applicable within the scope of these thirteen hooks specifically: none
-of them drives an unconditional, indefinite animation loop the way, for
-example, the separate avatar engine does. `useChatSizing`'s `pc-anim` class
+Not applicable to most of these thirteen hooks: none of them drives an
+unconditional, indefinite animation loop the way, for example, the
+[adhsdk.ingredient.avatar-animation-engine.avatar-engine](cookbook:bd101720-9fd3-4978-a0aa-7671e301e64b)
+does. One exception is a gap: `useChatSession`'s `say()` reveals text one
+simulated keystroke at a time (26–54ms apart) and does not consult
+`prefers-reduced-motion`. `useChatSizing`'s `pc-anim` class
 only enables a CSS height transition the host page's own stylesheet defines
 (this source contains no keyframe/tween of its own to gate), and
 `useConnectRitual`'s status-line stepping is text content, not motion. A
 grep of `hooks/` for `matchMedia`/`reduce`/`prefers`/`contrast` finds
-nothing, consistent with there being no motion here for such a check to
-guard. Separately, `useChatSession` passes a hardcoded `reducedMotion:false`
+nothing, so `say()`'s keystroke reveal is the one motion here that has no
+reduced-motion check. Separately, `useChatSession` passes a hardcoded `reducedMotion:false`
 into the `DefaultOrchestrator` display config on every construction; that
-field belongs to the orchestrator's own contract (covered by the
-`chat-coordinator-runtime` recipe) and is out of scope for these hooks'
-own behavior, so it is noted here rather than flagged as a gap of this
-recipe's sources.
+field belongs to the orchestrator's own contract (covered by
+[adhsdk.ingredient.chat.runtime](cookbook:98a0f3de-1489-465d-b1aa-017f4505d05d))
+and is out of scope for these hooks' own behavior, so it is noted here
+rather than flagged as a gap of this ingredient's sources.
 
 ## Feature Flags
 
@@ -802,13 +820,13 @@ none of these hooks writes to the console or any logging facility.
   `NSTrackingArea`/hover gesture recognizers for gaze, and Auto Layout
   constraint changes plus `CATransaction` animation blocks in place of the
   CSS-transition-driven `pc-anim` class.
-- **WinUI 3 (Windows)**: this is the reason this recipe exists — there is
-  no existing Windows port. `useChatSession`'s transport/orchestrator glue
-  maps to a coordinator class implementing `INotifyPropertyChanged`, backed
-  by an `ObservableCollection<ChatMessage>` for `messages`, with
-  `sendMessage`/`say`/`sayStream` as `async Task` methods that issue
-  requests through `HttpClient` and decode SSE/JSON payloads with
-  `System.Text.Json`; the pending-lines-landed-on-teardown pattern
+- **WinUI 3 (Windows)**: there is no existing Windows port. `useChatSession`'s
+  transport/orchestrator glue maps to a coordinator class implementing
+  `INotifyPropertyChanged`, backed by an `ObservableCollection<ChatMessage>`
+  for `messages`, with `sendMessage`/`say`/`sayStream` as `async Task`
+  methods that hand the work to an injected backend interface (transport,
+  including any `HttpClient` use or SSE decoding, stays entirely inside the
+  caller-supplied backend); the pending-lines-landed-on-teardown pattern
   (**session-say-landing-on-teardown**) maps to cancelling and awaiting
   outstanding `Task`s from the control's `Unloaded` handler rather than
   firing-and-forgetting them. `useConnectRitual`'s cadence and give-up
@@ -836,7 +854,7 @@ none of these hooks writes to the console or any logging facility.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/hooks/` | unverified |
+| web | `packages/web/packages/chat/src/hooks/` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -872,6 +890,9 @@ none of these hooks writes to the console or any logging facility.
 **Rationale**: keeps `useMouseGaze` a single-source, independently reusable and testable hook; the mutual-exclusion policy (mouse silenced while engaged, caret gated while disengaged) only makes sense to a caller that already knows about both sources.
 **Approved**: pending
 
+**Decision**: `sendMessage` swallows any rejection from `orchestrator.submitMessage` and returns no failure signal.
+**Rationale**: the orchestrator projects its own failure state into the transcript, so the hook adds no second channel; the cost is that a caller cannot tell "sent" from "silently failed to submit" from the hook's return value alone, which is why explicit-error-handling is partial.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -879,7 +900,7 @@ none of these hooks writes to the console or any logging facility.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
-| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | Reliability |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 Each hook owns exactly one concern (transport, caret geometry, gaze, mood,
@@ -900,8 +921,9 @@ explicit-error-handling is partial. Every timer this source starts is paired
 with a teardown (`useConnectRitual`'s step/beat timers, `usePersonaMood`'s
 rotation/beat timers, `useTransientEcho`'s hold timer, `useCaretTracker`'s
 rAF), every listener installed is removed, and in-flight `say`/`sayStream`
-lines are landed rather than abandoned on unmount, so fault-tolerance
-passes. Every DOM-touching hook that can't find its target (no selector
+lines are landed rather than abandoned on unmount, but fault-tolerance is
+partial: a `sayStream` call stalled on a generator that never yields can
+hang after unmount, and sends have no timeouts. Every DOM-touching hook that can't find its target (no selector
 match, no anchor, no wrapper) quietly reports an inert state instead of
 throwing, so a host that omits an optional ref or renders before the DOM is
 ready still functions — graceful-degradation passes. Accessibility,
@@ -915,5 +937,6 @@ persist nothing (see Privacy).
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Added the intro title, replaced recipe with ingredient, linked the runtime and avatar-engine ingredients, stated that the adapter forwards destroy() to the raw backend, tightened vector 016, added a focus-reclaim no-match requirement and vector, filled the configuration gaps, recorded the swallowed-rejection decision and the say() reduced-motion gap, corrected the WinUI 3 note, and marked fault-tolerance partial. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Trimmed summary <=160c; fixed caret-gaze input-width normalization; corrected sayStream teardown. |
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation from the thirteen hook sources in `@adh-sdk/chat`'s `src/hooks/` and their test suites; documents the hardcoded English apology string on `useChatSession`'s legacy-backend error path under Localization. |

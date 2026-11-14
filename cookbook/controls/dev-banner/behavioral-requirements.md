@@ -4,5 +4,6 @@
 - **default-position**: Component MUST default to `position: 'fixed'` when no `position` prop is provided.
 - **base-class**: Component MUST always apply the base class `awt-dev-banner` to the container element, in addition to the position class and any `className` prop.
 - **custom-class**: Component MUST accept and apply a `className` prop, which is appended to the component's CSS classes.
-- **hidden-from-at**: Component MUST set `aria-hidden="true"` on the root element.
+- **hidden-from-at**: Component MUST set `aria-hidden="true"` on the root element. This requirement is provisional until the Design Decision on hiding the banner from assistive technology is approved.
+- **non-interactive**: Component MUST NOT intercept pointer events: the container's CSS sets `pointer-events: none`.
 

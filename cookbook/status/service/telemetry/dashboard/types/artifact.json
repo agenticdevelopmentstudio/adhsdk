@@ -4,7 +4,7 @@
     "id": "f06a7f7a-1b36-4dfc-a17d-71d20d576155",
     "title": "Dashboard Wire Types",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,17 +23,15 @@
       "dashboard",
       "wire-contract"
     ],
-    "depends-on": [],
-    "related": [],
-    "references": [
-      "packages/web/packages/status-server/src/telemetry/dashboard/types.ts (adhsdk)",
-      "packages/web/packages/status-web/src/telemetry/dashboard-types-parity.test.ts (adhsdk)",
-      "packages/web/packages/status-server/src/telemetry/dashboard/dashboard-set.ts (adhsdk)"
+    "depends-on": [
+      "af0bacb9-bc1f-4773-85f5-35e33ae590ab"
     ],
+    "related": [],
+    "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a1454c27b8c66419",
+  "synced": "a4b065528621e7e6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

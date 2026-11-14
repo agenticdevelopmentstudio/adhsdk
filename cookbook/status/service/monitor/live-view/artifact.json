@@ -4,7 +4,7 @@
     "id": "1f17d751-d49c-4f0a-89d9-20c17b9dcee4",
     "title": "Status Server Live View Verdicts",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -17,14 +17,24 @@
       "typescript",
       "web"
     ],
-    "tags": [],
+    "tags": [
+      "status-server",
+      "freshness",
+      "deploys",
+      "monitoring"
+    ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "add8a34c-a40d-417e-9ee8-aec108e73474",
+      "2c8b4572-3851-4111-97d6-a42792fb7150",
+      "ac044c52-64bb-4e4f-b0d8-56dd88ab7d47",
+      "9d2d3132-0853-4e3a-8e81-503356e4585d"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e8710f74b77f2793",
+  "synced": "3fc6930f0384c338",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

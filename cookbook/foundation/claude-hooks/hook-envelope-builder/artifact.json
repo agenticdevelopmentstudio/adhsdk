@@ -4,7 +4,7 @@
     "id": "9e4aba28-ae2b-4733-b6a5-62e9ad5c7a19",
     "title": "Hook Envelope Builder",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,16 +24,19 @@
       "wire-format",
       "cache"
     ],
-    "depends-on": [],
-    "related": [],
-    "references": [
-      "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookEnvelopeBuilder.swift (adhsdk)"
+    "depends-on": [
+      "826153e3-cae8-4917-a1d3-c298a54ab558",
+      "fa0fce58-5e17-41da-b3eb-0d2de9e89b46",
+      "8ec76506-7cb3-4aca-a9a0-07f014500e7e",
+      "a8bfcd0b-0759-4801-aaf6-a14d7aa3fe49"
     ],
+    "related": [],
+    "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "859cc715a11cf7b5",
+  "synced": "b910cdb85d180c70",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

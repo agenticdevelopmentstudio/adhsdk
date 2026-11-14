@@ -15,7 +15,7 @@
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | partial | reliability |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | reliability |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | reliability |
-| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | reliability |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
@@ -38,7 +38,7 @@ refresh-and-retry path is a real recovery mechanism, but transport-level
 failures (timeouts, connection errors) are not caught or retried anywhere
 in `ADHClient.swift` / `ADHClient+Raw.swift` — they propagate to the caller.
 `error-recovery` is partial for the same reason: recovery is bounded to
-that one 401 path. `idempotent-operations` is partial: the automatic
+that one 401 path. `timeout-handling` is partial: neither file sets or catches a timeout, so a timeout is whatever the injected transport does and propagates to the caller. `idempotent-operations` is partial: the automatic
 replay-on-401 resends the exact original request, including its body, once
 with a new bearer, for any verb — with no idempotency key, assuming the
 server never partially processed the 401'd attempt. `unit-test-coverage` is
@@ -47,6 +47,6 @@ partial: `ADHClientWiringTests.swift`, `RawJSONTests.swift`, and
 construction, the factories, typed round-trips, and the raw happy/error
 paths well, but several paths are untested in the given sources — header-name
 rejection, response-header collapse, an oversized raw response body, and
-the daemon-session `port` override (Conformance Test Vectors 008, 013, 017,
-018, none of which cite an existing test).
+the daemon-session `port` override. Conformance Test Vectors 001, 008, 013, 014,
+016, 017, 018, 021, 022, 024, 025, 026, 027 and 028 cite no existing test.
 

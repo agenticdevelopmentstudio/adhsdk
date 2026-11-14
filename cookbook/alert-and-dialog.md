@@ -2,11 +2,11 @@
 id: 550f00f7-bfb2-415e-9b15-bd5dce015500
 title: "Alert & Dialog System"
 type: recipe
-version: 1.2.3
+version: 1.2.4
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -24,7 +24,9 @@ ingredients:
   - f3c25236-d72f-4a7b-839a-b7f335b3acd0
 depends-on: []
 related: []
-references: []
+references:
+  - https://base-ui.com/react/components/dialog
+  - https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
 approved-by: ""
 approved-date: ""
 ---
@@ -36,10 +38,8 @@ approved-date: ""
 The canonical styled alert / confirm / modal-dialog treatment for ADH. It is
 realized by evolving `@adh-sdk/ui`'s existing `AlertModal`
 (`packages/web/packages/ui/src/components/alert-modal.tsx`) **backward-compatibly** —
-current call-sites (`LoginCard`, `ProviderLinkHandler`, `SsoCallback`, admin
-`authentication/page.tsx`, tests) keep working. Larger modal dialogs (e.g. the hub
-invitation modal) reuse the same header + footer-button system on top of the base
-`Dialog`.
+existing call-sites and tests keep working. Larger modal dialogs reuse the same
+header + footer-button system on top of the base `Dialog`.
 
 It is one controlled component for two common shapes — **Alert** (single action,
 full-width gold `[ OK ]`) and **Confirm** (two actions `[ Cancel ][ OK ]`, equal
@@ -49,23 +49,25 @@ rules are exposed for composed dialogs so everything looks uniform.
 
 ## Ingredients
 
-| Name | Domain | Role | Required | Configuration |
+| Name | rdid | Role | Required | Configuration |
 |---|---|---|---|---|
 | Dialog | [adhsdk.ingredient.ui.components.overlays.dialog](cookbook:972be0d0-a9f5-45cd-a23b-c8329410b3d1) | Base overlay / focus-trap / portal that the system is built on | yes | reused unchanged |
-| Button | [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0) | Footer action + cancel buttons | yes | `variant="default"` (gold action), `variant="ghost"`/`outline` (cancel), red for destructive |
+| Button | [adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0) | Footer action + cancel buttons | yes | `variant="default"` (gold action), `variant="ghost"`/`outline` (cancel), `variant="destructive"` for the destructive action |
 
 ## Integration Requirements
 
+- **confirm-mode-trigger**: The modal MUST be in confirm mode (two buttons) exactly when `cancelLabel` is provided (non-null), and in alert mode (one button) otherwise.
 - **full-width-single-action**: With one button, the action button MUST be full width of the content area and gold (`Button variant="default"`).
-- **equal-width-when-narrow**: With two buttons, when the row is too narrow for both buttons at their natural width, the underlying `DialogActions` default `auto` layout MUST give each button up to an equal share of the row, capped at its own natural width (`flex-1 max-w-max`), with any share a button doesn't use falling to the other button — yielding an equal-width `[ Cancel ][ OK ]` split, Cancel `ghost`/`outline` and OK gold, only when neither button's natural width exceeds that share.
+- **equal-width-when-narrow**: With two buttons, when the row is too narrow for both buttons at their natural width, each button MUST get up to an equal share of the row, capped at its own natural width, and any share a button does not use MUST fall to the other button. Cancel is `ghost`/`outline` and OK is gold. (Implementation note: the `DialogActions` default `auto` layout does this with `flex-1 max-w-max`.)
 - **natural-width-when-wide**: Once the row has room for both buttons at their natural width, the buttons MUST render at natural width and right-justify (`justify-end`), Cancel then OK; no button is ever stretched past its own natural width.
 - **order-cancel-then-action**: The order MUST always be Cancel (left) then the action (right).
 - **keyboard-default**: Under `keyboard:"default"`, Escape MUST dismiss via cancel if a cancel button exists (else via the single action), and Enter MUST activate the action.
-- **keyboard-none**: Under `keyboard:"none"`, the modal MUST honor no keyboard shortcuts and be dismissable only by clicking a button (or the close affordance if shown).
+- **keyboard-none**: Under `keyboard:"none"`, the modal MUST honor no keyboard shortcuts: neither Enter nor Escape acts. Pointer dismissal (backdrop click or the close affordance, if shown) is not a keyboard shortcut and still routes to cancel (confirm mode) or confirm (alert mode).
+- **escape-routing**: The modal MUST route Escape through the base dialog's `onOpenChange` handler, using its `reason` value `"escape-key"`: ignore it when keyboard shortcuts are off (`"none"` or `destructive`) or when `busy`, otherwise route it to cancel (confirm mode) or confirm (alert mode). The window key listener MUST handle only keys other than Escape in the key map, so no key fires twice.
 - **keyboard-explicit-map**: Under an explicit key→action map, non-Escape keys MUST act only if listed, mapped to the named button (a key mapped to a button that is not present MUST be ignored). Escape MUST additionally always dismiss via cancel if a cancel button exists (else via the single action) whenever the keyboard policy is not `"none"`, regardless of whether Escape is listed in the map or mapped to a different action — see Edge Cases.
-- **destructive-forces-none**: When `destructive` is true, the action button MUST render red (`apt-red`) and the keyboard policy MUST be forced to `"none"` regardless of `keyboard`.
-- **block-dismissal-when-busy**: When `busy` is true, the component MUST block dismissal and replace the buttons with a spinner.
-- **be-accessible-dialog**: The surface MUST be `role="dialog"` with `aria-modal`, labelled by the title and described by the body; initial focus MUST be the action button under `"default"` (the first field for composed form dialogs); focus MUST be trapped while open and restored to the opener on close.
+- **destructive-forces-none**: When `destructive` is true, the action button MUST render red (`apt-red`) using the `Button` `variant="destructive"` (in alert mode directly, in confirm mode through `DialogActions` `destructive`) and the keyboard policy MUST be forced to `"none"` regardless of `keyboard`.
+- **block-dismissal-when-busy**: When `busy` is true, the component MUST block every dismissal path (Escape, backdrop click and the close affordance, by ignoring them in `onOpenChange`) and replace the buttons with a spinner.
+- **be-accessible-dialog**: The surface MUST be `role="dialog"` with `aria-modal`, labelled by the title and described by the body; initial focus MUST be the action button in confirm mode regardless of the keyboard policy (the first field for composed form dialogs), except that a `destructive` confirm MUST focus Cancel so Enter cannot land on the delete button; focus MUST be trapped while open and restored to the opener on close.
 
 ## Layout
 
@@ -114,6 +116,7 @@ Wide dialog (content wide enough that both buttons fit at their natural width �
 | confirm / cancel intent | Key handler + buttons | Caller (`onConfirm` / `onCancel`) | Up | Callbacks |
 
 ## Integration Test Vectors
+Verify the visual vectors with Playwright in the UI showcase app: render each variant and exercise the keyboard flows at 375, 768 and 1440 px widths. Vectors T9 to T11 are derived from the source and have no test behind them yet.
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
@@ -125,40 +128,65 @@ Wide dialog (content wide enough that both buttons fit at their natural width �
 | T6 | keyboard-explicit-map | `{ Enter: "confirm" }`, then Escape | Enter→confirm; unlisted keys ignored; Escape still dismisses via cancel (or the action in alert mode) despite not being listed |
 | T7 | destructive-forces-none | `destructive: true` | action red; no keyboard shortcuts |
 | T8 | block-dismissal-when-busy | `busy: true` | dismissal blocked; spinner replaces buttons |
-
+| T9 | keyboard-explicit-map, escape-routing | `{ Escape: "confirm" }` in confirm mode, press Escape | `onCancel` fires once; `onConfirm` does not (Escape is routed by `onOpenChange`, not the map) |
+| T10 | keyboard-none, escape-routing | `keyboard:"none"`, press Escape, then click the backdrop | Escape does nothing; the backdrop click fires `onCancel` (confirm mode) or `onConfirm` (alert mode) once |
+| T11 | destructive-forces-none, confirm-mode-trigger | `destructive: true` with no `cancelLabel` | one red button (`variant="destructive"`); Escape and Enter do nothing; backdrop click fires `onConfirm` |
+| T12 | be-accessible-dialog | `destructive: true` with `cancelLabel` | Cancel has initial focus; Enter does not activate the delete button |
 ## Edge Cases
 
-- Equal-width vs right-justified is governed by whether the row is too narrow for both buttons at their natural width, not by a fixed `2 × Wmax` multiple of the larger button; when the two natural widths differ enough, the narrower button can render at its own (smaller) natural width while the wider one absorbs the remaining share, capped at its own natural width, rather than both snapping to an equal split.
+- When the two natural widths differ enough, the narrower button renders at its own natural width and the wider one absorbs the remaining share, capped at its own natural width, rather than both snapping to an equal split.
 - A key mapped to a button that is not rendered is ignored.
-- Escape always dismisses via cancel (or, in alert mode, via the action) whenever the keyboard policy is not `"none"`, even when the explicit map omits Escape or maps it to a different action — Base UI's built-in escape-key handling is independent of the key map and cannot be overridden by it.
+- Escape always dismisses via cancel (or, in alert mode, via the action) whenever the keyboard policy is not `"none"` and the modal is not `busy`, even when the explicit map omits Escape or maps it to a different action, because Escape is routed by `onOpenChange` (`escape-routing`) and not by the key map.
 - `destructive` overrides any supplied `keyboard` value (forced `"none"`) so a delete is always an explicit click.
 - `busy` blocks all dismissal paths and hides the buttons behind a spinner.
 
 ## Platform Notes
 
-- **React / Web (TypeScript):** Evolve `packages/web/packages/ui/src/components/alert-modal.tsx`; reuse `packages/web/packages/ui/src/components/dialog.tsx` (Base UI) unchanged. Extend (not replace) `packages/web/packages/ui/src/__tests__/alertModal.test.tsx`. Demo in the UI showcase app (a consumer of this package, outside this repo). Reused by the hub `InvitationModal` (header + footer-button system).
-- **Responsive:** Verify via Playwright (ui-showcase) — each variant rendered, keyboard flows exercised, at 375 / 768 / 1440.
+- **React / Web (TypeScript):** Evolve `packages/web/packages/ui/src/components/alert-modal.tsx`; reuse `packages/web/packages/ui/src/components/dialog.tsx` (Base UI) unchanged. Extend (not replace) `packages/web/packages/ui/src/__tests__/alertModal.test.tsx`. Demo in the UI showcase app (a consumer of this package, outside this repo). The `equal-width-when-narrow` rule is realized by the `DialogActions` default `auto` layout (`flex-1 max-w-max`).
 - **SwiftUI / Compose:** Not applicable — web-only shared system.
+- **AppKit / UIKit:** Not applicable to this web-only system. A port would use `NSAlert` (AppKit) or `UIAlertController` (UIKit), which supply the focus trap, the button order and the Escape handling; map `destructive` to the platform's destructive button style and `confirm-mode-trigger` to adding a second button.
+- **WinUI 3:** Port to a `ContentDialog`: `PrimaryButtonText` is the action and `CloseButtonText` is Cancel, `DefaultButton` set to `Close` for a destructive dialog (the focus rule), `IsPrimaryButtonEnabled` and `ProgressRing` for `busy`, and a `PreviewKeyDown` handler for an explicit key map. `ContentDialog` handles Escape itself, so the `Closing` event is where to apply `escape-routing`.
 
-API. Existing props (kept): `open`, `title`, `description`, `tone` (`"info" | "success" | "error"`), `confirmLabel` (default `"OK"`), `confirmVariant`, `onConfirm`, `cancelLabel` (presence ⇒ confirm mode), `onCancel`, `busy`. New props:
+API. Props of `AlertModal`:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `open` | `boolean` | none (required) | Controlled visibility. |
+| `title` | `string` | none (required) | Heading line. |
+| `description` | `ReactNode` | none | Body copy. |
+| `tone` | `"info" \| "success" \| "error"` | `"info"` | Leading icon and accent. |
+| `confirmLabel` | `string` | `"OK"` | Action button label. |
+| `confirmVariant` | `Button` variant | `"default"` | Variant of the action button. |
+| `onConfirm` | `() => void` | none (required) | Action. Also fired on dismissal in alert mode. |
+| `cancelLabel` | `string` | none | Presence turns on confirm mode (`confirm-mode-trigger`). |
+| `onCancel` | `() => void` | none | Cancel action. Also fired on dismissal in confirm mode. |
+| `busy` | `boolean` | `false` | Replaces the buttons with a spinner and blocks dismissal. |
+| `keyboard` | `"default" \| "none" \| Partial<Record<string, "confirm" \| "cancel">>` | `"default"` | Keyboard policy: `"default"` (see keyboard rules), `"none"` (no shortcuts) or an explicit key to action map. |
+| `destructive` | `boolean` | `false` | Action button red (`apt-red`); forces keyboard `"none"`. |
 
 ```ts
 type KeyAction = "confirm" | "cancel";
 
 interface AlertModalKeyboardAdds {
-  /** "default" (see keyboard rules) | "none" (no shortcuts) | explicit key→action map. */
+  /** "default" (see keyboard rules) | "none" (no shortcuts) | explicit key to action map. */
   keyboard?: "default" | "none" | Partial<Record<string, KeyAction>>;
   /** Destructive: action button red (apt-red); forces keyboard "none". */
   destructive?: boolean;
 }
 ```
-
 ## Design Decisions
 
-- **Decision**: Evolve the existing `AlertModal` backward-compatibly rather than introduce a new component. **Rationale**: Defaults preserve today's behavior (`keyboard:"default"`, `destructive:false`); existing call-sites that pass only `tone`/`confirmLabel`/`cancelLabel`/`onConfirm`/`onCancel` are unaffected in API while gaining the standardized header + button layout. Smoke-check each known call-site during implementation — `LoginCard`, `ProviderLinkHandler`, `SsoCallback`, and admin `authentication/page.tsx` — so the visual/keyboard change is intended, not a regression.
-- **Decision**: Destructive mode forces no keyboard shortcuts. **Rationale**: A destructive action must be a deliberate, explicit click — never Enter-to-confirm.
-- **Decision**: The header + footer-button system is exposed for composed dialogs. **Rationale**: Larger dialogs (e.g. the invitation modal) stay visually uniform with alerts/confirms.
+**Decision**: Evolve the existing `AlertModal` backward-compatibly rather than introduce a new component.
+**Rationale**: Defaults preserve today's behavior (`keyboard:"default"`, `destructive:false`), so call-sites that pass only `tone`/`confirmLabel`/`cancelLabel`/`onConfirm`/`onCancel` are unaffected in API while gaining the standardized header and button layout. Smoke-check every existing call-site during implementation so the visual and keyboard change is intended, not a regression.
+**Approved**: pending
 
+**Decision**: Destructive mode forces no keyboard shortcuts.
+**Rationale**: A destructive action must be a deliberate, explicit click, never Enter-to-confirm.
+**Approved**: pending
+
+**Decision**: The header + footer-button system is exposed for composed dialogs.
+**Rationale**: Larger dialogs stay visually uniform with alerts and confirms.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -184,3 +212,4 @@ interface AlertModalKeyboardAdds {
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
 | 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: status draft to review after lint pass. |
 | 1.2.3 | 2026-09-25 | Mike Fullerton | Fixed keyboard-explicit-map requirement (Escape override) and equal/natural-width threshold requirements plus test vectors. |
+| 1.2.4 | 2026-11-14 | Mike Fullerton | Added confirm-mode and Escape-routing requirements, corrected the Escape edge case, moved consumer coupling out, added Design Decisions, API table and vectors T9 to T12. |

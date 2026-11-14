@@ -1,7 +1,7 @@
 
 - **Empty string input**: When `value` is an empty string, the component MUST render the input element with an empty value and display any provided `placeholder` text.
-- **Null or undefined label**: When `label` is `null`, `undefined`, or falsy, no `<label>` element is rendered.
-- **Null or undefined hint**: When `hint` is `null`, `undefined`, or falsy, no hint `<p>` element is rendered.
+- **Null or undefined label**: When `label` is `null`, `undefined`, `''`, or `false`, no `<label>` element is rendered. A numeric `0` is not suppressed: `label && …` evaluates to `0`, which React renders as the literal text "0" with no `<label>` element.
+- **Null or undefined hint**: When `hint` is `null`, `undefined`, `''`, or `false`, no hint `<p>` element is rendered. A numeric `0` is not suppressed: `hint && …` evaluates to `0`, which React renders as the literal text "0" with no hint `<p>` element.
 - **Large text input**: When `value` contains many characters (e.g., >10,000), the component MUST display all of them without truncation; overflow behavior (scrolling, wrapping) is controlled by CSS.
 - **Multiline with many rows**: When `multiline` is `true` and `value` contains many lines, the textarea MUST display all lines; it has a fixed `rows={4}` and SHOULD scroll vertically if content exceeds visible height (CSS-controlled).
 - **Rapid onChange calls**: When the user types quickly, `onChange` callbacks MUST be invoked in sequence for each keystroke; no debouncing or throttling is performed by the component.

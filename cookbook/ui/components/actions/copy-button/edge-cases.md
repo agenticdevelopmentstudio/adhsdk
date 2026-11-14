@@ -11,4 +11,6 @@
   there is no state update after unmount (T10).
 - The text is resolved lazily, so a stale render never copies stale data — the
   payload always reflects state at the instant of the click.
-
+- A consumer `className` that conflicts with a built-in class (for example `size-8`
+  against `size-6`) wins: `cn()` runs tailwind-merge, so the built-in class is
+  dropped (`classname-overrides-default-size`, T11).

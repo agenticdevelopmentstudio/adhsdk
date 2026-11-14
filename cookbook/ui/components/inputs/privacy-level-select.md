@@ -2,11 +2,11 @@
 id: d0cf136a-26ed-4a69-a440-4d056795601e
 title: "Privacy Level Select"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -56,8 +56,7 @@ Privacy Level Select is a controlled form component that allows users to choose 
 - **apply-disabled-styling**: Component MUST render the trigger with reduced opacity (50%) and a `not-allowed` cursor when disabled.
 - **focus-listbox-on-open**: Component MUST move focus to the internal listbox surface when the popover opens.
 - **reset-cursor-to-value-on-open**: Component MUST set the keyboard cursor to the currently selected level when the popover opens.
-- **initialize-null-cursor-to-first-option**: The `move` function seeds a null cursor at index `0`, then applies the arrow's delta (`Math.min(navLevels.length - 1, Math.max(0, idx + delta))`), so if `move` ever ran while `cursor` was still `null`, ArrowDown would move it to the second navigable option (`hub`), and only ArrowUp would move it to the first (`only-me`) — not both directions landing on `only-me`. This path is unreachable through the UI: **reset-cursor-to-value-on-open** sets `cursor` to `value` in the same synchronous handler that sets `open` to `true`, and the listbox surface this component's keydown handler is attached to is unmounted while the popover is closed (the Popover this component composes is the full-featured variant, whose `PopoverContent` MUST be removed from the DOM when closed — see requirements/hide-on-close-unmount ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d))) — so there is no closed-popover state in which a keyboard user can focus the listbox and press an arrow key with `cursor` still `null`.
-- **read-value-prop**: Component MUST use the `value` prop to determine the current selection and update all visual and focus indicators when `value` changes.
+- **read-value-prop**: Component MUST use the `value` prop to determine the current selection and update the trigger label and icon and the check mark whenever `value` changes. The keyboard cursor (highlight) is not tied to `value` after open: it is reset to `value` only when the popover opens (see **reset-cursor-to-value-on-open**), so an external `value` change while the popover is open leaves the cursor where it was.
 - **call-onchange-with-selected-level**: Component MUST call the `onChange` callback with a `PrivacyLevel` value ('only-me', 'hub', or 'public') when the user commits a selection.
 - **support-aria-label**: Component MUST accept an `ariaLabel` prop and apply it to the trigger and listbox for accessible naming.
 - **apply-aria-haspopup**: Component MUST set `aria-haspopup="listbox"` on the trigger to indicate a listbox menu is available.
@@ -115,7 +114,7 @@ Privacy Level Select is a controlled form component that allows users to choose 
   
 - **Option Icons**:
   - All icons: 14px (size-[14px])
-  - Padding-top: 4px (mt-0.5) to optical center align with text baseline
+  - Margin-top: 2px (mt-0.5) to optical center align with text baseline
   - Label icon and privacy icon: `apt-text-muted` color
   - Check icon: gold (`apt-gold`) when checked, otherwise opacity-0
   - Coming-soon option: all icons and text at 40% opacity
@@ -171,8 +170,7 @@ Privacy Level Select is a controlled form component that allows users to choose 
 | privacy-016 | apply-disabled-styling | disabled={true} | Trigger renders with opacity 50%, cursor not-allowed |
 | privacy-017 | focus-listbox-on-open | User opens popover via trigger click | Listbox surface receives focus (can accept keyboard input immediately) |
 | privacy-018 | reset-cursor-to-value-on-open | value="public", user clicks trigger to open | Cursor initializes to "public" option (keyboard can select immediately without navigation) |
-| privacy-019 | initialize-null-cursor-to-first-option | Cursor forced to null, `move(1)` (ArrowDown) invoked directly against the null-cursor branch | Cursor becomes the second option ("hub"), not "only-me"; `move(-1)` (ArrowUp) from the same null cursor becomes the first option ("only-me") instead — this branch is unreachable through the UI (see Edge Cases) |
-| privacy-020 | read-value-prop | value prop changes from "only-me" to "public" externally | Trigger updates to show "Public"; all visual indicators update |
+| privacy-020 | read-value-prop | value prop changes from "only-me" to "public" externally while the popover is closed, then it is opened | Trigger shows "Public" with the Globe icon; on open the "Public" option has `aria-selected="true"` and the check icon, the other options `aria-selected="false"`; `aria-activedescendant` points to the "Public" option |
 | privacy-021 | call-onchange-with-selected-level | User clicks "hub" option | onChange callback invoked with argument "hub" (string, not object) |
 | privacy-022 | support-aria-label | ariaLabel="Profile visibility", rendered | Trigger and listbox both have aria-label="Profile visibility" |
 | privacy-023 | apply-aria-haspopup | Component rendered | Trigger element has aria-haspopup="listbox" |
@@ -185,13 +183,17 @@ Privacy Level Select is a controlled form component that allows users to choose 
 | privacy-030 | support-custom-class-name | className="custom-class" prop passed | Trigger element includes custom-class in its className |
 | privacy-031 | prevent-default-on-trigger-keys | Trigger focused, user presses ArrowDown to open | Browser default behavior is prevented; page does not scroll |
 | privacy-032 | prevent-default-on-navigation-keys | Popover open, user presses ArrowUp | Browser default behavior is prevented; page does not scroll |
-| privacy-033 | use-unique-option-ids | Component renders multiple times in a page | Each option ID is unique across all component instances |
+| privacy-033 | use-unique-option-ids | Two instances rendered on one page, both opened | Every option `id` is unique across the page (each of the form `<useId>-opt-only_me`, `-opt-hub`, `-opt-public`); each listbox's `aria-activedescendant` resolves to an option inside that same listbox |
 | privacy-034 | truncate-trigger-text | Trigger width constrained, long label text | Label text truncates with an ellipsis; the icon does not shrink and remains fully visible |
-
+| privacy-035 | read-value-prop | popover open with cursor on "only-me" (value "only-me"), then ArrowDown to "hub", then `value` changes externally to "public" | Trigger shows "Public" and the check moves to "Public"; `aria-activedescendant` still points to the "hub" option (cursor not moved) |
+| privacy-036 | prevent-default-on-navigation-keys | Popover open, user presses Escape | The keydown's default is prevented; popover closes; no `onChange` call |
+| privacy-037 | respect-disabled-prop | Popover open, then `disabled` becomes `true` | Popover stays open (see the disabled-while-open Design Decision); trigger renders at 50% opacity with cursor `not-allowed` |
+| privacy-038 | open-popover-with-trigger-keys | Trigger focused, popover closed, user presses Enter | Popover opens; `aria-expanded="true"`; listbox receives focus; cursor on the current value |
+| privacy-039 | select-with-enter-or-space | Popover open, cursor on "hub", user presses Space | Popover closes; `onChange` called once with "hub" |
 ## Edge Cases
 
 - **Null/undefined value**: The component assumes `value` is always a valid `PrivacyLevel` ('only-me', 'hub', or 'public'). No guard against undefined or invalid values is present; the caller MUST provide a valid initial value.
-- **Rapid onChange calls**: If parent rapidly updates `value` while the popover is open, the component updates the cursor and trigger display immediately without additional validation.
+- **Rapid onChange calls**: If parent rapidly updates `value` while the popover is open, the component updates the trigger display and the check mark immediately without additional validation; the cursor is not moved (see **read-value-prop**).
 - **Disabled to enabled transition**: When `disabled` prop changes from `true` to `false`, the component becomes interactive immediately; the popover will open on next trigger click without resetting internal state.
 - **Rapid open/close**: If the user rapidly toggles the popover (click trigger, click again), state changes propagate correctly; cursor is reset to current value each time the popover opens.
 - **Focus loss before commit**: If the user navigates with arrow keys, then clicks outside the popover before selecting an option, the popover closes without calling `onChange` and the cursor state is discarded.
@@ -201,7 +203,7 @@ Privacy Level Select is a controlled form component that allows users to choose 
 - **Disabled option interaction**: The "Team / Org" option is not keyboard-navigable (arrow keys skip it) and has `role="option"` + `aria-disabled="true"` but is a `<div>`, not a button, so it is not clickable (no onClick handler, no pointer events enabled).
 - **Hover during keyboard navigation**: If the user navigates with arrow keys while hovering, the highlight state is shared (same `apt-highlight/15` background); the visual result is the same whether cursor or hover caused it.
 - **Window resize during popover open**: The Popover component (not this component) handles repositioning; this component makes no special handling.
-- **Keyboard navigation null cursor recovery**: The `move` function's null-cursor branch seeds index 0 and then applies the delta, so a hypothetical ArrowDown with a null cursor would land on index 1 ("hub"), and ArrowUp would land on index 0 ("only-me") — not "only-me" for both directions. This branch cannot run through the UI: the listbox surface only exists while the popover is open, and `cursor` is already `value` (never `null`) by the time the popover opens, set in the same synchronous update that sets `open` to `true` — see **initialize-null-cursor-to-first-option**.
+- **Keyboard navigation null cursor recovery**: Unreachable; see the Design Decision on the null-cursor branch.
 
 ## Configuration
 
@@ -219,8 +221,8 @@ The source hardcodes every label, description, and badge string below as English
 |-----------|-------------|---------|
 | `privacy_level_select.option.only_me.label` | Only me | Trigger and option label for the `only-me` level |
 | `privacy_level_select.option.only_me.description` | Visible to you alone | Option description text |
-| `privacy_level_select.option.hub.label` | Hub members | Trigger and option label for the `hub` level |
-| `privacy_level_select.option.hub.description` | Visible to everyone on the Hub | Option description text |
+| `privacy_level_select.option.hub.label` | {hub_name} members | Trigger and option label for the `hub` level; the source hardcodes "Hub members" (see the fixed-options Design Decision) |
+| `privacy_level_select.option.hub.description` | Visible to everyone on {hub_name} | Option description text; the source hardcodes "Visible to everyone on the Hub" |
 | `privacy_level_select.option.public.label` | Public | Trigger and option label for the `public` level |
 | `privacy_level_select.option.public.description` | Visible to anyone on the internet | Option description text |
 | `privacy_level_select.option.team_org.label` | Team / Org | Disabled "coming soon" option label |
@@ -256,6 +258,7 @@ Not applicable: the component does not emit analytics events. Event tracking (se
 Not applicable: the component has no logging. Console or error tracking is the responsibility of the parent application.
 
 ## Platform Notes
+The SwiftUI, Compose, AppKit / UIKit and WinUI 3 notes below are port guidance only; this ingredient is implemented for TypeScript and web.
 
 - **SwiftUI**: A SwiftUI implementation would use `Menu` for the trigger/popover pairing, with one `Button` per option whose label is a custom `HStack` (a privacy-icon `Image`, a `VStack` of label + description `Text`, and a conditional checkmark `Image(systemName: "checkmark")`). The disabled "Team / Org" row uses `.disabled(true)` with the "Coming soon" text appended inline. `Menu` supplies its own keyboard handling (arrow-key traversal, Return to select, Escape to dismiss) wherever a hardware keyboard is present, so none of this component's key-event code carries over; VoiceOver announces each `Button` the way the ARIA `option`/`listbox` roles do on web.
 - **Compose**: A Jetpack Compose implementation would use Material3's `ExposedDropdownMenuBox` for the trigger together with `DropdownMenu` / `DropdownMenuItem` for the option list — `leadingIcon` for the privacy icon, a `Column` of label + description `Text` composables for `text`, and a `trailingIcon` checkmark when selected. The disabled "Team / Org" item sets `enabled = false` on its `DropdownMenuItem` and appends the "Coming soon" text. `DropdownMenu` provides its own focus and directional-key handling; there is no separate "listbox" role to set — Compose's semantics tree exposes selection instead via `Modifier.semantics { selected = ... }`.
@@ -267,7 +270,7 @@ Not applicable: the component has no logging. Console or error tracking is the r
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/privacy-level-select.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/privacy-level-select.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -284,15 +287,15 @@ Not applicable: the component has no logging. Console or error tracking is the r
   **Approved**: pending
 
 - **Decision**: If `disabled` becomes `true` while the popover is already open, the popover is left open; closing it on that transition was not implemented.
-  **Rationale**: This is the source's actual behavior. Handling the disabled-while-open transition was left to the parent to manage (for example, by also controlling `open` externally) rather than building it into the component.
+  **Rationale**: This is the source's actual behavior. The component has no `open` prop, so a caller cannot close it from outside today; handling the disabled-while-open transition would need a change to the component.
   **Approved**: pending
 
 - **Decision**: Hovered and keyboard-focused options share the same highlight style (`apt-highlight/15`).
   **Rationale**: Keeps a single visual rule instead of two, and communicates that both interaction modes have the same effect; a user cannot tell which one produced the highlight.
   **Approved**: pending
 
-- **Decision**: The `move` function's null-cursor branch is unreachable dead code, not a real keyboard-navigation contract: `cursor` is always `value` (never `null`) by the time the listbox surface can receive a keydown, and its direction math (seed at index 0, then apply the delta) would send ArrowDown to `hub` and ArrowUp to `only-me` if it ever ran, not both to `only-me`.
-  **Rationale**: **reset-cursor-to-value-on-open** sets `cursor` to `value` in the same synchronous update that opens the popover, and the popover composes the full-featured Popover variant, whose listbox is unmounted while closed — so there is no reachable state where the listbox is focusable and `cursor` is still `null`. The branch is left in place as a defensive fallback rather than removed. See **initialize-null-cursor-to-first-option**.
+- **Decision**: The `move` function's null-cursor branch is unreachable dead code, not a real keyboard-navigation contract. If it ever ran with a `null` cursor it would seed index 0 and then apply the delta (`Math.min(navLevels.length - 1, Math.max(0, idx + delta))`), sending ArrowDown to `hub` and ArrowUp to `only-me`, not both to `only-me`.
+  **Rationale**: `cursor` is always `value` (never `null`) by the time the listbox surface can receive a keydown: opening sets `cursor` to `value` in the same synchronous update that sets `open` to `true` (see **reset-cursor-to-value-on-open**), and the Popover this component composes removes its content from the DOM when closed (the hide-on-close-unmount requirement of [adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)), so no closed-popover state lets a keyboard user press an arrow key with `cursor` still `null`. The branch is left in place as a defensive fallback rather than removed.
   **Approved**: pending
 
 - **Decision**: The popover panel has a fixed width of 288px (`w-72`) that does not respond to the trigger's width or the viewport.
@@ -312,7 +315,7 @@ Not applicable: the component has no logging. Console or error tracking is the r
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
@@ -328,7 +331,7 @@ Not applicable: the component has no logging. Console or error tracking is the r
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-`screen-reader-support`, `keyboard-navigable`, `semantic-markup`, `text-expansion-tolerance`, `unicode-support`, and `platform-design-language` pass because the source's ARIA roles/states, full Arrow/Enter/Space/Escape handling, unclipped wrapping option text, and plain JS-string label handling are all visible directly in `privacy-level-select.tsx`. `dynamic-type-support`, `contrast-ratio`, `touch-target-size`, and `focus-management` are `partial`: text sizes are rem-based Tailwind classes that scale with browser zoom but aren't verified against OS-level dynamic type; token colors are resolved outside this file; the actual option-row height (a 20px line plus 16px of padding, about 36px) falls under the 44pt/48dp guideline; and focus trapping plus return-to-trigger on close are delegated to the Popover component rather than implemented here. `string-externalization` and `no-hardcoded-strings` fail because every label, description, and badge string is hardcoded English with no override prop (see Localization); `rtl-layout-support` fails because the option rows use the literal `text-left` class instead of the logical `text-start`. `native-controls-preference` is `partial`: the component uses a custom ARIA listbox instead of `<select>`, which Design Decisions justifies with the rich icon+label+description rows a native control can't render. `PrivacyLevelSelect` is a presentational, controlled picker with no network calls — `onChange` is the caller's to wire up (separation-of-concerns passed); `privacy-level-select.test.tsx` exercises only the `PRIVACY_WIRE_VALUE`/`PRIVACY_LEVEL_FROM_WIRE`/`PRIVACY_AUDIENCE_MASK` conversion maps in the same file, not the component's own rendering, keyboard navigation, or selection commit (unit-test-coverage partial).
+`screen-reader-support`, `semantic-markup`, `text-expansion-tolerance`, `unicode-support`, and `platform-design-language` pass because the source's ARIA roles/states, full Arrow/Enter/Space/Escape handling, unclipped wrapping option text, and plain JS-string label handling are all visible directly in `privacy-level-select.tsx`. `keyboard-navigable` is `partial` because Home/End, typeahead and ArrowUp-to-open from the trigger are missing from the APG listbox pattern (see Design Decisions). `dynamic-type-support`, `contrast-ratio`, `touch-target-size`, and `focus-management` are `partial`: text sizes are rem-based Tailwind classes that scale with browser zoom but aren't verified against OS-level dynamic type; token colors are resolved outside this file; the actual option-row height (a 20px line plus 16px of padding, about 36px) falls under the 44pt/48dp guideline; and return-to-trigger on close is delegated to the Popover component rather than implemented here (the popover is non-modal and does not trap focus). `string-externalization` and `no-hardcoded-strings` fail because every label, description, and badge string is hardcoded English with no override prop (see Localization); `rtl-layout-support` fails because the option rows use the literal `text-left` class instead of the logical `text-start`. `native-controls-preference` is `partial`: the component uses a custom ARIA listbox instead of `<select>`, which Design Decisions justifies with the rich icon+label+description rows a native control can't render. `PrivacyLevelSelect` is a presentational, controlled picker with no network calls — `onChange` is the caller's to wire up (separation-of-concerns passed); `privacy-level-select.test.tsx` exercises only the `PRIVACY_WIRE_VALUE`/`PRIVACY_LEVEL_FROM_WIRE`/`PRIVACY_AUDIENCE_MASK` conversion maps in the same file, not the component's own rendering, keyboard navigation, or selection commit (unit-test-coverage partial).
 
 ## Change History
 
@@ -337,3 +340,4 @@ Not applicable: the component has no logging. Console or error tracking is the r
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case and updated all citations across the test vectors, edge cases, and design decisions; rewrote several requirements platform-neutral and moved their implementation mechanics (`requestAnimationFrame`, `e.preventDefault()`, `React.useId()`, `cn()`) into the React/Web Platform Note; resolved the reset-cursor/null-cursor contradiction by renaming and grounding **initialize-null-cursor-to-first-option** instead of removing it; corrected privacy-008's expected outcome and the truncate-trigger-text wording; reformatted every Design Decision to Decision/Rationale/Approved and added ones justifying the custom listbox and the partial keyboard scope; rebuilt Compliance as a catalog table across Accessibility, Internationalization, and Platform Compliance, with touch-target, contrast, focus-management, and native-controls now `partial` and the hardcoded-string checks `failed`; replaced Localization's "Not applicable" with a string-key table; corrected the WinUI 3 note to one control and the right placement, rescoped the Android note to real Compose APIs, split AppKit and UIKit coverage, and added a true SwiftUI note; added `depends-on` citations for Popover, Badge, and Input; and left `modified` unquoted |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed #requirements->#accessibility fragment link and rewrote null-cursor requirement/test vector/edge case to match unreachable-branch reality. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Collapsed the dead null-cursor branch to one Design Decision and removed its requirement and white-box vector, stated that an external value change leaves the cursor alone, made vectors for value updates, unique ids, Escape, disabled-while-open and trigger keys concrete, and fixed the margin value, focus rationale, keyboard-navigable status, hub-name placeholder and non-web port-guidance note. |

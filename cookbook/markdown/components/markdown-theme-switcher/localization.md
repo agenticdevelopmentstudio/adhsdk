@@ -1,3 +1,2 @@
 
-Not applicable: The only user-facing string is "Theme" (the label text), which is hardcoded in the component. To localize this string, the component would need a prop or context-based label key, which is not implemented in the source. See **no-hardcoded-strings** and **string-externalization** in Compliance.
-
+Known gap: the only user-facing strings are the visible label "Theme" and the accessible name "Select reading theme", both hardcoded in the component; the theme option labels come from the theme registry and are English too. The component has no label prop or context-based key, so none of them can be localized today. See **no-hardcoded-strings** and **string-externalization** in Compliance.

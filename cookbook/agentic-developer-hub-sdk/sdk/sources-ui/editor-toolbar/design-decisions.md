@@ -1,6 +1,6 @@
 
 **Decision**: Use a fixed height per platform — 44pt on iOS, 32pt on macOS.
-**Rationale**: iOS follows the Apple HIG standard button height; macOS follows the macOS toolbar standard. The different heights reflect platform conventions, not functional differences.
+**Rationale**: iOS follows the Apple HIG standard 44pt button height for the bar; the controls inside get at most 36pt after the stack's padding, so the HIG minimum is not met by the controls themselves (see Compliance: touch-target-size); macOS follows the macOS toolbar standard. The different heights reflect platform conventions, not functional differences.
 **Approved**: pending
 
 **Decision**: Hide the segmented control when only one mode is available.
@@ -20,6 +20,6 @@
 **Approved**: pending
 
 **Decision**: Make all three callbacks (`onModeChange`, `onImport`, `onSyntaxHelpRequested`) optional.
-**Rationale**: Lets a host ignore mode changes by leaving `onModeChange` unset, or suppress the help button entirely via `showsHelpButton = false`, without requiring stub callbacks.
+**Rationale**: Lets a host ignore mode changes, help requests or imports by leaving the callback unset, without requiring stub callbacks.
 **Approved**: pending
 

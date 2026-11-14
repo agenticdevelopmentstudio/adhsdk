@@ -16,5 +16,5 @@
 | service-list-013 | pricing-suffix | services = [{title: "Deliverable Based", pricingModel: "per_deliverable", priceMin: 500, currency: "USD"}] | Renders price text as "$500 per deliverable" |
 | service-list-014 | pricing-suffix | services = [{title: "Subscription Based", pricingModel: "subscription", priceMin: 20, currency: "USD"}] | Renders price text as "$20 per month" |
 | service-list-015 | pricing-suffix | services = [{title: "Unknown Model", pricingModel: "quote_only", priceMin: 40, currency: "USD"}] | Renders price text as "$40" with no trailing suffix, since "quote_only" matches no entry in the suffix map |
-| service-list-016 | unique-titles | services = [{title: "Duplicate", pricingModel: "free"}, {title: "Duplicate", pricingModel: "barter"}] | Both items render on the initial render; duplicate titles used as the React key are unsupported for stable reconciliation across re-renders |
-
+| service-list-016 | pricing-single-value, pricing-rate-on-request | services = [{title: "Zero Min", pricingModel: "hourly", priceMin: 0, currency: "USD"}] (priceMax absent) | Renders price text as "$0 per hour", not "Rate on request" |
+| service-list-017 | display-description | services = [{title: "Empty Description", description: "", pricingModel: "free"}] | Does not render the description paragraph |

@@ -4,7 +4,7 @@
     "id": "ad5bae6b-0172-4cd4-a4b7-297eb58eb28d",
     "title": "RGBAColor",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -25,12 +25,17 @@
       "logic"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "591d0b87-ce71-4b11-8642-149fc405cce9",
+      "932449c9-b57f-4e2c-992a-1e27584742b6",
+      "1f80f43d-5aa4-42cf-bc3e-fb742662b615",
+      "231a7e9a-8c03-44b3-afaf-b71755e05c1d"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e6ea1f9e2f4e040c",
+  "synced": "391dc1c94ce21a20",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

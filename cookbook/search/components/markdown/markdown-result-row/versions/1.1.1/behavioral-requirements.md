@@ -1,0 +1,22 @@
+
+- **render-title**: Component MUST render the document title from `hit.title`, defaulting to the string "Untitled" when the title is null or empty.
+- **highlight-title**: Component MUST wrap query-matching terms in the title with `<mark>` elements styled as search highlights; exact match boundaries are determined by `splitHighlightSegments(text, query)`.
+- **render-per-kind-badge**: Component MUST render a Badge component using the variant and label supplied by `kindRendererFor(hit.kind).badge`; a missing or unrecognized `hit.kind` MUST fall back to a default renderer and MUST NOT throw.
+- **render-snippet**: Component MUST render a snippet (or subtitle) derived from `kindRendererFor(hit.kind).rowSnippet(hit)`, trimmed of leading and trailing whitespace; if the trimmed snippet is empty, the snippet section MUST NOT be rendered.
+- **highlight-snippet**: When the snippet is rendered, Component MUST highlight query-matching terms within it with `<mark>` elements, using the same `splitHighlightSegments(text, query)` mechanism as the title.
+- **limit-snippet-lines**: Component MUST clamp snippet display to a maximum of 2 lines using CSS line clamping; line overflow MUST be indicated by ellipsis.
+- **render-tags**: Component MUST render each entry in `hit.tags` as a separate element prefixed with `#` (not comma-joined); if `hit.tags` is empty, the tags section MUST NOT be rendered.
+- **render-category**: Component MUST render the `hit.category` as an optional uppercase label; if `hit.category` is null or empty, the category section MUST NOT be rendered.
+- **render-author-display**: Component MUST display author attribution as "by [displayName]" when `hit.author.displayName` is a non-empty string; if displayName is null or empty after trimming, the name portion falls back to `@[slug]`, rendering as "by @[slug]".
+- **render-updated-date**: Component MUST display the updated date, preceded by the literal separator " · Updated ", in the format produced by `formatDate(hit.updatedAt)` (e.g. "Jun 24, 2026") when `hit.updatedAt` is present; if `hit.updatedAt` is absent, the date MUST NOT be rendered.
+- **bind-select-callback**: Component MUST invoke `onSelect(hit)` when the button is clicked, passing the entire hit object.
+- **highlight-selected-state**: Component MUST render a visually distinct border state when `selected` is true; the selected state MUST use the design system's accent color token for the border (`apt-gold` on web); when false, borders MUST use a neutral color token and MAY show a hover state.
+- **indicate-pressed-state**: Component MUST set the `aria-pressed` attribute to the value of `selected`, correctly indicating to assistive technology whether the row is selected.
+- **implement-roving-tabindex**: Component MUST support roving tabindex for list integration: when `active` is true, `tabIndex` MUST be 0; when `active` is false, `tabIndex` MUST be -1; when `active` is undefined, the native tab order MUST be used (no tabindex attribute).
+- **forward-ref-to-button**: Component MUST forward the `controlRef` to the internal button element, enabling external focus management by the containing list.
+- **manage-link-tabindex**: Component MUST apply the same roving-tabindex logic to the "View paper" link as the select button; both elements MUST share the same tabindex value at all times.
+- **enlarge-link-touch-target**: Component MUST ensure the "View paper" link's clickable/tappable target is at least 24 CSS px tall across the link's full width, meeting WCAG 2.2 SC 2.5.8 (Target Size, Minimum), independent of the visible link text's size.
+- **set-link-href**: Component MUST render the "View paper" link with `href` set to the prop value, allowing navigation to the public paper page.
+- **escape-content**: Component MUST render title and snippet content as React nodes (never `dangerouslySetInnerHTML`), ensuring user-controlled text is escaped by React's default behavior.
+- **render-rounded-corners**: Component MUST apply the `--radius-lg` design token (8px) to the root article and the `--radius-md` design token (~6px) to interactive focus rings; the per-kind Badge applies its own corner radius (see [adhsdk.ingredient.ui.controls.badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f)).
+

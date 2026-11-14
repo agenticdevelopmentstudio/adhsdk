@@ -2,11 +2,11 @@
 id: 951b86ac-cf75-46ec-9746-d15fcb4618b4
 title: "Switch"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -46,7 +46,8 @@ A Switch is a binary toggle control that allows users to turn a setting on or of
 - **class-prop**: The Switch MUST accept a `className` prop and merge it with internal styles.
 - **toggle-on-space**: The Switch MUST toggle its checked state when it has focus and the user presses Space (optionally, Enter).
 - **expose-switch-role**: The Switch MUST expose the ARIA `switch` role via `Switch.Root` so assistive technology can identify it as a toggle and announce the label the consumer provides.
-
+- **read-only-blocks-input**: The Switch MUST ignore user-driven changes when `readOnly` is set, while still reflecting controlled `checked` updates.
+- **form-submission**: The Switch MUST submit its `value` under `name` when checked, through the forwarded `name`/`value` props, so it takes part in native form submission.
 ## Appearance
 
 - **Track size**: 36px wide × 20px tall
@@ -55,7 +56,7 @@ A Switch is a binary toggle control that allows users to turn a setting on or of
 - **Border**: 1px, transparent (reserves space so applying the focus ring doesn't shift layout)
 - **Track padding**: 2px horizontal, 0px vertical, between the track edge and the thumb
 - **Track color (unchecked)**: the design system's neutral input-surface color role
-- **Track color (checked)**: the design system's accent (gold) color role
+- **Track color (checked)**: the design system's accent color role
 - **Thumb color**: the design system's primary text/foreground color role
 - **Shadow**: a small drop shadow under the thumb
 - **Transition duration**: 150ms for both the track color change and the thumb position change (the source sets no explicit duration override)
@@ -65,7 +66,7 @@ A Switch is a binary toggle control that allows users to turn a setting on or of
 | State | Appearance change |
 |-------|------------------|
 | Unchecked (default) | Track uses the unchecked color; thumb sits at its leftmost position |
-| Checked | Track uses the checked color; thumb translates 14px to the right — its full travel within the track |
+| Checked | Track uses the checked color; thumb translates 16px to the right (`translate-x-4`); the free travel inside the padding is 14px, so the thumb overshoots the 2px right padding by 2px and rests against the track's inner edge |
 | Disabled | No visual change (track/thumb keep full opacity, cursor stays `pointer`); toggling is blocked by Base UI's internal guards, not by CSS |
 | Focus-visible (keyboard) | 2px focus ring around the track, in the checked color at 40% opacity |
 | Checked + Disabled | Checked appearance only; no dimming (see **Disabled**) |
@@ -83,21 +84,25 @@ A Switch is a binary toggle control that allows users to turn a setting on or of
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| switch-001 | toggles-on-click | Unchecked Switch, user clicks | State changes to checked; callback fires if controlled |
-| switch-002 | toggles-on-click | Checked Switch, user clicks | State changes to unchecked; callback fires if controlled |
+| switch-001 | toggles-on-click | Unchecked uncontrolled Switch, user clicks | State changes to checked |
+| switch-002 | toggles-on-click | Checked uncontrolled Switch (`defaultChecked={true}`), user clicks | State changes to unchecked |
 | switch-003 | support-controlled | Controlled Switch with `checked={true}` and `onCheckedChange`; user clicks, parent does not update `checked` | `onCheckedChange` fires with the toggled value; the rendered state stays at `checked={true}` until the parent prop changes |
 | switch-004 | support-uncontrolled | Uncontrolled Switch with `defaultChecked={true}` | Clicking toggles visual state without external callback |
 | switch-005 | respect-disabled-state | Disabled Switch, user clicks | State does not change; Base UI's internal disabled guard blocks the click handler (not CSS `pointer-events`) — the root shows no visual change |
-| switch-006 | animate-position | Toggle checked → unchecked | Thumb translates from 14px to 0px with a smooth transition |
+| switch-006 | animate-position | Toggle checked → unchecked | Thumb translates from 16px to 0px with a transition (computed `transition-property` includes `transform`, `transition-duration` greater than 0) |
 | switch-007 | animate-colors | Toggle checked → unchecked | Track color transitions from the checked color to the unchecked color smoothly |
 | switch-008 | render-inline | Switch rendered in text flow | Component displays as inline-flex (does not break text flow) |
 | switch-009 | class-prop | Switch with custom `className="my-custom-class"` | Custom class merges with internal classes; visual result reflects both |
-| switch-010 | respect-disabled-state | Disabled Switch (`disabled={true}`), controlled parent flips the `checked` prop | Track color and thumb position still animate to match the new `checked` value — the transition classes are always active and unaffected by `disabled`, which shows no visual change of its own; user clicks remain ignored |
-| switch-011 | toggle-on-space | Enabled Switch, user presses Tab to focus then presses Space | State toggles; callback fires if controlled |
+| switch-010 | respect-disabled-state, support-controlled, animate-position, animate-colors | Disabled Switch (`disabled={true}`), controlled parent flips the `checked` prop | Track color and thumb position still animate to match the new `checked` value — the transition classes are always active and unaffected by `disabled`, which shows no visual change of its own; user clicks remain ignored |
+| switch-011 | toggle-on-space | Enabled uncontrolled Switch, user presses Tab to focus then presses Space | State toggles |
 | switch-012 | expose-switch-role | Switch rendered with an accessible name | Assistive technology reports role "switch" along with the provided name and current checked state |
 | switch-013 | respect-disabled-state | Disabled Switch, focused via Tab, user presses Space | State does not change; no callback fires |
 | switch-014 | toggles-on-click | Enabled Switch, user clicks 3 times in rapid succession | Each completed click toggles the state once; three clicks alternate checked/unchecked/checked with no coalesced or dropped toggles |
-
+| switch-015 | toggles-on-click | Unchecked controlled Switch with `onCheckedChange`, user clicks | `onCheckedChange(true)` fires once |
+| switch-016 | toggles-on-click | Checked controlled Switch with `onCheckedChange`, user clicks | `onCheckedChange(false)` fires once |
+| switch-017 | toggle-on-space | Enabled controlled Switch with `onCheckedChange`, focused via Tab, user presses Space | `onCheckedChange` fires once with the toggled value |
+| switch-018 | read-only-blocks-input | Switch with `readOnly`, user clicks | `onCheckedChange` does not fire and the state does not change |
+| switch-019 | form-submission | Checked Switch with `name="notify"` and `value="yes"` inside a form, form submitted | The submitted form data contains `notify=yes`; when unchecked it does not contain `notify` |
 ## Edge Cases
 
 - **Rapid clicks**: Each completed click or tap MUST toggle the state exactly once; see switch-014. Rapid successive clicks are not debounced or coalesced — N completed clicks produce N toggles.
@@ -136,8 +141,8 @@ Not applicable: Switch has no text content or user-facing strings. Labels and de
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Transitions are applied (transition-colors on the root, transition-transform on the thumb); the component does not check `prefers-reduced-motion` and does not disable or minimize transitions when the user has Reduce Motion enabled. |
-| Increase Contrast | The component uses the `apt-gold` (checked) and `apt-input` (unchecked) tokens from the design system; see the open question on increase-contrast. |
-| Differentiate Without Color | The Switch communicates state through both color (apt-gold vs. apt-input) and position change (thumb translates 14px right when checked); the position change provides a non-color indicator for users who cannot distinguish colors. |
+| Increase Contrast | The component uses the accent (checked) and input-surface (unchecked) color roles from the design system; see the open question on increase-contrast. |
+| Differentiate Without Color | The Switch communicates state through both color (accent vs. input-surface) and position change (thumb translates right when checked); the position change provides a non-color indicator for users who cannot distinguish colors. |
 
 - **increase-contrast**: NEEDS REVIEW: Not implemented in source. Confirm the `apt-gold` (checked) and `apt-input` (unchecked) tokens meet the WCAG 1.4.11 non-text contrast ratio (3:1) against their surrounding background — `switch.tsx` only assigns these tokens and doesn't resolve or verify their contrast; the switch's state indicator is a non-text UI component, so the 4.5:1 text threshold doesn't apply.
 
@@ -169,7 +174,7 @@ Not applicable: The component does not perform logging. Debugging state changes 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/switch.tsx` | confirmed (1.2.2) |
+| web | `packages/web/packages/ui/src/components/switch.tsx` | confirmed (1.2.3) |
 
 ## Design Decisions
 
@@ -181,16 +186,16 @@ Not applicable: The component does not perform logging. Debugging state changes 
 **Rationale**: Reserves layout space so applying the focus ring doesn't shift surrounding content.
 **Approved**: pending
 
-**Decision**: The thumb travels 14px to the right when checked.
-**Rationale**: The 36px track leaves 14px of travel once the 1px border, 4px of horizontal padding (2px each side), and the 16px thumb are subtracted (36 − 2 − 4 − 16 = 14). The source's `translate-x-4` Tailwind utility requests 16px (Tailwind's default spacing scale), but the thumb starts already inset by the track's padding, so its visual travel lands exactly at this 14px right-aligned position.
+**Decision**: The thumb travels 16px to the right when checked.
+**Rationale**: The source's `translate-x-4` Tailwind utility is a 16px transform measured from the thumb's starting position, and the starting padding inset does not reduce it. The 36px track leaves only 14px of free travel once the 1px border, 4px of horizontal padding (2px each side), and the 16px thumb are subtracted (36 − 2 − 4 − 16 = 14), so the thumb overshoots the 2px right padding by 2px. A port can match this, or use a 14px travel to end flush with the padding.
 **Approved**: pending
 
 **Decision**: Animate both the track color and the thumb position rather than switching instantly.
 **Rationale**: Matches modern UI expectations for visual feedback and improves perceived responsiveness.
 **Approved**: pending
 
-**Decision**: Rely on the design system's color tokens (`apt-gold`, `apt-input`, `apt-text`) rather than hardcoded colors.
-**Rationale**: Keeps the component's colors consistent with the rest of the design system; if a token is undefined, the component will fail to display correctly, which is a consumer responsibility.
+**Decision**: Rely on the design system's accent, input-surface and foreground color roles rather than hardcoded colors.
+**Rationale**: Keeps the component's colors consistent with the rest of the design system; no fallback is provided: if a token is undefined, the component will fail to display correctly, which is a consumer responsibility.
 **Approved**: pending
 
 **Decision**: Support both controlled (`checked` / `onCheckedChange`) and uncontrolled (`defaultChecked`) usage.
@@ -216,6 +221,7 @@ Statuses rest on what `switch.tsx` itself shows: the fixed 36×20px track (below
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.3 | 2026-11-14 | Mike Fullerton | Stated the real 16px thumb travel with its 2px overshoot, split controlled and uncontrolled vectors, retagged switch-010, added read-only and form-submission requirements with vectors, and used semantic color roles outside the React/Web note. |
 | 1.2.2 | 2026-09-25 | Mike Fullerton | Corrected disabled mechanism (span aria/data-disabled, no native disabled); added BP checks. |
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: fixed nonexistent Platform Notes APIs; rewrote Appearance/States/test vectors as semantic values with Tailwind mapping confined to React/Web; corrected thumb-travel math to 14px; resolved the disabled cursor/pointer-events conflict and clarified the native disabled attribute; added toggle-on-space and expose-switch-role requirements with vectors; reformatted Design Decisions; rebuilt Compliance with real linked checks; corrected the Increase Contrast WCAG citation; listed forwarded form props in Configuration; populated related ingredients; fixed the 1.0.0 author and an RFC 2119 misuse |

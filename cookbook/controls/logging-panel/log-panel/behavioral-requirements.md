@@ -10,13 +10,13 @@
 - **handle-cell-double-click**: Component MUST invoke `column.onCellDoubleClick` when a cell is double-clicked, passing the entire `LogLine` object, if the handler is defined. The click events that precede a double-click gesture still invoke `onCellClick`, if defined, per native browser event order (see Edge Cases).
 - **apply-column-widths**: Component MUST apply the width from `column.width` to each column as a CSS grid track size, using the format `${width}px` for numeric values and the string value directly for other formats.
 - **apply-default-column-width**: Component MUST use `minmax(120px, 1fr)` as the default grid track size for columns that do not specify a width.
-- **apply-cell-text-alignment**: Component MUST align cell text according to `column.align` (e.g., `start`, `center`, `end`), defaulting to `start`.
-- **apply-cell-level-color**: Component MUST apply the color for the log level (`cell.level`, falling back to `column.defaultLevel` when `cell.level` is not set) using the Level Colors table (see Appearance), when `cell.color` is not set.
+- **apply-cell-text-alignment**: Component MUST align cell text and the column's header cell according to `column.align` (e.g., `start`, `center`, `end`), defaulting to `start`.
+- **apply-cell-level-color**: Component MUST apply the color for the log level (`cell.level`, falling back to `column.defaultLevel` when `cell.level` is not set) using the Level Colors table (see Appearance), when `cell.color` is not set. When `cell.color`, `cell.level` and `column.defaultLevel` are all unset, no color is applied and the text inherits the surrounding text color. A level value that is not in the Level Colors table (possible from untyped JS) likewise applies no color and the text inherits.
 - **apply-cell-custom-color**: Component MUST apply `cell.color` as the CSS color value if provided; it takes precedence over any level-based color.
 - **apply-cell-mono-font**: Component MUST apply monospace font (CSS variable `--font-mono` or fallback to system monospace) when the effective mono flag is true. The effective flag is `cell.mono` when it is explicitly set, including an explicit `false`, and `column.defaultMono` otherwise.
 - **apply-cell-strong-weight**: Component MUST apply font-weight of 600 if `cell.strong` is true.
 - **apply-cell-link-styling**: Component MUST add the CSS class `lp-cell--link` if `cell.link` is true, allowing stylistic differentiation (e.g., underline, color change).
-- **show-interactive-indicator**: Component MUST add the CSS class `lp-cell--interactive` to cells if `column.isClickable`, `cell.link`, or `column.onCellClick` is defined.
+- **show-interactive-indicator**: Component MUST add the CSS class `lp-cell--interactive` to cells if `column.isClickable` is true, `cell.link` is true, or `column.onCellClick` is defined. A column that defines only `onCellDoubleClick` does not by itself make its cells interactive.
 - **apply-cell-title-attribute**: Component MUST set the HTML `title` attribute on each cell to the cell's text content for tooltip display on hover.
 - **support-max-height**: Component MUST apply the `maxHeight` style to the scrollable body container if `maxHeight` is provided.
 - **support-custom-class**: Component MUST apply the `className` prop to the root container; the root class is `lp-root`, followed by `className` when provided.

@@ -1,7 +1,7 @@
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Title and slug inputs render with inherited platform styles; status message is null or not rendered |
+| Default | Title and slug inputs render with inherited platform styles; status region is mounted but empty |
 | Verdict: checking | Status message displays "Checking…" in muted tone |
 | Verdict: available | Status message displays "Available" in success tone |
 | Verdict: unavailable | Status message displays the reason (or "Unavailable") in error tone |

@@ -1,3 +1,1 @@
-
-Not applicable. The component does not collect, store, or transmit any data; it only reads from `getText()` at click time and writes to `navigator.clipboard`, both of which are caller-managed and session-local.
-
+The component collects and stores no data of its own. It reads `getText()` at click time and writes the result with `navigator.clipboard.writeText`, which puts the text on the system-wide clipboard. That clipboard is shared across the operating system: other applications, and clipboard managers or synced clipboards, can read it, so the copied text leaves the session. Callers must not return secrets (tokens, passwords, personal data) from `getText` without weighing that exposure.

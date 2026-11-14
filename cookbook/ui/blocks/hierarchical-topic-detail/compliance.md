@@ -13,7 +13,7 @@
 | [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
 | [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | failed | internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Keyboard/AT coverage rests on the source's `aria-current`, `aria-hidden`, `inert`, `aria-label` and live-region
 (`role="status"`) usage throughout the rail, connector and narrow-pane code; reduced-motion is `partial`
@@ -26,8 +26,8 @@ start/end substitution anywhere in the source. `separation-of-concerns` is parti
 and layout logic is broken out into dedicated hooks and pure functions (`railOnSelect`, `structureSignature`,
 `useRailFit`, `useSelectionConnectors`), the cover/pressure calculations that decide which lists are disclosed
 (`CoveredStack`, `MinimizedStack`, `NarrowStack`) are computed inline in those components' render bodies rather
-than extracted alongside the rest of the logic; `unit-test-coverage` is passed on the nine dedicated test files
+than extracted alongside the rest of the logic; `unit-test-coverage` is partial: the nine dedicated test files
 (`hierarchicalTopicDetail`, `cascadeRules`, `cascadeInteraction`, `railAutoFit`, `detailSwapContainment`,
 `htdvExitGuard`, `breadcrumbLeadingSeparator`, `detailPaneMarker`, `topicDetailCheckable`), which render the real
-`HierarchicalTopicDetail` and assert its cascade, exit-guard, rail-fit, and breadcrumb behaviors directly.
+`HierarchicalTopicDetail` and assert its cascade, exit-guard, rail-fit, and breadcrumb behaviors directly, but jsdom has no layout engine, so the cascade's measured geometry (rect unions, connector paths, ground) is checked only by hand on the ui-showcase at 375 / 768 / 1440 (see Platform Notes), not by an automated test.
 

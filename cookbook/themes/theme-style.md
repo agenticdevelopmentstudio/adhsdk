@@ -2,7 +2,7 @@
 id: 54b48020-df78-4b41-853c-268ad0ea6b84
 title: "Theme Style"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -18,8 +18,10 @@ tags:
   - theme
   - appearance
   - color-mode
-depends-on: []
-related: []
+depends-on:
+  - 391a4eef-9872-432f-a049-eac4af00938d
+related:
+  - 3bff70de-bfca-4bfd-b112-2a6044416ddc
 references: []
 approved-by: ""
 approved-date: ""
@@ -29,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-Theme Style turns a named theme into CSS on the page. `ThemeStyle` is a React component that looks the theme up in the manifest (`themes`, keyed by `ThemeKey`) and renders its stylesheet as one inline `style` element. With no `scope` the stylesheet is emitted verbatim and styles the whole document. With a `scope` (a CSS selector) the stylesheet is first rewritten by `buildScopedCss` into an `@scope (<selector>)` block, so the theme applies only inside that subtree and can coexist with the host page's own theme. An optional `colorMode` forces the light or dark variant of a scoped theme instead of following the document's `html.dark` class.
+Theme Style turns a named theme into CSS on the page. `ThemeStyle` is a React component that looks the theme up in the manifest ([adhsdk.ingredient.themes.manifest](cookbook:391a4eef-9872-432f-a049-eac4af00938d); `themes`, keyed by `ThemeKey`) and renders its stylesheet as one inline `style` element. With no `scope` the stylesheet is emitted verbatim and styles the whole document. With a `scope` (a CSS selector) the stylesheet is first rewritten by `buildScopedCss` into an `@scope (<selector>)` block, so the theme applies only inside that subtree and can coexist with the host page's own theme. An optional `colorMode` forces the light or dark variant of a scoped theme instead of following the document's `html.dark` class (the class the color-mode machinery writes; see [adhsdk.ingredient.themes.color-mode](cookbook:3bff70de-bfca-4bfd-b112-2a6044416ddc)).
 
 `buildScopedCss` is also exported from the module (though not re-exported by the package index), so external consumers can scope stylesheets that are not in the manifest. Most of the module's logic is the set of selector rewrites it applies to the theme stylesheets' root anchors (`html:root`, `:root`, `body`), because an anchor it does not recognise silently drops that theme's palette inside the scope.
 
@@ -40,16 +42,16 @@ Theme Style turns a named theme into CSS on the page. `ThemeStyle` is a React co
 - **theme-style-props**: `ThemeStyle` MUST accept `theme` (a `ThemeKey`, required), `scope` (an optional string) and `colorMode` (an optional `ThemeColorMode`, default `system`).
 - **theme-color-mode-type**: `ThemeColorMode` MUST be exactly one of `system`, `light` or `dark`.
 - **build-scoped-css-signature**: `buildScopedCss(css, scope, colorMode)` MUST take a stylesheet string and a scope selector, take `colorMode` as an optional third argument defaulting to `system`, and return a string.
-- **public-transform**: `buildScopedCss` MUST be exported from the `ThemeStyle` module; the source's test calls it a public export whose legacy `:root` forms must keep resolving even though no shipped theme uses them. The package index re-exports only `ThemeStyle` and `ThemeStyleProps`, and `package.json` has no `./ThemeStyle` subpath, so the function is reachable by deep path to the built `ThemeStyle` entry, not from the package root.
+- **public-transform**: `buildScopedCss` MUST be exported from the `ThemeStyle` module. The package index re-exports only `ThemeStyle` and `ThemeStyleProps`, and `package.json` has no `./ThemeStyle` subpath, so the function is reachable only by deep path to the built `ThemeStyle` entry, not from the package root. Whether it should be a supported API is a pending Design Decision.
 
 ### Component rendering
 
-- **unknown-theme-renders-nothing**: When `themes[theme]` has no entry, `ThemeStyle` MUST return `null` and MUST NOT throw; the source comment gives a stale persisted choice or a typo in a consumer's theme list as the cases.
+- **unknown-theme-renders-nothing**: When `themes[theme]` has no entry, `ThemeStyle` MUST return `null` and MUST NOT throw.
 - **unscoped-passthrough**: When `scope` is absent or an empty string, `ThemeStyle` MUST emit the theme's CSS unchanged, `@import` lines included.
 - **scoped-transform**: When `scope` is a non-empty string, `ThemeStyle` MUST emit the result of `buildScopedCss(entry.css, scope, colorMode)`.
 - **color-mode-scoped-only**: `colorMode` MUST have no effect when `scope` is not set.
 - **inline-style-element**: `ThemeStyle` MUST render a single `style` element inline in the component's own output, not append it to `document.head` through an effect, so the CSS is in server-rendered HTML and applies on first paint.
-- **raw-css-body**: The `style` element's body MUST be set as raw HTML (`dangerouslySetInnerHTML`) so CSS punctuation such as `>` is not escaped; the source comment notes the CSS comes from the static theme manifest, not user input.
+- **raw-css-body**: The `style` element's body MUST be set as raw HTML (`dangerouslySetInnerHTML`) so CSS punctuation such as `>` is not escaped.
 - **rerender-swaps-css**: Re-rendering with a different `theme`, `scope` or `colorMode` MUST replace the style body with the newly resolved CSS.
 
 ### Element ids
@@ -69,7 +71,7 @@ Theme Style turns a named theme into CSS on the page. `ThemeStyle` is a React co
 - **html-root-bare**: A bare `html:root` anchor (followed by whitespace, a comma or `{`) MUST become `:scope`.
 - **html-root-qualified**: An `html:root` anchor followed by any run of attribute selectors or `:not(...)` qualifiers MUST be rewritten to `html<qualifiers> :scope`, moving the qualifiers onto an `html` ancestor of the scope, because they describe the document, not the scoped element.
 - **html-root-light-anchor**: An `html:root[data-color-mode]:not(.dark)` anchor that is the entire selector of its own rule (immediately followed by optional whitespace and `{`) MUST be rewritten according to `colorMode`: `system` gives `html[data-color-mode]:not(.dark) :scope`, `light` gives `:scope`, `dark` gives `:scope.pc-colormode-off`.
-- **light-anchor-not-in-lists**: The same discriminator MUST NOT receive the colorMode rewrite when it is followed by a comma or by further qualifiers (it is then not directly followed by `{`); it takes the qualified rewrite instead, so dark-always themes (charcoal, fishlamp), whose combined selector list ends in qualified members, get no light variant forced on them. The rule is a lookahead for `{`, not a check that the item stands alone: the same discriminator written as the last item of a comma list, directly before `{`, would still receive the colorMode rewrite.
+- **light-anchor-not-in-lists**: The same discriminator MUST NOT receive the colorMode rewrite when it is followed by a comma or by further qualifiers (it is then not directly followed by `{`); it takes the qualified rewrite instead, so dark-always themes (charcoal, fishlamp), whose combined selector list ends in qualified members, get no light variant forced on them. Known limitation: the rule is a lookahead for `{`, not a check that the item stands alone, so the same discriminator written as the last item of a comma list, directly before `{`, still receives the colorMode rewrite (pinned by vector theme-style-021).
 - **legacy-root-dark**: A `:root.dark` anchor MUST become `:scope` for `dark`, `:scope.pc-colormode-off` for `light` and `html.dark :scope` for `system`.
 - **legacy-root-not-dark**: A `:root:not(.dark)` anchor MUST become `:scope` for `light`, `:scope.pc-colormode-off` for `dark` and `html:not(.dark) :scope` for `system`.
 - **legacy-root-bare**: A bare `:root` anchor (followed by whitespace, a comma, `{` or `:`) MUST become `:scope`.
@@ -78,7 +80,7 @@ Theme Style turns a named theme into CSS on the page. `ThemeStyle` is a React co
 - **forced-mode-keeps-dark-block**: For `light`, the bare `html:root` dark block MUST NOT be removed; both blocks become `:scope` and the light block wins because it is later in source order. For `dark`, the light block is sent to the never-matching selector.
 - **never-selector**: The never-matching selector MUST be `:scope.pc-colormode-off`.
 - **system-mode-default**: With `colorMode` of `system`, the output MUST follow the document: dark rules apply under `html.dark` and light rules under `html:not(.dark)` or `html[data-color-mode]:not(.dark)`.
-- **no-anchor-left-behind**: No shipped theme's scoped output MUST contain an unrewritten `:root` or `html:root` anchor at a line start or after a comma; the source test asserts this against every stylesheet in the manifest.
+- **no-anchor-left-behind**: Scoped output for every shipped theme MUST NOT contain an unrewritten `:root` or `html:root` anchor at a line start or after a comma.
 - **scope-not-escaped**: `buildScopedCss` MUST insert `scope` into the `@scope (...)` prelude as given, with no validation or escaping; an invalid selector yields CSS the browser ignores.
 
 ### Ordering and concurrency
@@ -103,12 +105,12 @@ Not applicable — this is a stylesheet injector, not a visual component. It ren
 
 ## Conformance Test Vectors
 
-Vectors 001 to 011 derive from `__tests__/ThemeStyle.test.tsx` and `__tests__/buildScopedCss.test.ts` beside the source; the rest derive from the source. The component tests mock the manifest with a stub theme whose CSS is `:root:not(.dark) { --a: 1; } :root.dark { --a: 2; }`.
+Vectors 001 to 011 derive from `__tests__/ThemeStyle.test.tsx` and `__tests__/buildScopedCss.test.ts` beside the source; the rest derive from the source and have no test yet. Vectors 012 to 015 and 018 to 021 belong in `buildScopedCss.test.ts`, and vector 016 and 017's component cases in `ThemeStyle.test.tsx`. The component tests mock the manifest with a stub theme whose CSS is `:root:not(.dark) { --a: 1; } :root.dark { --a: 2; }`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | theme-style-001 | global-id, inline-style-element, unscoped-passthrough | `ThemeStyle.test.tsx` "renders an unscoped theme inline": `<ThemeStyle theme="stub" />` | a `style` in the render container with id `adh-sdk-theme`, none in `document.head`, body contains `--a: 1` |
-| theme-style-002 | scoped-id-prefix, scoped-id-slug | "gives two differently-scoped renders two different ids": scopes `.host-a` and `.host-b` rendered on one page | both ids non-empty and different from each other |
+| theme-style-002 | distinct-scope-ids | "gives two differently-scoped renders two different ids": scopes `.host-a` and `.host-b` rendered on one page | both ids non-empty and different from each other |
 | theme-style-003 | theme-color-mode-type, legacy-root-dark, legacy-root-not-dark | "resolves colorMode dark and light to different CSS": scope `.host`, `colorMode` `dark` then `light` | the two style bodies differ |
 | theme-style-004 | system-mode-default | "defaults colorMode to system": scope `.host`, no `colorMode` | body contains `html.dark :scope` and `html:not(.dark) :scope` |
 | theme-style-005 | unknown-theme-renders-nothing | "renders nothing for an unknown theme key": `theme="not-a-real-theme"` | render does not throw and no `style` element exists |
@@ -124,6 +126,11 @@ Vectors 001 to 011 derive from `__tests__/ThemeStyle.test.tsx` and `__tests__/bu
 | theme-style-015 | scoped-id-slug | scope `Host B > .x` | id is `adh-sdk-theme-scoped-host-b-x-g3a3in` (the run space, `>`, space, `.` collapses to one `-`; the scope is not its own slug, so the FNV-1a hash is appended) |
 | theme-style-016 | color-mode-scoped-only | `<ThemeStyle theme="stub" colorMode="dark" />` with no `scope` | body equals the stub CSS exactly |
 | theme-style-017 | distinct-scope-ids, scoped-id-prefix | "keeps scopes that differ only in punctuation or case on different ids": scopes `.host-a`, `#host-a`, `.Host-A`, `host-a` | four distinct ids; `host-a` gives `adh-sdk-theme-scoped-host-a`; `.host-a` gives `adh-sdk-theme-scoped-host-a-5l1jl5`; `#host-a` gives `adh-sdk-theme-scoped-host-a-lcrp5y` |
+| theme-style-018 | import-form-limit | `buildScopedCss("@import 'a.css';\nhtml:root { --a: 1; }", '.host')` | `"\n@scope (.host) {\n@import 'a.css';\n:scope { --a: 1; }\n}"`; the quoted `@import` is not hoisted |
+| theme-style-019 | scope-not-escaped | `buildScopedCss('body {}', '.a > .b')` | `"\n@scope (.a > .b) {\n:scope {}\n}"` |
+| theme-style-020 | legacy-root-not-dark, empty stylesheet | `buildScopedCss(':root:not(.dark) {}', '.host', mode)` for `system`, `light`, `dark`; and `buildScopedCss('', '.host')` | the body is `html:not(.dark) :scope {}`, `:scope {}`, `:scope.pc-colormode-off {}` respectively; the empty stylesheet gives `"\n@scope (.host) {\n\n}"` |
+| theme-style-021 | light-anchor-not-in-lists | `buildScopedCss('html:root, html:root[data-color-mode]:not(.dark) {}', '.host')` | `"\n@scope (.host) {\n:scope, html[data-color-mode]:not(.dark) :scope {}\n}"`; this records a known limitation, not desired behavior: the discriminator at the end of a comma list directly before `{` gets the colorMode rewrite |
+| theme-style-022 | rerender-swaps-css | render `<ThemeStyle theme="stub" scope=".a" />`, then rerender with `scope=".b"` | the style body equals `buildScopedCss(stub css, '.b')` and the id is the one for `.b` |
 ## Edge Cases
 
 - **Unknown theme key** (MUST): `ThemeStyle` renders nothing and does not throw, so a stale persisted choice does not take the page down.
@@ -132,7 +139,7 @@ Vectors 001 to 011 derive from `__tests__/ThemeStyle.test.tsx` and `__tests__/bu
 - **No imports** (MUST): the hoisted-imports part is an empty string, so the output begins with a newline.
 - **Stylesheet with no recognised anchor** (MUST): rules pass through unchanged inside the `@scope` block; the module does not warn, which is how a new anchor shape would silently drop a palette (the reason the shipped-theme test exists).
 - **Dark-always themes** (MUST): a theme whose light discriminator is followed by a comma or carries further qualifiers (charcoal's combined selector list) gets no light variant forced under `light`; its output is identical in all three modes.
-- **Forced light keeps the dark block** (MUST): under `light` the dark `html:root` block still applies as `:scope`; the light block only wins by coming later in the stylesheet, so a theme with its light block first would render dark.
+- **Forced light keeps the dark block** (documented limitation): under `light` the dark `html:root` block still applies as `:scope`; the light block only wins by coming later in the stylesheet, so a theme with its light block first would render dark.
 - **Selector that reduces to an empty or shared slug** (SHOULD NOT occur): a scope of only punctuation yields an empty slug and the id `adh-sdk-theme-scoped--<hash>`. Distinct selectors that share a slug still get distinct ids through the hash suffix (`distinct-scope-ids`).
 - **Invalid scope selector** (not validated): the string is inserted as given and the browser discards the invalid `@scope` rule, so the theme silently does not apply.
 - **Browser without `@scope` support** (not handled): the source has no fallback, so an engine that lacks `@scope` ignores the whole scoped block.
@@ -202,7 +209,7 @@ Not applicable: the module makes no log calls; an unknown theme returns `null` s
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/ThemeStyle.tsx` | confirmed (1.0.1) |
+| web | `packages/web/packages/themes/src/ThemeStyle.tsx` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -215,7 +222,7 @@ Not applicable: the module makes no log calls; an unknown theme returns `null` s
 **Approved**: pending
 
 **Decision**: Rewrite the stylesheet text with ordered regular expressions into an `@scope` block instead of authoring scoped stylesheets.
-**Rationale**: Inferred from the source: the same shipped theme stylesheets (the source comments count 41; the manifest lists 39 themes) serve both document-wide and scoped use. The cost, documented in the comments, is that an unrecognised anchor drops the whole palette with no error, which is why a test runs every shipped theme.
+**Rationale**: Inferred from the source: the same shipped theme stylesheets (the source comments give a theme count that is out of date against the manifest) serve both document-wide and scoped use. The cost, documented in the comments, is that an unrecognised anchor drops the whole palette with no error, which is why a test runs every shipped theme.
 **Approved**: pending
 
 **Decision**: Move document-state qualifiers (`[data-color-mode]`, `:not(.dark)`, `[data-contrast=...]`) onto an `html` ancestor of `:scope`.
@@ -235,26 +242,30 @@ Not applicable: the module makes no log calls; an unknown theme returns `null` s
 **Approved**: pending
 
 **Decision**: Keep the legacy `:root`, `:root.dark` and `:root:not(.dark)` rewrites although no shipped theme uses them.
-**Rationale**: The source test calls this a contract regression test: `buildScopedCss` is public and an external stylesheet may still use that shape.
+**Rationale**: The source test calls this a contract regression test: `buildScopedCss` is exported and an external stylesheet may still use that shape. Whether `buildScopedCss` is a supported API, given it has no package subpath or index export, is undecided; adding a `./ThemeStyle` subpath or index export would make it one, and dropping the claim would retire the legacy rewrites.
 **Approved**: pending
 
 **Decision**: Return `null` for an unknown theme key rather than throw.
 **Rationale**: The source comment: a throw would take down a whole page over a style tag.
 **Approved**: pending
 
+**Decision**: Fail silently, with no dev-mode warning, when an anchor is unrecognised or `scope` is not a valid selector.
+**Rationale**: The source does nothing in either case, and the shipped-theme sweep test is what catches a new anchor shape. A warning when the rewritten body has no `:scope`, or when `scope` fails `CSS.supports('selector(...)')`, would shorten that failure but is not in the source.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | platform-compliance |
 
-The module keeps one concern: it turns a theme key into a style element, a pure function does the rewriting, and the manifest and stylesheets live elsewhere, so separation of concerns passes. Two test files sit beside the source and cover rendering, ids, every colorMode path, import hoisting and the real stylesheets, so unit-test coverage passes; the attribute-qualified, indented and `body` rewrites are covered only by the source's comments and the shipped-theme sweep, not by dedicated assertions. An unknown theme is handled explicitly, but an invalid scope or an unrecognised anchor fails without any signal, so explicit error handling is partial. Following the document's `html.dark` class by default and offering a forced mode satisfies platform theming.
+The module keeps one concern: it turns a theme key into a style element, a pure function does the rewriting, and the manifest and stylesheets live elsewhere, so separation of concerns passes. Two test files sit beside the source and cover rendering, ids, every colorMode path, import hoisting and the real stylesheets, so those paths are covered; vectors 012 to 021 have no dedicated assertion (the attribute-qualified, indented and `body` rewrites are covered only by the source's comments and the shipped-theme sweep), so unit-test coverage is partial. An unknown theme is handled explicitly, but an invalid scope or an unrecognised anchor fails without any signal, so explicit error handling is partial. Following the document's `html.dark` class by default and offering a forced mode satisfies platform theming.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Added vectors 018-022 with outputs checked against the source, pinned the light-anchor comma-list limitation, downgraded the forced-light edge case, retagged vector 002, removed provenance prose from requirements, fixed the no-anchor-left-behind wording, marked unit-test coverage partial and linked manifest and color-mode. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Every distinct scope gets a distinct style id through an FNV-1a hash suffix; claims verified against source |

@@ -8,6 +8,8 @@
 - **omit-navigation-when-absent**: Component MUST NOT render back navigation link when `back` prop is undefined; MUST NOT render next navigation link when `next` prop is undefined.
 - **steps-container-always-renders**: Component MUST render the `lp-tour__steps` container element regardless of whether `back` or `next` is provided, even when both are absent.
 - **hide-arrow-from-assistive-tech**: Component MUST mark arrow indicators as decorative with `aria-hidden="true"`.
-- **accept-react-node-promise**: The `promise` prop MUST accept any valid React node, in practice limited to phrasing content since it renders inside a `<p>` wrapper (see Edge Cases).
+- **accept-react-node-promise**: The `promise` prop MUST accept any valid React node.
+- **promise-phrasing-content**: Callers SHOULD pass phrasing content only as `promise`, since it renders inside a `<p>` wrapper (see Edge Cases).
+- **render-order**: Component MUST render the eyebrow first, then the promise paragraph, then the pillars (when present), then the `lp-tour__steps` container, in that DOM order.
 - **accept-note-on-navigation-steps**: Both `back` and `next` step objects MUST accept an optional `note` property to display explanatory text below the step label.
 

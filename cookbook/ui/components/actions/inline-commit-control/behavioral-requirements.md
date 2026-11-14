@@ -36,6 +36,17 @@
   raises the AlertModal (via a same-URL history sentinel); and chrome that
   navigates programmatically (menus, choosers, logout) raises it too when it
   awaits `confirmNavigation()` from the navigation-guard registry.
+- **patch-only-drafts**: `useInlineDrafts` MUST store a row's draft as only
+  the fields the user touched, so `changesOf` returns only those fields.
+- **settle-preserves-typing**: `useInlineDrafts` `settle` MUST drop only the
+  committed keys, so a value typed while a commit was in flight stays as a
+  dirty draft.
+- **gate-in-flight-commit**: `useInlineDrafts` `runCommit` MUST no-op on
+  re-entry for a row already in flight, and MUST store a failure as that
+  row's error while keeping the draft.
+- **respect-reduced-motion**: The trash reveal SHOULD carry a `motion-reduce:`
+  variant (or the platform equivalent) so it does not fade when the user has
+  asked for reduced motion. It does not today (see Compliance).
 - **route-keyboard**: `InlineEditableText` SHOULD route Enter to the
   row's commit action and Escape to its cancel action; a consumer-supplied
   `onKeyDown` runs FIRST and may `preventDefault()` to suppress that routing.

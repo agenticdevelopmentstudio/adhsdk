@@ -14,3 +14,7 @@
 | shot-011 | caption-in-placeholder | caption="" | Placeholder renders an empty `<b>` element; no caption text is visible |
 | shot-012 | title-in-bar | title="" | `.lp-shot__name` renders empty; the frame and dots still display |
 
+| shot-013 | falsy-pending-label-omitted | `pendingLabel={false}` | No visible pending-label text renders; placeholder shows only the caption |
+| shot-014 | falsy-pending-label-omitted | `pendingLabel={null}` | No visible pending-label text renders; placeholder shows only the caption |
+| shot-015 | placeholder-when-no-media | `media={null}` | No `.lp-shot__placeholder` renders; the frame shows the title bar only |
+| shot-016 | placeholder-when-no-media | `media={false}` | No `.lp-shot__placeholder` renders; the frame shows the title bar only |

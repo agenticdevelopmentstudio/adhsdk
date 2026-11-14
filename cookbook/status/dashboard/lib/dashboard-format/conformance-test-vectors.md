@@ -19,6 +19,10 @@ Vectors 001–011 are the assertions in `dashboard-format.test.ts`; the rest are
 | dfmt-014 | vital-threshold-before-rounding | `("lcp", 999.6)` and `("lcp", 1000)` | `1000ms` and `1.0s` |
 | dfmt-015 | vital-no-validation | `("inp", -5)` and `("cls", NaN)` | `-5ms` and `NaN` |
 | dfmt-016 | label-invalid-date | bucket-label of `not-a-date` with `"7d"` | throws a range error |
-| dfmt-017 | with-sort-whole-list | `(["c.com","a.com"], "b.com")` | `["a.com","b.com","c.com"]` |
-| dfmt-018 | with-exact-match | `(["a.com"], "A.com")` | `["a.com","A.com"]` under the default English ICU collation, which puts lowercase first (the lookup is case-sensitive, so the site is added; another collation may order the two differently) |
+| dfmt-017 | with-sort-whole-list | `(["c.com","a.com"], "b.com")` | `["a.com","b.com","c.com"]` (ASCII names sort the same under any sensible collation) |
+| dfmt-018 | with-exact-match | `(["a.com"], "A.com")` | `["a.com","A.com"]` under the default English ICU collation, which puts lowercase first (the lookup is case-sensitive, so the site is added; the order of the two is unspecified across runtimes, so a port MAY order them differently) |
 
+| dfmt-019 | vital-ms | `("lcp", 999.4)` | `999ms` |
+| dfmt-020 | label-days | bucket-label of `2026-11-04T00:00:00.000Z` with an unknown range `"1y"` | `Nov 4`, the day format |
+| dfmt-021 | bucket-utc | bucket-label of `2026-11-04T23:59:59.999Z` with `"7d"` | `Nov 4`, the earlier day |
+| dfmt-022 | report-none | empty reports object, site `""`, a `none` value | the `none` value itself |

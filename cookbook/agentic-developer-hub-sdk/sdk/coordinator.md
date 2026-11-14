@@ -2,11 +2,11 @@
 id: 9c6338b6-9a7a-4692-8164-a75800875031
 title: "Chat Coordinator"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -22,7 +22,8 @@ tags:
   - streaming
   - logic
 depends-on: []
-related: []
+related:
+  - 447d0e33-c66e-4bf9-8511-e7823bdbcf9b
 references: []
 approved-by: ""
 approved-date: ""
@@ -33,7 +34,7 @@ approved-date: ""
 ## Overview
 
 `PersonaChatCoordinator` is the Apple implementation of the
-`persona-chat-coordinator` ingredient: a `Backend`-conforming actor that
+`persona-chat-coordinator` ingredient of the [persona-chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b) recipe: a `Backend`-conforming actor that
 turns a chat UI's `send`/`inboundEvents` contract into calls against adh's
 chat API. adh orchestrates the turn — it resolves the persona from its slug,
 assembles the prompt, reads and writes history, calls the provider, and
@@ -73,7 +74,7 @@ mid-separator is never truncated or duplicated.
 - **widget-response-unsupported**: `submitWidgetResponse(_:)` MUST always
   throw `PersonaChatError.widgetsUnsupported`; the coordinator supports no
   interactive widgets.
-- **message-encode-failure-swallowed**: NEEDS REVIEW: Not implemented in source. `request.httpBody = try? JSONEncoder().encode(SendMessageBody(message: text))` discards an encoding failure instead of propagating it, unlike `ensureConversation()`, which `try`-propagates the equivalent `CreateConversationBody` encoding. If encoding ever fails, `runTurn` proceeds to call `options.authorize(request)` with a `nil` body, silently sending a bodyless POST rather than failing the turn with a diagnosable error. `SendMessageBody` holds only a `String`, so this is unlikely in practice, but the source defines no behavior for the case and no test exercises it. Resolving this requires deciding whether a `send`-time encoding failure should throw synchronously (matching `ensureConversation`'s pattern) or fail the turn via `messageFailed`.
+- **message-encode-failure-swallowed**: NEEDS REVIEW: Not implemented in source. `request.httpBody = try? JSONEncoder().encode(SendMessageBody(message: text))` discards an encoding failure, so `runTurn` would send a bodyless POST; no behavior or test defines this case (see Design Decisions).
 
 ### Conversation management
 
@@ -218,20 +219,19 @@ mid-separator is never truncated or duplicated.
   `onDisappear` — without first hopping onto the coordinator's actor, so a
   `send` already queued on the actor cannot start a new turn after the
   caller believes the coordinator is gone.
-- **turn-control-manual-locking**: `TurnControl` MUST serialize every read
-  and write of its `task` and `isDestroyed` state behind its own `NSLock`,
-  since it is declared `final class: @unchecked Sendable` rather than an
-  `actor`, specifically so `destroy()` can mutate it synchronously from a
-  non-isolated, non-async context.
+- **turn-control-thread-safe**: The in-flight turn reference and the destroyed
+  flag MUST be readable and writable from any isolation context without
+  awaiting, and every access MUST be serialized, so `destroy()` cancels
+  synchronously. The mechanism is in Design Decisions and Platform Notes.
 
 ### Concurrency and isolation
 
-- **coordinator-actor-isolated**: `PersonaChatCoordinator` MUST be declared
-  as an `actor`, so `send`, `setLocalTyping`, `submitWidgetResponse`, and
-  the turn-processing state (`conversationID`, `openInvocations`) are only
-  ever mutated by one call at a time. Only `inboundEvents`, `participantID`,
-  `conversationsURL`, and `control` (the `TurnControl`) are declared
-  `nonisolated` and are safe to touch synchronously.
+- **coordinator-state-isolation**: The coordinator's turn state
+  (`conversationID`, `openInvocations`) MUST only ever be mutated by one call
+  at a time, while `inboundEvents`, `participantID`, `conversationsURL` and
+  the turn control MUST be safe to touch synchronously from any context.
+  `PersonaChatCoordinator` achieves this as an `actor` with those members
+  `nonisolated` (see Platform Notes).
 - **authorize-injected**: The coordinator MUST attach no credentials of its
   own. Every outgoing `URLRequest` MUST be passed through the
   caller-supplied `Authorize` closure, and the coordinator MUST hold no
@@ -240,7 +240,7 @@ mid-separator is never truncated or duplicated.
   (URLRequest) async throws -> AuthorizedResponse`, so a host's
   implementation MUST be safe to invoke from the coordinator's actor
   context without additional synchronization supplied by the coordinator.
-- **concurrent-turns**: NEEDS REVIEW: Not implemented in source. `TurnControl` stores only a single `Task<Void, Never>?`; a second `send()` call issued before the first turn's `done`/`error`/abort overwrites that reference (`adopt` replaces `self.task` unconditionally), so `destroy()` after two overlapping sends only cancels the most recently adopted turn — the earlier turn keeps running and calling `options.authorize`, even though its emitted events are silently dropped once `inboundEvents` has finished. Separately, `ensureConversation()` re-checks `conversationID` before suspending on `await options.authorize(request)`; because actors are reentrant across `await`, two `send()` calls issued back-to-back before either has awaited a response can both observe `conversationID == nil` and each `POST` a distinct conversation, with whichever response returns last winning the race and the other becoming an orphaned server-side conversation. No test in `PersonaChatCoordinatorTests.swift` exercises two `send()` calls without awaiting the first turn's completion — `test_pcc002_conversationReuse_twoSendsShareOneConversation` explicitly serializes its two sends with `f.collector.wait(for: 4)` in between — so this is unresolved by both the source and its test suite. Resolving it requires either serializing `send()` behind an actor-held queue, tracking one task per turn in `TurnControl` instead of one per coordinator, or documenting that a second concurrent `send()` before the first turn ends is itself a caller error the type should reject.
+- **concurrent-turns**: NEEDS REVIEW: Not implemented in source. `TurnControl` tracks one task and `ensureConversation()` is reentrant across `await`, so overlapping `send()` calls have no defined behavior and no test (see Design Decisions).
 
 ### SSEParser
 
@@ -298,41 +298,41 @@ visual component.
 
 ## Conformance Test Vectors
 
-| ID | Requirements | Input | Expected |
-|----|-------------|-------|----------|
-| pcc-001 | conversation-lazy-creation | Coordinator constructed; no `send()` called | Zero HTTP requests recorded — `test_pcc001_lazyConversation_constructedCoordinatorMakesNoRequests` |
-| pcc-002 | conversation-reuse | `send("one")`, wait for the turn to reach 4 events, then `send("two")` | Exactly 1 request to `/conversations`, 2 requests to `/messages` — `test_pcc002_conversationReuse_twoSendsShareOneConversation` |
-| pcc-003 | no-history-in-request | `send(text: "hello", attachments: [])` | POST body to `/messages` has JSON keys exactly `["message"]`, `message == "hello"` — `test_pcc003_noHistory_requestCarriesOnlyTheNewMessage` |
-| pcc-004 | draft-accumulates-full-text | SSE `token("Hel")`, `token("lo")`, `done` | `draftUpdated.text` sequence is `["Hel", "Hello"]`, not `["Hel", "lo"]` — `test_pcc004_accumulate_draftsCarryTheWholeTextSoFar` |
-| pcc-005 | commit-once, received-message-shape | Same stream as pcc-004 | Exactly one `messageReceived` with `text == "Hello"`, followed by a `draftCleared`; the commit event precedes the clear event — `test_pcc005_commitOnce_oneMessageThenTheDraftClears` |
-| pcc-006 | no-commit-on-abort, transport-error-on-stream-failure | Stream yields `token("par")` then the body throws mid-turn (a network error) instead of `done` or `error` | No `messageReceived`; a `draftCleared` and a `transportError` are both emitted — `test_pcc006_noCommitOnAbort_truncatedReplyDoesNotCommit` |
-| pcc-007 | heartbeat-dropped | SSE `open`, `token("hi")`, `done` | `draftUpdated.text == ["hi"]`; exactly 3 non-status-changed events total (draft, message, clear) — `test_pcc007_dropOpen_theHeartbeatIsNotATranscriptEvent` |
-| pcc-008 | unknown-events-ignored, malformed-token-fallback | SSE `quux` (unrecognized event), `token("hi")`, `done` | Turn completes normally; committed message text is `"hi"` — `test_pcc008_unknownEvents_areIgnoredAndTheStreamContinues` |
-| pcc-009 | tool-call-opened, tool-call-closed | SSE `tool_call_started(name: "search", arguments: {"q":"x"})`, `tool_call_completed(name: "search", ok: true, result: {"hits":2})`, `done` | `commandInvoked.invocation.commandName == "search"`, `argumentsJSON == {"q":"x"}`; `commandCompleted.result.invocationID == invocation.id`, `ok == true`, `resultJSON == {"hits":2}` — `test_pcc009_toolCalls_completionCorrelatesToItsInvocation` |
-| pcc-010 | tool-call-ids-distinct | Two `tool_call_started(name: "search")` blocks with no completions, then `done` | The two `commandInvoked.invocation.id` values are distinct — `test_pcc010_invocationIDs_twoCallsOfOneCommandGetDistinctIDs` |
-| pcc-011 | tool-payloads-excluded-from-draft | `token("Looking")`, `tool_call_started`, `tool_call_completed(result: "classified")`, `token(" — found it.")`, `done` | `draftUpdated.text` sequence is `["Looking", "Looking — found it."]`; neither draft contains `"secret"` or `"classified"`; committed message is `"Looking — found it."` — `test_pcc011_toolTextSeparation_theDraftCarriesNoToolPayloads` |
-| pcc-012 | in-band-error-terminal | `token("par")`, `error({"message":"upstream exploded"})` | No `messageReceived`; `messageFailed(localID, "upstream exploded")` emitted for the `send`'s own `localID` — `test_pcc012_errorTerminal_theTurnFailsInsteadOfCommitting` |
-| pcc-013 | in-band-error-terminal | SSE body is a single `error({"message":"model refused"})` block on an HTTP 200 response | `messageFailed` reason is `"model refused"`; no `messageReceived` — `test_pcc013_inBandErrors_http200IsNotSuccess` |
-| pcc-014 | conversation-creation-failure-status, conversation-creation-failure-reported-as-message-failure | `/conversations` responds with HTTP 500 | `messageFailed(reason: "Couldn't start the conversation (500).")`; no request to `/messages` is made — `test_conversationCreationFailure_isReportedAgainstTheMessage` |
-| pcc-015 | destroy-cancels-and-closes, transport-error-on-stream-failure | `send()` a turn whose stream hangs after one `token`; call `destroy()` mid-turn | The in-flight cancellation flag becomes true; a `draftCleared` is emitted; no `messageReceived`; no `transportError` (because `control.destroyed` is true when the cancellation is caught) — `test_pcc014_destroyAuthoritative_cancelsTheInFlightTurn` |
-| pcc-016 | destroyed-rejects-send | `destroy()`, then `send(text: "hey", attachments: [])` | Throws `PersonaChatError.destroyed`; zero HTTP requests recorded — `test_pcc015_noReuseAfterDestroy_sendFailsFast` |
-| pcc-017 | turn-status-thinking-on-start, turn-status-retrying-on-server-signal, turn-status-responding-on-first-token, turn-status-cleared-on-exit, status-dual-channel, status-kind-mapping, status-words-always-nil | SSE `status({"phase":"retrying"})`, `token("hi")`, `done` | `onStatus` callback sequence is `[.thinking, .retrying, .responding, nil]`; every one of those four also arrives as a `statusChanged` event whose `status?.kind` is `.think`/`.retry`/`.respond`/`nil` respectively and whose `status?.words` is always `nil`; exactly 3 non-status-changed transcript events total — `test_pcc016_statusOutOfBand_retryDrivesStatusNotTheTranscript` |
-| pcc-018 | turn-status-cleared-on-exit | Truncated stream (no `done` or `error`) | The last `onStatus` value observed is `nil` — `test_statusClearsOnEveryExitPath` |
-| pcc-019 | attachments-unsupported | `send(text: "hey", attachments: [StubAttachment()])` | Throws `PersonaChatError.attachmentsUnsupported`; zero HTTP requests recorded — `test_attachmentsAreRefusedRatherThanDroppedSilently` |
-| pcc-020 | commit-once | SSE body is a single `done({})` block, no `token` blocks | One `messageReceived` with `text == ""` — `test_emptyReplyStillCommits` |
-| pcc-021 | sse-block-boundary | `SSEParser.consume` fed the bytes of one `event:token\ndata:{"text":"hi"}\n\n` block split across two arbitrary byte-range chunks, mid-word | Zero blocks returned from a `consume` call that ends before the full `\n\n` separator has arrived; exactly one `SSEBlock(event: "token", data: "{\"text\":\"hi\"}")` returned once the separator completes — traced to `SSEParser.consume`'s buffer/range logic (source; no dedicated `SSEParserTests.swift` exists) |
-| pcc-022 | sse-default-event-name, sse-comments-ignored | Block text `": a comment\ndata: hello\n\n"` (no `event:` line) | Returned block has `event == "message"`, `data == "hello"`; the comment line contributes nothing — traced to `SSEParser.parse` (source) |
-| pcc-023 | sse-single-leading-space-stripped | Block text `"event: token\ndata:  two spaces\n\n"` | Returned `data == " two spaces"` (only the first space stripped) — traced to `SSEParser.parse`'s `value.hasPrefix(" ")` guard (source) |
-| pcc-024 | sse-invalid-utf8-dropped | A chunk containing an invalid UTF-8 byte sequence between two `\n\n` separators | `consume` returns no block for that segment; parsing continues normally on the next segment — traced to `SSEParser.consume`'s `String(data:encoding:.utf8)` guard (source) |
-| pcc-025 | model-override | `PersonaChatCoordinatorOptions.model = "model-x"` vs. `model = nil` | The `/conversations` POST body includes `"model":"model-x"` in the first case and omits the `model` key entirely in the second — traced to `CreateConversationBody`'s synthesized `Encodable` conformance (source) |
-| pcc-026 | send-returns-local-id-immediately | `send(text:, attachments: [])` called against a stream that never emits any block | The call returns a `String` `localID` before any SSE block has been read — traced to `send`'s `return localID` immediately after `control.adopt(turn)` succeeds (source) |
-| pcc-027 | local-typing-noop | `setLocalTyping(true)` | Returns without throwing and produces no `InboundEvent` — traced to the empty method body (source) |
-| pcc-028 | widget-response-unsupported | `submitWidgetResponse(_:)` called with any `WidgetResponse` | Throws `PersonaChatError.widgetsUnsupported` unconditionally — traced to the method body (source) |
-| pcc-029 | destroy-idempotent-flag, destroy-nonisolated | `destroy()` called twice in a row, then `send(...)` | `destroyed == true` after the first call and remains `true` after the second; the subsequent `send` throws `PersonaChatError.destroyed` — traced to `TurnControl.destroy()`'s sticky `isDestroyed = true` (source) |
-| pcc-030 | open-invocations-cleared-per-turn | Turn A opens `tool_call_started(name: "x")` then aborts without a matching completion; a later, fresh turn B receives `tool_call_completed(name: "x")` | Turn B's completion finds no open invocation for `"x"` and produces no `commandCompleted` — traced to `defer { openInvocations.removeAll() }` in `runTurn` (source) |
-| pcc-031 | error-description-prefers-persona-chat-error | `ensureConversation()` throws `PersonaChatError.conversationFailed(status: 503)`, reaching `describe(_:fallback:)` | Returned string is exactly `"Couldn't start the conversation (503)."` — `PersonaChatError.description`, not the `fallback` and not an `NSError` bridge — traced to `describe`'s `error as? PersonaChatError` branch (source) |
-| pcc-032 | authorize-injected, authorize-is-sendable, no-persistent-storage, network-only-side-effect, coordinator-actor-isolated, turn-control-manual-locking | Inspection of the type declarations, not a runtime call | `PersonaChatCoordinator` is declared `actor`; `Authorize` is declared `@Sendable`; `TurnControl` is `final class: @unchecked Sendable` guarded by `NSLock`; neither source file references `FileManager`, `Process`, or `UserDefaults` — traced to the declarations themselves (source; a structural/compile-time check, not a unit test) |
-| pcc-033 | default-authorize-factory | `urlSessionAuthorize()` used as the `Authorize` against a `URLSession` whose response streams bytes incrementally | Each `AuthorizedResponse.body` chunk ends with `\n` (or is the final partial line at stream end); `statusCode` reflects the underlying `HTTPURLResponse.statusCode`, or `0` if the response is not an `HTTPURLResponse` — traced to `urlSessionAuthorize`'s `pump` task (source; `PersonaChatCoordinatorTests.swift` uses a custom `Authorize` fixture instead of this default) |
+| ID | Requirements | Input | Expected | Verification |
+|----|-------------|-------|----------|--------------|
+| pcc-001 | conversation-lazy-creation | Coordinator constructed; no `send()` called | Zero HTTP requests recorded — `test_pcc001_lazyConversation_constructedCoordinatorMakesNoRequests` | tested |
+| pcc-002 | conversation-reuse | `send("one")`, wait for the turn to reach 4 events, then `send("two")` | Exactly 1 request to `/conversations`, 2 requests to `/messages` — `test_pcc002_conversationReuse_twoSendsShareOneConversation` | tested |
+| pcc-003 | no-history-in-request | `send(text: "hello", attachments: [])` | POST body to `/messages` has JSON keys exactly `["message"]`, `message == "hello"` — `test_pcc003_noHistory_requestCarriesOnlyTheNewMessage` | tested |
+| pcc-004 | draft-accumulates-full-text | SSE `token("Hel")`, `token("lo")`, `done` | `draftUpdated.text` sequence is `["Hel", "Hello"]`, not `["Hel", "lo"]` — `test_pcc004_accumulate_draftsCarryTheWholeTextSoFar` | tested |
+| pcc-005 | commit-once | Same stream as pcc-004 | Exactly one `messageReceived` with `text == "Hello"`, followed by a `draftCleared`; the commit event precedes the clear event — `test_pcc005_commitOnce_oneMessageThenTheDraftClears` | tested |
+| pcc-006 | no-commit-on-abort, transport-error-on-stream-failure | Stream yields `token("par")` then the body throws mid-turn (a network error) instead of `done` or `error` | No `messageReceived`; a `draftCleared` and a `transportError` are both emitted — `test_pcc006_noCommitOnAbort_truncatedReplyDoesNotCommit` | tested |
+| pcc-007 | heartbeat-dropped | SSE `open`, `token("hi")`, `done` | `draftUpdated.text == ["hi"]`; exactly 3 non-status-changed events total (draft, message, clear) — `test_pcc007_dropOpen_theHeartbeatIsNotATranscriptEvent` | tested |
+| pcc-008 | unknown-events-ignored | SSE `quux` (unrecognized event), `token("hi")`, `done` | Turn completes normally; committed message text is `"hi"` — `test_pcc008_unknownEvents_areIgnoredAndTheStreamContinues` | tested |
+| pcc-009 | tool-call-opened, tool-call-closed | SSE `tool_call_started(name: "search", arguments: {"q":"x"})`, `tool_call_completed(name: "search", ok: true, result: {"hits":2})`, `done` | `commandInvoked.invocation.commandName == "search"`, `argumentsJSON == {"q":"x"}`; `commandCompleted.result.invocationID == invocation.id`, `ok == true`, `resultJSON == {"hits":2}` — `test_pcc009_toolCalls_completionCorrelatesToItsInvocation` | tested |
+| pcc-010 | tool-call-ids-distinct | Two `tool_call_started(name: "search")` blocks with no completions, then `done` | The two `commandInvoked.invocation.id` values are distinct — `test_pcc010_invocationIDs_twoCallsOfOneCommandGetDistinctIDs` | tested |
+| pcc-011 | tool-payloads-excluded-from-draft | `token("Looking")`, `tool_call_started(name: "search", arguments: {"q":"secret"})`, `tool_call_completed(name: "search", result: "classified")`, `token(" — found it.")`, `done` | `draftUpdated.text` sequence is `["Looking", "Looking — found it."]`; neither draft contains `"secret"` or `"classified"`; committed message is `"Looking — found it."` — `test_pcc011_toolTextSeparation_theDraftCarriesNoToolPayloads` | tested |
+| pcc-012 | in-band-error-terminal | `token("par")`, `error({"message":"upstream exploded"})` | No `messageReceived`; `messageFailed(localID, "upstream exploded")` emitted for the `send`'s own `localID` — `test_pcc012_errorTerminal_theTurnFailsInsteadOfCommitting` | tested |
+| pcc-013 | in-band-error-terminal | SSE body is a single `error({"message":"model refused"})` block on an HTTP 200 response | `messageFailed` reason is `"model refused"`; no `messageReceived` — `test_pcc013_inBandErrors_http200IsNotSuccess` | tested |
+| pcc-014 | destroy-cancels-and-closes, transport-error-on-stream-failure | `send()` a turn whose stream hangs after one `token`; call `destroy()` mid-turn | The in-flight cancellation flag becomes true; a `draftCleared` is emitted; no `messageReceived`; no `transportError` (because `control.destroyed` is true when the cancellation is caught) — `test_pcc014_destroyAuthoritative_cancelsTheInFlightTurn` | tested |
+| pcc-015 | destroyed-rejects-send | `destroy()`, then `send(text: "hey", attachments: [])` | Throws `PersonaChatError.destroyed`; zero HTTP requests recorded — `test_pcc015_noReuseAfterDestroy_sendFailsFast` | tested |
+| pcc-016 | turn-status-thinking-on-start, turn-status-retrying-on-server-signal, turn-status-responding-on-first-token, turn-status-cleared-on-exit, status-dual-channel, status-kind-mapping, status-words-always-nil | SSE `status({"phase":"retrying"})`, `token("hi")`, `done` | `onStatus` callback sequence is `[.thinking, .retrying, .responding, nil]`; every one of those four also arrives as a `statusChanged` event whose `status?.kind` is `.think`/`.retry`/`.respond`/`nil` respectively and whose `status?.words` is always `nil`; exactly 3 non-status-changed transcript events total — `test_pcc016_statusOutOfBand_retryDrivesStatusNotTheTranscript` | tested |
+| pcc-017 | conversation-creation-failure-status, conversation-creation-failure-reported-as-message-failure | `/conversations` responds with HTTP 500 | `messageFailed(reason: "Couldn't start the conversation (500).")`; no request to `/messages` is made — `test_conversationCreationFailure_isReportedAgainstTheMessage` (unnumbered test) | tested |
+| pcc-018 | turn-status-cleared-on-exit | Truncated stream (no `done` or `error`) | The last `onStatus` value observed is `nil` — `test_statusClearsOnEveryExitPath` | tested |
+| pcc-019 | attachments-unsupported | `send(text: "hey", attachments: [StubAttachment()])` | Throws `PersonaChatError.attachmentsUnsupported`; zero HTTP requests recorded — `test_attachmentsAreRefusedRatherThanDroppedSilently` | tested |
+| pcc-020 | commit-once | SSE body is a single `done({})` block, no `token` blocks | One `messageReceived` with `text == ""` — `test_emptyReplyStillCommits` | tested |
+| pcc-021 | sse-block-boundary | `SSEParser.consume` fed the bytes of one `event:token\ndata:{"text":"hi"}\n\n` block split across two arbitrary byte-range chunks, mid-word | Zero blocks returned from a `consume` call that ends before the full `\n\n` separator has arrived; exactly one `SSEBlock(event: "token", data: "{\"text\":\"hi\"}")` returned once the separator completes — traced to `SSEParser.consume`'s buffer/range logic (source; no dedicated `SSEParserTests.swift` exists) | source-traced only |
+| pcc-022 | sse-default-event-name, sse-comments-ignored | Block text `": a comment\ndata: hello\n\n"` (no `event:` line) | Returned block has `event == "message"`, `data == "hello"`; the comment line contributes nothing — traced to `SSEParser.parse` (source) | source-traced only |
+| pcc-023 | sse-single-leading-space-stripped | Block text `"event: token\ndata:  two spaces\n\n"` | Returned `data == " two spaces"` (only the first space stripped) — traced to `SSEParser.parse`'s `value.hasPrefix(" ")` guard (source) | source-traced only |
+| pcc-024 | sse-invalid-utf8-dropped | A chunk containing an invalid UTF-8 byte sequence between two `\n\n` separators | `consume` returns no block for that segment; parsing continues normally on the next segment — traced to `SSEParser.consume`'s `String(data:encoding:.utf8)` guard (source) | source-traced only |
+| pcc-025 | model-override | `PersonaChatCoordinatorOptions.model = "model-x"` vs. `model = nil` | The `/conversations` POST body includes `"model":"model-x"` in the first case and omits the `model` key entirely in the second — traced to `CreateConversationBody`'s synthesized `Encodable` conformance (source) | source-traced only |
+| pcc-026 | send-returns-local-id-immediately | `send(text:, attachments: [])` called against a stream that never emits any block | The call returns a `String` `localID` before any SSE block has been read — traced to `send`'s `return localID` immediately after `control.adopt(turn)` succeeds (source) | source-traced only |
+| pcc-027 | local-typing-noop | `setLocalTyping(true)` | Returns without throwing and produces no `InboundEvent` — traced to the empty method body (source) | source-traced only |
+| pcc-028 | widget-response-unsupported | `submitWidgetResponse(_:)` called with any `WidgetResponse` | Throws `PersonaChatError.widgetsUnsupported` unconditionally — traced to the method body (source) | source-traced only |
+| pcc-029 | destroy-idempotent-flag, destroy-nonisolated | `destroy()` called twice in a row, then `send(...)` | `destroyed == true` after the first call and remains `true` after the second; the subsequent `send` throws `PersonaChatError.destroyed` — traced to `TurnControl.destroy()`'s sticky `isDestroyed = true` (source) | source-traced only |
+| pcc-030 | open-invocations-cleared-per-turn | Turn A opens `tool_call_started(name: "x")` then aborts without a matching completion; a later, fresh turn B receives `tool_call_completed(name: "x")` | Turn B's completion finds no open invocation for `"x"` and produces no `commandCompleted` — traced to `defer { openInvocations.removeAll() }` in `runTurn` (source) | source-traced only |
+| pcc-031 | error-description-prefers-persona-chat-error | `ensureConversation()` throws `PersonaChatError.conversationFailed(status: 503)`, reaching `describe(_:fallback:)` | Returned string is exactly `"Couldn't start the conversation (503)."` — `PersonaChatError.description`, not the `fallback` and not an `NSError` bridge — traced to `describe`'s `error as? PersonaChatError` branch (source) | source-traced only |
+| pcc-032 | authorize-injected, authorize-is-sendable, no-persistent-storage, network-only-side-effect, coordinator-state-isolation, turn-control-thread-safe | Inspection of the type declarations, not a runtime call | Turn state is isolated to one call at a time and `destroy()` is callable synchronously from any context; `Authorize` is declared `@Sendable`; neither source file references `FileManager`, `Process`, or `UserDefaults` — traced to the declarations themselves (source; a structural/compile-time check, not a unit test) | source-traced only |
+| pcc-033 | default-authorize-factory | `urlSessionAuthorize()` used as the `Authorize` against a `URLSession` whose response streams bytes incrementally | Each `AuthorizedResponse.body` chunk ends with `\n` (or is the final partial line at stream end); `statusCode` reflects the underlying `HTTPURLResponse.statusCode`, or `0` if the response is not an `HTTPURLResponse` — traced to `urlSessionAuthorize`'s `pump` task (source; `PersonaChatCoordinatorTests.swift` uses a custom `Authorize` fixture instead of this default) | source-traced only |
 
 ## Edge Cases
 
@@ -356,21 +356,20 @@ visual component.
   turn ends are not given a defined ordering by the source or its test
   suite; both the single-task `TurnControl` and the reentrant
   `ensureConversation()` check are affected.
-- **Concurrent tool correlation (MUST)**: `openInvocations` is
+- **Concurrent tool correlation (depends on concurrent-turns)**: `openInvocations` is
   coordinator-wide, not per-turn, so if two turns are ever in flight at
-  once (see the open question on concurrent-turns), a `tool_call_completed` block is
+  once, which `concurrent-turns` leaves undefined, a `tool_call_completed` block would be
   matched to the oldest open invocation of that command name regardless of
   which turn opened it — the source's per-command FIFO does not
   distinguish turns.
 - **Conversation creation fails (MUST)**: A non-`2xx` status from
   `/conversations` throws `conversationFailed(status:)`, reported as
   `messageFailed` for the triggering `send`'s `localID`; no `/messages`
-  request is attempted (`pcc-014`).
+  request is attempted (`pcc-017`).
 - **Message request transport failure (MUST)**: If `options.authorize`
   itself throws while posting the message (e.g. no route to host, DNS
   failure), it is caught in `runTurn` and reported as
-  `messageFailed(localID:, reason:)` via `describe(error:,
-  fallback: "The chat request failed.")`. The conversation id already
+  `messageFailed(localID:, reason:)` via `describe(_:fallback: "The chat request failed.")`. The conversation id already
   cached by `ensureConversation()` is NOT cleared, so the next `send` still
   reuses it.
 - **In-band error on HTTP 200 (MUST)**: An `error` SSE block is treated as
@@ -395,7 +394,7 @@ visual component.
   `draftCleared` is emitted, and `inboundEvents` finishes. Because
   `control.destroyed` becomes `true` before the resulting
   `CancellationError` is caught in `consumeStream`, no `transportError` is
-  emitted for that cancellation (`pcc-015`).
+  emitted for that cancellation (`pcc-014`).
 - **`destroy()` with no turn ever started (MUST)**: `control.destroy()`
   returns `nil` (nothing to cancel); `draftCleared` and the stream finish
   still occur, which is harmless since no consumer has an active draft.
@@ -438,7 +437,7 @@ deep-linkable app URL, and neither source file parses or constructs a
 `InboundEvent.messageFailed(reason:)`
 and `.transportError(message:)` carry only the hardcoded English strings
 produced by `PersonaChatError.description` and the `fallback` arguments to
-`describe(error:fallback:)`: `"PersonaChatCoordinator has been destroyed."`,
+`describe(_:fallback:)`: `"PersonaChatCoordinator has been destroyed."`,
 `"PersonaChatCoordinator does not support attachments."`,
 `"PersonaChatCoordinator does not support widgets."`,
 `"Couldn't start the conversation (\(status))."`,
@@ -459,7 +458,7 @@ Differentiate Without Color to.
 
 Not applicable: no feature-flag or remote-config check appears anywhere in
 `PersonaChatCoordinator.swift` or `SSEParser.swift`; every code path this
-recipe describes is unconditional.
+ingredient describes is unconditional.
 
 ## Analytics
 
@@ -507,6 +506,10 @@ values and thrown `PersonaChatError` values, never written to a log.
   no `@Observable`, no `View`, no SwiftUI-specific types anywhere in either
   file. A SwiftUI host binds to it only indirectly, through a view model
   (e.g. `ObservableChatViewModel`) that subscribes to `inboundEvents`.
+  `PersonaChatCoordinator` is an `actor`; `inboundEvents`, `participantID`,
+  `conversationsURL` and `control` are `nonisolated`. `TurnControl` is a
+  `final class: @unchecked Sendable` whose `task` and `isDestroyed` state sit
+  behind an `NSLock`, so `destroy()` can mutate it synchronously.
 - **Compose**: Start from `kotlinx.coroutines` and `kotlinx.serialization`.
   `AsyncStream<InboundEvent>` maps to a `kotlinx.coroutines.flow.Flow`, or a
   `Channel<InboundEvent>` if buffering semantics need to match
@@ -558,57 +561,64 @@ values and thrown `PersonaChatError` values, never written to a log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Coordinator/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Coordinator/` | confirmed (1.0.3) |
 
 ## Design Decisions
 
-- **Decision**: `describe(_:fallback:)` names the concrete
-  `PersonaChatError` type in its `as?` cast instead of casting to
-  `CustomStringConvertible`.
-  **Rationale**: `any Error` bridges to `NSError` on Apple platforms, and
-  `NSError` itself conforms to `CustomStringConvertible` — so `error as?
-  CustomStringConvertible` succeeds for every error, not just
-  `PersonaChatError`, which silently skipped the `NSError.localizedDescription`
-  fallback for every non-`PersonaChatError` case and surfaced a raw Swift
-  `String(describing:)` dump (e.g. a verbose `DecodingError` case) instead
-  of the friendlier message the function exists to prefer. This is a fixed
-  workaround, documented inline in the source, not a hypothetical risk.
-  **Approved**: pending
-- **Decision**: `send`'s turn `Task` captures `self` weakly and is
-  deliberately detached from the caller's own task rather than being a
-  child task.
-  **Rationale**: The turn outlives the `send` call that started it — the
-  reply arrives later, on `inboundEvents` — so tying it to the caller's
-  task would cancel the reply the moment the caller's own work finished.
-  The capture is `weak` because `TurnControl` holds the task and the actor
-  holds `TurnControl`; a strong capture would keep the coordinator alive
-  for as long as a turn it is no longer wanted for.
-  **Approved**: pending
-- **Decision**: Cancellation state (`TurnControl`) lives outside the actor,
-  guarded by an `NSLock` instead of actor isolation.
-  **Rationale**: `destroy()` has to cancel a turn immediately, from any
-  context, including one holding no async capability at all — a `deinit`,
-  a SwiftUI `onDisappear`. Actor isolation would turn `destroy()` into a
-  request to cancel (queued behind whatever the actor is doing) rather
-  than an immediate cancellation.
-  **Approved**: pending
-- **Decision**: Tool call correlation is by `commandName` and FIFO arrival
-  order, not by a server-supplied invocation id.
-  **Rationale**: adh's `tool_call_completed` payload carries a `name` and
-  no id, so the coordinator has nothing else to correlate on; it assumes
-  adh completes calls to the same command in the order it started them.
-  **Approved**: pending
-- **Decision**: A turn-phase transition is reported through both the
-  `onStatus` callback and the `statusChanged` event, with neither derived
-  from the other at the call site.
-  **Rationale**: `onStatus` is kept for its existing callers while
-  `statusChanged` is the newer, out-of-band channel
-  (`status-not-a-transcript-event`); both are driven from the same single
-  `report(_:via:)` call so they can never disagree, but the source
-  maintains them as two explicit sinks rather than one deriving from the
-  other.
-  **Approved**: pending
+**Decision**: `describe(_:fallback:)` names the concrete
+`PersonaChatError` type in its `as?` cast instead of casting to
+`CustomStringConvertible`.
+**Rationale**: `any Error` bridges to `NSError` on Apple platforms, and
+`NSError` itself conforms to `CustomStringConvertible` — so `error as?
+CustomStringConvertible` succeeds for every error, not just
+`PersonaChatError`, which silently skipped the `NSError.localizedDescription`
+fallback for every non-`PersonaChatError` case and surfaced a raw Swift
+`String(describing:)` dump (e.g. a verbose `DecodingError` case) instead
+of the friendlier message the function exists to prefer. This is a fixed
+workaround, documented inline in the source, not a hypothetical risk.
+**Approved**: pending
+**Decision**: `send`'s turn `Task` captures `self` weakly and is
+deliberately detached from the caller's own task rather than being a
+child task.
+**Rationale**: The turn outlives the `send` call that started it — the
+reply arrives later, on `inboundEvents` — so tying it to the caller's
+task would cancel the reply the moment the caller's own work finished.
+The capture is `weak` because `TurnControl` holds the task and the actor
+holds `TurnControl`; a strong capture would keep the coordinator alive
+for as long as a turn it is no longer wanted for.
+**Approved**: pending
+**Decision**: Cancellation state (`TurnControl`) lives outside the actor,
+guarded by an `NSLock` instead of actor isolation.
+**Rationale**: `destroy()` has to cancel a turn immediately, from any
+context, including one holding no async capability at all — a `deinit`,
+a SwiftUI `onDisappear`. Actor isolation would turn `destroy()` into a
+request to cancel (queued behind whatever the actor is doing) rather
+than an immediate cancellation.
+**Approved**: pending
+**Decision**: Tool call correlation is by `commandName` and FIFO arrival
+order, not by a server-supplied invocation id.
+**Rationale**: adh's `tool_call_completed` payload carries a `name` and
+no id, so the coordinator has nothing else to correlate on; it assumes
+adh completes calls to the same command in the order it started them.
+**Approved**: pending
+**Decision**: A turn-phase transition is reported through both the
+`onStatus` callback and the `statusChanged` event, with neither derived
+from the other at the call site.
+**Rationale**: `onStatus` is kept for its existing callers (in the apple package today only `TestSupport.swift` passes it) and can be deleted once no host passes it, a removal the SDK maintainer owns, while
+`statusChanged` is the newer, out-of-band channel
+(`status-not-a-transcript-event`); both are driven from the same single
+`report(_:via:)` call so they can never disagree, but the source
+maintains them as two explicit sinks rather than one deriving from the
+other.
+**Approved**: pending
 
+**Decision**: `message-encode-failure-swallowed` stays open: a `send`-time encoding failure either throws synchronously (matching `ensureConversation()`) or fails the turn via `messageFailed`.
+**Rationale**: The source uses `try?` and sends a bodyless POST if `JSONEncoder` ever fails, unlike `ensureConversation()`, which propagates the equivalent failure. `SendMessageBody` holds only a `String`, so failure is unlikely, but no test exercises it.
+**Approved**: pending
+
+**Decision**: `concurrent-turns` stays open: serialize `send()` behind an actor-held queue, track one task per turn in `TurnControl`, or reject a second concurrent `send()` as a caller error.
+**Rationale**: `TurnControl` stores a single task, so a second `send()` before the first turn ends overwrites it and `destroy()` cancels only the latest turn. `ensureConversation()` re-checks `conversationID` before `await options.authorize(request)`, so two back-to-back sends can each create a conversation. `test_pcc002_conversationReuse_twoSendsShareOneConversation` serializes its sends, so no test covers this.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -639,8 +649,7 @@ overlapping `send()` calls can leave a turn `destroy()` cannot cancel, and
 conversations. `separation-of-concerns` passes: the coordinator holds no
 history, no prompt assembly, and no credentials, delegating all three to
 adh and the injected `Authorize` closure. `unit-test-coverage` is partial:
-sixteen `pcc-*` vectors plus four supplementary tests cover the
-SSE-translation and lifecycle contract thoroughly, but nothing in the repo
+twenty of the 33 `pcc-*` vectors are backed by tests, the other thirteen (pcc-021 to pcc-033) are source-traced only (see the Verification column), and nothing in the repo
 exercises `SSEParser` directly or the concurrent-`send()` scenario above.
 `secure-transport` is partial: requests go through the caller's
 `Authorize` closure and whatever `baseURL` scheme the host configures, but
@@ -657,3 +666,4 @@ conversation id.
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Fixed pcc-006 to match throwing-close test; noted clean-close emits no transportError. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Rewrote mechanism requirements as observable guarantees, moved the two open-question analyses into pending Design Decisions, renumbered test vectors to match the tests, added a Verification column and linked persona-chat. |

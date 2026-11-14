@@ -10,7 +10,7 @@
 - **signin-endpoints**: `AppAuthGoogleSignIn` MUST use `https://accounts.google.com/o/oauth2/v2/auth` as the authorization endpoint and `https://oauth2.googleapis.com/token` as the token endpoint.
 - **signin-scopes**: `AppAuthGoogleSignIn` MUST request exactly the scopes `openid`, `email` and `https://www.googleapis.com/auth/gmail.modify`.
 - **signin-offline-consent**: The authorization request MUST carry the additional parameters `access_type=offline` and `prompt=consent`, so Google issues a refresh token on every sign-in.
-- **signin-response-type**: The authorization request MUST use the authorization-code response type and send `clientId` and `clientSecret` from the config.
+- **signin-response-type**: The authorization request MUST use the authorization-code response type and be built from the config's `clientId` and `clientSecret`; the authorization URL carries `client_id` only, and the client secret goes only to the token endpoint (never into the authorization URL, where it would reach browser history and logs).
 - **signin-pkce**: The authorization request MUST carry an S256 `code_challenge` (RFC 7636) and the token exchange MUST send the matching `code_verifier`. The source does not set these; AppAuth's `OIDAuthorizationRequest` generates them by default, so a port that does not use AppAuth must add them.
 - **signin-state**: The authorization request MUST carry a random `state`, and a redirect whose `state` does not match MUST fail the flow rather than be exchanged (RFC 8252). The source relies on AppAuth for both the value and the check.
 - **signin-loopback-redirect**: The redirect URL MUST come from a local HTTP listener started on the loopback interface for the duration of the flow.
@@ -41,7 +41,7 @@
 ### Token endpoint
 
 - **endpoint-protocol**: A token endpoint MUST provide `refresh(refreshToken:config:)`, returning an access token and an `expiresIn` in seconds, and `revoke(token:)`.
-- **endpoint-refresh-request**: `refresh` MUST send one POST to `https://oauth2.googleapis.com/token` with `Content-Type: application/x-www-form-urlencoded` and the body fields, in this order, `grant_type=refresh_token`, `refresh_token`, `client_id`, `client_secret`.
+- **endpoint-refresh-request**: `refresh` MUST send one POST to `https://oauth2.googleapis.com/token` with `Content-Type: application/x-www-form-urlencoded` and the body fields `grant_type=refresh_token`, `refresh_token`, `client_id`, `client_secret`. The order is a test-fixture convention so the vectors can compare the exact body string; Google does not require it.
 - **endpoint-revoke-request**: `revoke` MUST send one POST to `https://oauth2.googleapis.com/revoke` with the same content type and a single body field `token`.
 - **endpoint-form-encoding**: Form values MUST be percent-encoded, escaping every character except the RFC 3986 unreserved set (ASCII letters, digits, `-`, `.`, `_`, `~`), so that `+`, `/`, `=`, `&` and space are escaped.
 - **endpoint-invalid-grant**: A non-2xx refresh reply whose JSON `error` is `invalid_grant` MUST throw `IntegrationError.revoked`.
@@ -55,13 +55,13 @@
 ### Token provider
 
 - **provider-actor**: `GoogleTokenProvider` MUST serialise all of its state in a single actor.
-- **provider-key**: A credential MUST be stored under `integrations.gmail.<connectionId>.credential`, and the client secret key constant MUST be `integrations.gmail.oauth-client-secret`.
+- **provider-key**: A credential MUST be stored under `integrations.gmail.<connectionId>.credential`, and the client secret key constant MUST be `integrations.gmail.oauth-client-secret`. The provider never reads that key; the host (`MailIntegrationService`) stores and reads the secret under it.
 - **provider-fresh-token**: `accessToken(connectionId:config:)` MUST return the stored access token without calling the endpoint when `expiresAt` is at least 60 seconds after `now`.
 - **provider-refresh-margin**: When `expiresAt` is less than 60 seconds after `now` (including already expired), `accessToken` MUST refresh before returning.
 - **provider-refresh-result**: A refresh MUST produce a credential with the new access token, the unchanged refresh token and `expiresAt` of `now` plus the reply's `expiresIn`, and MUST persist it before returning the token.
 - **provider-coalesce**: Concurrent `accessToken` callers for one connection MUST share a single in-flight refresh and receive the same outcome.
-- **provider-owner-persists**: Only the first caller to settle a refresh MUST persist the result and clear the in-flight entry.
-- **provider-save-error-to-owner**: When that save fails, only the persisting (first-to-settle) caller MUST receive the save error; every other caller sharing the refresh MUST return the refreshed access token without error.
+- **provider-owner-persists**: Only the first caller to settle a refresh MUST persist the result and clear the in-flight entry. Which caller settles first depends on scheduling, so callers MUST NOT rely on which one it is.
+- **provider-save-error-to-owner**: When that save fails, only the persisting (first-to-settle) caller MUST receive the save error; every other caller sharing the refresh MUST return the refreshed access token without error. Which caller that is depends on scheduling and is nondeterministic; callers MUST NOT rely on it.
 - **provider-propagates-endpoint-error**: An error thrown by the endpoint's `refresh` MUST propagate unchanged from `accessToken` to every caller sharing that refresh, and MUST NOT be persisted or change the stored credential.
 - **provider-failed-not-reused**: A failed refresh MUST be dropped from the in-flight table so the next call starts a new refresh.
 - **provider-missing-credential**: A missing credential, or one stored but not decodable as `GoogleCredential`, MUST throw `IntegrationError.revoked` from `accessToken`.

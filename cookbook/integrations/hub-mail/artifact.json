@@ -4,15 +4,15 @@
     "id": "a6442464-e17d-451e-b47a-3be23a2dc753",
     "title": "Hub Mail",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Hub-sourced mail on Apple platforms: a local mirror of the hub's Gmail tables pulled through the sync engine, typed reads over it, sign-out purge, and sending through the hub's integration action.",
+    "summary": "Apple hub-mail mirror: pulls the hub's Gmail tables locally, typed reads, sign-out purge, send through the hub.",
     "platforms": [
       "swift",
       "macos",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bc23bd7f9eef077b",
+  "synced": "bd02da23a8a9d79d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

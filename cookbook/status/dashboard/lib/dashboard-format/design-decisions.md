@@ -20,6 +20,10 @@
 **Approved**: pending
 
 **Decision**: Vitals use milliseconds below 1000 and seconds with one decimal above, and CLS has two decimals and no unit.
-**Rationale**: Doc comment: "CLS is unitless, the rest are milliseconds." The seconds form keeps long values short. The threshold compares the raw value, so a value that rounds up to 1000 reads `1000ms`, a small inconsistency kept as the source behaves.
+**Rationale**: Doc comment: "CLS is unitless, the rest are milliseconds." The seconds form keeps long values short. The threshold compares the raw value, so a value that rounds up to 1000 reads `1000ms`, a small inconsistency kept as the source behaves. Known debt: the source does not record the inconsistency as a defect; the remedy is to compare after rounding, so `999.6` reads `1.0s`.
 **Approved**: pending
 
+
+**Decision**: Month names and the literal suffixes (` UTC`, ` (UTC)`, `ms`, `s`) are fixed English strings.
+**Rationale**: The source builds both date formatters with the `"en"` locale and writes the suffixes as literals, so every viewer sees the same wording. It is a choice that affects what ports show, so it is recorded here for review rather than left implicit.
+**Approved**: pending

@@ -1,7 +1,6 @@
 
-- **Undefined children**: If `children` is `undefined` or `null`, the component MUST render an empty div with layout classes applied.
-- **Empty children array**: If `children` is an empty array, the component MUST render an empty div with layout classes applied.
-- **Gap as zero**: If `gap={0}`, the component MUST apply `gap: "0px"`; if `gap="0"`, it MUST apply `gap: "0"`.
-- **Conflicting inline styles**: If `style` contains `gap`, `alignItems`, or `justifyContent`, those values MUST take precedence over the `gap`/`align`/`justify` props, because `style` is spread last when merging.
-- **Empty or absent className**: If `className` is not provided or is an empty string, the class attribute contains no empty or extra whitespace tokens.
-
+- **Undefined or null children**: The root `div` renders with the layout classes and no child nodes. See #requirements/render-children, stack-011 and stack-018.
+- **Empty children array**: Same outcome as undefined children. See #requirements/render-children and stack-012.
+- **Gap as zero**: Numeric and string zero are applied as written. See #requirements/apply-gap-prop, stack-013 and stack-014.
+- **Conflicting inline styles**: `style` wins over the `gap`/`align`/`justify` props because it is spread last. See #requirements/apply-inline-styles and stack-015.
+- **Empty or absent className**: No empty or extra whitespace tokens appear in the class attribute. See #requirements/apply-class-names and stack-016.

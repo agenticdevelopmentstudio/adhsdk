@@ -1,0 +1,3 @@
+
+Component generates all user-facing strings (`aria-label`, `title`) from three hardcoded English templates — see **set-aria-label** — with no localization resource lookup or string-injection mechanism. These strings are read aloud by screen readers and shown as a browser tooltip, so they are user-facing text, not internal-only text; the `no-hardcoded-strings` and `string-externalization` checks in Compliance fail on this basis. A consumer that needs localized labels must fork the component or wrap it with its own label-generation logic; the source has no seam for supplying alternative templates.
+

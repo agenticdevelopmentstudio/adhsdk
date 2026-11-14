@@ -1,6 +1,6 @@
 
 **Decision**: First `finish` wins and later calls are ignored, and `finish` returns whether the caller won.
-**Rationale**: The callers use the return value to decide who runs the cleanup: the timer in `withSignInDeadline` calls `cancel()` and cancels the work only if its `finish` won, and the cancellation handler calls `cancel()` only if its `finish` won (it cancels the work either way). A port MUST keep the winner signal, not only the first-wins rule.
+**Rationale**: The callers use the return value to decide who runs the cleanup: the timer in `withSignInDeadline` calls `cancel()` and cancels the work only if its `finish` won; the cancellation handler calls `cancel()` only if its `finish` won, and cancels the work whether it won or lost. A port MUST keep the winner signal, not only the first-wins rule.
 **Approved**: pending
 
 **Decision**: A box is used instead of a task group.
@@ -12,9 +12,10 @@
 **Approved**: pending
 
 **Decision**: The class is `@unchecked Sendable` with a hand-written `NSLock`.
-**Rationale**: The compiler cannot verify a mutable class, so the type asserts its own safety; every access to `result` and `waiters` goes through the lock. A port with a built-in settle-once primitive does not need this.
+**Rationale**: The compiler cannot verify a mutable class, so the type asserts its own safety; every access to `result` and `waiters` goes through the lock. A Swift actor could replace the `NSLock` and the `@unchecked Sendable`, but `finish` would then be async, and the synchronous `finish` is what lets a cancellation handler call it, so the source keeps the lock. A port with a built-in settle-once primitive does not need this.
 **Approved**: pending
 
 **Decision**: `value()` does not respond to cancellation of the caller.
 **Rationale**: Cancellation is the caller's job, so the sign-in race wires it to `finish` through `withTaskCancellationHandler`. This keeps the box a pure race cell with no knowledge of tasks.
 **Approved**: pending
+

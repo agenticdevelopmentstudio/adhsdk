@@ -2,11 +2,11 @@
 id: df121975-deb8-49a9-b023-0aadcb0923d8
 title: "MailSyncSettings"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,8 +34,7 @@ approved-date: ""
 
 ## Overview
 
-MailSyncSettings is a small value type that says which mail classes a connection mirrors, how many days back it looks, and how often it polls. It holds five fields (`includeArchived`, `includeSpam`, `includeTrash`, `windowDays`, `pollIntervalMinutes`), a static `default`, two range constants, a classification gate `allows(_:)` and a range check `validated()`. It does no I/O. The connection record stores it as JSON (see the integration records recipe (cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f)) and the settings screen edits it. The mail integration service (cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) calls `validated()` as the first step of its settings update, so an invalid value is rejected before any stored data changes; this is the caller's contract and this type does not enforce it. When syncing, the service reads `allows(_:)` to decide which message classes to keep or tombstone, `windowDays` to compute the look-back start and tombstone older rows, and `pollIntervalMinutes` times 60 seconds as the minimum time between sync attempts per connection. It depends on `MailClass` (cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43), with cases `filed`, `archived`, `spam` and `trash`, and on `IntegrationError.invalidSettings(String)` (cookbook:351e3bf8-b137-4f59-94de-c769aa8b0666).
-
+MailSyncSettings is a small value type that says which mail classes a connection mirrors, how many days back it looks, and how often it polls. It holds five fields (`includeArchived`, `includeSpam`, `includeTrash`, `windowDays`, `pollIntervalMinutes`), a static `default`, two range constants, a classification gate `allows(_:)` and a range check `validated()`. It does no I/O. The connection record stores it as JSON ([adhsdk.ingredient.integrations.model.integration-records](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f)). How the mail integration service validates and applies these settings is that service's contract ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)); this type only supplies the values, `allows(_:)` and `validated()`. It depends on the `MailClass` enum ([adhsdk.ingredient.integrations.model.mail-classification](cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43)), with cases `filed`, `archived`, `spam` and `trash`, and on `IntegrationError.invalidSettings(String)` ([adhsdk.ingredient.integrations.model.integration-error](cookbook:351e3bf8-b137-4f59-94de-c769aa8b0666)).
 ## Behavioral Requirements
 
 ### Shape
@@ -44,7 +43,7 @@ MailSyncSettings is a small value type that says which mail classes a connection
 - **value-semantics**: MailSyncSettings MUST be an `Equatable`, `Codable` and `Sendable` value type, so two instances with equal fields compare equal.
 - **default-values**: The static `default` MUST have all three include flags false, `windowDays` 30 and `pollIntervalMinutes` 15.
 - **memberwise-init-defaults**: The memberwise initializer MUST default each parameter to the same value as `default`, so omitting every argument yields `default`.
-- **range-constants**: MailSyncSettings MUST publish `windowDaysRange` as 1 through 3650 and `pollIntervalRange` as 1 through 1440, both inclusive.
+- **range-constants**: MailSyncSettings MUST publish `windowDaysRange` as 1 through 3650 and `pollIntervalRange` as 1 through 1440, both inclusive. The `validated()` messages below are fixed text with these numbers written into them, so a port that changes a range MUST change the message with it.
 
 ### Decoding
 
@@ -53,7 +52,7 @@ MailSyncSettings is a small value type that says which mail classes a connection
 - **decode-null-key**: Decoding MUST treat a key present with a JSON null the same as an absent key, so a stored row whose field was cleared still loads instead of failing.
 - **decode-partial**: Decoding MUST keep the keys that are present and default only the missing ones.
 - **decode-ignore-unknown**: Decoding MUST ignore keys other than the five, so a stored row carrying extra keys still loads and decodes to the same values.
-- **decode-wrong-type**: Decoding MUST propagate the decoder's error when a present key has the wrong type (for example a string for `windowDays`); the source does not catch it.
+- **decode-wrong-type**: Decoding MUST propagate the decoder's error when a present key has the wrong type (for example a string for `windowDays`), and MUST NOT swallow it or fall back to the default.
 - **decode-no-range-check**: Decoding MUST NOT validate ranges, so an out-of-range number decodes unchanged and is rejected only when `validated()` is called.
 - **init-no-range-check**: The memberwise initializer MUST NOT validate ranges.
 
@@ -72,12 +71,12 @@ MailSyncSettings is a small value type that says which mail classes a connection
 
 ### Ordering and concurrency
 
-- **no-shared-state**: MailSyncSettings MUST hold no shared mutable state; as a `Sendable` value its copies move freely between threads and the type adds no ordering rule.
+- **no-shared-state**: MailSyncSettings MUST hold no shared mutable state: it declares no `static var` and no reference-type stored property, so its `Sendable` conformance compiles under strict concurrency and the type adds no ordering rule.
 
 ### Persistence and side effects
 
-- **no-side-effects**: Every operation MUST be a pure function of the instance fields; none touches files, the network, processes or notifications.
-- **persisted-as-json**: MailSyncSettings MUST be persisted through its `Codable` conformance as JSON text, which the connection record stores in a column (cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f).
+- **no-side-effects**: Every operation MUST be a pure function of the instance fields. The source file imports only Foundation and calls no file, network, process or notification API.
+- **persisted-as-json**: MailSyncSettings MUST be persisted through its `Codable` conformance as JSON text, which the connection record stores in a column ([adhsdk.ingredient.integrations.model.integration-records](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f)).
 
 ## Appearance
 
@@ -111,16 +110,18 @@ Not applicable — this is a settings value type, not a visual component.
 | mail-sync-settings-014 | decode-ignore-unknown | JSON `{"foo":1}` | Decodes to `default` (derived from the source, no test) |
 | mail-sync-settings-015 | validated-window | `windowDays` -1, with `pollIntervalMinutes` 15 | Throws with message `windowDays must be 1–3650, got -1` (derived from the source, no test) |
 | mail-sync-settings-016 | validated-poll | `pollIntervalMinutes` -1, with `windowDays` 30 | Throws with message `pollIntervalMinutes must be 1–1440, got -1` (derived from the source, no test) |
+| mail-sync-settings-017 | decode-keys, persisted-as-json, value-semantics | Encode `MailSyncSettings(includeSpam: true, windowDays: 10, pollIntervalMinutes: 5)` to JSON, check the top-level keys, then decode the JSON (derived from the source, no test) | The object has exactly the keys `includeArchived`, `includeSpam`, `includeTrash`, `windowDays` and `pollIntervalMinutes`, and the decoded value equals the original |
+| mail-sync-settings-018 | validated-no-clamp | `windowDays` 5000 with `pollIntervalMinutes` 15, call `validated()` (derived from the source, no test) | Throws `IntegrationError.invalidSettings` with message `windowDays must be 1–3650, got 5000`; no value of 3650 is returned |
 ## Edge Cases
 
-- **Empty object**: `{}` MUST decode to `default`; the doc comment says a missing key takes its default.
+- **Empty object**: `{}` MUST decode to `default`, because a missing key takes its default (decode-lenient).
 - **Null key**: A key set to null MUST take the default, the same as a missing key.
 - **Unknown extra keys**: Keys other than the five MUST be ignored (decode-ignore-unknown).
 - **Wrong-typed value**: A key with the wrong JSON type MUST make decoding throw; leniency covers absent keys only.
-- **Boundary values**: `windowDays` of 1 and 3650 and `pollIntervalMinutes` of 1 and 1440 MUST pass validation; 0, 3651 and 1441 MUST fail.
+- **Boundary values**: The lowest and highest value of each range (#requirements/range-constants) MUST pass validation; the values just outside each range MUST fail (vectors 005 and 006).
 - **Negative numbers**: A negative `windowDays` or `pollIntervalMinutes` is outside its range and MUST fail validation with the offending value in the message.
 - **Both numbers invalid**: Only the `windowDays` error is raised, because it is checked first.
-- **Unvalidated instances**: An instance built by decoding or the initializer can hold out-of-range numbers; a caller that skips `validated()` carries them forward. The service validates on update, and this type does not stop other callers.
+- **Unvalidated instances**: An instance built by decoding or the initializer can hold out-of-range numbers; a caller that skips `validated()` carries them forward. The mail integration service validates on update, and this type does not stop other callers.
 - **Concurrent access**: Not applicable; the type is a `Sendable` value with no shared state, so each thread works on its own copy.
 - **Offline or error states from dependencies**: Not applicable; the type has no network, file or database dependency. The only error it raises is `IntegrationError.invalidSettings`.
 - **Cancellation and timeouts**: Not applicable; every operation is synchronous and returns immediately.
@@ -132,8 +133,8 @@ Not applicable — this is a settings value type, not a visual component.
 | `includeArchived` | Bool | false | Also mirror archived mail (`MailClass.archived`) |
 | `includeSpam` | Bool | false | Also mirror spam (`MailClass.spam`) |
 | `includeTrash` | Bool | false | Also mirror trash (`MailClass.trash`) |
-| `windowDays` | Int | 30 | Look-back window in days; valid range 1 through 3650 |
-| `pollIntervalMinutes` | Int | 15 | Minutes between polls; valid range 1 through 1440 |
+| `windowDays` | Int | 30 | Look-back window in days; valid range per #requirements/range-constants |
+| `pollIntervalMinutes` | Int | 15 | Minutes between polls; valid range per #requirements/range-constants |
 
 ## Deep Linking
 
@@ -165,7 +166,7 @@ Not applicable: the source makes no log call.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Integrations/Model/MailSyncSettings.swift`, a Foundation-only struct with a hand-written `init(from:)` using `decodeIfPresent` and a private `CodingKeys`. As an `Equatable` value it can back `@State` or an observable model directly, and the settings screen can bind each field to a `Toggle` or `Stepper` and call `validated()` before saving.
+- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailSyncSettings.swift`, a Foundation-only struct with a hand-written `init(from:)` using `decodeIfPresent` and a private `CodingKeys`. As an `Equatable` value it can back `@State` or an observable model directly, and a settings screen can bind each field to a `Toggle` or `Stepper`. Validation is owned by the mail integration service, which calls `validated()` when it accepts an update; a screen may call it only to preview an error.
 - **Compose**: Use a Kotlin data class with default parameter values equal to `default`. With `kotlinx.serialization`, set defaults on each property and use `Json { coerceInputValues = true; ignoreUnknownKeys = true }` so absent keys default; a JSON null needs `coerceInputValues` and non-null types, and a wrong-typed value still throws `SerializationException`. Implement `validated()` with `require` or a custom exception carrying the same message.
 - **React/Web**: Use a TypeScript interface with the five camelCase keys, a `defaultMailSyncSettings` constant, and a decode function that spreads parsed JSON over the default after dropping null values; `JSON.parse` does not reject wrong types, so check `typeof` and throw to match the source. `validated` is a function that throws an `Error` with the same message, and `allows` is a switch over a string-literal union of the four classes.
 - **AppKit / UIKit**: Same Swift source; the type imports only Foundation, so macOS and iOS share it unchanged and an AppKit or UIKit settings screen uses it through a view model.
@@ -175,7 +176,7 @@ Not applicable: the source makes no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailSyncSettings.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailSyncSettings.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -195,7 +196,7 @@ Not applicable: the source makes no log call.
 **Approved**: pending
 
 **Decision**: Window of 1 to 3650 days and poll interval of 1 to 1440 minutes.
-**Rationale**: The bounds are fixed in `windowDaysRange` and `pollIntervalRange`; 3650 days is ten years and 1440 minutes is one day. The source gives no further reason for the numbers.
+**Rationale**: The bounds are fixed in `windowDaysRange` and `pollIntervalRange`; 3650 days is ten years and 1440 minutes is one day. No further reason is recorded for the numbers, so treat them as arbitrary limits that may change.
 **Approved**: pending
 
 ## Compliance
@@ -207,9 +208,10 @@ Not applicable: the source makes no log call.
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 
-The type holds shape, defaults, the class gate and the range check, with persistence and sync elsewhere, so separation of concerns passes. `MailSyncSettingsTests` covers the defaults, `allows`, both ranges and their boundaries, the empty-object decode and the partial decode, but not null keys, wrong-typed keys, unknown keys or the error message text, so unit test coverage is partial. Error handling passes because `validated()` throws a typed error with the offending value, and decoding errors propagate. Data integrity is partial because decoding and the initializer accept out-of-range numbers and the guarantee depends on callers invoking `validated()`.
+The type holds shape, defaults, the class gate and the range check, with persistence and sync elsewhere, so separation of concerns passes. `MailSyncSettingsTests` covers the defaults, `allows`, both ranges and their boundaries, the empty-object decode and the partial decode, but not null keys, wrong-typed keys, unknown keys, the encoded key set or the error message text, so unit test coverage is partial. The untested vectors are 010 through 018. Error handling passes because `validated()` throws a typed error with the offending value, and decoding errors propagate. Data integrity is partial because decoding and the initializer accept out-of-range numbers and the guarantee depends on callers invoking `validated()`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Replaced bare links with rdid-labelled links, cut the Overview down to what the type supplies, made the decode-wrong-type, no-shared-state and no-side-effects requirements checkable, added round-trip and no-clamp vectors, removed repeated range numbers, fixed the source path and named the service as owner of validation. |

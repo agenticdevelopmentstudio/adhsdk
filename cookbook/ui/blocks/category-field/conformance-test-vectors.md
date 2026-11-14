@@ -5,11 +5,11 @@
 | category-field-002 | render-browser-button | Render with default props. | "Choose…" button is visible and clickable. |
 | category-field-003 | update-value-on-combobox-change | Type "test" in the combobox and confirm a selection matching an item in `options`. | `onChange` is called once with "test". |
 | category-field-004 | update-value-on-browser-select | Click "Choose…", select an option in the entity chooser, confirm the selection. | `onChange` is called once with the selected option's name. |
-| category-field-005 | accept-value-not-in-options | Render with `value="custom-name"` where "custom-name" is not in `options` list. | Component displays "custom-name" in combobox without error; breadcrumbs show it if `nodes` includes it. |
+| category-field-005 | accept-value-not-in-options | Render with `value="custom-name"` where "custom-name" is not in `options` list. | Component displays "custom-name" in combobox without error; with `nodes` omitted no breadcrumbs render. |
 | category-field-006 | display-breadcrumbs-when-nodes-provided | Render with `value="leaf"`, `nodes` containing a tree with "leaf" at the end of a trail. | One breadcrumb trail is displayed with ancestors leading to "leaf". |
 | category-field-007 | show-all-filing-paths | Render with `value="shared"` where "shared" node has two parents in `nodes`. | Two breadcrumb trails are displayed, each showing a different path to "shared". |
 | category-field-008 | path-count-aria-label | Render with one trail; then render with two trails. | `aria-label="<label> path"` (singular) for one trail; `aria-label="<label> paths"` (plural) for two or more trails. |
-| category-field-009 | chevron-separators | Render breadcrumb trail with three nodes. | Two ChevronRight icons (12px) are visible between the three breadcrumbs; none appears before the first. |
+| category-field-009 | chevron-separators | Render breadcrumb trail with three nodes. | Two chevron glyphs are visible between the three breadcrumbs; none appears before the first. |
 | category-field-010 | leaf-breadcrumb-accent | Render breadcrumb trail with ancestor and leaf. | Leaf breadcrumb renders in the leaf-accent color token (`text-apt-gold`). |
 | category-field-011 | ancestor-breadcrumb-muted | Render breadcrumb trail with three nodes. | First two (ancestor) breadcrumbs render in the muted color token (`text-apt-text-muted`); the third (leaf) renders in the leaf-accent token. |
 | category-field-012 | breadcrumb-truncation | Render breadcrumb with very long node name in narrow container. | Text is truncated with ellipsis; no overflow occurs. |
@@ -34,6 +34,6 @@
 | category-field-031 | browser-aria-label-from-label | Render with `label="Skills"`. | Entity chooser `ariaLabel` is "Browse skills". |
 | category-field-032 | hide-breadcrumbs-without-trail | Render with `value="missing"` where no node in `nodes` has that name. | `nodeForName` resolves to `null`; breadcrumb `<nav>` section is not rendered; combobox and chooser remain interactive. |
 | category-field-033 | rename-follows-selected | Click a breadcrumb to open the rename dialog; submit a name for which `onRename` rejects. | `onChange` is NOT called and `value`/breadcrumbs are unchanged; the dialog's own error handling is CategoryRenameDialog's — see [adhsdk.ingredient.ui.blocks.category-rename-dialog](cookbook:526da033-2f0d-4bd7-b2c2-99faba4783a3). |
-| category-field-034 | disabled-state | Open the rename dialog via a breadcrumb click, then re-render CategoryField with `disabled={true}`. | The dialog remains open; the source does not close it or otherwise alter it on this transition — CategoryField's `renaming` state is independent of `disabled`. |
 | category-field-035 | show-all-filing-paths | Render with `value="shared"` where "shared" has 5 parents in `nodes` (5 distinct filing paths). | Only 4 breadcrumb trails are displayed (`MAX_TRAILS`); the 5th filing path is not rendered. |
-
+| category-field-036 | accept-value-not-in-options, display-breadcrumbs-when-nodes-provided | Render with `value="custom-name"` where "custom-name" is not in `options` but is a node name in `nodes`. | Combobox displays "custom-name" without error and a breadcrumb trail ending at "custom-name" renders. |
+| category-field-037 | show-all-filing-paths | Render with `value="shared"` whose node lists parents `[p1, p2]` in `parentIds`, each a root. | Two trails render in `parentIds` order: the p1 trail first, then the p2 trail, each root-first and ending at "shared". |

@@ -16,7 +16,7 @@
 **Approved**: pending
 
 **Decision**: The 0.5 to 4 clamp is a shared static (`sizeScaleRange`, `clampedSizeScale(_:)`) applied by callers and not by `init` or `size(_:)`.
-**Rationale**: The source says it is the one place both callers enforce the limit so they cannot drift. It is not enforced in `init` because a decoded or hand-built value is the caller's to repair; `ThemeStore.importJSON` repairs rather than refuses since a bad scale leaves the theme mis-sized, not unusable. The consequence is that a `ThemeTypography` built directly can hold any scale.
+**Rationale**: The source says it is the one place both callers enforce the limit so they cannot drift. The lower bound exists because below 0.5 `size(_:)` collapses every role toward zero and takes any constraint built on an intrinsic size with it; the upper bound exists because above 4 the size exceeds what a layout that assumes a roughly system-sized label can hold (the doc comment). It is not enforced in `init` because a decoded or hand-built value is the caller's to repair; `ThemeStore.importJSON` repairs rather than refuses since a bad scale leaves the theme mis-sized, not unusable. The consequence is that a `ThemeTypography` built directly can hold any scale.
 **Approved**: pending
 
 **Decision**: `defaultStyle(_:)` uses AppKit's standard metrics (22, 15, 13, 11, 12 monospaced, 13 medium).

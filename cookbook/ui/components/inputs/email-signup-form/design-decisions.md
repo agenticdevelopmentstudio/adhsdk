@@ -11,7 +11,7 @@
 
 **Generic Server Errors**
 **Decision**: The component does not expose server error reasons (e.g., "invalid submission", "rate limit") to the visitor.
-**Rationale**: Those reasons describe the anti-abuse gate, and leaking which defense tripped is an attack surface. Developers see the real error in the console; visitors see only "Something went wrong."
+**Rationale**: Those reasons describe the anti-abuse gate, and leaking which defense tripped is an attack surface. Visitors see only "Something went wrong." A submission failure is not logged to the console (only config-load and nonce-refresh failures are), so the generic message is the only record on the client.
 **Approved**: pending
 
 **Silent Config Refresh on Submission Error**
@@ -19,14 +19,14 @@
 **Rationale**: If the refresh itself fails, the visitor still has the form, and retrying (with a stale nonce) is still better than showing a dead end. This trades silent nonce staleness for a form that remains usable.
 **Approved**: pending
 
-**Honeypot over CSRF Tokens**
-**Decision**: The component uses a honeypot (a form field invisible to humans) rather than CSRF token validation.
-**Rationale**: CSRF tokens require a shared session or state between the page and backend. A public endpoint has no session, so a honeypot is the only bot defense available at this layer (the server layer separately enforces nonce aging and IP rate limits).
+**Honeypot and Nonce Aging over CAPTCHA**
+**Decision**: The component uses a honeypot (a form field invisible to humans) plus nonce aging rather than a CAPTCHA or similar challenge.
+**Rationale**: A challenge such as a CAPTCHA adds friction and a third-party dependency to an embeddable form. The honeypot catches content-filling bots, and the client-side nonce-age wait defeats rapid-fire submissions; the server separately enforces nonce aging and IP rate limits. (CSRF tokens are a different defense, against forged cross-site requests, and need a session that a public endpoint does not have.)
 **Approved**: pending
 
 **sourceUrl Captures window.location.href**
-**Decision**: The POST body's `sourceUrl` field is `window.location.href` (undefined during SSR).
-**Rationale**: The backend stores this as the consent record's provenance, proving the address opted in at this specific page. This is necessary for compliance and dispute resolution.
+**Decision**: The POST body's `sourceUrl` field is `window.location.href` (undefined during SSR), including any query string or fragment.
+**Rationale**: The backend stores this as the consent record's provenance, proving the address opted in at this specific page. This is necessary for compliance and dispute resolution. The full href can carry tokens or personal data in a query string or fragment, so a host page that puts such values in its URL should know they are sent; the component does not strip them.
 **Approved**: pending
 
 **No Optimistic Submission**
@@ -54,3 +54,12 @@
 **Rationale**: The field's validation state is always readable by assistive tech and tests, not just its failure half. This is more maintainable than conditionally rendering the attribute.
 **Approved**: pending
 
+**Closed-State Name Fallback**
+**Decision**: The Closed state renders `config?.name ?? "This list"`, so an empty-string `config.name` produces a blank subject instead of "This list".
+**Rationale**: This records what the source does today and treats it as a known defect, not a goal. A port may use an empty-name-aware fallback (`||`) without breaking any other requirement.
+**Approved**: pending
+
+**Accepted Accessibility and Localization Gaps**
+**Decision**: The touch-target size (about 36px), Increase Contrast handling, string externalization and hardcoded English strings are known gaps that this version leaves open.
+**Rationale**: The component ships as a self-contained embed with fixed English copy and Tailwind defaults; closing these gaps needs a localization layer and larger control sizing, which are changes to the component itself. The Compliance table records each as `failed` or `partial` so that no reader mistakes them for passes.
+**Approved**: pending

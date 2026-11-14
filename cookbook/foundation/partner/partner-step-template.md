@@ -2,7 +2,7 @@
 id: 211ef664-01fc-45d5-996b-1a0a4167a748
 title: "Partner Step Template"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,8 @@ tags:
   - partner
   - templating
   - shell-quoting
-depends-on: []
+depends-on:
+  - 79810488-c613-4f9b-af2a-4ba9d8ee1c26
 related: []
 references: []
 approved-by: ""
@@ -30,23 +31,24 @@ approved-date: ""
 
 ## Overview
 
-`PartnerStepTemplate` fills `{key}` placeholders in the commands of a partner job's steps. A terminal step is a shell command line, so each value goes in as one shell word; a Claude step is a prompt, so its values are typed as written. A value that itself contains a placeholder is never substituted again, which matters because a value such as a commit subject is written by someone else.
+`PartnerStepTemplate` has two functions named `fill` and one helper. The *command fill* is `fill(_ command: String, values: [String: String]) -> String`; the *step fill* is `fill(_ steps: [PartnerJobStep], values: [String: String]) -> [PartnerJobStep]`; the helper is `shellQuoted(_ value: String) -> String`. Together they fill `{key}` placeholders in the commands of a partner job's steps. A terminal step is a shell command line, so each value goes in as one shell word; a Claude step is a prompt, so its values are typed as written. A value that itself contains a placeholder is never substituted again, which matters because a value such as a commit subject is written by someone else.
 
 ## Behavioral Requirements
 
-- **placeholder-syntax**: A placeholder MUST be an opening brace, one or more word characters (the regular-expression word class, which in Swift's `NSRegularExpression` includes Unicode letters and numerals, plus underscore) and a closing brace; `{}` and `{two words}` are not placeholders.
-- **fill-known**: `fill(_:values:)` on a command MUST replace each placeholder whose key has a value with that value.
+- **placeholder-syntax**: A placeholder MUST be an opening brace, one or more word characters (the ICU `\w` class used by Swift's `NSRegularExpression`: Unicode letters, marks and decimal digits, plus underscore and other connector punctuation, so `{café}` is a placeholder; a port MUST use this same class, not an ASCII-only one) and a closing brace; `{}` and `{two words}` are not placeholders.
+- **fill-known**: The command fill MUST replace each placeholder whose key has a value with that value.
 - **unknown-stays**: A placeholder whose key has no value MUST stay in the output exactly as written.
 - **one-pass**: Substitution MUST be one pass over the original command; a value MUST NOT be scanned for placeholders, so a value containing `{key}` appears as written.
 - **text-between-preserved**: All text outside replaced placeholders MUST be copied unchanged.
-- **terminal-quoting**: `fill(_:values:)` on steps MUST quote every value with `shellQuoted` before filling a step whose environment is `terminal`.
-- **claude-unquoted**: The same function MUST fill a step whose environment is `claude` with the values as written.
-- **steps-keep-fields**: The step function MUST return one step per input step, in order, changing only `command`; `name`, `environment` and `condition` MUST be unchanged.
+- **terminal-quoting**: The step fill MUST quote every value with `shellQuoted` before filling a step whose environment is `terminal`.
+- **claude-unquoted**: The step fill MUST fill a step whose environment is `claude` with the values as written.
+- **steps-keep-fields**: The step fill MUST return one step per input step, in order, changing only `command`; `name`, `environment` and `condition` MUST be unchanged.
 - **plain-word-unquoted**: `shellQuoted` MUST return a value as written when it is not empty and every character is an ASCII letter, an ASCII numeral, or one of `_ - . / : @ + ,`.
 - **otherwise-single-quoted**: `shellQuoted` MUST otherwise return the value wrapped in single quotes, with each single quote in the value written as the four characters quote, backslash, quote, quote.
 - **empty-is-quoted**: `shellQuoted` MUST return two single quotes for an empty value, so it stays one word.
-- **no-equals-no-tilde**: `shellQuoted` MUST quote a value containing `=` or `~`; the source comment says a leading `=` is zsh's command-path expansion.
-
+- **no-equals-no-tilde**: `shellQuoted` MUST quote a value containing `=` or `~`.
+- **empty-values-unchanged**: The command fill MUST return a command with every placeholder as written when `values` is empty.
+- **hostile-values-inert**: The step fill MUST deliver a value containing `{key}`, a single quote, `$`, a backtick or a space to a terminal step as one shell word with no expansion, and MUST deliver it verbatim to a Claude step.
 ## Appearance
 
 Not applicable — this is a pure text-substitution helper, not a visual component.
@@ -67,22 +69,25 @@ Not applicable — this is a pure text-substitution helper, not a visual compone
 | partner-step-template-002 | one-pass | Command `{subject} {sha}`, values `subject` = `fix {sha} {nope}`, `sha` = `abc`. | `fix {sha} {nope} abc` (test: fillIsOnePassSoAValueIsNeverReSubstituted). |
 | partner-step-template-003 | terminal-quoting, claude-unquoted | A terminal step `claude --model {model}` and a Claude step `/code-review {model}`, values `model` = `opus[1m]`. | Commands become `claude --model 'opus[1m]'` and `/code-review opus[1m]` (test: aTerminalStepQuotesItsValuesAndAClaudeStepDoesNot). |
 | partner-step-template-004 | plain-word-unquoted, terminal-quoting | The same terminal step with `model` = `claude-opus-5-5`. | `claude --model claude-opus-5-5`, unquoted (test: aTerminalStepQuotesItsValuesAndAClaudeStepDoesNot). |
-| partner-step-template-005 | otherwise-single-quoted | `shellQuoted` of the value `it's`. | The value wrapped in single quotes with the inner quote written as quote, backslash, quote, quote (test: aTerminalStepQuotesItsValuesAndAClaudeStepDoesNot). |
+| partner-step-template-005 | otherwise-single-quoted | `shellQuoted` of the value `it's`. | `'it'\''s'` (test: aTerminalStepQuotesItsValuesAndAClaudeStepDoesNot, line `shellQuoted("it's")`). |
 | partner-step-template-006 | no-equals-no-tilde | `shellQuoted` of the value `=ls`. | `'=ls'` (test: aTerminalStepQuotesItsValuesAndAClaudeStepDoesNot). |
-| partner-step-template-007 | empty-is-quoted | `shellQuoted` of the empty string. | Two single quotes. |
-| partner-step-template-008 | placeholder-syntax | Command `{} {a b} {c}`, values `c` = `x`. | `{} {a b} x`. |
-| partner-step-template-009 | steps-keep-fields | One terminal step with `name` `open`, `condition` `when-idle` and command `echo {x}`, values `x` = `1`. | One step with `name` `open`, environment `terminal`, `condition` `when-idle` and command `echo 1`. |
-| partner-step-template-010 | text-between-preserved | Command `a {x} b {x} c`, values `x` = `1`. | `a 1 b 1 c`. |
-
+| partner-step-template-007 | empty-is-quoted | `shellQuoted` of the empty string. | `''` (no test yet). |
+| partner-step-template-008 | placeholder-syntax | Command `{} {a b} {c}`, values `c` = `x`. | `{} {a b} x` (no test yet). |
+| partner-step-template-009 | steps-keep-fields | One terminal step with `name` `open`, `condition` `when-idle` and command `echo {x}`, values `x` = `1`. | One step with `name` `open`, environment `terminal`, `condition` `when-idle` and command `echo 1` (no test yet). |
+| partner-step-template-010 | text-between-preserved | Command `a {x} b {x} c`, values `x` = `1`. | `a 1 b 1 c` (no test yet). |
+| partner-step-template-011 | placeholder-syntax | Command `{café}`, values `café` = `x`. | `x` (no test yet). |
+| partner-step-template-012 | no-equals-no-tilde | `shellQuoted` of `~/x`. | `'~/x'` (no test yet). |
+| partner-step-template-013 | terminal-quoting, claude-unquoted | One terminal step `echo {v}` and one Claude step `say {v}` in the same list, values `v` = `a b`. | Commands `echo 'a b'` and `say a b` (no test yet). |
+| partner-step-template-014 | empty-values-unchanged | Command `x {a} {b}`, empty `values`. | `x {a} {b}` (no test yet). |
 ## Edge Cases
 
-- **Null / empty input**: An empty command returns an empty string; an empty `values` leaves every placeholder as written (MUST); an empty step list returns an empty list; an empty value fills as nothing in a Claude step and as two single quotes in a terminal step.
+- **Null / empty input**: An empty command returns an empty string; an empty `values` leaves every placeholder as written (see `#requirements/empty-values-unchanged`); an empty step list returns an empty list; an empty value fills as nothing in a Claude step and as two single quotes in a terminal step.
 - **Boundary values**: Adjacent placeholders such as `{a}{b}` are both filled; a placeholder at the very start or end of the command is filled; the key is word characters only, so `{a-b}` is not a placeholder and stays as written.
 - **Concurrent access**: Both functions are pure over their arguments; the compiled expression is a shared immutable constant, so concurrent callers are safe.
 - **Error states**: The functions cannot fail. The placeholder expression is a constant created with a forced `try!` (the source disables the lint rule on that line); it is fixed, so it cannot fail at run time.
 - **Offline / disconnected state**: Not applicable: the type performs no network or file access.
 - **Cancellation**: Not applicable: every function is synchronous.
-- **Hostile values**: A value containing `{key}`, a single quote, `$`, backticks or spaces MUST reach a terminal step as one inert shell word and MUST appear verbatim in a Claude step; that is the reason for one-pass substitution and for quoting.
+- **Hostile values**: A value containing `{key}`, a single quote, `$`, backticks or spaces is covered by `#requirements/hostile-values-inert`; that is the reason for one-pass substitution and for quoting.
 
 ## Configuration
 
@@ -131,7 +136,7 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerStepTemplate.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerStepTemplate.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -159,12 +164,13 @@ Not applicable: the source calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 
-`separation-of-concerns` passes because the type only substitutes and quotes text; deciding what values to supply and running the command belong to the callers. `unit-test-coverage` passes because `PartnerModelsTests` covers known and unknown keys, one-pass substitution, terminal versus Claude quoting and the two quoting cases `it's` and `=ls`. `input-sanitization` is partial: values reach a terminal step as one quoted word, but a Claude-step prompt receives them as written by design, and the type is not a general sanitizer.
+`separation-of-concerns` passes because the type only substitutes and quotes text; deciding what values to supply and running the command belong to the callers. `unit-test-coverage` is partial: `PartnerModelsTests` covers known and unknown keys, one-pass substitution, terminal versus Claude quoting and the two quoting cases `it's` and `=ls` (vectors 001-006), but no test covers vectors 007-014. `input-sanitization` is partial: values reach a terminal step as one quoted word, but a Claude-step prompt receives them as written by design, and the type is not a general sanitizer.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Spelled out both fill signatures, pinned the placeholder character class, made hostile-values and empty-values named requirements, gave literal vector outputs, added four vectors, downgraded unit-test-coverage to partial, and depends-on partner-job. |

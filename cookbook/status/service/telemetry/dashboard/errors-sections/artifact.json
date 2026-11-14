@@ -4,7 +4,7 @@
     "id": "488a7fef-19c2-4526-8882-3d0529dda3e3",
     "title": "Errors Dashboard Sections",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,17 +24,19 @@
       "glitchtip",
       "errors"
     ],
-    "depends-on": [],
-    "related": [
-      "a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f",
+    "depends-on": [
       "8648272e-2da3-46fc-b9e8-5148dacdbcff",
+      "d4e7dd53-4771-425f-af0a-0186ba89c3ef",
       "7984f592-a12d-49da-806c-ff39d9557998"
+    ],
+    "related": [
+      "a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ec321a63f672f41b",
+  "synced": "40c41be36f571dd4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,7 +2,7 @@
 id: 92a9546a-eec1-47ed-8420-7db51e8d0261
 title: "Activity Span DTO"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,8 @@ tags:
   - foundation
   - dto
 depends-on: []
-related: []
+related:
+  - aa775836-5679-4a22-9ff3-b2bdcb09cc20
 references: []
 approved-by: ""
 approved-date: ""
@@ -29,7 +30,7 @@ approved-date: ""
 
 ## Overview
 
-`ActivitySpanDTO` is the wire and storage shape of one contiguous stretch of focus on an allowlisted development app, per its doc comment "One contiguous stretch of focus on an allowlisted development app." It is a plain value type (`Codable`, `Sendable`, `Equatable`, `Identifiable`) with no behavior beyond one derived flag, `isOpen`. It is carried inside `WorkTrackingStatus` as `currentSpan` and is the span unit used by the work-tracking persistence contract. This recipe covers the shape, defaults, sentinel values and mutability rules only.
+`ActivitySpanDTO` is the wire and storage shape of one contiguous stretch of focus on an allowlisted development app, per its doc comment "One contiguous stretch of focus on an allowlisted development app." It is a plain value type (`Codable`, `Sendable`, `Equatable`, `Identifiable`) with no behavior beyond one derived flag, `isOpen`. It is carried inside `WorkTrackingStatus` ([adhsdk.ingredient.foundation.work-tracking.work-tracking-models](cookbook:aa775836-5679-4a22-9ff3-b2bdcb09cc20)) as `currentSpan` and is the span unit used by the work-tracking persistence contract. This ingredient covers the shape, defaults, sentinel values and mutability rules only.
 
 ## Behavioral Requirements
 
@@ -43,13 +44,14 @@ approved-date: ""
 - **mutable-fields**: `windowTitle`, `endedAt` and `lastSeenAt` MUST be mutable (`var`) after construction.
 - **working-path-sentinel**: An empty `workingPath` MUST mean the path is unresolved.
 - **repo-root-sentinel**: An empty `repoRoot` MUST mean the span has no repository.
-- **started-at-format**: `startedAt` MUST hold an ISO-8601 UTC timestamp, as the source comment states; the type does not validate it.
+- **started-at-format**: Callers MUST supply `startedAt` as an ISO-8601 UTC timestamp, as the source comment states; the type does not enforce it.
+- **tz-format**: Callers SHOULD supply `tz` as a time zone identifier string such as `America/Los_Angeles`; the type does not validate it.
 - **ended-at-sentinel**: An empty `endedAt` MUST mean the span is still open.
 - **last-seen-sentinel**: An empty `lastSeenAt` MUST mean no heartbeat has been recorded yet.
 - **is-open-derivation**: `isOpen` MUST be true exactly when `endedAt` is empty.
 - **is-open-not-encoded**: `isOpen` MUST be a computed property and MUST NOT be a stored or encoded field.
 - **codable-synthesis**: Encoding and decoding MUST use the compiler-synthesized `Codable` keyed by the property names (`id`, `bundleId`, `appName`, `windowTitle`, `workingPath`, `repoRoot`, `branch`, `startedAt`, `endedAt`, `tz`, `lastSeenAt`).
-- **snake-case-by-strategy**: The type MUST declare no `CodingKeys`; snake_case on the wire MUST come from the caller's key strategy (`convertToSnakeCase` and `convertFromSnakeCase`), as the models test does.
+- **snake-case-by-strategy**: The type MUST declare no `CodingKeys`; snake_case on the wire MUST come from the caller's key strategy (`convertToSnakeCase` and `convertFromSnakeCase`), as the models test does. The wire key format therefore belongs to the caller; a caller that uses the default encoder gets the camelCase property names.
 - **no-validation**: The type MUST NOT validate or normalize any field at construction or decode; every string is stored as given.
 - **value-semantics**: Copies MUST be independent values; mutation of a copy MUST NOT affect the original.
 
@@ -80,11 +82,11 @@ Derived from the type's source and from `testStatusRoundTripsSnakeCase` in `Work
 | activity-span-dto-007 | mutable-fields, immutable-fields | Set `windowTitle` and `lastSeenAt` on a span | Both read back the new values; `id` and `startedAt` are unchanged |
 | activity-span-dto-008 | codable-synthesis, snake-case-by-strategy | Encode with `convertToSnakeCase`, decode with `convertFromSnakeCase` a `WorkTrackingStatus` whose `currentSpan` is a span with id `s` (test `testStatusRoundTripsSnakeCase`) | Decoded value equals the original |
 | activity-span-dto-009 | is-open-not-encoded | Encode an open span to JSON | The JSON has no `isOpen` or `is_open` key |
-| activity-span-dto-010 | no-validation, started-at-format | Init with `startedAt: "not a date"` and `tz: ""` | Construction succeeds and both strings are stored unchanged |
+| activity-span-dto-010 | no-validation | Init with `startedAt: "not a date"` and `tz: ""` | Construction succeeds and both strings are stored unchanged |
 | activity-span-dto-011 | value-semantics | Copy a span, set `endedAt` on the copy | The original `isOpen` remains true |
-| activity-span-dto-012 | conformances, all-strings | Compare two spans built with identical arguments including `id` | They are equal; spans differing only in `lastSeenAt` are not equal |
+| activity-span-dto-012 | conformances | Compare two spans built with identical arguments including `id` | They are equal; spans differing only in `lastSeenAt` are not equal |
 | activity-span-dto-013 | working-path-sentinel, repo-root-sentinel, last-seen-sentinel | Span built with defaults | `workingPath`, `repoRoot` and `lastSeenAt` are `""`, meaning unresolved, no repo, no heartbeat |
-
+| activity-span-dto-014 | all-strings | Encode a span with the default encoder and inspect every value in the JSON object | Every value is a JSON string |
 ## Edge Cases
 
 - **Empty `endedAt` with a non-empty `lastSeenAt`**: The span MUST be open; a heartbeat does not close a span, because `isOpen` reads only `endedAt`.
@@ -149,16 +151,16 @@ Not applicable: the type contains no log calls.
 ## Platform Notes
 
 - **SwiftUI**: Source platform. The file is `ActivitySpanDTO.swift` under `Core/WorkTracking`. A SwiftUI view reads `isOpen` and the string fields directly. Timestamps are strings, so views parse them with `ISO8601DateFormatter` before display.
-- **Compose**: Use a Kotlin `data class` annotated `@Serializable` (kotlinx.serialization) with String properties defaulting to `""`, `val` for the immutable fields and `var` for the mutable ones, and `val isOpen get() = endedAt.isEmpty()` outside the serialized properties. Use `@SerialName` for snake_case; unlike the source there is no global key strategy.
-- **React/Web**: Use a TypeScript `interface` with string fields and a helper `isOpen(span)` that returns `span.endedAt === ""`. Wire keys are snake_case in JSON, so map them at the boundary. Use `crypto.randomUUID()` for the default id and `readonly` for the immutable fields.
-- **AppKit / UIKit**: Same Swift type, no differences; the DTO has no platform dependency beyond `Foundation`, so one definition serves macOS and iOS.
-- **WinUI 3**: Use a C# `record` (`init` properties for the immutable fields, `{ get; set; }` for `WindowTitle`, `EndedAt` and `LastSeenAt`) with string defaults of `string.Empty` and `Id` defaulting to `Guid.NewGuid().ToString()`. Serialize with `System.Text.Json` and `JsonNamingPolicy.SnakeCaseLower` (.NET 8) to match the snake_case strategy. Expose `IsOpen` as `string.IsNullOrEmpty(EndedAt)` marked `[JsonIgnore]`. Where a XAML view binds to a mutable span, wrap it in an `INotifyPropertyChanged` type, since records raise no change notifications. Missing JSON keys leave defaults rather than failing, unlike Swift's synthesized `Codable`, so add `[JsonRequired]` to match.
+- **Compose**: Use a Kotlin `data class` annotated `@Serializable` (kotlinx.serialization) with String properties defaulting to `""`, `val` for the immutable fields and `var` for the mutable ones, and `val isOpen get() = endedAt.isEmpty()` outside the serialized properties. Use `@SerialName` for snake_case if the wire needs it; unlike the source there is no global key strategy.
+- **React/Web**: Use a TypeScript `interface` with string fields and a helper `isOpen(span)` that returns `span.endedAt === ""`. The wire key format belongs to the caller; if the wire is snake_case, map the keys at the boundary. Use `crypto.randomUUID()` for the default id and `readonly` for the immutable fields.
+- **AppKit / UIKit**: Same Swift type, no differences; the DTO has no platform dependency beyond `Foundation`.
+- **WinUI 3**: Use a C# `record` (`init` properties for the immutable fields, `{ get; set; }` for `WindowTitle`, `EndedAt` and `LastSeenAt`) with string defaults of `string.Empty` and `Id` defaulting to `Guid.NewGuid().ToString()`. Serialize with `System.Text.Json` and, when the wire is snake_case, `JsonNamingPolicy.SnakeCaseLower` (.NET 8) to match the caller's strategy. Default every string to `string.Empty`, never serialize `null`, and expose `IsOpen` as `EndedAt.Length == 0` marked `[JsonIgnore]`, so a `null` `EndedAt` is not a state the type has. Where a XAML view binds to a mutable span, wrap it in an `INotifyPropertyChanged` type, since records raise no change notifications. Missing JSON keys leave defaults rather than failing, unlike Swift's synthesized `Codable`, so add `[JsonRequired]` to match.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/ActivitySpanDTO.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/ActivitySpanDTO.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -185,6 +187,13 @@ Not applicable: the type contains no log calls.
 **Rationale**: The source has no checks; callers such as the recorder own correctness, which keeps the DTO a pure carrier.
 **Approved**: pending
 
+**Decision**: The type declares no `CodingKeys`, so the wire key format belongs to the caller's encoder and decoder strategy.
+**Rationale**: The source relies on `convertToSnakeCase` and `convertFromSnakeCase`, as the models test does, which keeps the type free of key names; the cost is that a caller using the default strategy silently produces camelCase keys.
+**Approved**: pending
+
+**Decision**: Decoding is strict: a missing key fails, so adding a field to the type breaks decoding of data written before the field existed.
+**Rationale**: Synthesized `Codable` has no default for an absent key, and the source adds no `decodeIfPresent` defaults. A change that adds a field has to decide how older stored or sent data is handled.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -199,3 +208,4 @@ The type is a pure data carrier with no I/O, so separation of concerns passes. U
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Stated that the wire key format belongs to the caller, made the startedAt format a caller precondition, added a tz format requirement, strict-decode and key-format Design Decisions, an all-strings vector, a related link, and fixed the Overview wording and the WinUI and wire-format notes. |

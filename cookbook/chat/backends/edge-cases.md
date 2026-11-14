@@ -32,10 +32,6 @@
   only the prior reply's in-progress partial draft for a streaming backend
   — not the prior turn's committed outcome, despite running strictly after
   it.
-- **Concurrent `sendMessage`/`sendMessageStream` calls directly on a bare
-  `ChatBackend` implementation (concurrent access)**: `ChatBackend`
-  (`types.ts`) states no concurrency contract for overlapping calls on the
-  same instance; see the open question on **chatbackend-no-concurrency-contract**.
 - **chatbackend-no-concurrency-contract**: NEEDS REVIEW: Not implemented in source. `ChatBackend` (`types.ts`) states no concurrency contract for overlapping calls to `sendMessage` and/or `sendMessageStream` on the same instance. `FetchBackend` makes this concrete: its `AbortController` lives in a single instance field (**fetchbackend-single-controller-field**), so a second `sendMessage` call issued before the first resolves silently overwrites that field, and a subsequent `destroy()` aborts only the newer request — the older one runs to completion (or hangs) uncancellable. `useChatSession.ts` always reaches a `ChatBackend` through `ChatBackendAdapter`, which serializes turns and so never produces this overlap in practice, but `FetchBackend` and `MockBackend` are also exported standalone from the package's `index.ts` and can be called directly without that serialization. Resolving this requires either a documented "one call at a time" invariant on `ChatBackend` itself, or `FetchBackend` widening its cancellation state to one `AbortController` per call — a decision for whoever owns the `ChatBackend` interface, not something the given source states.
 - **Error states (dependency unavailable/error)**: `FetchBackend.sendMessage`
   throws on a non-`ok` HTTP status but does not itself catch a `fetch()`

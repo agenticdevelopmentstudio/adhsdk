@@ -8,6 +8,6 @@
 **Approved**: pending
 
 **Decision**: The effect's dependency array is `[id, reg]`.
-**Rationale**: Causes the previous `id` to be unregistered and the current `id` to be re-registered whenever `id` or the registry instance changes, matching the source implementation.
+**Rationale**: Causes the previous `id` to be unregistered and the current `id` to be re-registered whenever `id` or the registry instance changes, and also re-registers when the registry instance changes (see **re-register-on-registry-change**).
 **Approved**: pending
 

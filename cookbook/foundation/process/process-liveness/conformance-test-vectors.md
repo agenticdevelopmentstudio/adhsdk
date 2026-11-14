@@ -14,8 +14,10 @@
 | process-liveness-011 | headless-argv (no test in source) | No session file; argv `claude -p ping`; argv `node cli.js --print ping` | true; true |
 | process-liveness-012 | headless-after-separator, headless-default (no test in source) | No session file; argv `claude -- -p`; argv `claude`; nil argv | false; false; false |
 | process-liveness-013 | attachment-unknown (test: testTerminalAttachmentIsUnknownForAProcessThatIsNotClaude) | `terminalAttachment(ofPid: 0)` and of the test runner's own pid | nil; nil |
-| process-liveness-014 | live-list-empty, live-list-failed | `liveClaudeProcesses()` on a machine running `claude` or not | nil only if the pid scan itself failed; otherwise an array (empty when no `claude` runs) |
+| process-liveness-014 | live-list-empty, live-list-failed | `liveClaudeProcesses()`; the result depends on the host, so assert only its shape | nil only if the pid scan itself failed; otherwise an array (empty when no `claude` runs) |
 | process-liveness-015 | canonical-fallback | `canonicalPath("/no/such/path")` | `/no/such/path` |
+| process-liveness-016 | claude-identity, claude-identity-desktop (no test in source; derived from the doc comment) | Launch paths `/Applications/Claude.app/Contents/MacOS/Claude`, `/usr/local/bin/Claude`, `/opt/claude/bin/tool` and `/usr/local/bin/claude` | not Claude (case differs); not Claude (case differs); Claude (accepted false positive: a `/claude/` component); Claude |
+| process-liveness-017 | headless-argv (no test in source) | No session file; argv `claude --print=x`; argv `claude -pv`; argv `claude --model -p` | false; false; true |
 
 The requirements `claude-identity-desktop`, `live-list-session-keeps`, `live-cwd-empty`, `cwd-bounded`, `enumeration-headroom` and `attachment-tty` need a real process or a kernel record and have no unit vector in the source; a port should add integration checks for them.
 

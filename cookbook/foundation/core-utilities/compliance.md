@@ -9,26 +9,27 @@
 
 `separation-of-concerns` passes because each of the six files owns exactly
 one concern (Codable-field exclusion, Keychain access, logger
-construction, a math clamp, version parsing, text folding) with no
-cross-file coupling — none imports another file in this recipe.
+construction, a math clamp, version parsing, text folding) with one
+coupling: the secret store conforms to the logger factory contract, and no other file in this ingredient imports another.
 
 `unit-test-coverage` is `partial`: `KeychainHelper`, `SemanticVersion`,
 `TextFolding`, and `MathUtils`'s `CGFloat.clamped(to:)` each have a
 dedicated test file with meaningful assertions (`KeychainHelperTests
 .swift`, `SemanticVersionTests.swift`, `TextFoldingTests.swift`,
 `CGFloatClampedTests.swift`), but `CodableIgnored` and `Loggable` have no
-test file anywhere in the repository.
+test file anywhere in the repository; vectors fc-001, fc-002, fc-014, fc-016 and fc-017 are traced to source, not tested.
 
 `explicit-error-handling` passes because every fallible operation reports
 its outcome through its return value — `KeychainHelper.set`/`.delete`
 return `Bool`, `.get` returns `String?`, `SemanticVersion.init?` returns an
-optional — none swallows a failure silently without any signal reaching
-the caller (see `keychain-get-error-ambiguity` above for the one place
-that signal is coarser than it could be).
+optional, and `.read` throws a `KeychainReadError` for any failure other
+than not-found, so a caller that needs to tell a failed lookup from a
+missing key has a way to (see `keychain-get-error-ambiguity` above for the
+one place `get` stays coarse).
 
 `secure-storage` passes because `KeychainHelper` is the only file in this
-recipe that stores sensitive material, and it stores it exclusively as
-macOS Keychain generic-password items via `SecItemAdd`/`SecItemUpdate` —
+ingredient that stores sensitive material, and it stores it exclusively as
+macOS Keychain generic-password items via `SecItemAdd` —
 never in `UserDefaults`, a file, or any other unencrypted location.
 
 `secure-log-output` passes because every log call site in

@@ -8,5 +8,6 @@
 - **focus-visible-ring**: A keyboard-focused item MUST show a visible focus ring (`focus-visible:ring-2 ring-apt-gold/40`).
 - **disabled-item-inert**: A disabled item MUST NOT respond to pointer input, MUST be skipped during roving keyboard navigation, and MUST render dimmed (`opacity-50`, `pointer-events-none`).
 - **forwards-group-and-item-props**: The component MUST forward arbitrary props (incl. `aria-label`, `className`, `multiple`, `defaultValue`) to the underlying Base UI group and item primitives.
-- **single-select-keeps-selection**: When driven single-select (`value={[selected]}`, `multiple` unset), the consumer MUST ignore the empty array from `onValueChange` (the deselect case) so the group keeps exactly one item pressed at all times.
+- **group-disabled-inert**: When `disabled` is set on the group, every item MUST behave as a disabled item (see **disabled-item-inert**).
+- **single-select-keeps-selection**: Consumer contract, not enforced by the component: when driving the group single-select (`value={[selected]}`, `multiple` unset), the consumer MUST ignore the empty array from `onValueChange` (the deselect case) so the group keeps exactly one item pressed at all times.
 

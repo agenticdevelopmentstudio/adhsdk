@@ -17,3 +17,18 @@ Vectors 001 and 002 are the runtime assertions in `dashboard-types-parity.test.t
 | dtypes-012 | runtime-window | runtime report | `window` is `"24h"` |
 | dtypes-013 | rated-vitals | rated vitals row with a vital that has no sample | that vital's rating is `null` |
 
+| dtypes-014 | section-shape | analytics response | `sections` holds `traffic`, `dimensions`, `paths`, `vitals`, `health` and `vercel`, each with `data`, `error` and `updatedAt` |
+| dtypes-015 | analytics-sections | analytics response | exactly the six sections `traffic`, `dimensions`, `paths`, `vitals`, `health`, `vercel` |
+| dtypes-016 | errors-sections | errors response | exactly the four sections `issues`, `sites`, `detail`, `runtime` |
+| dtypes-017 | envelope-common | either response | carries `generatedAt`, `refreshing`, `configured` and `views` |
+| dtypes-018 | analytics-envelope | analytics response | carries `range` and `configured` flags for `posthog` and `vercel` |
+| dtypes-019 | truncated-flags | dimensions section with `truncated` true | read as "the tail is missing from every breakdown" |
+| dtypes-020 | incomplete-flags | Vercel project with `incomplete` true | `series` and lists may be short; `pageviews` is still whole |
+| dtypes-021 | rated-health | rated health row | a site health row plus `failureRateHigh` |
+| dtypes-022 | views-null-sections | views built while the vitals section has no data | `vitals` is `null`, read as "nothing to show" |
+| dtypes-023 | site-error-ids | site error and failed-request views | each row carries an `id` |
+| dtypes-024 | views-failures | a failed PostHog section | `failures` lists an entry with source `"PostHog"`, what failed and the error text |
+| dtypes-025 | types-only | importing the module | only the four lists exist at run time; nothing else runs at load |
+| dtypes-026 | series-per-bucket | traffic for the `24h` range | 25 buckets, and `pageviews` and `sessions` each have 25 values |
+| dtypes-027 | views-absent-older-backend | response from an older backend with no `views` | the client shows nothing for views and does not throw |
+| dtypes-028 | vercel-incomplete-series | Vercel project with `incomplete` true | its `series` may be shorter than `buckets` |

@@ -5,6 +5,6 @@
 | Active (Combobox focused) | Combobox shows focus ring; suggestion dropdown visible if text matches partial options. |
 | Active (EntityChooser opened) | EntityChooser dialog open; Combobox in background. |
 | Item added | Combobox text field cleared; chip appears in chips row. |
-| Item removed | Chip removed from chips row; if last chip, row renders empty. |
+| Item removed | Chip removed from chips row; if last chip, the chips row is removed from the DOM. |
 | Disabled | Both Combobox and EntityChooser render disabled; no interaction possible. |
 

@@ -2,11 +2,11 @@
 id: 1157bca1-0d27-49e9-a989-d637505ba5f1
 title: "Gmail Sync Worker"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -29,6 +29,9 @@ related:
 references:
   - https://developers.google.com/gmail/api/reference/rest/v1/users.history/list
   - https://developers.google.com/gmail/api/reference/rest/v1/users.messages/get
+  - https://developers.google.com/gmail/api/reference/rest/v1/users.messages/list
+  - https://developers.google.com/gmail/api/reference/rest/v1/users.labels/list
+  - https://developers.google.com/gmail/api/reference/rest/v1/users/getProfile
 approved-by: ""
 approved-date: ""
 ---
@@ -41,7 +44,7 @@ approved-date: ""
 
 What is kept is decided by the connection's `MailSyncSettings` (`allows(_:)` per mail class, and `windowDays`) and by the `mailClass` that `GmailMessageParser` assigns to each message. The worker bounds what it keeps to a rolling window of `windowDays` days, and it tombstones rows that fall outside the window or that Gmail no longer lists.
 
-The worker does not talk to HTTP, pace quota, parse message bodies, classify mail or schedule itself. It takes a `GmailAPI`, an `IntegrationsStore` and a clock, and it relies on the owner of those collaborators for authentication, retry, pacing, scheduling and per-connection serialisation. `MailIntegrationService` is that owner: it builds a worker per run, serialises runs per connection, and records an `error` or `revoked` status when `sync` throws. The same file also exposes `storeLabels(_:connectionId:in:)`, which the service calls on its own to refresh labels outside a sync.
+The worker does not talk to HTTP, pace quota, parse message bodies, classify mail or schedule itself. It takes a `GmailAPI`, an `IntegrationsStore` and a clock, and it relies on the owner of those collaborators for authentication, retry, pacing, scheduling and per-connection serialisation. `MailIntegrationService` is that owner: it builds a worker per run, serialises runs per connection, and records an `error` or `revoked` status when `sync` throws. The same file also holds `storeLabels(_:connectionId:in:)`, which is module-internal, not public, so `MailIntegrationService` must live in the same module to call it on its own to refresh labels outside a sync.
 
 ## Behavioral Requirements
 
@@ -51,31 +54,33 @@ Contract: `public struct GmailSyncWorker: Sendable` with `public init(api: any G
 
 - **outcome-shape**: `GmailSyncOutcome` MUST be a `Sendable`, `Equatable` struct with the fields `mode`, `upserted` and `tombstoned`, and a public memberwise initializer.
 - **outcome-modes**: `GmailSyncOutcome.Mode` MUST have exactly two cases, `full` and `incremental`, with the raw values "full" and "incremental".
-- **mode-reports-last-pass**: The returned `mode` MUST be `full` when the run ended in a full pass, including a full pass that replaced an expired incremental one.
+- **mode-reports-last-pass**: The returned `mode` MUST be `full` when the run ended in a full pass, including a full pass that replaced an expired incremental one. It MUST be `incremental` when, and only when, the incremental pass completed without falling back.
 
 ### Entry point
 
 - **labels-first**: `sync(connection:)` MUST refresh the connection's labels before it starts either kind of message pass.
 - **no-cursor-full**: `sync(connection:)` MUST run a full sync when `connection.syncCursor` is nil.
 - **cursor-incremental**: `sync(connection:)` MUST run an incremental sync from `connection.syncCursor` when it is not nil.
-- **expired-falls-back**: When the incremental pass throws `GmailCursorExpired`, `sync(connection:)` MUST run one full sync and return that sync's outcome.
+- **expired-falls-back**: When the incremental pass throws `GmailCursorExpired`, `sync(connection:)` MUST run one full sync and return that sync's outcome. The worker only catches `GmailCursorExpired` and never creates it; the `GmailRESTClient` type ([adhsdk.ingredient.integrations.gmail.gmail-rest-client](cookbook:c448c9f4-195d-4625-a49d-22dd5468a914)) throws it when its `history` call answers 404.
 - **fallback-only-expired**: `sync(connection:)` MUST NOT fall back to a full sync for any error other than `GmailCursorExpired`; every other error propagates.
+- **fallback-expired-propagates**: A `GmailCursorExpired` thrown by the fallback full sync MUST propagate to the caller, and the worker MUST NOT retry the fallback.
 - **state-written-once**: On success `sync(connection:)` MUST call `store.updateSyncState` exactly once, with the pass's cursor, `IntegrationClock.string(from: now())` as `lastSyncAt`, status `.active` and a nil `lastError`.
 - **no-state-on-failure**: When `sync(connection:)` throws, it MUST NOT call `store.updateSyncState`, so the stored cursor is unchanged.
 - **status-not-recorded**: The worker MUST NOT record an `error` or `revoked` status itself; recording a failed run belongs to the caller.
-- **thrown-errors-unchanged**: Errors from `GmailAPI` and from the store MUST reach the caller of `sync(connection:)` unchanged, with no wrapping.
+- **thrown-errors-unchanged**: Every error from `GmailAPI` or the store that **fetch-404-nil** and **expired-falls-back** do not handle MUST reach the caller of `sync(connection:)` unchanged, with no wrapping.
 
 ### Labels
 
-- **labels-replace**: `storeLabels` MUST hand the store the complete list of labels Gmail returned through `store.replaceLabels(connectionId:with:)`, so the store upserts those labels and tombstones every live label not in the list.
+- **labels-replace**: `storeLabels` MUST hand the store the complete list of labels Gmail returned through `store.replaceLabels(connectionId:with:)`. The worker relies on the store's `labels-replace-tombstones` requirement ([adhsdk.ingredient.integrations.store.integrations-store](cookbook:c19280fd-b80c-46f3-a6a7-0b60a0c90d91)) to tombstone every live label not in that list, and tombstones no label itself.
 - **label-fields**: Each `EmailLabel` MUST carry the Gmail label's `externalId`, `name`, `color`, `messagesTotal` and `messagesUnread`, taken from the `GmailLabelDTO`'s `id`, `name`, `color`, `messagesTotal` and `messagesUnread`.
 - **label-type**: A label's `type` MUST be "system" when the DTO's `type` is exactly "system" and "user" for any other value.
-- **label-parent**: A label's `parentName` MUST be the part of its `name` before the last "/" and MUST be nil when the name has no "/".
-- **label-local-id**: `storeLabels` MUST offer a freshly generated lowercase UUID string as each label's local `id`, and the store keeps the local id of a label already present, so a label's id is stable across syncs.
+- **label-parent**: A label's `parentName` MUST be the part of its `name` before the last "/" and MUST be nil when the name has no "/", so a name ending in "/" has the whole name before that slash as its parent and a name starting with "/" has the empty string as its parent.
+- **label-local-id**: `storeLabels` MUST offer a freshly generated lowercase UUID string as each label's local `id`. The worker relies on the store's `labels-replace-keeps-identity` requirement ([adhsdk.ingredient.integrations.store.integrations-store](cookbook:c19280fd-b80c-46f3-a6a7-0b60a0c90d91)) to keep the local id of a label already present, so a label's id is stable across syncs.
 - **labels-before-messages**: Labels MUST be committed before any message is fetched, so a sync that fails later leaves the label refresh in place.
 
 ### Full sync
 
+- **empty-listing-sweeps**: When the full pass lists no ids, it MUST fetch nothing and MUST still apply **tombstone-unkept** and **tombstone-old**, so the outcome reports `upserted` 0.
 - **baseline-first**: The full pass MUST read the account profile's `historyId` before it lists any message ids, so a change made while listing is replayed by the next incremental sync.
 - **baseline-is-cursor**: The cursor a full pass returns MUST be that profile `historyId`, not any later value.
 - **query-from-settings**: The full pass MUST list ids with the query and `includeSpamTrash` flag that `GmailQuery.fullSync(settings:now:)` builds from the connection's settings and the clock.
@@ -90,6 +95,7 @@ Contract: `public struct GmailSyncWorker: Sendable` with `public init(api: any G
 
 ### Incremental sync
 
+- **empty-history-advances-cursor**: When history yields no changed ids and no deleted ids, the incremental pass MUST fetch nothing, MUST still run **window-sweep**, and MUST still return the last page's `historyId` as the cursor.
 - **history-all-pages**: The incremental pass MUST call `history(startHistoryId:pageToken:)` following `nextPageToken` until it is nil, and MUST send the cursor it started with as `startHistoryId` on every call, not the page's newer `historyId`.
 - **cursor-latest-page**: The cursor an incremental pass returns MUST be the `historyId` of the last history page.
 - **deleted-first**: The incremental pass MUST tombstone the ids Gmail reported as deleted before it fetches any changed message.
@@ -99,24 +105,26 @@ Contract: `public struct GmailSyncWorker: Sendable` with `public init(api: any G
 - **tombstone-rule**: The incremental pass MUST tombstone a fetched id when Gmail no longer has it (a 404), when its class is not allowed, or when it is older than the window.
 - **batch-order**: Within one batch the incremental pass MUST tombstone first and upsert second.
 - **window-sweep**: After the batches the incremental pass MUST tombstone every live row older than the window start, as the full pass does.
+- **partial-pass-replayable**: When an incremental pass fails partway, the stored cursor MUST stay at its old value, so the next run replays the same history. The replay is safe because the worker relies on the store's `message-upsert-key` requirement ([adhsdk.ingredient.integrations.store.integrations-store](cookbook:c19280fd-b80c-46f3-a6a7-0b60a0c90d91)) to key upserts on connection and external id, and tombstoning a tombstoned row changes nothing.
 - **incremental-counts**: The incremental outcome MUST report `upserted` as the number of messages it handed to `store.upsertMessages` and `tombstoned` as the sum of the counts the store returned, so ids the store did not hold do not count.
 
 ### Fetching
 
 - **fetch-concurrency**: The fetch MUST keep at most 8 `GmailAPI.message(id:)` calls in flight at once.
 - **fetch-batch-size**: The fetch MUST hand results to its handler in batches of exactly 100, and the final batch MAY be smaller.
+- **no-empty-final-batch**: The fetch MUST NOT hand its handler an empty batch, so exactly 100 results give one batch of 100 and nothing after it.
 - **fetch-completion-order**: The fetch MUST batch results in the order they complete, not the order of the ids.
 - **fetch-handler-serial**: The fetch MUST call its handler one batch at a time from the parent task, so the handler's captured sets and counters are never mutated concurrently.
 - **fetch-404-nil**: The fetch MUST turn `IntegrationError.gmail(status: 404, message: _)` from `message(id:)` into a nil message for that id.
 - **fetch-error-fails**: Any other error from `message(id:)` MUST fail the fetch, and the batches already handed over MUST stay stored.
 - **fetch-parse**: Each fetched DTO MUST be parsed with `GmailMessageParser.parse` using the connection's id, the `existingId` set by **local-id-kept** and the clock value read once at the start of the fetch.
-- **local-id-kept**: The worker MUST pass a nil `existingId`, and relies on `store.upsertMessages` to keep the local id and `createdAt` of a row already stored for the same connection and `externalId`.
+- **local-id-kept**: The worker MUST pass a nil `existingId`, and relies on the store's `message-upsert-keeps-identity` requirement ([adhsdk.ingredient.integrations.store.integrations-store](cookbook:c19280fd-b80c-46f3-a6a7-0b60a0c90d91)) to keep the local id and `createdAt` of a row already stored for the same connection and `externalId`.
 
 ### Ordering and concurrency
 
 - **struct-sendable**: `GmailSyncWorker` MUST be `Sendable`, and its collaborators `GmailAPI` and the clock closure MUST be `Sendable`.
 - **no-self-serialisation**: The worker MUST NOT guard against two overlapping `sync` calls on the same connection; `MailIntegrationService` serialises them per connection.
-- **clock-reads**: The worker MAY read the injected clock separately for the query, the window start, the fetch and the stored `lastSyncAt`, so a moving clock gives each read a different value; a port MAY read it once per run (see the last Design Decision).
+- **clock-reads**: The worker MAY read the injected clock separately for the query, the window start, the fetch and the stored `lastSyncAt`; the effect and the trigger for fixing it are in the clock Design Decision.
 
 ## Appearance
 
@@ -146,7 +154,7 @@ Vectors named for a test come from `GmailSyncWorkerTests`, which runs the worker
 | sync-worker-008 | list-all-pages, no-state-on-failure, thrown-errors-unchanged | Test `fullSyncListErrorPropagates`: listing fails with `IntegrationError.gmail(status: 403, message: "Forbidden")`, a row "kept" exists | `sync` throws 403; "kept" is still live; the cursor is nil |
 | sync-worker-009 | query-from-settings | Test `spamAndTrashFollowSettings`: default settings, then `includeSpam` and `includeTrash` true; messages in (INBOX), spam (SPAM), trash (TRASH) | Default run: `includeSpamTrash` false, live ids in. Second run: `includeSpamTrash` true, live ids in, spam, trash |
 | sync-worker-010 | local-id-kept | Test `resyncKeepsLocalId`: row "a" already stored with local id "local-a", then a full sync returns "a" | The stored row's `id` is still "local-a" |
-| sync-worker-011 | cursor-incremental, history-all-pages, cursor-latest-page, upsert-rule, deleted-first, incremental-counts | Test `incrementalUpsertsChangedAndTombstonesDeleted`: cursor "600"; history page 1 changed [new], historyId "610", next token; page 2 deleted [del], historyId "620", no token; "del" is stored | Outcome incremental, upserted 1, tombstoned 1; live ids new; history called twice with "600" both times; stored cursor "620" |
+| sync-worker-011 | cursor-incremental, history-all-pages, cursor-latest-page, upsert-rule, deleted-first, incremental-counts, mode-reports-last-pass | Test `incrementalUpsertsChangedAndTombstonesDeleted`: cursor "600"; history page 1 changed [new], historyId "610", next token; page 2 deleted [del], historyId "620", no token; "del" is stored | Outcome incremental, upserted 1, tombstoned 1; live ids new; history called twice with "600" both times; stored cursor "620" |
 | sync-worker-012 | incremental-counts | Test `incrementalCountsRealTombstones`: history deletes ["del", "never-stored"], and only "del" is stored | tombstoned 1, upserted 0 |
 | sync-worker-013 | upsert-rule, tombstone-rule | Test `incrementalTombstonesOutOfWindowChange`: changed message "old" is 90 days old with a STARRED label, and is stored | upserted 0, tombstoned 1; no live rows |
 | sync-worker-014 | tombstone-rule | Test `incrementalTombstonesMessageThatBecameArchived`: stored "a" now carries only CATEGORY_PROMOTIONS and is changed in history | tombstoned 1; no live rows |
@@ -160,29 +168,34 @@ Vectors named for a test come from `GmailSyncWorkerTests`, which runs the worker
 | sync-worker-022 | fetch-concurrency | Derived: 50 ids, each `message(id:)` suspends until released, counting in-flight calls | The in-flight count never exceeds 8 |
 | sync-worker-023 | label-type, label-parent | Derived: a label with type "other" named "A/B" and a label of type "user" named "/x" | First: type "user", `parentName` "A". Second: type "user", `parentName` "" (empty string) |
 | sync-worker-024 | fallback-only-expired | Derived: cursor present; `history` throws `IntegrationError.gmail(status: 500, message: "Boom")` | `sync` throws that error; no `listMessageIds` call is made |
+| sync-worker-025 | empty-listing-sweeps | Derived: no cursor; `listMessageIds` returns no ids; a live in-window row and a live row older than the window exist | Outcome `full`, upserted 0, tombstoned 2; no `message(id:)` call; the cursor is the profile `historyId` |
+| sync-worker-026 | empty-history-advances-cursor | Derived: cursor "600"; one history page with no changed and no deleted ids and `historyId` "610" | Outcome `incremental`, upserted 0, tombstoned 0; no `message(id:)` call; stored cursor "610" |
+| sync-worker-027 | no-empty-final-batch, fetch-batch-size | Derived: exactly 100 messages, with a handler that counts the batches it receives | One batch of 100 and no empty batch after it; upserted 100 |
+| sync-worker-028 | fallback-expired-propagates, expired-falls-back | Derived: cursor "600"; `history` throws `GmailCursorExpired` and the fallback's `listMessageIds` throws `GmailCursorExpired` too | `sync` throws `GmailCursorExpired`; `listMessageIds` was called once; the stored cursor is still "600" |
+| sync-worker-029 | partial-pass-replayable, no-state-on-failure | Derived: cursor "600"; history changes ids a and b; `message(id:)` for b fails with `IntegrationError.gmail(status: 500, message: "Boom")`; then the same run repeats with a working API | The first run throws and the cursor stays "600"; after the second run the live ids and the cursor equal those of a run that never failed |
 
 ## Edge Cases
 
-- **Empty account (null and empty input)**: When Gmail lists no ids, the full pass fetches nothing, tombstones every live row in the window and every row older than it, and returns upserted 0. This MUST hold.
-- **Empty history**: When history returns changed and deleted ids that are both empty, the incremental pass fetches nothing and returns upserted 0 with whatever the window sweep tombstoned. The cursor still advances to the last page's `historyId`. This MUST hold.
-- **No ids to tombstone**: Passing an empty list to `tombstoneMessages(connectionId:externalIds:)` returns 0 without a write, so a batch that has no tombstones adds nothing. This MUST hold.
-- **Message deleted between listing and fetching**: The 404 makes the fetch return nil for that id. The full pass drops it; the incremental pass tombstones it. This MUST hold.
-- **Id in both changed and deleted**: It is tombstoned as deleted and never fetched. This MUST hold.
-- **Same id changed many times**: History repeats an id once per change; the worker fetches it once. This MUST hold.
-- **Boundary at the window start**: A message dated exactly at the window start is kept, because the comparisons use "at or after". Rows older than the start are tombstoned. The incremental upsert compares `message.internalDate >= windowStart` as ISO-8601 strings, which order the same as the instants when both sides use `IntegrationClock`'s format. This MUST hold.
-- **Window settings (boundary values)**: The worker does not check `windowDays`; this is a gap in the code, not a requirement, and a port SHOULD accept only validated settings. `MailSyncSettings.validated()` limits it to 1 through 3650 and its caller owns that check; a value of 0 or less would put the window start at or after the present and tombstone nearly everything. The worker computes the start as the clock minus `windowDays` times 86,400 seconds.
-- **Exactly 100 results**: The fetch hands over a full batch of 100 and then, with nothing pending, no empty final batch. This MUST hold.
-- **Expired cursor mid-history**: `GmailCursorExpired` thrown by any history page discards the pages already read and triggers the full sync. The partly gathered ids are not used. This MUST hold.
-- **Expired cursor on the fallback**: The `catch` covers only the incremental call, so a `GmailCursorExpired` thrown by the fallback full pass propagates to the caller. A port MUST propagate it and MUST NOT retry the fallback.
-- **Failure partway through a full pass (error states)**: Batches already stored stay stored, no tombstoning happens, and no cursor is written. The next `sync` repeats a full pass when the run began without a cursor (it is still nil); when the full pass was the fallback for an expired cursor, the stored cursor is still the expired one, so the next run tries the incremental pass again and falls back again. This MUST hold.
-- **Failure partway through an incremental pass**: The deleted ids have been tombstoned and some batches stored, but the cursor stays at its old value, so the next run replays the same history. Replaying is safe because upserts are keyed on `(connection_id, external_id)` and tombstoning a tombstoned row changes nothing. This MUST hold.
-- **Failure after the labels step**: A later failure leaves the refreshed labels in place. This MUST hold (see **labels-before-messages**).
+- **Empty account (null and empty input)**: When Gmail lists no ids, the full pass fetches nothing, tombstones every live row in the window and every row older than it, and returns upserted 0. See #requirements/empty-listing-sweeps.
+- **Empty history**: When history returns changed and deleted ids that are both empty, the incremental pass fetches nothing and returns upserted 0 with whatever the window sweep tombstoned. The cursor still advances to the last page's `historyId`. See #requirements/empty-history-advances-cursor.
+- **No ids to tombstone**: Passing an empty list to `tombstoneMessages(connectionId:externalIds:)` returns 0 without a write, so a batch that has no tombstones adds nothing; the store owns this (`tombstone-ids-empty` in its spec).
+- **Message deleted between listing and fetching**: The 404 makes the fetch return nil for that id. The full pass drops it; the incremental pass tombstones it. See #requirements/fetch-404-nil, #requirements/missing-skipped and #requirements/tombstone-rule.
+- **Id in both changed and deleted**: It is tombstoned as deleted and never fetched. See #requirements/deleted-not-fetched.
+- **Same id changed many times**: History repeats an id once per change; the worker fetches it once. See #requirements/changed-deduped.
+- **Boundary at the window start**: A message dated exactly at the window start is kept, because the comparisons use "at or after". Rows older than the start are tombstoned. The incremental upsert compares `message.internalDate >= windowStart` as ISO-8601 strings, which order the same as the instants when both sides use `IntegrationClock`'s format. See #requirements/upsert-rule and #requirements/tombstone-unkept.
+- **Window settings (boundary values)**: The worker does not check `windowDays`; this is recorded as deliberate prudent debt in Design Decisions. `MailSyncSettings.validated()` limits it to 1 through 3650 and its caller owns that check; a value of 0 or less would put the window start at or after the present and tombstone nearly everything. The worker computes the start as the clock minus `windowDays` times 86,400 seconds.
+- **Exactly 100 results**: The fetch hands over a full batch of 100 and then, with nothing pending, no empty final batch. See #requirements/no-empty-final-batch.
+- **Expired cursor mid-history**: `GmailCursorExpired` thrown by any history page discards the pages already read and triggers the full sync. The partly gathered ids are not used. See #requirements/expired-falls-back.
+- **Expired cursor on the fallback**: The `catch` covers only the incremental call, so a `GmailCursorExpired` thrown by the fallback full pass propagates to the caller. See #requirements/fallback-expired-propagates.
+- **Failure partway through a full pass (error states)**: Batches already stored stay stored, no tombstoning happens, and no cursor is written. The next `sync` repeats a full pass when the run began without a cursor (it is still nil); when the full pass was the fallback for an expired cursor, the stored cursor is still the expired one, so the next run tries the incremental pass again and falls back again. See #requirements/batched-upserts, #requirements/tombstone-after-pass and #requirements/no-state-on-failure.
+- **Failure partway through an incremental pass**: The deleted ids have been tombstoned and some batches stored, but the cursor stays at its old value, so the next run replays the same history. Replaying is safe because upserts are keyed on `(connection_id, external_id)` and tombstoning a tombstoned row changes nothing. See #requirements/partial-pass-replayable.
+- **Failure after the labels step**: A later failure leaves the refreshed labels in place. See #requirements/labels-before-messages.
 - **Cancellation**: The worker never checks `Task.isCancelled` and has no cancel path. Cancelling the calling task propagates into the awaited `GmailAPI` calls and the task group, which end the run by throwing; the stored cursor is then unchanged. `MailIntegrationService` treats that outcome as not an error. The worker's own promise ends at "the cursor is written only on success".
 - **Offline or unreachable Gmail**: The worker has no connectivity handling. A failed `GmailAPI` call throws and the sync fails with the cursor unchanged. Timeouts, retry, backoff and pacing belong to `GmailRESTClient`, which is outside this recipe.
 - **Concurrent access**: The worker itself keeps no shared state and runs concurrent fetches only inside one run; their results are consumed one at a time. Two overlapping `sync` calls for the same connection are not prevented here and would interleave their store writes; `MailIntegrationService` keeps one running sync per connection and cancels it before starting another. Within one run the batch contents depend on completion order and so vary between runs, while the final stored set does not.
-- **Lost clock consistency**: Because the clock is read separately for the query, the fetch and the window start, a clock that advances during a long run gives later reads a later window. The worker does not freeze one instant. A port MAY read the clock once per run (see **clock-reads**).
-- **Rows excluded by settings**: A row stored under an earlier, wider setting is tombstoned by the next full pass if it is in the window and not kept, and by the incremental pass only if it changes. This MUST hold.
-- **Label name edge cases**: A name ending in "/" has the whole name before that slash as its parent. A name starting with "/" has the empty string as its parent. A port that must stay compatible with stored data MUST copy this; the behavior is otherwise unspecified.
+- **Lost clock consistency**: The clock is read several times per run; the effect and the trigger for fixing it are in the clock Design Decision.
+- **Rows excluded by settings**: A row stored under an earlier, wider setting is tombstoned by the next full pass if it is in the window and not kept, and by the incremental pass only if it changes. See #requirements/filter-by-class.
+- **Label name edge cases**: A name ending in "/" has the whole name before that slash as its parent. A name starting with "/" has the empty string as its parent. See #requirements/label-parent.
 
 ## Configuration
 
@@ -242,7 +255,7 @@ Not applicable: the source makes no log call; failures reach the caller as throw
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailSyncWorker.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailSyncWorker.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -270,7 +283,7 @@ Not applicable: the source makes no log call; failures reach the caller as throw
 **Approved**: pending
 
 **Decision**: Fetch eight messages at a time and store in batches of 100.
-**Rationale**: The numbers are `fetchConcurrency` and `upsertBatchSize`; the source does not state why. Eight is small enough to stay modest against Gmail's per-user quota, which `GmailRESTClient` also paces, and 100 bounds how much a partial failure can lose, because the stored count is a multiple of the batch size. Whether eight is the best number is outside the source.
+**Rationale**: The numbers are `fetchConcurrency` and `upsertBatchSize`. The source gives no reason for fetching eight at a time, so that number is unexplained. A batch of 100 bounds how much a partial failure can lose, because the stored count after a failure is a multiple of the batch size.
 **Approved**: pending
 
 **Decision**: Batch results in completion order, and never in id order.
@@ -286,7 +299,11 @@ Not applicable: the source makes no log call; failures reach the caller as throw
 **Approved**: pending
 
 **Decision**: Technical debt: the clock is read separately for the query, the fetch, the window start and the stored time.
-**Rationale**: The worker calls `now()` several times per run, so on a long run the window start used for the final sweep is later than the one in the query. It is harmless in the tests because the clock is fixed, and the effect is a window that drifts a little during one run. A port may read the clock once, but it should record that as a deliberate change.
+**Rationale**: The worker calls `now()` several times per run, so on a long run the window start used for the final sweep is later than the one in the query. It is harmless in the tests because the clock is fixed, and the effect is a window that drifts a little during one run. Pay it off by reading the clock once at the start of `sync` and passing that instant down, as soon as window drift shows up in any test or run. A port may read the clock once sooner, but it should record that as a deliberate change.
+**Approved**: pending
+
+**Decision**: Deliberate prudent debt: the worker does not validate `windowDays`.
+**Rationale**: `MailSyncSettings.validated()` limits it to 1 through 3650 and its caller owns that check, so the worker trusts what it is given. A value of 0 or less would put the window start at or after the present and tombstone nearly every row. Fix it by making `sync` reject settings that fail `validated()` before it writes anything, the first time a caller passes unvalidated settings or a second caller of `sync` appears.
 **Approved**: pending
 
 ## Compliance
@@ -305,3 +322,4 @@ The worker separates concerns cleanly: it sequences calls to an injected `GmailA
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Named requirements for empty listing, empty history, no empty final batch, fallback expiry and replayable partial passes, pointed edge cases at requirement fragments, linked the store and REST client for relied-on behavior, recorded the windowDays gap and clock drift as prudent debt with fix triggers, added vectors 025 to 029, and added the missing Gmail reference URLs. |

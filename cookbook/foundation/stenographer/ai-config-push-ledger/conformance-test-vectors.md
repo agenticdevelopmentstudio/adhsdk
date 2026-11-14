@@ -11,4 +11,4 @@
 | ai-config-push-ledger-008 | removed-order | Ledger holds three ids; none configured. | The result is in ascending `uuidString` order (derived from the source; no test). |
 | ai-config-push-ledger-009 | record-landed-removals | Record a sync with nil `removedConfigIds` and one config over a ledger holding another id. | The other id stays in the ledger with the new one (derived from the source; no test). |
 | ai-config-push-ledger-010 | record-landed-format | Record two configs, then read the raw entry. | An array of two UUID strings sorted ascending (derived from the source; no test). |
-
+| ai-config-push-ledger-011 | record-landed-configs-win | Record a sync whose `configs` holds first and whose `removedConfigIds` also names first. | `lastPushed()` holds first (derived from the source; no test). |

@@ -1,5 +1,5 @@
 
-| Name | Domain | Role | Required | Configuration |
+| Name | rdid | Role | Required | Configuration |
 |---|---|---|---|---|
 | Textarea | [adhsdk.ingredient.ui.components.inputs.textarea](cookbook:1e323e69-44d2-4a15-a11e-22a68e8e6a8c) | The markdown source field | yes | `id` (from `useId`), `rows`, `spellCheck`, mono font |
 | Label | [adhsdk.ingredient.ui.components.inputs.label](cookbook:c5703986-6d14-4341-8719-b89e44f2ab80) | Caption bound to the textarea via `htmlFor` | yes | mono uppercase caption styling |

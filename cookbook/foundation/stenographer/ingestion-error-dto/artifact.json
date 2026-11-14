@@ -4,7 +4,7 @@
     "id": "95ea4062-09e5-4342-a376-413cb7deb7d1",
     "title": "Ingestion Error DTOs",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,12 +24,15 @@
       "wire"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "96f73261-cf32-42cc-92f3-f8b58542382a",
+      "e8286557-84ee-4f45-b78c-f1d184c51a37"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "658bbcd08c03df25",
+  "synced": "40b9176d3f49a0a4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

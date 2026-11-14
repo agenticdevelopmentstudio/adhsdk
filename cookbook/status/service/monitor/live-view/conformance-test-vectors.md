@@ -24,4 +24,5 @@ Vectors come from `live-view.test.ts` where a test is named; the others are trac
 | status-server-monitor-live-view-019 | stale-monitor-order, stale-monitor-threshold | Down 8 days and 90 days; and exactly 7 days and 6 days | Order `["older", "newer"]`; 7 days is included, 6 days is not — `live-view.test.ts` › "sorts longest-down first and uses an inclusive 7-day threshold" |
 | status-server-monitor-live-view-020 | stale-monitors-view | `staleMonitorsView([svc()], NOW)` | `{ thresholdDays: 7, monitors: [{ slug: "ep1" }] }` — `live-view.test.ts` › "staleMonitorsView names the threshold in days" |
 | status-server-monitor-live-view-021 | stale-monitor-detail, stale-monitor-shape | Down service with `error: null`, `statusCode: null`, `environment: ""` | `detail === "down"`, `environment === null` — traced to the `??` chain and `|| null`; not exercised by a test |
-
+| status-server-monitor-live-view-022 | stale-monitor-detail | Down service with `error: ""` and `statusCode: 503` | `detail === ""`, because an empty string is kept (`??` only skips null and undefined) — traced to the `??` chain; not exercised by a test |
+| status-server-monitor-live-view-023 | stale-monitor-ties | Two down services with the same `downSince`, input order `["first", "second"]` | Slugs `["first", "second"]` — traced to the stable `Array.sort`; not exercised by a test |

@@ -2,7 +2,7 @@
 id: d6ff4cf9-05b9-43f0-96d2-b4c8454dd6d1
 title: "Partner Attention"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -35,10 +35,9 @@ The data shapes for the partner's attention list: something the partner needs th
 
 **Enumerations**
 
-- **kind-values**: `AttentionKind` MUST be a String-backed enum with exactly the raw values `question`, `blocked` and `notification`, and MUST be `Codable`, `Sendable` and `CaseIterable`.
+- **kind-values**: `AttentionKind` MUST be a String-backed enum with exactly the raw values `question`, `blocked` and `notification`, and MUST be `Codable`, `Sendable` and `CaseIterable`; `AttentionKind.allCases` MUST list the three kinds in declaration order. `AttentionState` and `AttentionActionKind` need not be `CaseIterable`.
 - **state-values**: `AttentionState` MUST be a String-backed enum with exactly the raw values `open`, `discussing`, `sent` and `done`, and MUST be `Codable` and `Sendable`.
 - **action-kind-values**: `AttentionActionKind` MUST be a String-backed enum with exactly the raw values `discuss`, `resolved`, `confirm` and `reopen`, and MUST be `Codable` and `Sendable`.
-- **kind-enumerable**: `AttentionKind.allCases` MUST list the three kinds, which is the one enum that offers enumeration.
 
 **Attention item**
 
@@ -47,9 +46,10 @@ The data shapes for the partner's attention list: something the partner needs th
 - **item-mutable**: Every `AttentionItem` field MUST be a mutable stored property, so a holder updates an item in place.
 - **item-init-required**: The `AttentionItem` initializer MUST require `kind`, `text` and `createdBy`.
 - **item-init-id-default**: The `AttentionItem` initializer MUST default `id` to a fresh `UUID().uuidString`.
+- **item-init-explicit**: Every `AttentionItem` initializer parameter MUST be stored exactly as passed.
 - **item-init-defaults**: The `AttentionItem` initializer MUST default `reference` to an empty dictionary, `state` to `.open` and `completedAt` to `nil`.
-- **item-init-dates**: The `AttentionItem` initializer MUST default both `createdAt` and `updatedAt` to the current date at the time of the call, evaluated separately for each.
-- **item-completed-optional**: `completedAt` MUST be `nil` until a holder sets it; the file never sets it and does not tie it to the `done` state.
+- **item-init-dates**: The `AttentionItem` initializer MUST default both `createdAt` and `updatedAt` to the current date at the time of the call; when both default, `createdAt` and `updatedAt` MAY differ slightly.
+- **item-completed-optional**: `completedAt` MUST be `nil` until a holder sets it, and an `AttentionItem` MUST NOT set it or tie it to the `done` state on its own.
 
 **Attention action**
 
@@ -57,7 +57,7 @@ The data shapes for the partner's attention list: something the partner needs th
 - **action-conformances**: `AttentionAction` MUST be `Codable`, `Sendable`, `Equatable` and `Identifiable`, with `id` as the identity.
 - **action-init-required**: The `AttentionAction` initializer MUST require `itemID` and `action`.
 - **action-init-defaults**: The `AttentionAction` initializer MUST default `id` to a fresh `UUID().uuidString`, `at` to the current date and `messageID` to `nil`.
-- **action-references-item-by-id**: `AttentionAction.itemID` MUST name its item by the item's `id`; the file does not check that such an item exists.
+- **action-references-item-by-id**: `AttentionAction.itemID` MUST name its item by the item's `id`, and an `AttentionAction` MUST NOT check that such an item exists.
 
 **Wire form**
 
@@ -66,7 +66,7 @@ The data shapes for the partner's attention list: something the partner needs th
 - **wire-required-on-decode**: Decoding MUST fail when a non-optional field is missing, because the initializer defaults do not apply to decoding.
 - **wire-optional-on-decode**: Decoding MUST accept a missing `completedAt` or `messageID` as `nil`.
 - **wire-unknown-enum-fails**: Decoding MUST fail for a `kind`, `state` or `action` value outside its enum's raw values; there is no fallback case.
-- **wire-dates-strategy**: The date encoding is the coder's: this file sets no `dateEncodingStrategy` or `dateDecodingStrategy`, so a store chooses and uses one consistently.
+- **wire-dates-strategy**: An encoder and a decoder of these types MUST share one date strategy; the types set no `dateEncodingStrategy` or `dateDecodingStrategy` of their own, so each store chooses one.
 
 ## Appearance
 
@@ -89,24 +89,27 @@ The source has no tests beside it; the vectors are derived from the initializers
 | partner-attention-001 | item-init-defaults, item-init-id-default | `AttentionItem(kind: .question, text: "Ship it?", createdBy: "partner")` | `state == .open`, `reference == [:]`, `completedAt == nil`, and `id` is a non-empty UUID string |
 | partner-attention-002 | item-init-id-default | Two items built with the same arguments | The two `id` values differ and the items are not equal |
 | partner-attention-003 | item-init-dates | One item built with no dates | `createdAt` and `updatedAt` are both within a second of the call time |
-| partner-attention-004 | item-init-defaults | `AttentionItem(id: "a", kind: .blocked, text: "t", reference: ["file": "x"], state: .discussing, createdBy: "p", createdAt: d1, updatedAt: d2, completedAt: d3)` | Every field holds exactly the value passed |
-| partner-attention-005 | kind-values, kind-enumerable | `AttentionKind.allCases.map(\.rawValue)` | `["question", "blocked", "notification"]` |
+| partner-attention-004 | item-init-explicit | `AttentionItem(id: "a", kind: .blocked, text: "t", reference: ["file": "x"], state: .discussing, createdBy: "p", createdAt: d1, updatedAt: d2, completedAt: d3)` | Every field holds exactly the value passed |
+| partner-attention-005 | kind-values | `AttentionKind.allCases.map(\.rawValue)` | `["question", "blocked", "notification"]` |
 | partner-attention-006 | state-values | Raw values of `.open`, `.discussing`, `.sent`, `.done` | `"open"`, `"discussing"`, `"sent"`, `"done"` |
 | partner-attention-007 | action-kind-values | Raw values of `.discuss`, `.resolved`, `.confirm`, `.reopen` | `"discuss"`, `"resolved"`, `"confirm"`, `"reopen"` |
 | partner-attention-008 | wire-keys, wire-enum-strings | Encode an item with `kind: .notification` and `state: .sent` | JSON object whose `kind` is `"notification"`, `state` is `"sent"` and keys include `createdBy`, `createdAt` and `updatedAt` |
-| partner-attention-009 | item-conformances, wire-optional-on-decode | Encode then decode an item with `completedAt == nil` under one date strategy | The decoded item equals the original |
+| partner-attention-009 | item-conformances, wire-optional-on-decode | Encode then decode an item with `completedAt == nil` and whole-second dates, using `.iso8601` for both the encoder and the decoder (it drops sub-second precision) | The decoded item equals the original |
 | partner-attention-010 | wire-required-on-decode | JSON for an item with `text` removed | Decoding throws |
 | partner-attention-011 | wire-unknown-enum-fails | JSON for an item whose `state` is `"archived"` | Decoding throws |
 | partner-attention-012 | action-init-defaults, action-init-required | `AttentionAction(itemID: "a", action: .confirm)` | `messageID == nil`, `at` is within a second of the call time and `id` is a fresh non-empty UUID string |
 | partner-attention-013 | action-fields, wire-keys | Encode `AttentionAction(itemID: "a", action: .resolved, messageID: "m1")` | JSON keys `id`, `itemID`, `action`, `at`, `messageID`, with `action` equal to `"resolved"` |
 | partner-attention-014 | wire-optional-on-decode, action-conformances | JSON for an action with no `messageID` | Decodes with `messageID == nil` |
 | partner-attention-015 | item-mutable | Build an item, then set `state = .done` and `completedAt = Date()` | The item holds the new values and `updatedAt` is unchanged |
-
+| partner-attention-016 | action-conformances, wire-dates-strategy | Encode then decode `AttentionAction(id: "x", itemID: "a", action: .confirm, at: d, messageID: "m1")` with a whole-second `d`, using `.iso8601` for both the encoder and the decoder | The decoded action equals the original |
+| partner-attention-017 | wire-required-on-decode | JSON for an action with `itemID` removed, and likewise one with `action` removed and one with `at` removed | Decoding throws in each case |
 ## Edge Cases
 
 - **Empty and null input**: An empty `text`, an empty `createdBy` and an empty `reference` are all accepted; the file validates nothing.
 - **Duplicate ids**: Two items or two actions with the same `id` are accepted; `Identifiable` identity is then ambiguous. The caller owns uniqueness; the default `UUID().uuidString` makes a collision negligible.
-- **Dangling action**: An `AttentionAction` whose `itemID` matches no item is accepted; the file does not link the two.
+- **Dangling action**: An `AttentionAction` whose `itemID` matches no item is accepted; the types do not link the two.
+- **Completion date**: The types never set `completedAt` and do not tie it to the `done` state; a holder sets it.
+- **Default dates**: When an item is built with no dates, `createdAt` and `updatedAt` come from two separate clock reads and may differ slightly.
 - **Inconsistent timestamps**: `updatedAt` earlier than `createdAt`, or a `completedAt` on an item that is not `done`, is accepted and not corrected.
 - **State changes do not touch dates**: Changing `state` does not update `updatedAt` or `completedAt`; a holder sets them.
 - **Unknown enum value on the wire**: A newer writer's new `kind`, `state` or `action` raw value makes decoding of that whole item or action fail on an older reader.
@@ -170,7 +173,7 @@ Not applicable: The source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/Attention.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/Attention.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -207,4 +210,5 @@ Not applicable: The source calls no logging API.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Merged kind-enumerable into kind-values, rewrote the date, completed-at and item-reference requirements as MUST/MUST NOT with the notes moved to Edge Cases, added item-init-explicit, relaxed the two-clock-read clause, added action round-trip and missing-field vectors, and named the .iso8601 strategy in vector 009. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

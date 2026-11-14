@@ -19,3 +19,7 @@
 **Rationale**: The source defines it as a session on a feature branch or inside a `.claude/worktrees/<name>` directory; a path ending at `worktrees` with no name is not a worktree.
 **Approved**: pending
 
+
+**Decision**: Refusal sentences are English text built in the type, not reason codes.
+**Rationale**: The only callers are the `steno conversation send` and `info` verbs, which print the sentence as is, so a code-to-text mapping would add a layer nothing needs yet; a second audience would call for returning a code.
+**Approved**: pending

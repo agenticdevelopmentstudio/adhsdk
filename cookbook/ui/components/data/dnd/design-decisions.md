@@ -31,3 +31,6 @@
 **Rationale**: Without it, a touch drag on the grip would be consumed by the browser's scroll handler, and the pointer sensor would never see a move event.
 **Approved**: pending
 
+**Decision**: Accept that drag transitions ignore `prefers-reduced-motion`, as known debt.
+**Rationale**: The surfaces rely on the drag library's CSS transitions with no reduced-motion handling, so the `reduced-motion` check fails. The remedy is to turn the transitions off under `prefers-reduced-motion`; adding it later would not change the API.
+**Approved**: pending

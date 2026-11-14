@@ -4,7 +4,7 @@
     "id": "d2213cbb-1a6e-452e-98f0-acd2007c8430",
     "title": "Partner Process",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,14 +23,17 @@
       "process",
       "streaming"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "f333f036-2c23-4a87-8496-bd3616b44786",
+      "c77c4cfb-e9be-4339-b40d-3f7abc6a4543"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "b2d577821b0d33a0",
+  "synced": "c549e60c97267ce4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

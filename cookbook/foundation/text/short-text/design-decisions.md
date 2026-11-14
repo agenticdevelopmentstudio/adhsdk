@@ -8,11 +8,11 @@
 **Approved**: pending
 
 **Decision**: One shared helper with a default of 60.
-**Rationale**: A quota card gives an error line about sixty characters before it wraps, and the number had been written three times (refresher, evaluator, probe), so tuning one would have left the others a different width.
+**Rationale**: A width-limited card gives a one-line message about sixty characters before it wraps, and the number had been written at three call sites, so tuning one would have left the others a different width. The number belongs to that card; callers that show a one-line message in such a card should use the default instead of writing 60 again.
 **Approved**: pending
 
 **Decision**: The method does not guard a limit under 3.
-**Rationale**: The doc comment documents the precondition ("`limit` must be at least 3: a smaller value makes `prefix` trap on a negative count"); the method does not check it, so the contract belongs to the caller. This is recorded as the contract, not a gap.
+**Rationale**: The doc comment documents the precondition ("`limit` must be at least 3: a smaller value makes `prefix` trap on a negative count"); the method does not check it, so the contract belongs to the caller. This is recorded as the contract, not a gap: a precondition that fails only for long text can pass every short-string test, so a caller needs to know it.
 **Approved**: pending
 
 **Decision**: The cut is not at a word boundary and does not trim trailing whitespace.

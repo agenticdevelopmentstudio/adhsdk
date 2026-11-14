@@ -15,11 +15,11 @@
 | detail-012 | visibility-state | visible = true | Root element has class "pc-pane-visible" |
 | detail-013 | visibility-state | visible = false | Root element has class "pc-pane-hidden" |
 | detail-014 | connector-anchor | topic = {messageIndex: 5, ...}, rendered inside a `ConnectorRegistryProvider` | ConnectorAnchor element renders with `data-connector-anchor="panel-5-in"` (no `id` attribute) |
-| detail-015 | content-mounted-when-hidden | topic present, rendered with visible = true, then re-rendered with visible = false | Title, description, image and link elements are all still present in the DOM; the root element has no `inert`, `aria-hidden`, or `tabindex` attribute |
-| detail-016 | focus-untouched | topic with one link, visible = true; focus that link, then re-render with visible = false | `document.activeElement` is still the link element; the component issues no focus() call |
+| detail-015 | content-mounted-when-hidden | topic present, rendered with visible = true, then re-rendered with visible = false | Title, description, image and link elements are all still present in the DOM |
+| detail-016 | focus-untouched (current behavior) | topic with one link, visible = true; focus that link, then re-render with visible = false | `document.activeElement` is still the link element; the component issues no focus() call |
 | detail-017 | no-analytics | topic present; render, load an image, click a link, toggle visible | No analytics event is dispatched by the component; the module references no analytics client |
 | detail-018 | no-logging | topic present; render, load an image, toggle visible, render with topic = null | No console or logger output is produced by the component |
-| detail-019 | topic-prop | topic = {title: "T", description: "", links: [], images: [], messageIndex: 0} (minimal valid Topic), rendered standalone with no `ConnectorRegistryProvider` | Component renders without error; per conditional-content, only the title renders — the connector anchor renders nothing, because ConnectorAnchor requires a `ConnectorRegistryProvider` |
+| detail-019 | topic-prop | topic = {title: "T", description: "", links: [], images: [], messageIndex: 0} (minimal valid `TopicData`), rendered standalone with no `ConnectorRegistryProvider` | Component renders without error; per conditional-content, only the title renders — the connector anchor renders nothing, because ConnectorAnchor requires a `ConnectorRegistryProvider` |
 | detail-020 | ref-forwarding | a ref object is passed to the component | `ref.current` is the root `HTMLDivElement` |
 | detail-021 | connector-anchor | topic = null | No ConnectorAnchor element renders; no element carries a `data-connector-anchor` attribute |
 

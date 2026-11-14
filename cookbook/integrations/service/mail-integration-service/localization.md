@@ -16,6 +16,9 @@ Every user-facing error is a hardcoded English string, not a localised key.
 | none (inline) | `labels applied; refreshing messages failed: <message>` | Re-read failed after a write |
 | none (inline) | `No connected account matches “<account>”` | `IntegrationError.unknownAccount`, an account that matches no id or email |
 | none (inline) | `Invalid sync settings: <reason>` (for example `windowDays must be 1–3650, got <n>`) | `IntegrationError.invalidSettings`, a refused `updateSettings` |
+| none (inline) | `Gmail is not configured — import an OAuth client JSON first` | `IntegrationError.notConfigured`, an operation that needs the OAuth client with none imported |
+| none (inline) | `Google access was revoked — sign in again` | `IntegrationError.revoked` |
+| none (inline) | `Keychain error: <reason>` (for example `Keychain error: Could not read the Google credential: locked`) | `IntegrationError.keychain`, a locked or denied Keychain |
 | none (inline) | `encoding failed` | Response could not be encoded |
 
 The `IntegrationError` cases (`notConfigured`, `unknownAccount`, `revoked` and the rest) supply their own English `errorDescription` in the Model layer.

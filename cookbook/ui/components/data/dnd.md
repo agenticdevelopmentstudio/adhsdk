@@ -2,11 +2,11 @@
 id: d8f2a1c3-9e4b-4a7b-8c6d-2f9a1e5b3c7d
 title: "Drag-and-Drop"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -29,12 +29,14 @@ approved-date: ""
 
 ## Overview
 
-Two distinct drag surfaces: **SortableSurface** for ordered collections (lists or multi-column boards) that report drop position as neighboring items rather than indexes — a safety measure against concurrent reordering; and **DragSurface** for unordered placement (calendar chips landing on dates, timeline bars moving along one axis). Both support pointer and keyboard interaction. The component is a thin wrapper over `@dnd-kit`, unifying its API so views speak one vocabulary for drop position and axis constraint.
+Two distinct drag surfaces: **SortableSurface** for ordered collections (lists or multi-column boards) that report drop position as neighboring items rather than indexes — a safety measure against concurrent reordering; and **DragSurface** for unordered placement (calendar chips landing on dates, timeline bars moving along one axis). Both support pointer and keyboard interaction. The surfaces unify the drag machinery behind one vocabulary, so views speak the same terms for drop position and axis constraint.
 
 ## Behavioral Requirements
 
 - **sortable-model-input**: SortableSurface MUST accept a `zones` array of `{ id: string, itemIds: readonly string[] }` objects, each describing one ordered collection and the items it contains in render order.
-- **drag-surface-config-input**: DragSurface MUST accept an `onDrop` callback, plus optional `describeItem`, `describeTarget`, `renderOverlay`, `axis`, and `keyboard` props to configure its behavior.
+- **sortable-surface-config-input**: SortableSurface MUST accept an `onDrop` callback, plus optional `describeItem`, `describeZone`, `renderOverlay` and `orientation` props, in addition to its `zones` model.
+- **sortable-drop-payload**: On drop, SortableSurface's `onDrop` callback MUST receive `{ itemId: string, fromZoneId: string, toZoneId: string, afterId: string | null, beforeId: string | null }` — the dragged item, the zone it came from, the zone it landed in (the same one for a plain reorder), and the neighbours it landed between.
+- **drag-surface-config-input**: DragSurface MUST accept an `onDrop` callback, plus optional `describeItem`, `describeTarget`, `renderOverlay`, `axis`, and `keyboard` props to configure its behavior. At the surface, `keyboard` turns the keyboard drag path on; on a DragItem, `keyboard` controls whether the handle carries the attributes that make it keyboard-operable (see **conditional-keyboard-attribute-spreading**).
 - **drag-surface-drop-payload**: On drop, DragSurface's `onDrop` callback MUST receive `{ itemId: string, targetId: string | null, delta: { x: number, y: number } }` — the target the item landed on (or null if none) and the pixel distance it travelled.
 - **drop-position-report**: SortableSurface MUST report drop position as `afterId` (item before the dropped item, or null if dropped at top) and `beforeId` (item after, or null if dropped at bottom).
 - **center-crossing-drop-position**: When a drag ends over another item, SortableSurface MUST decide before/after by comparing the dragged element's translated-rect center to the target element's rect center along the active orientation axis (horizontal: `left + width/2`; vertical: `top + height/2`); the item lands after the target once the dragged center has passed the target's center.
@@ -43,18 +45,18 @@ Two distinct drag surfaces: **SortableSurface** for ordered collections (lists o
 - **continuous-drop-target-remeasurement**: Droppable zones MUST be re-measured continuously during a drag (not just at drag start), to accommodate zones that grow or scroll during the operation.
 - **pointer-and-keyboard-interaction**: Both SortableSurface and DragSurface MUST support pointer drags and MUST provide keyboard interaction (Space or Enter to start, arrow keys to move, Enter to drop, Escape to cancel) when keyboard is enabled. SortableItem defaults to keyboard enabled; DragItem defaults to keyboard disabled. When keyboard is disabled, the host MUST provide an equivalent non-pointer path to the same change (e.g., the form fields a calendar or timeline drag would otherwise set).
 - **optional-drag-overlay**: SortableSurface and DragSurface MUST render a DragOverlay component under the pointer during a drag when `renderOverlay` prop is provided; when omitted, no overlay is rendered.
-- **axis-constraint**: DragSurface MAY accept an `axis` prop to constrain movement to the x or y axis only.
-- **grip-handle-rendering**: DragGrip MAY render a span element with grab/grabbing cursor, icon, and optional accessible label.
+- **axis-constraint**: DragSurface MUST accept an `axis` prop to constrain movement to the x or y axis only.
+- **grip-handle-rendering**: DragGrip MUST render a span element with grab/grabbing cursor, icon, and optional accessible label.
 - **drag-event-announcements**: SortableSurface and DragSurface MUST provide accessibility announcements (via aria-live regions) for drag start, drag over a target, drag end, and drag cancel events.
 - **optional-item-and-zone-descriptions**: SortableSurface MUST accept `describeItem` and `describeZone` callbacks to customize item and zone names in announcements; DragSurface MUST accept `describeItem` and `describeTarget` callbacks.
 - **nearest-corner-collision-detection**: Both surfaces MUST use nearest-corner collision detection (not center-point or bounding-box overlap) to decide which zone or target a drag is over.
 - **dragged-item-de-emphasis**: During a pointer drag in SortableSurface, the dragged item's original element MUST be visibly de-emphasized (reduced opacity) to indicate it is lifted, while the overlay renders the visual representation under the pointer.
 - **dragged-item-visual-elevation**: During a pointer drag in DragSurface, the dragged element MUST be visually elevated above surrounding content.
 - **grip-touch-scroll-suppression**: DragGrip MUST disable the browser's touch-scroll gesture on the handle so it does not interfere with the pointer sensor.
-- **horizontal-layout-support**: SortableSurface SHOULD accept an `orientation` prop set to `"horizontal"` to handle zones laid out left-to-right; the default orientation is `"vertical"`.
+- **horizontal-layout-support**: SortableSurface MUST accept an `orientation` prop set to `"horizontal"` to handle zones laid out left-to-right; the default orientation is `"vertical"`.
 - **conditional-drag-disabling**: Both SortableItem and DragItem MUST accept an `enabled` prop (default true) to disable dragging for specific items (e.g., filtered rows, busy rows).
-- **conditional-keyboard-attribute-spreading**: SortableItem and DragItem MAY accept a `keyboard` prop (default true for SortableItem, false for DragItem) to control whether dnd-kit's keyboard attributes are spread onto the handle; when false, only listeners are spread.
-- **sortable-zone-droppable**: SortableZone MUST register its own droppable (via useDroppable) so that drops into an empty zone are reachable.
+- **conditional-keyboard-attribute-spreading**: SortableItem and DragItem MUST accept a `keyboard` prop (default true for SortableItem, false for DragItem) that controls whether the handle is made keyboard-operable (it carries a button `role` and a `tabIndex`); when false, only the pointer listeners are attached.
+- **sortable-zone-droppable**: SortableZone MUST register its own drop target so that drops into an empty zone are reachable.
 
 ## Appearance
 
@@ -97,7 +99,7 @@ Two distinct drag surfaces: **SortableSurface** for ordered collections (lists o
 | dnd-002 | drop-position-report | Zone contains items `[a, b, c]` in order; drag item `a` and drop it directly below `b` | onDrop callback receives `{ itemId: "a", fromZoneId, toZoneId, afterId: "b", beforeId: "c" }` |
 | dnd-003 | no-op-reorder-ignored | Drag item in same zone and drop it in its original position | onDrop callback is NOT invoked |
 | dnd-004 | pointer-drag-activation-distance | Pointer moves 3px from start; then moves 6px from start | Drag does not start at 3px; drag starts and active state is set at 6px+ |
-| dnd-005 | continuous-drop-target-remeasurement | Start drag; zone grows in height mid-drag; drop item | Drop calculation uses the updated zone rect, not the original |
+| dnd-005 | continuous-drop-target-remeasurement | Start drag; zone grows in height mid-drag; drop item | A drop released inside the newly grown area (for example, a zone that grew from 100px to 300px tall, released at 250px from its top) lands in that zone, at the position that point implies |
 | dnd-006 | pointer-and-keyboard-interaction | Focus on SortableItem's grip; press Space or Enter to start; press Arrow Up/Down to move; press Enter to drop | Drag starts, item moves, drag completes and onDrop is called |
 | dnd-007 | optional-drag-overlay | SortableSurface with renderOverlay prop provided | DragOverlay renders the result of renderOverlay(itemId) under pointer during drag |
 | dnd-008 | optional-drag-overlay | SortableSurface without renderOverlay prop | No DragOverlay appears during drag |
@@ -105,22 +107,22 @@ Two distinct drag surfaces: **SortableSurface** for ordered collections (lists o
 | dnd-010 | axis-constraint | DragSurface with axis="y" | Dragging horizontally has no effect; only vertical movement is possible |
 | dnd-011 | drag-event-announcements | Focus on grip and start drag via keyboard; listen to screen reader announcements | Announcement includes "Picked up {itemName}" |
 | dnd-012 | optional-item-and-zone-descriptions | SortableSurface with describeItem={(id) => `Card ${id}`} and describeZone={(id) => `Column ${id}`} | Announcements use "Card X" and "Column Y" instead of bare IDs |
-| dnd-013 | nearest-corner-collision-detection | Two zones side by side; dragged item's nearest corner sits 10px from Zone A's near edge and 40px from Zone B's near edge | Item lands in Zone A — the zone whose corner is closest — not by center point or bounding-box overlap |
+| dnd-013 | nearest-corner-collision-detection | Zone A spans x 0–100, y 0–200; Zone B spans x 140–240, y 0–200; the dragged item is 40×40 with corners at x 90–130, y 80–120 | Item lands in Zone A — the zone whose four corners are closest to the item's four corners (summed distance about 412 against about 461 for Zone B) — not by center point or bounding-box overlap |
 | dnd-014 | dragged-item-de-emphasis | Start pointer drag in SortableSurface; inspect element style during drag | `opacity: 0.4` is applied to the dragged item's element |
 | dnd-015 | dragged-item-visual-elevation | Start pointer drag in DragSurface; inspect element style during drag | `zIndex: 20` and `position: relative` are applied |
-| dnd-016 | grip-touch-scroll-suppression | On touch device, attempt to scroll by dragging on a DragGrip | Pointer sensor receives the move events; browser does not consume scroll |
+| dnd-016 | grip-touch-scroll-suppression | Render a DragGrip and read its computed `touch-action` | `touch-action` is `none`, so the browser does not claim a touch gesture for scrolling |
 | dnd-017 | horizontal-layout-support, center-crossing-drop-position | orientation="horizontal"; dragged item's translated rect center at x=150; target item's rect spans x=100–180 (center x=140) | Dragged center (150) has passed the target's center (140) → item lands AFTER the target |
 | dnd-018 | conditional-drag-disabling | SortableItem with enabled={false} | Item cannot be picked up; pointer and keyboard sensors are inactive for this item |
 | dnd-019 | conditional-keyboard-attribute-spreading | SortableItem with keyboard={false} | Only listeners are spread on handleProps; no `role`, `tabIndex`, or attributes are included |
 | dnd-020 | sortable-zone-droppable | SortableZone with empty itemIds array | Zone's own droppable is reachable; dropping into it lands item at the end of that (empty) zone |
 | dnd-021 | drag-surface-drop-payload | Drag item in DragSurface 15px right and 3px down; release over a target | onDrop callback receives `{ itemId, targetId: <target id>, delta: { x: 15, y: 3 } }` |
 | dnd-022 | drag-surface-config-input | DragSurface rendered with onDrop, describeItem, describeTarget, renderOverlay, axis, and keyboard all provided | Surface renders without error; describeItem/describeTarget values are used in announcements |
-
+| dnd-023 | sortable-surface-config-input, sortable-drop-payload | SortableSurface rendered with onDrop, describeItem, describeZone, renderOverlay and orientation all provided; drag an item to a new place | Surface renders without error; onDrop receives all five payload fields; the describe values are used in announcements |
 ## Edge Cases
 
-- **Empty zone drop target**: When a zone has no items, the zone's own droppable (via useDroppable) is the only collision target. Dropping directly on a zone's own droppable (rather than on an item) always lands the item at the end of that zone's list; for an empty zone, "the end" is index 0 (afterId = null, beforeId = null).
-- **Drag with no target**: Dragging outside all zones and releasing MUST NOT invoke onDrop (checked via `if (!over) return`).
-- **Drag originating from invalid zone**: If the dragged item's zone cannot be determined from the zone model, the drag is ignored (checked via `if (fromZoneId === undefined) return`).
+- **Empty zone drop target**: When a zone has no items, the zone's own drop target is the only collision target. Dropping directly on a zone's own drop target (rather than on an item) always lands the item at the end of that zone's list; for an empty zone, "the end" is index 0 (afterId = null, beforeId = null).
+- **Drag with no target**: In SortableSurface, dragging outside all zones and releasing MUST NOT invoke onDrop. DragSurface still invokes onDrop in that case, with `targetId: null` and the distance travelled (see **drag-surface-drop-payload**).
+- **Drag originating from invalid zone**: If the dragged item's zone cannot be determined from the zone model, the drag is ignored and onDrop is not called.
 - **Cross-zone reorder**: Item is picked up from Zone A and dropped into Zone B. onDrop reports both fromZoneId and toZoneId; the view is responsible for updating its data model.
 - **Concurrent drags**: Only one drag is active at a time; new drags are blocked by dnd-kit until the previous drag ends.
 - **Concurrent reorders by multiple users**: The SortableDrop report uses item neighbors (afterId, beforeId) rather than indexes, so two users can reorder the same collection at once without a shared index going stale. This holds only while both reported neighbors are still present: if another user has already moved or deleted the afterId or beforeId item by the time a drop is applied, the neighbor pair is stale and the drop can no longer be placed unambiguously. A host applying drops from multiple users SHOULD detect a missing neighbor at apply time and either re-resolve the drop against the current list or reject it back to the dragging user.
@@ -129,7 +131,7 @@ Two distinct drag surfaces: **SortableSurface** for ordered collections (lists o
 - **Drag inside a button**: When the draggable is inside a button element (e.g., a calendar chip, timeline bar), setting keyboard={false} prevents spreading dnd-kit's `role="button"` onto the handle, avoiding a nested button violation.
 - **Viewport scroll during drag**: If a scrollable parent scrolls during a drag (e.g., user scrolls a list while dragging), the drop position calculation accounts for the new scroll offset because droppables are re-measured continuously.
 - **Overlay rendering fails**: `renderOverlay` is called directly inside DragOverlay's render, with no surrounding try/catch or error boundary. If it throws, the error propagates up React's tree exactly like any other render error — the surface does not contain it. A host that passes `renderOverlay` SHOULD wrap it (or its own subtree) in a React error boundary if it cannot guarantee the callback is error-free.
-- **Missing zone in model**: If a zone ID appears in itemsOfZone but not in the zones array passed to the surface, that zone is still droppable, but the view may have inconsistent state. This case, and an item ID that cannot be resolved to a zone, are silently ignored inside onDragEnd — the callback simply returns without calling onDrop or reporting anything. The component has no logging or rejection channel of its own; a host that needs visibility into these cases must add its own checks around onDrop.
+- **Missing zone in model**: If a zone is registered as a drop target but is missing from the zones model passed to the surface, that zone is still droppable, but the view may have inconsistent state. This case, and an item ID that cannot be resolved to a zone, are silently ignored when the drag ends — the surface simply returns without calling onDrop or reporting anything. The component has no logging or rejection channel of its own; a host that needs visibility into these cases must add its own checks around onDrop.
 
 ## Configuration
 
@@ -148,7 +150,8 @@ Not applicable: These drag-and-drop components are interaction primitives with n
 | `dnd.announce.picked-up` | "Picked up {item}." | Drag-start announcement (SortableSurface, DragSurface) |
 | `dnd.announce.over-target` | "{item} is over {target}." | Drag-over announcement when over a zone, item, or target |
 | `dnd.announce.over-none` | "{item} is over no drop target." | Drag-over announcement when over nothing |
-| `dnd.announce.dropped` | "{item} was dropped." / "{item} was dropped on {target}." | Drag-end announcement |
+| `dnd.announce.dropped` | "{item} was dropped." | Drag-end announcement (SortableSurface, or DragSurface with no target) |
+| `dnd.announce.dropped-on-target` | "{item} was dropped on {target}." | DragSurface drag-end announcement when dropped on a target |
 | `dnd.announce.returned` | "{item} was returned to where it started." | SortableSurface drag-end announcement when dropped with no target |
 | `dnd.announce.cancelled` | "Dragging {item} was cancelled." | Drag-cancel announcement |
 
@@ -181,8 +184,8 @@ Not applicable: No logging subsystem is built into the component. Errors (e.g., 
 ## Platform Notes
 
 - **SwiftUI**: Start from the `.draggable(_:)` and `.dropDestination(for:action:)` view modifiers (iOS 16+ / macOS 13+) for the free-drag case; a SortableSurface analogue combines `.draggable` items inside a `ForEach` with a `.dropDestination` per row or zone to detect neighbor position, or uses `List` with `.onMove` when index-based reordering is acceptable. Keyboard-equivalent interaction needs a custom accessibility action, since SwiftUI's drag gestures have no built-in keyboard path.
-- **Compose**: Start from `Modifier.dragAndDropSource` and `Modifier.dragAndDropTarget` (Jetpack Compose Foundation) for the free-drag case; a SortableSurface analogue combines these with `LazyColumn`/`LazyRow` and a `LazyListState`-based reorder helper. Keyboard interaction is handled via `KeyEvent` callbacks and accessibility focus management; announcements use `AccessibilityEventCompat` live-region semantics.
-- **React/Web**: Source is `packages/web/packages/ui/src/components/dnd.tsx`. SortableSurface and DragSurface wrap `@dnd-kit/core` (DndContext, DragOverlay, sensors, the `closestCorners` collision-detection strategy) and `@dnd-kit/sortable` (SortableContext, useSortable). Accessibility announcements are driven by dnd-kit's built-in Announcements API (via aria-live). The component uses CSS transforms for drag positioning (via CSS.Translate from @dnd-kit/utilities). During a pointer drag, the web implementation sets the original dragged element's opacity to 0.4 (SortableSurface) or applies `zIndex: 20` / `position: relative` (DragSurface), and applies the `touch-none` Tailwind class (`touch-action: none`) to DragGrip so the browser does not claim the touch gesture for scrolling. Grip handle renders as a span and accepts attributes from dnd-kit when keyboard={true}, or listeners only when keyboard={false}.
+- **Compose**: Start from `Modifier.dragAndDropSource` and `Modifier.dragAndDropTarget` (Jetpack Compose Foundation) for the free-drag case; a SortableSurface analogue combines these with `LazyColumn`/`LazyRow` and a `LazyListState`-based reorder helper. Keyboard interaction is handled via `KeyEvent` callbacks and accessibility focus management; announcements use Compose semantics: `Modifier.semantics { liveRegion = LiveRegionMode.Polite }`.
+- **React/Web**: SortableSurface and DragSurface are thin wrappers over `@dnd-kit` that unify its API. They wrap `@dnd-kit/core` (DndContext, DragOverlay, sensors, the `closestCorners` collision-detection strategy) and `@dnd-kit/sortable` (SortableContext, useSortable). Accessibility announcements are driven by dnd-kit's built-in Announcements API (via aria-live). The component uses CSS transforms for drag positioning (via CSS.Translate from @dnd-kit/utilities). During a pointer drag, the web implementation sets the original dragged element's opacity to 0.4 (SortableSurface) or applies `zIndex: 20` / `position: relative` (DragSurface), and applies the `touch-none` Tailwind class (`touch-action: none`) to DragGrip so the browser does not claim the touch gesture for scrolling. Grip handle renders as a span and accepts attributes from dnd-kit when keyboard={true}, or listeners only when keyboard={false}. SortableZone registers its drop target with `useDroppable`. The keyboard path is dnd-kit's `KeyboardSensor`, whose attributes (`role="button"`, `tabIndex`) are the ones `keyboard` spreads. In the drop handler, a drag with no `over` target, or an item whose zone is not in the model, returns without calling `onDrop`.
 - **AppKit / UIKit**: Start from `UIDragInteraction` and `UIDropInteraction` (iOS 11+) for pointer drag recognition and target detection, or `NSDraggingSource`/`NSDraggingDestination` on macOS. Zones map to `UITableView`/`UICollectionView` (or `NSTableView`/`NSCollectionView`) sections, using the built-in drag-delegate methods (`UICollectionViewDragDelegate`/`UICollectionViewDropDelegate`) for reordering rather than a hand-rolled gesture recognizer. `UIAccessibility.post(notification:.announcement, argument:)` provides the live-region equivalent. A separate keyboard/VoiceOver path (custom accessibility actions, VoiceOver rotor) is required since drag gestures have no built-in keyboard equivalent.
 - **WinUI 3**: Start from the native drag-and-drop support on `ListView`/`GridView` — `CanDragItems`, `AllowDrop`, `CanReorderItems`, and the `DragItemsStarting` / `DragItemsCompleted` / `Drop` events — rather than hand-rolling gesture recognition from `ManipulationStarted`/`ManipulationDelta`/`ManipulationCompleted`. Use XAML `Storyboard` animations for visual feedback. Keyboard interaction via `KeyDown` (Arrow keys, Enter, Escape). Announcements use `AutomationProperties.LiveSetting` (Polite or Assertive) or, for one-off announcements, the UI Automation `RaiseNotificationEvent` API. When a custom neighbor-based report (matching `SortableDrop`) is still needed beyond what `ListView`'s own reorder mode gives you, drop position requires hit-testing via `TransformToVisual` and computing element bounds against the destination panel.
 - **Pattern (all platforms)**: The core pattern is pointer and keyboard sensor registration, nearest-target collision detection, and neighbor-based drop reporting. The web version uses dnd-kit to provide these; native platforms should start from each platform's own drag-and-drop controls (`.draggable`/`.dropDestination`, `Modifier.dragAndDropSource`/`dragAndDropTarget`, `UIDragInteraction`/`UIDropInteraction`, `ListView`'s `CanReorderItems`) and fall back to custom gesture recognition only where the native API cannot express the neighbor-based report this component needs.
@@ -191,7 +194,7 @@ Not applicable: No logging subsystem is built into the component. Errors (e.g., 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/dnd.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/dnd.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -227,6 +230,9 @@ Not applicable: No logging subsystem is built into the component. Errors (e.g., 
 **Rationale**: Without it, a touch drag on the grip would be consumed by the browser's scroll handler, and the pointer sensor would never see a move event.
 **Approved**: pending
 
+**Decision**: Accept that drag transitions ignore `prefers-reduced-motion`, as known debt.
+**Rationale**: The surfaces rely on the drag library's CSS transitions with no reduced-motion handling, so the `reduced-motion` check fails. The remedy is to turn the transitions off under `prefers-reduced-motion`; adding it later would not change the API.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -250,3 +256,4 @@ Statuses rest on the source directly: the keyboard sensor, `aria-live` Announcem
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only names; split drag-surface config into input and drop-payload requirements with typed shapes; moved dnd-kit implementation values (closestCorners, opacity 0.4, zIndex 20, touch-none) out of requirements into the React/Web platform note; corrected grip dimensions, appearance token roles, and touch-target status; rewrote Platform Notes to the five required bullets with accurate native APIs; converted Design Decisions to Decision/Rationale/Approved format; added Compliance and Localization tables; sharpened ambiguous test vectors and edge-case wording |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added sortable-surface-config-input and sortable-drop-payload, raised the MAY and SHOULD requirements to MUST, moved dnd-kit and code specifics into the React/Web note, split the dropped announcement key, scoped the no-target edge case to SortableSurface, made vectors dnd-005, dnd-013 and dnd-016 observable, recorded reduced-motion as a Design Decision, and fixed the Compose announcement API. |

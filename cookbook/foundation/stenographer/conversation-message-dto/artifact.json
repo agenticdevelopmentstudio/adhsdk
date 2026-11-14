@@ -4,7 +4,7 @@
     "id": "f7338580-0738-46d8-a0c3-528794c045be",
     "title": "Conversation Message DTOs",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "One conversation message, a cursor-paged page of them, the range query a reader sends, and the unknown-message-id error behind steno conversation fetch.",
+    "summary": "Per-session conversation message, cursor page, range query and unknown-id error for steno conversation fetch.",
     "platforms": [
       "swift",
       "macos"
@@ -23,14 +23,16 @@
       "dto",
       "wire"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "08d59319-de4b-438a-a144-dcf3912aa2e5"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "7bd82bc9a42f6f52",
+  "synced": "1b6152d68ded20a6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

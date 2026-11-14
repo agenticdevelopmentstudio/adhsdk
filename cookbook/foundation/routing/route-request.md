@@ -2,7 +2,7 @@
 id: 1a8e345f-c602-4ccb-8880-432b1deac6ac
 title: "Route Request"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,9 @@ tags:
   - routing
   - http
   - query-parameters
-depends-on: []
+depends-on:
+  - 29a3044c-f785-4fa3-a1b9-746d069ae198
+  - 59f7893e-58fe-4f11-abd9-f80c1e05c002
 related: []
 references: []
 approved-by: ""
@@ -30,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-A request as shared routes see it: no transport and no framework. A daemon's HTTP layer converts its own request type into `RouteRequest`, so a route written once against it can be mounted by any daemon. It is a `Sendable`, `Equatable` struct holding `method`, `path`, `queryValues` (every value of every query key, in wire order), `headers` and `body`. Beyond the plain fields it offers path splitting, query accessors, two paging bounds that are safe to hand to SQL (`boundedLimit(default:max:)`, `boundedOffset()`), and ISO-8601 timestamp validation that either returns a canonical string or a typed `InvalidTimestamp` failure.
+A request as shared routes see it: no transport and no framework. A daemon's HTTP layer converts its own request type into `RouteRequest`, so a route written once against it can be mounted by any daemon. It is a `Sendable`, `Equatable` struct holding `method`, `path`, `queryValues` (every value of every query key, in wire order), `headers` and `body`. Beyond the plain fields it offers path splitting, query accessors, two paging bounds that are safe to hand to SQL (`boundedLimit(default:max:)`, `boundedOffset()`), and ISO-8601 timestamp validation that either returns a canonical string or a typed `InvalidTimestamp` failure. Validation is delegated to `TimestampParsing.parseISO8601` (see the [Timestamp Parsing recipe](cookbook:29a3044c-f785-4fa3-a1b9-746d069ae198)) and the whole-second form comes from `UTCTimestamp` (see the [UTC Timestamp recipe](cookbook:59f7893e-58fe-4f11-abd9-f80c1e05c002)).
 
 ## Behavioral Requirements
 
@@ -45,15 +47,14 @@ A request as shared routes see it: no transport and no framework. A daemon's HTT
 
 - **query-last-value**: `query(key)` MUST return the last value of `key`, or `nil` when the key is absent.
 - **query-all-wire-order**: `queryAll(key)` MUST return every value of `key` in wire order, or an empty list when the key is absent.
-- **query-int-default**: `queryInt(key, default:)` MUST return the last value of `key` parsed as an `Int`, and MUST return the default (0 when none is given) when the key is absent or its value is not an integer.
+- **query-int-default**: `queryInt(key, default:)` MUST return the last value of `key` parsed as an `Int`, and MUST return the default (0 when none is given) when the key is absent or its value is not an integer. An integer is an optional single leading `+` or `-` followed by one or more ASCII decimal digits, with no whitespace, no other character and a value that fits the platform's signed 64-bit `Int`, which is the grammar of Swift's `Int(String)`; a value outside it (`" 5"`, `"5 "`, `"1e3"`, `""`, an overflowing digit string) takes the default.
 
 ### Paging bounds
 
-- **limit-default**: `boundedLimit(default:max:)` MUST return the default, itself bounded to `1...max`, when `limit` is absent or unparseable.
+- **limit-default**: `boundedLimit(default:max:)` MUST return the default when `limit` is absent or unparseable, and MUST bound that default to `1...max` as well, so a default above `max` returns `max`.
 - **limit-in-range**: `boundedLimit(default:max:)` MUST return the requested `limit` when it is within `1...max`.
 - **limit-capped**: `boundedLimit(default:max:)` MUST return `max` when `limit` exceeds it.
 - **limit-floored-at-one**: `boundedLimit(default:max:)` MUST return 1 when `limit` is zero or negative, and MUST NOT pass a negative value through, because SQLite reads a negative `LIMIT` as no limit.
-- **limit-default-bounded**: `boundedLimit(default:max:)` MUST bound the default as well, so a default above `max` returns `max`.
 - **limit-clamp-is-silent**: A `limit` outside `1...max` MUST be clamped silently and MUST NOT produce an error; the source records this as deliberate for read-only paging parameters on a localhost API.
 - **ceiling-below-one**: NEEDS REVIEW: Not implemented in source. Behavior undefined. The doc comment promises a result always within `1...max`, but a `max` below 1 returns `max` itself (the computation is the minimum of the floored value and the ceiling), so the promise fails and nothing rejects or documents a ceiling below 1. Evidence that would settle it: a statement of whether callers may pass such a ceiling, or a precondition on the parameter.
 - **offset-default**: `boundedOffset()` MUST return 0 when `offset` is absent or unparseable.
@@ -63,13 +64,12 @@ A request as shared routes see it: no transport and no framework. A daemon's HTT
 ### Timestamps
 
 - **timestamp-absent-is-unbounded**: `validatedTimestamp(name)` MUST return `.success(nil)` when the parameter is absent or its last value is empty; an unbounded window is the documented default, not a bad request.
-- **timestamp-validated**: `validatedTimestamp(name)` MUST return `.failure(InvalidTimestamp)` when the last value is non-empty and is not an ISO-8601 instant accepted by `TimestampParsing.parseISO8601`, and MUST NOT clamp or guess.
-- **timestamp-rejection-is-not-a-clamp**: A malformed bound MUST be a failure rather than a silent fallback, because the window filters compare strings lexicographically and a malformed bound would return HTTP 200 with the wrong rows (`yesterday` sorts above every real timestamp; a bare year sorts below all of them).
+- **timestamp-validated**: `validatedTimestamp(name)` MUST return `.failure(InvalidTimestamp)` when the last value is non-empty and is not an ISO-8601 instant accepted by `TimestampParsing.parseISO8601`, and MUST NOT clamp, guess or fall back to a default.
 - **timestamp-normalized**: A valid value MUST be re-emitted in canonical form: an internet date-time in UTC with fractional seconds (`2026-01-31T00:00:00Z` becomes `2026-01-31T00:00:00.000Z`), so string comparison agrees with the instant it names.
 - **timestamp-rebased-to-utc**: A valid value with a zone offset MUST be rebased to UTC (`2026-01-31T02:00:00+02:00` becomes `2026-01-31T00:00:00.000Z`).
 - **timestamp-fraction-preserved**: A valid value with fractional seconds MUST keep them (`2026-01-31T00:00:00.500Z` is unchanged).
 - **normalized-timestamp-static**: `RouteRequest.normalizedTimestamp(raw, name:)` MUST apply the same parse-and-canonicalize step to a given string, and MUST return `.failure` for a string `TimestampParsing.parseISO8601` rejects.
-- **failure-message-format**: A rejection MUST carry a message that names the parameter in backticks, states it must be an ISO8601 timestamp with the example `2026-01-31T00:00:00Z`, and quotes the raw value after the word `got`, so a caller knows which of several bounds was wrong.
+- **failure-message-format**: A rejection MUST carry exactly the message ``"`{name}` must be an ISO8601 timestamp (e.g. 2026-01-31T00:00:00Z); got \"{raw}\""``, where `{name}` is the parameter name and `{raw}` is the rejected value, unescaped, so a caller knows which of several bounds was wrong.
 - **activity-since-absent-is-empty**: `RouteRequest.activitySince(raw)` MUST return `.success("")` when `raw` is `nil` or empty.
 - **activity-since-whole-seconds**: `RouteRequest.activitySince(raw)` MUST return the instant in the whole-second `UTCTimestamp` form with fractions truncated (`2026-10-03T11:00:00.500Z` becomes `2026-10-03T11:00:00Z`), because the fractional form would compare wrongly byte for byte against whole-second columns.
 - **activity-since-name**: `RouteRequest.activitySince(raw)` MUST name the parameter `since` in a rejection and MUST take only the text, not a parameter name.
@@ -100,11 +100,11 @@ Tests named below are in the `RouteRequest` suite (`RouteRequestTests`).
 | route-request-004 | query-int-default | `n=12` with default 5; `n=x` with default 5; no `n` with no default. | 12, 5, 0 (test: queryIntFallsBackToTheDefault). |
 | route-request-005 | limit-default | No `limit`, `boundedLimit(default: 50, max: 500)`. | 50 (test: missingLimitUsesTheDefault). |
 | route-request-006 | limit-in-range | `limit=120`, default 50, max 500. | 120 (test: limitInRangeIsHonoured). |
-| route-request-007 | limit-capped | `limit=99999`, default 50, max 500. | 500 (test: limitAboveTheCeilingIsCappedAtIt). |
-| route-request-008 | limit-floored-at-one | `limit=-1`, default 50, max 500. | 1, not unlimited (test: negativeLimitIsRaisedToOneRatherThanMeaningUnlimited). |
+| route-request-007 | limit-capped, limit-clamp-is-silent | `limit=99999`, default 50, max 500. | 500 (test: limitAboveTheCeilingIsCappedAtIt). |
+| route-request-008 | limit-floored-at-one, limit-clamp-is-silent | `limit=-1`, default 50, max 500. | 1, not unlimited (test: negativeLimitIsRaisedToOneRatherThanMeaningUnlimited). |
 | route-request-009 | limit-floored-at-one | `limit=0`, default 50, max 500. | 1 (test: zeroLimitIsRaisedToOne). |
 | route-request-010 | limit-default | `limit=all`, default 50, max 500. | 50 (test: unparseableLimitFallsBackToTheDefault). |
-| route-request-011 | limit-default-bounded | No `limit`, default 20000, max 10000. | 10000 (test: anAbsurdDefaultStillCannotExceedItsOwnCeiling). |
+| route-request-011 | limit-default | No `limit`, default 20000, max 10000. | 10000 (test: anAbsurdDefaultStillCannotExceedItsOwnCeiling). |
 | route-request-012 | offset-default | No `offset`. | 0 (test: missingOffsetIsZero). |
 | route-request-013 | offset-in-range | `offset=250`. | 250 (test: offsetInRangeIsHonoured). |
 | route-request-014 | offset-floored-at-zero | `offset=-40`. | 0 (test: negativeOffsetIsFlooredAtZero). |
@@ -114,13 +114,20 @@ Tests named below are in the `RouteRequest` suite (`RouteRequestTests`).
 | route-request-018 | timestamp-fraction-preserved | `since=2026-01-31T00:00:00.500Z`. | `.success("2026-01-31T00:00:00.500Z")` (test: aFractionalBoundSurvivesUnchanged). |
 | route-request-019 | timestamp-rebased-to-utc | `since=2026-01-31T02:00:00+02:00`. | `.success("2026-01-31T00:00:00.000Z")` (test: anOffsetBoundIsRebasedOntoUTC). |
 | route-request-020 | timestamp-validated, failure-message-format | `since=yesterday`. | `.failure` whose message contains `since` and `yesterday` (test: aWordIsRejectedRatherThanSortingAboveEveryRealTimestamp). |
-| route-request-021 | timestamp-rejection-is-not-a-clamp | `since=2026`. | `.failure` (test: aBareYearIsRejectedRatherThanSilentlyMeaningEverything). |
+| route-request-021 | timestamp-validated | `since=2026`. | `.failure` (test: aBareYearIsRejectedRatherThanSilentlyMeaningEverything). |
 | route-request-022 | failure-message-format | `until=nope`, `validatedTimestamp("until")`. | `.failure` whose message contains `until` (test: theRejectionNamesTheParameterThatWasWrong). |
 | route-request-023 | activity-since-whole-seconds | `activitySince("2026-10-03T11:00:00.500Z")`. | `.success("2026-10-03T11:00:00Z")` (test: activitySinceTruncatesToWholeSeconds). |
 | route-request-024 | activity-since-absent-is-empty | `activitySince(nil)` and `activitySince("")`. | `.success("")` for both (test: activitySinceTreatsNilAndEmptyAsNoBound). |
 | route-request-025 | activity-since-name | `activitySince("yesterday")` through a function typed `(String?) -> Result`. | `.failure` whose message contains `` `since` `` (test: activitySinceTakesOnlyTheTextAndItsRefusalNamesSince). |
 | route-request-026 | same-validator-as-core | Each of `2026-10-01T00:00:00Z`, `2026-10-01T00:00:00.250Z`, `2026-10-01T02:00:00+02:00`, `2026-10-01 00:00:00`, `2026-10-01`, `yesterday`, `2026`, `2026-13-01T00:00:00Z`. | `activitySince` succeeds exactly when `TimestampParsing.parseISO8601` returns a date (test: activitySinceAcceptsExactlyWhatCoreAccepts). |
 | route-request-027 | init-defaults | `RouteRequest(method: "GET", path: "/")`. | Empty `queryValues`, empty `headers`, empty `body` (derived from the initializer defaults; no test beside the source). |
+| route-request-028 | same-validator-as-core, timestamp-validated | `since=2026-10-01 00:00:00` (the SQLite shape), `validatedTimestamp("since")`. | `.failure` (derived from `TimestampParsing.parseISO8601`, which refuses that shape; no test beside the source). |
+| route-request-029 | same-validator-as-core, timestamp-validated | `since=2026-10-01` (a bare date), `validatedTimestamp("since")`. | `.failure` (derived; no test beside the source). |
+| route-request-030 | same-validator-as-core, timestamp-validated | `since=2026-13-01T00:00:00Z` (month 13), `validatedTimestamp("since")`. | `.failure` (derived; no test beside the source). |
+| route-request-031 | normalized-timestamp-static | `RouteRequest.normalizedTimestamp("2026-01-31T00:00:00Z", name: "until")`, then `normalizedTimestamp("nope", name: "until")`. | `.success("2026-01-31T00:00:00.000Z")`, then `.failure` whose message contains `until` (derived; no test beside the source). |
+| route-request-032 | fields | `RouteRequest(method: "POST", path: "/x", queryValues: ["a": ["1"]], headers: ["h": "v"], body: Data([1, 2]))`. | Each of `method`, `path`, `queryValues`, `headers` and `body` reads back exactly as given (derived from the initializer; no test beside the source). |
+| route-request-033 | value-semantics | Two requests built from identical arguments, then two that differ only in `body`. | Equal, then not equal (derived from the synthesized `Equatable`; no test beside the source). |
+| route-request-034 | pure-and-synchronous | Call `boundedLimit(default: 50, max: 500)` and `validatedTimestamp("since")` twice on one request. | Both calls return equal results and the request still equals its original (derived; no test beside the source). |
 
 ## Edge Cases
 
@@ -137,7 +144,7 @@ Tests named below are in the `RouteRequest` suite (`RouteRequestTests`).
 
 ## Configuration
 
-None — `RouteRequest` reads no environment variable or settings key. Callers supply the paging default and ceiling per call (`boundedLimit(default:max:)`), and the timestamp parameter name (`validatedTimestamp(_:)`). The `limit`, `offset` and `since` key names are fixed by the accessors that read them (`limit` and `offset` inside the paging bounds, `since` inside `activitySince`).
+None — `RouteRequest` reads no environment variable or settings key. Callers supply the paging default and ceiling per call (`boundedLimit(default:max:)`), and the timestamp parameter name (`validatedTimestamp(_:)`). The `limit`, `offset` and `since` key names are fixed by the accessors that read them (`limit` and `offset` inside the paging bounds). `activitySince` reads no key: it takes the text and uses `since` only as the parameter name in its rejection message.
 
 ## Deep Linking
 
@@ -149,7 +156,7 @@ Not applicable: `RouteRequest` defines no URL scheme or navigation destination; 
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| none (inline literal) | The parameter name in backticks, then: must be an ISO8601 timestamp (e.g. 2026-01-31T00:00:00Z); got the quoted raw value | Message of `InvalidTimestamp` from `validatedTimestamp`, `normalizedTimestamp` and `activitySince`. |
+| none (inline literal) | `` `{name}` must be an ISO8601 timestamp (e.g. 2026-01-31T00:00:00Z); got "{raw}" `` | Message of `InvalidTimestamp` from `validatedTimestamp`, `normalizedTimestamp` and `activitySince`. |
 
 ## Accessibility Options
 
@@ -186,7 +193,7 @@ Not applicable: `RouteRequest` calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/RouteRequest.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/RouteRequest.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -218,15 +225,16 @@ Not applicable: `RouteRequest` calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
-`separation-of-concerns` passes because the type holds a request and bounds its paging and timestamp inputs; routing, SQL and HTTP transport belong to callers. `unit-test-coverage` passes because `RouteRequestTests` covers each accessor, both paging bounds, timestamp validation, normalization and `activitySince`, including the SQLite negative-limit regression. `input-sanitization` is partial because paging and timestamp inputs are bounded or rejected, while a ceiling below 1 escapes the bound (the open question on `ceiling-below-one`) and the other accessors return raw strings. `explicit-error-handling` passes because a malformed timestamp is a typed failure with a message naming the parameter. `no-hardcoded-strings` fails because the rejection message is an inline English literal; it is an API error text and the source offers no localization path.
+`separation-of-concerns` passes because the type holds a request and bounds its paging and timestamp inputs; routing, SQL and HTTP transport belong to callers. `unit-test-coverage` is partial: `RouteRequestTests` covers each accessor, both paging bounds, timestamp validation, normalization and `activitySince`, including the SQLite negative-limit regression, but vectors 027 and 028 to 034 are derived and have no test. `input-sanitization` is partial because paging and timestamp inputs are bounded or rejected, while a ceiling below 1 escapes the bound (the open question on `ceiling-below-one`) and the other accessors return raw strings. `explicit-error-handling` passes because a malformed timestamp is a typed failure with a message naming the parameter. `no-hardcoded-strings` fails because the rejection message is an inline English literal; it is an API error text and the source offers no localization path.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Merged the duplicate limit and timestamp requirements, gave the exact rejection message and the integer grammar, listed Timestamp Parsing and UTC Timestamp in depends-on, added vectors 028 to 034, and corrected the configuration note. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

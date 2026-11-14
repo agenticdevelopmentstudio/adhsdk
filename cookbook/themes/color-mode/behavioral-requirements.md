@@ -2,7 +2,7 @@
 ### Types and exports
 
 - **color-mode-type**: `ColorMode` MUST be exactly one of `auto`, `light` or `dark`.
-- **resolved-color-mode-type**: `ResolvedColorMode` MUST be exactly one of `light` or `dark`, never `auto`.
+- **resolved-color-mode-type**: `ResolvedColorMode` MUST be exactly one of `light` or `dark`, never `auto`. This holds for valid input only, and the guarantee comes from TypeScript: a caller that passes an untyped string to `setMode` makes `resolved` that string (see Edge Cases, "Invalid mode through `setMode`").
 - **context-value-shape**: The value returned by `useColorMode` MUST carry `mode` (a `ColorMode`), `resolved` (a `ResolvedColorMode`), `setMode(mode)` and `cycle()`.
 - **provider-props**: `ColorModeProvider` MUST accept `children`, an optional `storageKey` and an optional `defaultMode`.
 - **client-only-module**: The module MUST be marked `'use client'`, so a server-component framework treats it as client code.
@@ -28,7 +28,7 @@
 
 - **dark-class**: The provider MUST add the class `dark` to `document.documentElement` when `resolved` is `dark` and remove it when `resolved` is `light`.
 - **appearance-mode-attribute**: The provider MUST set `data-appearance-mode` on `document.documentElement` to the current `mode` (`auto`, `light` or `dark`), not to the resolved value.
-- **no-attribute-removal**: The provider MUST NOT remove the `dark` class or `data-appearance-mode` attribute when it unmounts; the source has no cleanup for them.
+- **no-attribute-removal**: The provider MAY leave the `dark` class and `data-appearance-mode` attribute in place when it unmounts. The source has no cleanup for them, which is observed behavior, not a chosen one; a port MAY remove them.
 - **changed-event**: After each change of `mode` or `resolved`, including the first effect run on mount, the provider MUST dispatch a `CustomEvent` named `awt:appearance-changed` on `window`.
 - **no-document-effects**: When `document` is undefined the provider MUST skip the class and attribute writes, and when `window` is undefined it MUST skip the event dispatch.
 
@@ -38,11 +38,11 @@
 - **persist-auto-removes**: When `mode` is `auto`, the provider MUST remove `storageKey` from `localStorage` rather than write `auto`.
 - **persist-on-first-render**: The persistence effect runs on mount as well as on change, so a mode chosen from the default or the legacy key MUST be written (or removed) under `storageKey` immediately after the first render.
 - **legacy-key-not-cleaned**: The provider MUST NOT write to or remove `agentic-toolkit:color-mode`; the legacy key is read only.
-- **storage-failure-silent**: A throwing `localStorage` read, write or remove MUST be caught and ignored (the source marks each catch `/* ignore */`), with no log or other signal; the choice then fails to persist while state and document effects continue.
+- **storage-failure-silent**: A throwing `localStorage` read, write or remove MUST be caught and ignored (the source marks each catch `/* ignore */`); the choice then fails to persist while state and document effects continue. The source emits no log or other signal, and a port MAY report the failure.
 
 ### Operations
 
-- **set-mode**: `setMode(mode)` MUST replace the current mode with the given `ColorMode`; the source performs no validation of the argument beyond its TypeScript type.
+- **set-mode**: `setMode(mode)` MUST replace the current mode with the given `ColorMode`. The source performs no validation of the argument beyond its TypeScript type; a port MAY validate it.
 - **cycle-order**: `cycle()` MUST advance the mode through the fixed order `auto`, `dark`, `light`, then back to `auto`.
 - **cycle-fallback**: When the current mode is not found in the cycle order, `cycle()` MUST fall back to `auto`.
 - **cycle-event**: The provider MUST listen on `window` for an event named `awt:appearance-cycle` and call `cycle()` for each one received, after mount.

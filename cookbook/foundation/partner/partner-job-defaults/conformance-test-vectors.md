@@ -3,7 +3,7 @@ Vectors 001 to 004 are asserted in `PartnerModelsTests` (001), `CodeReviewsSched
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| partner-job-defaults-001 | all-contents, job-steps, step-open-session | `PartnerJobDefaults.all.map(\.id)` and `codeReviews().steps.map(\.name)` (`defaultsHaveTheTwoBuiltInJobs`) | Ids are exactly `code-reviews`; step names are `open session`, `review`, `fix` |
+| partner-job-defaults-001 | all-contents, job-steps | `PartnerJobDefaults.all.map(\.id)` and `codeReviews().steps.map(\.name)` (`defaultsHaveTheTwoBuiltInJobs`) | Ids are exactly `code-reviews`; step names are `open session`, `review`, `fix` |
 | partner-job-defaults-002 | step-fix-commit, step-fix-no-push | Read `codeReviews().steps[2].command` (`testTheFixStepCommitsOnTheFixBranchAndNeverPushes`) | Contains `Commit on {fix_branch}`, `Do not push` and `"Reviewed-Commit: {sha}"` |
 | partner-job-defaults-003 | guidelines-tool-names, guidelines-range-fallback, guidelines-wait-limit | Read `codeReviews().guidelines` (`testTheGuidelinesNameTheLoopAndTheRangeFallback`) | Contains `partner_review_next`, `partner_review_start`, `partner_review_finish`, `partner_session_run`, `partner_session_wait` and `{sha}^..{sha}` |
 | partner-job-defaults-004 | job-guidelines, job-steps, defaults-reproducible | Edit a stored default job, reset it, compare to `codeReviews()` (`testResetToDefaultRestoresStepsAndDeletesGuidelinesFile`) | Reset steps equal the default steps (3 steps); reset guidelines equal the default guidelines |
@@ -17,6 +17,7 @@ Vectors 001 to 004 are asserted in `PartnerModelsTests` (001), `CodeReviewsSched
 | partner-job-defaults-012 | job-guidelines | Compare `codeReviews().guidelines` with `codeReviewsGuidelines` | Equal |
 | partner-job-defaults-013 | all-fresh-values, defaults-reproducible | Mutate the `isEnabled` of one `codeReviews()` result, then call it again | The second call has `isEnabled` false; two untouched calls are equal |
 | partner-job-defaults-014 | guidelines-tick, guidelines-one-per-repo, guidelines-skipped-start | Read the guidelines | Contains `while \`running\` is below \`concurrency\``, `Never start two reviews in one repo` and `skipped (no session, no steps)` |
-| partner-job-defaults-015 | guidelines-idle-event, guidelines-exit-event, guidelines-no-push | Read the guidelines | Contains `partner_review_finish\` with \`done\``, `\`failed\`` and `Nothing is pushed` |
-| partner-job-defaults-016 | step-skip-permissions | Read steps[0].command | Contains `--dangerously-skip-permissions` |
+| partner-job-defaults-015 | guidelines-idle-event, guidelines-exit-event, guidelines-no-push | Read the guidelines | Contains "partner_review_finish" followed by "with `done`", the sentence beginning "On a session exited event for a review session that is not finished", and "Nothing is pushed" |
+| partner-job-defaults-016 | guidelines-exact | Compare `codeReviewsGuidelines` with the exact guidelines text | Equal |
+| partner-job-defaults-017 | step-fix-command-exact | Compare `codeReviews().steps[2].command` with the exact fix command | Equal |
 

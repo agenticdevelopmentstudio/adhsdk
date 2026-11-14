@@ -1,7 +1,7 @@
 
 ### Spawning
 
-- **entry-resolved-from-package**: The module MUST resolve the worker entry through the package's own `exports` (the specifier `@adh-sdk/status-server/storage-worker`) using `createRequire(import.meta.url).resolve`, never a relative path, so the entry is always the built output; the source gives the same reason as the monitor worker client.
+- **entry-resolved-from-package**: The module MUST resolve the worker entry through the package's own `exports` (the specifier `@adh-sdk/status-server/storage-worker`) using `createRequire(import.meta.url).resolve`, never a relative path, so the entry is always the built output; the source gives the same reason as the monitor worker client ([adhsdk.ingredient.status.service.monitor.worker-client](cookbook:bd58dfa4-13f8-4e92-adbe-45f8a020168d), its spawn).
 - **worker-data**: The module MUST start the worker with `workerData` of `{ db: conn }`, the connection description it was given, unchanged.
 - **single-worker**: Each call MUST spawn exactly one worker thread.
 - **no-connection-opened**: The module MUST NOT open a database connection on the calling thread.
@@ -11,8 +11,8 @@
 - **ready-resolves**: The start function MUST wait for the worker's first message and, when it is `{ ready: true }`, continue to connect this thread.
 - **ready-false-rejects**: The start function MUST reject with `Error("storage thread failed to start: <error>")` when the first message is `{ ready: false, error }`, where `<error>` is the text the worker sent.
 - **early-error-rejects**: The start function MUST reject with the worker's own error when the worker emits `error` before its first message (for example the worker's precondition throws, which post no reply).
-- **no-timeout**: The start function has no timeout of its own; it waits until the worker sends a message or emits `error`.
-- **failed-start-leaves-worker**: When the start function rejects, it MUST NOT terminate the worker; the source has no cleanup on that path, and ending the process is the host's decision.
+- **no-timeout**: The start function MUST NOT impose a timeout of its own; it waits until the worker sends a message or emits `error`.
+- **failed-start-leaves-worker**: When the start function rejects, it MUST NOT terminate the worker; see the Design Decision on a rejected start.
 - **exit-before-ready-unhandled**: NEEDS REVIEW: Not implemented in source. Behavior undefined.
 
 ### After startup
@@ -36,7 +36,4 @@
 
 ### Calls through the port
 
-- **calls-reject-after-death**: A call made through a port after the database thread has gone MUST reject with `Error("storage connection closed")`, and calls pending when the port closes MUST reject with the same error; this is `connectStorage` behavior the module relies on.
-- **unserialisable-args-reject**: A call whose arguments cannot be cloned MUST reject with the clone error before anything is sent.
-- **errors-keep-detail**: An error thrown by a store method MUST reach the caller as an `Error` carrying its `name`, `message`, `stack`, `code` (sent as a string) and `cause` chain (flattened to at most five levels), so callers that match on those still work.
-
+- **port-behavior-is-remote**: A call through any port from this module MUST behave as Storage Remote ([adhsdk.ingredient.status.service.storage.remote](cookbook:e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d)) specifies for `connectStorage`: `unclonable-args` for arguments that cannot be cloned, `error-flatten` and `error-rebuild` for errors that keep their detail, and `closed-port-client` (rejection with `storage connection closed`) once the database thread has gone. This module adds none of that behavior.

@@ -3,6 +3,10 @@
   **Rationale**: Each behavior addresses a distinct UX concern (pull-to-refresh parity, preventing mid-load snap, respecting history traversal, accessibility), and disabling one does not require disabling the others.
   **Approved**: pending
 
+- **Decision**: `openAtTop` sets `history.scrollRestoration` to `"manual"` on every load, and it can be combined with `armSmooth`.
+  **Rationale**: On iOS every pull-to-refresh is a reload, so without it a reader who pulled at the bottom of the page would land back mid-page with snapping arming underneath them. With both options enabled, the browser performs no scroll restoration on a history traversal, so `armSmooth`'s `popstate` handler only affects scrolls that a router performs itself; clearing `data-smooth` is still correct and harmless then.
+  **Approved**: pending
+
 - **Decision**: `armSnapping` and `armSmooth` arm on the reader's first input, not on page load or after a fixed delay.
   **Rationale**: Avoids the "mid-load snap" problem — if scroll snap were active during the initial layout pass while section heights are still settling, the snap engine would pick a snap point at an intermediate height, stranding the reader between two screens. Arming on first input guarantees the page is at rest when the property activates.
   **Approved**: pending

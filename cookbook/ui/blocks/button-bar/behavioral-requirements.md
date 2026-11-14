@@ -9,8 +9,8 @@
 - **save-button**: When rendering preset actions and `actions` is provided, the component MUST render a button with a leading confirm icon and the label `"Save"` or `"Saving…"` when `actions.saving` is `true`.
 - **disable-cancel-by-flag**: The Cancel button MUST be disabled when `actions.canCancel` is `false` or `actions.saving` is `true`. `canCancel` is a required field of `actions` (see Configuration); there is no omitted-value case for it.
 - **disable-save-by-flag**: The Save button MUST be disabled when `actions.canSave` is `false` or `actions.saving` is `true`. `canSave` is a required field of `actions` (see Configuration); there is no omitted-value case for it.
-- **disable-delete-by-flag**: The Delete button MUST be disabled when `actions.canDelete` is `false` or `actions.saving` is `true`.
-- **create-not-disabled-while-saving**: Unlike Delete, Cancel, and Save, the Create button does not receive a `disabled` attribute when `actions.saving` is `true` — it stays enabled and clickable through a save.
+- **disable-delete-by-flag**: The Delete button MUST be disabled when `actions.canDelete` is not `true` (including when it is omitted) or `actions.saving` is `true`.
+- **create-not-disabled-while-saving**: The Create button MUST NOT be disabled by `actions.saving`; unlike Delete, Cancel, and Save, it stays enabled and clickable through a save. See the Design Decision on Create during a save.
 - **save-disabled-styling**: When the Save button is disabled, the component MUST switch it to the Button component's `ghost` variant and apply the muted text token (`apt-text-muted`).
 - **render-vertical-separator**: When rendering preset actions and a Create button is present, the component MUST render a vertical separator (visual divider, marked `aria-hidden`) between Create and Delete/Cancel buttons.
 - **render-spacer**: When rendering preset actions, the component MUST render a flexible spacer between Delete and Save/Cancel groups that expands to fill available horizontal space.

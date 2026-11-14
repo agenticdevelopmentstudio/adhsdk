@@ -19,3 +19,4 @@ Constants the caller cannot set; a port keeps them fixed and does not expose the
 | `listMessageIds` page size | `Int` (literal) | `500` | Sent as `maxResults`; `searchMessageIds` takes it from the caller. |
 
 There are no environment variables or settings keys.
+

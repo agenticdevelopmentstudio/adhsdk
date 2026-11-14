@@ -59,3 +59,6 @@
 **Rationale**: Every delete is a tombstone (see the first decision), so message bodies and addresses stay on disk, including after `deleteConnection`. No store method removes them, and the source names no owner for erasure.
 **Approved**: pending
 
+**Decision**: `finishActionLog` returns silently when no row has the id, instead of throwing as `updateSyncState` does.
+**Rationale**: The source runs an `UPDATE` and does not check how many rows it changed, so a lost entry looks like a finished one. Whether it should throw is open: the call sites in `MailIntegrationService` write the log best effort, and the intended behavior would settle it. Until then a port keeps the silent no-op.
+**Approved**: pending

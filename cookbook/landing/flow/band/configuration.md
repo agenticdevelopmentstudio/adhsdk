@@ -5,5 +5,5 @@
 | `tone` | `'dark' \| 'soft' \| 'paper'` | `'dark'` | Background tone and color scheme |
 | `seam` | `boolean` | `true` | Whether to render the diagonal cut at the top edge |
 | `className` | `string` | undefined | Additional CSS classes to apply to the section |
-| `children` | `ReactNode` | (required) | Content to render inside the band, wrapped with Wrap |
+| `children` | `ReactNode` | (required prop; may be `null` or empty, see **Edge Cases**) | Content to render inside the band, wrapped with Wrap |
 

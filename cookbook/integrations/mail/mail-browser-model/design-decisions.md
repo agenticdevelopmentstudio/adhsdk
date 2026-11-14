@@ -28,11 +28,11 @@
 **Approved**: pending
 
 **Decision**: The status, account and label reads of `reload` share one error path; the first failure abandons the rest of that step.
-**Rationale**: The source wraps status, accounts and labels in one `do` block, so a failure leaves `mailboxes` unchanged while `accounts` may already be new. This is technical debt that affects behavior, recorded here so a port does not smooth it over.
+**Rationale**: The source wraps status, accounts and labels in one `do` block, so a failure leaves `mailboxes` unchanged while `accounts` may already be new. This is technical debt that affects behavior, recorded here so a port does not smooth it over. Current behavior: a failure on any account's labels abandons the whole `mailboxes` assignment, so `mailboxes` keeps its earlier value, `errorMessage` is set and `reload` still goes on to the selection step, which keeps a previously valid selection and reloads its first page. Because `accounts` and the recorded sync values are assigned before the labels are read, a label failure also leaves new accounts beside old mailboxes. A fix should assign `accounts`, the recorded sync values and `mailboxes` together after every read succeeds, or assign `mailboxes` per account as each read succeeds; a port may do that instead of copying the abandonment.
 **Approved**: pending
 
 **Decision**: The sender name, the list date, the full date and the unread test stay in the model as static functions instead of a separate formatter.
-**Rationale**: They are pure and hold no state, so they test without a client, and keeping them beside the model gives the view controllers one import. The cost is that the model has two concerns; a port may move them into their own unit without changing behavior.
+**Rationale**: They are pure and hold no state, so they test without a client, and keeping them beside the model gives the view controllers one import. The cost is that the model has two concerns, which is why the separation-of-concerns check is partial; a port may move them into their own unit without changing behavior.
 **Approved**: pending
 
 **Decision**: System mailbox titles are fixed English strings.

@@ -7,3 +7,4 @@
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Compliance section rewritten as linked checks against the compliance catalog |
 | 1.2.2 | 2026-09-24 | Mike Fullerton | Phase 6 lint: status draft to review after lint pass. |
 | 1.2.3 | 2026-09-25 | Mike Fullerton | Fixed keyboard-explicit-map requirement (Escape override) and equal/natural-width threshold requirements plus test vectors. |
+| 1.2.4 | 2026-11-14 | Mike Fullerton | Added confirm-mode and Escape-routing requirements, corrected the Escape edge case, moved consumer coupling out, added Design Decisions, API table and vectors T9 to T12. |

@@ -15,37 +15,26 @@
     "summary": "Six foundation-tier utilities: secret storage in the system credential store, an encoding-skip wrapper, a structured-logging factory, floating-point clamping, semantic-version parsing, and text folding.",
     "platforms": [
       "swift",
-      "macos"
+      "macos",
+      "ios"
     ],
     "tags": [
       "credential-storage",
       "secrets",
       "semantic-versioning",
       "logging",
-      "text-normalization",
-      "value-types"
+      "text-normalization"
     ],
     "depends-on": [],
     "related": [
       "d274abfa-3696-4fd0-b3e8-cff6fdffb825",
       "fea35fb1-9eeb-4647-b185-902c1d1cb988"
     ],
-    "references": [
-      "packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/KeychainHelperTests.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/SemanticVersionTests.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Extensions/TextFoldingTests.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/CGFloatClampedTests.swift (adhsdk)"
-    ],
+    "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "814e2e43c02c60f0",
+  "synced": "d59f79a129acda42",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: e86eb195-1ec2-4b12-8a24-79f8c03f65ce
 title: "Empty State"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -33,11 +33,10 @@ The Empty State component renders a standardized "nothing here yet" placeholder 
 
 ## Behavioral Requirements
 
-- **title**: Component MUST render the `title` prop as required content in a centered layout.
+- **title**: Component MUST render the required `title` prop in a centered layout, and MUST declare `title` as a required, non-optional prop, rejecting a missing value at the type level rather than leaving the runtime behavior undefined.
 - **dashed-border**: Component MUST display a dashed border around the container.
-- **non-optional-title**: Component MUST declare `title` as a required, non-optional prop, rejecting a missing value at the type level rather than leaving the runtime behavior undefined.
 - **optional-icon**: Component MUST render the `icon` prop when provided, positioned above the title, and MUST NOT render the icon wrapper when `icon` is absent.
-- **icon-size**: When `icon` is provided, the icon wrapper MUST constrain it to 24×24px (6×6 units).
+- **icon-size**: When `icon` is an SVG element, the icon wrapper MUST constrain it to 24×24px (6×6 units). Other node types (such as an `<img>`) are not sized by the wrapper.
 - **optional-description**: Component MUST render the `description` prop when provided, positioned below the title, and MUST NOT render the description wrapper when `description` is absent.
 - **optional-action**: Component MUST render the `action` prop when provided, positioned below the description, and MUST NOT render the action wrapper when `action` is absent.
 - **classname**: Component MUST accept and apply a `className` prop for custom styling via class composition.
@@ -49,20 +48,17 @@ The Empty State component renders a standardized "nothing here yet" placeholder 
 - **Container**: Flex column layout, items centered on both axes, dashed border, rounded corners
 - **Padding**: 24px
 - **Border**: Dashed, 1px width, color token `apt-border`
+- **Border dash pattern**: Web uses the browser's CSS `dashed` style; native ports draw 4 on, 4 off
 - **Border radius**: 8px
 - **Minimum height**: 160px
 - **Gap between elements**: 8px
 - **Icon size**: 24×24px
 - **Icon color**: `apt-text-dim`
 - **Title font**: 14px (0.875rem), color `apt-text-muted`
-- **Description font**: 12px (0.75rem), color `apt-text-dim`, max width ~65ch
+- **Description font**: 12px (0.75rem), color `apt-text-dim`, max width 65ch
 - **Action margin**: 4px top
 
 ## States
-
-| State | Appearance change |
-|-------|-------------------|
-| Default | Dashed border, centered content, standard spacing |
 
 Not applicable: Component is a static presentation container with no interactive states.
 
@@ -70,8 +66,7 @@ Not applicable: Component is a static presentation container with no interactive
 
 - **Role**: The container is a plain `div` with no ARIA landmark or region role; it carries no implicit semantics of its own.
 - **Content responsibility**: The `title`, `description`, and `action` are provided as ReactNode by the consumer; component does not wrap them with semantic markup.
-- **Minimum height and padding**: Ensure adequate spacing around content for readability.
-- **Icon visual only**: Icon is purely presentational; no aria-label is required on the component itself.
+- **Icon visual only**: The icon wrapper carries no `aria-hidden` or label. Hiding a decorative icon from screen readers (for example `aria-hidden="true"` on the SVG) is the consumer's job.
 
 ## Conformance Test Vectors
 
@@ -80,22 +75,23 @@ Not applicable: Component is a static presentation container with no interactive
 | empty-state-001 | title | `title="No items"` | Title text "No items" appears centered in container |
 | empty-state-002 | dashed-border | Default props | Container has visible dashed border |
 | empty-state-003 | minimum-height | Default props | Container height is at least 160px |
-| empty-state-004 | optional-icon, icon-size | `icon={<Icon />}` | Icon is rendered above title and its wrapper constrains it to 24×24px |
+| empty-state-004 | optional-icon, icon-size | `icon={<svg />}` | Icon is rendered above title and its wrapper constrains the SVG to 24×24px |
 | empty-state-005 | optional-description | `description="Try adding an item"` | Description text appears below title |
 | empty-state-006 | optional-action | `action={<Button>Create</Button>}` | Action button appears below description |
 | empty-state-007 | classname | `className="bg-red-100"` | Custom class is applied to container |
 | empty-state-008 | centered-content | `title="Centered"` rendered inside a container constrained to 320px width | Title text is centered horizontally and vertically within the 320px-wide container |
 | empty-state-009 | optional-icon, optional-description, optional-action | `title`, no other props | Only title is rendered; description, action, and icon wrappers are absent |
-| empty-state-010 | non-optional-title | Omit the `title` prop entirely | TypeScript compiler rejects the call with a type error (`title` is a required, non-optional prop) |
-
+| empty-state-010 | title | Omit the `title` prop entirely | TypeScript compiler rejects the call with a type error (`title` is a required, non-optional prop) |
+| empty-state-011 | optional-icon, optional-description | `icon={0}`, `description={0}` | A stray "0" is rendered for each, because the slots are truthiness-checked; `""` renders no wrapper |
 ## Edge Cases
 
-- **Null or empty title**: `title` is a required, non-optional prop (see **non-optional-title**); omitting it is a compile-time TypeScript error, so the component never receives a null or undefined title at runtime. A caller passing an empty string or empty fragment renders an empty but valid title area; layout is unaffected.
-- **Very long title text**: Component renders title with `text-center` and no truncation constraint; long titles may wrap or overflow depending on container width. Component respects consumer's width context.
+- **Null or empty title**: `title` is a required, non-optional prop (see **title**); omitting it is a compile-time TypeScript error, so the component never receives a null or undefined title at runtime. A caller passing an empty string or empty fragment renders an empty but valid title area; layout is unaffected.
+- **Very long title text**: Component renders title with `text-center` and no truncation constraint; the title wraps at whitespace within the container's width, and an unbroken string longer than the container can overflow because no `break-words` is applied.
 - **Long description text**: Description has `max-w-prose` constraint; text wrapping is handled by the prose width, preventing excessive line length.
 - **No icon provided**: Icon div is not rendered (conditional render); layout remains centered.
 - **All optional props omitted**: Component renders only title and border container, maintaining 160px minimum height.
-
+- **Falsy slot values**: `icon`, `description` and `action` are truthiness-checked, not null-checked. Passing `0` renders a stray "0" (React renders the number), and passing `""` renders nothing and no wrapper.
+- **Block-level content**: The title and description are wrapped in `<p>` elements, so passing a block element (`<div>`, `<ul>`) as either produces invalid HTML nesting. Consumers SHOULD pass inline content.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -141,9 +137,9 @@ Not applicable: Component performs no operations requiring debug or error loggin
 
 ## Platform Notes
 
-- **React/Web**: Implemented as a stateless functional component. Uses Tailwind CSS for styling via the `cn` utility (class-name composition): `rounded-lg border border-dashed border-apt-border p-6` for the container, `text-sm text-apt-text-muted` for the title, `max-w-prose text-xs text-apt-text-dim` for the description, `[&_svg]:size-6` for the icon, and `mt-1` for the action wrapper. Files: `packages/web/packages/ui/src/components/empty-state.tsx`.
-- **SwiftUI**: Map to a `VStack` with `alignment: .center`. A `Divider` cannot render a dashed stroke, so draw the border with `.overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4, 4])))` and `.frame(minHeight: 160)`. Map `apt-border` to `Color(.separator)`, `apt-text-muted` to `Color(.secondaryLabel)`, and `apt-text-dim` to `Color(.tertiaryLabel)`. Padding: 24pt. Icon size: 24×24pt.
-- **Compose**: Map to a `Column` with `verticalArrangement = Arrangement.Center` and `horizontalAlignment = Alignment.CenterHorizontally`. Draw the dashed border with `Modifier.drawBehind` using a `Canvas`/`Path` and `PathEffect.dashPathEffect`. Map `apt-border` to `MaterialTheme.colorScheme.outlineVariant`, `apt-text-muted` to `MaterialTheme.colorScheme.onSurfaceVariant`, and `apt-text-dim` to the same `onSurfaceVariant` at reduced alpha. Minimum height: 160dp, padding: 24dp. Icon size: 24×24dp.
+- **React/Web**: Implemented as a stateless functional component. Uses Tailwind CSS for styling via the `cn` utility (class-name composition): `rounded-lg border border-dashed border-apt-border p-6` for the container, `text-sm text-apt-text-muted` for the title, `max-w-prose text-xs text-apt-text-dim` for the description, `[&_svg]:size-6` for the icon, and `mt-1` for the action wrapper.
+- **SwiftUI**: Map to a `VStack` with `alignment: .center`. A `Divider` cannot render a dashed stroke, so draw the border with `.overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4, 4])))` and `.frame(minHeight: 160)`. Map `apt-border` to `Color(.separator)` (iOS) or `Color(nsColor: .separatorColor)` (macOS), `apt-text-muted` to `Color(.secondaryLabel)` or `Color(nsColor: .secondaryLabelColor)`, and `apt-text-dim` to `Color(.tertiaryLabel)` or `Color(nsColor: .tertiaryLabelColor)`. Padding: 24pt. Icon size: 24×24pt.
+- **Compose**: Map to a `Column` with `verticalArrangement = Arrangement.Center` and `horizontalAlignment = Alignment.CenterHorizontally`. Draw the dashed border with `Modifier.drawBehind` calling `drawRoundRect(style = Stroke(width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))))` inside its `DrawScope`. Map `apt-border` to `MaterialTheme.colorScheme.outlineVariant`, `apt-text-muted` to `MaterialTheme.colorScheme.onSurfaceVariant`, and `apt-text-dim` to the same `onSurfaceVariant` at reduced alpha. Minimum height: 160dp, padding: 24dp. Icon size: 24×24dp.
 - **AppKit / UIKit**: Map to `NSStackView` (macOS) or `UIStackView` (iOS) with vertical axis, center alignment, and center distribution. Render dashed border using `CAShapeLayer` with a dash pattern. Map `apt-border` to `.separator`, `apt-text-muted` to `.secondaryLabelColor` / `.secondaryLabel`, and `apt-text-dim` to `.tertiaryLabelColor` / `.tertiaryLabel`. Minimum height: 160pt, padding: 24pt. Icon size: 24×24pt.
 - **WinUI 3**: A `Border` has no `StrokeDashArray`, so use a `Grid` that layers a `Rectangle` (with `StrokeDashArray="4,4"`, `RadiusX="8"`, `RadiusY="8"`) behind a `StackPanel` with `Orientation="Vertical"`, `HorizontalAlignment="Center"`, and `VerticalAlignment="Center"`. Map `apt-border` to `{ThemeResource ControlStrokeColorDefaultBrush}`, `apt-text-muted` to `{ThemeResource TextFillColorSecondaryBrush}`, and `apt-text-dim` to `{ThemeResource TextFillColorTertiaryBrush}`. Set `MinHeight="160"`, padding: 24. Icon size: 24×24.
 
@@ -151,7 +147,7 @@ Not applicable: Component performs no operations requiring debug or error loggin
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/empty-state.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/empty-state.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -190,12 +186,13 @@ Not applicable: Component performs no operations requiring debug or error loggin
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-These statuses rest on the source's rem-based Tailwind font utilities (`text-sm`/`text-xs`) and design-token-delegated colors (`apt-border`, `apt-text-muted`, `apt-text-dim`) whose actual contrast the component cannot itself attest to, its plain `div`/`p` markup with no explicit ARIA roles beyond what a consumer supplies, and its title/description/action content being entirely consumer-supplied `ReactNode` rather than strings hardcoded in the component. `separation-of-concerns` is `passed` because the component is pure presentation over props with no business logic; `unit-test-coverage` is `passed` because `emptyState.test.tsx` renders `EmptyState` directly and asserts its title/description/action/icon rendering.
+These statuses rest on the source's rem-based Tailwind font utilities (`text-sm`/`text-xs`) and design-token-delegated colors (`apt-border`, `apt-text-muted`, `apt-text-dim`) whose actual contrast the component cannot itself attest to, its plain `div`/`p` markup with no explicit ARIA roles beyond what a consumer supplies, and its title/description/action content being entirely consumer-supplied `ReactNode` rather than strings hardcoded in the component. `separation-of-concerns` is `passed` because the component is pure presentation over props with no business logic; `unit-test-coverage` is `passed` because `packages/web/packages/ui/src/__tests__/emptyState.test.tsx` renders `EmptyState` directly and asserts its title/description/action/icon rendering.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Merged the title requirements, narrowed icon-size to SVG icons, documented falsy-slot, block-content and long-title behavior, made the icon-hiding responsibility explicit, and fixed Appearance, platform notes and compliance path. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names and reworded the optional-icon/description/action requirements as explicit MUST render-when-provided/MUST NOT render-when-absent; added non-optional-title and icon-size requirements with matching test vectors and gave vector 008 a concrete container width; rewrote Appearance in exact pixel/token values, leaving Tailwind class names in the React/Web platform note; marked Analytics not applicable and moved the event names to consumer guidance; reformatted Design Decisions into Decision/Rationale/Approved entries; relinked and re-scored the Compliance table against the compliance catalog; clarified the container's accessibility role as having no landmark; fixed the SwiftUI Divider and WinUI Border dashed-border APIs and named the native color mappings for `apt-border`/`apt-text-muted`/`apt-text-dim` across SwiftUI, Compose, AppKit/UIKit, and WinUI 3; renamed the Swift/iOS and Kotlin/Android platform-note labels to SwiftUI and Compose and removed the React-hooks-optional noise; unquoted the `modified` frontmatter field |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source |

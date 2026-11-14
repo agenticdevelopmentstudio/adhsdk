@@ -21,7 +21,7 @@
 - **widget-response-unsupported**: `submitWidgetResponse(_:)` MUST always
   throw `PersonaChatError.widgetsUnsupported`; the coordinator supports no
   interactive widgets.
-- **message-encode-failure-swallowed**: NEEDS REVIEW: Not implemented in source. `request.httpBody = try? JSONEncoder().encode(SendMessageBody(message: text))` discards an encoding failure instead of propagating it, unlike `ensureConversation()`, which `try`-propagates the equivalent `CreateConversationBody` encoding. If encoding ever fails, `runTurn` proceeds to call `options.authorize(request)` with a `nil` body, silently sending a bodyless POST rather than failing the turn with a diagnosable error. `SendMessageBody` holds only a `String`, so this is unlikely in practice, but the source defines no behavior for the case and no test exercises it. Resolving this requires deciding whether a `send`-time encoding failure should throw synchronously (matching `ensureConversation`'s pattern) or fail the turn via `messageFailed`.
+- **message-encode-failure-swallowed**: NEEDS REVIEW: Not implemented in source. `request.httpBody = try? JSONEncoder().encode(SendMessageBody(message: text))` discards an encoding failure, so `runTurn` would send a bodyless POST; no behavior or test defines this case (see Design Decisions).
 
 ### Conversation management
 
@@ -166,20 +166,19 @@
   `onDisappear` — without first hopping onto the coordinator's actor, so a
   `send` already queued on the actor cannot start a new turn after the
   caller believes the coordinator is gone.
-- **turn-control-manual-locking**: `TurnControl` MUST serialize every read
-  and write of its `task` and `isDestroyed` state behind its own `NSLock`,
-  since it is declared `final class: @unchecked Sendable` rather than an
-  `actor`, specifically so `destroy()` can mutate it synchronously from a
-  non-isolated, non-async context.
+- **turn-control-thread-safe**: The in-flight turn reference and the destroyed
+  flag MUST be readable and writable from any isolation context without
+  awaiting, and every access MUST be serialized, so `destroy()` cancels
+  synchronously. The mechanism is in Design Decisions and Platform Notes.
 
 ### Concurrency and isolation
 
-- **coordinator-actor-isolated**: `PersonaChatCoordinator` MUST be declared
-  as an `actor`, so `send`, `setLocalTyping`, `submitWidgetResponse`, and
-  the turn-processing state (`conversationID`, `openInvocations`) are only
-  ever mutated by one call at a time. Only `inboundEvents`, `participantID`,
-  `conversationsURL`, and `control` (the `TurnControl`) are declared
-  `nonisolated` and are safe to touch synchronously.
+- **coordinator-state-isolation**: The coordinator's turn state
+  (`conversationID`, `openInvocations`) MUST only ever be mutated by one call
+  at a time, while `inboundEvents`, `participantID`, `conversationsURL` and
+  the turn control MUST be safe to touch synchronously from any context.
+  `PersonaChatCoordinator` achieves this as an `actor` with those members
+  `nonisolated` (see Platform Notes).
 - **authorize-injected**: The coordinator MUST attach no credentials of its
   own. Every outgoing `URLRequest` MUST be passed through the
   caller-supplied `Authorize` closure, and the coordinator MUST hold no
@@ -188,7 +187,7 @@
   (URLRequest) async throws -> AuthorizedResponse`, so a host's
   implementation MUST be safe to invoke from the coordinator's actor
   context without additional synchronization supplied by the coordinator.
-- **concurrent-turns**: NEEDS REVIEW: Not implemented in source. `TurnControl` stores only a single `Task<Void, Never>?`; a second `send()` call issued before the first turn's `done`/`error`/abort overwrites that reference (`adopt` replaces `self.task` unconditionally), so `destroy()` after two overlapping sends only cancels the most recently adopted turn — the earlier turn keeps running and calling `options.authorize`, even though its emitted events are silently dropped once `inboundEvents` has finished. Separately, `ensureConversation()` re-checks `conversationID` before suspending on `await options.authorize(request)`; because actors are reentrant across `await`, two `send()` calls issued back-to-back before either has awaited a response can both observe `conversationID == nil` and each `POST` a distinct conversation, with whichever response returns last winning the race and the other becoming an orphaned server-side conversation. No test in `PersonaChatCoordinatorTests.swift` exercises two `send()` calls without awaiting the first turn's completion — `test_pcc002_conversationReuse_twoSendsShareOneConversation` explicitly serializes its two sends with `f.collector.wait(for: 4)` in between — so this is unresolved by both the source and its test suite. Resolving it requires either serializing `send()` behind an actor-held queue, tracking one task per turn in `TurnControl` instead of one per coordinator, or documenting that a second concurrent `send()` before the first turn ends is itself a caller error the type should reject.
+- **concurrent-turns**: NEEDS REVIEW: Not implemented in source. `TurnControl` tracks one task and `ensureConversation()` is reentrant across `await`, so overlapping `send()` calls have no defined behavior and no test (see Design Decisions).
 
 ### SSEParser
 

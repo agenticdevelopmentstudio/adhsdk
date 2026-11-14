@@ -4,11 +4,11 @@
     "id": "6d2dc0d3-e373-448c-81c9-76b2e5c03057",
     "title": "Unsaved Changes Guard",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "40f0313221b6b9ef",
+  "synced": "4c51f0a49dd3110d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

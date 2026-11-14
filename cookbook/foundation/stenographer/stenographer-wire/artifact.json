@@ -4,7 +4,7 @@
     "id": "e8286557-84ee-4f45-b78c-f1d184c51a37",
     "title": "Stenographer Wire",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -15,7 +15,8 @@
     "summary": "The one JSON spelling shared by steno, the daemon and the app: snake_case keys and ISO-8601 dates, built as a fresh encoder and decoder.",
     "platforms": [
       "swift",
-      "macos"
+      "macos",
+      "ios"
     ],
     "tags": [
       "foundation",
@@ -24,12 +25,14 @@
       "json"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "9c7c78d3-23ca-4ca6-a519-9968b440b8c6"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "baed39bb6cf48bc1",
+  "synced": "6a1e76e1b07f858a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

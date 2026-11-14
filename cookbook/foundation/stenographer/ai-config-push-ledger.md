@@ -2,7 +2,7 @@
 id: 1a0b943c-35f4-4568-9d92-033acce97afb
 title: "AI Config Push Ledger"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,9 @@ tags:
   - ai-provider
   - sync
 depends-on: []
-related: []
+related:
+  - b05ceb21-7c1c-4d62-83ba-01a3132df00a
+  - 402e0ab0-6488-403b-bc43-fbc9145a9a27
 references: []
 approved-by: ""
 approved-date: ""
@@ -46,12 +48,13 @@ Two hosts share one daemon registry: the Kitchen over HTTP and the Stenographer 
 - **configured-means-held**: The `configured` argument is every configuration the host holds now, resolvable or not; a configuration that is configured but unresolvable this time MUST NOT be returned as removed.
 - **first-push-removes-nothing**: With an empty ledger, `removed(configured:)` MUST return an empty array.
 - **record-landed-union**: `recordLanded(_:)` MUST store the union of the ids in `sync.configs` and the previously pushed ids that the sync did not remove.
-- **record-landed-removals**: `recordLanded(_:)` MUST drop every id listed in `sync.removedConfigIds` from the stored set; a nil `removedConfigIds` drops nothing.
+- **record-landed-removals**: `recordLanded(_:)` MUST drop every id listed in `sync.removedConfigIds` from the previously pushed ids; a nil `removedConfigIds` drops nothing.
+- **record-landed-configs-win**: An id that appears in both `sync.configs` and `sync.removedConfigIds` MUST be stored, because `sync.configs` is always recorded.
 - **record-landed-keeps-unresolved**: A previously pushed id that is absent from `sync.configs` and not in `removedConfigIds` MUST remain in the ledger.
 - **record-landed-format**: `recordLanded(_:)` MUST store the ids as UUID strings sorted ascending, replacing the whole entry under the key.
 - **record-only-landed**: The ledger MUST be updated only by an explicit `recordLanded(_:)` call; `removed(configured:)` and `lastPushed()` MUST NOT write.
-- **caller-records-after-landing**: Callers MUST call `recordLanded(_:)` only for a push the daemon accepted; the type has no knowledge of delivery. The one caller in source records only when the send reports it landed.
-- **caller-serialises**: Callers MUST NOT call `recordLanded(_:)` concurrently on one key, because it reads then writes the entry with no lock. The one caller sends through a push engine that holds one push in flight at a time.
+- **caller-records-after-landing**: Callers MUST call `recordLanded(_:)` only for a push the daemon accepted; the type has no knowledge of delivery.
+- **caller-serialises**: Callers MUST NOT call `recordLanded(_:)` concurrently on one key, because it reads then writes the entry with no lock.
 
 ## Appearance
 
@@ -79,14 +82,16 @@ Not applicable — this is a persisted id ledger, not a visual component.
 | ai-config-push-ledger-008 | removed-order | Ledger holds three ids; none configured. | The result is in ascending `uuidString` order (derived from the source; no test). |
 | ai-config-push-ledger-009 | record-landed-removals | Record a sync with nil `removedConfigIds` and one config over a ledger holding another id. | The other id stays in the ledger with the new one (derived from the source; no test). |
 | ai-config-push-ledger-010 | record-landed-format | Record two configs, then read the raw entry. | An array of two UUID strings sorted ascending (derived from the source; no test). |
-
+| ai-config-push-ledger-011 | record-landed-configs-win | Record a sync whose `configs` holds first and whose `removedConfigIds` also names first. | `lastPushed()` holds first (derived from the source; no test). |
 ## Edge Cases
 
 - **Null / empty input**: An unset key, or an empty `configured` list over an empty ledger, yields empty results. A nil `removedConfigIds` removes nothing from the ledger.
 - **Boundary values**: Not applicable: the ledger holds no numeric limits; its size is the number of configuration ids pushed.
 - **Concurrent access**: `recordLanded(_:)` is a read-then-write over `UserDefaults` with no lock, so two concurrent records on one key could lose an update. The type is declared `Sendable` and `UserDefaults` is documented thread-safe, but that covers each call, not the pair. Callers serialise, and the one caller does so through a push engine with a single in-flight push (`SettingsSnapshotPush`).
-- **Error states**: A stored value that is not an array of strings reads as empty. Malformed strings are skipped without a signal; the ledger throws and logs nothing. A failed write to `UserDefaults` cannot be observed.
+- **Error states**: A stored value that is not an array of strings reads as empty. Malformed strings are skipped without a signal; the ledger throws and logs nothing. A failed write to `UserDefaults` cannot be observed. A corrupt or non-array entry therefore reads as an empty ledger: the next push names no removals, so configurations it dropped stay behind in the daemon, and the next `recordLanded(_:)` rewrites the entry without the malformed ids.
 - **Offline / disconnected state**: Not applicable: the ledger touches only local `UserDefaults`. A push that did not land is simply never recorded, so its ids stay out of the ledger.
+- **Caller facts**: The one caller in source records only when its send reports the push landed, and sends through a push engine that holds one push in flight at a time.
+- **Id in both lists**: An id in both `sync.configs` and `sync.removedConfigIds` stays in the ledger (see `record-landed-configs-win`).
 - **Unresolvable configuration**: A configuration still held but not resolved is neither removed nor forgotten: it stays in the ledger and is not listed as removed.
 
 ## Configuration
@@ -129,17 +134,18 @@ Not applicable: the type calls no logging API; a malformed stored id is skipped 
 
 ## Platform Notes
 
-- **SwiftUI**: Source is `Core/Stenographer/AIConfigPushLedger.swift`, importing only `Foundation`. A `Sendable` struct holding a `nonisolated(unsafe)` `UserDefaults` (marked unsafe because the SDK has not marked it `Sendable`). It reads with `stringArray(forKey:)` and `compactMap(UUID.init(uuidString:))`, and writes `map(\.uuidString).sorted()` with `set(_:forKey:)`. It depends on `AIProviderConfigSync` for `recordLanded`.
-- **Compose**: Use `SharedPreferences` or Jetpack DataStore with a string set under the key, and `java.util.UUID.fromString` guarded by try/catch to skip malformed entries. A read-modify-write needs `edit()` and a single writer, or DataStore's `updateData`.
-- **React/Web**: Use `localStorage` with a JSON array of strings under the key, filtering entries that fail a UUID regular expression, and a `Set` for the difference. Browser storage is per origin and synchronous, so the read-write pair cannot interleave within one tab.
-- **AppKit / UIKit**: Identical to the SwiftUI note: the source uses `UserDefaults`, available on macOS and iOS.
-- **WinUI 3**: Use `Windows.Storage.ApplicationData.Current.LocalSettings.Values[key]` holding a JSON-serialised string array via `System.Text.Json`, or a file in `LocalFolder`. Parse with `Guid.TryParse` to skip malformed entries, use `HashSet<Guid>` and `SortedSet`, and order by `Guid.ToString("D")` lowercase text to match the source's ascending string order (Swift's `uuidString` is uppercase, so compare with ordinal ordering on the same casing). Guard the read-modify-write with a `SemaphoreSlim` if callers could overlap.
+- **SwiftUI**: No SwiftUI-specific guidance: the type has no UI.
+- **Source**: `Core/Stenographer/AIConfigPushLedger.swift`, importing only `Foundation`. A `Sendable` struct holding a `nonisolated(unsafe)` `UserDefaults` (marked unsafe because the SDK has not marked it `Sendable`). It reads with `stringArray(forKey:)` and `compactMap(UUID.init(uuidString:))`, and writes `map(\.uuidString).sorted()` with `set(_:forKey:)`. It depends on `AIProviderConfigSync` for `recordLanded`.
+- **Compose**: Use `SharedPreferences` or Jetpack DataStore holding a sorted JSON array string under the key (a `SharedPreferences` string set is unordered, which would break `record-landed-format`), and `java.util.UUID.fromString` guarded by try/catch to skip malformed entries. A read-modify-write needs `edit()` and a single writer, or DataStore's `updateData`.
+- **React/Web**: Use `localStorage` with a JSON array of strings under the key, filtering entries that fail a UUID regular expression, and a `Set` for the difference. Browser storage is per origin and synchronous, so the read-write pair cannot interleave within one tab; `localStorage` is shared across tabs, so multiple tabs need a cross-tab lock (the Web Locks API) or a single writer.
+- **AppKit / UIKit**: The source description above applies as is: it uses `UserDefaults` and has no UI.
+- **WinUI 3**: Use `Windows.Storage.ApplicationData.Current.LocalSettings.Values[key]` holding a JSON-serialised string array via `System.Text.Json`, or a file in `LocalFolder`. Parse with `Guid.TryParse` to skip malformed entries, use `HashSet<Guid>` and `SortedSet`, and order by `Guid.ToString("D").ToUpperInvariant()` with `StringComparer.Ordinal`, so the stored order matches Swift's ascending `uuidString` order (Swift's `uuidString` is uppercase). Guard the read-modify-write with a `SemaphoreSlim` if callers could overlap.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIConfigPushLedger.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIConfigPushLedger.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -166,17 +172,21 @@ Not applicable: the type calls no logging API; a malformed stored id is skipped 
 **Rationale**: A stable stored order makes the entry deterministic; the source does not state a further reason.
 **Approved**: pending
 
+**Decision**: A corrupt or non-array ledger entry reads as an empty ledger, silently.
+**Rationale**: `lastPushed()` has no failure channel and uses `stringArray(forKey:)` with `compactMap`, so the ledger neither throws nor logs; the cost is that the next push names no removals for configurations the ledger no longer remembers.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 
-`separation-of-concerns` passes because the type only records and diffs ids; sending the push and deciding when it landed stay with the host. `unit-test-coverage` passes because `AIConfigPushLedgerTests` covers the first push, a dropped configuration, an unresolved configuration, a removal and key independence; malformed-id skipping, ordering and the stored format have no test. `idempotent-operations` passes because recording the same landed sync twice leaves the same stored set.
+`separation-of-concerns` passes because the type only records and diffs ids; sending the push and deciding when it landed stay with the host. `unit-test-coverage` is partial: `AIConfigPushLedgerTests` covers the first push, a dropped configuration, an unresolved configuration, a removal and key independence; malformed-id skipping, ordering, the stored format and a nil `removedConfigIds` have no test. `idempotent-operations` passes because recording the same landed sync twice leaves the same stored set.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Downgraded unit-test-coverage to partial, specified that an id in both configs and removedConfigIds is kept, recorded the corrupt-entry consequence as an edge case and Design Decision, moved caller facts out of MUSTs, and fixed the WinUI, Compose, Web and SwiftUI platform notes. |

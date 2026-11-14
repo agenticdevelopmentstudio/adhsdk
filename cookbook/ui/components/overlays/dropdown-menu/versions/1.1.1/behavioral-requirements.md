@@ -1,0 +1,21 @@
+
+- **render-trigger**: The component MUST render a trigger element (button, link, or other control) that opens the menu.
+- **render-content**: The component MUST render a positioned popup containing menu items.
+- **close-on-item-select**: The component MUST close the menu when a user selects a standard menu item (unless `closeOnClick` is explicitly set to false).
+- **close-on-link-select**: DropdownMenuLinkItem MUST close the menu after the link click handler fires, preserving browser link semantics (middle-click, Cmd+click for new tabs).
+- **close-on-escape**: The component MUST close the menu when the user presses Escape.
+- **close-on-outside-click**: The component MUST close the menu when the user clicks outside the menu and trigger.
+- **support-checkbox-items**: Checkbox items MUST support a `checked` state and MUST render a checkmark icon when checked.
+- **support-radio-items**: Radio items MUST support a single-selected value within a RadioGroup and MUST render a circle indicator when selected.
+- **support-submenus**: SubmenuRoot items MUST open a nested menu positioned relative to the parent menu, and MUST close when the user moves focus away from the submenu.
+- **position-with-offset**: DropdownMenuContent MUST accept `side`, `sideOffset`, `align`, and `alignOffset` props to control menu positioning. Default `sideOffset` is 4px.
+- **support-semantic-classes**: All menu elements MUST apply semantic CSS class names prefixed with `adh-dropdown-menu__` to enable consistent theming.
+- **support-inset-items**: Menu items and labels MUST support an `inset` prop that adds the `adh-dropdown-menu__item--inset` class for visual indentation.
+- **support-accent-items**: Menu items MUST support an `accent` prop that applies the theme's accent styling on hover/focus via the `adh-dropdown-menu__item--accent` class.
+- **close-on-click-default**: CheckboxItem, RadioItem, and LinkItem SHOULD default `closeOnClick` to `true`, closing the menu when the item is clicked. MenuItem's `closeOnClick` has no explicit default and inherits Base UI's default of `true` (see close-on-item-select).
+- **keyboard-navigation**: The component MUST support arrow-key navigation of menu items: ArrowDown/ArrowUp move focus between items, and ArrowRight/ArrowLeft open/close submenus.
+- **focus-management**: The component MUST move focus into the menu, onto the first focusable item, when the menu opens via the trigger, and MUST return focus to the trigger when the menu closes.
+- **checkbox-state-announcement**: Checkbox items MUST announce their checked state to assistive technology via `aria-checked`.
+- **disabled-state-announcement**: Disabled items MUST announce their disabled state via `aria-disabled`. This does not guarantee they are skipped by keyboard navigation; see the **Focus on disabled item** edge case.
+- **submenu-indication**: Submenu triggers MUST indicate that they open a submenu, via the ChevronRight icon and `aria-haspopup="menu"`.
+

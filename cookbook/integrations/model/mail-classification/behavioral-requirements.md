@@ -14,7 +14,7 @@
 - **trash-first**: When `labelIds` contains `TRASH`, `classify(labelIds:)` MUST return `.trash`, regardless of every other label.
 - **spam-second**: When `labelIds` does not contain `TRASH` and contains `SPAM`, `classify(labelIds:)` MUST return `.spam`, regardless of every other label.
 - **filed-by-filing-label**: When the message is neither trash nor spam and `labelIds` contains any of `INBOX`, `SENT`, `DRAFT` or `STARRED`, `classify(labelIds:)` MUST return `.filed`.
-- **filed-by-user-label**: When the message is neither trash nor spam and `labelIds` contains any label that is not a system label, `classify(labelIds:)` MUST return `.filed`. A label id that is neither in `systemLabelIds` nor `CATEGORY_`-prefixed is a user label, so an id Gmail adds later to its system set classifies as filed until the constants change.
+- **filed-by-user-label**: When the message is neither trash nor spam and `labelIds` contains any label that is not a system label, `classify(labelIds:)` MUST return `.filed`.
 - **archived-otherwise**: When none of the rules above match, including when `labelIds` is empty, `classify(labelIds:)` MUST return `.archived`.
 - **attribute-labels-not-filing**: The labels `UNREAD`, `IMPORTANT`, `CHAT` and any label starting with `CATEGORY_` MUST NOT by themselves make a message `.filed`.
 - **system-label-set**: `MailClassifier.systemLabelIds` MUST be the public constant set `INBOX`, `SENT`, `DRAFT`, `STARRED`, `SPAM`, `TRASH`, `UNREAD`, `IMPORTANT`, `CHAT`.
@@ -25,5 +25,5 @@
 
 ### Downstream use
 
-- **mirroring-is-elsewhere**: Which classes are mirrored is decided by [MailSyncSettings](cookbook:df121975-deb8-49a9-b023-0aadcb0923d8) `allows(_:)`, not by this file, which does not read settings.
+- **mirroring-is-elsewhere**: Which classes are mirrored is decided by `MailSyncSettings` `allows(_:)` ([adhsdk.ingredient.integrations.model.mail-sync-settings](cookbook:df121975-deb8-49a9-b023-0aadcb0923d8)), not by this file, which does not read settings.
 

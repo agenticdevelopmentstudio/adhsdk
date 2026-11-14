@@ -78,17 +78,11 @@
   tween state, or scheduler time, which is what keeps the expression
   language free of feedback loops between what it decides and what it is
   deciding about.
-- **predicate-vocabulary-is-closed**: `predicate` MUST support exactly the
-  configured predicate kinds (including `eyesShut`, `curious`,
-  `choreographed`, and the relational `gt`) and MUST NOT accept an
-  unrecognized kind as anything other than an error; a config that reaches
+- **predicate-vocabulary-is-closed**: `predicate` MUST support exactly four forms: a `gt` param (the named pose number is greater than a configured threshold), and the built-in names `eyesShut` (the mood is the config's eyes-shut mood), `choreographed` (the mood has a configured choreography entry) and `curious` (the mood is the ladder's active mood), resolved in that order with `gt` first; it MUST NOT accept an unrecognized kind as anything other than an error; a config that reaches
   this evaluator with an unrecognized predicate kind is a loader-contract
   violation, not a value this function silently tolerates.
 - **amplitude-and-number-derivation**: `amplitude`/`numberParam` MUST
-  resolve `literal` to its literal value verbatim, `param` to the named
-  parameter looked up for the current mood, and `select` to the branch
-  chosen by evaluating the select's own predicate — with no other
-  derivation kinds accepted.
+  resolve an amplitude of kind `literal` to its literal value verbatim, and of kind `param` to the named number for the current mood multiplied by its optional scale (default 1); a named number MUST resolve through `numberParam`, which turns a `select` param into its `then` or `else` value by evaluating the select's own predicate, and otherwise reads the current pose's `loops` value (`0` when absent) — with no other derivation kinds accepted.
 
 ### Poses: static pose application
 
@@ -205,6 +199,8 @@
   active effect had moved off its rest value, cancel that channel's live
   tween and write its rest value directly.
 
+- **gaze-input-validation**: NEEDS REVIEW: Not implemented in source. `Reflexes.look(x, y, now)` clamps its inputs toward `[-1, 1]` but does not validate that `x`/`y` are finite numbers; a non-finite (`NaN`/`Infinity`) coordinate from the host passes the clamp unchanged (both platforms' clamp forms leave `NaN` as `NaN`) and is then written into a gaze channel, where it can permanently corrupt that channel's tween interpolation (`lerpValue`'s numeric branch and the tween progress calculation both propagate `NaN` once introduced, with no recovery path in the given sources); the contract does not say whether the host is required to pre-validate pointer input or whether `look`/the params/tween layer should reject or sanitize a non-finite value itself.
+
 ### Timelines: declarative playback
 
 - **timeline-lookup-failure**: `playTimeline` MUST throw an error whose
@@ -267,6 +263,3 @@
   `Tweens` tween), scheduling or canceling `Scheduler` entries, and reading
   from the injected `Prng`. Neither type performs file, network, or process
   I/O, and neither reads or writes any persistence layer.
-
-- **gaze-input-validation**: NEEDS REVIEW: Not implemented in source. `Reflexes.look(x, y, now)` clamps its inputs toward `[-1, 1]` but does not validate that `x`/`y` are finite numbers; a non-finite (`NaN`/`Infinity`) coordinate from the host passes the clamp unchanged (both platforms' clamp forms leave `NaN` as `NaN`) and is then written into a gaze channel, where it can permanently corrupt that channel's tween interpolation (`lerpValue`'s numeric branch and the tween progress calculation both propagate `NaN` once introduced, with no recovery path in the given sources); the contract does not say whether the host is required to pre-validate pointer input or whether `look`/the params/tween layer should reject or sanitize a non-finite value itself.
-

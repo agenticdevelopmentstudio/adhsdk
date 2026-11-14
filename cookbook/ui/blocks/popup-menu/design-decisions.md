@@ -23,3 +23,6 @@
   **Rationale**: The caller owns the logic to create a new item and update state, keeping this component focused on selection only — it has no knowledge of routing or deep linking, which remains entirely the caller's responsibility.
   **Approved**: pending
 
+- **Decision**: Truncate long trigger labels with an ellipsis and offer no tooltip or other expansion for them.
+  **Rationale**: Keeps the trigger a fixed single-line control that fits its container; the cost is that a long localized label is cut off and the full text is visible only in the open menu. This is why the text-expansion-tolerance check is `failed` by design. Callers with long localized labels MUST size the trigger wide enough (for example with `className`) or shorten the label.
+  **Approved**: pending

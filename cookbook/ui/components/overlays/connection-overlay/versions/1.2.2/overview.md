@@ -1,0 +1,3 @@
+
+Connection Overlay is a modal card displayed over the current board or dashboard when a live data feed becomes unreachable (dark). It presents a calm, non-alarming state to the user rather than tearing down panels or displaying an error. The component shows the current connection status (either a backend deployment or unreachability), a spinner, a countdown timer to the next automatic retry attempt, and a manual "Try again now" button. The component obscures the underlying content with a semi-opaque background and blur effect, making it clear the view is temporarily unavailable without destroying the user's context.
+

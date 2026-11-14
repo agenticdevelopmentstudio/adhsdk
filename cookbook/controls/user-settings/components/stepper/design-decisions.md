@@ -11,7 +11,7 @@
   **Rationale**: This prevents repeated clicks from attempting invalid operations and provides clear affordance to users.
   **Approved**: pending
 
-- **Decision**: Non-numeric input is silently ignored via a `Number.isNaN()` check; an empty or whitespace input parses to `0` and is committed like any other value (see Edge Cases).
+- **Decision**: Non-numeric input is silently ignored via a `Number.isNaN()` check (in a browser, unparseable text in `<input type="number">` reports `""`, so it takes the empty-input path instead; see stepper-012); an empty or whitespace input parses to `0` and is committed like any other value (see Edge Cases).
   **Rationale**: This provides lenient error handling without introducing error states, though it means blank input is treated as zero rather than as "no value."
   **Approved**: pending
 

@@ -12,8 +12,8 @@ Derived from the type's source and from `testStatusRoundTripsSnakeCase` in `Work
 | activity-span-dto-007 | mutable-fields, immutable-fields | Set `windowTitle` and `lastSeenAt` on a span | Both read back the new values; `id` and `startedAt` are unchanged |
 | activity-span-dto-008 | codable-synthesis, snake-case-by-strategy | Encode with `convertToSnakeCase`, decode with `convertFromSnakeCase` a `WorkTrackingStatus` whose `currentSpan` is a span with id `s` (test `testStatusRoundTripsSnakeCase`) | Decoded value equals the original |
 | activity-span-dto-009 | is-open-not-encoded | Encode an open span to JSON | The JSON has no `isOpen` or `is_open` key |
-| activity-span-dto-010 | no-validation, started-at-format | Init with `startedAt: "not a date"` and `tz: ""` | Construction succeeds and both strings are stored unchanged |
+| activity-span-dto-010 | no-validation | Init with `startedAt: "not a date"` and `tz: ""` | Construction succeeds and both strings are stored unchanged |
 | activity-span-dto-011 | value-semantics | Copy a span, set `endedAt` on the copy | The original `isOpen` remains true |
-| activity-span-dto-012 | conformances, all-strings | Compare two spans built with identical arguments including `id` | They are equal; spans differing only in `lastSeenAt` are not equal |
+| activity-span-dto-012 | conformances | Compare two spans built with identical arguments including `id` | They are equal; spans differing only in `lastSeenAt` are not equal |
 | activity-span-dto-013 | working-path-sentinel, repo-root-sentinel, last-seen-sentinel | Span built with defaults | `workingPath`, `repoRoot` and `lastSeenAt` are `""`, meaning unresolved, no repo, no heartbeat |
-
+| activity-span-dto-014 | all-strings | Encode a span with the default encoder and inspect every value in the JSON object | Every value is a JSON string |

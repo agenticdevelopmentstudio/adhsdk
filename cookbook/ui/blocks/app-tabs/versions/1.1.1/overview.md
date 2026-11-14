@@ -1,0 +1,3 @@
+
+AppTabs is a controlled tab navigation component used as the top tab bar in the signed-in app. It renders a horizontal list of tabs with optional icons, marking one tab as active based on the `value` prop. It supports an optional `endItem` that appears at the trailing edge, commonly used for user settings or other app-level actions. The component uses semantic button elements styled with a shared tab grammar (`tabItemClass` / `tabListClass`, imported from the `tabs` ingredient — see depends-on) to achieve an underline-mono appearance. Each entry in `items` is an `AppTab` (`{ id: string; label: ReactNode; icon?: ReactNode }`); `endItem` is an `AppTab` extended with an optional `active?: boolean` that drives its own selected state independently of `value`.
+

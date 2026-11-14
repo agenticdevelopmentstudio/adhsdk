@@ -4,11 +4,11 @@
     "id": "fcb8a0a4-2446-46f9-99bb-49b0317529d4",
     "title": "HelpEnabled",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "52a33980fce2e70c",
+  "synced": "a7a5d462088d7c35",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

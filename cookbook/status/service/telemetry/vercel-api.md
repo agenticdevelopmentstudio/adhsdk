@@ -2,7 +2,7 @@
 id: 60ff967b-b041-4723-913e-016fba7bae6d
 title: "Vercel API Client"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,8 +19,11 @@ tags:
   - vercel
   - status-server
 depends-on: []
-related: []
-references: []
+related:
+  - c116715f-2986-4554-a779-97e99d875c54
+  - 55ffb81c-6a7d-4837-9180-0b5d3fe952ec
+references:
+  - https://vercel.com/docs/rest-api
 approved-by: ""
 approved-date: ""
 ---
@@ -36,7 +39,7 @@ approved-date: ""
 ### Request
 
 - **api-base**: `VERCEL_API` MUST be `https://api.vercel.com`, and every request URL MUST be built with `new URL(path, VERCEL_API)`.
-- **cooldown-first**: `vercelRequest` MUST check `rateLimitedUntil("vercel")` before every call, not only a load's first call, and when a cooldown is active MUST throw `VercelRateLimited` with the message `Vercel rate limited until <ISO time>` without calling `fetch`. The reason: several workers run at once, and without it the rest would keep firing at a throttled API and each 429 would push the cooldown, which the deploy poll also honors, further out.
+- **cooldown-first**: `vercelRequest` MUST check `rateLimitedUntil("vercel")` before every call, not only a load's first call, and when a cooldown is active MUST throw `VercelRateLimited` with the message `Vercel rate limited until <ISO time>` without calling `fetch`.
 - **team-scope**: When `env.VERCEL_TEAM_ID` is non-empty the request MUST carry it as the `teamId` query parameter.
 - **query-params**: Every entry of `params` MUST be set as a query parameter after `teamId`, so a `teamId` in `params` replaces the one from `env`.
 - **auth-header**: The request MUST send `Authorization: Bearer <env.VERCEL_API_TOKEN>`.
@@ -53,22 +56,21 @@ approved-date: ""
 - **http-error**: Any other non-2xx response MUST throw `VercelHttpError` carrying `path`, `status` and `body` (the response text, or the empty string when reading it fails), with the message `Vercel <path> HTTP <status>`.
 - **network-errors-propagate**: A network failure, timeout abort or caller abort MUST reject with the underlying error, unchanged and unretried.
 - **no-retry**: `vercelRequest` MUST NOT retry or back off by itself; the only back-pressure is the shared cooldown.
-- **token-presence**: `vercelRequest` does not check `env.VERCEL_API_TOKEN` itself; when it is `undefined` the header reads `Bearer undefined` and Vercel's 401 surfaces as a `VercelHttpError` like any other error status. The callers own the missing-token check: `vercelRuntimeFetcher` returns an empty successful read without a token, and the monitor's Vercel fetchers do the same.
+- **token-presence**: `vercelRequest` MUST NOT check `env.VERCEL_API_TOKEN` itself: when it is `undefined` the header reads `Bearer undefined` and Vercel's 401 MUST surface as a `VercelHttpError` like any other error status. The callers MUST own the missing-token check: `vercelRuntimeFetcher` returns an empty successful read without a token, and the monitor's Vercel fetchers do the same.
 
 ### JSON and listing
 
 - **json-get**: `vercelGet` MUST call `vercelRequest` (GET) and return the parsed JSON body typed `unknown`; invalid JSON MUST reject.
 - **list-projects**: `listProjects` MUST request `/v9/projects` with `limit` `100`, append each page's `projects` to the result (a missing `projects` reads empty), and pass the caller's `signal` on.
 - **list-continuation**: `listProjects` MUST continue while `pagination.next` is truthy, sending it as the `until` parameter converted with `String`, and MUST stop when it is null, absent or 0.
-- **list-page-cap**: `listProjects` MUST read at most `MAX_PROJECT_PAGES` (20) pages, so at most 2,000 projects; a longer list is truncated without any signal.
+- **list-page-cap**: `listProjects` MUST read at most `MAX_PROJECT_PAGES` (20) pages, so at most 2,000 projects; a longer list is truncated, and the result carries no flag or log that says so.
 - **list-errors**: An error on any page (rate limit, HTTP error, abort) MUST reject the whole call; the pages already read are discarded.
 
 ### Production rules
 
-- **production-domain**: `productionDomain` MUST return the first alias in `targets.production.alias` that does not end in `.vercel.app`, or null when there is none or the structure is missing. It is a cheap first filter and fallback, because these aliases belong to the latest production deployment, so a queued deployment leaves only `*.vercel.app`.
+- **production-domain**: `productionDomain` MUST return the first alias in `targets.production.alias` that does not end in `.vercel.app`, or null when there is none or the structure is missing.
 - **production-project**: `isProductionProject` MUST return false when the project name ends in `-staging` or `-testing` (case-insensitive), or when its `productionDomain` is a non-production host; otherwise true. A missing name passes the name test. Only the end of the name counts: `testing-production` is a production site.
 - **non-production-host**: `isNonProductionHost` MUST return true when the domain starts with `staging.` or `testing.` (case-insensitive), and false for null or any other domain.
-- **site-triple**: The reason for the name rule: every site is three Vercel projects (`x-production`, `x-staging`, `x-testing`) and analytics runs only on the first, so the other two are dropped before anything is counted or queried.
 
 ## Appearance
 
@@ -84,7 +86,7 @@ Not applicable — this is shared logic with no visual surface or interaction.
 
 ## Conformance Test Vectors
 
-Vectors 1 to 3 are assertions of `telemetry-dashboard-sections.test.ts` (test names in brackets); 4 to 6 come from `runtime-errors.test.ts`, which exercises `vercelRequest` through `vercelRuntimeFetcher`; 7 to 14 are read from the source. There is no test file for `vercel-api.ts` alone.
+Vectors 1 to 3 are assertions of `telemetry-dashboard-sections.test.ts` (test names in brackets); 4 to 6 come from `runtime-errors.test.ts`, which exercises `vercelRequest` through `vercelRuntimeFetcher`; 7 to 19 are read from the source. There is no test file for `vercel-api.ts` alone.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -92,7 +94,7 @@ Vectors 1 to 3 are assertions of `telemetry-dashboard-sections.test.ts` (test na
 | vercel-api-002 | production-project ("a project is production unless its name ends in staging or testing") | names `site-production`, `site-staging`, `site-testing`, `testing-production` | true, false, false, true |
 | vercel-api-003 | production-project, non-production-host | name `x`, alias `staging.x.com` | false |
 | vercel-api-004 | rate-limit-429, cooldown-first ("fails on a 429, records the shared cooldown, and then asks nothing while it lasts") | first call answered 429; then a second read | the first read fails and `rateLimitedUntil("vercel")` is not null; the second makes no `fetch` call |
-| vercel-api-005 | call-timeout, caller-signal ("fails at the overall deadline, the project list included") | `fetch` that never resolves, abort by caller deadline of 50 ms | the read fails in under 5 seconds |
+| vercel-api-005 | caller-signal ("fails at the overall deadline, the project list included") | `fetch` that never resolves, abort by caller deadline of 50 ms | the read fails in under 5 seconds |
 | vercel-api-006 | http-error (test "fails on any other error, so the store keeps what it had") | a non-429 error status | the read fails; nothing saved |
 | vercel-api-007 | list-continuation | page 1 with `pagination.next` 1700, page 2 with next null | two requests; the second has `until=1700`; both pages' projects returned |
 | vercel-api-008 | list-page-cap | every page returns a `next` | exactly 20 requests, then the collected projects are returned with no error |
@@ -102,7 +104,11 @@ Vectors 1 to 3 are assertions of `telemetry-dashboard-sections.test.ts` (test na
 | vercel-api-012 | non-production-host | `STAGING.x.com`; `x.com`; null | true; false; false |
 | vercel-api-013 | production-project | name `Site-STAGING` | false |
 | vercel-api-014 | json-get | 200 response with body `not json` | rejects |
-
+| vercel-api-015 | call-timeout, caller-signal | `fetch` that never resolves, a fake timer, no caller `signal`; then the same with a caller `signal` that never aborts | the call aborts with the timeout error once `CALL_TIMEOUT_MS` (20,000 ms) has passed, in both cases; the caller signal does not lengthen it |
+| vercel-api-016 | extra-headers | `init.headers` `{Authorization: "Bearer other"}` | the request carries `Authorization: Bearer other`, not the one built from `env` |
+| vercel-api-017 | query-params | `VERCEL_TEAM_ID` `team_1`, params `{teamId: "team_2"}` | URL carries `teamId=team_2` once |
+| vercel-api-018 | cooldown-first | `rateLimitedUntil("vercel")` returns a time | `VercelRateLimited` with message `Vercel rate limited until <ISO time>`, and `fetch` is not called |
+| vercel-api-019 | list-errors | page 1 returns projects with a `next`; page 2 answers 500 | `listProjects` rejects with `VercelHttpError`; page 1's projects are not returned |
 ## Edge Cases
 
 - **Missing token**: `Bearer undefined` is sent and Vercel's 401 surfaces as `VercelHttpError` (see `token-presence`; callers skip the call when there is no token).
@@ -180,7 +186,7 @@ Not applicable: `vercel-api.ts` contains no log call. The cooldown module it cal
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/vercel-api.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/telemetry/vercel-api.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -204,7 +210,15 @@ Not applicable: `vercel-api.ts` contains no log call. The cooldown module it cal
 **Approved**: pending
 
 **Decision**: Cap project listing at 20 pages with no signal when it truncates.
-**Rationale**: The source gives no reason for the number 20 and no signal when the cap is hit; it only bounds the page loop.
+**Rationale**: Known debt: the cap bounds the page loop, so one read cannot spend an unbounded share of the shared token's quota. The source states no reason for the number 20, and nothing tells a caller that the list was cut short. Revisit when an account passes 2,000 projects.
+**Approved**: pending
+
+**Decision**: Send the request even when `env.VERCEL_API_TOKEN` is undefined, and let Vercel's 401 surface as `VercelHttpError`.
+**Rationale**: The source leaves the missing-token check to the callers, which skip the call when there is no token; the client sends `Bearer undefined` rather than failing before `fetch`. This is recorded as the observed behavior and has not been chosen over a typed error thrown before the call.
+**Approved**: pending
+
+**Decision**: Drop the `-staging` and `-testing` projects before anything is counted or queried.
+**Rationale**: Every site is three Vercel projects (`x-production`, `x-staging`, `x-testing`) and analytics runs only on the first, so the other two are not sites to report on.
 **Approved**: pending
 
 **Decision**: Match the staging and testing suffix only at the end of the name.
@@ -233,3 +247,4 @@ Not applicable: `vercel-api.ts` contains no log call. The cooldown module it cal
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Added related links and the Vercel REST docs reference, rewrote token-presence as MUST statements, moved rationale out of requirements into Design Decisions, labeled the page cap as known debt, and added vectors 015-019 for the timeout ceiling, extra headers, query params, cooldown message and list errors. |

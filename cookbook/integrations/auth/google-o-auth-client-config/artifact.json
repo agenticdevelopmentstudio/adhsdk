@@ -4,11 +4,11 @@
     "id": "238f4d91-4a22-4a0d-ae4b-b4070d02b357",
     "title": "GoogleOAuthClientConfig",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "33cb053e43b98fa3",
+  "synced": "9e3c6b499c22a74d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

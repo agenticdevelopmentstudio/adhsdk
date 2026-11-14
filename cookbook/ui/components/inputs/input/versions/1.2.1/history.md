@@ -1,0 +1,7 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rewrote Behavioral Requirements as platform-neutral behavior and moved implementation detail (spread operator, `cn()`, `fieldShellClass`, Tailwind classes) into the React/Web note; renamed requirements to subject-only kebab-case and updated all citations, including the Conformance Test Vectors' state rows; listed the exact autofill opt-out attributes; corrected the `cn()` attribution (`clsx` + `tailwind-merge`) and cut the unsupported Deep Linking claim; corrected the tap-target minimum, the focus/invalid "inner shadow" (actually an outer ring), and the color-only Differentiate-Without-Color claim; corrected Design Decisions 1 and 2 against source and reformatted all five to Decision/Rationale/Approved; clarified the Reduce Motion transition; corrected the WinUI, SwiftUI, and Compose Platform Notes and added invalid-state and no-token-autofill parity across all native platforms; replaced Compliance's blanket "Not applicable" with a table of applicable checks |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Remove review marker from Compliance section; replace with concrete "Not applicable" statement |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

@@ -14,7 +14,8 @@ reaction back; pressing one you are not adds it. Both directions call the same `
 the same argument, because the caller can already tell which way it goes from the `mine` flag it
 supplied — two callbacks would be two chances for them to disagree.
 
-Two exports ship from `@adh-sdk/ui/components/reaction-bar`: the `ReactionBar`
-component and `DEFAULT_REACTIONS`, the default palette, exported so a host starts from one
-fact rather than restating a literal per surface.
+Three exports ship from `@adh-sdk/ui/components/reaction-bar`: the `ReactionBar`
+component, `DEFAULT_REACTIONS`, the default palette (exported so a host starts from one
+fact rather than restating a literal per surface), and the `ReactionBarItem` type, which a
+consumer needs in order to type `reactions`.
 

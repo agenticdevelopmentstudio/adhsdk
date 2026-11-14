@@ -3,7 +3,7 @@ Type and isolation
 
 - **protocol-conformance**: `UserDefaultsThemeStorage` MUST conform to `ThemeStorage`, exposing `customThemes`, `activeThemeID` and `onExternalChange` as read-write properties.
 - **main-actor**: The type MUST be `@MainActor` and a `final class`, so every read, write and the `onExternalChange` callback run on the main actor.
-- **no-sendable**: The type MUST NOT be shared across actors; it is main-actor state, is not explicitly declared `Sendable`, and main-actor isolation is what keeps it in its domain.
+- **no-sendable**: The type MUST be used only on the main actor; it is implicitly `Sendable` through its main-actor isolation, and every member access hops to the main actor, which is what keeps it in its domain.
 
 Storage keys
 
@@ -40,22 +40,22 @@ External-change detection
 
 - **external-compare-values**: The observer callback MUST compare the currently stored themes data and active id with the last-seen values, and MUST invoke `onExternalChange` only when either differs. The source comment rejects a boolean "I am writing" flag because the notification arrives on a later run loop turn, after such a flag has been cleared, so every write would report itself and `ThemeManager` would reload the theme it had just applied.
 - **external-update-last-seen**: When a difference is found, the object MUST update both last-seen values to the current stored values before invoking `onExternalChange`, so one foreign write fires the callback once.
-- **external-coalesce**: When several writes are followed by one notification, the object MUST fire at most once. The source comment says comparing values gets the coalesced case right.
+- **external-coalesce**: When several writes are followed by one notification, the object MUST fire at most once, and a notification that finds no difference MUST NOT fire. The source comment says comparing values gets the coalesced case right. When the platform delivers one notification per write, the callback may fire once per write that changed a value.
 - **external-same-value**: A foreign write that stores the value this object already had MUST NOT fire the callback; the source comment calls that "genuinely not a change".
 - **external-own-writes-silent**: Writes made through this object's own setters MUST NOT fire `onExternalChange`.
 - **external-nil-callback**: With `onExternalChange` nil, a detected foreign change MUST update the last-seen values and do nothing else.
 - **external-main-actor**: The callback MUST run on the main actor. The observer is delivered on the main queue and enters the main actor with `MainActor.assumeIsolated`; the observer holds `self` weakly, so a notification arriving after the object is released does nothing.
 - **external-read-through**: After a foreign write, the getters MUST return the foreign value, because they read `UserDefaults` on every access and keep no cache of the themes or the id.
 - **notification-granularity**: The observer MUST react to every `UserDefaults.didChangeNotification` for its domain, including changes to unrelated keys, and rely on the value comparison to filter them; a change to an unrelated key therefore does not fire the callback.
-- **multiple-instances**: Two instances over the same `UserDefaults` domain each treat the other's writes as external, because each keeps its own last-seen values.
+- **multiple-instances**: Two instances over the same `UserDefaults` domain MUST each treat the other's writes as external, because each keeps its own last-seen values.
 
 Persistence and side effects
 
-- **persistence-medium**: Everything is persisted through `UserDefaults` set and get calls; the class never calls `synchronize()`, never touches the file system directly and never uses the network. Durability and flush timing are whatever `UserDefaults` provides.
-- **cloud-and-suite**: Changes arriving from a shared suite or an iCloud-backed sync reach this object only through `UserDefaults.didChangeNotification`; the class has no sync code of its own.
+- **persistence-medium**: The class MUST persist only through `UserDefaults` set and get calls, and MUST NOT call `synchronize()`, touch the file system directly or use the network. Durability and flush timing are whatever `UserDefaults` provides.
+- **cloud-and-suite**: The class MUST NOT contain sync code of its own; changes arriving from a shared suite or an iCloud-backed sync MUST reach it only through `UserDefaults.didChangeNotification`.
 - **failure-logging**: The class MUST log through `Loggable` (its own `logger`) on exactly two paths, a decode failure on read and an encode failure on write; it logs nothing else.
 
 Deinit isolation
 
-- **observer-unsafe-field**: The `observer` field is `nonisolated(unsafe)`: it is assigned once in `init`, read once in `deinit` and never touched between, so the nonisolated `deinit` cannot race it. The source comment says `isolated deinit` would state this in the type system but needs macOS 15.4 or iOS 18.4.
+- **observer-unsafe-field**: The `observer` field MUST be assigned only in `init` and read only in `deinit`; the reasoning is in the Design Decisions.
 

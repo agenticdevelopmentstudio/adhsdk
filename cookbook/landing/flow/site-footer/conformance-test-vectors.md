@@ -8,8 +8,11 @@
 | site-footer-005 | merge-classes | Render with `className="custom-footer"` | Footer element's `class` attribute is exactly `lp-site-foot custom-footer` |
 | site-footer-006 | merge-classes | Render with `className={undefined}` | Footer element's `class` attribute is exactly `lp-site-foot` |
 | site-footer-007 | merge-classes | Render with `className=""` | Footer element's `class` attribute is exactly `lp-site-foot` (empty string is falsy and filtered) |
-| site-footer-008 | apply-footer-chrome | Render component | Footer element's computed style has a `1px` top border, `background-color` equal to the `--lp-ground` token, `color` equal to the `--lp-ink-dim` token, and `font-size: 0.86rem` |
-| site-footer-009 | apply-footer-chrome | Render component with `--lp-dock-clear` set to a non-zero value on an ancestor | Footer element's computed `padding-bottom` equals `clamp(3rem, 6vw, 5rem)` plus the `--lp-dock-clear` value |
-| site-footer-010 | style-descendant-links | Render with `children={<a href="#">Credit</a>}` | Descendant `<a>` element's computed style has no underline text-decoration, a `1px` bottom border, and `color` equal to the `--lp-ink` token |
-| site-footer-011 | style-credit-sub-lines | Render with `children={<small>© 2026</small>}` | Descendant `<small>` element's computed `font-size` is `0.72rem` |
+| site-footer-008 | apply-footer-chrome | Real browser (Playwright), viewport 1440px wide, default token fallbacks: render component | Footer element's computed style has a `1px` top border, `background-color` `rgb(16, 16, 16)`, `color` `rgb(160, 160, 160)`, and `font-size: 13.76px` (at a 16px root) |
+| site-footer-009 | apply-footer-chrome | Real browser (Playwright), viewport 1440px wide: render component with `--lp-dock-clear: 40px` on an ancestor | Footer element's computed `padding-top` is `80px` and `padding-bottom` is `120px` |
+| site-footer-010 | style-descendant-links | Real browser (Playwright), default token fallbacks: render with `children={<a href="#">Credit</a>}` | Descendant `<a>` element's computed style has no underline text-decoration, a `1px` bottom border, and `color` `rgb(237, 237, 237)` |
+| site-footer-011 | style-credit-sub-lines | Real browser (Playwright), 16px root: render with `children={<small>© 2026</small>}` | Descendant `<small>` element's computed `font-size` is `11.52px` |
+| site-footer-012 | style-descendant-links | Real browser (Playwright), default token fallbacks: render with `children={<a href="#">Credit</a>}` and hover the link | The link's computed `border-bottom-color` changes from the hairline color to `rgb(154, 154, 154)` (the `--lp-accent` fallback) |
+| site-footer-013 | style-credit-sub-lines | Real browser (Playwright), 16px root: render with `children={<small>© 2026</small>}` | Descendant `<small>` element's computed `letter-spacing` is `0.4608px` (`0.04em` of `11.52px`) |
+| site-footer-014 | mount-outside-flow | Real browser (Playwright): host renders `<Flow>` and then `<SiteFooter>` as its sibling | The `<footer>` is not a descendant of `main.lp-flow` and the accessibility tree exposes it as `contentinfo` |
 

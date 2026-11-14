@@ -8,7 +8,6 @@
 - **account-email**: `accountEmail` MUST hold the account email string as given; it is empty when no token could be fingerprinted.
 - **oauth-account-email**: `oauthAccountEmail` MUST hold the optional oauth login email as given, and the initializer MUST default it to nil.
 - **oauth-nil-versus-empty**: nil MUST mean "this envelope predates the field" (a drop file written by an older build), the only case where resolving the login at write time is still the best answer; the empty string MUST mean "resolved at capture, and there was no oauth login", a real answer and not a missing one.
-- **oauth-resolved-at-capture**: The oauth login is resolved when the hook fires and carried on the event, not looked up at write time, because an event can wait in the spool through a migration or a reboot and resolving later would attribute the backlog to whoever is logged in at the drain; the sessions upsert is first-oauth-wins, so a wrong attribution sticks.
 
 ### Construction
 
@@ -23,6 +22,6 @@
 
 ### Related behavior in the same module
 
-- **session-id-accessor**: The session an event belongs to is `hookData["session_id"]` read as a string, empty when missing (`ParsedEvent.sessionId`, specified with the envelope encoding).
-- **no-equatable**: The type does not conform to `Equatable` or `Codable`; tests compare fields one by one, and the serialized form is the envelope.
+- **session-id-accessor**: `ParsedEvent.sessionId` is defined by the envelope-encoding spec ([Parsed Event Envelope](cookbook:7dfeb441-3681-45d3-a11b-049294168607)); this type adds no accessor of its own.
+- **no-equatable**: The type MUST NOT conform to `Equatable` or `Codable`; tests compare fields one by one, and the serialized form is the envelope.
 

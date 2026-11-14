@@ -1,9 +1,9 @@
 
 - **Empty storage** (MUST): a fresh install has no custom themes; `allThemes` is the built-ins alone and `theme(withID:)` returns `nil` for an unknown id.
 - **Unknown id on update** (MUST): `update(_:)` does nothing and does not write to storage.
-- **Unknown id on delete** (MUST): `delete(id:)` returns without writing storage or touching `activeThemeID`.
+- **Unknown id on delete** (MUST): see `delete-builtin-noop`.
 - **Deleting the active custom theme** (MUST): `activeThemeID` becomes `nil`, so a later import that reuses the id cannot silently become active.
-- **Deleting a built-in id** (MUST): the built-in stays in the catalog; `activeThemeID` is left alone even when it names that built-in.
+- **Deleting a built-in id** (MUST): see `delete-builtin-noop`; the built-in stays in the catalog.
 - **Id collisions through `add`** (SHOULD NOT be relied on): `add` accepts a theme whose id matches a built-in or custom theme; the built-in then shadows it in `theme(withID:)`. The import paths avoid this by assigning fresh ids.
 - **Name collisions** (MUST): `addNewTheme` and `duplicate` add a numeric suffix starting at 2; `add` and the import paths keep the name as given.
 - **Malformed JSON, wrong shape, or missing fields** (MUST): the `JSONDecoder` error propagates and nothing is stored.

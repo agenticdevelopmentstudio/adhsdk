@@ -2,7 +2,7 @@
 id: 998864ec-d852-4e92-aa2c-3177130ff21d
 title: "Text Substitution Filter"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -30,7 +30,7 @@ approved-date: ""
 
 ## Overview
 
-`TextSubstitutionFilter` is a two-way word substitution between what the user sees and what a program is given: the user writes an alias and the program receives the real text (`revealing`); the program prints the real text and the user reads the alias (`concealing`). It is a `Sendable`, `Equatable` value type holding an ordered list of `Pair` values (`alias`, `real`).
+`TextSubstitutionFilter` is a two-way word substitution between what the user sees and what a program is given: the user writes an alias and the program receives the real text (`revealing`); the program prints the real text and the user reads the alias (`concealing`). It is a `Sendable`, `Equatable` value type holding an ordered list of `Pair` values (`alias`, `real`), built from a list of pairs (`init(pairs:)`) or from text (`init(parsing:)`) whose entries are separated by `;` or newlines.
 
 Matching is case-insensitive, because a program prints a name however it likes ("Mike", "mike", "MIKE") and every one of those is the same leak. The replacement is written as given unless the caller asks for case matching. Substitution is a single left-to-right pass rather than one replacement per pair, so a replacement is never itself rewritten by a later pair, and at each position the longest pattern wins. The filter can be parsed from, and serialised to, a one-field text form (`alias = real` entries). `BrowserPageWordFilter.js` applies the same casing rule as `casing(_:like:)`.
 
@@ -52,17 +52,16 @@ Matching is case-insensitive, because a program prints a name however it likes (
 - **replacement-as-given**: Without `matchingCase`, the replacement MUST be written exactly as stored in the pair, whatever the case of the matched text.
 - **single-pass**: Text MUST be scanned once from left to right, so a replacement is never rewritten by a later pair: with pairs `a = b; b = c`, revealing `a b` yields `b c`.
 - **longest-wins**: At each position the longest pattern, measured in `Character`s, MUST win, so `mike fullerton` is replaced whole before a shorter `mike` pair can split it.
-- **tie-order**: Among patterns of equal length that match the same text (duplicate or case-variant aliases), the first one in the order the sort leaves them, which is declaration order in practice, MUST be used.
-- **literal-patterns**: Each alias or real text MUST be matched literally: regular-expression metacharacters in a pattern carry no meaning, because each is passed through `NSRegularExpression.escapedPattern(for:)`.
+- **tie-order**: Among patterns of equal length that match the same text (duplicate or case-variant aliases), the first one in declaration order MUST be used (the ordering by length MUST be stable).
+- **literal-patterns**: Each alias or real text MUST be matched literally: regular-expression metacharacters in a pattern carry no meaning.
 - **whole-words**: With `wholeWords: true`, `revealing` MUST replace an alias only where no Unicode letter or number (`\p{L}`, `\p{N}`) touches either end of the match, so "robin" is left alone in `robinhood.com` and `robin2`, and replaced in `/Robin/` and `robin` after `?`.
 - **whole-words-underscore**: The whole-word test counts only letters and numbers, so an underscore or punctuation next to an alias does not block replacement.
-- **early-exit**: `substitute` MUST return the text unchanged when there are no pairs or the text is empty.
+- **early-exit**: `revealing` and `concealing` MUST return the text unchanged when there are no pairs or the text is empty.
 - **casing-rule**: `casing(_:like:)` MUST return the replacement in all capitals when the match has letters and is all upper case; in all lower case when the match has letters and is all lower case; with a capital first letter and the rest lower case when the match is a capital followed by lower case; and otherwise (mixed case, or no letters) the replacement as given.
 - **casing-single-letter**: `casing` MUST treat a one-letter upper-case match as all capitals, and a one-letter lower-case match as all lower case.
 - **matching-case**: With `matchingCase: true`, each replacement MUST be passed through `casing(_:like:)` with the text it replaces, whatever case the pair was written in.
-- **regex-failure-passthrough**: NEEDS REVIEW: Not implemented in source. When the combined regular expression fails to compile, `substitute` returns the input text unchanged with no error or log, so a `concealing` call would pass real text through; the source never shows the case, since every pattern is escaped, and a test with a pattern set large enough to exceed the engine's limits would settle whether it can happen.
-- **utf16-ranges**: Match ranges MUST be taken in UTF-16 units over an `NSString` copy, and unmatched stretches MUST be copied through unchanged.
-- **no-state**: Substitution MUST NOT mutate the filter; each call builds its own regular expression and holds no cache between calls.
+- **unmatched-text-kept**: Every stretch of text that no pattern matches MUST be copied through unchanged, including text with accents, emoji or other multi-unit characters.
+- **no-state**: Substitution MUST NOT mutate the filter that callers can observe: the same filter and the same input MUST give the same output on every call. An implementation MAY cache compiled patterns internally.
 - **foundation-only**: The component MUST depend only on Foundation.
 
 ## Appearance
@@ -88,7 +87,7 @@ Not applicable — this is a text-transformation value type, not a visual compon
 | text-substitution-filter-005 | parse-forgiving, init-drops-empty | `init(parsing: "x = y; nonsense; = z; w = ;")` (test: parsingIsForgiving). | `pairs` equals one pair, alias `x` and real `y`. |
 | text-substitution-filter-006 | serialized, round-trip | Filter parsed from `a = b` and `c = d` on two lines; parse its `serialized` (test: roundTrips). | The reparsed filter equals the original; `serialized` is `a = b; c = d`. |
 | text-substitution-filter-007 | matching-case, casing-rule, replacement-as-given | Filter parsed from `Redbird = Bluebird`; `concealing("BLUEBIRD bluebird Bluebird", matchingCase: true)`; `revealing("REDBIRD redbird Redbird", matchingCase: true)`; `concealing("BlueBird", matchingCase: true)`; `concealing("bluebird")` (test: matchesCase). | `REDBIRD redbird Redbird`; `BLUEBIRD bluebird Bluebird`; `Redbird` (mixed case keeps the pair as written); `Redbird` (no case matching, as written). |
-| text-substitution-filter-008 | whole-words, whole-words-underscore | Filter parsed from `Robin = Mike`; `revealing` with `wholeWords: true` on `robinhood.com`, on `https://x.test/Robin/q?robin`, on `robin2 Robin.`; and without `wholeWords` on `robinhood.com` (test: revealsWholeWords). | `robinhood.com`; `https://x.test/Mike/q?Mike`; `robin2 Mike.`; `Mikehood.com`. |
+| text-substitution-filter-008 | whole-words | Filter parsed from `Robin = Mike`; `revealing` with `wholeWords: true` on `robinhood.com`, on `https://x.test/Robin/q?robin`, on `robin2 Robin.`; and without `wholeWords` on `robinhood.com` (test: revealsWholeWords). | `robinhood.com`; `https://x.test/Mike/q?Mike`; `robin2 Mike.`; `Mikehood.com`. |
 | text-substitution-filter-009 | casing-rule | `casing("Ab", like: "42")` and `casing("ab", like: "X")` (test: casingWithoutLetters). | `Ab` (no letters, as given) and `AB` (one capital letter). |
 | text-substitution-filter-010 | identity, early-exit | `TextSubstitutionFilter.identity.concealing("mike")` (test: identity). | `mike`. |
 | text-substitution-filter-011 | init-drops-empty | `TextSubstitutionFilter(pairs: [Pair(alias: "", real: "x"), Pair(alias: "y", real: ""), Pair(alias: "a", real: "b")]).pairs` (derived from the source; no test). | One pair, alias `a` and real `b`. |
@@ -96,29 +95,33 @@ Not applicable — this is a text-transformation value type, not a visual compon
 | text-substitution-filter-013 | literal-patterns | Filter parsed from `a.c = X`; `revealing("abc a.c")` (derived from the source; no test). | `abc X`: the dot matches only a literal dot. |
 | text-substitution-filter-014 | early-exit | `TextSubstitutionFilter(parsing: "a = b").revealing("")` (derived from the source; no test). | The empty string. |
 | text-substitution-filter-015 | concealing, no whole-words | Filter parsed from `Robin = Mike`; `concealing("Mikehood")` (derived from the source; no test). | `Robinhood`: concealing replaces inside a longer word. |
-
+| text-substitution-filter-016 | whole-words-underscore | Filter parsed from `robin = Mike`; `revealing("robin_x", wholeWords: true)` (derived from the source; no test). | `Mike_x`: an underscore does not block replacement. |
+| text-substitution-filter-017 | tie-order | Filter from `[Pair(alias: "a", real: "X"), Pair(alias: "A", real: "Y")]`; `revealing("a")` (derived from the source; no test). | `X`: the first pair in declaration order wins. |
+| text-substitution-filter-018 | unmatched-text-kept, case-insensitive | Filter parsed from `café = X`; `revealing("un café noir")` (derived from the source; no test). | `un X noir`. |
+| text-substitution-filter-019 | revealing, matching-case, whole-words | Filter parsed from `Robin = Mike`; `revealing("ROBIN robinhood", matchingCase: true, wholeWords: true)` (derived from the source; no test). | `MIKE robinhood`. |
+| text-substitution-filter-020 | pair-shape | Encode `Pair(alias: "a", real: "b")` as JSON and decode it again (derived from the source; no test). | JSON with the fields `alias` and `real`; the decoded pair equals the original. |
 ## Edge Cases
 
 - **Null / empty input**: Empty text, or a filter with no pairs, returns the text unchanged (MUST). Pairs with an empty side never enter the filter (MUST). An empty or all-separator text parses to `identity`-equivalent pairs (MUST).
 - **Boundary values**: An entry like `a=b` with no spaces parses the same as `a = b` (MUST). A one-letter match is cased as all capitals or all lower case by `casing` (MUST). A match with no letters keeps the replacement as given (MUST).
 - **Overlapping patterns**: The longest pattern wins at a position; a shorter pattern that starts inside it cannot match there because the scan resumes after the replaced text (MUST).
-- **Duplicate patterns**: Two pairs with the same alias are both kept; the first in sorted order is the one used when the text matches (SHOULD be avoided by callers; the source does not reject it).
+- **Duplicate patterns**: Two pairs with the same alias are both kept; the first in declaration order is the one used when the text matches (SHOULD be avoided by callers; the source does not reject it).
 - **Pairs that cannot round-trip**: A pair whose side contains `;` or a newline, or whose alias contains `=`, or whose sides carry leading or trailing whitespace, does not reappear identically after `serialized` and `init(parsing:)`, because the parser splits on those characters and trims; `init(pairs:)` itself accepts them.
-- **Unicode**: Matching uses UTF-16 ranges over an `NSString` copy and a case-insensitive regular expression; length ordering counts `Character`s, so a combined character counts once.
+- **Unicode**: Matching is case-insensitive and works on whole text, and unmatched text is copied through unchanged. Length ordering counts `Character`s in the Swift source, so a combined character counts once; a platform that counts UTF-16 units or code points MAY order patterns of differing Unicode composition differently, and that divergence is allowed.
 - **Large text**: A single regular expression covers every pattern, because a browser pane conceals whole page reads, hundreds of kilobytes at a time, on the main actor; the expression is rebuilt on every call.
-- **Regular-expression compile failure**: See the open question on `regex-failure-passthrough`: the original text is returned unchanged, with no signal.
+- **regex-failure-passthrough**: NEEDS REVIEW: Not implemented in source. A combined expression that fails to compile is meant to return the input text unchanged with no error or log, so a `concealing` call would pass real text through; no test shows the case, because every pattern is escaped.
 - **Concurrent access**: The type is an immutable `Sendable` value and each call builds its own expression, so any number of threads may call it at once with no ordering rule.
-- **Error states**: No function throws or returns an error; unusable parse entries are skipped and a compile failure falls back to the input text.
+- **Error states**: No function throws or returns an error; unusable parse entries are skipped and a compile failure is meant to fall back to the input text.
 - **Offline / disconnected state**: Not applicable: the component performs no network access or I/O.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `pairs` | `[Pair]` | none | The ordered alias and real-text pairs; pairs with an empty side are dropped at initialisation. |
-| `parsing` | `String` | none | Text form: `alias = real` entries separated by `;` or newlines. |
 | `matchingCase` | `Bool` | `false` | Write each replacement in the case of the text it replaces (`casing(_:like:)`). |
 | `wholeWords` | `Bool` | `false` | `revealing` only: replace an alias only where no letter or digit touches either end. |
+
+The options above are per-call arguments (`matchingCase` on both directions, `wholeWords` on `revealing`); the pairs and the text form are initialiser inputs, described in the Overview.
 
 The component reads no environment variable and no settings key.
 
@@ -155,7 +158,7 @@ Not applicable: The source calls no logging API.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/TextSubstitutionFilter.swift` and imports only `Foundation`; a SwiftUI view model holds the filter as a value and edits it through `serialized` and `init(parsing:)` in a single `TextField`. Its tests are `TextSubstitutionFilterTests.swift` (Swift Testing) in `AgenticDeveloperHubSDKCoreTests`.
+- **SwiftUI**: The component imports only `Foundation`. A SwiftUI view model holds the filter as a value and edits it through `serialized` and `init(parsing:)` in a single `TextField`, rebuilding the filter on each edit; `Pair` is `Codable`, so a list of pairs can be stored as JSON. The Swift source builds one case-insensitive `NSRegularExpression` over an `NSString` copy, takes match ranges in UTF-16 units, and escapes every pattern with `NSRegularExpression.escapedPattern(for:)`.
 - **Compose**: Use a `data class Pair(val alias: String, val real: String)` and build one `Regex` with `RegexOption.IGNORE_CASE` from `Regex.escape` of each pattern, sorted by length descending, joined by `|`; use `Regex.replace` with a lambda to look up the matching group. Wrap whole-word as lookarounds with `\p{L}` and `\p{N}`.
 - **React/Web**: A plain function over a `{alias, real}[]` array: sort by length descending, build `new RegExp(parts.join("|"), "giu")` with each part escaped, and use `String.replace` with a callback. Whole-word uses `(?<![\p{L}\p{N}])` and `(?![\p{L}\p{N}])` with the `u` flag. `BrowserPageWordFilter.js` is the existing web counterpart of the casing rule. JavaScript counts UTF-16 units, not Characters, when ordering by length.
 - **AppKit / UIKit**: The source uses `NSRegularExpression` and `NSString`, which are the same on AppKit and UIKit; nothing here is UI-framework-specific, and the filter is called from the main actor for page reads.
@@ -165,7 +168,7 @@ Not applicable: The source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/TextSubstitutionFilter.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/TextSubstitutionFilter.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -173,7 +176,7 @@ Not applicable: The source calls no logging API.
 ## Design Decisions
 
 **Decision**: Substitute in a single left-to-right pass rather than one replacement per pair.
-**Rationale**: A replacement must never be rewritten by a later pair: with `a = b; b = c`, "a" is sent as "b", not as "c" (`principle-of-least-astonishment`).
+**Rationale**: A replacement must never be rewritten by a later pair: with `a = b; b = c`, "a" is sent as "b", not as "c", which is the least surprising result (principle of least astonishment).
 **Approved**: pending
 
 **Decision**: The longest pattern wins at each position, by sorting patterns longest first in one alternation.
@@ -201,7 +204,7 @@ Not applicable: The source calls no logging API.
 **Approved**: pending
 
 **Decision**: When the combined expression cannot be compiled, `substitute` falls back to returning the input.
-**Rationale**: The source gives no reason; patterns are escaped so the case is not expected. The consequence for `concealing` is recorded under the open question on `regex-failure-passthrough`.
+**Rationale**: Every pattern is escaped, so a compile failure is not expected. The risk is accepted knowingly: if it did happen, `concealing` would pass real text through unchanged, so a port that needs to fail closed should redact or return an error instead. See Edge Cases.
 **Approved**: pending
 
 ## Compliance
@@ -220,4 +223,5 @@ separation-of-concerns passes: the type only parses, serialises and substitutes;
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the regex-failure marker out of Behavioral Requirements, stated declaration-order ties, allowed internal caching, rewrote requirements against the public API, trimmed SwiftUI note paths, fixed the configuration table and added five test vectors. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

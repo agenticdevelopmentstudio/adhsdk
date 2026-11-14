@@ -2,11 +2,11 @@
 id: 33aaba17-874f-43aa-8d70-4a5dab2081a1
 title: "Batch Select"
 type: ingredient
-version: 1.1.2
+version: 1.1.3
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,7 +18,8 @@ tags:
   - selection
   - list-control
   - multi-select
-depends-on: []
+depends-on:
+  - f3c25236-d72f-4a7b-839a-b7f335b3acd0
 related: []
 references: []
 approved-by: ""
@@ -34,6 +35,7 @@ Batch Select provides a mode for lists to enter multi-select behavior, distinct 
 ## Behavioral Requirements
 
 - **expose-active-state**: The hook MUST expose a boolean `active` property indicating whether batch mode is currently active.
+- **initial-state**: On first render the hook MUST return `active: false`, an empty `selectedIds` and `count` 0. The first render MUST NOT count as a `resetKey` change.
 - **expose-selected-ids**: The hook MUST expose a `selectedIds` property as a `Set<string>` of currently selected row identifiers.
 - **provide-set-selected-ids**: The hook MUST provide a `setSelectedIds` function to update the selected row IDs, accepting a `Set<string>` parameter.
 - **expose-toggle-active**: The hook MUST provide a `toggleActive` function that switches batch mode on and off.
@@ -43,7 +45,8 @@ Batch Select provides a mode for lists to enter multi-select behavior, distinct 
 - **expose-count**: The hook MUST expose a `count` property equal to the size of `selectedIds`.
 - **reset-on-reset-key-change**: When the `resetKey` option changes (as determined by `Object.is` comparison), the hook MUST reset `selectedIds` to an empty `Set<string>` synchronously during render.
 - **set-selected-ids-new-reference**: Each call to `setSelectedIds` MUST hand back exactly the `Set<string>` instance the caller supplied; the hook MUST NOT synthesize a new instance or preserve the previous one by comparing contents, so calling `setSelectedIds` with a different object — even one with identical contents — MUST produce a new `selectedIds` reference on the next render.
-- **reset-uses-shared-empty-selection**: Every render-time reset (see **reset-on-reset-key-change**) MUST set `selectedIds` to the same shared `EMPTY_SELECTION` instance rather than a freshly constructed empty `Set`, so consecutive resets return an identical reference and do not invalidate callers' memoized effects.
+- **stable-selected-ids-reference**: Between renders in which `setSelectedIds` is not called and `resetKey` does not change, `selectedIds` MUST be the same `Set` instance.
+- **reset-uses-shared-empty-selection**: Every render-time reset (see **reset-on-reset-key-change**) MUST set `selectedIds` to one shared empty `Set` rather than a freshly constructed one, so consecutive resets return `Object.is`-identical empty sets and do not invalidate callers' memoized effects. The initial value, `clear` and `toggleActive` each produce a fresh empty `Set`; callers MUST NOT rely on those being identical to the shared one.
 - **button-render-label**: The `BatchSelectButton` MUST render a clickable element displaying either the `selectLabel` (when inactive) or `doneLabel` (when active).
 - **button-toggle-on-click**: The `BatchSelectButton` MUST call `batch.toggleActive` when clicked.
 - **button-announce-pressed-state**: The `BatchSelectButton` MUST set `aria-pressed` to reflect the `batch.active` state.
@@ -63,10 +66,10 @@ Not applicable: This is a state management hook and a generic button. Visual app
 
 ## Accessibility
 
-- **role**: The `BatchSelectButton` MUST delegate its role to the underlying Button component, which provides button semantics.
+- **role**: The `BatchSelectButton` MUST delegate its role to the underlying Button component ([adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0)), which provides button semantics.
 - **pressed-state-announcement**: The `BatchSelectButton` MUST announce the pressed state via `aria-pressed` attribute, updating to reflect `batch.active` on each render.
 - **label-provided-by-text**: The button text (`selectLabel` or `doneLabel`) MUST serve as the accessible label.
-- **keyboard-navigable**: The underlying Button component MUST be keyboard navigable and activatable via Enter or Space keys.
+- **keyboard-navigable**: The `BatchSelectButton` inherits keyboard support from the underlying Button component, which MUST be keyboard navigable and activatable via Enter or Space keys.
 
 ## Conformance Test Vectors
 
@@ -79,9 +82,9 @@ Not applicable: This is a state management hook and a generic button. Visual app
 | batch-select-005 | clear-selection-on-toggle-exit | active=true, selectedIds={id1, id2}, call toggleActive | active becomes false, selectedIds becomes empty Set |
 | batch-select-006 | clear-selection-on-toggle-entry | active=false, call `setSelectedIds(new Set(['id1']))`, then call toggleActive | active becomes true, selectedIds becomes empty Set (the seeded id1 is cleared, not carried into batch mode) |
 | batch-select-007 | provide-clear-function | active=true, selectedIds={id1}, call clear | active stays true, selectedIds becomes empty Set |
-| batch-select-008 | reset-on-reset-key-change | Render with resetKey=1, then resetKey=2, selectedIds={id1} | selectedIds cleared to empty Set during render of resetKey=2 |
+| batch-select-008 | reset-on-reset-key-change | Render with resetKey=1, call `setSelectedIds(new Set(['id1']))`, then re-render with resetKey=2 | selectedIds cleared to empty Set during render of resetKey=2 |
 | batch-select-009 | reset-on-reset-key-change | Render with resetKey="search:foo", then resetKey="search:foo" (same value) | selectedIds retained, no reset |
-| batch-select-010 | set-selected-ids-new-reference | Render, then render again with no call to `setSelectedIds` | selectedIds reference is the same object between the two renders |
+| batch-select-010 | stable-selected-ids-reference | Render, then render again with no call to `setSelectedIds` | selectedIds reference is the same object between the two renders |
 | batch-select-011 | button-render-label | BatchSelectButton with active=false, selectLabel="Pick" | Button displays "Pick" |
 | batch-select-012 | button-render-label | BatchSelectButton with active=true, doneLabel="Finish" | Button displays "Finish" |
 | batch-select-013 | button-default-select-label | BatchSelectButton with active=false, no selectLabel | Button displays "Select" |
@@ -90,11 +93,13 @@ Not applicable: This is a state management hook and a generic button. Visual app
 | batch-select-016 | button-announce-pressed-state | BatchSelectButton with active=true | `aria-pressed="true"` on button element |
 | batch-select-017 | button-toggle-on-click | BatchSelectButton clicked while active=false | batch.toggleActive is called, active becomes true |
 | batch-select-018 | set-selected-ids-new-reference | selectedIds={id1}, call `setSelectedIds(new Set(['id1']))` (same contents, different instance) | selectedIds reference is a new object, distinct from the previous render's |
-| batch-select-019 | reset-uses-shared-empty-selection | Render with resetKey=1 then resetKey=2 (first reset), then resetKey=3 (second reset) | Both resets set selectedIds to the identical `EMPTY_SELECTION` object (`Object.is` true across the two resets) |
+| batch-select-019 | reset-uses-shared-empty-selection | Render with resetKey=1 then resetKey=2 (first reset), then resetKey=3 (second reset) | The `selectedIds` values after the two resets are empty and `Object.is`-identical to each other |
 | batch-select-020 | provide-set-selected-ids | `useBatchSelect()`, call `setSelectedIds(new Set(['id1']))` | selectedIds becomes `Set{'id1'}`, count becomes 1 on next render |
-| batch-select-021 | Rapid toggles (edge case) | active=false, selectedIds={id1}, call toggleActive three times in quick succession | active ends true (odd number of toggles), selectedIds ends empty Set |
-| batch-select-022 | resetKey as non-primitive (edge case) | Render repeatedly with `resetKey={}` (a new object literal each render), selectedIds={id1} | selectedIds is cleared to empty Set on every render, even though the semantic filter value never changed |
-
+| batch-select-021 | #edge-cases/rapid-toggles | active=false, selectedIds={id1}, call toggleActive three times in quick succession | active ends true (odd number of toggles), selectedIds ends empty Set |
+| batch-select-022 | #edge-cases/reset-key-as-non-primitive | Render repeatedly with `resetKey={}` (a new object literal each render), selectedIds={id1} | selectedIds is cleared to empty Set on every render, even though the semantic filter value never changed |
+| batch-select-023 | initial-state | First render of `useBatchSelect({ resetKey: 1 })` | `active` is false, `selectedIds` is empty, `count` is 0, and no reset occurs |
+| batch-select-024 | button-toggle-on-click | BatchSelectButton clicked while active=true | batch.toggleActive is called, active becomes false and selectedIds becomes empty Set |
+| batch-select-025 | keyboard-navigable | BatchSelectButton focused, Enter or Space pressed | batch.toggleActive is called, same as a click |
 ## Edge Cases
 
 - **Rapid toggles**: If `toggleActive` is called multiple times in quick succession, each call MUST correctly flip the state and clear the selection; the final state MUST reflect the number of toggles applied.
@@ -104,13 +109,19 @@ Not applicable: This is a state management hook and a generic button. Visual app
 - **Render-time reset vs effect**: The reset happens synchronously during render (not in an effect), so a commit with new `resetKey` will never execute pending actions with stale selection against new rows.
 
 ## Configuration
+Hook options (`useBatchSelect`):
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `resetKey` | `unknown` (pass a primitive) | `undefined` | Value identifying which rows are currently visible (page number, search string, active filters). Whenever it changes by `Object.is`, `selectedIds` is cleared. See **reset-on-reset-key-change**. |
+
+`BatchSelectButton` props:
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `batch` | `BatchSelect` | required | The object returned by `useBatchSelect`; the button reads `active` and calls `toggleActive`. |
 | `selectLabel` | `string` | `"Select"` (`batch_select.select`) | Label the `BatchSelectButton` displays while batch mode is inactive. |
 | `doneLabel` | `string` | `"Done"` (`batch_select.done`) | Label the `BatchSelectButton` displays while batch mode is active. |
-
 ## Deep Linking
 
 Not applicable: Batch Select manages internal component state and does not implement deep linking.
@@ -119,8 +130,8 @@ Not applicable: Batch Select manages internal component state and does not imple
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| `batch_select.select` | "Select" | Label for `BatchSelectButton` when not in batch mode. The `selectLabel` prop overrides this default directly, but the default itself is resolved through the platform's localization system, not hardcoded per locale. |
-| `batch_select.done` | "Done" | Label for `BatchSelectButton` when in batch mode. The `doneLabel` prop overrides this default directly, but the default itself is resolved through the platform's localization system. |
+| `batch_select.select` | "Select" | Label for `BatchSelectButton` when not in batch mode. The `selectLabel` prop overrides this default. The web source ships the default as a literal English string (a JavaScript default parameter), so consumers localize by passing `selectLabel`; resolving the default through a platform localization system is a requirement for ports, not behavior the web source has today. |
+| `batch_select.done` | "Done" | Label for `BatchSelectButton` when in batch mode. The `doneLabel` prop overrides this default. As with `selectLabel`, the web source ships a literal English default, so consumers localize by passing `doneLabel`. |
 
 ## Accessibility Options
 
@@ -147,14 +158,14 @@ Not applicable: Batch Select does not emit debug or informational logs.
 - **React/Web**: Implemented as a custom hook (`useBatchSelect`) exported from `packages/web/packages/ui/src/blocks/batch-select.tsx`. The hook manages state with `React.useState` and `React.useCallback`, and performs render-time reset via `React.useRef`. `BatchSelectButton` wraps the shared Button component with `aria-pressed` binding.
 - **SwiftUI**: Keep `active` and `selectedIds` in an `@Observable` model rather than local `@State` — writing `@State` during `body` triggers a runtime warning or an update loop, and the reset must be visible before the view reads `selectedIds`. Call `model.sync(resetKey:)` at the top of `body` before reading `selectedIds`, or explicitly accept `.onChange(of: resetKey)` and document the resulting one-frame gap. Implement `toggleActive` and `clear` on the model, matching the hook interface. Render `BatchSelectButton` as `Toggle(isOn: ...) { Text(...) }.toggleStyle(.button)` bound to `model.active`, not a plain `Button`, so the pressed state is exposed as a native toggle.
 - **Compose**: Implement as a composable returning a data class mirroring `BatchSelect`. Use `remember { mutableStateOf(...) }` for `active` and `selectedIds`. Perform `resetKey` comparison in the composable body (not in an effect) to clear synchronously. `BatchSelectButton` should apply `Modifier.toggleable(value = batch.active, onValueChange = { batch.toggleActive() })` (or set `semantics { toggleableState = ... }` directly) so the pressed state is exposed as a toggleable control rather than through `contentDescription`.
-- **AppKit / UIKit**: Implement as a reference type (class) managing `active` and `selectedIds` properties with property observers. Store the last `resetKey` and check it on access to the hook, resetting synchronously if it changes. Provide `toggleActive()` and `clear()` methods. `BatchSelectButton` is a `UIButton` with `changesSelectionAsPrimaryAction = true`, so tapping toggles `isSelected` natively; call `toggleActive()` from the `.primaryActionTriggered` handler, and add the `.selected` accessibility trait when `isSelected` is true so assistive technology announces the pressed state (`isSelected` / `UIControl.State.selected` alone changes appearance but not the accessible state).
+- **AppKit / UIKit**: Implement as a reference type (class) managing `active` and `selectedIds` properties with property observers. Store the last `resetKey` and compare it in a `resetKey` setter or an explicit `sync(resetKey:)` call (never inside a property getter, where a reset would be a surprising side effect of a read), resetting synchronously if it changes. Provide `toggleActive()` and `clear()` methods. On AppKit, `BatchSelectButton` is an `NSButton` with `setButtonType(.pushOnPushOff)` whose `state` is bound to `active`; call `toggleActive()` from its action and post an `NSAccessibility` value-changed notification so assistive technology announces the pressed state. On UIKit, `BatchSelectButton` is a `UIButton` with `changesSelectionAsPrimaryAction = true`, so tapping toggles `isSelected` natively; call `toggleActive()` from the `.primaryActionTriggered` handler, and add the `.selected` accessibility trait when `isSelected` is true so assistive technology announces the pressed state (`isSelected` / `UIControl.State.selected` alone changes appearance but not the accessible state).
 - **WinUI 3**: Implement as a `BindableBase` or `ObservableObject` exposing `Active` (bool), `SelectedIds` (`IReadOnlySet<string>`, replaced with a new instance on every change rather than an `ObservableCollection<string>`, to keep the replace-not-mutate contract), `SetSelectedIds(IReadOnlySet<string>)`, `ToggleActive()`, and `Clear()` methods. Use a backing field for `ResetKey` and perform the reset inside the `ResetKey` setter (not a property getter, where resetting as a side effect of a read would be surprising) so `SelectedIds` clears synchronously when it changes. `BatchSelectButton` is a `ToggleButton` bound to `IsChecked`, not a plain `Button`, so the pressed state is exposed as a native toggle rather than through `AutomationProperties.AutomationId` alone; call `ToggleActive()` from the `Checked`/`Unchecked` handlers.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/batch-select.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/ui/src/blocks/batch-select.tsx` | confirmed (1.1.3) |
 
 ## Design Decisions
 
@@ -197,3 +208,4 @@ The accessibility statuses rest on the `aria-pressed` binding and delegation to 
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and split the conflicting set-reference requirement into set-selected-ids-new-reference and reset-uses-shared-empty-selection; reformatted Design Decisions into the three-line form; documented Configuration options; rewrote Localization to use real string keys; fixed test vectors 006 and 010 and added vectors for provide-set-selected-ids, the rapid-toggle and non-primitive-resetKey edge cases, and shared-empty-Set identity; renamed the resetKey edge case; corrected Platform Notes to use real native toggle APIs (SwiftUI `Toggle`/`.toggleStyle(.button)`, Compose `Modifier.toggleable`, UIKit `changesSelectionAsPrimaryAction` plus the `.selected` trait, WinUI `ToggleButton`/`IsChecked` and `IReadOnlySet<string>`); corrected the Compliance table to reference real catalog checks |
 | 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: removed source line-number citations. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.3 | 2026-11-14 | Mike Fullerton | Lint fixes: added the Button dependency, initial-state and stable-reference requirements, split Configuration into hook options and button props, corrected Localization and the AppKit/UIKit note, added vectors 023-025 and fixed vectors 008, 010, 019, 021, 022. |

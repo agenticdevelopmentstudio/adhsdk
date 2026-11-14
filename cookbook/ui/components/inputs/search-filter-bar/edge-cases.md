@@ -7,7 +7,7 @@
   while `value` (and the caller's state) still holds the stale, unmatched string.
   This is misleading: the control *looks* reset to "all", but the caller's filter
   is still narrowed by the old value. The caller owns keeping `value` within the
-  option universe (e.g. the research pane sources options from the *unfiltered*
+  option universe (e.g. a consuming list sources options from the *unfiltered*
   document universe for this reason). See **T12**.
 - **Search-only bar**: omit `filters` (or pass `[]`) for a bare search field.
 - **Duplicate option strings**: the React key for each `<option>` is `value` (not

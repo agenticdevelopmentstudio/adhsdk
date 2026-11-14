@@ -4,5 +4,5 @@
 - **PendingLabel is empty string or falsy**: See **falsy-pending-label-omitted**; no visible content renders and the placeholder shows only the caption, the same visible result as pendingLabel being omitted.
 - **Title is empty string**: Renders with an empty title bar; frame still displays.
 - **Media is a complex nested component tree**: Rendered as-is without interaction or state management by Shot.
-- **Media is a video element without preload/autoplay attributes**: Shot does not apply Reduce Motion behavior; host or a wrapper component (e.g., Clip from the same package) must handle motion preferences.
+- **Media is a video element without preload/autoplay attributes**: Shot does not apply Reduce Motion behavior; host or a wrapper component (for example the `Clip` ingredient ([adhsdk.ingredient.landing.blocks.clip](cookbook:e268fe4f-8e83-4189-b1d2-105cd177308c))) must handle motion preferences.
 

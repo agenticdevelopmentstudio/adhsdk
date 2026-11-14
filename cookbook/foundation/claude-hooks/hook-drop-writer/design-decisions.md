@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: The name is a millisecond timestamp plus eight random hex characters.
-**Rationale**: The timestamp orders files roughly by arrival and the random suffix keeps concurrent hook processes from colliding. The local variable is named `durationMs` in the source although it holds a point in time, not a duration; a port should name it for what it is.
+**Rationale**: The timestamp orders files roughly by arrival and the random suffix keeps concurrent hook processes from colliding.
 **Approved**: pending
 
 **Decision**: The override variable is derived from the configuration name.
@@ -19,3 +19,10 @@
 **Rationale**: The source has no cleanup path. Because the temporary name does not end in `.json`, scanners ignore it, so the cost is leaked disk space rather than a wrong read.
 **Approved**: pending
 
+**Decision**: The directory and the file are created with the file system's default permissions, not owner-only (0700 directory, 0600 file).
+**Rationale**: The envelope carries account emails and process context, so owner-only permissions may be warranted; the source sets no mode today, and this is recorded as an open choice.
+**Approved**: pending
+
+**Decision**: A port gives `writeDropFile` an injectable clock and suffix source.
+**Rationale**: The source reads the clock and a random UUID directly, so the name and collision vectors cannot be asserted deterministically; injection lets a test pre-create the target name.
+**Approved**: pending

@@ -2,11 +2,11 @@
 id: 1a044d34-d585-46b4-b703-dea3fb9b9642
 title: "StatusDot"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -56,13 +56,13 @@ presentational span with no internal state and no `"use client"` directive.
 
 - **derives-fill-from-currentcolor**: The component MUST fill the dot with `background: currentColor` so the tone class alone sets the fill color.
 - **derives-glow-from-currentcolor**: The component MUST render a soft `box-shadow` glow whose color is a `color-mix` of the same `currentColor`, so one tone class drives both fill and glow.
-- **tone-sets-currentcolor**: The component MUST map each `tone` to an `apt-*` text-color class (`neutral`→`apt-text-muted`, `muted`→`apt-text-dim`, `accent`→`apt-gold`, `blue`→`apt-blue`, `orange`→`apt-orange`, `success`→`apt-green`, `error`→`apt-red`).
-- **defaults-to-neutral-tone**: With no `tone`, the component MUST use the `neutral` tone (`apt-text-muted`).
+- **tone-sets-currentcolor**: The component MUST map each `tone` to an `apt-*` text-color class (`neutral`→`text-apt-text-muted`, `muted`→`text-apt-text-dim`, `accent`→`text-apt-gold`, `blue`→`text-apt-blue`, `orange`→`text-apt-orange`, `success`→`text-apt-green`, `error`→`text-apt-red`). `neutral` is the one tone this component overrides from the shared family table.
+- **defaults-to-neutral-tone**: With no `tone`, the component MUST use the `neutral` tone (`text-apt-text-muted`).
 - **sizes-in-px**: The component MUST render the dot at `size` px square (default `10`) via inline `width`/`height`.
 - **scales-glow-with-size**: The component MUST set the glow radius to `max(6, round(size * 0.55))` px so the glow grows with the dot but never falls below 6 px.
 - **labeled-is-accessible-image**: Given a `label`, the component MUST expose `role="img"` and `aria-label` set to that label.
 - **unlabeled-is-decorative**: With no `label`, the component MUST render `aria-hidden="true"` and no `role`, so it is skipped by assistive technology.
-- **passes-label-through-verbatim**: The component MUST render a provided `label` verbatim as `aria-label`, without concatenating, translating, or otherwise transforming it — the consumer MUST supply an already-localized string.
+- **passes-label-through-verbatim**: The component MUST render a provided `label` verbatim as `aria-label`, without concatenating, translating, or otherwise transforming it (the consumer's duty to supply a localized string is in Localization).
 - **merges-classname**: The component MUST merge any `className` after the tone class via `cn()`, so a consumer MAY add layout classes without losing the tone.
 - **memoizes-render**: Since every prop is a primitive, the component SHOULD be wrapped in a memoization boundary (`React.memo`) so an unchanged dot skips re-render on a frequently-updating parent.
 
@@ -93,7 +93,7 @@ size=8   ·      size=12   ●      size=18   ⬤   (glow radius grows with size
 | Default (`neutral`) | `apt-text-muted` fill + muted glow |
 | Tinted (`success`/`error`/`accent`/`blue`/`orange`/`muted`) | Fill and glow both recolor to the tone's `apt-*` color |
 | Small (`size` < 10) | Dot shrinks; glow clamps to a 6 px floor so it stays visible |
-| Large (`size` big) | Dot grows; glow radius scales to `round(size * 0.55)` px |
+| Large (`size` ≥ 12) | Dot grows; glow radius scales to `round(size * 0.55)` px, which first exceeds the 6 px floor at `size` 12 (sizes 10 and 11 still sit at the floor) |
 | Labeled | Announced as an image named `label` (`role="img"`) |
 | Decorative (no `label`) | `aria-hidden`; ignored by AT |
 
@@ -128,7 +128,8 @@ size=8   ·      size=12   ●      size=18   ⬤   (glow radius grows with size
 | T12 | tone-sets-currentcolor | render `<StatusDot tone="orange" />` | className contains `text-apt-orange` |
 | T13 | unlabeled-is-decorative, passes-label-through-verbatim | `<StatusDot tone="success" label="" />` | span has `aria-hidden="true"` and no `role` attribute (empty string is falsy) |
 | T14 | scales-glow-with-size | `size={10}` | inline `boxShadow` contains `6px` (round(10 × 0.55) = 6, exactly at the floor) |
-
+| T15 | passes-label-through-verbatim | `<StatusDot label="Down – 3 nodes" />` | `aria-label` is exactly `Down – 3 nodes`, unchanged |
+| T16 | memoizes-render | the exported `StatusDot` | the export is a `React.memo` wrapper; re-rendering the parent with identical props does not re-render the dot (render-count spy) |
 ## Edge Cases
 
 - **Tiny sizes.** For `size` < 10, `round(size * 0.55)` is below 6, so the glow
@@ -189,17 +190,17 @@ tone, not the dot.
 
 ## Platform Notes
 
-- **SwiftUI**: Start from `Circle()` rather than a capsule, sized via `.frame(width: size, height: size)`. Apply `.shadow(color:radius:)` with a tone-mapped `Color` at 40% opacity and radius `max(6, round(size * 0.55))`. Accessibility: with `label`, apply `.accessibilityLabel(label)` and `.accessibilityAddTraits(.isImage)`; without, apply `.accessibilityHidden(true)` (`.hidden` is a view-visibility modifier, not an accessibility API).
-- **Compose**: `Modifier.shadow()` is elevation-based and cannot take an arbitrary tone-colored glow radius, so draw the halo by hand with `Modifier.drawBehind { }` (or a blur `RenderEffect`), sized `max(6, round(size * 0.55))` dp; fill with `Modifier.size(size.dp).background(toneColor, CircleShape)`. Semantics: with `label`, `Modifier.semantics { contentDescription = label; role = Role.Image }`; without, `Modifier.clearAndSetSemantics {}` ("mark as decorative" is not itself an API).
-- **Web/TypeScript**: File `packages/web/packages/ui/src/components/status-dot.tsx`. React functional component wrapped in `React.memo` (see **memoizes-render**) — all props are primitives, so an unchanged dot skips re-render on a ticking parent. No `"use client"` directive — it is a stateless span with inline style and renders in server components. Uses CSS `color-mix(in srgb, …)` for the glow; supported by all evergreen browsers ([MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix)). The `cn()` utility for className merging comes from `../lib/utils`.
-- **AppKit / UIKit**: A layer-backed `NSView` (AppKit) or `UIView` (UIKit) with a `CALayer` glow. Fill: AppKit sets `layer.backgroundColor` from an `NSColor` derived from the tone on a layer-backed view; UIKit sets it from `UIColor(named: "apt-<tone>")`. Glow: both set `layer.shadowColor`, `layer.shadowRadius = max(6, round(size * 0.55))`, and `layer.shadowOpacity = 0.4` for the tone-colored halo. Accessibility: with `label`, AppKit sets `accessibilityRole = .image` + `accessibilityLabel`; UIKit sets `accessibilityTraits = .image` + `accessibilityLabel`. Without `label`, both set `isAccessibilityElement = false`.
-- **WinUI 3**: A `Border` with `CornerRadius="{size/2}"` (half the diameter, so it reads as a circle rather than a rounded square) and `Background` bound to a tone-based brush. `ThemeShadow` cannot take a color or blur radius, so use a Composition `DropShadow` via `ElementCompositionPreview`, with `BlurRadius = max(6, round(size * 0.55))` and `Color` at 40% opacity of the tone brush. Accessibility: with `label`, set `AutomationProperties.Name`; without, set `AutomationProperties.AccessibilityView="Raw"` so it is excluded from the accessibility tree rather than merely left unnamed. Pair with a `ContentPresenter` or inline text for the status word; color alone is insufficient.
+- **SwiftUI**: Start from `Circle()` rather than a capsule, sized via `.frame(width: size, height: size)`. Apply `.shadow(color:radius:)` with a tone-mapped `Color` at 40% opacity. Start the radius at `max(6, round(size * 0.55))` and tune it visually, since SwiftUI's `.shadow` radius does not match CSS blur radius one to one. Accessibility: with `label`, apply `.accessibilityLabel(label)` and `.accessibilityAddTraits(.isImage)`; without, apply `.accessibilityHidden(true)` (`.hidden` is a view-visibility modifier, not an accessibility API).
+- **Compose**: `Modifier.shadow()` is elevation-based and cannot take an arbitrary tone-colored glow radius, so draw the halo by hand with `Modifier.drawBehind { }` (or a blur `RenderEffect`), sized from a starting radius of `max(6, round(size * 0.55))` dp, tuned visually since Compose blur does not match CSS `box-shadow` blur one to one; fill with `Modifier.size(size.dp).background(toneColor, CircleShape)`. Semantics: with `label`, `Modifier.semantics { contentDescription = label; role = Role.Image }`; without, `Modifier.clearAndSetSemantics {}` ("mark as decorative" is not itself an API).
+- **React/Web**: React functional component wrapped in `React.memo` (see **memoizes-render**) — all props are primitives, so an unchanged dot skips re-render on a ticking parent. No `"use client"` directive — it is a stateless span with inline style and renders in server components. Uses CSS `color-mix(in srgb, …)` for the glow; supported by all evergreen browsers ([MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix)). The `cn()` utility for className merging comes from `../lib/utils`.
+- **AppKit / UIKit**: A layer-backed `NSView` (AppKit) or `UIView` (UIKit) with a `CALayer` glow. Fill: AppKit sets `layer.backgroundColor` from an `NSColor` derived from the tone on a layer-backed view; UIKit sets it from `UIColor(named: "apt-<tone>")`. Glow: both set `layer.shadowColor`, `layer.shadowRadius`, and `layer.shadowOpacity = 0.4` for the tone-colored halo. Start `shadowRadius` at `max(6, round(size * 0.55))` and tune it visually, since `shadowRadius` does not measure blur the way CSS `box-shadow` does. Accessibility: with `label`, AppKit sets `accessibilityRole = .image` + `accessibilityLabel`; UIKit sets `accessibilityTraits = .image` + `accessibilityLabel`. Without `label`, both set `isAccessibilityElement = false`.
+- **WinUI 3**: A `Border` with `CornerRadius="{size/2}"` (half the diameter, so it reads as a circle rather than a rounded square) and `Background` bound to a tone-based brush. `ThemeShadow` cannot take a color or blur radius, so use a Composition `DropShadow` via `ElementCompositionPreview`, with `Color` at 40% opacity of the tone brush and `BlurRadius` starting at `max(6, round(size * 0.55))`, tuned visually because Composition blur does not match CSS `box-shadow` blur one to one. Accessibility: with `label`, set `AutomationProperties.Name`; without, set `AutomationProperties.AccessibilityView="Raw"` so it is excluded from the accessibility tree rather than merely left unnamed. Pair with a `ContentPresenter` or inline text for the status word; color alone is insufficient.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/status-dot.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/components/status-dot.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -242,15 +243,17 @@ component never embeds a literal user-facing string — `label` is always a
 value the consumer passes in (`no-hardcoded-strings`). `separation-of-concerns`
 passes: `StatusDot` is a memoized, pure presentational component, and its
 tone-to-class mapping is delegated to the shared `lib/tone` table rather than
-computed inline. `unit-test-coverage` is partial: `stat.test.tsx` covers the
-decorative/accessible-image split and the size-driven glow, but not the
-`color-mix` glow color, the small-size threshold, or the `neutral` tone
-override.
+computed inline. `unit-test-coverage` is partial: the `StatusDot` block in `stat.test.tsx` (the display
+primitives test file; no `status-dot` test file exists) has two tests — the decorative
+without a label case, and the labeled accessible-image case with size-driven glow — and
+nothing yet covers the `color-mix` glow color, the small-size floor (T5), the
+`neutral` tone override (T6), verbatim labels (T15) or memoization (T16).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Used exact emitted tone classes, moved the localization duty out of the label requirement, fixed the large-size threshold, added vectors T15 and T16, marked glow radii as per-platform starting points, and corrected the test-file prose and React/Web label. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History wording ("Initial recipe" not "Initial ingredient"); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: fix the small-size threshold to `size < 10` in States and Edge Cases, cite MDN for `color-mix` support, rewrite Compliance as a real catalog-check table, reformat Design Decisions to the Decision/Rationale/Approved form, reorder Platform Notes and correct the SwiftUI/Compose/AppKit-UIKit/WinUI 3 APIs, add `passes-label-through-verbatim` and `memoizes-render` requirements with new test vectors and a rewritten Localization section, add missing tone/empty-label/boundary conformance vectors, fix the 1.0.0 Change History summary, and trim the frontmatter summary. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise: fix domain (cookbook), add missing "not applicable" sections, complete Platform Notes for all platforms, set status to review. |

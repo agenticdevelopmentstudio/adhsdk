@@ -1,13 +1,13 @@
 
 **Decision**: Render lowercase hex, two digits per byte, with no separator or prefix.
-**Rationale**: The strings are stored in the daemon's database columns and compared as text; one spelling means equal hashes are equal strings.
+**Rationale**: Stored hashes are compared as text, so one spelling means equal hashes are equal strings.
 **Approved**: pending
 
 **Decision**: Put the rendering on `Digest` as one shared property.
-**Rationale**: The source calls it "the one place the daemon turns hash bytes into the hex strings it stores", so a second copy cannot drift.
+**Rationale**: With one rendering, callers that store a digest as text should take it from this property, so a second copy of the spelling cannot drift. That constrains callers, so each consuming recipe states it as its own integration requirement.
 **Approved**: pending
 
 **Decision**: Build the string byte by byte with `String(format: "%02x", ...)` and `joined()`.
-**Rationale**: The source gives none; this is recorded as the implementation, and a port need only match the output, not the mechanism.
+**Rationale**: It is the simplest correct rendering, and digests are small (16 to 64 bytes), so the per-byte cost does not matter. A port need only match the output, not the mechanism.
 **Approved**: pending
 

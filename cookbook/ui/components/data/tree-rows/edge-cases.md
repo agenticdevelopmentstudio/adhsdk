@@ -6,7 +6,7 @@
 - **Very deep nesting (10+ levels)**: The algorithm MUST handle arbitrary nesting depth. At 10 levels, indent is 12.5em; at 20 levels, 25em. No depth limit is enforced.
 - **Large input (1000+ rows)**: The algorithm uses a single O(n) pass to build the index and a single depth-first walk, which is linear in row count. When a `compare` function is provided, sorting each sibling group (and the roots) adds up to O(n log n) on top of that linear walk.
 - **All rows are orphans**: If all rows have missing parents, all are treated as roots and rendered at depth 0.
-- **Mixed cycles and valid hierarchy**: Rows in valid chains are reachable and rendered in depth-first order. Rows in cycles are detected at the end and surfaced at depth 0.
+- **Mixed cycles and valid hierarchy**: Rows in valid chains are reachable and rendered in depth-first order. Rows in cycles are detected at the end and surfaced by a leftover walk in input order; the first unreached row of a cycle is at depth 0 and its unreached descendants follow one depth deeper.
 - **Expansion set does not match input**: If `expanded` Set contains IDs not in the input, they are ignored. If it omits IDs that are in the input, those rows are treated as collapsed (see **omit-collapsed-descendants**).
 - **Label prop is empty string**: `TreeRowLabel` MUST still render; aria-label becomes "Expand " or "Collapse " (with trailing space).
 - **TreeRowLabel with depth=0**: Indent is 0 (no padding); toggle and content align to the left edge.

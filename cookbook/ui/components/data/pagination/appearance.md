@@ -9,6 +9,7 @@
   merge via `cn()` through `className`.
 - `Prev` / `Next`: the shared `Button` with `variant="outline"` and `size="sm"`, plain
   text labels.
+- Caption size: `text-xs` is 12px (0.75rem); every platform uses the same 12-unit caption size, derived from a text style where the platform has one.
 - Caption: `<span>` with `px-1 font-mono text-xs text-apt-text-muted`, reading
   `Page {page} of {totalPages}`.
 - Disabled edge buttons inherit `Button`'s disabled treatment (`opacity-50`,

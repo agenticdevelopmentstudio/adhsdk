@@ -15,10 +15,16 @@
 | daemon-health-report-012 | kind-constants | Read the three static constants | `"timing"`, `"event"` and `"composite"` |
 | daemon-health-report-013 | probe-200-only, probe-body-raw | A server answering `GET /health` with status 200 and a JSON body | The closure returns the exact body bytes |
 | daemon-health-report-014 | probe-nil-on-failure | A server answering `GET /health` with status 503 | The closure returns `nil` |
-| daemon-health-report-015 | probe-nil-on-failure, probe-default-timeout | A server that accepts the connection and sends nothing for longer than 2 seconds | The closure returns `nil` after about 2 seconds |
+| daemon-health-report-015 | probe-request, probe-nil-on-failure, probe-default-timeout | A server that accepts the connection and sends no data for longer than 2 seconds | The closure returns `nil` after about 2 seconds of silence |
 | daemon-health-report-016 | probe-nil-on-failure | No server listening at `baseURL` | The closure returns `nil` |
 | daemon-health-report-017 | probe-nil-on-bad-url | `baseURL` set to a string `URL(string:)` rejects, such as the empty string | The closure returns `nil` and issues no request |
 | daemon-health-report-018 | probe-url | `baseURL` `http://127.0.0.1:9000` | The request is a GET to `http://127.0.0.1:9000/health` |
-| daemon-health-report-019 | probe-ephemeral-session, probe-no-retry | Invoke the closure twice against a server that answers 500 | Two requests are made, one per invocation, and both return `nil` |
+| daemon-health-report-019 | probe-no-retry | Invoke the closure twice against a server that answers 500 | Two requests are made, one per invocation, and both return `nil` |
 | daemon-health-report-020 | kind-open | Body with a strategy whose `kind` is `"custom"` | Decodes; `kind == "custom"` |
-
+| daemon-health-report-021 | probe-request | A server that sends a valid 200 response body in small pieces, one piece every second, for longer than 2 seconds in total | The closure returns the complete body bytes; the idle timeout never fires |
+| daemon-health-report-022 | probe-non-http-response | A probe over a transport whose response is not an `HTTPURLResponse` (for example a `file:` URL as `baseURL`) | The closure returns `nil` |
+| daemon-health-report-023 | strategy-memberwise-default | `DaemonStrategyReport(name: "t", kind: "timing", workUnits: [])` | `children == []` |
+| daemon-health-report-024 | children-recursive | A composite strategy with one child that itself has one child; a leaf strategy | The composite's `children` holds the child, whose `children` holds the grandchild; the leaf's `children` is empty |
+| daemon-health-report-025 | status-opaque | A well-formed body whose `status` is `"degraded"` | Decodes; `status == "degraded"` |
+| daemon-health-report-026 | decode-iso8601, decode-nil-on-mismatch | A well-formed body whose `nextActivation` is `"2026-01-01T00:00:00.500Z"` | `decode` returns `nil` for the whole report |
+| daemon-health-report-027 | probe-url | `baseURL` `http://127.0.0.1:9000/` and, separately, `http://127.0.0.1:9000/api` | The requests are GETs to `http://127.0.0.1:9000/health` and `http://127.0.0.1:9000/api/health` |

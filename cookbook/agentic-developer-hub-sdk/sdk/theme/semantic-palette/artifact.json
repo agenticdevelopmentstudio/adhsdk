@@ -4,13 +4,13 @@
     "id": "1f80f43d-5aa4-42cf-bc3e-fb742662b615",
     "title": "SemanticPalette",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
     "modified": "2026-11-14",
-    "author": "mfullerton",
-    "copyright": "2026 mfullerton",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
     "license": "MIT",
     "summary": "Resolves 40 semantic color roles from a ColorTheme by override or derivation from its terminal palette, plus chart hues, text scale and project colors.",
     "platforms": [
@@ -24,13 +24,23 @@
       "palette",
       "logic"
     ],
-    "depends-on": [],
-    "related": [],
-    "references": [],
+    "depends-on": [
+      "932449c9-b57f-4e2c-992a-1e27584742b6",
+      "ad5bae6b-0172-4cd4-a4b7-297eb58eb28d",
+      "591d0b87-ce71-4b11-8642-149fc405cce9",
+      "ccc0d121-4927-4a83-b0e5-337116edebc0"
+    ],
+    "related": [
+      "d15bba09-4574-4fd1-93a0-f7d2cccd04f2",
+      "0e35ddf2-3e87-4a5a-9fd9-24bafc7325b6"
+    ],
+    "references": [
+      "https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e230d187f2144865",
+  "synced": "50a69e4fd3c7b933",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

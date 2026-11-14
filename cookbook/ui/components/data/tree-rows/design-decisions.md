@@ -3,7 +3,7 @@
 **Rationale**: This prioritizes visibility over strict hierarchy correctness — a user's view will not silently lose rows due to missing parents. The tradeoff is that inconsistent parentId mappings become visible in the UI.
 **Approved**: pending
 
-**Decision**: Cycles are detected only after a full depth-first descent, and unreached rows are surfaced at depth 0 in input order.
+**Decision**: Cycles are detected only after a full depth-first descent, and unreached rows are surfaced in input order, each leftover walk starting at depth 0 (see **handle-cycles**).
 **Rationale**: This ensures no row is lost and all rows are visited exactly once. The cost is O(n) space for the `reached` set and a final O(n) scan.
 **Approved**: pending
 
@@ -23,11 +23,13 @@
 **Rationale**: This keeps the row visually clean and focuses attention on the content, not the toggle itself.
 **Approved**: pending
 
-**Decision**: Ports and callers building a standalone tree browser — one that owns its own selection, keyboard navigation, and virtualization — should reach for the platform's native tree control instead of this recipe: SwiftUI `OutlineGroup`/`DisclosureGroup`, AppKit `NSOutlineView`, WinUI 3 `TreeView`/`TreeViewItem`, or web `role="treegrid"`/`aria-level`. `flattenTree` and `TreeRowLabel` exist for the opposite case: hierarchy layered onto an *existing* flat table, list, or card grid whose column logic, sorting, resizing, selection, and keyboard behavior must keep working unchanged (see Overview).
+**Decision**: Ports and callers building a standalone tree browser — one that owns its own selection, keyboard navigation, and virtualization — should reach for the platform's native tree control instead of this ingredient: SwiftUI `OutlineGroup`/`DisclosureGroup`, AppKit `NSOutlineView`, WinUI 3 `TreeView`/`TreeViewItem`, or web `role="treegrid"`/`aria-level`. `flattenTree` and `TreeRowLabel` exist for the opposite case: hierarchy layered onto an *existing* flat table, list, or card grid whose column logic, sorting, resizing, selection, and keyboard behavior must keep working unchanged (see Overview).
 **Rationale**: A native tree control owns its own row rendering and interaction model; grafting it onto an existing table would mean re-deriving that table's behavior inside the tree control instead of reusing it.
 **Approved**: pending
 
 **Decision**: `TreeRowLabel` and `flattenTree` do not set `role="treegrid"`, `aria-level`, `aria-posinset`, or `aria-setsize`.
 **Rationale**: The component intentionally does not become a `<TreeTable>` (see Overview) — the caller's own table/list row owns the outer semantic element, so tree-level ARIA attributes belong there, not in this inner label.
 **Approved**: pending
-
+**Decision**: The toggle ships with three known gaps, accepted as debt for now: its touch target (a 14px icon plus `0.125rem` padding) is below standard minimums, the chevron rotation transition ignores `prefers-reduced-motion`, and the `Expand`/`Collapse` words are hard-coded English with no override.
+**Rationale**: Each fix changes the toggle's public surface or styling and is better made once, with the design system's touch-target, motion and localization conventions; until then the `touch-target-size`, `reduced-motion` and string-externalization checks stay `failed` in Compliance and the gaps are described in Accessibility Options and Localization.
+**Approved**: pending

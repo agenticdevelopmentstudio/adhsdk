@@ -11,3 +11,5 @@
 | stats-008 | render-entries | `entries: []` | Component renders an empty `dl` with class `lp-stats` and no child `div`s |
 | stats-009 | preserve-node-content | `entries: [{term: null, detail: "Users"}]` | Component renders an empty `dt` within the entry `div`; `dd` renders normally |
 
+| stats-010 | three-column-wrap | Playwright at 375px viewport width, 3 entries | One column: each entry's top offset is greater than the previous entry's, and all share one left edge |
+| stats-011 | three-column-wrap | Playwright at 768px and 1440px viewport width, 4 entries | Three entries share a row (same top offset) and the fourth is on a new row under the first column |

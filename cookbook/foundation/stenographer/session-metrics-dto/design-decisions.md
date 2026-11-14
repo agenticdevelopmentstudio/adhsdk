@@ -15,8 +15,8 @@
 **Rationale**: Healthy steady state reads kilobytes and skips gigabytes; skipped at 0 while files are scanned means cursors are being rejected and every pass re-reads from byte zero.
 **Approved**: pending
 
-**Decision**: `cutoffISO` is spelled with an all-caps trailing acronym in the Swift property and in the hand-written `CodingKeys`.
-**Rationale**: Recorded as a defect, not a choice: the from-snake-case decoder rebuilds `cutoff_iso` as `cutoffIso`, so a wire read yields nil (the casing trap the health record documents for `Mb`). The in-process chunked path is unaffected. The fix is a key spelling, which is why the open question sits on `summary-cutoff-wire-key`.
+**Decision**: The timestamps `firstTurnAt`, `lastTurnAt`, `updatedAt`, the cursor timestamps and `cutoffISO` stay opaque Strings, while `ImportRequestDTO.since` is a `Date`.
+**Rationale**: The strings are the forms the daemon stored, so the DTO never parses them. The parse boundary for `cutoffISO` is the daemon's import pass, which stores the string as the `jsonl_import_last_run_at` setting and parses it back into a `Date` when it builds the next `since`; nothing on the wire does that round trip.
 **Approved**: pending
 
 **Decision**: `ImportRequestDTO.since` is a `Date`, written as ISO-8601 by the wire encoder.

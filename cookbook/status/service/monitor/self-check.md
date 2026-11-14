@@ -2,7 +2,7 @@
 id: 9baed0c1-00e0-4186-9fd3-410039dc9881
 title: "Status Server Self-Check View"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -14,8 +14,13 @@ summary: "Pure function that judges the integration checks into the dashboard se
 platforms:
   - typescript
   - web
-tags: []
-depends-on: []
+tags:
+  - status
+  - self-check
+  - integrations
+  - verdict
+depends-on:
+  - 4e32bf7a-b87a-44f6-aa16-f57a533e3b77
 related: []
 references: []
 approved-by: ""
@@ -26,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-`selfCheckView` turns the list of `IntegrationCheck` results into the one verdict the dashboard's self-check bar and the KPI pill render. The server publishes it on `GET /integrations` as `selfCheck`, so the bar and the pill each show a verdict instead of filtering the checks with their own copy of the rule (the source notes the rule moved here from status-web's `computeSelfCheck`). It returns a `SelfCheckView`, or `null` when there is nothing to show. It is a total, synchronous, side-effect-free function over its argument. Its caller is `runIntegrationsCheck` in `integrations.ts`, which passes the already-stabilised checks (see the self-check-stability recipe).
+`selfCheckView` turns the list of `IntegrationCheck` results into the one verdict the dashboard's self-check bar and the KPI pill render. The server publishes it on `GET /integrations` as `selfCheck`, so the bar and the pill each show a verdict instead of filtering the checks with their own copy of the rule (the source notes the rule moved here from status-web's `computeSelfCheck`). It returns a `SelfCheckView`, or `null` when there is nothing to show. It is a total, synchronous, side-effect-free function over its argument. Its caller is `runIntegrationsCheck` in `integrations.ts`, which passes the already-stabilised checks (see [adhsdk.ingredient.status.service.monitor.self-check-stability](cookbook:4e32bf7a-b87a-44f6-aa16-f57a533e3b77)).
 
 ## Behavioral Requirements
 
@@ -69,7 +74,7 @@ Not applicable — this is a pure verdict function over check results, not a vis
 
 ## Conformance Test Vectors
 
-The `selfCheckView` suite in `packages/web/packages/status-server/test/read-views.test.ts` covers vectors 001 (test "is null when everything is ok"), 005 and 007 (test "surfaces missing env (deduped) as a non-error warning"), 006 (test "an error-severity missing env goes red and counts as an error"), 003 and 008 (test "keeps reachability issues as chips but excludes the internal cron check"), 009 (test "collapses correlated provider failures into the Connectivity chip only") and 004 (test "a warning alone is not a red error"). The remaining vectors are traced directly to the function body.
+The `selfCheckView` suite in `packages/web/packages/status-server/test/read-views.test.ts` covers vectors 001 (test "is null when everything is ok"), 005 and 007 (test "surfaces missing env (deduped) as a non-error warning"), 006 (test "an error-severity missing env goes red and counts as an error"), 003 and 008 (test "keeps reachability issues as chips but excludes the internal cron check"), 009 (test "collapses correlated provider failures into the Connectivity chip only") and 004 (test "a warning alone is not a red error"). The remaining vectors (002, 010, 011, 012 and 013) are traced directly to the function body and have no test.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -79,12 +84,13 @@ The `selfCheckView` suite in `packages/web/packages/status-server/test/read-view
 | status-server-monitor-self-check-004 | warn-is-issue, has-error | `[warn("posthog")]` with `state: "warn"`, no `missingEnv` | `issues` has one entry, `hasError: false`, `issueCount: 1` |
 | status-server-monitor-self-check-005 | missing-env-collection, missing-env-not-an-issue, missing-env-error-flag, severity-follows-state | `[{ id: "cloudflare", state: "warn", missingEnv: ["CLOUDFLARE_ACCOUNT_ID"] }]` | `{ missingEnv: ["CLOUDFLARE_ACCOUNT_ID"], missingEnvError: false, issues: [], hasError: false, issueCount: 1 }` |
 | status-server-monitor-self-check-006 | missing-env-error-flag, has-error | Same check as 005 but `state: "error"` | `missingEnvError: true`, `hasError: true`, `issues: []`, `issueCount: 1` |
-| status-server-monitor-self-check-007 | missing-env-dedupe | Two checks with `missingEnv: ["A", "B"]` and `missingEnv: ["B", "C"]` | `missingEnv` is `["A", "B", "C"]`; `issueCount` is `3` |
+| status-server-monitor-self-check-007 | missing-env-dedupe | `[{ id: "a", state: "warn", missingEnv: ["A", "B"] }, { id: "b", state: "warn", missingEnv: ["B", "C"] }]` | `{ missingEnv: ["A", "B", "C"], missingEnvError: false, issues: [], hasError: false, issueCount: 3 }` |
 | status-server-monitor-self-check-008 | cron-excluded | `[{ id: "cron", state: "error" }]` | `null` (the cron check is never an issue) |
 | status-server-monitor-self-check-009 | correlated-excluded | `[{ id: "vercel", state: "warn", correlated: true }, { id: "connectivity", state: "warn" }]` | `issues` contains only the `connectivity` check; `issueCount: 1` |
 | status-server-monitor-self-check-010 | issue-selection, missing-env-not-an-issue | `[{ id: "x", state: "error", missingEnv: [] }]` (empty array) | The check is an issue (empty `missingEnv` does not exclude it): `issues.length === 1`, `hasError: true` |
-| status-server-monitor-self-check-011 | purity, issue-identity | Call with a frozen array of frozen checks, one non-ok | No throw; `result.issues[0] === input[i]` |
-
+| status-server-monitor-self-check-011 | purity, issue-identity | Call with a frozen array `[ok("vercel"), err("railway")]` of frozen checks, where the non-ok check is at index 1 | No throw; `result.issues[0] === input[1]` |
+| status-server-monitor-self-check-012 | missing-env-collection, missing-env-error-flag | `[{ id: "stats", state: "ok", missingEnv: ["STATS_TOKEN"] }]` (an ok check that reports a missing variable) | `{ missingEnv: ["STATS_TOKEN"], missingEnvError: false, issues: [], hasError: false, issueCount: 1 }` |
+| status-server-monitor-self-check-013 | missing-env-collection, correlated-excluded, missing-env-not-an-issue | `[{ id: "vercel", state: "warn", correlated: true, missingEnv: ["VERCEL_API_TOKEN"] }]` | `{ missingEnv: ["VERCEL_API_TOKEN"], missingEnvError: false, issues: [], hasError: false, issueCount: 1 }` |
 ## Edge Cases
 
 - **Null and empty input**: An empty `checks` array returns `null` — MUST. A check with `missingEnv: []` is treated as having no missing variables and can be an issue — MUST.
@@ -99,7 +105,6 @@ The `selfCheckView` suite in `packages/web/packages/status-server/test/read-view
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `checks` | `readonly IntegrationCheck[]` | none, required | The stabilised integration checks to judge. |
-| Excluded id | string literal `"cron"` | `"cron"` | The one check id never chipped as an issue; hardcoded, not configurable. |
 
 The function reads no environment variable and takes no other parameter.
 
@@ -137,13 +142,13 @@ Not applicable: the function contains no `console.*` or logger call; its return 
 - **Compose**: not a view concern. A Kotlin port is a top-level function returning `SelfCheckView?`; `flatMap { it.missingEnv.orEmpty() }.distinct()` keeps first-occurrence order, and `SelfCheckView` is a `data class`.
 - **React/Web** (source platform): lives at `packages/web/packages/status-server/src/monitor/self-check.ts`, with its types in `monitor/types.ts`. `new Set([...])` preserves insertion order, which the dedupe requirement relies on. The only call site is `integrations.ts`, which assigns the result to the `selfCheck` field of `IntegrationsResponse`.
 - **AppKit / UIKit**: same non-view framing as SwiftUI; a status-bar or banner controller in AppKit or UIKit would render from the `SelfCheckView?` value and never recompute the rule.
-- **WinUI 3**: a .NET port is a static method `SelfCheckView? SelfCheckView(IReadOnlyList<IntegrationCheck> checks)` on a static class. Use `IReadOnlyList<T>` for the read-only input, `Enumerable.Where` and `SelectMany(...).Distinct()` (which preserves first-occurrence order for `IEnumerable<string>`), and a `record SelfCheckView(IReadOnlyList<string> MissingEnv, bool MissingEnvError, IReadOnlyList<IntegrationCheck> Issues, bool HasError, int IssueCount)` as the result. Bind a `InfoBar` (`Severity` set from `HasError`) and a `ListView` of issues to the result through an `INotifyPropertyChanged` view model; return `null` and set `InfoBar.IsOpen = false` for the clean case. A nullable reference return replaces the source's `null`; unlike TypeScript, `Enumerable.Where` is lazy, so materialise with `ToList()` before storing.
+- **WinUI 3**: a .NET port is a static method `SelfCheckView? ComputeSelfCheckView(IReadOnlyList<IntegrationCheck> checks)` on a static class (the method is not named `SelfCheckView`, to avoid a clash with the record type it returns). Use `IReadOnlyList<T>` for the read-only input, `Enumerable.Where` and `SelectMany`, dedupe with a `HashSet<string>` guard while appending to a `List<string>` (the documentation does not guarantee `Enumerable.Distinct` order), and a `record SelfCheckView(IReadOnlyList<string> MissingEnv, bool MissingEnvError, IReadOnlyList<IntegrationCheck> Issues, bool HasError, int IssueCount)` as the result. Like the other platforms, it is not a view concern: a WinUI banner would render from the `SelfCheckView?` value and never recompute the rule. A nullable reference return replaces the source's `null`; unlike TypeScript, `Enumerable.Where` is lazy, so materialise with `ToList()` before storing.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/self-check.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/monitor/self-check.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -157,7 +162,7 @@ Not applicable: the function contains no `console.*` or logger call; its return 
   **Rationale**: Stated in the source comment: a check that reports them "is not chipped again as an issue".
   **Approved**: pending
 - **Decision**: Never chip the internal `cron` check.
-  **Rationale**: Stated in the source comment: it is "wallboard noise". It is a hardcoded id, so a renamed check would reappear in the bar.
+  **Rationale**: Stated in the source comment: it is "wallboard noise". It is a hardcoded id with no shared constant tying it to the code that creates the cron check, so a renamed check would reappear in the bar. This coupling is a known risk.
   **Approved**: pending
 - **Decision**: Collapse correlated provider failures into the Connectivity chip by excluding them from `issues`.
   **Rationale**: Stated in the source comment; the `correlated` flag and the synthetic `connectivity` check come from `self-check-stability.ts`.
@@ -174,13 +179,14 @@ Not applicable: the function contains no `console.*` or logger call; its return 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
-| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
-`separation-of-concerns` passes: the function only judges an already-computed list, leaving probing and debounce to `integrations.ts` and `self-check-stability.ts` and rendering to the dashboard. `unit-test-coverage` fails: no test file for `self-check.ts` exists, and the rule it owns, once duplicated in the dashboard, is now covered by no assertion. `good-test-properties` is partial: the function is pure and trivially testable, so it would be fast and isolated, but there is no test to confirm it. `fault-tolerance` passes: the function is total over any well-typed array and never throws, including for an empty one.
+`separation-of-concerns` passes: the function only judges an already-computed list, leaving probing and debounce to `integrations.ts` and `self-check-stability.ts` and rendering to the dashboard. `unit-test-coverage` is partial: the `selfCheckView` suite in `test/read-views.test.ts` has seven tests covering vectors 001, 003, 004, 005, 006, 007, 008 and 009, but vectors 002, 010, 011, 012 and 013 have no test. `good-test-properties` passes for the tests that exist: the function is pure, so they are fast, isolated and deterministic, and each asserts on the returned view. `fault-tolerance` passes: the function is total over any well-typed array and never throws, including for an empty one.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Compliance now says the selfCheckView suite exists (unit-test-coverage partial), the cron-id coupling is recorded as a known risk, the stability recipe is linked and in depends-on, tags added, the Excluded id row removed, vectors 007 and 011 made concrete, vectors 012 and 013 added, and the WinUI note renamed the method, dropped view wiring and fixed the article. |

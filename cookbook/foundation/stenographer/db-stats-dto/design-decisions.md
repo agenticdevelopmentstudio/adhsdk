@@ -4,6 +4,6 @@
 **Approved**: pending
 
 **Decision**: The DTO is `Codable` and `Sendable` but not `Equatable`.
-**Rationale**: The source declares only those two conformances; a port should not assume value equality on a stats snapshot.
+**Rationale**: A stats snapshot is a point-in-time reading with floating-point latencies, so nothing needs to compare two of them for equality; a port should not assume value equality on one.
 **Approved**: pending
 

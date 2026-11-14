@@ -10,4 +10,6 @@
 | partner-process-007 | start-launches | Executable path that does not exist; `start()`. | Throws the channel's launch failure. |
 | partner-process-008 | terminate-unstarted | A process never started; `terminate()`. | Returns without error; `isRunning` is false. |
 | partner-process-009 | stderr-text | A started process of `/bin/sh` that writes `boom` to stderr and exits; after the stream ends call `standardErrorText()`. | The text contains `boom`. |
-
+| partner-process-010 | framing, send-user-message | Process of `/bin/cat`; `start()`; read `messages()` in a task; `send("a")` then `send("b")`; wait 300 ms; `terminate()`. | Two messages of kind `user`, in order, with first-block texts `a` then `b`. |
+| partner-process-011 | environment-replace | Process of `/bin/sh` with arguments `-c` and a script that echoes one `result` JSON line whose `result` is `$FOO-${BAR-unset}`; environment `FOO` `a` and `PATH` `/bin:/usr/bin` only; the parent has `BAR` set. | One message of kind `result` with `resultText` `a-unset`. |
+| partner-process-012 | buffering | Process of `/bin/cat`; `start()`; `send("x")`; wait 300 ms; only then call `messages()` for the first time and read it. | The first message has kind `user` and text `x`, so the message decoded before any consumer existed was kept. |

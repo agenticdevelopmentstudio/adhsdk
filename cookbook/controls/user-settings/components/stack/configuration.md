@@ -8,5 +8,5 @@
 | `className` | `string` | `undefined` | Appended after the base `aws-stack` and direction classes. |
 | `style` | `CSSProperties` | `undefined` | Merged into the computed inline style last, taking precedence over `gap`/`align`/`justify`. |
 
-No other props are accepted. `id`, `role`, `aria-*`, and any other attribute are not forwarded to the root element (see **no-rest-prop-forwarding**).
+No other props are accepted. `id`, `role`, `aria-*`, and any other attribute are not forwarded to the root element (see #requirements/no-rest-prop-forwarding).
 

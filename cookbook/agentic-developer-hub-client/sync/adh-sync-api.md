@@ -1,12 +1,12 @@
 ---
 id: e7262e09-e6f7-4152-acff-7fa09c242088
-title: "Hub Client Sync"
+title: "ADH Sync API Client"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-23
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -27,32 +27,27 @@ approved-by: ""
 approved-date: ""
 ---
 
-# Hub Client Sync
+# ADH Sync API Client
 
 ## Overview
 
 `ADHSyncAPI` is the authenticated wire client for the Agentic Developer Hub
-backend's offline-sync endpoints, `GET /sync/pull` and `POST /sync/push`. Per
-its own doc comment, it deliberately owns exactly three things — the request
+backend's offline-sync endpoints, `GET /sync/pull` and `POST /sync/push`. It
+deliberately owns exactly three things — the request
 URLs, attaching the caller's bearer credential, and mapping HTTP status codes
 to a typed `Failure` — and decodes nothing: the wire shapes belong to the
 backend and to the native sync core, so this package needs no sync-core
 dependency. A host adapts `ADHSyncAPI` to the `SyncTransport` protocol the
-sync engine (`offline-sync-client.md`) calls through, in about 20 lines,
-per the same comment.
+sync engine ([adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044)) calls through, in about 20 lines.
 
 ## Behavioral Requirements
 
 ### Initialization
 
 - **default-base-url**: `ADHSyncAPI.init` MUST default `baseURL` to
-  `DaemonContract.backendURL` (`"https://api.agenticdeveloperhub.com"`) when
-  the caller supplies none.
-- **default-session**: `ADHSyncAPI.init` MUST default `session` to
-  `URLSession.shared` when the caller supplies none.
-- **credentials-conformer-required**: `ADHSyncAPI.init` MUST require a
-  `CredentialProvider` conformer for `credentials`; this parameter has no
-  default value.
+  `DaemonContract.backendURL` when the caller supplies none. The other two
+  initializer defaults, `session` and the required `credentials`, are listed in
+  Configuration.
 - **sendable-value-type**: `ADHSyncAPI` MUST be declared `Sendable`. It is a
   `struct` with three `let` stored properties (`baseURL: URL`,
   `credentials: any CredentialProvider`, `session: URLSession`), so an
@@ -69,7 +64,8 @@ per the same comment.
   `cursor` query item entirely when `cursor` is `nil`.
 - **pull-cursor-query-item-verbatim**: `pull(cursor:limit:)` MUST include a
   `cursor` query item whose value is the exact string given, unmodified and
-  unparsed, whenever `cursor` is non-`nil` — including an empty string.
+  unparsed, whenever `cursor` is non-`nil`. An empty string is currently sent as
+  `cursor=`; a port MAY treat it the same as `nil`.
 
 ### Push
 
@@ -83,28 +79,28 @@ per the same comment.
 
 ### Response Handling
 
-`pull` and `push` both route their request through the same private
-`perform(_:)`, so these requirements govern both.
+These requirements govern both `pull` and `push`.
 
 - **success-returns-raw-body**: On a response whose status is in
-  `200...299`, `perform` MUST return the response `Data` unmodified. It MUST
+  `200...299`, `pull` and `push` MUST return the response `Data` unmodified. It MUST
   NOT decode, parse, or otherwise inspect the body.
-- **maps-401-to-unauthorized**: A `401` response MUST cause `perform` to
-  throw `Failure.unauthorized`.
-- **maps-410-to-resync-required**: A `410` response MUST cause `perform` to
-  throw `Failure.resyncRequired`.
+- **maps-401-to-unauthorized**: A `401` response MUST cause `pull` and `push`
+  to throw `Failure.unauthorized`.
+- **maps-410-to-resync-required**: A `410` response MUST cause `pull` and `push`
+  to throw `Failure.resyncRequired`.
 - **maps-other-status-to-http**: Any status outside `200...299`, `401`, and
-  `410` MUST cause `perform` to throw `Failure.http(statusCode)` carrying
+  `410` MUST cause `pull` and `push` to throw `Failure.http(statusCode)` carrying
   only the numeric status code. The response body for these statuses MUST
   NOT be read, retained, or exposed by `Failure.http` — a `503` whose body
   is a JSON error object loses that body entirely, by construction (see
   Design Decisions).
 - **maps-transport-errors**: Any error thrown by the underlying
   `URLSession.data(for:)` call — a network failure, a cancellation, or any
-  other `Error` — MUST be caught and rethrown as
-  `Failure.transport(String(describing: error))`.
+  other `Error` — MUST be caught and rethrown as a
+  `Failure.transport` whose payload is the error's description. Cancellation is
+  not a separate case (see Design Decisions).
 - **maps-non-http-response**: A response that cannot be cast to
-  `HTTPURLResponse` MUST cause `perform` to throw
+  `HTTPURLResponse` MUST cause `pull` and `push` to throw
   `Failure.transport("non-HTTP response")`.
 - **failure-is-equatable**: `Failure` MUST conform to `Error`, `Sendable`,
   and `Equatable`, so callers and tests can compare a thrown failure by
@@ -116,7 +112,7 @@ This sub-section addresses the security concerns of token handling, per
 [adc.guideline.cookbook.recipe-quality.cookbook-compliance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0d3aaa29-0ce3-4803-8f8a-a7023713b574)'s
 requirement that a recipe involving token handling include one.
 
-- **bearer-attached-per-request**: `perform` MUST read the current
+- **bearer-attached-per-request**: `pull` and `push` MUST read the current
   credential via `credentials.currentCredentials()` at the moment each
   request is made — never a value captured once at `init` — and, when
   `currentCredentials()?.token` is non-`nil`, MUST attach it as
@@ -131,12 +127,11 @@ requirement that a recipe involving token handling include one.
   storage and revocation — `KeychainCredentialStore` persists the token in
   the macOS Keychain until `clear()` is called, and `InMemoryCredentialStore`
   holds it only for the process's lifetime (both in
-  `Auth/CredentialStore.swift`, grepped as the helper behind
-  `CredentialProvider`, not part of `ADHSyncAPI.swift` itself). Both
+  `Auth/CredentialStore.swift`, not part of `ADHSyncAPI.swift` itself). Both
   `Credentials.Kind` cases, `jwt` and `apiToken`, are sent identically as a
   bearer value; `ADHSyncAPI` does not distinguish them (`Auth/Credentials.swift`).
-- **failure-excludes-credential**: Neither `Failure.transport` nor
-  `Failure.http` MUST carry the bearer token or the request's headers —
+- **failure-excludes-credential**: `Failure.transport` and `Failure.http` MUST NOT
+  carry the bearer token or the request's headers —
   `Failure.transport`'s payload is the thrown `Error`'s own description (or
   the literal `"non-HTTP response"`), and `Failure.http`'s payload is only
   the numeric status code.
@@ -148,7 +143,7 @@ requirement that a recipe involving token handling include one.
   independent because the type holds no mutable state. Ordering guarantees
   across calls (e.g., applying pull pages in sequence) are the caller's
   responsibility — the sync engine that owns cursor state serializes
-  through its own actor (`offline-sync-client.md`).
+  through its own actor ([adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044)).
 
 ### Persistence and Caching
 
@@ -175,23 +170,22 @@ component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-client-sync-001 | default-base-url, default-session | Construct `ADHSyncAPI(credentials: someProvider)`, supplying neither `baseURL` nor `session` | The instance's `baseURL` equals `DaemonContract.backendURL`; its `session` equals `URLSession.shared`. Not independently asserted in `ADHSyncAPITests` — every test there overrides `session` to install `StubURLProtocol` — this follows directly from the default-parameter values on `ADHSyncAPI.init`. |
-| hub-client-sync-002 | credentials-conformer-required | A call to `ADHSyncAPI.init` that omits the `credentials` argument | Fails to compile; `credentials` has no default value in the initializer's signature. |
-| hub-client-sync-003 | sendable-value-type | One `ADHSyncAPI` instance passed into two concurrently running `Task`s that each call `pull` | Both calls proceed independently with no compiler diagnostic and no data race; `ADHSyncAPI` is a `struct` with only `let` properties, declared `Sendable`. |
+| hub-client-sync-001 | default-base-url | Inspect `ADHSyncAPI.init`'s signature | The `baseURL` parameter's default value is `DaemonContract.backendURL`, and the `session` parameter's default is `URLSession.shared`. An inspection check: every test in `ADHSyncAPITests` overrides `session` to install `StubURLProtocol`. |
+| hub-client-sync-003 | sendable-value-type | Inspect the declaration of `ADHSyncAPI` | It is declared `Sendable`, and every stored property is a `let`; a compile-time check, with no runtime assertion. |
 | hub-client-sync-004 | pull-http-method-and-path, pull-limit-query-item, bearer-attached-per-request | `pull(cursor: "abc123", limit: 250)` against a 200 stub, with credentials returning token `"tok-sync"` | Captured request has `httpMethod == "GET"`, path `"/sync/pull"`, query items containing `cursor=abc123` and `limit=250`, and header `Authorization` equal to `"Bearer tok-sync"` — `ADHSyncAPITests.pullRequestShape`. |
 | hub-client-sync-005 | pull-cursor-omitted-when-nil | `pull(cursor: nil, limit: 500)` against a 200 stub | Captured request's query items contain no item named `cursor` — `ADHSyncAPITests.pullFirstSync`. |
-| hub-client-sync-006 | pull-cursor-query-item-verbatim | `pull(cursor: "", limit: 10)` against a 200 stub | Captured request's query items include a `cursor` item whose value is the empty string, because `cursor` is non-`nil`. Not covered by an existing test; derived from the `if let cursor` branch in `pull(cursor:limit:)`. |
+| hub-client-sync-006 | pull-cursor-query-item-verbatim | `pull(cursor: "", limit: 10)` against a 200 stub | Captured request's query items include a `cursor` item whose value is the empty string, because `cursor` is non-`nil`. Not covered by an existing test. |
 | hub-client-sync-007 | push-http-method-and-path | `push(body: <push-request fixture>)` against a 200 stub | Captured request has `httpMethod == "POST"`, `url?.path == "/sync/push"`, and header `Content-Type` equal to `"application/json"` — `ADHSyncAPITests.pushRoundTrip`. |
 | hub-client-sync-008 | push-body-passthrough | `push(body: <push-request fixture bytes>)` | Captured request's `httpBody` is byte-identical to the fixture's bytes, with no transformation applied — `ADHSyncAPITests.pushRoundTrip` (the same fixture is used to build the request and is not re-derived by `ADHSyncAPI`). |
 | hub-client-sync-009 | success-returns-raw-body | `pull` and `push` each against a 200 stub whose body is `pull-response.json` / `push-response.json` | Returned `Data` equals the fixture bytes exactly; no JSON decoding is performed by `ADHSyncAPI` — `ADHSyncAPITests.pullRequestShape`, `pushRoundTrip`. |
 | hub-client-sync-010 | maps-401-to-unauthorized, maps-410-to-resync-required, maps-other-status-to-http | `pull(cursor: nil, limit: 1)` against stubs returning, in turn, 401, 410, and 503, each with body `{"error":{"message":"x"}}` | Thrown `Failure` equals `.unauthorized`, `.resyncRequired`, and `.http(503)` respectively; the JSON error body is discarded in all three cases — none of the thrown `Failure` values carries it — `ADHSyncAPITests.errorMapping`. |
 | hub-client-sync-011 | maps-transport-errors | `pull(cursor: nil, limit: 1)` where `session.data(for:)` throws `URLError(.notConnectedToInternet)` | Thrown error is a `Failure.transport` (case match only; the associated string is `String(describing: error)` and is not asserted verbatim) — `ADHSyncAPITests.transportFailureMapping`. |
-| hub-client-sync-012 | maps-non-http-response | `pull` or `push` where the underlying `URLResponse` is not an `HTTPURLResponse` | Thrown error is `Failure.transport("non-HTTP response")`. Not covered by an existing test — `StubURLProtocol` always answers with an `HTTPURLResponse` — derived from the `guard let http = response as? HTTPURLResponse else` branch in `perform`. |
+| hub-client-sync-012 | maps-non-http-response | `pull` or `push` where the underlying `URLResponse` is not an `HTTPURLResponse` | Thrown error is `Failure.transport("non-HTTP response")`. Not covered by an existing test, since `StubURLProtocol` always answers with an `HTTPURLResponse`. |
 | hub-client-sync-013 | failure-is-equatable | Compare two `Failure.http(503)` values, and separately compare `Failure.unauthorized` against `Failure.resyncRequired` | `Failure.http(503) == Failure.http(503)` is `true`; `Failure.unauthorized == Failure.resyncRequired` is `false` — traced to `Failure: Error, Sendable, Equatable`; exercised implicitly by `ADHSyncAPITests.errorMapping`'s `#expect(throws: expected)`. |
-| hub-client-sync-014 | unauthenticated-when-absent | `pull` or `push` where `credentials.currentCredentials()` returns `nil` | Captured request carries no `Authorization` header. Not covered by an existing test — every case in `ADHSyncAPITests` constructs `InMemoryCredentialStore` with a non-`nil` credential — derived from the `if let token = ...` branch in `perform`. |
+| hub-client-sync-014 | unauthenticated-when-absent | `pull` or `push` where `credentials.currentCredentials()` returns `nil` | Captured request carries no `Authorization` header. Not covered by an existing test, since every case in `ADHSyncAPITests` constructs `InMemoryCredentialStore` with a non-`nil` credential. |
 | hub-client-sync-015 | token-storage-and-lifetime-delegated, failure-excludes-credential | Inspect the `Failure` values thrown during `errorMapping`/`transportFailureMapping`, and inspect `ADHSyncAPI`'s stored properties | Neither thrown `Failure` case nor any `ADHSyncAPI` property holds the bearer token string; `Credentials`'s `description` prints `"<redacted>"` in place of the token when interpolated — traced to `Auth/Credentials.swift`'s `CustomStringConvertible` conformance, and to `ADHSyncAPI`'s three stored properties, none of which is a bare token. |
-| hub-client-sync-016 | no-internal-serialization | Two concurrent `pull` calls, with different cursors, issued on the same `ADHSyncAPI` instance | Both requests are sent independently with no shared mutable state touched between them. Not covered by an existing test; derived from `ADHSyncAPI` having only `let` stored properties. |
-| hub-client-sync-017 | no-local-persistence | Two sequential `pull` calls against stubs returning different bodies each time | Each call returns exactly the body from its own stub response; no value from the first call is reused or cached by the second. Not covered by an existing test; derived from `perform` performing one `session.data(for:)` round trip per call with no cache. |
+| hub-client-sync-016 | no-internal-serialization | Inspect the declaration of `ADHSyncAPI` | It has only `let` stored properties and no lock, queue or actor, so concurrent `pull` calls share no mutable state. An inspection check, not covered by an existing test. |
+| hub-client-sync-017 | no-local-persistence | Two sequential `pull` calls against stubs returning different bodies each time | Each call returns exactly the body from its own stub response; no value from the first call is reused or cached by the second. Not covered by an existing test. |
 
 ## Edge Cases
 
@@ -201,14 +195,14 @@ component.
   `ADHSyncAPITests.pullFirstSync`.
 - **Empty-string cursor.** Input: `pull(cursor: "", limit: N)`. Because
   `""` is non-`nil`, it is sent as `cursor=` (an empty query value) rather
-  than being treated as equivalent to `nil`. MUST —
-  `pull-cursor-query-item-verbatim`.
+  than being treated as equivalent to `nil`. Current behavior —
+  `pull-cursor-query-item-verbatim`; a port MAY treat `""` as `nil`.
 - **Non-positive or oversized `limit`.** Input: `limit` of `0`, a negative
   number, or `Int.max`. `pull` performs no local validation or clamping;
   `String(limit)` is sent to the server unmodified, and any resulting
   rejection surfaces through the ordinary status-mapping path
-  (`maps-other-status-to-http`). MUST — this is the observed behavior of
-  `pull-limit-query-item`; no client-side bound exists in the source.
+  (`maps-other-status-to-http`). Current behavior of
+  `pull-limit-query-item`; no client-side bound exists in the source, and a port MAY clamp.
 - **Concurrent calls on one instance.** Two or more `pull`/`push` calls
   issued concurrently on the same `ADHSyncAPI` value proceed independently;
   `ADHSyncAPI` has no shared mutable state to race on, and it enforces no
@@ -221,7 +215,7 @@ component.
   `unauthenticated-when-absent`, `maps-401-to-unauthorized`.
 - **Resync required.** Input: server responds `410`. `pull`/`push` throw
   `Failure.resyncRequired` and perform no local resync themselves — that
-  policy belongs to the caller (`offline-sync-client.md`'s `SyncEngine`).
+  policy belongs to the caller (the `SyncEngine` in [adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044)).
   MUST — `maps-410-to-resync-required`.
 - **Unreachable server / offline device.** Input: `session.data(for:)`
   throws (verified in source with `URLError(.notConnectedToInternet)`).
@@ -230,17 +224,17 @@ component.
   `maps-transport-errors`, `ADHSyncAPITests.transportFailureMapping`.
 - **Task cancellation mid-request.** Input: the calling `Task` is cancelled
   while `session.data(for:)` is in flight. `URLSession` surfaces this as a
-  thrown error (typically `URLError(.cancelled)`), which `perform` catches
+  thrown error (typically `URLError(.cancelled)`), which `pull`/`push` catch
   through the same generic `catch` as any other transport error and
   rethrows as `Failure.transport(String(describing: error))`; a caller
   cannot distinguish a user-cancelled request from any other transport
   failure except by inspecting that description string, which is not
-  documented as a stable format. MUST — `maps-transport-errors` (this is
-  the same code path; it is called out separately here because it is easy
-  to overlook that cancellation is not a distinct `Failure` case).
+  documented as a stable format. Current behavior — `maps-transport-errors`
+  (the same code path; see the cancellation Design Decision for why it is
+  not a distinct `Failure` case).
 - **Non-HTTP response.** Input: the `URLResponse` returned by
-  `session.data(for:)` cannot be cast to `HTTPURLResponse`. `perform`
-  throws `Failure.transport("non-HTTP response")`. MUST —
+  `session.data(for:)` cannot be cast to `HTTPURLResponse`. `pull`/`push`
+  throw `Failure.transport("non-HTTP response")`. MUST —
   `maps-non-http-response`.
 - **Error body on a non-2xx, non-401, non-410 status.** Input: a `503`
   response body carrying a structured JSON error (as in
@@ -253,8 +247,8 @@ component.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `baseURL` | `URL` | `DaemonContract.backendURL` | Base URL the two endpoint paths are appended to. Caller-overridable; tests override it implicitly by installing `StubURLProtocol` on the `session` instead. |
-| `credentials` | `any CredentialProvider` | none (required) | Supplies the bearer token, read fresh via `currentCredentials()` on every request. |
-| `session` | `URLSession` | `.shared` | The `URLSession` `perform` issues requests through. |
+| `credentials` | `any CredentialProvider` | none (required) | Supplies the bearer token, read fresh via `currentCredentials()` on every request. The initializer requires a `CredentialProvider` conformer; omitting it fails to compile. |
+| `session` | `URLSession` | `.shared` | The `URLSession` the requests are issued through. Defaults to `URLSession.shared` when the caller supplies none. |
 | `cursor` (pull parameter) | `String?` | `nil` | Opaque, server-issued sync cursor; omitted from the query when `nil`. |
 | `limit` (pull parameter) | `Int` | none (required) | Requested page size for `/sync/pull`; forwarded to the server without local validation. |
 | `body` (push parameter) | `Data` | none (required) | Pre-encoded `SyncPushRequest` JSON; forwarded to the server without local validation. |
@@ -271,7 +265,7 @@ are HTTP API endpoints, not deep links.
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| (none — hardcoded, not looked up by key) | `"non-HTTP response"` | Literal string embedded in `Failure.transport("non-HTTP response")`, produced when `perform`'s response cannot be cast to `HTTPURLResponse`. It is English-only and not routed through any string catalog or localization mechanism. |
+| (none — hardcoded, not looked up by key) | `"non-HTTP response"` | Literal string embedded in `Failure.transport("non-HTTP response")`, produced when the response cannot be cast to `HTTPURLResponse`. It is English-only and not routed through any string catalog or localization mechanism. |
 
 `Failure.transport(String(describing: error))`'s other payload comes from the
 underlying `Error`'s own, unlocalized description — it is not authored by
@@ -327,7 +321,7 @@ throwing a typed `Failure` value, never by writing to a log.
 
 ## Platform Notes
 
-- **SwiftUI** (source platform — apple, `macOS 14.0` / `iOS 17.0`, one
+- **Apple / Swift** (source platform — `macOS 14.0` / `iOS 17.0`, one
   multi-destination target): `ADHSyncAPI.swift`
   (`packages/apple/AgenticDeveloperHubClient/Sources/Sync/ADHSyncAPI.swift`)
   and its tests, `ADHSyncAPITests.swift`
@@ -343,15 +337,15 @@ throwing a typed `Failure` value, never by writing to a log.
   `Transport(message: String)`) matching `Failure`'s four cases exactly.
   Read the bearer token from an injected credential interface on every
   call — the same way `credentials.currentCredentials()` is read fresh
-  inside `perform` — rather than capturing it once at construction.
+  on each call — rather than capturing it once at construction.
 - **React/Web**: start from `fetch` (or the project's existing HTTP
   wrapper) with two `async` functions mirroring `pull`/`push`, a
   discriminated union mirroring `Failure` (`{ kind: "unauthorized" }`,
   `{ kind: "resyncRequired" }`, `{ kind: "http", status: number }`,
   `{ kind: "transport", message: string }`), and a credential accessor
   called at request time rather than captured once.
-- **AppKit / UIKit**: no change from the SwiftUI bullet — `ADHSyncAPI` has
-  no UI layer; both AppKit and UIKit hosts consume the same
+- **SwiftUI**: no UI layer; `ADHSyncAPI` is not a view.
+- **AppKit / UIKit**: no UI layer; both AppKit and UIKit hosts consume the same
   `AgenticDeveloperHubClient` package target unmodified.
 - **WinUI 3**: start from `System.Net.Http.HttpClient` for the two calls
   (`GetAsync("sync/pull?...")`, `PostAsync("sync/push", ...)`), reaching for
@@ -363,7 +357,7 @@ throwing a typed `Failure` value, never by writing to a log.
   thrown from the two methods. Read the bearer token from an injected
   `ICredentialProvider.CurrentCredentials()` on every request — never
   cached on the client object, mirroring `credentials.currentCredentials()`
-  being called inside `perform` rather than once in the constructor — and
+  being called on each call rather than once in the constructor — and
   attach it via
   `request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token)`.
   Credential storage (a DPAPI-backed store, mirroring
@@ -375,13 +369,15 @@ throwing a typed `Failure` value, never by writing to a log.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubClient/Sources/Sync/ADHSyncAPI.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubClient/Sources/Sync/ADHSyncAPI.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubClient/Tests/AgenticDeveloperHubClientTests/ADHSyncAPITests.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubClient/Tests/AgenticDeveloperHubClientTests/TestSupport.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
 - **Decision**: `Failure.http(Int)` carries only the numeric status code,
   never the response body.
-  **Rationale**: `perform`'s switch discards `data` for every branch except
+  **Rationale**: the status mapping discards `data` for every branch except
   `200...299`. `ADHSyncAPI`'s own doc comment scopes its job narrowly to
   "URLs, auth, and HTTP error mapping," not error-body diagnostics — a
   caller that needs the server's structured error detail (as
@@ -394,13 +390,13 @@ throwing a typed `Failure` value, never by writing to a log.
   customization of its own.
   **Rationale**: every call is a single attempt. The type's doc comment
   scopes it to URLs, auth, and error mapping only; the sibling
-  `offline-sync-client.md` recipe's `SyncEngine` — not this type — owns
+  [adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044) ingredient's `SyncEngine` — not this type — owns
   retry, backoff, and treating `resyncRequired`/`unauthorized` as
   engine-level pause/reset triggers.
   **Approved**: pending
 
 - **Decision**: the bearer credential is read via
-  `credentials.currentCredentials()` inside `perform` on every call, never
+  `credentials.currentCredentials()` on every call, never
   captured once at `init`.
   **Rationale**: `CredentialProvider`'s own doc comment states this is
   deliberate — a token rotation (a refresh, or a freshly issued API token)
@@ -420,11 +416,19 @@ throwing a typed `Failure` value, never by writing to a log.
   **Rationale**: `ADHSyncAPITests` substitutes `StubURLProtocol` rather
   than a real host, which requires an overridable `baseURL`; the type's
   own default (`DaemonContract.backendURL`) is `https`. Enforcing TLS
-  inside `ADHSyncAPI` would duplicate what `secure-transport` already
+  inside `ADHSyncAPI` would duplicate what [secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) already
   expects of any production caller while blocking the test seam this type
   is built around.
   **Approved**: pending
 
+
+- **Decision**: cancellation is not a distinct `Failure` case; it arrives as
+  `Failure.transport` like any other error from the underlying call.
+  **Rationale**: `Failure` is kept to the four outcomes the sync engine acts on
+  (`unauthorized`, `resyncRequired`, `http`, `transport`), and the type's scope is URLs,
+  auth and status mapping. A caller that must tell a cancelled request apart can only
+  inspect the unstable description string; a port MAY add a `cancelled` case.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -441,9 +445,9 @@ throwing a typed `Failure` value, never by writing to a log.
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | passed | privacy-and-data |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
-| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | reliability |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | reliability |
-| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | reliability |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
@@ -462,7 +466,7 @@ nothing itself and delegates all storage to the `CredentialProvider`
 a transient failure is attempted at this layer (delegated to the caller).
 `idempotent-operations` is `partial`: `push` forwards the caller's body
 verbatim with no idempotency key or dedup logic of its own; the opId-based
-idempotency `offline-sync-client.md` describes is enforced by the caller's
+idempotency [adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044) describes is enforced by the caller's
 `SyncEngine`, not by this transport. `unit-test-coverage` is `partial`:
 `ADHSyncAPITests` covers the pull/push request shape and the three explicit
 status mappings plus one transport failure, but not the nil-credential path,
@@ -470,8 +474,10 @@ the non-HTTP-response path, or the default `baseURL`/`session` values (see
 Conformance Test Vectors 001, 002, 006, 012, 014, 016, and 017, none of which
 cite an existing test).
 
+`fault-tolerance` is `partial`: failures surface as typed values, but `ADHSyncAPI` makes a single attempt with no retry, so tolerance of a transient fault is delegated to the caller. `timeout-handling` is `partial`: no timeout is set beyond the `URLSession` default, matching the Design Decision that this type performs no timeout customization.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Retitled to ADH Sync API Client, restated requirements as observable pull/push behavior, downgraded accidental MUSTs to current behavior, added a cancellation Design Decision, merged the signature-only requirements into Configuration, fixed the failure-excludes-credential wording, marked fault-tolerance and timeout-handling partial, rewrote vectors 001/003/016 as inspection checks, linked offline-sync-client and removed process-residue wording. |
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation |

@@ -2,11 +2,11 @@
 id: 9041d819-d6bf-405a-9129-9730bb2c8a6b
 title: "Hub Client"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-23
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,7 +21,10 @@ tags:
   - auth
 depends-on: []
 related: []
-references: []
+references:
+  - https://github.com/apple/swift-openapi-runtime
+  - https://github.com/apple/swift-openapi-urlsession
+  - https://github.com/apple/swift-http-types
 approved-by: ""
 approved-date: ""
 ---
@@ -33,8 +36,8 @@ approved-date: ""
 `ADHClient` is the entry point to the Agentic Developer Hub API — a thin
 façade over the generated `Client` from swift-openapi-runtime /
 swift-openapi-urlsession. It wires one of two `APITransport` seams (Direct,
-straight to the backend over HTTPS; Daemon, HTTP to a local `adhd` daemon —
-which does not exist yet, per `DaemonContract`'s own doc comment) to exactly
+straight to the backend over HTTPS; Daemon, HTTP to a local `adhd` daemon,
+see the Daemon design decision) to exactly
 one `ClientMiddleware`: the bearer-only `AuthenticationMiddleware` or the
 bearer-plus-refresh-and-retry `SessionRefreshMiddleware`. The generated
 client is exposed directly as `api`; consumers call any operation the
@@ -45,8 +48,8 @@ arbitrary un-generated request through the identical transport-and-middleware
 pipeline, for backend routes the OpenAPI document does not describe or
 describes stalely.
 
-This recipe covers exactly `ADHClient.swift` and `ADHClient+Raw.swift`
-(`packages/apple/AgenticDeveloperHubClient/Sources/`). `AuthenticationMiddleware`,
+This ingredient covers exactly `ADHClient.swift` and `ADHClient+Raw.swift`
+(`packages/apple/AgenticDeveloperHubClient/AuthSources/`). `AuthenticationMiddleware`,
 `SessionRefreshMiddleware`, `RefreshCoordinator`, `CredentialStore`,
 `SessionStore`, `Credentials`, `Session`, `KeychainHelper`, and the
 `ADHClient+Auth.swift` / `ADHClient+Session.swift` convenience wrappers
@@ -60,7 +63,8 @@ factories select between them.
 
 ### Construction
 
-- **sendable-value-type**: `ADHClient` MUST be declared `Sendable`. It is a
+- **sendable-value-type**: `ADHClient` MUST be declared `Sendable`, checked at compile time, with no data race when one
+  instance is used from concurrent tasks. It is a
   `struct` with only `let` stored properties (`api: Client`,
   `transport: APITransport`, `credentials: any CredentialStore`,
   `session: (any SessionStore)?`, `middlewares: [any ClientMiddleware]`), so
@@ -109,8 +113,11 @@ factories select between them.
 - **session-factories-mirror-bearer-factories**:
   `.direct(session:onSessionExpired:)`, `.daemon(session:port:onSessionExpired:)`,
   and `.resolved(using:session:onSessionExpired:)` MUST select the same
-  transport as their bearer-only counterparts, differing only in
-  constructing a session-backed `ADHClient`.
+  transport as their bearer-only counterparts, differing in
+  constructing a session-backed `ADHClient`. One asymmetry exists:
+  `.daemon(session:port:onSessionExpired:)` accepts a `port`, which the
+  bearer-only `.daemon(credentials:)` does not (see
+  `daemon-session-factory-port-override`).
 - **daemon-session-factory-port-override**:
   `.daemon(session:port:onSessionExpired:)` MUST accept a caller-supplied
   `port`, defaulting to `DaemonContract.port`, and pass it through to
@@ -130,8 +137,9 @@ factories select between them.
   before performing any network activity.
 - **raw-query-sorted-and-percent-encoded**: When `query` is non-empty,
   `rawJSON` MUST build the query string by sorting entries by key and
-  percent-encoding both key and value against `CharacterSet.urlQueryAllowed`
-  minus `+&=?#`, joined with `&`.
+  percent-encoding both key and value so that none of `+`, `&`, `=`, `?`
+  and `#` appears unescaped in a key or value, joined with `&`. The mechanism
+  (`CharacterSet.urlQueryAllowed` minus `+&=?#`) is in Platform Notes.
 - **raw-query-appended-correctly**: `rawJSON` MUST append the built query
   string to `path` with `&` when `path` already contains `?`, otherwise with
   `?`.
@@ -142,31 +150,34 @@ factories select between them.
   caller's `headers`, sorted by key, after the default `Accept` /
   `Content-Type` headers, so a caller-supplied value of the same name
   replaces a default.
-- **raw-invalid-header-name-dropped**: `rawJSON` MUST silently skip any
-  caller-supplied header whose name `HTTPField.Name(name)` fails to parse,
-  rather than throwing.
+- **raw-invalid-header-name-dropped**: `rawJSON` MUST skip any
+  caller-supplied header whose name is not a valid HTTP field name, rather than
+  throwing. The skip gives the caller no signal: nothing is thrown or returned
+  to say a header was dropped, so a caller can detect it only by inspecting the
+  request a middleware or the transport receives.
 - **raw-operation-id-derived-from-unqueried-path**: `rawJSON` MUST compute
   its `operationID` as `"raw <METHOD> <path>"` via
   `ADHClient.rawOperationID(method:path:)`, using the original, un-queried
   `path` — never the query-appended `fullPath`.
 - **raw-middleware-chain-reused**: `rawJSON` MUST route the request through
-  the exact same `middlewares` chain (composed by reversing `middlewares`
-  and wrapping the transport's `send`) that `api` was built with, so bearer
+  the exact same `middlewares` chain that `api` was built with, so bearer
   injection and refresh-and-retry behave identically for raw and typed
   requests.
 - **raw-nil-body-yields-empty-data**: When the response has no body,
-  `rawJSON` MUST set `RawResponse.body` to an empty `Data()` without
-  invoking `Data(collecting:upTo:)`.
+  `rawJSON` MUST set `RawResponse.body` to an empty `Data()`.
 - **raw-response-body-capped**: When the response has a body, `rawJSON` MUST
-  collect it via `Data(collecting: responseBody, upTo: ADHBodyLimit.maxBuffered)`
-  — a shared 16 MiB cap (`ADHBodyLimit`, defined in this file and reused by
-  `hub-client-auth`'s `SessionRefreshMiddleware` for request-body buffering)
-  — which throws when the body exceeds that cap.
+  collect it under a shared 16 MiB cap (`ADHBodyLimit.maxBuffered`,
+  defined in this file and reused by `hub-client-auth`'s
+  `SessionRefreshMiddleware` for request-body buffering) and MUST throw when
+  the body exceeds that cap. The thrown error is whatever the runtime's
+  `Data(collecting:upTo:)` throws; `rawJSON` does not wrap it in a
+  `RawRequestError` case, so a caller cannot match it as one.
 - **raw-response-headers-last-wins**: `rawJSON` MUST build
-  `RawResponse.headers` by folding `response.headerFields` into a
-  `[String: String]` keyed by `canonicalName`, so a response with more than
-  one header of the same canonical name retains only the last value
-  encountered.
+  `RawResponse.headers` as a `[String: String]` keyed by the header's canonical
+  name, so a response with more than one header of the same canonical name
+  (such as `Set-Cookie` or `Link`) retains only the last value encountered;
+  callers MUST NOT rely on `RawResponse.headers` for repeated headers (see the
+  design decision on single-value headers).
 - **raw-error-status-throws-http**: `rawJSON` MUST throw
   `RawRequestError.http(status:body:)` for any response with
   `status.code >= 400`, carrying the numeric status and the (already-capped)
@@ -192,12 +203,12 @@ concurrent refreshes are serialized through `RefreshCoordinator.shared`,
 when a rejected refresh clears the session — is `hub-client-auth`'s
 contract; from `ADHClient`'s own two files, only the following is specified.
 
-- **middleware-choice-fixed-at-construction**: Once constructed, an
+- **middleware-choice-fixed-at-construction**: (see also `internal-fields-not-public`) Once constructed, an
   `ADHClient` MUST use exactly the one middleware chosen by which
   initializer built it — bearer-only from `init(transport:credentials:)`,
   refresh-and-retry from `init(transport:session:onSessionExpired:)` — with
   no way to swap it after construction.
-- **raw-and-typed-share-identical-auth**: `rawJSON` MUST observe the exact
+- **raw-and-typed-share-identical-auth**: (the outcome of `raw-middleware-chain-reused`) `rawJSON` MUST observe the exact
   same authentication and refresh behavior as the typed `api` for the same
   `ADHClient` instance, because both route through the identical
   `middlewares` array.
@@ -210,7 +221,7 @@ contract; from `ADHClient`'s own two files, only the following is specified.
 
 ### Concurrency
 
-- **adhclient-carries-no-shared-mutable-state**: `ADHClient` MUST hold only
+- **adhclient-carries-no-shared-mutable-state**: (the structural basis of `sendable-value-type`) `ADHClient` MUST hold only
   `let` stored properties (including the array `middlewares`, referencing
   `Sendable` middleware instances), so concurrent calls through one instance
   need no additional synchronization beyond what the injected
@@ -245,11 +256,11 @@ Not applicable — this is an API client façade, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hub-client-001 | sendable-value-type, adhclient-carries-no-shared-mutable-state | One `ADHClient` instance passed into two concurrently running `Task`s that each call `api.getHealth()` | Both calls proceed independently with no compiler diagnostic and no data race; `ADHClient` is a `struct` with only `let` properties, declared `Sendable`. Not covered by an existing test; derived from the type declaration. |
+| hub-client-001 | sendable-value-type, adhclient-carries-no-shared-mutable-state | One `ADHClient` instance passed into two concurrently running `Task`s that each call `api.getHealth()` | The code compiles under strict concurrency with `ADHClient: Sendable` as a compile-time conformance check and both calls complete, also under a Thread Sanitizer run. Not covered by an existing test; derived from the type declaration. |
 | hub-client-002 | bearer-only-init-installs-authentication-middleware, generated-client-shares-transport-and-middleware | Construct `ADHClient(transport:, credentials: someStore)` and call `api.getHealth()`, once with a credential present and once with none | `Authorization` header equals `"Bearer <token>"` when a credential is present, and is absent otherwise — `ADHClientWiringTests.authHeaderInjected` / `noAuthHeaderWhenUnauthenticated`. |
 | hub-client-003 | session-init-installs-session-refresh-middleware, generated-client-shares-transport-and-middleware | `ADHClient(transport:, session: store)` where `store` holds an expired JWT plus a refresh token; call `api.getHealth()` | The 401 is refreshed and the retried request carries the new bearer; `store` ends holding the rotated token — `ADHClientWiringTests.sessionInitWiresRefresh`. |
 | hub-client-004 | transport-kind-computed | `ADHClient(transport: .direct(...))` and `ADHClient(transport: .daemon(...))` | `.transportKind` equals `.direct` and `.daemon` respectively — `ADHClientWiringTests.transportKindCarried`. |
-| hub-client-005 | direct-factory-targets-backend | `ADHClient.direct(credentials:)` | Resulting client's `transport.serverURL == DaemonContract.backendURL`, `transport.kind == .direct` — `ADHClientWiringTests.directFactoryTargetsBackend` exercises the underlying `APITransport.direct()` this factory calls unchanged. |
+| hub-client-005 | direct-factory-targets-backend | `ADHClient.direct(credentials:)` | Resulting client's `transport.serverURL == DaemonContract.backendURL`, `transport.kind == .direct` — `ADHClientWiringTests.directFactoryTargetsBackend` tests `APITransport.direct()`, which this factory calls, not the `ADHClient.direct(credentials:)` factory itself. |
 | hub-client-006 | daemon-factory-targets-loopback | `ADHClient.daemon(credentials:)` | Resulting client's `transport.serverURL == DaemonContract.daemonURL()` (`"http://127.0.0.1:22850"`), `transport.kind == .daemon` — `ADHClientWiringTests.daemonFactoryTargetsLoopback`. |
 | hub-client-007 | resolved-factory-follows-resolver, resolved-factory-default-resolver | `await ADHClient.resolved(using: TransportResolver(override: .forceDaemon))` and the same with `.forceDirect` | `transportKind == .daemon` and `.direct` respectively — `TransportResolverTests.resolvedClientUsesChosenTransport`. |
 | hub-client-008 | session-factories-mirror-bearer-factories, daemon-session-factory-port-override | `ADHClient.daemon(session:, port: 9999)` | Resulting client's `transport.serverURL == DaemonContract.daemonURL(port: 9999)`. Not covered by an existing test; derived from `.daemon(session:port:onSessionExpired:)` forwarding `port` to `.daemon(port:)`. |
@@ -267,11 +278,12 @@ Not applicable — this is an API client façade, not a visual component.
 | hub-client-020 | raw-response-decodes-with-adh-default | `response.decode([Org].self)` on a 200 JSON array body, where `Org` has no custom date fields | Decodes successfully via `JSONDecoder.adhDefault` — `RawJSONTests.goesThroughMiddleware`. |
 | hub-client-021 | revoke-operation-id-shared-with-signout | Compare `ADHClient.revokeRawOperationID` to the literal it is built from | Equals `"raw POST /auth/revoke"`, matching `rawOperationID(method: .post, path: "/auth/revoke")` exactly; `hub-client-auth`'s `SessionRefreshMiddleware.exemptOperationIDs` contains this same value. Not covered by a test in the two given sources; derived from the static declarations and cross-checked against `hub-client-auth`'s `session-refresh-exempt-operations` requirement. |
 | hub-client-022 | internal-fields-not-public, middleware-choice-fixed-at-construction | Attempt, from outside the module, to read or assign `client.middlewares`, `client.credentials`, or `client.session` | Fails to compile — none of the three is `public`. Not covered by an existing test; derived from the access-level declarations. |
-| hub-client-023 | raw-and-typed-share-identical-auth | On one session-backed client: one 401 via `client.api.getHealth()`, one 401 via `client.rawJSON(...)` | Both are refreshed and retried identically (new bearer, same store mutation) — `ADHClientWiringTests.sessionInitWiresRefresh` and `RawJSONTests.refreshesOn401` compared side by side. |
+| hub-client-023 | raw-and-typed-share-identical-auth | On one session-backed client: one 401 via `client.api.getHealth()`, one 401 via `client.rawJSON(...)` | Both are refreshed and retried identically (new bearer, same store mutation) — two separate tests: `ADHClientWiringTests.sessionInitWiresRefresh` covers the typed call and `RawJSONTests.refreshesOn401` covers the raw call. |
 | hub-client-024 | credential-and-session-storage-delegated | Inspect `ADHClient`'s stored properties immediately after construction | `credentials`/`session` hold only the exact store instance the caller passed in — no local copy of a credential or session value exists anywhere on `ADHClient`. Not covered by an existing test; derived from the initializer bodies. |
 | hub-client-025 | rawjson-safe-for-concurrent-calls | Two concurrent `rawJSON` calls on one `ADHClient` instance, with different paths | Both proceed independently with no shared mutable state touched between them. Not covered by an existing test; derived from `rawJSON` building all of its per-call state (`request`, `next`, `fullPath`) as local variables. |
-| hub-client-026 | no-local-persistence | Two sequential calls (`api.getHealth()` then `rawJSON(...)`, or the reverse) against mocks returning different bodies each time | Each call returns exactly its own response; neither `ADHClient` nor `rawJSON` caches or reuses a value from one call in the next. Not covered by an existing test; derived from `ADHClient` and `ADHClient+Raw.swift` defining no cache/store field of their own. |
-
+| hub-client-026 | no-local-persistence | Two sequential calls (`api.getHealth()` then `rawJSON(...)`, or the reverse) against mocks returning different bodies each time | Each call returns its own distinct mock response (the second response differs from the first, so a cached value would fail); neither `ADHClient` nor `rawJSON` caches or reuses a value from one call in the next. Not covered by an existing test; derived from `ADHClient` and `ADHClient+Raw.swift` defining no cache/store field of their own. |
+| hub-client-027 | raw-response-decodes-with-adh-default | `response.decode(...)` on date strings `"2026-11-14T10:00:00.123Z"`, `"2026-11-14T10:00:00Z"` and `"yesterday"` | the first two parse; the third throws `DecodingError.dataCorrupted`. Not covered by an existing test; derived from `JSONDecoder.adhDefault`. |
+| hub-client-028 | raw-default-headers | `rawJSON(method: .get, path: "/x")` with a nil `body`, then `rawJSON(method: .post, path: "/x", body: Data("{}".utf8))` | both sent requests carry `Accept: application/json`; only the second carries `Content-Type: application/json`. Not covered by an existing test; derived from the header setup in `rawJSON`. |
 ## Edge Cases
 
 - **Relative path.** Input: `rawJSON(path: "billing/context")` (no leading
@@ -279,8 +291,8 @@ Not applicable — this is an API client façade, not a visual component.
   `RawRequestError.invalidPath`. MUST — `raw-path-must-be-absolute`,
   `RawJSONTests.rejectsRelativePath`.
 - **Query values containing reserved characters.** Input: a query value
-  containing `+`, `&`, `=`, `?`, or `#` (e.g. `"a b"`, or a value that is
-  itself a URL). Percent-encoded against `urlQueryAllowed` minus those six
+  containing `+`, `&`, `=`, `?`, or `#` (e.g. `"a&b=c"`, or a value that is
+  itself a URL). Percent-encoded against `urlQueryAllowed` minus those five
   characters, so they cannot be mistaken for query-string syntax once
   embedded. MUST — `raw-query-sorted-and-percent-encoded`.
 - **`path` that already contains a literal `?` plus a non-empty `query`.**
@@ -298,10 +310,11 @@ Not applicable — this is an API client façade, not a visual component.
 - **No response body on a success status** (e.g. a 204-shaped response).
   `RawResponse.body` is `Data()`, never thrown or left as an optional. MUST
   — `raw-nil-body-yields-empty-data`.
-- **Response body at or beyond the 16 MiB cap.** The collection step itself
+- **Response body that exceeds the 16 MiB cap.** The collection step itself
   throws before the status code is even inspected — a large body on an
   error status never reaches `RawRequestError.http`; the caller instead sees
-  whatever error `Data(collecting:upTo:)` throws. MUST —
+  whatever error `Data(collecting:upTo:)` throws (not wrapped in a
+  `RawRequestError` case). MUST —
   `raw-response-body-capped` interacting with `raw-error-status-throws-http`
   (the size check runs strictly before the status check).
 - **Duplicate response header names differing only by original casing.**
@@ -363,7 +376,7 @@ flag or feature-toggle field; every code path in these two files runs
 unconditionally. (Transport selection can be steered by
 `TransportResolver.fromUserDefaults(_:port:)`'s `useDirectMode` key, but that
 steering lives in `TransportResolver.swift` — `hub-client-transport`'s
-contract, not either of the two sources this recipe covers.)
+contract, not either of the two sources this ingredient covers.)
 
 ## Analytics
 
@@ -394,7 +407,7 @@ appears anywhere in `ADHClient.swift` or `ADHClient+Raw.swift`.
   provides.
 - **Retention**: not applicable to `ADHClient` — it retains nothing after a
   call returns. Retention of the credential/session itself is
-  `hub-client-auth`'s (the injected store's) policy; this recipe's two
+  `hub-client-auth`'s (the injected store's) policy; this ingredient's two
   sources specify no retention duration.
 
 ## Logging
@@ -406,9 +419,10 @@ transport/middleware itself throws), never by writing to a log.
 
 ## Platform Notes
 
-- **SwiftUI** (source platform — apple, `macOS 14.0` / `iOS 17.0`, one
+- **SwiftUI**: No UI layer; `ADHClient` uses no SwiftUI, so a SwiftUI host calls it from a view model.
+- **Apple source** (neutral Swift, `macOS 14.0` / `iOS 17.0`, one
   multi-destination target): `ADHClient.swift`, `ADHClient+Raw.swift`
-  (`packages/apple/AgenticDeveloperHubClient/Sources/`) and their tests,
+  (`packages/apple/AgenticDeveloperHubClient/AuthSources/`) and their tests,
   `ADHClientWiringTests.swift`, `RawJSONTests.swift`
   (`.../Tests/AgenticDeveloperHubClientTests/`, using `MockClientTransport`).
   Built on the generated swift-openapi-runtime `Client` /
@@ -417,6 +431,7 @@ transport/middleware itself throws), never by writing to a log.
   `APITransport` / `TransportResolver` (`hub-client-transport`) and
   `CredentialStore` / `SessionStore` / `AuthenticationMiddleware` /
   `SessionRefreshMiddleware` (`hub-client-auth`) types.
+- **Query encoding mechanism**: the Swift source encodes keys and values against `CharacterSet.urlQueryAllowed` minus `+&=?#`, sorted by key; the middleware chain is composed by reversing `middlewares` and wrapping the transport's `send`.
 - **Compose** (Android/Kotlin): start from a generated OpenAPI client (or a
   hand-rolled `OkHttpClient` / Ktor `HttpClient` wrapper) for the typed
   surface `api` exposes here, a small façade class mirroring `ADHClient`'s
@@ -431,7 +446,7 @@ transport/middleware itself throws), never by writing to a log.
   the same query-encoding, header-override, and cap contract; browser
   `fetch` has no built-in response-size limit, so a port must enforce the 16
   MiB cap itself while reading the body.
-- **AppKit / UIKit**: no change from the SwiftUI bullet — `ADHClient` has no
+- **AppKit / UIKit**: no change from the Apple source bullet — `ADHClient` has no
   UI layer; both AppKit and UIKit hosts consume the same
   `AgenticDeveloperHubClient` package target unmodified.
 - **WinUI 3**: start from the nearest .NET OpenAPI-generated client (or a
@@ -487,7 +502,8 @@ transport/middleware itself throws), never by writing to a log.
   **Rationale**: the doc comment states this is "a transport detail, not a
   place to crash a sign-in" — the one real caller needing arbitrary headers
   (`hub-client-auth`'s `exchangeOAuthCode`) must not have an unrelated
-  malformed header abort authentication.
+  malformed header abort authentication. This is a deliberate exception to
+  failing fast: the drop gives the caller no signal.
   **Approved**: pending
 
 - **Decision**: The 16 MiB buffering cap (`ADHBodyLimit.maxBuffered`) is a
@@ -498,6 +514,23 @@ transport/middleware itself throws), never by writing to a log.
   contract avoids the two call sites silently drifting to different limits.
   **Approved**: pending
 
+- **Decision**: `RawResponse.headers` is a single-value `[String: String]`, so
+  repeated response headers collapse to the last value.
+  **Rationale**: the source states no reason; the type is the simple shape the
+  one known caller can use. Headers that repeat, such as `Set-Cookie` or
+  `Link`, lose their earlier values, so a caller needing them must not use
+  `rawJSON`. A multi-value representation is the alternative and is an open
+  question for the maintainer.
+  **Approved**: pending
+
+- **Decision**: The Daemon transport targets `DaemonContract`, not a running
+  daemon.
+  **Rationale**: `DaemonContract`'s doc comment says the real `adhd` daemon
+  does not exist yet and the type defines what it must implement. That was the
+  state of the source on 2026-11-14; recheck the comment before relying on a
+  daemon being present, and prefer `.resolved(...)`, which falls back to
+  Direct.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -516,7 +549,7 @@ transport/middleware itself throws), never by writing to a log.
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | partial | reliability |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | reliability |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | reliability |
-| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | reliability |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
@@ -539,7 +572,7 @@ refresh-and-retry path is a real recovery mechanism, but transport-level
 failures (timeouts, connection errors) are not caught or retried anywhere
 in `ADHClient.swift` / `ADHClient+Raw.swift` — they propagate to the caller.
 `error-recovery` is partial for the same reason: recovery is bounded to
-that one 401 path. `idempotent-operations` is partial: the automatic
+that one 401 path. `timeout-handling` is partial: neither file sets or catches a timeout, so a timeout is whatever the injected transport does and propagates to the caller. `idempotent-operations` is partial: the automatic
 replay-on-401 resends the exact original request, including its body, once
 with a new bearer, for any verb — with no idempotency key, assuming the
 server never partially processed the 401'd attempt. `unit-test-coverage` is
@@ -548,11 +581,12 @@ partial: `ADHClientWiringTests.swift`, `RawJSONTests.swift`, and
 construction, the factories, typed round-trips, and the raw happy/error
 paths well, but several paths are untested in the given sources — header-name
 rejection, response-header collapse, an oversized raw response body, and
-the daemon-session `port` override (Conformance Test Vectors 008, 013, 017,
-018, none of which cite an existing test).
+the daemon-session `port` override. Conformance Test Vectors 001, 008, 013, 014,
+016, 017, 018, 021, 022, 024, 025, 026, 027 and 028 cite no existing test.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Called it an ingredient throughout, added reference URLs, named the single-value header and daemon Design Decisions, reworded mechanism-heavy requirements as outcomes, fixed the reserved-character count and cap boundary, added two vectors and listed every untested vector. |
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation |

@@ -13,8 +13,15 @@
 - **failed-read-throws**: When the unresolved read fails, `loadErrorIssues` MUST throw `GlitchTip issues could not be read`, so the section cache keeps its last answer and its `active` flags rather than judging anything as a frozen feed.
 - **resolved-optional**: A failure to count resolved issues MUST NOT fail the issue list; the count is a nice-to-have on the KPI row.
 - **resolved-cached**: `resolvedCounter(env, ttlMs)` MUST read the resolved list at most once per `ttlMs` (default 60 minutes), through a single flight, and MUST return the same count to every caller within that time.
-- **resolved-value**: The resolved count MUST be the length of the `is:resolved` list when the walk is complete, and null when the walk is incomplete without having been interrupted (the page cap, a repeated cursor, or a full page with no way forward).
+- **resolved-value**: The resolved count MUST be the length of the `is:resolved` list when the walk is complete, and null when the walk is capped (see Walk outcomes below).
 - **resolved-failure-not-kept**: A resolved read that failed, or that was interrupted after its first page, MUST give null to the caller and MUST NOT be cached, so the next call reads again.
-- **resolved-cap-kept**: A walk that is incomplete but not interrupted (the page cap, a repeated cursor, or a full page with no way forward) MUST be cached as null for the whole TTL, since walking again would meet the same limit.
+- **resolved-cap-kept**: A capped walk MUST be cached as null for the whole TTL, since walking again would meet the same limit.
 - **resolved-never-throws**: The function returned by `resolvedCounter` MUST NOT reject; every failure becomes null.
+
+Walk outcomes. The GlitchTip fetcher classifies each walk of an issue list, and these requirements use its terms:
+
+- **failed**: the read is not ok, because no page could be read at all.
+- **interrupted**: a page after the first failed, so the walk was cut short and the fetcher flags it `interrupted`.
+- **capped**: the walk finished without being interrupted but is not complete, because it hit the page cap, met a repeated cursor, or got a full page with no way forward.
+- **complete**: the whole list was read.
 

@@ -4,11 +4,11 @@
     "id": "447d0e33-c66e-4bf9-8511-e7823bdbcf9b",
     "title": "Persona Chat",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "602ff7900d953353",
+  "synced": "810e10cf7ec9be39",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

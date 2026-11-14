@@ -1,0 +1,43 @@
+
+- **accept-search-source**: Component MUST accept a `source` prop defining the API endpoint, base URL, and request parameter map for document search.
+- **accept-document-type**: Component MUST accept a `documentType` prop containing a result row renderer, a preview component, a preview header renderer, and two extractors (`getId`, `getTitle`).
+- **accept-document-href**: Component MUST accept a `documentHref` function prop that returns the public-page URL for a hit; this is the primary link seam and has no default.
+- **render-search-filter-bar**: Component MUST render a SearchFilterBar with a text query input, a category dropdown filter, and a tag dropdown filter; all three are always mounted.
+- **render-filter-chips**: Component MUST render a chip for each active facet filter (category, tag); each chip MUST have a remove button that clears only that chip's own facet, leaving any other active facet unchanged; a "Clear filters" button MUST appear when any facet is active.
+- **no-auto-fetch**: Component MUST NOT fetch results until a query or facet filter becomes active; until then it MUST display a prompt (EmptyState).
+- **debounce-search**: Component MUST debounce search and filter changes by the `debounceMs` prop (default 250ms) before fetching.
+- **fetch-on-enter**: Component MUST fetch immediately (flushing the debounce) when Enter is pressed in the search input.
+- **render-result-count**: Once results have settled, component MUST render a live result count above the list (e.g. "3 results" or "No results").
+- **render-result-list**: Component MUST render the result list as a `<ul>` with one `<li>` per hit; each hit MUST be rendered through the supplied ResultRow component with `hit`, `href`, `query`, `selected` (boolean), `active` (boolean), `controlRef`, and `onSelect` props.
+- **support-roving-focus**: Result list MUST implement roving tabindex: only one row is a Tab stop at any time; ArrowUp/ArrowDown move focus; Home/End jump to first/last; Enter/Space activate the focused row (left to the ResultRow's native handler).
+- **track-active-index**: Component MUST track an internal active index (cursor position) distinct from `selectedId`; the cursor moves with arrow keys. Opening the cursor's row into the preview on Enter/Space is the ResultRow's own responsibility — see **support-roving-focus**.
+- **clamp-cursor-on-resize**: When results are requeried and the result set shrinks, component MUST clamp the active index to the new item count to prevent out-of-bounds access.
+- **render-loading-skeleton**: During the initial fetch (while no results have settled), component MUST render 3 placeholder skeleton bars with `aria-busy="true"` and `aria-label="Loading results"`.
+- **render-zero-results**: When results settle with an empty list and no error, component MUST render a "No matching documents" message; if facets are active, include a hint to remove filters.
+- **render-hard-error**: When a fetch error occurs and no results are cached, component MUST render a full error block with the error message and a Retry button.
+- **render-stale-error**: When a fetch error occurs while results are cached (re-query failure), component MUST render a compact error strip above the list with the error message and a Retry button.
+- **support-preview-dock**: Component MUST render a collapsible preview dock below the result list; the dock has a minimal header bar (title, collapse toggle) when collapsed, and expands to show the full preview header and rendered content when disclosed.
+- **render-split-divider**: When the preview dock is disclosed, component MUST render a horizontal SplitDivider above it that is draggable (mouse) and keyboard-operable to resize the list/preview ratio; the divider MUST NOT render when the dock is collapsed.
+- **manage-preview-disclosure**: Component MUST manage preview disclosure state independently of selection; selecting a result both opens the dock (discloses it) and moves focus into the preview content region (labeled "Document preview content").
+- **reselect-focuses-without-reopening**: When the already-selected hit is selected again while the preview is already disclosed, the component MUST move focus into the preview content region without changing selection or disclosure state (no re-render of either).
+- **handle-escape-in-list**: While focus is in the result list, Escape MUST collapse the preview dock and clear the selection (if a result is selected), without moving focus.
+- **escape-noop-without-selection**: While focus is in the result list, if no result is currently selected, Escape MUST have no effect — no dock-state change and no focus move.
+- **handle-escape-in-preview**: While focus is anywhere in the preview dock — the header controls (the collapse toggle and any links rendered by the type's `PreviewHeader`) or the body — Escape MUST collapse the dock, clear the selection, and move focus to the row at the roving-focus cursor (`activeIndex`). `activeIndex` coincides with the row that opened the preview only when that row was reached by keyboard (Arrow/Home/End) and then activated there; a preview opened by clicking a different row (a click never updates `activeIndex`) leaves the cursor on whatever row it was on before, so focus returns to that cursor row instead, not the row that opened the preview. The handler sits on the outer preview section so it fires uniformly from either area.
+- **support-url-sync**: Component MUST synchronize `q`, `tag`, and `category` filters to the URL query string (if `urlSync` prop is true, the default); the synchronization MUST be SSR-safe and framework-agnostic, allowing results to be shared and back/forward to re-sync state.
+- **label-search-region**: The search and filter bar MUST sit inside a `role="search"` landmark with an accessible label (`searchLandmarkLabel` prop, default "Document search"); the label MUST be distinct when multiple search regions render on a page.
+- **label-search-input**: The search input MUST have an accessible label (`searchLabel` prop, default "Search documents").
+- **label-result-list**: The result list `<ul>` MUST have `aria-label="Search results"`.
+- **label-preview-region**: The preview dock section MUST have `aria-label="Document preview"` and the preview content region MUST have `aria-label="Document preview content"`.
+- **announce-result-count**: The result count MUST have `role="status"` and `aria-live="polite"` to announce count changes to screen readers.
+- **announce-loading-container**: The outer container holding the list MUST have `aria-busy` set to true while in the loading phase.
+- **focus-preview-on-select**: When a result is selected, component MUST programmatically focus the preview content region (a `<div tabIndex={-1}>`) so keyboard users land on the opened preview.
+- **no-unrelated-refocus**: Focus movement into the preview MUST only occur on user selection, not on unrelated re-renders or header-toggle disclosure changes; this is gated by an internal flag.
+- **category-filter-label**: The category dropdown label MUST be the static text "Filter by category" (it never varies).
+- **tag-filter-label**: The tag dropdown label MUST be the static text "Filter by tag" (it never varies).
+- **accept-optional-props**: Component MUST accept optional props: `searchPlaceholder` (default "Search…"), `debounceMs` (default 250), `timeoutMs` (optional, passed to data-fetching hooks), `urlSync` (default true), `className` (extra classes on root).
+- **clear-facets-only**: The "Clear filters" button MUST clear only active facets (category and tag), NOT the query string.
+- **accept-hit-id-extraction**: Component MUST use the supplied `getId` function from documentType to extract the hit identifier.
+- **accept-hit-title-extraction**: Component MUST use the supplied `getTitle` function from documentType to extract the hit title for display in the preview dock header.
+- **render-preview-title-collapsed**: When the preview dock is collapsed, the minimal header bar MUST show the selected hit's title or "Preview" if nothing is selected.
+- **render-preview-metadata-disclosed**: When the preview dock is disclosed and a hit is selected, the full metadata header from the type's `PreviewHeader` component MUST render in the header region; if nothing is selected while disclosed, the header renders nothing and the body's EmptyState is the sole "Select a result…" text.
+

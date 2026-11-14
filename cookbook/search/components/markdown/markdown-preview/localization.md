@@ -8,5 +8,5 @@
 | `markdownPreview.error.detail` | (dynamic) | Error state detail: either the timeout message or the underlying error's message |
 | `markdownPreview.retry.label` | "Retry" | Retry button label |
 
-Note: Strings are hardcoded in the component; no i18n framework is integrated. Localization would require extracting strings to a message catalog and applying a translation layer.
+Note: The string keys above are proposed names for a future message catalog; none of them exists in source. Strings are hardcoded in the component; no i18n framework is integrated. Localization would require extracting strings to a message catalog and applying a translation layer.
 

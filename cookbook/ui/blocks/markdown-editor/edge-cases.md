@@ -10,6 +10,9 @@
 - An empty `value` shows the `placeholder`; the editor renders no empty/error
   state of its own (the body is always valid text — validation belongs to the
   consuming form).
+- Reading an uploaded file is not guarded: the control awaits the file's text
+  with no error handling and no size limit, so a failed read rejects unhandled
+  and `onUpload` is not called; whatever the browser decodes is passed along as-is.
 - Disabling the editor (`disabled`) reaches the textarea and the upload
   control only; the quick-reference control and any `toolbarExtras` stay
   interactive (see **propagate-disabled**).

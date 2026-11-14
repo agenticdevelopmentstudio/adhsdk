@@ -4,7 +4,7 @@
     "id": "d6ff4cf9-05b9-43f0-96d2-b4c8454dd6d1",
     "title": "Partner Attention",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "07e49829f016c559",
+  "synced": "75ad815d6dd09122",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -3,3 +3,4 @@ Google Authorizer is the Google OAuth layer for the Gmail integration. It has fo
 
 The OAuth client (`GoogleOAuthClientConfig`, with `clientId` and `clientSecret`) and the error type (`IntegrationError`) live in sibling files and are inputs to this component, not part of it. This component only reads `clientId` and `clientSecret` from the config.
 
+The source files are `Integrations/Auth/GoogleAuthorizer.swift`, with `GoogleOAuthClientConfig.swift` beside it, `Integrations/Model/IntegrationError.swift` and `AIPluginKit/SecretStoring.swift`. The component is Gmail-only: the scope `gmail.modify` and the Keychain keys `integrations.gmail.*` are fixed.

@@ -2,11 +2,11 @@
 id: 1d701cc5-5822-4465-8ad5-413e6b0c31fc
 title: "Tour Strip"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -45,7 +45,9 @@ The Tour Strip is a full-viewport screen component that introduces a single stop
 - **omit-navigation-when-absent**: Component MUST NOT render back navigation link when `back` prop is undefined; MUST NOT render next navigation link when `next` prop is undefined.
 - **steps-container-always-renders**: Component MUST render the `lp-tour__steps` container element regardless of whether `back` or `next` is provided, even when both are absent.
 - **hide-arrow-from-assistive-tech**: Component MUST mark arrow indicators as decorative with `aria-hidden="true"`.
-- **accept-react-node-promise**: The `promise` prop MUST accept any valid React node, in practice limited to phrasing content since it renders inside a `<p>` wrapper (see Edge Cases).
+- **accept-react-node-promise**: The `promise` prop MUST accept any valid React node.
+- **promise-phrasing-content**: Callers SHOULD pass phrasing content only as `promise`, since it renders inside a `<p>` wrapper (see Edge Cases).
+- **render-order**: Component MUST render the eyebrow first, then the promise paragraph, then the pillars (when present), then the `lp-tour__steps` container, in that DOM order.
 - **accept-note-on-navigation-steps**: Both `back` and `next` step objects MUST accept an optional `note` property to display explanatory text below the step label.
 
 ## Appearance
@@ -75,11 +77,12 @@ The Tour Strip is a full-viewport screen component that introduces a single stop
 - **Screen container**: Component renders within the shared `Screen` ingredient (a `<section>` by default) carrying `id="tour"`. Without an accessible name (`aria-label` or `aria-labelledby`), this section is not exposed to assistive technology as a landmark region — see Compliance.
 - **Semantic navigation**: Navigation links use standard `<a>` elements with `href` attributes; not marked as buttons. They sit inside a plain `<div className="lp-tour__steps">`, not a `<nav>` landmark, so assistive technology reaches them as ordinary links rather than through a named navigation region.
 - **Arrow decorative status**: Left and right arrow characters are marked `aria-hidden="true"` as they are visual indicators duplicating semantic link content
-- **Label clarity**: Navigation step labels (the `<b>` text) provide clear, concise descriptions of destination
-- **Note clarification**: Optional note text in `<em>` provides clarification of what the reader gains by following the link
+- **Label clarity**: Callers SHOULD supply step labels (the `<b>` text) that name the destination; the component renders the text it is given and cannot check it.
+- **Note clarification**: Callers SHOULD supply note text (the `<em>` text) that says what the reader gains by following the link; the component renders it as given.
 - **Pillar structure**: Pillar cards render with semantic heading (`<h3>`) and paragraph (`<p>`) to convey structure to assistive technology
+- **Heading outline**: Pillar cards use a fixed `<h3>`, but the screen renders no `<h1>` or `<h2>` above them (the promise is a `<p>`), so the heading outline skips levels unless the host page supplies the higher headings. Heading level is not configurable.
 - **Eyebrow context**: Eyebrow text provides step progress context to all users
-- **Touch targets**: This recipe sets no touch-target minimum for inline links that might appear inside `promise` content — that's the caller's typography choice. The back/next step links this component renders are block-level anchors; the source does not specify their spacing, which is controlled entirely by CSS.
+- **Touch targets**: This ingredient sets no touch-target minimum for inline links that might appear inside `promise` content — that's the caller's typography choice. The back/next step links this component renders are block-level anchors; the source does not specify their spacing, which is controlled entirely by CSS.
 
 ## Conformance Test Vectors
 
@@ -98,7 +101,8 @@ The Tour Strip is a full-viewport screen component that introduces a single stop
 | tour-011 | render-pillars-when-provided | `pillars: []` | Pillars section (`lp-tour__pillars` div) does not render |
 | tour-012 | render-pillars-when-provided | `pillars: undefined` | Pillars section does not render; no `lp-tour__pillars` div in output |
 | tour-013 | omit-navigation-when-absent | `back: { href: "/tour/prev", label: "Previous" }`, `next: undefined` | Only the back link renders inside `lp-tour__steps`; no next link is present (Last step state) |
-
+| tour-014 | omit-navigation-when-absent | `back: undefined`, `next: { href: "/tour/next", label: "Next" }` | Only the next link renders inside `lp-tour__steps`; no back link is present (First step state) |
+| tour-015 | render-order | `pillars` with one entry, `back` and `next` provided | DOM order is eyebrow, `lp-tour__promise`, `lp-tour__pillars`, `lp-tour__steps` |
 ## Edge Cases
 
 - **Empty pillars array**: When `pillars` is provided but has zero length, the entire pillars section does not render (conditional on `length > 0`).
@@ -132,7 +136,7 @@ Not applicable: routing is owned by the host application. `back` and `next` href
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| N/A | "Step {step} of {total} · " | Hardcoded English progress prefix built inline in the source, not read from a resource file. The `eyebrow`, `promise`, and step `label`/`note` strings are supplied by the caller and can be localized there. |
+| `tour.progress` (proposed) | "Step {step} of {total} · " | Hardcoded English progress prefix built inline in the source, not read from a resource file. The `eyebrow`, `promise`, and step `label`/`note` strings are supplied by the caller and can be localized there. |
 
 The `←`/`→` arrow glyphs are hardcoded Unicode characters and do not mirror for right-to-left locales; see Compliance.
 
@@ -150,7 +154,7 @@ Not applicable: Component does not emit analytics events directly. Analytics ins
 
 ## Privacy
 
-Not applicable: Component does not collect, store, or transmit user data beyond standard navigation tracking inherited from link semantics.
+Not applicable: Component does not collect, store, or transmit user data at all: it collects, stores and sends nothing.
 
 ## Logging
 
@@ -160,7 +164,7 @@ Not applicable: Component does not emit log messages or events.
 
 - **React/Web**: TourStrip is a functional component receiving props and rendering JSX. Styling is applied via CSS classes (`lp-tour`, `lp-tour__promise`, `lp-tour__pillars`, `lp-tour__steps`, `lp-tour__step`, `lp-tour__step--back`, `lp-tour__step--next`, `lp-tour__arrow`, `lp-card`, `lp-eyebrow`). Layout is managed by parent `Screen` and `Wrap` components for site-wide consistency. Navigation state (back/next presence) is determined by the router or tour orchestrator; the component is stateless.
 - **SwiftUI**: Translate to a full-screen view containing a top section for eyebrow text and promise headline, optional pillar cards in a grid (`VStack` or `LazyVGrid`), and bottom navigation buttons styled as links. Since `href` is a URL string rather than a typed navigation value, use `Link(destination:)` for the back/next hrefs, or delegate to the host app's router/URL-handling abstraction — `NavigationLink` is for value-based navigation within a `NavigationStack` and doesn't fit a raw URL. Conditional rendering (`if back != nil`) handles absent navigation steps.
-- **Compose**: Implement as a Composable function receiving the same data model. Use `LazyVerticalGrid` or `Column` for layout; render eyebrow and promise in a top section, pillar `Card` composables in a grid, and `TextButton` or `ClickableText` for navigation links. Platform-appropriate spacing and colors apply. State management (current step, tour walk) is external.
+- **Compose**: Implement as a Composable function receiving the same data model. Use `LazyVerticalGrid` or `Column` for layout; render eyebrow and promise in a top section, pillar `Card` composables in a grid, and `TextButton`, or `Text` with `LinkAnnotation.Url` (`withLink`), for navigation links; `ClickableText` is deprecated. Platform-appropriate spacing and colors apply. State management (current step, tour walk) is external.
 - **AppKit / UIKit**: Build a view controller or view containing a vertical stack with eyebrow label, promise view (rendered from the app's own content model, not HTML), optional pillar cards in a collection view or table, and bottom navigation buttons or text views styled as links. Use Auto Layout for responsive layout. Route the back/next hrefs through platform link handling (`UIApplication.shared.open(url:)` / `NSWorkspace.shared.open(url:)`) or the host's router; navigation is managed by the hosting navigation controller or router.
 - **WinUI 3**: Implement as a XAML UserControl with a `StackPanel` (vertical) or `Grid` for layout. Eyebrow renders as a `TextBlock`; promise as rich text or `TextBlock`. Pillars render as a `GridView` or `ItemsControl` of cards, each a `Border` with nested `TextBlock` elements. Navigation links are `HyperlinkButton` elements styled to match web appearance (arrow glyphs, underline state). Use `Visibility` binding to show/hide back and next buttons based on props.
 
@@ -168,7 +172,7 @@ Not applicable: Component does not emit log messages or events.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/TourStrip.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/TourStrip.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -192,6 +196,9 @@ Not applicable: Component does not emit log messages or events.
 **Rationale**: Naming the benefit of proceeding, or returning, reduces the reader's hesitation when deciding whether to follow the link.
 **Approved**: pending
 
+**Decision**: The English-only `Step {step} of {total} · ` prefix and the fixed `←`/`→` arrows are accepted as-is for now, so no-hardcoded-strings and rtl-layout-support stay `failed`.
+**Rationale**: The only consumers are English-language sites with left-to-right layout; revisit when any consuming site ships a non-English or right-to-left locale, at which point the prefix becomes a localizable string and the arrows mirror.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -205,12 +212,13 @@ Not applicable: Component does not emit log messages or events.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on the source: native `<a>` elements carrying visible text labels give screen-reader-support and keyboard-navigable a pass; the arrows are correctly `aria-hidden` but the steps sit in a plain `div` rather than a `<nav>` landmark, so semantic-markup is partial; touch-target-size is partial because spacing is left entirely to CSS the source doesn't show; and the hardcoded `Step {step} of {total} ·` string plus the fixed, non-mirroring `←`/`→` glyphs fail no-hardcoded-strings and rtl-layout-support. `separation-of-concerns` passes because `TourStrip.tsx` is pure presentation over its props with no business logic, and `unit-test-coverage` passes on `TourStrip.test.tsx`'s exercise of its position text, sibling links, pillar rendering, and back/next omission.
+Statuses rest on the source: native `<a>` elements carrying visible text labels give screen-reader-support and keyboard-navigable a pass; the arrows are correctly `aria-hidden` but the steps sit in a plain `div` rather than a `<nav>` landmark, and the pillar `<h3>` headings have no `<h1>`/`<h2>` above them so the outline skips levels, so semantic-markup is partial; touch-target-size is partial because spacing is left entirely to CSS the source doesn't show; and the hardcoded `Step {step} of {total} ·` string plus the fixed, non-mirroring `←`/`→` glyphs fail no-hardcoded-strings and rtl-layout-support. `separation-of-concerns` passes because `TourStrip.tsx` is pure presentation over its props with no business logic, and `unit-test-coverage` passes on `TourStrip.test.tsx`'s exercise of its position text, back/next links, pillar rendering, and back/next omission.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Reworded label/note accessibility bullets as caller obligations, stated that nothing is collected, added render-order and promise-phrasing requirements, vectors tour-014 and tour-015, an English-only/fixed-arrow design decision, a proposed string key, the heading-outline skip and the deprecated Compose ClickableText note. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; split the first-screen requirement into a testable claim plus a host-integration note; added steps-container-always-renders; removed the missing-href edge case now that TourStep requires href/label; added position-value, block-content, and single-instance edge cases; added tour-011 through tour-013 test vectors and fixed the tour-002 invalid-HTML input and the tour-003 quote typo; corrected the Screen-landmark and navigation-region accessibility claims and reworded the touch-target bullet; documented the hardcoded progress string and non-mirroring arrows in Localization; reformatted Compliance with linked, lowercase-status checks; reformatted Design Decisions into decision/rationale/approved entries and defined masterbrand/leaf-site terms; corrected the SwiftUI and AppKit/UIKit platform notes for URL-based navigation and dropped the WinUI 3 motion suggestion; marked Deep Linking not applicable to host-owned routing; added depends-on (Screen, Wrap) and related (Landing Card) links. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

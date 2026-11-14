@@ -1,0 +1,11 @@
+
+- **React/Web**: Implemented in `packages/web/packages/landing/src/deck/Deck.tsx`. The component accepts `children` (ReactNode) and optional `className` (string) props, realizing render-children and merges-style-hook. Class names are filtered and merged using `['lp-deck', className].filter(Boolean).join(' ')`. The root is a `<div>` (not-a-landmark) with `tabIndex={-1}` (focusable-not-tabbable) and no height or overflow styling (no-own-scroll).
+
+- **SwiftUI**: Use a `VStack(spacing: 0)` or another zero-spacing container as the root, with no scroll modifier applied — let the document or an outer scroll view handle scrolling.
+
+- **Compose**: Compose has no direct equivalent of `tabIndex={-1}`: `Modifier.focusable()` alone places the container in the platform's default focus-traversal order, which would defeat focusable-not-tabbable. Use `Modifier.focusRequester(requester).focusTarget()` so the container becomes focusable only through an explicit `requester.requestFocus()` call, without joining tab/d-pad traversal.
+
+- **AppKit / UIKit**: For macOS, use `NSView` or `NSStackView`; for iOS, use `UIView` or `UIStackView`. Neither should scroll — scrolling is handled by the document or an enclosing scroll view. Leave the view's default accessibility role (`NSAccessibility.Role.group` on macOS, or `isAccessibilityElement = false` on iOS) rather than assigning a landmark-like trait, so the container satisfies not-a-landmark.
+
+- **WinUI 3**: `Grid` and `StackPanel` are Panels, not Controls, so `TabIndex`/`IsTabStop` don't behave on them as they do on a `Control`; setting `IsTabStop="false"` also blocks programmatic `Focus()`, defeating focusable-not-tabbable's goal of accepting a click or a programmatic focus call without a tab stop. Host the deck's content in a `Control`-derived container where `IsTabStop="false"` paired with an explicit `Focus(FocusState.Programmatic)` call keeps it out of tab order while still accepting focus; where no such host is available, treat focusable-not-tabbable parity as a known WinUI 3 gap. Ensure the parent window or page provides any required semantic roles (like `AutomationProperties.LandmarkType="Main"`) outside the Deck container, matching not-a-landmark.
+

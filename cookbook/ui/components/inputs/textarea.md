@@ -2,11 +2,11 @@
 id: 1e323e69-44d2-4a15-a11e-22a68e8e6a8c
 title: "Textarea"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,7 +18,9 @@ tags:
   - form-input
   - text-entry
 depends-on: []
-related: []
+related:
+  - 0f5b7167-b375-4f44-977b-566f720a453d
+  - ea565474-df7a-42bd-9613-5dd0cd861911
 references: []
 approved-by: ""
 approved-date: ""
@@ -28,7 +30,7 @@ approved-date: ""
 
 ## Overview
 
-Textarea is a wrapper around the native HTML `<textarea>` element that provides consistent styling and state management across the application. It renders a multi-line text input field with support for disabled state, focus indication, and validation error states. The component is themed using token utilities (`apt-*`) and is designed to match the sibling Input and Card components.
+Textarea is a wrapper around the native HTML `<textarea>` element that provides consistent styling and state management across the application. It renders a multi-line text input field with support for disabled state, focus indication, and validation error states. The component is themed using token utilities (`apt-*`) and is designed to match the sibling Input component ([adhsdk.ingredient.ui.components.inputs.input](cookbook:0f5b7167-b375-4f44-977b-566f720a453d)) and the Card component ([adhsdk.ingredient.ui.components.layout.card](cookbook:ea565474-df7a-42bd-9613-5dd0cd861911)).
 
 ## Behavioral Requirements
 
@@ -36,30 +38,31 @@ Textarea is a wrapper around the native HTML `<textarea>` element that provides 
 - **prop-forwarding**: The component MUST accept and forward all standard HTML textarea props (e.g., `value`, `onChange`, `placeholder`, `disabled`, `rows`, `cols`) to the underlying textarea element via spread props.
 - **custom-classname**: The component MUST accept a `className` prop and merge it with the default styles, so both apply unless they conflict, in which case the custom class wins.
 - **autocomplete-control**: The component MUST accept an `autoComplete` prop to control browser autocomplete behavior, and MUST forward it to the textarea element.
-- **autofill-suppression**: The component MUST suppress password manager and autocomplete manager decoration based on the `autoComplete` value, even though textareas are never credentials.
+- **autofill-suppression**: The component MUST suppress password manager and autocomplete manager decoration when `autoComplete` is `undefined`, empty, or `"off"` (trimmed and compared case-insensitively), and MUST suppress nothing when `autoComplete` is any other token (such as `"email"`), even though textareas are never credentials.
 - **fieldshell-base-styles**: The component MUST apply the shared field-shell base visual treatment (border, background, corner radius) also used by the Input component.
 - **min-height**: The component MUST set a minimum height of 64px.
 - **full-width**: The component MUST set width to 100% of its container.
 - **padding**: The component MUST apply padding of 12px horizontally and 8px vertically.
 - **font-size**: The component MUST use a 14px font size.
 - **text-color**: The component MUST apply the `text-apt-text` token color to the textarea text.
-- **color-transition**: The component MUST smoothly transition color changes during state transitions (focus, disabled, invalid).
+- **color-transition**: The component MUST smoothly transition text and border color changes during the focus and invalid state transitions. The disabled state's opacity change and the focus and invalid rings (box-shadow) change instantly, because `transition-colors` does not animate them.
+- **reduced-motion**: The component SHOULD NOT animate color changes when the user prefers reduced motion. The source does not yet do this (see Accessibility Options and Compliance).
 - **outline-removal**: The component MUST remove the default browser focus outline, since the component provides its own focus indicator.
 - **placeholder-styling**: The component MUST render placeholder text using the dimmed text token color (`apt-text-dim`).
 - **focus-indicator**: The component MUST show a focus indicator when `focus-visible` state is active, consisting of a border change to `apt-gold` and a 2px ring with `apt-gold/25` opacity.
 - **disabled-state**: The component MUST disable pointer events, show a not-allowed cursor, and reduce opacity to 50% when the `disabled` attribute is present.
-- **invalid-state**: The component MUST change the border and ring color to `apt-red` with `apt-red/25` ring opacity when the `aria-invalid` attribute is set to `true`.
+- **invalid-state**: The component MUST change the border and ring color to `apt-red` with `apt-red/25` ring opacity when the `aria-invalid` attribute is set to `true`. The ring is visible whenever the attribute is set, at rest as well as on focus.
 - **data-slot**: The component MUST set the `data-slot="textarea"` attribute on the root textarea element for testing and targeting purposes.
 
 ## Appearance
 
-- **Corner radius**: Inherited from `fieldShellClass` (no explicit override in source).
+- **Corner radius**: `rounded-lg` (from `fieldShellClass`; no override in source).
 - **Padding**: 8px vertical × 12px horizontal (py-2 px-3).
 - **Font**: weight regular (default), size 14px (text-sm).
-- **Background**: Inherited from `fieldShellClass` (no explicit override in source).
+- **Background**: `bg-apt-bg` token (from `fieldShellClass`; no override in source).
 - **Foreground/Text**: `apt-text` token color.
-- **Border**: Inherited from `fieldShellClass` with state-driven overrides (golden on focus, red on invalid).
-- **Shadow**: Inherited from `fieldShellClass` (no explicit override in source).
+- **Border**: 1px `apt-border` token (from `fieldShellClass`) with state-driven overrides (golden on focus, red on invalid).
+- **Shadow**: None at rest; `fieldShellClass` defines no shadow. The focus and invalid states add a 2px ring.
 - **Min/Max size**: Minimum height 64px; full width (100%); no maximum enforced.
 - **Placeholder text**: Uses `apt-text-dim` token color for reduced visibility.
 
@@ -70,7 +73,7 @@ Textarea is a wrapper around the native HTML `<textarea>` element that provides 
 | Default | Text color `apt-text`, placeholder dimmed, standard border and background from `fieldShellClass` |
 | Focused | Border and 2px ring change to `apt-gold`, ring opacity 25% |
 | Disabled | Opacity reduced to 50%, cursor changed to not-allowed, pointer events disabled |
-| Invalid (`aria-invalid="true"`) | Border and 2px ring change to `apt-red`, ring opacity 25% |
+| Invalid (`aria-invalid="true"`) | Border and 2px ring change to `apt-red`, ring opacity 25%; the ring shows at rest, not only on focus |
 | Placeholder visible | Text color `apt-text-dim` |
 
 ## Accessibility
@@ -103,16 +106,18 @@ Textarea is a wrapper around the native HTML `<textarea>` element that provides 
 | textarea-015 | text-color | Render component, measure computed style | Text color matches the `apt-text` token value |
 | textarea-016 | placeholder-styling | Render with `placeholder="Enter text"` and no value | Placeholder text renders in the `apt-text-dim` token color |
 | textarea-017 | outline-removal | Focus the textarea | No native browser outline is rendered; only the component's own border/ring focus indicator is visible |
-| textarea-018 | color-transition | Toggle `disabled`, `aria-invalid`, or focus state | The border/ring color change is animated via a CSS transition, not an instant snap |
+| textarea-018 | color-transition | Toggle `aria-invalid` or focus state | The border color change is animated via a CSS transition, not an instant snap; the ring and the disabled opacity change apply instantly |
 | textarea-019 | custom-classname | `className="w-1/2"` (conflicts with the default `w-full`) | Rendered class list contains a single width utility (`w-1/2`); `tailwind-merge` removes the conflicting default rather than both classes coexisting |
-
+| textarea-020 | autofill-suppression | `autoComplete=" OFF "` | Same six suppression attributes as textarea-009 are present (value is trimmed and compared case-insensitively) |
+| textarea-021 | disabled-state | `disabled={true}`, call `.focus()` on the element | The element does not become `document.activeElement`, so the focus indicator never applies |
+| textarea-022 | invalid-state | `aria-invalid="true"`, not focused | Border and ring are already red at rest, without focus |
 ## Edge Cases
 
 - **Empty textarea**: The component renders and accepts an empty string or undefined value without error. Placeholder text is visible when the field is empty.
 - **Very long text input**: The component does not impose a maximum length via source code; form context is responsible for enforcing length limits via the `maxLength` prop if needed. Text will wrap within the textarea and scroll vertically if it exceeds the visible area.
 - **Null value**: Passing `value={null}` triggers a React warning (`value` prop on `textarea` should not be `null`); use `""` to clear the field or `undefined` for an uncontrolled textarea instead. `value={undefined}` is accepted without warning, and the textarea remains empty or shows placeholder text.
 - **Concurrent focus and disabled state**: A disabled `<textarea>` is not focusable at all — `disabled:pointer-events-none` blocks pointer interaction but is not what prevents focus. Attempting to focus a disabled textarea programmatically or via pointer has no effect, so the focus-visible styling never applies. This is standard HTML behavior.
-- **Rapid state changes**: If `disabled`, `aria-invalid`, or `className` props change rapidly, the component applies changes synchronously; CSS transitions smooth color changes via `transition-colors`.
+- **Rapid state changes**: If `disabled`, `aria-invalid`, or `className` props change rapidly, the component applies changes synchronously; CSS transitions smooth text and border color changes via `transition-colors`.
 - **Custom className override**: If `className` includes a class that conflicts with a default (e.g., `w-1/2` conflicting with the default `w-full`), `cn()`'s `tailwind-merge` step detects the conflict and drops the default class, leaving only the custom one. Precedence comes from tailwind-merge's conflict resolution, not CSS specificity — both classes are single-class selectors of equal specificity. See test vector textarea-019.
 - **`autoComplete="off"` with manager suppression**: When `autoComplete="off"` is passed, `noAutofillPropsFor("off")` returns the same suppression attributes as when `autoComplete` is left `undefined` (see **autofill-suppression**). Both the `autocomplete="off"` attribute and the vendor-specific ignore attributes are applied.
 
@@ -168,7 +173,7 @@ Not applicable: Textarea does not emit structured logs. Debugging textarea state
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/textarea.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/textarea.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -180,7 +185,7 @@ Not applicable: Textarea does not emit structured logs. Debugging textarea state
 **Rationale**: Textareas are never credentials, but managers still decorate them when the surrounding page reads like a form. `noAutofillPropsFor` returns the full suppression attribute set (`autocomplete="off"` plus the vendor-specific ignore attributes) when `autoComplete` is `undefined` or `"off"` (trimmed and compared case-insensitively), and returns no suppression attributes at all when `autoComplete` is set to any other value — a real autofill token such as `"email"` or `"current-password"` — handing the field back to managers so a form that genuinely wants autofill can opt back in by naming a token.
 **Approved**: pending
 
-**Decision**: The component applies `transition-colors` to smooth color changes during state transitions (focus, disabled, invalid).
+**Decision**: The component applies `transition-colors` to smooth text and border color changes during the focus and invalid transitions. It does not animate the disabled opacity or the rings.
 **Rationale**: This improves perceived responsiveness without requiring JavaScript or animation libraries. The source defines no `motion-reduce:` variant, so this transition does not respect the `prefers-reduced-motion` preference (see Accessibility Options and Compliance).
 **Approved**: pending
 
@@ -200,14 +205,15 @@ Not applicable: Textarea does not emit structured logs. Debugging textarea state
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Statuses rest on the source: it renders a native `<textarea>` with `data-slot`, `aria-invalid`-driven state styling, and a fixed 64px minimum height regardless of viewport (semantic-markup, keyboard-navigable, and touch-target-size passed), and it forwards all user-facing text via props with nothing hardcoded (no-hardcoded-strings passed); but it defers label association to the caller and defines no explicit contrast values or `motion-reduce:` variant (screen-reader-support and contrast-ratio partial, reduced-motion failed); the component is a themed pass-through of native `<textarea>` props with no logic beyond the autofill opt-out (separation-of-concerns passed), and `autofill.test.tsx` renders `Textarea` directly and asserts on its autocomplete-opt-out attributes (unit-test-coverage passed).
+Statuses rest on the source: it renders a native `<textarea>` with `data-slot`, `aria-invalid`-driven state styling, and a fixed 64px minimum height regardless of viewport (semantic-markup, keyboard-navigable, and touch-target-size passed), and it forwards all user-facing text via props with nothing hardcoded (no-hardcoded-strings passed); but it defers label association to the caller and defines no explicit contrast values or `motion-reduce:` variant (screen-reader-support and contrast-ratio partial, reduced-motion failed); the component is a themed pass-through of native `<textarea>` props with no logic beyond the autofill opt-out (separation-of-concerns passed); `autofill.test.tsx` renders `Textarea` directly but asserts only its autocomplete-opt-out attributes, so the focus, invalid, disabled, min-height and padding vectors have no test (unit-test-coverage partial).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Stated the autofill-suppression rule, added reduced-motion and invalid-ring requirements, corrected color-transition scope, gave appearance token values, added three test vectors, linked Input and Card as related, and downgraded unit-test-coverage to partial. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; corrected the reduced-motion, disabled-focus, className-specificity, and WCAG-AA claims; gave the invalid state a non-color-cue recommendation; moved Tailwind/JS implementation details out of requirement text and into Platform Notes; reformatted Design Decisions and specified the autoComplete undefined/off/token tri-state behavior; replaced the Compliance section with a checks table; added test vectors for autoComplete forwarding and suppression, padding, font size, text color, placeholder, outline removal, transitions, and className dedup; corrected the null-value edge case and an unbalanced-backtick label; fixed the label and tap-target accessibility guidance; corrected the SwiftUI, Compose, and WinUI 3 platform-note APIs; fixed "This ingredient" terminology; unquoted `modified` |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

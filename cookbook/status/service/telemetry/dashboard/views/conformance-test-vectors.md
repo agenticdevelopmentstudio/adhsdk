@@ -1,5 +1,5 @@
 
-Vectors come from `dashboard-views.test.ts`; each ID names the test it summarizes.
+Vectors views-001 to views-037 come from `dashboard-views.test.ts`; each ID names the test it summarizes. Vectors views-038 and later give literal inputs and expected values that follow from the requirements.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -40,4 +40,17 @@ Vectors come from `dashboard-views.test.ts`; each ID names the test it summarize
 | views-035 | merge-rows, errors-chart, errors-report | Tests "adds a site's hosts together, and leaves other sites out", "keeps a clean site's health but draws no chart or tables for it", "has nothing for a site nothing reported" | Merged rows; health only; empty |
 | views-036 | errors-site-failures | Tests "names what could not be read, one line per error" and "does not count a section still holding last good data" | Named; last-good excluded |
 | views-037 | errors-views | Tests "lists the sites, ranks the most errors and reports each listed site" and "reports no read failures for PostHog when PostHog is not configured" | Full shape; empty failures |
-
+| views-038 | site-key, project-key | `siteKey("  WWW.X.com ")`, `siteKey("www.www.x.com")`; `projectKey` of a project with domain `WWW.x.com`, and of a project named `odd-name` with domain null | `x.com`; `www.x.com`; `x.com`; `odd-name` |
+| views-039 | site-names-sorted, tiebreak-comparator | `sortSiteNames(["b.com", "a.com"])` | `["a.com", "b.com"]`; the input list is unchanged |
+| views-040 | add-series | `addSeries([1, 2, 3], [4])` | `[5, 2, 3]` |
+| views-041 | join-sort | Two joined rows with equal pageviews, keys `b.com` and `a.com` | `a.com` then `b.com` |
+| views-042 | join-key, join-merge, join-side-by-side | PostHog host `www.x.com` with 10 pageviews, and a Vercel project with domain `x.com` and 7 pageviews | One row keyed `x.com`; PostHog pageviews 10 and Vercel pageviews 7, not 17 |
+| views-043 | vital-limits | `vitalRating("lcp", 2500)`, `2501`, `4000`, `4001`; `vitalRating("cls", 0.1)`, `0.25`, `0.26` | `good`, `fair`, `fair`, `poor`; `good`, `fair`, `poor` |
+| views-044 | series-labels, series-gap | PostHog buckets `["d1", "d2"]`, Vercel buckets `["d2", "d3"]` | Labels `["d1", "d2", "d3"]`; PostHog is `null` at `d3` and Vercel is `null` at `d1` |
+| views-045 | breakdown-topics, breakdown-null | Topic `browsers` with a PostHog dimension row and Vercel projects; then topic `countries` with null dimension rows | The first has only PostHog's list and `null` for Vercel; the second has `null` for PostHog |
+| views-046 | error-row-id | Error row `name` `E`, all other fields null; failed request `status` 0, `method` null, `path` `/a` | `["E",null,null,null,null]`; `[0,null,"/a"]` |
+| views-047 | merge-rows | Rows for hosts `www.x.com` (count 2, `lastSeen` `2026-11-04T10:00:00Z`) and `x.com` (count 3, `lastSeen` `2026-11-04T12:00:00Z`) with the same name, merged for site `x.com` | One row: `host` `x.com`, `count` 5, `lastSeen` `2026-11-04T12:00:00Z` |
+| views-048 | merge-rows | The same two rows, one with `lastSeen` null | `lastSeen` is the non-null value |
+| views-049 | most-errors | Sites `b.com` (3 errors, 1 failure), `a.com` (3 errors, 1 failure), `c.com` (3 errors, 2 failures) and `d.com` (0 errors) | Order `c.com`, `a.com`, `b.com`; `d.com` is dropped |
+| views-050 | errors-chart | A site whose detail `days` hold only zeros, then a site with no detail section | `chart` is `null` in both cases |
+| views-051 | analytics-views-reports | Health for host `WWW.Only-Health.com` and no traffic | `siteReports` has the key `only-health.com`; `sites` does not list it |

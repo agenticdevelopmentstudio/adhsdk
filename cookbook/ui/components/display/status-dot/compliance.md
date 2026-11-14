@@ -12,8 +12,9 @@ component never embeds a literal user-facing string — `label` is always a
 value the consumer passes in (`no-hardcoded-strings`). `separation-of-concerns`
 passes: `StatusDot` is a memoized, pure presentational component, and its
 tone-to-class mapping is delegated to the shared `lib/tone` table rather than
-computed inline. `unit-test-coverage` is partial: `stat.test.tsx` covers the
-decorative/accessible-image split and the size-driven glow, but not the
-`color-mix` glow color, the small-size threshold, or the `neutral` tone
-override.
+computed inline. `unit-test-coverage` is partial: the `StatusDot` block in `stat.test.tsx` (the display
+primitives test file; no `status-dot` test file exists) has two tests — the decorative
+without a label case, and the labeled accessible-image case with size-driven glow — and
+nothing yet covers the `color-mix` glow color, the small-size floor (T5), the
+`neutral` tone override (T6), verbatim labels (T15) or memoization (T16).
 

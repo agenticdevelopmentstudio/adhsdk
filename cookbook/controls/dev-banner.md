@@ -2,11 +2,11 @@
 id: 1cdd9485-95e5-47dd-9346-224b43ce8ab9
 title: "DevBanner"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -38,14 +38,15 @@ DevBanner is a simple notification component that displays a development-stage m
 - **default-position**: Component MUST default to `position: 'fixed'` when no `position` prop is provided.
 - **base-class**: Component MUST always apply the base class `awt-dev-banner` to the container element, in addition to the position class and any `className` prop.
 - **custom-class**: Component MUST accept and apply a `className` prop, which is appended to the component's CSS classes.
-- **hidden-from-at**: Component MUST set `aria-hidden="true"` on the root element.
+- **hidden-from-at**: Component MUST set `aria-hidden="true"` on the root element. This requirement is provisional until the Design Decision on hiding the banner from assistive technology is approved.
+- **non-interactive**: Component MUST NOT intercept pointer events: the container's CSS sets `pointer-events: none`.
 
 ## Appearance
 
-- **Container**: Non-interactive, block-level element with base class `awt-dev-banner`; the container does not intercept pointer/click events.
+- **Container**: Non-interactive element with base class `awt-dev-banner`; the container does not intercept pointer/click events. The `fixed` variant is positioned relative to the viewport; the `static` variant is `display: inline-block`.
 - **Background**: Dark, semi-transparent (near-black at roughly 40% opacity).
-- **Border**: ~2pt solid, warm gold/tan, the same hue as the text.
-- **Corner radius**: ~6pt.
+- **Border**: `2px` solid, warm gold/tan, the same hue as the text.
+- **Corner radius**: `6px`.
 - **Shadow/glow**: Soft two-layer gold-tinted glow around the container's edge.
 - **Text**: Monospace family, ~0.85rem (relative to the root font size), medium weight, wide letter-spacing, uppercase transform, single line with no wrapping — long text overflows rather than wraps.
 - **Foreground/Text color**: Warm gold/tan, matching the border.
@@ -77,24 +78,41 @@ The component is a non-interactive, decorative status ribbon (it disables pointe
 | dev-banner-007 | custom-class | `className=""` (empty string) | Container class list contains only `awt-dev-banner` and the position class (no empty class token) |
 | dev-banner-008 | hidden-from-at | Any props | Root element has attribute `aria-hidden="true"` |
 | dev-banner-009 | base-class | `position="static"`, `className="extra"` | Container class list includes `awt-dev-banner` alongside `awt-dev-banner--static` and `extra` |
-| dev-banner-010 | message-text | `message={null}` | Rendered text is empty; the default message is NOT used (the JS default parameter applies only to `undefined`) |
+| dev-banner-010 | message-text | `message={null}` (untyped JS only; the declared type rejects `null`) | Rendered text is empty; the default message is NOT used (the JS default parameter applies only to `undefined`) |
 | dev-banner-011 | message-text | `message=""` | Rendered text is empty (container has no text content) |
 | dev-banner-012 | message-text | `message="  padded  "` | Rendered text equals `"  padded  "` (leading/trailing whitespace preserved) |
-
-## Edge Cases
+| dev-banner-013 | non-interactive | Any props, with the default stylesheet applied | Computed `pointer-events` of the container is `none` |
+| dev-banner-014 | position-class | `position` set to an out-of-range value such as `"sticky"` from untyped JS | Container has class `awt-dev-banner--sticky`; there is no fallback to `fixed`, and the default stylesheet gives it no positioning rule |## Edge Cases
 
 - **Empty message**: `message=""` renders an empty container with no text content.
-- **Null message**: `message={null}` bypasses the JS default parameter, which applies only to `undefined`, not `null`; the banner renders with no text content, the same as an empty string.
+- **Null message**: `message={null}` (untyped JS only, since the declared type `string | undefined` rejects it) bypasses the JS default parameter, which applies only to `undefined`, not `null`; the banner renders with no text content, the same as an empty string.
 - **Undefined or omitted message**: Falls back to the default message `'Development Preview — Coming Soon!'`, since the default parameter applies to `undefined` values.
 - **Null, undefined, or empty className**: Contributes no class token to the container; the rendered class list contains only the base class and the position class.
 - **Whitespace in message**: Leading and trailing whitespace in the message string is preserved and rendered as-is.
-
-## Configuration
+- **Out-of-range position**: A `position` value other than `'fixed'` or `'static'` (possible from untyped JS) passes through unchanged into the class `awt-dev-banner--<value>`. The component does not fall back to `'fixed'`, and the default stylesheet has no rule for that class, so the banner renders with only the base styles.
+- **Long message**: The container sets `white-space: nowrap` and no maximum width or truncation, so a long or translated message overflows its box instead of wrapping or truncating (see Design Decisions: Overflow of long text).## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `message` | `string \| undefined` | `'Development Preview — Coming Soon!'` | Text content displayed in the banner |
 | `position` | `'fixed' \| 'static' \| undefined` | `'fixed'` | Controls CSS positioning behavior via class name |
+| `className` | `string \| undefined` | `undefined` | Additional CSS classes applied to the root element |
+
+## Edge Cases
+
+- **Empty message**: `message=""` renders an empty container with no text content.
+- **Null message**: `message={null}` (untyped JS only, since the declared type `string | undefined` rejects it) bypasses the JS default parameter, which applies only to `undefined`, not `null`; the banner renders with no text content, the same as an empty string.
+- **Undefined or omitted message**: Falls back to the default message `'Development Preview — Coming Soon!'`, since the default parameter applies to `undefined` values.
+- **Null, undefined, or empty className**: Contributes no class token to the container; the rendered class list contains only the base class and the position class.
+- **Whitespace in message**: Leading and trailing whitespace in the message string is preserved and rendered as-is.
+- **Out-of-range position**: A `position` value other than `'fixed'` or `'static'` (possible from untyped JS) passes through unchanged into the class `awt-dev-banner--<value>`. The component does not fall back to `'fixed'`, and the default stylesheet has no rule for that class, so the banner renders with only the base styles (see dev-banner-014).
+- **Long message**: The container sets `white-space: nowrap` with no maximum width or truncation, so a long or translated message overflows its box instead of wrapping or truncating (see Design Decisions: Overflow of long text).
+## Configuration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `message` | `string \| undefined` | `'Development Preview — Coming Soon!'` | Text content displayed in the banner; `null` is accepted only from untyped JS and renders empty (it does not use the default) |
+| `position` | `'fixed' \| 'static' \| undefined` | `'fixed'` | Controls CSS positioning behavior via class name; any other value (untyped JS only) passes through into the class name with no fallback |
 | `className` | `string \| undefined` | `undefined` | Additional CSS classes applied to the root element |
 
 ## Deep Linking
@@ -147,7 +165,7 @@ Not applicable: The component does not emit log events.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/dev-banner/DevBanner.tsx` | unverified |
+| web | `packages/web/packages/controls/src/dev-banner/DevBanner.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -155,7 +173,11 @@ Not applicable: The component does not emit log events.
 **Rationale**: The container also sets `pointer-events: none` and is styled as a rotated ribbon/badge — evidence it is meant as passive visual chrome, not an interactive or critical alert. If the development status is later judged semantically important to all users, `aria-hidden` should be removed and an appropriate role (e.g. `role="status"`) added instead.
 **Approved**: pending
 
-## Compliance
+**Overflow of long text**
+
+**Decision**: The banner does not wrap or truncate long text; the message stays on one line and overflows the container.
+**Rationale**: The source sets `white-space: nowrap` with no maximum width or ellipsis, and no source comment says whether overflow is intended, so this records the current behavior until it is approved (it is why `text-expansion-tolerance` is failed in Compliance).
+**Approved**: pending## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
@@ -171,6 +193,22 @@ Not applicable: The component does not emit log events.
 
 Statuses rest on `DevBanner.tsx` and `dev-banner.css`: font-size is set in `rem` (scales with root size), the default message is a hardcoded string literal with no key/resource lookup, the container renders arbitrary text as a plain JSX text node, and `white-space: nowrap` with no truncation means longer or translated text can overflow rather than wrap; the background is semi-transparent (`rgba(12, 12, 15, 0.4)`), so contrast against arbitrary underlying page content cannot be guaranteed, and `aria-hidden` is applied to a `pointer-events: none` decorative element. `separation-of-concerns` passes because `DevBanner.tsx` only joins classes and renders a static message with no business logic; `unit-test-coverage` fails because no test file exercises `DevBanner`.
 
+## Compliance
+
+| Check | Status | Category |
+|-------|--------|----------|
+| [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | passed | Accessibility |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
+| [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
+| [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | partial | Internationalization |
+| [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
+| [adc.check.internationalization.text-expansion-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8007859b-a974-5b8a-88f7-162624b0c056) | failed | Internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+
+Statuses rest on `DevBanner.tsx` and `dev-banner.css`: font-size is set in `rem` (scales with root size), the default message is a hardcoded string literal with no key/resource lookup, the container renders arbitrary text as a plain JSX text node, and `white-space: nowrap` with no truncation means longer or translated text can overflow rather than wrap (recorded as a pending Design Decision, Overflow of long text); the background is semi-transparent (`rgba(12, 12, 15, 0.4)`), so contrast against arbitrary underlying page content cannot be guaranteed, and `aria-hidden` is applied to a `pointer-events: none` decorative element (the non-interactive requirement keeps `pointer-events: none` in place; the aria-hidden choice is a pending Design Decision). `separation-of-concerns` passes because `DevBanner.tsx` only joins classes and renders a static message with no business logic; `unit-test-coverage` fails because no test file exercises `DevBanner`.
+
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -178,3 +216,4 @@ Statuses rest on `DevBanner.tsx` and `dev-banner.css`: font-size is set in `rem`
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and added `default-position`/`base-class`; rewrote Compliance as linked catalog checks; reformatted Design Decision to Decision/Rationale/Approved; corrected the null-vs-undefined message and className edge cases with new test vectors; filled Appearance, Platform Notes, Localization, and Accessibility Options with detail grounded in `dev-banner.css`. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added non-interactive requirement, out-of-range position edge case and vectors, an overflow Design Decision, and corrected the Appearance display and px units. |

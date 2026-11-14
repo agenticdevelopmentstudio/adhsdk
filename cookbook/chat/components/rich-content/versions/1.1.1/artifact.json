@@ -1,0 +1,62 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "e6c9f895-888f-4984-8fe1-ba86cc855613",
+    "title": "Rich Content",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Renders linked and embedded media content from structured data with built-in security filtering.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "content-rendering",
+      "media",
+      "links"
+    ],
+    "depends-on": [],
+    "related": [
+      "46e0a509-8eac-460a-b24a-d39a8b71b02c"
+    ],
+    "references": [
+      "https://owasp.org/www-community/attacks/xss/",
+      "https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html",
+      "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html",
+      "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel/noopener"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "446e45088e75d947",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "data-model", "heading": "Data Model"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

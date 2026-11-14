@@ -4,11 +4,11 @@
     "id": "fba584ed-a87c-4223-a4a9-de9c6dd342d3",
     "title": "Select",
     "type": "ingredient",
-    "version": "1.3.2",
+    "version": "1.3.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -22,7 +22,10 @@
       "select"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "c57b1aed-ef38-4803-b38a-2d7e0aeced5f",
+      "0f5b7167-b375-4f44-977b-566f720a453d"
+    ],
     "references": [
       "https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element",
       "https://www.w3.org/TR/WCAG21/#info-and-relationships",
@@ -34,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "19093cb9ee9c728a",
+  "synced": "4e9c3ff246741895",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

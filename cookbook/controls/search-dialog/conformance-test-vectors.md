@@ -20,9 +20,9 @@
 | search-dialog-017 | limit-results-to-twenty | `open: true`, 50 results in `state.results` | Only top 20 results are processed and displayed. |
 | search-dialog-018 | group-results-by-section | `open: true`, results with sections `["guides", "api", "api", "guides"]` | Results render as two section groups, in first-occurrence order: `guides`, then `api`. |
 | search-dialog-019 | group-results-by-section | `open: true`, result without section property | Result is grouped under `"other"`. |
-| search-dialog-020 | translate-section-labels | `open: true`, `sectionLabels: { guides: "How-To Guides" }` | Section displays as "How-To Guides", not "guides". |
-| search-dialog-021 | translate-section-labels | `open: true`, `sectionLabels: {}`, section is "api" | Section displays as "api" (no translation provided). |
-| search-dialog-022 | empty-state-when-no-results | `open: true`, `state.query: "xyzabc"`, no results | Message displays: `No results for "xyzabc"`. |
+| search-dialog-020 | map-section-labels | `open: true`, `sectionLabels: { guides: "How-To Guides" }` | Section displays as "How-To Guides", not "guides". |
+| search-dialog-021 | map-section-labels | `open: true`, `sectionLabels: {}`, section is "api" | Section displays as "api" (no translation provided). |
+| search-dialog-022 | empty-state-when-no-results | `open: true`, `state.query: "xyzabc"`, no results | Message displays: `No results for “xyzabc”` (curly quotes). |
 | search-dialog-023 | result-title-and-summary | `open: true`, results present | Each result displays `entry.frontmatter.title`. |
 | search-dialog-024 | result-title-and-summary | `open: true`, result with summary | Result displays both title and summary below it. |
 | search-dialog-025 | result-title-and-summary | `open: true`, result without summary | Result displays title only; summary section not rendered. |
@@ -34,5 +34,8 @@
 | search-dialog-031 | prevent-form-submission | `open: true`, user presses Enter with form focused | Form's `onSubmit` prevents default; no page navigation. |
 | search-dialog-032 | search-role-on-form | `open: true` | Form element has `role="search"`. |
 | search-dialog-033 | suppress-autofill-suggestions | `open: true` | Input field carries the attributes needed to suppress the browser's autofill suggestion UI (`noAutofillProps` in source; see Design Decisions). |
-| search-dialog-034 | enter-selects-highlighted-result, highlight-selected-result | `open: true`, ranked results `[A(guides), B(api), C(api), D(guides)]` (grouped render order: guides → A, D; api → B, C), `state.selectedIndex: 1` | Row D (grouped position 1) is highlighted, but Enter invokes `onSelect(B)` — `state.results[1]` in rank order — not `onSelect(D)`; the highlighted row and the Enter target diverge whenever sections interleave. |
+| search-dialog-034 | enter-selects-highlighted-result, highlight-selected-result | `open: true`, ranked results `[A(guides), B(api), C(api), D(guides)]` (grouped render order: guides → A, D; api → B, C), `state.selectedIndex: 1` | Row D (grouped position 1) is highlighted, but Enter invokes `onSelect(B)` — `state.results[1]` in rank order — not `onSelect(D)`; the highlighted row and the Enter target diverge whenever sections interleave. This vector records the reference implementation's known defect; a port that selects the highlighted row (D) is the intended behavior and SHOULD NOT be failed for it. No test in `SearchDialog.test.tsx` covers it. |
+| search-dialog-035 | enter-selects-highlighted-result | `open: true`, `state.query: "docs"`, 2 results, `state.selectedIndex: 999` (beyond the results), user presses Enter | No callback is invoked; page does not navigate. |
+| search-dialog-036 | result-title-and-summary | `open: true`, a result whose `entry.frontmatter.title` is `undefined` | The title element renders with empty text; nothing throws. |
+| search-dialog-037 | reset-search-state-on-open | `open` toggled `false → true → false → true` in quick succession | `state.reset()` is called once per `false → true` transition (twice in total). |
 

@@ -19,3 +19,10 @@
   **Rationale**: Draws attention to the selected category while de-emphasizing the hierarchy above it, following a common breadcrumb-navigation pattern that aids scanning.
   **Approved**: pending
 
+- **Decision**: When more than four distinct filing paths exist, the breadcrumb shows the first four and gives no overflow cue.
+  **Rationale**: The source stops walking at `MAX_TRAILS` and renders nothing to say more exist, so a user who sees four trails may assume those are every place the category is filed. An overflow cue such as "+N more paths" is the alternative; it is not implemented.
+  **Approved**: pending
+
+- **Decision**: A rename dialog that is open when the field becomes `disabled` stays open.
+  **Rationale**: `renaming` state is independent of `disabled` in the source, so the dialog is not closed on that transition. This is incidental source behavior, not a conformance requirement; closing the dialog on disable would better match **disabled-state** and is the alternative.
+  **Approved**: pending

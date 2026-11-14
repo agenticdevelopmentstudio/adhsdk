@@ -1,0 +1,13 @@
+
+- **Empty value for any type**: When value is empty string, null, or undefined, the component returns nothing for text, date, select, multi_select, address, and the default case; email and phone are the exception, rendering an empty `<span class="rp-field__text"></span>` instead (see **empty-email-or-phone-renders-empty-span**).
+- **Non-array value for multi_select**: If value is not an array, it is coerced to an empty array, resulting in null render.
+- **Invalid image resolver result**: When resolveImageUrl is provided but returns null, the component renders nothing rather than a broken image.
+- **Address as non-object**: If address value is not an object or is null, it defaults to an empty object, resulting in null render.
+- **Null resolveImageUrl prop**: When resolveImageUrl prop is not provided, unresolvable IDs are handled using optional chaining (`resolveImageUrl?.(id) ?? null`), resulting in null render.
+- **URL with no protocol**: When URL value has no http:// or https:// prefix, the full URL is displayed as-is.
+- **Whitespace in multi_select items**: Array items are converted to strings but not trimmed; leading/trailing whitespace is preserved.
+- **Non-boolean truthy value for boolean type**: A truthy non-boolean value (for example, the string "false") renders "Yes" because the component performs a truthiness check, not a strict boolean comparison; see **boolean-as-yes-no**.
+- **Null or undefined boolean value**: Renders "No" because null and undefined are falsy in the truthiness check.
+- **Markdown or textarea containing HTML or script markup**: Rendered as literal, escaped text and never executed, because the component places the string as JSX text content rather than parsing or injecting it as HTML; see **markdown-as-text** and **textarea-as-text**.
+- **URL value with a non-http(s) scheme**: The `href` prop is set directly from the value with no scheme check in the component's own code; the component does not validate or restrict the URL scheme, and its protocol prefix is untouched by the http(s) stripping in **url-protocol-stripped**. For most non-http(s) schemes this renders a clickable link with that value verbatim. A `javascript:` value is the one case that renders differently: React 19's `sanitizeURL` intercepts every `javascript:`-scheme `href`/`src`/`action`/`formAction` prop at render time and replaces it with a throwing stub (`javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')`), regardless of what FieldValue itself does — see `field-value-030`. A non-React port has no equivalent sanitizer and would need one to avoid emitting a live `javascript:` link built from untrusted registry data.
+

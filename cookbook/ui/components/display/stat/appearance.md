@@ -2,9 +2,9 @@
 `StatRow` (dashboard-card form):
 
 ```
-UPTIME                              99.98%   ← success tint (text-apt-green)
+UPTIME                              99.98%   ← success tint
 BUILDS · 24H                            12   ← neutral (default)
-FAILURES · 24H                           0   ← muted (text-apt-text-dim)
+FAILURES · 24H                           0   ← muted
 └ micro uppercase-mono label        └ big mono-bold value, right on the baseline
 ```
 
@@ -20,6 +20,7 @@ FAILURES · 24H                           0   ← muted (text-apt-text-dim)
 - Label: `font-mono text-[10px] uppercase tracking-[0.06em] text-apt-text-dim` — the
   display micro-caption, deliberately smaller/dimmer than the form-field caption.
 - `StatRow` wrapper: `flex items-baseline justify-between gap-3`.
-- `Stat` wrapper: `flex flex-col items-end gap-px`.
+- `Stat` wrapper: `flex flex-col items-end gap-px` (`items-start` when `align="start"`).
+- `StatStrip` wrapper: `flex flex-wrap gap-x-8 gap-y-3`.
 - Color comes entirely from `apt-*` tokens; no raw hex, no `!important`.
 

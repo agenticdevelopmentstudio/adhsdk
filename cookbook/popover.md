@@ -2,11 +2,11 @@
 id: c61a220c-b63e-4dcd-a12b-715de20f7b5d
 title: "Popover"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -35,10 +35,10 @@ approved-date: ""
 
 ## Overview
 
-This recipe covers two independent components that share the name "popover" but little else:
+This ingredient covers two independent components that share the name "popover" but little else:
 
 - **Full-featured** (`Popover` / `PopoverTrigger` / `PopoverContent`, source: `packages/web/packages/ui/src/components/popover.tsx`): built on `@base-ui/react/popover`, with `dialog` role, non-modal focus management, and four-sided placement.
-- **Lightweight** (`Popover`, source: `packages/web/packages/popover/src/Popover.tsx`): a hover-only panel with no positioning library and no dialog semantics, supporting only top/bottom placement.
+- **Lightweight** (`Popover`, source: `packages/web/packages/popover/src/Popover.tsx`): a hover-only panel with no positioning library and no dialog semantics, supporting only top/bottom placement. It is positioned against a `PopoverAnchor` (`packages/web/packages/popover/src/PopoverAnchor.tsx`), a `position: relative` wrapper that holds both the trigger and the panel. A caller opens it by passing `open`; the package's `useHoverPopoverGroup` hook (`packages/web/packages/popover/src/useHoverPopoverGroup.ts`) keeps hover-intent state for a set of such popovers, with at most one open and a close delay (default 200ms) so the pointer can cross from trigger to panel.
 
 Every requirement, test vector, and configuration option below is tagged with the variant(s) it applies to. Where the two disagree, each keeps its own behavior rather than being forced into a shared contract.
 
@@ -52,8 +52,10 @@ Every requirement, test vector, and configuration option below is tagged with th
 - **side-offset** (full-featured): `PopoverContent` MUST accept a `sideOffset` prop to control the gap, in pixels, between the panel and the trigger element (default `8`). The lightweight variant has no equivalent prop; its gap is a CSS custom property on `.hover-popover`.
 - **alignment** (full-featured): `PopoverContent` MUST accept an `align` prop to control alignment along the axis perpendicular to `side` (`'start' | 'center' | 'end'`, default `'center'`). The lightweight variant has no equivalent prop.
 - **custom-styling** (full-featured, lightweight): The component MUST accept a `className` prop, concatenated after its own default classes, to allow custom styling.
+- **arrow-orientation** (full-featured): When `arrow={true}`, the arrow MUST be rotated per the active `side`: 45deg for top, 225deg for bottom, 315deg for left, 135deg for right.
 - **arrow** (full-featured): `PopoverContent` MAY render an optional pointer indicator, controlled by the `arrow` prop (default `false`). The lightweight variant always renders its arrow as a fixed part of the panel; it has no prop to disable it.
-
+- **outside-press-closes** (full-featured): A press outside the panel and the trigger MUST request close by calling `onOpenChange(false, ...)` (Base UI Popover's default dismissal).
+- **trigger-toggles** (full-featured): Pressing `PopoverTrigger` while the popover is open MUST request close, and pressing it while closed MUST request open, through `onOpenChange` (Base UI `Popover.Trigger`'s default).
 ## Appearance
 
 Numeric spec (full-featured variant; the class names that implement it are listed under **Platform Notes → React/Web**):
@@ -64,10 +66,10 @@ Numeric spec (full-featured variant; the class names that implement it are liste
 - **Background**: Surface color token (apt-surface)
 - **Foreground/Text**: Text color token (apt-text)
 - **Border**: 1px solid, border color token (apt-border)
-- **Shadow**: Drop shadow with blur and offset
+- **Shadow**: Tailwind `shadow-lg`: `0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)` (default theme)
 - **Min/Max size**: Maximum width 288px; further constrained by the positioning library's available-width custom property
 
-The lightweight variant's paint and geometry are custom properties declared on `.hover-popover`, outside the two source files this recipe is grounded in; this recipe does not specify their values.
+The lightweight variant's paint and geometry are custom properties declared on `.hover-popover`, outside the two source files this ingredient is grounded in; this ingredient does not specify their values.
 
 ## States
 
@@ -85,12 +87,13 @@ The lightweight variant's paint and geometry are custom properties declared on `
 These requirements describe the full-featured variant only, which wraps Base UI's Popover. The lightweight variant renders a plain `<div>` with mouse handlers and has no ARIA role, no focus management, and no keyboard equivalent to its hover trigger — it is a pointer-only affordance.
 
 - **dialog-role** (full-featured): The popover content MUST be assigned the `dialog` role via Base UI's `Popover.Popup`.
-- **return-focus-on-close** (full-featured): The popover is non-modal by default (Base UI `Popover.Root`'s `modal` prop, not set by this wrapper, defaults to `false`), so opening it does not trap focus inside the panel. When the popover closes via Escape, or via an outside interaction that lands on a non-focusable area, focus MUST return to the trigger element (Base UI's default `finalFocus` behavior). When the popover instead closes because focus itself left the panel (Tab past the last focusable element, Base UI's `focus-out` dismissal), Base UI suppresses the return-focus behavior and forwards focus to the next tabbable element after the trigger instead — the closing Tab keypress is left to complete its forward navigation rather than being undone (see popover-022).
+- **non-modal** (full-featured): The popover is non-modal by default (Base UI `Popover.Root`'s `modal` prop, not set by this wrapper, defaults to `false`), so opening it MUST NOT trap focus inside the panel.
+- **return-focus-on-close** (full-featured): When the popover closes via Escape, or via an outside interaction that lands on a non-focusable area, focus MUST return to the trigger element (Base UI's default `finalFocus` behavior). When the popover instead closes because focus itself left the panel (Tab past the last focusable element, Base UI's `focus-out` dismissal), Base UI suppresses the return-focus behavior and forwards focus to the next tabbable element after the trigger instead — the closing Tab keypress is left to complete its forward navigation rather than being undone (see popover-022).
 - **escape-closes** (full-featured): The Escape key MUST close the popover (Base UI Popover's native keyboard handling).
 - **aria-expanded** (full-featured): The trigger element MUST have `aria-expanded="true"` when the popover is open and `aria-expanded="false"` when closed (Base UI `Popover.Trigger` handles this automatically).
 - **label-association** (full-featured): The popover SHOULD be associated with a descriptive label via `aria-labelledby` or `aria-label` on `Popover.Popup` for screen reader users.
-- **live-region-updates** (full-featured, lightweight): Dynamic content changes inside the panel SHOULD use `aria-live="polite"` or `aria-live="assertive"` as appropriate to announce updates to assistive technology users.
-
+- **live-region-updates** (full-featured): Consumers who change the panel's content while it is open SHOULD mark that content with `aria-live="polite"` or `aria-live="assertive"` as appropriate to announce updates to assistive technology users. The component itself adds no live region.
+- **supplementary-content** (lightweight): Because the lightweight panel opens only on pointer hover, its content MUST be supplementary: every fact it shows MUST also be reachable some other way, and it MUST NOT be the only path to any information or action.
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
@@ -111,24 +114,34 @@ These requirements describe the full-featured variant only, which wraps Base UI'
 | popover-014 | alignment | `align="start"` (full-featured) | Popover's start edge aligns with trigger's start edge |
 | popover-015 | alignment | `align="center"` (full-featured, default) | Popover center aligns with trigger center along the perpendicular axis |
 | popover-016 | alignment | `align="end"` (full-featured) | Popover's end edge aligns with trigger's end edge |
-| popover-017 | custom-styling | `className="custom-popover-class"` (full-featured or lightweight) | Custom class is applied to the panel element alongside default classes |
+| popover-017 | custom-styling | `className="custom-popover-class"` (full-featured) | Custom class is applied to the panel element alongside default classes |
 | popover-018 | arrow | `arrow={true}` (full-featured) | Diamond pointer (8px square, rotated per `side`) appears at the edge of the panel facing the trigger |
 | popover-019 | arrow | `arrow={false}` (full-featured, default) | No pointer element is rendered |
 | popover-020 | dialog-role | Popover rendered via `PopoverContent` (full-featured) | Inspect DOM; the `Popover.Popup` element has `role="dialog"` |
-| popover-021 | return-focus-on-close | Popover open (full-featured, non-modal), Tab from the first focusable element inside the panel through the last | Focus moves forward through the panel's focusable elements in DOM order; it does not cycle back to the first panel element (no focus trap) |
+| popover-021 | non-modal | Popover open (full-featured, non-modal), Tab from the first focusable element inside the panel through the last | Focus moves forward through the panel's focusable elements in DOM order; it does not cycle back to the first panel element (no focus trap) |
 | popover-022 | return-focus-on-close | Popover open (full-featured), focus on the last focusable element inside the panel, press Tab | Focus leaves the panel and moves to the next tabbable element after the trigger in document tab order; the popover closes (Base UI's `focus-out` dismissal); return-focus is suppressed, so focus does NOT go back to the trigger element (contrast Escape, which does return focus to the trigger) |
 | popover-023 | escape-closes | Popover open (full-featured, controlled via `open`/`onOpenChange`), press Escape | `onOpenChange(false, ...)` is called; the consumer setting `open` to `false` in response causes `PopoverContent` to unmount |
 | popover-024 | aria-expanded | Popover open (full-featured) | Trigger element has `aria-expanded="true"` |
 | popover-025 | aria-expanded | Popover closed (full-featured) | Trigger element has `aria-expanded="false"` |
-
+| popover-026 | outside-press-closes | Popover open (full-featured, controlled), press on an element outside the panel and trigger | `onOpenChange(false, ...)` is called |
+| popover-027 | trigger-toggles | Popover open (full-featured, controlled), press `PopoverTrigger`; then, once closed, press it again | First press calls `onOpenChange(false, ...)`; second calls `onOpenChange(true, ...)` |
+| popover-028 | label-association | `aria-label="Help"` passed to `PopoverContent` (full-featured) | The `role="dialog"` element has `aria-label="Help"` |
+| popover-029 | side-offset | `PopoverContent` with no `sideOffset` (full-featured) | Gap between panel edge and trigger element is 8px |
+| popover-030 | custom-styling | `className="custom-popover-class"` (lightweight) | The panel's class list contains `hover-popover`, its placement class, and `custom-popover-class`, in that order |
+| popover-031 | arrow-orientation | `arrow={true}`, `side="top"` (full-featured) | Arrow is rotated 45deg |
+| popover-032 | arrow-orientation | `arrow={true}`, `side="bottom"` (full-featured) | Arrow is rotated 225deg |
+| popover-033 | arrow-orientation | `arrow={true}`, `side="left"` (full-featured) | Arrow is rotated 315deg |
+| popover-034 | arrow-orientation | `arrow={true}`, `side="right"` (full-featured) | Arrow is rotated 135deg |
+| popover-035 | supplementary-content | Inspect a consumer of the lightweight `Popover` | Every fact shown in the panel is also reachable without hovering |
+| popover-036 | hide-on-close-visibility | Toggle `open` true/false ten times in a row (lightweight) | The panel element is never unmounted or remounted; only the `hover-popover--open` class changes |
 ## Edge Cases
 
-- **Content larger than max-width** (full-featured): If popover content exceeds 288px width, text MUST wrap rather than overflow the panel's width; no max-height or overflow-scroll behavior for content that also exceeds the panel's height is defined in the source.
-- **Placement adjustment** (full-featured): If the requested `side` would render the popover outside the viewport, the positioning library (base-ui) MAY auto-adjust placement or alignment to keep the popover visible.
-- **Empty children** (full-featured, lightweight): If no children are provided, the popover MUST render as an empty panel; no fallback content is added.
-- **Rapid visibility toggles** (lightweight): If `open` toggles rapidly, the panel MUST remain stable without layout thrashing, since it stays mounted throughout (see **hide-on-close-visibility**).
-- **Arrow orientation per placement** (full-featured): When `arrow={true}`, the arrow MUST be rotated per the active `side`: 45deg for top, 225deg for bottom, 315deg for left, 135deg for right.
-- **Tab-out closes without returning focus** (full-featured): Tabbing forward past the last focusable element inside the panel closes the popover via Base UI's `focus-out` dismissal; unlike Escape or an outside press on a non-focusable area, this path does not return focus to the trigger — focus instead lands on the next tabbable element after the trigger, continuing the forward Tab (see **return-focus-on-close**, popover-022).
+- **content-overflow** (full-featured): If popover content exceeds 288px width, text MUST wrap rather than overflow the panel's width; no max-height or overflow-scroll behavior for content that also exceeds the panel's height is defined in the source.
+- **placement-adjustment** (full-featured): If the requested `side` would render the popover outside the viewport, the positioning library (base-ui) MAY auto-adjust placement or alignment to keep the popover visible.
+- **empty-children** (full-featured, lightweight): If no children are provided, the popover renders as an empty panel; no fallback content is added.
+- **rapid-visibility-toggles** (lightweight): If `open` toggles rapidly, the panel stays mounted throughout and only the `hover-popover--open` class toggles; nothing mounts or unmounts (see **hide-on-close-visibility**, popover-036).
+- **arrow-orientation-per-placement** (full-featured): See **arrow-orientation**.
+- **tab-out-no-return-focus** (full-featured): Tabbing forward past the last focusable element inside the panel closes the popover via Base UI's `focus-out` dismissal; unlike Escape or an outside press on a non-focusable area, this path does not return focus to the trigger — focus instead lands on the next tabbable element after the trigger, continuing the forward Tab (see **return-focus-on-close**, popover-022).
 
 ## Configuration
 
@@ -156,7 +169,7 @@ Not applicable: The component renders only the child content provided by the par
 
 ## Accessibility Options
 
-- **Reduce Motion**: When enabled at the system level, transitions and animations on the popover (if any) SHOULD be disabled or shortened to instant.
+- **Reduce Motion**: The lightweight variant transitions `opacity`, `visibility` and `transform` over `--popover-duration` (0.12s); under `prefers-reduced-motion: reduce` its CSS sets `--popover-lift` to `0px`, so the slide is removed and only the opacity/visibility fade remains. The full-featured variant's wrapper classes define no transition of its own; any animation comes from Base UI and SHOULD be disabled or shortened to instant when the system setting is on.
 - **Increase Contrast**: Border and background colors SHOULD adapt to provide WCAG AA contrast ratios (4.5:1 for text, 3:1 for non-text elements) when high-contrast mode is active.
 
 ## Feature Flags
@@ -177,28 +190,28 @@ Not applicable: No logging behavior is specified in the source implementation.
 
 ## Platform Notes
 
-- **React/Web (full-featured)** (source: `packages/web/packages/ui/src/components/popover.tsx`): Built on `@base-ui/react/popover`. Exports `Popover` (wraps `Popover.Root`), `PopoverTrigger` (wraps `Trigger`), and `PopoverContent` (wraps `Popup` + `Positioner` + `Portal`). Styling uses Tailwind classes and `apt-*` design tokens: `rounded-lg` (corner radius), `p-4` (padding), `text-sm` (font), `bg-apt-surface` / `border-apt-border` / `text-apt-text` (tokens), `shadow-lg` (shadow), `w-72 max-w-(--available-width)` (max size). The arrow is a conditionally rendered rotated square (`size-2 rounded-[2px] border-r border-b border-apt-border bg-apt-surface`) with CSS `data-[side=...]` attribute selectors controlling rotation and offset per `side` (top: `-bottom-1 rotate-45`; bottom: `-top-1 rotate-[225deg]`; left: `-right-1 rotate-[315deg]`; right: `-left-1 rotate-[135deg]`). Supports all four sides via `side`; default is `bottom`.
-- **React/Web (lightweight variant)** (source: `packages/web/packages/popover/src/Popover.tsx`): Simpler hover-only popover using CSS class composition (`hover-popover`, `hover-popover--{placement}`, `hover-popover--open`). Supports top/bottom placement only, via `placement` (default `top`). Always rendered in DOM, hidden via `opacity`/`visibility` CSS. `onMouseEnter`/`onMouseLeave` pass through to caller-supplied handlers. Useful for inline hover popovers without positioning-library overhead.
-- **SwiftUI**: Use `.popover(isPresented:attachmentAnchor:arrowEdge:)` to present the panel relative to the source view; `arrowEdge` selects the side, matching `side`/`placement`. Draw the arrow indicator with a rotated `Rectangle` or a custom `Shape`, rotated per placement angle.
+- **React/Web (full-featured)** (source: `packages/web/packages/ui/src/components/popover.tsx`): Built on `@base-ui/react/popover`. Exports `Popover` (wraps `Popover.Root`), `PopoverTrigger` (wraps `Trigger`), and `PopoverContent` (wraps `Popup` + `Positioner` + `Portal`). Styling uses Tailwind classes and `apt-*` design tokens: `rounded-lg` (corner radius), `p-4` (padding), `text-sm` (font), `bg-apt-surface` / `border-apt-border` / `text-apt-text` (tokens), `shadow-lg` (shadow; Tailwind's default `0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)` unless the theme overrides it), `w-72 max-w-(--available-width)` (max size). The arrow is a conditionally rendered rotated square (`size-2 rounded-[2px] border-r border-b border-apt-border bg-apt-surface`) with CSS `data-[side=...]` attribute selectors controlling rotation and offset per `side` (top: `-bottom-1 rotate-45`; bottom: `-top-1 rotate-[225deg]`; left: `-right-1 rotate-[315deg]`; right: `-left-1 rotate-[135deg]`). Supports all four sides via `side`; default is `bottom`.
+- **React/Web (lightweight variant)** (source: `packages/web/packages/popover/src/Popover.tsx`): Simpler hover-only popover using CSS class composition (`hover-popover`, `hover-popover--{placement}`, `hover-popover--open`). Supports top/bottom placement only, via `placement` (default `top`). Always rendered in DOM, hidden via `opacity`/`visibility` CSS. `onMouseEnter`/`onMouseLeave` pass through to caller-supplied handlers. It sits inside a `PopoverAnchor` (`hover-popover-anchor`, `position: relative`) that wraps the trigger and the panel, and is opened by the caller through `open`, usually driven by `useHoverPopoverGroup`. Useful for inline hover popovers without positioning-library overhead.
+- **SwiftUI**: Use `.popover(isPresented:attachmentAnchor:arrowEdge:)` to present the panel relative to the source view; `arrowEdge` selects the side, matching `side`/`placement`. Use the arrow the system draws for the popover; do not draw a custom one.
 - **Compose**: Build with `Popup` and a custom `PopupPositionProvider` to position the panel relative to the anchor and compute placement, offset, and alignment. Draw the arrow with `Canvas` or a custom `Composable` shape.
-- **AppKit / UIKit**: Use `NSPopover` (AppKit, supports automatic positioning) for AppKit, and `UIPopoverPresentationController` for UIKit. Manage visibility via `.isShown` (AppKit) or the presentation controller's dismissal (UIKit). Draw the arrow via Core Graphics or a custom view layer.
+- **AppKit / UIKit**: Use `NSPopover` (AppKit, supports automatic positioning) for AppKit, and `UIPopoverPresentationController` for UIKit. Manage visibility via `.isShown` (AppKit) or the presentation controller's dismissal (UIKit). Use the arrow `NSPopover` and `UIPopoverPresentationController` draw themselves; do not draw a custom one.
 - **WinUI 3**: Use the `Flyout` control with its `Placement` property (Top, Bottom, Left, Right, Full). Style via `ControlTemplate` overrides; render the arrow as a custom element in the template, styled with a `Brush` and rotated via `RenderTransform`/`RotateTransform`. Control offset via margin on the Flyout's inner content.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/popover/src/Popover.tsx` | unverified |
-| web | `packages/web/packages/ui/src/components/popover.tsx` | unverified |
+| web | `packages/web/packages/popover/src/Popover.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/ui/src/components/popover.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 1. **Decision**: The lightweight variant remains mounted in the DOM at all times and is hidden via CSS (`opacity`/`visibility`) rather than unmounting; the full-featured variant unmounts `PopoverContent` when closed (Base UI's default `keepMounted={false}`, not overridden by this wrapper).
-   **Rationale**: For the lightweight variant, this ensures server-rendered HTML includes the full page structure, accessible to non-JavaScript clients and screen readers, and lets CSS transitions work smoothly. The full-featured variant instead relies on Base UI's own mount/unmount and animation-completion handling.
+   **Rationale**: For the lightweight variant, this ensures server-rendered HTML includes the full page structure, present in the HTML for non-JavaScript clients (while closed it is hidden with `visibility:hidden`, so it is not exposed to assistive technology until open), and lets CSS transitions work smoothly. The full-featured variant instead relies on Base UI's own mount/unmount and animation-completion handling.
    **Approved**: pending
 
 2. **Decision**: The `arrow` prop on `PopoverContent` defaults to `false`.
-   **Rationale**: Maintains backward compatibility with existing consumers who were built before the arrow feature was added and do not expect it.
+   **Rationale**: The source comment on `PopoverContent` records that it has consumers that predate the arrow, and turning the arrow on for them would be a restyle nobody asked for; call sites opt in (the help popover does).
    **Approved**: pending
 
 3. **Decision**: On web, `PopoverContent` renders in a React Portal.
@@ -210,7 +223,7 @@ Not applicable: No logging behavior is specified in the source implementation.
    **Approved**: pending
 
 5. **Decision**: Default placement is `bottom` for the full-featured variant and `top` for the lightweight variant, with an 8px offset on the full-featured variant.
-   **Rationale**: Conventional defaults for popover components, providing adequate visual separation from the trigger without excessive displacement.
+   **Rationale**: Conventional defaults for popover components, providing adequate visual separation from the trigger without excessive displacement. The two variants were written independently and do not share a placement contract: the prop names (`side` vs `placement`) and default sides (`bottom` vs `top`) differ, so a consumer who swaps one variant for the other MUST set the placement prop explicitly.
    **Approved**: pending
 
 6. **Decision**: The full-featured variant is non-modal by default and delegates its accessibility behavior (dialog role, non-modal focus handling, Escape, aria-expanded) to Base UI's Popover rather than re-implementing it; the lightweight variant implements no accessibility behavior at all.
@@ -229,12 +242,13 @@ Not applicable: No logging behavior is specified in the source implementation.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-The full-featured variant satisfies these checks through Base UI's `dialog` role, non-modal focus handling (return-focus-on-close), and automatic `aria-expanded`, but its colors come from `apt-*` tokens whose actual contrast values the source does not define; the lightweight variant has no ARIA role, no focus management, and no keyboard path to its hover trigger. Because this recipe covers both variants, each check is only partly satisfied overall. Both `Popover.tsx` and `popover.tsx` are pure presentation with no business logic or data access (separation-of-concerns passed), but neither has a dedicated test rendering the component itself — `useHoverPopoverGroup.test.tsx` exercises only the pairing hook, and `entityChooser.test.tsx` reaches the full-featured variant only through its parent `EntityChooser` (unit-test-coverage partial).
+The full-featured variant satisfies these checks through Base UI's `dialog` role, non-modal focus handling (return-focus-on-close), and automatic `aria-expanded`, but its colors come from `apt-*` tokens whose actual contrast values the source does not define; the lightweight variant has no ARIA role, no focus management, and no keyboard path to its hover trigger. Because this ingredient covers both variants, each check is only partly satisfied overall. Both `Popover.tsx` and `popover.tsx` are pure presentation with no business logic or data access (separation-of-concerns passed), but neither has a dedicated test rendering the component itself — `useHoverPopoverGroup.test.tsx` exercises only the pairing hook, and `entityChooser.test.tsx` reaches the full-featured variant only through its parent `EntityChooser` (unit-test-coverage partial).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Corrected the always-mounted and arrow rationales, added outside-press, trigger-toggle, non-modal, arrow-orientation and supplementary-content requirements with eleven new test vectors, kebab-cased edge cases, grounded the lightweight anchor and hook, and told Apple platforms to use the native arrow. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | return-focus-on-close and popover-022 corrected: focus-out (Tab past last panel element) does not return focus to the trigger, only Escape/outside-press do; added Edge Case and popover-022 expected result. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: tag requirements, configuration, and platform notes by variant (full-featured vs. lightweight); rename requirements to subject-only kebab-case; correct hide-on-close and focus behavior to match Base UI defaults (non-modal, `keepMounted={false}`); fix SwiftUI/Compose/UIKit/WinUI 3 platform APIs; add `onOpenChange`/`defaultOpen` configuration; reformat Design Decisions to Decision/Rationale/Approved; populate Compliance as a table; add related recipes and Base UI references; move Tailwind class names into the React/Web platform note; split ambiguous test vectors by variant |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Revise Accessibility section: state Base UI delegation as requirements (dialog role, focus trap, Escape handling, aria-expanded); add test vectors for accessibility features; drop review marker |

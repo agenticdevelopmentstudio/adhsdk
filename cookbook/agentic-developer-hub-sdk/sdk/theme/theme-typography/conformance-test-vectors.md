@@ -1,5 +1,5 @@
 
-Tests live in `ThemeTypographyTests` (Swift Testing suite `ThemeTypography`): `systemHasAllRoles`, `sizeScaleApplies`, `explicitStyleWins`, `codableRoundTrip`, `colorThemeCarriesTypography` and `clampNonFinite`. `clampNonFinite` also asserts `clampedSizeScale(9)` is 4 and `(0.1)` is 0.5. The suite has no test of `sizeScaleRange` itself; that vector and the in-range clamp rows derive from the source and from the call sites in `ThemeStore` and `SemanticPalette`.
+Tests live in `ThemeTypographyTests` (Swift Testing suite `ThemeTypography`): `systemHasAllRoles`, `sizeScaleApplies`, `explicitStyleWins`, `codableRoundTrip`, `colorThemeCarriesTypography` and `clampNonFinite`. `clampNonFinite` also asserts `clampedSizeScale(9)` is 4 and `(0.1)` is 0.5. The clamp's callers (`ThemeStore.importJSON`, `SemanticPalette.scaled(by:)`) have their vectors in their own ingredients. The suite has no test of `sizeScaleRange` itself; that vector and the in-range clamp rows derive from the source and from the call sites in `ThemeStore` and `SemanticPalette`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -15,16 +15,14 @@ Tests live in `ThemeTypographyTests` (Swift Testing suite `ThemeTypography`): `s
 | typography-010 | typography-init-defaults, system-constant | `ThemeTypography()` and `ThemeTypography.system` | equal; `sizeScale` 1.0, `styles` empty |
 | typography-011 | style-init-defaults | `FontStyle(size: 14)` | family nil, size 14, weight `.regular`, `monospaced` false |
 | typography-012 | scale-range | `ThemeTypography.sizeScaleRange` | lower bound 0.5, upper bound 4 |
-| typography-013 | clamp-function | `clampedSizeScale(0)`, `(0.1)`, `(0.5)`, `(1.0667)`, `(4)`, `(9)` | 0.5, 0.5, 0.5, 1.0667, 4, 4 |
-| typography-014 | clamp-infinity | `clampedSizeScale(-.infinity)` and `(.infinity)` (test `clampNonFinite`) | 1.0 and 1.0 |
-| typography-015 | clamp-callers, clamp-repair-not-refuse | `ThemeStore.importJSON` of a theme file declaring `"sizeScale": 0` with a valid palette | the imported theme's `typography.sizeScale` is 0.5; no error |
-| typography-016 | clamp-callers | `SemanticPalette.scaled(by: 100)` | behaves as `scaled(by: 4)` |
+| typography-013 | clamp-function | `clampedSizeScale(0.1)` and `(9)` (test `clampNonFinite`) | 0.5 and 4 |
+| typography-014 | clamp-non-finite | `clampedSizeScale(.nan)`, `(.infinity)` and `(-.infinity)` (test `clampNonFinite`) | 1.0 for each |
 | typography-017 | typography-init-no-clamp, size-uses-stored-scale | `ThemeTypography(sizeScale: 0).size(.body)` | 0 |
 | typography-018 | decode-strict | decode `{"sizeScale": 1, "styles": {"body": {"size": 13, "weight": "plush", "monospaced": false}}}` | throws a decoding error; no default weight is substituted |
 | typography-019 | decode-strict | decode `{"sizeScale": 1}` | throws `keyNotFound` for `styles` |
 | typography-020 | role-cases, role-raw-value | `TextRole.allCases.map(\.rawValue)` | `["title", "heading", "body", "caption", "code", "button"]` |
 | typography-021 | weight-cases | `FontWeight.allCases.count` and first and last case | 9; `ultraLight` and `black` |
-| typography-022 | clamp-nan | `clampedSizeScale(.nan)`, `(.infinity)`, `(-.infinity)` | 1.0 for each |
 | typography-023 | styles-unknown-key | `styles["footnote"] = FontStyle(size: 9)`; read every role | every role resolves as before; the unknown key is kept and not read |
 | typography-024 | style-no-size-validation | `FontStyle(size: -3).size` and `ThemeTypography(styles: ["body": FontStyle(size: 0)]).size(.body)` | -3 and 0 |
 
+| typography-025 | clamp-function | `clampedSizeScale(0)`, `(0.5)`, `(1.0667)` and `(4)` (derived from the source; no test) | 0.5, 0.5, 1.0667 and 4 |

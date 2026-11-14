@@ -5,11 +5,11 @@
 - **selectedIndex is less than -1**: Same behavior as -1 — no message receives `isSelected={true}`, and the component does not error.
 - **isTyping true with empty messages array**: Typing indicator renders at the top of an otherwise empty container. Scroll position is at the bottom (no content to scroll to, so it is naturally at bottom).
 - **Reader scrolled away from bottom**: If the transcript is not at (or within a small threshold of) the bottom when a new message arrives or `isTyping` changes, the view remains where the reader left it; arrival does not force a jump. Scrolling back near the bottom resumes auto-follow.
-- **Rapid message arrivals**: If messages arrive faster than scroll-to-bottom can complete while the reader is at the bottom, the container remains scrolled to bottom — the underlying scroll observer re-triggers on every mutation, so it keeps pace with each new message.
+- **Rapid message arrivals**: If messages arrive faster than scroll-to-bottom can complete while the reader is at the bottom, the container remains scrolled to bottom — the follow-scroll re-triggers on every content change, so it keeps pace with each new message and with streamed growth inside a bubble.
 - **fadeOlder with single message**: Single message remains at full opacity; fade gradient has no effect (no older messages to fade).
 - **fadeOlder and scroll to top**: User scrolls to the top of the transcript to read the oldest message. That message transitions from faded to fully opaque as it enters the readable zone; no jarring opacity shift (the mask tracks scroll position continuously, not a discrete state change).
 - **suppressTypingIndicator with isTyping true**: TypingIndicator is not rendered even though the component is aware typing is in progress; scroll-to-bottom still occurs on `isTyping` changes.
-- **renderPopover returns null or undefined**: If renderPopover is called but returns null or undefined, nothing is rendered after the MessageBubble (React skips falsy children).
+- **renderPopover returns null or undefined**: If renderPopover is called but returns null or undefined, nothing is rendered after the MessageBubble.
 - **message.popover is falsy but renderPopover is provided**: No popover is rendered; renderPopover is not called.
 - **onDetailArrowClick on message with no popover**: MessageBubble receives `showDetailArrow={false}` even if `showDetailArrows={true}`, so the detail arrow itself is not rendered — but if `onDetailArrowClick` was provided, the callback is still wired to that message; it simply has no arrow to trigger it.
 

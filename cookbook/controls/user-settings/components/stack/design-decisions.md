@@ -15,7 +15,7 @@
 **Rationale**: This allows default styling from the CSS class definitions to apply, reducing redundant inline style declarations.
 **Approved**: pending
 
-**Decision**: On platforms where the native layout primitive maps `gap` and `justify` onto the same property (Compose `Arrangement`, `NSStackView`/`UIStackView` `distribution`), `gap` takes precedence; `justify` is approximated with the closest available distribution, or dropped.
+**Decision**: On platforms where the native layout primitive maps `gap` and `justify` onto the same property (Compose `Arrangement`, `NSStackView`/`UIStackView` `distribution`, WinUI 3 `StackPanel` `Spacing` versus a `Grid`), `gap` takes precedence; `justify` is approximated with the closest available distribution, or dropped.
 **Rationale**: The React/Web source applies `gap` and `justifyContent` as independent CSS properties with no conflict between them; a priority is needed only where a platform's API cannot represent both independently.
 **Approved**: pending
 

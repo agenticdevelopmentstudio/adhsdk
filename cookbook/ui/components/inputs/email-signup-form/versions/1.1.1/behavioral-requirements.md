@@ -1,0 +1,56 @@
+
+- **load-config-on-mount**: Component MUST fetch list configuration from the server when mounted, using a GET request to `{apiBaseUrl}/public/signup-lists/{publicKey}` with a 10-second timeout.
+- **timeout-config-request**: Component MUST treat config fetch failure due to timeout (after 10,000ms) as a retriable error in the `unavailable` state.
+- **handle-config-not-ok**: Component MUST treat any HTTP response with status not 2xx as a configuration load failure and enter the `unavailable` state.
+- **parse-config-json**: Component MUST parse the config response as JSON and extract the fields `name`, `description`, `status`, `nonce`, and optionally `minAgeMs`.
+- **reject-malformed-config**: Component MUST treat a config response body that cannot be parsed as JSON as a configuration load failure — logged through the same failure path as a non-2xx response — and enter the `unavailable` state.
+- **adopt-config-with-timestamp**: Component MUST record the timestamp when configuration is successfully received, for use in nonce age calculations.
+- **show-loading-state**: Component MUST display "Loading…" text while the initial config request is in flight.
+- **show-closed-state**: Component MUST display "{list name} is closed to new signups right now." when config.status is not "open", and MUST NOT render a form in this state.
+- **show-unavailable-state**: Component MUST display "Signups are unavailable right now." with a clickable "Try again" button when the config fetch fails, allowing the user to retry without a page reload.
+- **show-ready-state**: Component MUST render the signup form when config is loaded and status is "open".
+- **validate-email-locally**: Component MUST validate the email address against the pattern `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` before submission.
+- **reject-invalid-email**: Component MUST display the validation error "Enter a valid email address." and MUST NOT submit when email fails local validation. The email input is also `required` and `type="email"`, and the `<form>` has no `noValidate`, so for a real user click on the submit button, the browser's own native constraint validation runs first: for an empty field or one that fails the browser's `type="email"` check, the browser blocks the `submit` event with its own message, and this handler (and the message above) never runs. The component's own message is reachable by a real click only for input that passes the browser's check but fails the stricter local pattern (e.g. `"a@b"`), or by any submit that bypasses native validation (a synthetic/programmatic `submit` event).
+- **trim-email-before-submit**: Component MUST trim whitespace from the email value before both validation and submission.
+- **trim-name-before-submit**: Component MUST trim whitespace from the name value before submission (if collectName is true).
+- **wait-for-nonce-age**: Component MUST wait until the nonce age (time since config.nonce was received) exceeds config.minAgeMs before submitting, if minAgeMs is specified.
+- **add-timing-buffer**: Component MUST add 250ms to any nonce age wait to account for `setTimeout`'s lower-bound rounding and other measurement noise — not for clock differences between client and server; the elapsed-duration measurement used by **wait-for-nonce-age** is already immune to clock skew on its own.
+- **enter-submitting-state**: Component MUST set phase to "submitting" and disable the submit button before sending the POST request.
+- **post-submission**: Component MUST POST the signup data to `{apiBaseUrl}/public/signup-lists/{publicKey}/signups` with method "POST", Content-Type "application/json", and body containing email, name (if provided), nonce, website (honeypot), and sourceUrl.
+- **include-honeypot-in-post**: Component MUST send the honeypot field value to the server in the POST body as `website`, on every submission — empty for a legitimate visitor, non-empty only if something else filled it in.
+- **include-source-url**: Component MUST capture and send `window.location.href` as `sourceUrl` in the POST body, unless running on the server (SSR).
+- **handle-submission-ok**: Component MUST enter the "done" state and display the success message when the POST response status is 2xx.
+- **handle-submission-error**: Component MUST catch POST errors (any status not 2xx, network failure, or timeout) and display "Something went wrong. Please try again." with a generic error message.
+- **return-to-ready-on-error**: Component MUST return to the "ready" state after an error, allowing the user to retry.
+- **refresh-nonce-on-error**: Component MUST fetch a fresh config (with a new nonce) after a submission error, in case the original nonce has expired.
+- **suppress-server-error-details**: Component MUST NOT display server error reasons or HTTP status codes to the visitor; errors MUST NOT leak anti-abuse gate details.
+- **log-failures-to-console**: Component MUST log configuration-load failures and nonce-refresh failures (the two console-visible failure paths; a submission failure by itself is not separately logged — see the Logging section) to the browser console with the public key included, for developer debugging only.
+- **log-with-prefix**: Component MUST prefix all console error messages with `[EmailSignupForm]` for easy identification.
+- **render-email-label**: Component MUST render a visible `<label>` with text "Email address" for the email input field.
+- **render-name-label-when-enabled**: Component MUST render a visible `<label>` with text "Name" for the name input field when collectName is true.
+- **mark-email-required**: Component MUST set the `required` attribute on the email input.
+- **set-email-type**: Component MUST set type="email" on the email input.
+- **set-name-autocomplete**: Component MUST set autoComplete="name" on the name input.
+- **set-email-autocomplete**: Component MUST set autoComplete="email" on the email input.
+- **mark-email-invalid-on-validation-error**: Component MUST set `aria-invalid="true"` on the email input when a validation error exists, and set it to false when there is no error.
+- **associate-error-with-field**: Component MUST set `aria-describedby` on the email input to reference the error message when a validation error exists.
+- **render-honeypot-hidden**: Component MUST render the honeypot input with `aria-hidden="true"`, `tabIndex={-1}`, and CSS positioning that removes it from the visual and tab order flow (e.g., `position: absolute; left: -9999px`).
+- **opt-out-honeypot-autofill**: Component MUST apply autofill opt-out properties to the honeypot field to prevent password managers from filling it.
+- **mark-error-alert**: Component MUST set `role="alert"` on the error message container.
+- **display-error-when-present**: Component MUST render an error message only when an error object exists, MUST NOT pre-render an empty error container.
+- **use-unique-ids**: Component MUST generate unique instance-scoped IDs for all inputs and labels using React.useId(), to support multiple forms on the same page.
+- **mark-submit-disabled-during-submit**: Component MUST set the `disabled` attribute on the submit button when phase is "submitting".
+- **mark-submit-busy**: Component MUST set `aria-busy="true"` on the submit button when the form is submitting.
+- **change-submit-label-on-submit**: Component MUST change the button text to "Signing up…" when submitting.
+- **show-success-message**: Component MUST display the successMessage text when phase is "done".
+- **replace-form-on-success**: Component MUST render only the success message (not the form) when phase is "done".
+- **focus-success-message**: Component MUST programmatically focus the success message container — which exposes `tabIndex={-1}` so it is focusable — to ensure screen readers announce it.
+- **set-success-role-status**: Component MUST set `role="status"` on the success message container to indicate it is a status update.
+- **title-fallback**: Component MUST display the provided `title` prop when supplied, and MUST fall back to `config.name` when it is not (`title ?? config?.name`); this is unconditional, not a soft preference.
+- **description-fallback**: Component MUST display the provided `description` prop when supplied, and MUST fall back to `config.description` when it is not.
+- **button-label-default**: Component MUST use the provided `buttonLabel` prop when supplied, and MUST default to "Sign up" when it is not.
+- **success-message-default**: Component MUST use the provided `successMessage` prop when supplied, and MUST default to "Thanks for signing up! Check your inbox for a confirmation." when it is not.
+- **collect-name-default**: Component MUST default `collectName` to `true` when the prop is not specified.
+- **apply-classname**: Component MAY apply the provided className prop to the root element for styling customization.
+- **handle-missing-min-age**: Component MAY handle backends that do not return minAgeMs by treating it as undefined and submitting without a nonce age delay.
+

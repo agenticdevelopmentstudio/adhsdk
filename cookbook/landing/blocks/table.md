@@ -2,11 +2,11 @@
 id: b0ce8cbb-31ac-425a-889c-68e699d24578
 title: "Table"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -48,6 +48,7 @@ A data-presentation component that renders HTML semantic table structure with la
 - **scroll-container**: Component MUST wrap the table in a div element with class `lp-table-scroll` to enable horizontal scrolling on narrow viewports.
 - **table-class**: Component MUST apply the `lp-table` class to the `<table>` element.
 
+- **reports-first-mismatched-row**: When more than one row has the wrong width, Component MUST report the index of the first (lowest-index) bad row in the thrown error; it does not assume only one row can be invalid.
 ## Appearance
 
 - **Container**: Div wrapper with class `lp-table-scroll` provides horizontal scroll context.
@@ -70,6 +71,7 @@ Not applicable: This component is a static data container with no interactive or
 - **Caption visibility toggle**: The `showCaption` prop allows the caption to be displayed visually when the surrounding context does not already identify the table's purpose.
 - **Screen reader only class**: The `lp-sr-only` class hides the caption from sighted users by default while preserving it for screen readers.
 
+- **Scroll container**: The `lp-table-scroll` wrapper scrolls horizontally on narrow viewports, but the source does not make it focusable or name it, so keyboard users cannot scroll it. A host that needs keyboard access SHOULD give the wrapper `tabindex="0"`, `role="region"` and an accessible name taken from the caption; the component does not do this today (see the keyboard-navigable row in Compliance).
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
@@ -87,13 +89,16 @@ Not applicable: This component is a static data container with no interactive or
 | table-011 | tbody-rows | `columns=["A", "B"]`, `rows=[[null, "x"]]` | Both `<td>` elements render; the first is empty (`null` renders as no visible content), the second contains "x"; no error is thrown |
 | table-012 | tbody-rows, columns-prop | `columns=["Name", <strong>Status</strong>]`, `rows=[["Alice", <span>Active</span>]]` | The header and cell render the ReactNode content as given (the `<strong>` and `<span>` elements appear in the DOM); no error is thrown |
 
+| table-013 | reports-first-mismatched-row, row-width-validation | `columns=["A", "B"]`, `rows=[["1", "2"], ["3"], ["4", "5", "6"]]` | Throws an `Error` reporting row index `1` (the first bad row), not `2` |
+| table-014 | row-width-validation, columns-prop | `columns=[]`, `rows=[["x"]]` | Throws an `Error` reporting row index `0`, `1` cell and `0` columns |
+| table-015 | row-width-validation | `columns=["A"]`, `rows=[["1", "2"]]` (row is too long) | Throws an `Error` reporting row index `0`, `2` cells and `1` column |
 ## Edge Cases
 
-- **Empty columns array**: If `columns` is an empty array, the table renders with no header cells and no validation error on rows (rows must also be empty or each row must have zero cells). MUST render without error if rows are also empty; throws error if rows contain non-empty sub-arrays. See Design Decisions.
+- **Empty columns array**: Zero columns means every row must have zero cells. If `rows` is empty (or every row is `[]`), the table renders with no header cells and no error; if any row has cells (for example `columns=[]` with `rows=[["x"]]`), #requirements/row-width-validation throws (see #test-vectors/table-014). See Design Decisions.
 - **Empty rows array**: If `rows` is an empty array, the table renders with headers but no body rows. MUST render without error.
 - **Null or undefined cells**: If a cell value is `null`, `undefined`, or a falsy ReactNode, it renders as an empty cell. MUST render without error and display the cell visually empty.
 - **ReactNode content in cells**: Cells accept ReactNode values (strings, numbers, React elements, fragments). MUST render without error regardless of ReactNode type.
-- **reports-first-mismatched-row**: Row-width validation checks every row in order and reports the lowest index at which a mismatch occurs; it does not assume only the first row can be invalid. MUST report the index of the first row found to be incorrect.
+- **Several mismatched rows**: See #requirements/reports-first-mismatched-row; only the lowest-index bad row is reported (see #test-vectors/table-013).
 
 ## Configuration
 
@@ -131,17 +136,16 @@ Not applicable: The component does not log anything. A row-width mismatch (**row
 
 ## Platform Notes
 
-- **React/Web**: Defined in `packages/web/packages/landing/src/blocks/Table.tsx`. Uses native HTML `<table>`, `<thead>`, `<tbody>`, `<th>`, `<td>`, `<caption>` elements with CSS classes `lp-table`, `lp-table-scroll`, and `lp-sr-only` for styling and screen-reader-only visibility. Row width validation occurs at render time and throws an error if mismatched.
-- **SwiftUI**: Start with a SwiftUI `Table` (iOS 16.0+, macOS 12.0+) or a custom list-based layout using `List` and `HStack` to simulate columns. Render column headers via a custom header row view. Validate row width synchronously — during model initialization or with a `precondition`/`fatalError` before the view is built, not inside `.onAppear` or another later effect — so a misaligned row never renders, matching **row-width-validation**. Apply `.accessibilityLabel(_:)` to the table's container to expose the required caption to VoiceOver, and use `.accessibilityElement(children: .combine)` to associate a row's cells with its column headers. When `showCaption` is true, also render the caption as a visible `Text` above the table.
+- **SwiftUI**: Start with a SwiftUI `Table` (iOS 16.0+, macOS 12.0+) or a custom list-based layout using `List` and `HStack` to simulate columns. Render column headers via a custom header row view. Validate row width synchronously — during model initialization or with a `precondition`/`fatalError` before the view is built, not inside `.onAppear` or another later effect — so a misaligned row never renders, matching **row-width-validation**. Apply `.accessibilityLabel(_:)` to the table's container to expose the required caption to VoiceOver, and include each cell's column header in that cell's `accessibilityLabel` (`.accessibilityElement(children: .combine)` only merges a row into one element and does not link cells to headers), or rely on the column semantics SwiftUI `Table` already provides. When `showCaption` is true, also render the caption as a visible `Text` above the table.
 - **Compose**: Use `LazyColumn` to render rows and `Row` for each row's cells, applying `Modifier.horizontalScroll(rememberScrollState())` to enable horizontal scrolling on narrow viewports. Define column widths using `Modifier.weight()` or fixed widths. Render column headers as a sticky header row at the top. Validate row width synchronously during data/model construction with a `require()` check before composition, not in a `LaunchedEffect`, so a misaligned row never composes, matching **row-width-validation**. Set `contentDescription` on the container to expose the required caption to TalkBack, and use `Modifier.semantics { }` on cells to associate them with columns. When `showCaption` is true, also render the caption as a visible `Text` above the table.
+- **React/Web**: Uses native HTML `<table>`, `<thead>`, `<tbody>`, `<th>`, `<td>`, `<caption>` elements with CSS classes `lp-table`, `lp-table-scroll`, and `lp-sr-only` for styling and screen-reader-only visibility. Row width validation occurs at render time and throws an error if mismatched.
 - **AppKit / UIKit**: AppKit's `NSTableView` offers native column-header support via `NSTableColumn` objects — implement `NSTableViewDataSource`/`NSTableViewDelegate` to provide column headers and row data, validating row widths in the data source's initializer and throwing or calling `precondition` on mismatch. UIKit's `UITableView` has no column-header concept, so use `UICollectionView` with a compositional layout (one section per row, a header supplementary view for column labels) instead. On both platforms, set an accessibility label on the table's container (`NSAccessibility.Element` / `UIAccessibilityElement`) to expose the required caption, and set `accessibilityLabel` on cells to associate them with their column header where needed. When `showCaption` is true, also render the caption in a visible label above the table.
 - **WinUI 3**: Use the CommunityToolkit `DataGrid` (`CommunityToolkit.WinUI.UI.Controls.DataGrid`) or construct a custom table using `Grid` with `ColumnDefinition` elements for column headers and rows of `TextBlock` elements for cells. Bind column count to the grid's column definitions and validate row counts synchronously in the view model's constructor, throwing before the view binds, matching **row-width-validation**. Set `AutomationProperties.Name` on the table's container to expose the required caption to Narrator, and set `AutomationProperties.Name` on each column header to associate it with its cells. For narrow viewports, wrap the table in a `ScrollViewer` with `HorizontalScrollBarVisibility="Auto"`. When `showCaption` is true, also render the caption as a visible `TextBlock` above the table.
-
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Table.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Table.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -161,6 +165,10 @@ Not applicable: The component does not log anything. A row-width mismatch (**row
 **Rationale**: Zero columns is a degenerate input but not inherently invalid — the same width check that guards against misaligned cells already rejects any row that doesn't match it, so no separate rule against empty `columns` is needed. Banning zero columns outright would reject legitimate callers, such as a table rendered before its columns are known, without preventing any misalignment the existing check doesn't already catch.
 **Approved**: pending
 
+
+**Decision**: Rows have no header cell: every cell in a row is a `<td>`, and there is no `rowHeader` option or `<th scope="row">`.
+**Rationale**: The source renders every row cell as `<td>`, and the first column is data like any other. A table whose rows need their own headers is outside what this component models; adding the option later is additive, so excluding it now keeps room to change.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -171,14 +179,20 @@ Not applicable: The component does not log anything. A row-width mismatch (**row
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | failed | Accessibility |
 
-Statuses rest on the source: it uses semantic `<table>`/`<th scope="col">`/`<caption>` markup (semantic-markup) and contains no hardcoded strings, since every string comes from the caller via props (no-hardcoded-strings, string-externalization); font size and color are delegated entirely to the `lp-table`/`lp-sr-only` CSS classes, which the source does not define, so dynamic type and contrast ratio cannot be confirmed from the source alone (dynamic-type-support, contrast-ratio); the row-width validation (`rows.find`/`throw`) runs inline in the render function rather than as a separate helper (separation-of-concerns partial), and `blocks-frame.test.tsx`'s `Table` suite covers the header/row layout, the caption visibility toggle, and the mismatched-row-width throw (unit-test-coverage passed).
-
+- semantic-markup passed: the source uses native `<table>`/`<th scope="col">`/`<caption>` markup.
+- no-hardcoded-strings and string-externalization passed: every string comes from the caller via props.
+- dynamic-type-support and contrast-ratio partial: font size and color come from the `lp-table`/`lp-sr-only` CSS classes in `blocks.css`, so they cannot be confirmed from the component source alone.
+- separation-of-concerns partial: the row-width validation (`rows.find`/`throw`) runs inline in the render function rather than as a separate helper.
+- keyboard-navigable failed: the `lp-table-scroll` wrapper scrolls horizontally (`overflow-x: auto`) but the source sets no `tabindex`, `role` or accessible name on it, so a keyboard user cannot scroll a wide table (WCAG 2.1.1, axe `scrollable-region-focusable`).
+- unit-test-coverage partial: the `Table` suite in `packages/web/packages/landing/src/__tests__/blocks-frame.test.tsx` covers the header/row layout under a caption (table-001 to table-003, table-005, table-007), the caption toggle (table-006) and one too-short row throw (table-004). Vectors table-008 to table-015 have no test, and no test checks which bad row is reported.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Downgraded unit-test-coverage to partial with per-check basis, promoted reports-first-mismatched-row to a behavioral requirement, restated the empty-columns edge case, added row-too-long, multiple-bad-row and zero-column vectors, recorded the unfocusable scroll container as a failed keyboard-navigable check, added a no-row-headers decision, corrected the SwiftUI accessibility note and reordered Platform Notes. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and update all citations, reformat Design Decisions into Decision/Rationale/Approved triples and add a decision for the empty-columns edge case, replace Compliance's "Not applicable" with an evaluated check table, add references for the semantic-HTML decision, fix the Logging section's log-vs-throw claim, clarify the showCaption default, rename and clarify the first-mismatched-row edge case, add test vectors table-009 through table-012, loosen the row-width error-message vector to assert index and counts rather than exact text, correct invented/wrong Platform Notes APIs and add caption handling per platform, make Compose/SwiftUI validation synchronous and explicit, add tags and a related link to data-table |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

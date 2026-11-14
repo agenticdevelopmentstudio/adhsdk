@@ -1,5 +1,5 @@
 
-**Decision**: The component does not validate or correct the `value` prop against `parent` on mount. Enforcement occurs only during user interaction via the `toggle()` function, and only for the capability being toggled (see **clamp-emitted-values**).
+**Decision**: The component does not validate or correct the `value` prop against `parent` on mount. Enforcement occurs only during user interaction via the `toggle()` function, and only for the capability being toggled (see **pass-through-other-keys**).
 **Rationale**: If `value` violates `parent` on initial render, the button will appear off (due to the `on = value[key] && !blockedByParent` calculation) but the component does not emit a corrected value. This design assumes the caller is responsible for providing a valid initial state; a stricter design would validate on mount and call `onChange` with a corrected value, but this design trusts the caller.
 **Approved**: pending
 
@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: Blocked capabilities are rendered disabled and visually suppressed (opacity: 0.4) rather than hidden.
-**Rationale**: This allows users to understand what permissions exist and why they cannot be enabled. Hiding blocked buttons would require less space but would sacrifice discoverability of the permission structure.
+**Rationale**: This lets sighted mouse users see what permissions exist and, through the `title` tooltip, why one cannot be enabled. The reason is not reachable by keyboard or touch users: a native `disabled` button leaves the tab order and `title` tooltips do not show on touch. Hiding blocked buttons would require less space but would sacrifice discoverability of the permission structure.
 **Approved**: pending
 
 **Decision**: The `onChange` callback is invoked synchronously during the click handler, with no debouncing, throttling, or asynchronous state updates.

@@ -31,3 +31,6 @@
 **Rationale**: This provides necessary feedback without overwhelming screen readers with constant updates.
 **Approved**: pending
 
+**Decision**: On macOS/iOS the shared phase machine drops a showing utterance on a turn transition, while web keeps it until the caller clears it. The Apple behavior is recorded as a divergence from the web requirements, not as the target.
+**Rationale**: The Apple `ThinkingPhase.Machine` settles `.utterance` into `.done` on a `nil` status and clears `phaseBeforeUtterance`, so a later `clearUtterance()` is a no-op. Treating this as intended behavior would make the requirements untestable on web; treating it as a bug to fix is a decision for the owner. Until then Apple does not conform to `show-utterance-when-provided`, and the same applies to the frozen-dots behavior in `render-dots-pulse-when-inactive`.
+**Approved**: pending

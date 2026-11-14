@@ -12,8 +12,5 @@ authenticated hub members (HUB+PUBLIC card with more fields).
 Two exports are provided: `UserCard` (the main card) and `UserCardSkeleton`
 (a placeholder for the loading state).
 
-**Known consumers**: the Agentic Developer Hub (ADH) uses this component on
-its public profile route (`/<slug>`) and in its profile-settings live
-preview; ADH's social-links settings editor also imports `PLATFORM_LABELS`
-from this module for its own platform picker.
+`PLATFORM_LABELS` is a public export of this module.
 

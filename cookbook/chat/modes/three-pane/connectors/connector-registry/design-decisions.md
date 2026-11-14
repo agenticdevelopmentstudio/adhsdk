@@ -1,6 +1,6 @@
 
 **Decision**: `snapshot()` returns the same `RegistrySnapshot` object reference between changes, but that snapshot's `has()`/`get()` methods close over the live underlying `Map` rather than a frozen copy — only `ids()` is captured as a fixed array at the time the snapshot was built.
-**Rationale**: A stable object reference lets `useSyncExternalStore`-style consumers treat an unchanged snapshot as identical (`===`) and skip re-rendering, while avoiding the cost of deep-copying the `Map` on every change; `ids()` is copied because callers commonly iterate or diff it.
+**Rationale**: This is the behavior defined by **snapshot-liveness**. A stable object reference lets `useSyncExternalStore`-style consumers treat an unchanged snapshot as identical (`===`) and skip re-rendering, while avoiding the cost of deep-copying the `Map` on every change; `ids()` is copied because callers commonly iterate or diff it.
 **Approved**: pending
 
 **Decision**: Re-registering the same id with the identical element reference is a no-op: `register()` returns an empty unregister function and does not notify subscribers.

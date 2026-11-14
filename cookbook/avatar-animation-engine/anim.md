@@ -2,11 +2,11 @@
 id: a7c91832-4059-4e06-b8c6-e8c727567c66
 title: "Avatar Engine Anim"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,7 +23,8 @@ tags:
   - animation
   - mood
   - reflexes
-depends-on: []
+depends-on:
+  - 74ba9dde-4963-42cb-aa03-bf1ee4dcc794
 related: []
 references: []
 approved-by: ""
@@ -40,7 +41,7 @@ engine, shared verbatim in contract between the Swift implementation
 `Timelines.swift`) and its TypeScript mirror (`arbiter.ts`, `params.ts`,
 `pose.ts`, `reflexes.ts`, `timeline.ts`). It has no visual surface of its
 own: it reads a loaded `CharacterConfig` and writes channel values and
-tweens through the `avatar-engine-runtime` primitives (`Channels`,
+tweens through the `avatar-engine-runtime` ([avatar-engine-runtime](cookbook:74ba9dde-4963-42cb-aa03-bf1ee4dcc794)) primitives (`Channels`,
 `Scheduler`, `Tweens`), which a host `Engine` then renders. Five
 cooperating pieces make up the contract:
 
@@ -154,17 +155,11 @@ side.
   tween state, or scheduler time, which is what keeps the expression
   language free of feedback loops between what it decides and what it is
   deciding about.
-- **predicate-vocabulary-is-closed**: `predicate` MUST support exactly the
-  configured predicate kinds (including `eyesShut`, `curious`,
-  `choreographed`, and the relational `gt`) and MUST NOT accept an
-  unrecognized kind as anything other than an error; a config that reaches
+- **predicate-vocabulary-is-closed**: `predicate` MUST support exactly four forms: a `gt` param (the named pose number is greater than a configured threshold), and the built-in names `eyesShut` (the mood is the config's eyes-shut mood), `choreographed` (the mood has a configured choreography entry) and `curious` (the mood is the ladder's active mood), resolved in that order with `gt` first; it MUST NOT accept an unrecognized kind as anything other than an error; a config that reaches
   this evaluator with an unrecognized predicate kind is a loader-contract
   violation, not a value this function silently tolerates.
 - **amplitude-and-number-derivation**: `amplitude`/`numberParam` MUST
-  resolve `literal` to its literal value verbatim, `param` to the named
-  parameter looked up for the current mood, and `select` to the branch
-  chosen by evaluating the select's own predicate — with no other
-  derivation kinds accepted.
+  resolve an amplitude of kind `literal` to its literal value verbatim, and of kind `param` to the named number for the current mood multiplied by its optional scale (default 1); a named number MUST resolve through `numberParam`, which turns a `select` param into its `then` or `else` value by evaluating the select's own predicate, and otherwise reads the current pose's `loops` value (`0` when absent) — with no other derivation kinds accepted.
 
 ### Poses: static pose application
 
@@ -281,6 +276,8 @@ side.
   active effect had moved off its rest value, cancel that channel's live
   tween and write its rest value directly.
 
+- **gaze-input-validation**: NEEDS REVIEW: Not implemented in source. `Reflexes.look(x, y, now)` clamps its inputs toward `[-1, 1]` but does not validate that `x`/`y` are finite numbers; a non-finite (`NaN`/`Infinity`) coordinate from the host passes the clamp unchanged (both platforms' clamp forms leave `NaN` as `NaN`) and is then written into a gaze channel, where it can permanently corrupt that channel's tween interpolation (`lerpValue`'s numeric branch and the tween progress calculation both propagate `NaN` once introduced, with no recovery path in the given sources); the contract does not say whether the host is required to pre-validate pointer input or whether `look`/the params/tween layer should reject or sanitize a non-finite value itself.
+
 ### Timelines: declarative playback
 
 - **timeline-lookup-failure**: `playTimeline` MUST throw an error whose
@@ -343,9 +340,6 @@ side.
   `Tweens` tween), scheduling or canceling `Scheduler` entries, and reading
   from the injected `Prng`. Neither type performs file, network, or process
   I/O, and neither reads or writes any persistence layer.
-
-- **gaze-input-validation**: NEEDS REVIEW: Not implemented in source. `Reflexes.look(x, y, now)` clamps its inputs toward `[-1, 1]` but does not validate that `x`/`y` are finite numbers; a non-finite (`NaN`/`Infinity`) coordinate from the host passes the clamp unchanged (both platforms' clamp forms leave `NaN` as `NaN`) and is then written into a gaze channel, where it can permanently corrupt that channel's tween interpolation (`lerpValue`'s numeric branch and the tween progress calculation both propagate `NaN` once introduced, with no recovery path in the given sources); the contract does not say whether the host is required to pre-validate pointer input or whether `look`/the params/tween layer should reject or sanitize a non-finite value itself.
-
 ## Appearance
 
 Not applicable — this is a mood-arbitration, reflex, and timeline-playback
@@ -362,9 +356,11 @@ visual-state table.
 
 ## Accessibility
 
-Not applicable — this is a mood-arbitration, reflex, and timeline-playback
-engine, not a visual component; it has no rendered surface, focus, label, or
-trait for an assistive technology to describe.
+This is a mood-arbitration, reflex, and timeline-playback engine, not a visual
+component; it has no rendered surface, focus, label, or trait for an assistive
+technology to describe. Its one accessibility-driven behavior, reduced-motion
+gating through `ReflexDeps.reducedMotion`, is specified under Accessibility
+Options.
 
 ## Conformance Test Vectors
 
@@ -384,7 +380,7 @@ tweens` at 60 fps, and asserts against the resulting channel/state values.
 | avatar-engine-anim-008 | mood-source-priority, notice-resets-the-idle-clock | From the waking transition's configured starting mood, call `notice(now)`, then advance the clock past the waking transition's configured `ms` window. | While the window is open the arbiter plays the waking transition as a mood (a timeline/choreography); once the window elapses, mood-source-priority hands control to the idle ladder, which resolves its own rung from time-since-interaction — the arbiter does not land on the waking transition's configured `to` destination pose merely because the window ended; it lands there only when the ladder's resolved rung happens to be that same mood (`testWakesIntoWakingPlayAsAMoodAndOnlyThenLandsOnWakingTo`). |
 | avatar-engine-anim-009 | applied-mood-drives-pose-or-choreography | Resolve into a mood that has a configured choreography entry. | The arbiter plays that mood's timeline instead of applying its static pose (`testPlaysAChoreographedMoodsTimelineInsteadOfItsPose`). |
 | avatar-engine-anim-010 | hand-play-shares-the-timeline-slot | While a choreographed mood's timeline is mid-playback, force a mood change out from under it (via `setMood`, `poke`, or the ladder advancing). | The outstanding timeline is canceled, and any family/shape it had promoted is restored before the new mood's pose or timeline is applied (`testCancelsAChoreographedTimelineWhenTheMoodChangesOutFromUnderIt`). |
-
+| avatar-engine-anim-011 | prng-draws-only-at-scheduled-events | Run two reflex harnesses with the same seed and the same clock steps (Swift test `testSameSeedAndSameClockProduceIdenticalChannels`). | Both harnesses produce identical channel values at every step. |
 ## Edge Cases
 
 - **Empty/no-op poke**: `poke(now)` when the resolved mood has neither a
@@ -398,11 +394,11 @@ tweens` at 60 fps, and asserts against the resulting channel/state values.
 - **Cancel racing a timeline's own closing snap**: calling a
   `TimelineHandle.cancel()` after that timeline's own last step has already
   restored a node's family is a no-op for that node (see
-  **cancel-restores-only-what-still-belongs-to-it**) — the source treats
+  [cancel-restores-only-what-still-belongs-to-it](#requirements/cancel-restores-only-what-still-belongs-to-it)) — the source treats
   this as a legitimate, reachable race, not a bug.
 - **Malformed promote input**: a `promote` step whose target channel does
   not currently hold a path-shaped string value is skipped silently for
-  that channel (see **promote-is-reversible-or-silently-skipped**); it does
+  that channel (see [promote-is-reversible-or-silently-skipped](#requirements/promote-is-reversible-or-silently-skipped)); it does
   not throw and does not abort the rest of the timeline.
 - **Mismatched-family tween**: a pose or timeline step that ends up tweening
   a path-valued channel between two values whose shape families differ
@@ -413,9 +409,9 @@ tweens` at 60 fps, and asserts against the resulting channel/state values.
   unplanned mood interruption land safely.
 - **Concurrent hand-play and mood-driven choreography**: calling `play(name)`
   while a mood's own choreography timeline is active cancels that mood's
-  timeline first (see **hand-play-shares-the-timeline-slot**); there is no
+  timeline first (see [hand-play-shares-the-timeline-slot](#requirements/hand-play-shares-the-timeline-slot)); there is no
   configuration that lets the two run side by side.
-- **Non-finite gaze input**: see the open question on gaze-input-validation
+- **Non-finite gaze input**: see the open question [gaze-input-validation](#requirements/gaze-input-validation)
   — `look(x, y, now)` does not validate that its coordinates are finite
   before clamping and writing them.
 
@@ -424,7 +420,7 @@ tweens` at 60 fps, and asserts against the resulting channel/state values.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `AnimContext` (`config`, `channels`, `tweens`, `prng`, deps) | struct/object, constructor argument | — (required) | The loaded `CharacterConfig`, the runtime `Channels`/`Tweens` instances, and the shared seeded `Prng` every Arbiter/Reflexes instance is built against. |
-| `ReflexDeps` (`mood`, `reducedMotion`, `mutter`, and related closures) | injected callbacks | — (required) | Host-supplied functions Reflexes reads every poll: the currently resolved mood, whether reduced motion is active, and the mutter callback invoked on eligible moods. |
+| `ReflexDeps` | struct/object, constructor argument | — (required) | The `AnimContext` parts and the shared `Prng` (`ctx`/`prng` in Swift; `config`, `channels`, `tweens`, `scheduler` and `prng` in TypeScript), plus three host callbacks: `mood: () -> String` (the currently resolved mood), `reducedMotion: () -> Bool` (whether reduced motion is active, read every poll) and `mutter: (Double) -> Void` (called with the time, only on mutter-eligible moods). |
 | `config.behavior.ladder` (`LadderDef`) | config, loaded JSON | — (authored per character) | The idle rung thresholds/moods, `pollMs` poll cadence, and `alertAfterTypingMs` typing-pin window `Arbiter`/`Reflexes` share one poll cadence from. |
 | `config.behavior.poke` (`[PokeRule]`) | config, loaded JSON | — (authored per character) | Ordered `from`/`"*"`-matched poke reactions and their hold windows. |
 | `config.behavior.waking` (`WakingDef`) | config, loaded JSON | — (authored per character) | The waking transition's starting mood, destination mood, and window duration. |
@@ -486,21 +482,23 @@ communicated only through a thrown `AnimError`/`Error`, never a log line.
 
 ## Platform Notes
 
-- **Swift/Apple**: uses `Foundation`'s `Double` for all timestamps/durations
+- **AppKit / UIKit**: uses `Foundation`'s `Double` for all timestamps/durations
   (no `Date`/`DispatchTime`), Swift's native `struct`/`enum`/`final class`
   for data shapes, and `throws`/`Error` for the two validated failure paths.
   An unreachable/loader-guaranteed branch (an unrecognized predicate kind,
   a spin channel not present where expected) uses `preconditionFailure`/
   `try!`, which traps the process rather than returning an error — see
   Design Decisions.
-- **TypeScript/web**: mirrors every type one-for-one (`MoodSource`,
+- **SwiftUI**: Nothing in this component is view-specific, so a SwiftUI host uses the Swift types unchanged and drives `Scheduler.tick`, the arbiter and reflexes, and `Tweens.tick` from its own frame source (a `TimelineView` or display link), then renders `Channels` values.
+- **Compose**: Translate the data shapes to Kotlin `data class` and `sealed interface` types, with `Double` timestamps and `Map` in place of dictionaries. The two validated failure paths (`setMood`, `play`) throw `IllegalArgumentException` with the same messages. Drive the fixed tick order from `withFrameNanos`, and keep all calls on one coroutine dispatcher, since the contract is single-caller.
+- **React/Web**: mirrors every type one-for-one (`MoodSource`,
   `SpeechState`, `ArbiterState` are the same names on both sides) using
   plain interfaces/discriminated unions and `Map`/plain objects in place of
   Swift's `Dictionary`; the same unreachable/loader-guaranteed branches
   `throw` a catchable `Error` on this side instead of trapping, which is
   the one systematic behavioral divergence between the platforms (see
   Design Decisions).
-- **WinUI 3 / .NET port**: this component's data shapes translate directly
+- **WinUI 3**: this component's data shapes translate directly
   to C# `record`/`readonly struct` types; `Scheduler`/`Tweens`/`Channels`
   (from `avatar-engine-runtime`) are the natural home for
   `System.Threading.Tasks`/`DispatcherQueue.TryEnqueue`-based scheduling in
@@ -510,15 +508,17 @@ communicated only through a thrown `AnimError`/`Error`, never a log line.
   drives its own bound view-models from it. The two validated failure paths
   (`setMood`, `play`) map to a thrown `InvalidOperationException` or a
   dedicated exception type, matching the web side's catchable-`Error`
-  choice rather than the Swift side's `preconditionFailure`s, since .NET
-  has no equivalent "fail the whole process" trap idiom for library code.
+  choice rather than the Swift side's `preconditionFailure`s. .NET does
+  have a process-ending idiom (`Environment.FailFast`), but a library should
+  not end its host process over a config the loader should have rejected,
+  so throwing is the better choice here.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AvatarAnimationEngine/Sources/Anim/` | unverified |
-| web | `packages/web/packages/avatar-engine/src/anim/` | unverified |
+| apple | `packages/apple/AvatarAnimationEngine/Sources/Anim/` | confirmed (1.0.3) |
+| web | `packages/web/packages/avatar-engine/src/anim/` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -607,3 +607,4 @@ identically only on the web side; on Apple they end the process instead.
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial ingredient recipe covering `Arbiter.swift`/`arbiter.ts`, `Params.swift`/`params.ts`, `Poses.swift`/`pose.ts`, `Reflexes.swift`/`reflexes.ts`, and `Timelines.swift`/`timeline.ts`, with the open question about unvalidated non-finite gaze input carried as the one open item for a future revision to resolve. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | unknown-timeline-rejected now cancels the running timeline before throwing; stir-branch-selection uses a seeded Bernoulli draw on branch.probability, not a predicate; vector 8 corrected to reflect the idle ladder taking over after the waking window, not waking.to. Converted the Conformance Test Vectors section from a numbered list into a pipe table, mapping each of the 10 existing vectors to its Behavioral Requirement name(s), and added `macos`/`ios` to the frontmatter `platforms` list. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Added the runtime dependency and link, listed the closed predicate and amplitude vocabulary from source, listed ReflexDeps, corrected the .NET FailFast claim, added SwiftUI and Compose platform notes with standard labels, linked Accessibility Options, used requirement fragments, moved the gaze marker into Reflexes and added a seeded determinism vector. |

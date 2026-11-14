@@ -65,7 +65,7 @@ form expose no `primaryDomain`/`domain` field, while the web `Ecosystem`
 interface and settings-equivalent panes do (`domain`, mapped from
 `primaryDomain`).
 **Rationale**: This is a genuine, current cross-platform divergence, not
-an inconsistency in this recipe's sourcing: the Apple Hub UI for editing a
+an inconsistency in this ingredient's sourcing: the Apple Hub UI for editing a
 custom domain has not been built yet, while the web client already models
 the field end-to-end (`EcosystemInput.domain`, `toEcosystem`,
 `EcosystemPutBody.primaryDomain`). A future Apple settings field for it
@@ -81,7 +81,7 @@ recipe.
 **Rationale**: Those mappers are shared with the platform-admin
 invitations hooks referenced in this file's own header comment
 (`packages/web/packages/features/adh-admin/src/api/invitations.ts`) — they belong to the
-Invitations feature's own contract, not to Ecosystems. This recipe
+Invitations feature's own contract, not to Ecosystems. This ingredient
 documents what the Ecosystems-owned hooks in `ecosystem-invitations.ts`
 do with their query keys, endpoints, and cache invalidation, and treats
 the mappers' internal field-by-field shape as a different component's
@@ -117,9 +117,7 @@ kept so the owner can see what is coming; the picker disables them and the
 backend refuses to provision them, so the client needs no filter.
 **Approved**: pending
 
-**Decision**: the feature-provisioning mutations have no client-side guard against an absent ecosystem id and will send a request with a literal absent-marker in the path.
-
-**Rationale**: the id is optional in the mutation signature and nothing checks it before use; closing the gap would take either a guard that rejects the call before any request is made or a non-optional id parameter.
-
+**Decision**: the feature-provisioning mutations SHOULD reject an absent ecosystem id before any request is sent, or take a non-optional id; today they do neither.
+**Rationale**: failing fast on the client avoids sending a request to a path holding a literal absent-marker; the gap is kept visible here as a known gap until a guard lands.
 **Approved**: pending
 

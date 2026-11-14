@@ -14,4 +14,6 @@
 | crud-011 | clamp-child-to-parent | Call clampToParent({ create: true, read: true, update: true, delete: true }, readOnly()) | Returns `{ create: false, read: true, update: false, delete: false }` |
 | crud-012 | not-mutate-inputs | Call clampToParent(child, parent) with fixed `child`/`parent` objects, then re-read both after the call | `child` and `parent` are unchanged from their original values |
 | crud-013 | fresh-instance-per-call | Call noAccess() twice and compare the two results with `===` | Comparison is `false` — the two calls return different object references |
-
+| crud-014 | clamp-child-to-parent | Call `clampToParent(x, x)` and compare the result with `x` using `===` | Comparison is `false` — the result is a new object |
+| crud-015 | fresh-instance-per-call | Call readOnly() twice and compare the two results with `===` | Comparison is `false` — the two calls return different object references |
+| crud-016 | clamp-child-to-parent | Call clampToParent({ create: true, read: true, update: true, delete: true }, { create: true, read: true, update: false, delete: false }) | Returns `{ create: true, read: true, update: false, delete: false }` |

@@ -2,11 +2,11 @@
 id: 57e33900-ca06-474e-abb1-d904c27a6336
 title: "Log Panel"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -46,13 +46,13 @@ The Log Panel component displays structured log data as rows and columns in a sc
 - **handle-cell-double-click**: Component MUST invoke `column.onCellDoubleClick` when a cell is double-clicked, passing the entire `LogLine` object, if the handler is defined. The click events that precede a double-click gesture still invoke `onCellClick`, if defined, per native browser event order (see Edge Cases).
 - **apply-column-widths**: Component MUST apply the width from `column.width` to each column as a CSS grid track size, using the format `${width}px` for numeric values and the string value directly for other formats.
 - **apply-default-column-width**: Component MUST use `minmax(120px, 1fr)` as the default grid track size for columns that do not specify a width.
-- **apply-cell-text-alignment**: Component MUST align cell text according to `column.align` (e.g., `start`, `center`, `end`), defaulting to `start`.
-- **apply-cell-level-color**: Component MUST apply the color for the log level (`cell.level`, falling back to `column.defaultLevel` when `cell.level` is not set) using the Level Colors table (see Appearance), when `cell.color` is not set.
+- **apply-cell-text-alignment**: Component MUST align cell text and the column's header cell according to `column.align` (e.g., `start`, `center`, `end`), defaulting to `start`.
+- **apply-cell-level-color**: Component MUST apply the color for the log level (`cell.level`, falling back to `column.defaultLevel` when `cell.level` is not set) using the Level Colors table (see Appearance), when `cell.color` is not set. When `cell.color`, `cell.level` and `column.defaultLevel` are all unset, no color is applied and the text inherits the surrounding text color. A level value that is not in the Level Colors table (possible from untyped JS) likewise applies no color and the text inherits.
 - **apply-cell-custom-color**: Component MUST apply `cell.color` as the CSS color value if provided; it takes precedence over any level-based color.
 - **apply-cell-mono-font**: Component MUST apply monospace font (CSS variable `--font-mono` or fallback to system monospace) when the effective mono flag is true. The effective flag is `cell.mono` when it is explicitly set, including an explicit `false`, and `column.defaultMono` otherwise.
 - **apply-cell-strong-weight**: Component MUST apply font-weight of 600 if `cell.strong` is true.
 - **apply-cell-link-styling**: Component MUST add the CSS class `lp-cell--link` if `cell.link` is true, allowing stylistic differentiation (e.g., underline, color change).
-- **show-interactive-indicator**: Component MUST add the CSS class `lp-cell--interactive` to cells if `column.isClickable`, `cell.link`, or `column.onCellClick` is defined.
+- **show-interactive-indicator**: Component MUST add the CSS class `lp-cell--interactive` to cells if `column.isClickable` is true, `cell.link` is true, or `column.onCellClick` is defined. A column that defines only `onCellDoubleClick` does not by itself make its cells interactive.
 - **apply-cell-title-attribute**: Component MUST set the HTML `title` attribute on each cell to the cell's text content for tooltip display on hover.
 - **support-max-height**: Component MUST apply the `maxHeight` style to the scrollable body container if `maxHeight` is provided.
 - **support-custom-class**: Component MUST apply the `className` prop to the root container; the root class is `lp-root`, followed by `className` when provided.
@@ -90,7 +90,7 @@ The Log Panel component displays structured log data as rows and columns in a sc
 |-------|---|
 | Default | Rows display with configured colors and fonts |
 | Empty | Empty message text is shown; rows are hidden |
-| Interactive cell hovered | CSS class `lp-cell--link` or `lp-cell--interactive` applied for visual feedback |
+| Interactive cell | CSS class `lp-cell--link` or `lp-cell--interactive` is applied statically at render; any hover styling comes from the stylesheet |
 | User scrolled away from tail | Component stops auto-scrolling; no visual change to rows themselves |
 | followTail disabled | Component does not scroll on new content; no visual change |
 
@@ -102,7 +102,7 @@ The Log Panel component displays structured log data as rows and columns in a sc
 - **Title attribute**: Each cell sets the HTML `title` attribute to the cell's text content, which shows a hover tooltip in most browsers. Screen reader support for `title` is inconsistent, so it is not a reliable accessible name for interactive cells.
 - **Text alternatives**: Text content is displayed directly; no icons or images require alt text in the component itself.
 - **Keyboard navigation**: Not implemented in source. Cells have no `tabIndex`, no `onKeyDown` handler, and no focus management; `onClick`/`onDoubleClick` are the only interaction handlers wired to a cell, so interactive cells (marked by `column.isClickable`, `cell.link`, or `column.onCellClick`) are reachable only by mouse.
-- **Minimum tap target**: Not applicable: Cell dimensions and tap target sizes are controlled by CSS styling, not by the component; consumers must ensure minimum tap/click targets via stylesheet implementation. WCAG 2.5.8 (Target Size Minimum, Level AA) requires at least 24×24 CSS px; WCAG 2.5.5 (Target Size Enhanced, Level AAA) and platform HIG guidance recommend 44×44pt.
+- **Minimum tap target**: Not enforced by the component (Compliance: touch-target-size is partial). Cell dimensions and tap target sizes are controlled by CSS styling, not by the component; consumers must ensure minimum tap/click targets via stylesheet implementation. WCAG 2.5.8 (Target Size Minimum, Level AA) requires at least 24×24 CSS px; WCAG 2.5.5 (Target Size Enhanced, Level AAA) and platform HIG guidance recommend 44×44pt.
 
 ## Conformance Test Vectors
 
@@ -137,7 +137,19 @@ The Log Panel component displays structured log data as rows and columns in a sc
 | log-panel-027 | enforce-max-lines | lines=[{id:'1',...},{id:'2',...}], maxLines=0 | Zero rows are visible; empty message is shown |
 | log-panel-028 | honor-follow-tail-toggle | followTail=false, user scrolled away from the bottom, then followTail=true, line appended | The next append scrolls the container to the bottom |
 | log-panel-029 | apply-cell-mono-font | cell={mono: undefined}, column={defaultMono:true} | fontFamily is 'var(--font-mono, ui-monospace, SFMono-Regular, monospace)' |
-
+| log-panel-030 | apply-cell-mono-font | cell={mono:false}, column={defaultMono:true} | fontFamily is not set to the monospace stack |
+| log-panel-031 | apply-cell-level-color | cell has no level, column={defaultLevel:'warn'} | Cell color matches the 'warn' row of the Level Colors table |
+| log-panel-032 | apply-cell-level-color | cell has no color or level, column has no defaultLevel | No inline color is set; text inherits |
+| log-panel-033 | support-max-height | maxHeight=300 (number) | Body container has CSS maxHeight of 300px |
+| log-panel-034 | enforce-max-lines | 3 lines, maxLines=-1 | Zero rows are visible; empty message is shown |
+| log-panel-035 | enforce-max-lines | 3 lines, maxLines=NaN | All 3 rows are visible |
+| log-panel-036 | enforce-max-lines | 3 lines, maxLines=1.5 | The last 2 rows are visible (the fractional slice start truncates toward zero) |
+| log-panel-037 | stop-event-propagation | Cell with no onCellClick, nested in a parent with its own click handler; click the cell | The parent's click handler is invoked (the event bubbles) |
+| log-panel-038 | handle-cell-double-click | Column defines both onCellClick and onCellDoubleClick; double-click a cell | onCellClick is called for the preceding clicks and onCellDoubleClick is called with the LogLine |
+| log-panel-039 | apply-cell-title-attribute | cell={text:'<b>x</b>'} | The cell shows the literal text `<b>x</b>` and contains no `<b>` element |
+| log-panel-040 | apply-cell-text-alignment | column={align:'end'} | Header cell and body cells both have textAlign 'end' |
+| log-panel-041 | show-interactive-indicator | column={isClickable:false}, no onCellClick, cell.link not set | CSS class 'lp-cell--interactive' is absent |
+| log-panel-042 | show-interactive-indicator | column defines only onCellDoubleClick | CSS class 'lp-cell--interactive' is absent |
 ## Edge Cases
 
 - **Empty columns array**: If `columns` is an empty array, the header (when `showHeader` is true) renders with no header cells, and each row renders with no cells. An empty `columns` array does not by itself trigger the empty state — the empty message is shown only when `lines` is empty (or `maxLines` reduces the visible count to zero).
@@ -174,6 +186,7 @@ The Log Panel component displays structured log data as rows and columns in a sc
 | className | string | undefined | Additional CSS class(es) to apply to the root container |
 | maxHeight | string \| number \| undefined | undefined | CSS max-height value for the scrollable body container |
 
+`LogLevel` values: `info`, `warn`, `error`, `success`, `debug`, `dim`, `accent` (see the Level Colors table in Appearance).
 ## Deep Linking
 
 Not applicable: Log Panel is a data display component without URL-based navigation or deep linking support.
@@ -214,7 +227,7 @@ Not applicable: The component does not emit logs or diagnostic output.
 
 - **Compose**: Implement as a Composable using `LazyColumn` for virtualized row rendering. Track scroll position via `rememberLazyListState()` and derive "at the bottom" from its `layoutInfo` (comparing the last visible item's index and offset against the total item count) — `LazyListState` has no built-in `isScrolledToTheEnd()`. Apply `Text` and `Row` composables for cells with color and font styles. Use the `clickable` modifier for interactive cells. Map log levels to the Material 3 color palette.
 
-- **React/Web**: The component is implemented in TypeScript/React using hooks (`useRef`, `useEffect`, `useLayoutEffect`, `useMemo`). It uses CSS Grid for layout and relies on stylesheet rules for visual appearance (colors, spacing, fonts). Key files: `LogPanel.tsx`, `types.ts` (defines `LogPanelProps`, `LogLine`, `LogColumn`, `LogLevel`, `LogCellValue`). Cell values are normalized via a `normalize()` helper (`undefined` → `{text: ''}`, a plain string → `{text: value}`), column track sizes are computed via `trackSize()` (`number` → `'Npx'`, `string` passed through, `undefined` → the default), the visible row slice is memoized (`useMemo`) keyed on `[lines, maxLines]`, and tail-pinning state is tracked in a ref (`pinnedRef`) that is updated on scroll and reset via a `useEffect` when `followTail` flips back to `true`. Styling is applied via CSS class names (`lp-root`, `lp-header`, `lp-body`, `lp-row`, `lp-cell`, `lp-cell--interactive`, `lp-cell--link`, `lp-empty`) and inline styles for layout (`gridTemplateColumns`) and level-based colors. The component communicates interactivity via ARIA roles and data attributes.
+- **React/Web**: The component is implemented in TypeScript/React using hooks (`useRef`, `useEffect`, `useLayoutEffect`, `useMemo`). It uses CSS Grid for layout and relies on stylesheet rules for visual appearance (colors, spacing, fonts). Key files: `LogPanel.tsx`, `types.ts` (defines `LogPanelProps`, `LogLine`, `LogColumn`, `LogLevel`, `LogCellValue`). Cell values are normalized via a `normalize()` helper (`undefined` → `{text: ''}`, a plain string → `{text: value}`), column track sizes are computed via `trackSize()` (`number` → `'Npx'`, `string` passed through, `undefined` → the default), the visible row slice is memoized (`useMemo`) keyed on `[lines, maxLines]`, and tail-pinning state is tracked in a ref (`pinnedRef`) that is updated on scroll and reset via a `useEffect` when `followTail` flips back to `true`. Styling is applied via CSS class names (`lp-root`, `lp-header`, `lp-body`, `lp-row`, `lp-cell`, `lp-cell--interactive`, `lp-cell--link`, `lp-empty`) and inline styles for layout (`gridTemplateColumns`) and level-based colors. ARIA roles describe structure only; interactivity is communicated solely by the `lp-cell--interactive` and `lp-cell--link` class names, which carry no ARIA semantics (see Accessibility).
 
 - **AppKit / UIKit**: Implement as a `UITableView` (or `NSTableView` on macOS) with dynamic row height. `UITableView` has no native column concept — lay out each row's cells in a horizontal stack (`UIStackView`) or a custom cell class that positions subviews to match the grid columns; `NSTableView` on macOS does have real columns via `NSTableColumn`. Implement scroll tracking via `UIScrollViewDelegate.scrollViewDidScroll(_:)` (or the equivalent bounds-change notification on `NSScrollView`) to detect pinning. Apply `NSAttributedString` or `UIFont` with colors matching the log level. Use tap and double-tap gesture recognizers (or the table view delegate's selection/double-click handling) for cell interactions. For accessibility, set `accessibilityLabel` to the cell text and the appropriate `accessibilityTraits` on interactive cells — `accessibilityRole` is not a UIKit API.
 
@@ -224,7 +237,7 @@ Not applicable: The component does not emit logs or diagnostic output.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/logging-panel/LogPanel.tsx` | unverified |
+| web | `packages/web/packages/controls/src/logging-panel/LogPanel.tsx` | confirmed (1.2.3) |
 
 ## Design Decisions
 
@@ -252,7 +265,7 @@ Not applicable: The component does not emit logs or diagnostic output.
   **Rationale**: Lets CSS Grid handle layout while preserving accessibility roles for assistive technology.
   **Approved**: pending
 
-- **Decision**: Click and double-click events are stopped at the cell (`stopPropagation()`) when a cell handler runs, rather than left to bubble.
+- **Decision**: Click and double-click events are stopped at the cell (`stopPropagation()`) only when that cell has the handler for the interaction (`onCellClick` for a click, `onCellDoubleClick` for a double-click), rather than left to bubble; with no handler for that interaction, the event bubbles normally.
   **Rationale**: Ensures the cell's own callback is the only handler invoked for that interaction.
   **Approved**: pending
 
@@ -281,6 +294,7 @@ Statuses rest on the source: interactive cells have no ARIA label or role beyond
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.3 | 2026-11-14 | Mike Fullerton | Stated the color fallbacks and listed LogLevel values; tightened show-interactive-indicator and apply-cell-text-alignment; aligned the stop-event-propagation decision; fixed the ARIA, hover-state and tap-target contradictions; added 13 test vectors. |
 | 1.2.2 | 2026-09-25 | Mike Fullerton | String/undefined cells now correctly show defaultLevel/Mono apply; history reordered; Compliance added. |
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; clarify cell color/mono precedence and the stop-event-propagation scope; add a Level Colors table; rewrite test vectors and edge cases as observable outcomes and add missing coverage; correct overclaimed Accessibility statements and the WCAG tap-target citation; reformat Design Decisions; add a Compliance table; reorder and correct Platform Notes API references; treat the default emptyMessage as a localizable string. |

@@ -1,5 +1,5 @@
 
-No test file exists for this module: `ErrorsView.dom.test.tsx` replaces the errors-dashboard read with a stub, and `client.test.ts` covers only the message-extraction helper this module calls. Vectors 001–008 are derived from the source; vectors 009–011 reuse the `errorMessage` assertions in `client.test.ts`. Run the reads under a shared cache provider with retries disabled and an overriding client with a stubbed transport.
+No test file exists for this module: `ErrorsView.dom.test.tsx` replaces the errors-dashboard read with a stub, and `client.test.ts` covers only the message-extraction helper this module calls. Vectors 001–008 and 012–020 are derived from the source; vectors 009–011 reuse the `errorMessage` assertions in `client.test.ts`. Run the reads under a shared cache provider with retries disabled and an overriding client with a stubbed transport.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -16,5 +16,10 @@ No test file exists for this module: `ErrorsView.dom.test.tsx` replaces the erro
 | dash-011 | non-ok-message-fallback | stub returns `502` with body `<html>Bad Gateway</html>`, and separately `500` with body `{"error":{}}` | the read's `error.message` is `status 502`, and `status 500` |
 | dash-012 | parse-failure | stub returns `200` with body `not json` | the read enters its error state with the JSON parse rejection |
 | dash-013 | network-failure | stub transport rejects with `TypeError("Failed to fetch")` | the read's `error` is that `TypeError`, unchanged |
-| dash-014 | single-threaded-ordering | two components call the analytics-dashboard read with `"30d"` under one shared cache | one request is sent |
-
+| dash-014 | shared-cache-entry | two components call the analytics-dashboard read with `"30d"` under one shared cache | one request is sent |
+| dash-015 | poll-after-recovery, poll-interval-recomputed | a read whose body has `refreshing: true` (5000 ms), then a refetch returns `502`, then the next refetch returns a success body with `refreshing: true` | the interval is 5000, then 60000 while in the error state, then 5000 again with no action from the caller |
+| dash-016 | analytics-focus-refetch | the analytics-dashboard read has settled; the window loses and regains focus | one extra fetch to the same path is issued |
+| dash-017 | errors-focus-refetch | the errors-dashboard read has settled; the window loses and regains focus | one extra fetch to `/api/errors/dashboard` is issued |
+| dash-018 | errors-no-placeholder | the errors-dashboard read is unmounted and a fresh caller mounts under a cleared cache while the request is pending | `data` is `undefined` and `isPlaceholderData` is false until the response arrives |
+| dash-019 | return-value, success-body | either read called against a stub returning `200` and the JSON body `{"refreshing":false}` | the returned object is the full read result with `data` equal to the parsed body and no extra fields |
+| dash-020 | enabled-default | either read first called with `{ enabled: false }`, then re-rendered with `{ enabled: true }` | no fetch while disabled; one fetch begins on the switch and polling starts |

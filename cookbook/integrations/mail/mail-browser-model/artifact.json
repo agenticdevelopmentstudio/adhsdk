@@ -4,11 +4,11 @@
     "id": "b3edb32d-7473-464b-acfb-c19cdd44e99e",
     "title": "Mail Browser Model",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d99f603396d694c1",
+  "synced": "35c8fbbd5a5340e9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

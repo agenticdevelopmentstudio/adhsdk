@@ -6,5 +6,5 @@
 - The runtime read can throw on a store fault; the error is carried in the section and the call still resolves.
 - A `settle` on a key never read resolves true, because nothing is in flight.
 - The `analytics` memo is kept per range, so a range's views are not shared with another range, and the map is created for every key of `ANALYTICS_RANGES` up front.
-- Section state lives for the life of the process, so keys must come from a closed list; the set only uses the three ranges, `all`, and nothing caller-supplied.
+- Section state lives for the life of the process, so keys must come from a closed list; the set only uses the three ranges and `all` (the one key of the GlitchTip and sites caches, which hold no per-range state), and nothing caller-supplied.
 

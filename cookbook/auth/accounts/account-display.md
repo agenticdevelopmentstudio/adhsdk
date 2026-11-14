@@ -2,7 +2,7 @@
 id: 86eccc6f-cd1b-4ac7-bb98-851eb7c54324
 title: "Account Display"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,9 @@ tags:
   - accounts
   - display
 depends-on: []
-related: []
+related:
+  - 9cf9784d-48c9-4b29-b553-c72ffdfce7b9
+  - f46b9323-7954-4f66-a476-970fcc9db372
 references: []
 approved-by: ""
 approved-date: ""
@@ -30,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`AccountDisplay` is an immutable value that turns one account's state into the visibility decisions every account detail view needs: which user to show, whether the "Checking sign-in…" status line and a spinner show, which of Login, Signup and Logout show, whether the buttons are enabled, and which error or status message line shows. It is the platform-free half of the accounts screen: macOS and iOS each draw it with their own controls, and the rules for what is visible live here once. It is a pure function of its inputs (an `AccountState`, a message, whether a signup URL exists, and the previous render's shown user); it holds no storage, performs no I/O and starts no work.
+`AccountDisplay` is an immutable value that turns one account's state into the visibility decisions every account detail view needs: which user to show, whether the "Checking sign-in…" status line and a spinner show, which of Login, Signup and Logout show, whether the buttons are enabled, and which error or status message line shows. It is the platform-free half of the accounts screen: macOS and iOS each draw it with their own controls, and the rules for what is visible live here once. It is a pure function of its inputs (an `AccountState` from the [Account](cookbook:9cf9784d-48c9-4b29-b553-c72ffdfce7b9) ingredient, a message, whether a signup URL exists, and the previous render's shown user); it holds no storage, performs no I/O and starts no work.
 
 ## Behavioral Requirements
 
@@ -59,8 +61,8 @@ Controls
 - **signup-visibility**: `showsSignup` MUST be true exactly when the display is signed-out-like and `hasSignupURL` is true.
 - **logout-visibility**: `showsLogout` MUST be true exactly when `shownUser` is not `nil`.
 - **no-controls-while-restoring**: While the state is `.restoring`, `showsLogin`, `showsSignup` and `showsLogout` MUST all be false.
-- **controls-enabled**: `controlsEnabled` MUST be false exactly when the state is `.busy`, and true in every other state.
-- **enabled-is-independent-of-visibility**: `controlsEnabled` MUST be true while the state is `.restoring` even though no button is visible then; it reflects only whether the state is busy.
+- **controls-enabled**: `controlsEnabled` MUST be false when the state is `.busy` and true when the state is `.signedOut` or `.signedIn`.
+- **enabled-is-independent-of-visibility**: `controlsEnabled` MUST depend only on whether the state is busy, never on which buttons are visible. Its value while the state is `.restoring` is unspecified, because no button is visible then and consumers MUST NOT read it. The source computes `true` there.
 
 Message
 
@@ -75,6 +77,9 @@ Ordering and concurrency
 - **actor-isolation**: The state initializer is nonisolated and callable from any context; only the account-based initializer is `@MainActor`, because `Account` is a main-actor protocol. The value itself is `Sendable` and may cross actors.
 - **caller-feeds-last-user**: The caller MUST pass the previous render's `shownUser` back as `lastUser` on the next render; the display keeps no history of its own, so a caller that passes `nil` while busy gets the signed-out controls.
 
+Verification
+
+- **derived-vectors-tested**: `AccountDisplayTests` SHOULD assert test vectors 008 to 014, so the account-based initializer, `restoringText` and the empty-string message are covered by tests and not only by this document.
 ## Appearance
 
 Not applicable — this is a display-rules value, not a visual component.
@@ -89,7 +94,7 @@ Not applicable — this is a display-rules value, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 007 mirror the tests in `AccountDisplayTests` (`restoring_showsTheStatusLineAndSpinner_andNoButtons`, `signedOut_showsLoginAndSignup_onlyWithASignupURL`, `signedIn_showsTheUserAndLogout`, `busyAfterSignedIn_keepsShowingTheUser_withControlsDisabled`, `busyFromSignedOut_keepsTheSignedOutControls`, `signedOut_forgetsTheLastUser`). Vectors 008 to 014 are derived from the initializer and are not asserted by those tests. `U` is a user such as id `u1`, name `Ada Lovelace`.
+Vectors 001 to 007 mirror the tests in `AccountDisplayTests`; 002 and 003 share one test (`signedOut_showsLoginAndSignup_onlyWithASignupURL`), so six tests cover seven vectors (`restoring_showsTheStatusLineAndSpinner_andNoButtons`, `signedOut_showsLoginAndSignup_onlyWithASignupURL`, `signedIn_showsTheUserAndLogout`, `busyAfterSignedIn_keepsShowingTheUser_withControlsDisabled`, `busyFromSignedOut_keepsTheSignedOutControls`, `signedOut_forgetsTheLastUser`). Vectors 008 to 014 are derived from the initializer and are not asserted by those tests. `U` is a user such as id `u1`, name `Ada Lovelace`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -102,16 +107,16 @@ Vectors 001 to 007 mirror the tests in `AccountDisplayTests` (`restoring_showsTh
 | account-display-007 | shown-user-otherwise, message-passthrough | state `.signedOut`, message `Signed out`, hasSignupURL false, lastUser `U` (test: `signedOut_forgetsTheLastUser`) | shownUser `nil`, message `Signed out`. |
 | account-display-008 | shown-user-signed-in | state `.signedIn(U)`, lastUser a different user `V` | shownUser `U`, not `V`. |
 | account-display-009 | shown-user-otherwise, no-controls-while-restoring | state `.restoring`, lastUser `U` | shownUser `nil`, showsLogout false. |
-| account-display-010 | enabled-is-independent-of-visibility | state `.restoring` | controlsEnabled true while every button is hidden. |
+| account-display-010 | enabled-is-independent-of-visibility | state `.restoring` | controlsEnabled is unspecified (the source gives true) while every button is hidden; consumers do not read it. |
 | account-display-011 | restoring-text | read `AccountDisplay.restoringText` | `Checking sign-in…`. |
-| account-display-012 | message-passthrough | state `.signedIn(U)`, message `nil`, then message `` (empty) | message `nil` in the first, empty string in the second (not coerced to `nil`). |
+| account-display-012 | message-passthrough | state `.signedIn(U)`, message `nil`, then message `""` (empty) | message `nil` in the first, empty string in the second (not coerced to `nil`). |
 | account-display-013 | account-initializer | a main-actor account whose state is `.signedOut`, message `Try again`, signupURL non-nil, with lastUser `nil` | Equal to the state initializer called with `.signedOut`, `Try again`, hasSignupURL true, `nil`. |
 | account-display-014 | account-initializer | the same account with signupURL `nil` | showsSignup false. |
 
 ## Edge Cases
 
 - **Null / empty input**: A `nil` `lastUser` while `.busy` MUST yield the signed-out controls (Login, and Signup when a URL exists) with controls disabled, not an empty signed-in layout. A `nil` message hides the line; an empty-string message is passed through as an empty string, not converted to `nil` (`message-passthrough`).
-- **Boundary values**: Busy with a stale `lastUser` after the account has become signed out is not possible through `.signedOut`, which always drops `lastUser`; the stale value only survives while the state stays `.busy`. In `.signedIn`, a differing `lastUser` MUST be ignored in favour of the state's user.
+- **Boundary values**: `lastUser` survives only across consecutive `.busy` renders; any `.signedOut` or `.restoring` render resets `shownUser` to `nil`. In `.signedIn`, a differing `lastUser` MUST be ignored in favour of the state's user.
 - **Concurrent access**: The value is immutable and `Sendable`, so any number of readers are safe. Only the account-based initializer is main-actor isolated, so it is serialised with the account's own state changes.
 - **Error states**: There is no failing path: the initializers do not throw or return an error. An error is shown only as the pass-through `message`; the display decides no wording and no severity.
 - **Offline / disconnected state**: Not applicable: the display performs no network access; an unreachable server reaches it only as an account `message` or a state change.
@@ -127,10 +132,8 @@ Vectors 001 to 007 mirror the tests in `AccountDisplayTests` (`restoring_showsTh
 | `message` | `String?` | none (required) | The account's error or status line; `nil` hides it. |
 | `hasSignupURL` | `Bool` | none (required) | Whether the account has a signup URL; false hides Signup. |
 | `lastUser` | `AccountUser?` | none (required) | The previous render's `shownUser`, used only while busy. |
-| `account` | `any Account` | none (required) | Alternative input to the account-based initializer, which reads `state`, `message` and `signupURL`. |
-| `restoringText` | `static let String` | `Checking sign-in…` | The status line text for `.restoring`. |
 
-The display reads no environment variable or settings key.
+These are the inputs of the state initializer. The account-based initializer takes `account` and `lastUser` instead (see `account-initializer`), and the `restoringText` constant is listed under Localization. The display reads no environment variable or settings key.
 
 ## Deep Linking
 
@@ -140,7 +143,7 @@ Not applicable: the display defines no URL scheme or route; it only observes whe
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| none (hardcoded literal `restoringText`) | `Checking sign-in…` | Status line shown while a stored login is being checked. |
+| none yet (hardcoded literal `AccountDisplay.restoringText`; target key `account.status.restoring`) | `Checking sign-in…` | Status line shown while a stored login is being checked. |
 
 The string is a hardcoded English literal with no localization lookup. The `message` it passes through is localized, if at all, by the account that supplies it.
 
@@ -179,12 +182,13 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
+All four decisions are `Approved: pending`: the recipe is in review and none has been settled by the owner yet.
 
 **Decision**: While busy, the display keeps showing the user shown before the work began (supplied by the caller as `lastUser`) instead of switching to the signed-out controls.
-**Rationale**: The source documents this: signing out keeps showing who is signing out rather than flashing the signed-out controls. The display stays stateless, so the caller carries the previous `shownUser` forward.
+**Rationale**: Without it, a sign-out in progress would flash the signed-out controls instead of showing who is signing out (the doc comment on `AccountDisplay.shownUser`). The display stays stateless, so the caller carries the previous `shownUser` forward.
 **Approved**: pending
 
 **Decision**: A busy account with no remembered user renders as signed out (Login, and Signup when a URL exists), with every control disabled.
@@ -192,20 +196,20 @@ Not applicable: the source calls no logging API.
 **Approved**: pending
 
 **Decision**: `controlsEnabled` depends only on busy, not on whether a button is visible.
-**Rationale**: The source's doc comment states it as "False while busy: every button is disabled", a single rule that views apply to whichever buttons they show; during restoring no button shows, so the value is not consulted.
+**Rationale**: One rule, "False while busy: every button is disabled" (the doc comment on `AccountDisplay.controlsEnabled`), applies to whichever buttons a view shows. During restoring no button shows, so the value is unspecified there and no consumer depends on it.
 **Approved**: pending
 
 **Decision**: `restoringText` is a hardcoded English constant on the type and the account `message` is passed through verbatim.
-**Rationale**: The source places the one status line the display itself owns in one constant so both platforms show the same text, and leaves the wording of errors to the account that produces them.
+**Rationale**: One constant on the type (`AccountDisplay.restoringText`) makes both platforms show the same text, and the account that produces an error owns its wording. The hardcoded literal is known internationalization debt, which is why `no-hardcoded-strings` is `failed`. It should be paid off by looking the text up under a key such as `account.status.restoring` with the English default `Checking sign-in…`, when the SDK gains a localization layer.
 **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
-| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
 `separation-of-concerns` passes because the type holds only visibility rules: it draws nothing, stores nothing and performs no I/O, and leaves rendering to each platform's views. `unit-test-coverage` is partial: `AccountDisplayTests` asserts the state initializer for restoring, signed out with and without a signup URL, signed in, and both busy cases, but nothing asserts the `@MainActor` account-based initializer, the `restoringText` value, or an empty-string message. `no-hardcoded-strings` fails because `restoringText` is an English literal with no localization lookup.
 
@@ -213,3 +217,4 @@ Not applicable: the source calls no logging API.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Corrected spec claims against AccountDisplay source and tightened requirements and vectors. |

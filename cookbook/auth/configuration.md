@@ -3,7 +3,7 @@
 |--------|------|---------|-------------|
 | `KeychainCredentialStore.keyPrefix` | `String` | `"adh.api"` | Namespaces the two Keychain account keys (`.token`, `.token.kind`); lets multiple independent stores share one Keychain service. |
 | `KeychainSessionStore.keyPrefix` | `String` | `"adh.api"` | Namespaces the three Keychain account keys (`.token`, `.token.kind`, `.refresh`); shares its first two keys with `KeychainCredentialStore` under the same prefix. |
-| `KeychainHelper.service` | `String` (`nonisolated(unsafe) static var`) | `Bundle.main.bundleIdentifier`, else a hardcoded reverse-DNS identifier naming the hub client | The Keychain `kSecAttrService` every key is scoped under. |
+| `KeychainHelper.service` | `String` (`nonisolated(unsafe) static var`) | `Bundle.main.bundleIdentifier`, else `com.mikefullerton.AgenticDeveloperHubClient` | The Keychain `kSecAttrService` every key is scoped under. |
 | `InMemoryCredentialStore.init(_:)` | `Credentials?` | `nil` | Seeds the in-memory credential for tests or ephemeral, non-persisted sessions. |
 | `InMemorySessionStore.init(_:)` | `Session?` | `nil` | Seeds the in-memory session for tests or ephemeral, non-persisted sessions. |
 | `AuthenticationMiddleware.credentials` | `any CredentialProvider` | — (required) | Injected dependency the middleware reads at send time. |

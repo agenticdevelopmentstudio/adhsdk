@@ -24,4 +24,5 @@ No test sits beside `tokens.ts`. The themes package tests (`appearanceScope.test
 | tokens-019 | comments-not-parsed | `parseRootProps(":root{/* --a:1; */--b:2;}")` | Map has `--a` to `1` and `--b` to `2` |
 | tokens-020 | prop-pattern | `parseRootProps(":root{--é:1;--a_b-c:2;}")` | Map has only `--a_b-c` to `2`; the non-ASCII name is not matched |
 | tokens-021 | no-shared-state, pure | Call `splitImports` twice on the same string containing an import | Both calls return equal results |
+| tokens-022 | non-custom-ignored | `parseRootProps(":root{x--y:1;}")` | Map has `--y` to `1`; the match is not anchored |
 

@@ -2,15 +2,15 @@
 id: 972be0d0-a9f5-45cd-a23b-c8329410b3d1
 title: "Dialog"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Centered modal Dialog (Base UI) themed with apt-* tokens; backdrop dismissal off by default. Composes Trigger/Content/Header/Footer/Title/Description."
+summary: "Centered modal Dialog (Base UI) themed with apt-* tokens; backdrop dismissal off by default."
 platforms:
   - typescript
   - web
@@ -41,10 +41,11 @@ larger overlay (AlertModal, the invitation and add-users modals) is built on.
 
 - **centered-modal**: `DialogContent` MUST render a centered, portalled popup over a dimmed, blurred backdrop.
 - **backdrop-dismissal-disabled**: By default the dialog MUST NOT close on a backdrop or outside click (`disablePointerDismissal`); a caller MAY re-enable it with `disablePointerDismissal={false}`.
-- **escape-closes**: Escape MUST close the dialog, unless a composing component overrides it via its own `onOpenChange` handler.
-- **close-affordance**: `DialogContent` MUST render a labelled `×` close button by default; `showClose={false}` MUST hide it.
+- **escape-closes**: Escape MUST close the dialog by default.
+- **escape-overridable**: A composing component MAY keep the dialog open on Escape by supplying its own `onOpenChange` handler (see Edge Cases, "Escape override, uncontrolled" and "Escape override, controlled").
+- **close-affordance**: `DialogContent` MUST render a labelled `×` close button by default, and activating it MUST close the dialog; `showClose={false}` MUST hide it.
 - **focus-trap**: While open, focus MUST be trapped within the dialog and restored to the opener on close.
-- **dialog-labelling**: Every composing dialog MUST render a `DialogTitle` so the dialog is labelled for assistive technology; `DialogDescription` MUST be rendered when descriptive text is needed.
+- **dialog-labelling**: Every composing dialog MUST render a `DialogTitle` so the dialog is labelled for assistive technology; `DialogDescription` SHOULD be rendered whenever the dialog has descriptive text.
 
 ## Appearance
 
@@ -79,25 +80,27 @@ larger overlay (AlertModal, the invitation and add-users modals) is built on.
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | centered-modal | Open the dialog with `<DialogTrigger>` | Popup appears centered on screen with dimmed, blurred backdrop behind it |
+| T1 | centered-modal | Open the dialog with `<DialogTrigger>` | Popup carries `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2` and the backdrop carries `fixed inset-0 bg-black/30 backdrop-blur-sm`; the popup's bounding box is centered in the viewport |
 | T2 | backdrop-dismissal-disabled (default) | Click the backdrop area while dialog is open | Dialog remains open |
 | T3 | escape-closes (default) | Press Escape key while dialog is open and focused | Dialog closes |
 | T4 | close-affordance (default) | Render `<DialogContent>` without `showClose` prop | Close button (×) is rendered in top-right corner |
+| T4b | close-affordance (activate) | Render the dialog open, click the × button | Dialog closes |
 | T5 | close-affordance (hidden) | Render `<DialogContent showClose={false}>` | Close button is not rendered |
 | T6 | focus-trap | Tab through dialog, close it | Focus stays within dialog; on close, focus returns to the trigger element |
-| T7 | dialog-labelling | Render with `<DialogTitle>` and `<DialogDescription>` | Assistive technology announces title and description |
+| T7 | dialog-labelling | Render with `<DialogTitle>` and `<DialogDescription>` | The popup's `aria-labelledby` and `aria-describedby` ids resolve to the title and description elements |
 | T8 | backdrop-dismissal-disabled (opt-in) | Set `disablePointerDismissal={false}` and click backdrop | Dialog closes on backdrop click |
-| T9 | escape-closes (override) | Composing component passes its own `onOpenChange`, calling `eventDetails.cancel()` when the dismissal reason is Escape (or, with a controlled `open`, simply not setting it to `false`), then Escape is pressed while the dialog is open and focused | Dialog remains open — the composing component's override suppresses the default Escape-to-close behavior |
+| T9 | escape-overridable | Composing component passes its own `onOpenChange`, calling `eventDetails.cancel()` when the dismissal reason is Escape (or, with a controlled `open`, simply not setting it to `false`), then Escape is pressed while the dialog is open and focused | Dialog remains open — the composing component's override suppresses the default Escape-to-close behavior |
 | T10 | dialog-labelling (missing title) | Render `<DialogContent>` with no `<DialogTitle>` child | Popup renders without an `aria-labelledby` attribute; assistive technology announces the dialog with no accessible name |
 
 ## Edge Cases
 
-- **Backdrop dismissal is off by default** (see **backdrop-dismissal-disabled**) for modals/alerts — users opt back in with `disablePointerDismissal={false}`.
+- **Backdrop dismissal**: see [backdrop-dismissal-disabled](#requirements/backdrop-dismissal-disabled) for the default and the opt-in.
 - **Content width**: Dialog caps at `max-w-md` (448px); composing dialogs widen it via className override (e.g., `sm:max-w-2xl`).
-- **Close button hide**: `showClose={false}` hides the affordance for dialogs whose footer buttons are the only dismissal path (e.g., a busy/loading state that also overrides **escape-closes** so Escape is blocked while busy).
+- **Close button hide**: `showClose={false}` hides the affordance for dialogs whose footer buttons are the only dismissal path (e.g., a busy/loading state that also overrides [escape-closes](#requirements/escape-closes) (per [escape-overridable](#requirements/escape-overridable)) so Escape is blocked while busy).
 - **Responsive behavior**: `w-[calc(100%-2rem)]` preserves 16px side margins on small screens; margins prevent edge-touching on mobile.
-- **Escape override**: A composing component overrides **escape-closes** by passing its own `onOpenChange` (forwarded via `{...props}` on the `Dialog` root) and checking the dismissal reason before calling `eventDetails.cancel()` on the event-details argument — Base UI ignores a plain `event.preventDefault()` here — or, with a controlled `open`, by simply returning without flipping it to `false` — e.g., a search input within the dialog that wants to capture Escape for its own purposes.
-- **Missing title**: A `<DialogContent>` rendered without `<DialogTitle>` has no `aria-labelledby` and is announced to assistive technology with no accessible name; composing components MUST always render `DialogTitle` (see **dialog-labelling**), hiding it visually with CSS if a visible title isn't wanted.
+- **Escape override, uncontrolled**: A composing component passes its own `onOpenChange` (forwarded via `{...props}` on the `Dialog` root) and calls `eventDetails.cancel()` on the event-details argument when the reason is Escape. Base UI ignores a plain `event.preventDefault()` here.
+- **Escape override, controlled**: With a controlled `open`, the composing component simply returns from `onOpenChange` without setting `open` to `false`, e.g. a search input within the dialog that wants to capture Escape for its own purposes.
+- **Missing title**: A `<DialogContent>` rendered without `<DialogTitle>` has no `aria-labelledby` and is announced to assistive technology with no accessible name; see [dialog-labelling](#requirements/dialog-labelling); hide the title visually with CSS if a visible one isn't wanted.
 
 ## Configuration
 
@@ -144,7 +147,7 @@ None — a presentational primitive that emits no logs of its own.
 
 ## Platform Notes
 
-- **React/Web**: Implemented in `packages/web/packages/ui/src/components/dialog.tsx`. Built on `@base-ui/react/dialog`. Marked `"use client"` for Next.js. Responsive behavior verified via Playwright (ui-showcase) at 375px, 768px, and 1440px viewport widths.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/components/dialog.tsx`. Built on `@base-ui/react/dialog`. Marked `"use client"` for Next.js. Responsive behavior comes from `w-[calc(100%-2rem)] max-w-md`; no Playwright spec file in this repository asserts it at specific viewport widths.
 - **SwiftUI**: Web-only shared component; no SwiftUI implementation exists in `packages/apple` yet. A SwiftUI-native equivalent would present via `.sheet(isPresented:)` (or `.fullScreenCover`), pairing `interactiveDismissDisabled()` with the backdrop-dismissal-disabled default.
 - **Compose**: Web-only shared component; no Compose implementation exists yet. A Compose equivalent would use the `Dialog` composable from Material Design 3.
 - **AppKit / UIKit**: Web-only shared component. A native equivalent would use `NSWindow.beginSheet(_:completionHandler:)` on AppKit or `UIModalPresentationStyle.formSheet` on UIKit for arbitrary content — not `UIAlertController`, which is scoped to alert/action-sheet styles. `packages/apple`'s existing dialogs (e.g. `WindowOptionsDialog` in `AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome`) are bespoke `NSWindow` presentations built for a different purpose, not a shared counterpart to this primitive.
@@ -154,12 +157,12 @@ None — a presentational primitive that emits no logs of its own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/dialog.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/dialog.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 **Decision**: Backdrop dismissal is disabled by default for modals and alerts.
-**Rationale**: Prevents accidental data loss and clarifies intent (see **backdrop-dismissal-disabled** above, which AlertModal and the other composing dialogs inherit unchanged); pointer dismissal is opt-in for advanced use cases.
+**Rationale**: Prevents accidental data loss and clarifies intent (see [backdrop-dismissal-disabled](#requirements/backdrop-dismissal-disabled), which AlertModal and the other composing dialogs inherit unchanged).
 **Approved**: pending
 
 **Decision**: Built on Base UI (`@base-ui/react/dialog`) rather than a hand-rolled implementation.
@@ -167,13 +170,20 @@ None — a presentational primitive that emits no logs of its own.
 **Approved**: pending
 
 **Decision**: Backdrop opacity is 30% black (`bg-black/30`), not 60%.
-**Rationale**: Keeps the underlying page legible and subordinate while preserving context; the harder 60% opacity obscured the page entirely.
+**Rationale**: Keeps the underlying page legible and subordinate while preserving context. This is a stated preference: the source comment records that the earlier 60% dim put the page out of reach of reading, but cites no review or screenshot.
 **Approved**: pending
 
 **Decision**: All colors and spacing use the `apt-*` design-token family.
 **Rationale**: Ensures consistent theming across the product without raw hex values or `!important` overrides.
 **Approved**: pending
 
+**Decision**: The close button's hit area stays at its `size-4` (16×16px) icon, below the 44×44 target.
+**Rationale**: A known gap, not an accepted trade-off: `dialog.tsx` adds no padding to enlarge the target, and no decision has been made to fix or accept it. See `touch-target-size` in Compliance.
+**Approved**: pending
+
+**Decision**: The close button's `aria-label="Close"` stays hardcoded in English.
+**Rationale**: A known gap, not an accepted trade-off: `DialogContent` offers no `closeLabel` prop, and no decision has been made to add one or accept the limitation. See the two internationalization checks in Compliance.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -196,6 +206,7 @@ Statuses rest on `dialog.tsx`: the explicit `aria-label="Close"` plus Base UI's 
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Split Escape into default and overridable requirements, made the close button and description requirements testable, replaced duplicate prose with requirement fragments, and recorded the touch-target and close-label gaps as decisions. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed T9/Escape-override to use eventDetails.cancel() (or controlled open) not event.preventDefault(); fixed dangling backdrop-dismissal-disabled cross-ref to point locally instead of alert-and-dialog. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed Behavioral Requirements to subject-only kebab-case and updated every citation; corrected the WinUI 3 and AppKit/UIKit Platform Notes bullets to real APIs and verified against `packages/apple`; relabeled Platform Notes bullets to the standard names; rebuilt Compliance as canonical linked accessibility/internationalization checks with a supporting sentence; reformatted Design Decisions into Decision/Rationale/Approved blocks and cited the alert-and-dialog requirement by fragment instead of a wiki-link and section number; corrected the Localization and Target size claims against `dialog.tsx`; narrowed Logging to stop repeating Analytics; documented the escape-override mechanism and the no-title edge case with new test vectors; noted the backdrop/popup z-order dependency and the unaddressed Reduce Transparency gap |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Correct backdrop opacity from bg-black/60 to bg-black/30 per source; structure Appearance section; fix domain URI from hub to cookbook; expand Accessibility, Edge Cases, and Platform Notes; upgrade status from draft to review |

@@ -2,11 +2,11 @@
 id: a17a8253-0be8-4646-a76a-6941b1af3528
 title: "Tooltip"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -40,13 +40,13 @@ A tooltip is a non-interactive label that displays supplementary information whe
 - **render-on-focus**: The tooltip MUST display when the trigger element receives keyboard focus.
 - **respect-provider-delay**: The tooltip MUST respect the `delay` property set on the `TooltipProvider`, which controls the number of milliseconds before the tooltip opens (this wrapper defaults it to 200ms).
 - **not-clipped-by-ancestors**: The tooltip content MUST NOT be clipped by an ancestor's `overflow` or stacking-context constraints.
-- **position-relative-to-trigger**: The tooltip MUST position relative to the trigger element using a Positioner component that supports `side` (top, bottom, left, right), `sideOffset`, and `align` (start, center, end) properties.
+- **position-relative-to-trigger**: The tooltip MUST position relative to the trigger element on the `side` (top, bottom, left, right) given, offset by `sideOffset`, and aligned per `align` (start, center, end).
 - **support-style-override**: The tooltip content MUST support consumer-supplied overrides or extensions to its default styling.
-- **show-arrow**: The tooltip SHOULD display an optional pointer (arrow) by default; it MAY be disabled by setting the `arrow` prop to `false`.
+- **show-arrow**: The arrow MUST render unless the `arrow` prop is `false`.
 - **render-children-in-content**: The tooltip content MUST render the provided `children` prop as the label text.
-- **dismiss-on-escape**: The tooltip MUST dismiss when the user presses Escape while it is open (inherited from Base UI).
-- **remain-open-on-content-hover**: The tooltip MUST remain open while the pointer is over the tooltip content itself, not only while it is over the trigger (inherited from Base UI).
-- **dismiss-on-pointer-leave-or-blur**: The tooltip MUST dismiss when the pointer leaves both the trigger and the content, or when the trigger loses focus (inherited from Base UI).
+- **dismiss-on-escape**: The tooltip MUST dismiss when the user presses Escape while it is open (inherited from Base UI; assumed, not verified by a test in this repo).
+- **remain-open-on-content-hover**: The tooltip MUST remain open while the pointer is over the tooltip content itself, not only while it is over the trigger (inherited from Base UI; assumed, not verified by a test in this repo).
+- **dismiss-on-pointer-leave-or-blur**: The tooltip MUST dismiss when the pointer leaves both the trigger and the content, or when the trigger loses focus (inherited from Base UI; assumed, not verified by a test in this repo).
 
 ## Appearance
 
@@ -57,7 +57,7 @@ A tooltip is a non-interactive label that displays supplementary information whe
 - **Foreground/Text**: `apt-text` token (primary text color)
 - **Border**: 1px solid, `apt-border` token
 - **Shadow**: Medium drop shadow (shadow-md)
-- **Arrow**: 8px × 8px diamond (size-2), rotated 45deg, 1px border on right and bottom edges, inherits background and border from content, positioned to touch the edge of the trigger element
+- **Arrow**: 8px × 8px diamond (size-2), rotated 45deg, 2px corner radius (`rounded-[2px]`), 1px border on right and bottom edges, inherits background and border from content, positioned to touch the edge of the trigger element
 - **Max width**: 320px (max-w-xs)
 - **Z-index**: 50 (z-50)
 
@@ -76,7 +76,7 @@ The component defines no CSS transition or animation on open/close, so there is 
 
 - **Role**: `tooltip` (inherited from Base UI primitive via `role="tooltip"`)
 - **Label requirements**: The trigger element SHOULD have an associated label or accessible name that describes its purpose; the tooltip content provides supplementary information only, not the primary label.
-- **Keyboard support**: The tooltip MUST display when the trigger element receives focus via keyboard navigation.
+- **Keyboard support**: See #requirements/render-on-focus.
 - **Announce on open**: The wrapper inherits Base UI Tooltip's `role="tooltip"` and `aria-describedby` wiring. Screen readers announce the tooltip content as the description of the trigger element when the relationship is established via `aria-describedby`.
 - **Dismiss, hover, and persist**: See #requirements/dismiss-on-escape, #requirements/remain-open-on-content-hover, and #requirements/dismiss-on-pointer-leave-or-blur (WCAG 1.4.13, Content on Hover or Focus).
 - **Minimum touch target**: The trigger element's touch target size is the consuming application's responsibility (recommended minimum 44×44pt per platform guidelines); the tooltip content itself is non-interactive and has no target of its own.
@@ -99,21 +99,21 @@ The component defines no CSS transition or animation on open/close, so there is 
 | tooltip-012 | remain-open-on-content-hover | Tooltip is open; user moves the pointer from the trigger onto the tooltip content | Tooltip remains open |
 | tooltip-013 | dismiss-on-pointer-leave-or-blur | Tooltip is open via hover; user moves the pointer off both the trigger and the content without pressing Escape | Tooltip closes |
 | tooltip-014 | position-relative-to-trigger | Document `dir="rtl"`; `TooltipContent` with `align="start"` | Tooltip's leading edge (the trigger's right edge in RTL) aligns with the trigger's leading edge |
-| tooltip-015 | renders-with-empty-content | `TooltipContent` with `children=""` | Tooltip still renders and positions normally, with no visible text content |
-| tooltip-016 | very-long-text-wraps | `TooltipContent` with `children` text longer than 320px wide | Tooltip wraps text onto multiple lines and grows vertically without exceeding `max-w-xs` |
-| tooltip-017 | single-open-tooltip | User moves the pointer rapidly between two trigger elements within the same `TooltipProvider` before the first tooltip's delay elapses | Only one tooltip is open at a time; the delay timer resets for the newly hovered trigger |
-| tooltip-018 | auto-flip-near-viewport-edge | `TooltipContent` with `side="bottom"` on a trigger near the bottom edge of the viewport | Positioner flips the tooltip to the opposite or best-fit side so it stays within the viewport |
-| tooltip-019 | arrow-rotates-per-side | `TooltipContent` with `side="bottom"` | Arrow rotates 225deg to point upward toward the trigger instead of 45deg |
-| tooltip-020 | disabled-trigger-not-observed | Trigger's `disabled` attribute is set to true while its tooltip is open, with no pointer-leave, blur, or Escape event | Tooltip does not close on its own |
+| tooltip-015 | #edge-cases/renders-with-empty-content | `TooltipContent` with `children=""` | Tooltip still renders and positions normally, with no visible text content |
+| tooltip-016 | #edge-cases/very-long-text-wraps | `TooltipContent` with `children` text longer than 320px wide | Tooltip wraps text onto multiple lines and grows vertically without exceeding `max-w-xs` |
+| tooltip-017 | #edge-cases/single-open-tooltip | User moves the pointer rapidly between two trigger elements within the same `TooltipProvider` before the first tooltip's delay elapses | Only one tooltip is open at a time; the delay timer resets for the newly hovered trigger |
+| tooltip-018 | #edge-cases/auto-flip-near-viewport-edge | `TooltipContent` with `side="bottom"` on a trigger near the bottom edge of the viewport | Positioner flips the tooltip to the opposite or best-fit side so it stays within the viewport |
+| tooltip-019 | #edge-cases/arrow-rotates-per-side | `TooltipContent` with `side="bottom"` | Arrow rotates 225deg to point upward toward the trigger instead of 45deg |
+| tooltip-020 | #edge-cases/disabled-trigger-not-observed | Trigger's `disabled` attribute is set to true while its tooltip is open, with no pointer-leave, blur, or Escape event | Tooltip does not close on its own |
 
 ## Edge Cases
 
 - **renders-with-empty-content**: If `children` is an empty string or falsy, the tooltip MUST still render and position normally, with no visible text content.
 - **very-long-text-wraps**: Text longer than `max-w-xs` (320px) MUST wrap to multiple lines, and the tooltip MUST grow vertically to accommodate it.
-- **single-open-tooltip**: If a user quickly moves the pointer between trigger elements within the same `TooltipProvider`, only one tooltip MUST be open at a time, and the delay timer MUST reset for the newly hovered trigger (inherited from Base UI).
-- **auto-flip-near-viewport-edge**: If the configured `side` would place the tooltip outside the viewport (for example `side="bottom"` near the bottom edge), Base UI's Positioner MUST adjust the side automatically so the tooltip stays within the viewport.
+- **single-open-tooltip**: If a user quickly moves the pointer between trigger elements within the same `TooltipProvider`, only one tooltip MUST be open at a time, and the delay timer MUST reset for the newly hovered trigger (inherited from Base UI; assumed, not verified by a test in this repo).
+- **auto-flip-near-viewport-edge**: If the configured `side` would place the tooltip outside the viewport (for example `side="bottom"` near the bottom edge), the tooltip MUST adjust the side automatically so it stays within the viewport (on the web, Base UI's Positioner does this; see Platform Notes).
 - **arrow-rotates-per-side**: When `side="bottom"`, the arrow MUST rotate 225deg to point upward instead of 45deg; for `side="left"` or `side="right"`, the arrow's position MUST adjust accordingly.
-- **disabled-trigger-not-observed**: The component does not observe the trigger element's `disabled` state. If the trigger becomes disabled while its tooltip is open, the tooltip does not close on its own — dismissal depends entirely on whether the trigger's own pointer-leave, blur, or Escape handling still fires, which this component does not control.
+- **disabled-trigger-not-observed**: The tooltip MUST NOT observe the trigger element's `disabled` state. If the trigger becomes disabled while its tooltip is open, the tooltip MUST NOT close on its own — dismissal depends entirely on whether the trigger's own pointer-leave, blur, or Escape handling still fires, which this component does not control.
 
 ## Configuration
 
@@ -137,7 +137,7 @@ Not applicable: The Tooltip component does not render any static text strings; a
 
 ## Accessibility Options
 
-Not applicable: The component does not implement platform-specific accessibility display options (Reduce Motion, Increase Contrast, Differentiate Without Color). These concerns SHOULD be addressed at the application level by conditionally disabling tooltips or adjusting the provider's delay based on user preferences.
+Not applicable: The component has no motion (it mounts and unmounts instantly) and does not signal anything by color alone, so there is nothing to adapt for Reduce Motion, Increase Contrast, or Differentiate Without Color.
 
 ## Feature Flags
 
@@ -157,17 +157,17 @@ Not applicable: The component does not emit any structured logs; debugging relie
 
 ## Platform Notes
 
-- **React/Web**: Wraps Base UI's tooltip primitive (`@base-ui/react/tooltip`) in the exported `Tooltip`, `TooltipTrigger`, `TooltipContent`, and `TooltipProvider` components. `TooltipContent` composes the primitive's `Portal`, `Positioner` (side, sideOffset, align), `Popup`, and `Arrow`: the `Portal` is what satisfies #requirements/not-clipped-by-ancestors, and the `className` prop forwarded to `Popup` is what satisfies #requirements/support-style-override. The arrow is an 8×8 (`size-2`) square rotated 45deg with a border on its right and bottom edges and a 2px corner radius (`rounded-[2px]`), not a 2px square.
+- **React/Web**: Wraps Base UI's tooltip primitive (`@base-ui/react/tooltip`) in the exported `Tooltip`, `TooltipTrigger`, `TooltipContent`, and `TooltipProvider` components. `TooltipContent` composes the primitive's `Portal`, `Positioner` (side, sideOffset, align), `Popup`, and `Arrow`: the `Portal` is what satisfies #requirements/not-clipped-by-ancestors, and the `className` prop forwarded to `Popup` is what satisfies #requirements/support-style-override. The arrow is an 8×8 (`size-2`) square rotated 45deg with a border on its right and bottom edges and a 2px corner radius (see Appearance).
 - **SwiftUI**: Use the `.help(_:)` view modifier, which attaches a native tooltip that macOS shows on pointer hover. It has no `delay`, `side`, `sideOffset`, or `arrow` equivalents, so those semantics are informational only on this platform.
 - **Compose**: Use Material 3's `TooltipBox` composable with a `PlainTooltip` (or `RichTooltip` for richer content) and `rememberTooltipState()`, anchoring it to the trigger composable; `TooltipBox`'s `positionProvider` controls placement analogous to `side`/`align`.
 - **AppKit / UIKit**: On macOS, set `NSView.toolTip` (or the inherited `NSControl` property) to a string; AppKit shows it automatically after its own hover delay. On iOS/iPadOS, attach a `UIToolTipInteraction` to the trigger view; it only appears for pointer-based interactions (trackpad/mouse), matching this component's hover semantics.
-- **WinUI 3**: Use the `ToolTipService.ToolTip` attached property (or an explicit `ToolTip` control) on the trigger element. `Placement` controls side (Top, Bottom, Left, Right, Mouse), and `VerticalOffset`/`HorizontalOffset` map to `sideOffset`. Show delay is controlled by `ToolTipService.ShowDuration` / system settings, analogous to the Provider's `delay`.
+- **WinUI 3**: Use the `ToolTipService.ToolTip` attached property (or an explicit `ToolTip` control) on the trigger element. `Placement` controls side (Top, Bottom, Left, Right, Mouse), and `VerticalOffset`/`HorizontalOffset` map to `sideOffset`. WinUI 3 exposes no per-tooltip open delay (it follows the system setting), so `delay` is informational only on this platform.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/tooltip.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/tooltip.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -200,12 +200,13 @@ Not applicable: The component does not emit any structured logs; debugging relie
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-Screen-reader, keyboard, and semantic-markup statuses rest on Base UI's built-in `role="tooltip"`/`aria-describedby` wiring and this wrapper's hover/focus triggers documented above; contrast and RTL are marked partial because the source confirms the design tokens and the Positioner's logical placement but not the rendered contrast values or `dir="rtl"` behavior directly; text-expansion is passed on the wrapping behavior confirmed in **very-long-text-wraps**; the four exports are themed pass-throughs of base-ui's `Tooltip` primitives with no logic of their own (separation-of-concerns passed), and no test in the web workspace imports this source — the candidate tests matched by name are unrelated macOS `Chrome`-pane Swift files (unit-test-coverage failed).
+The Escape, content-hover, pointer-leave, single-open and viewport-flip guarantees are inherited from Base UI and are assumed, not verified by a test. Screen-reader, keyboard, and semantic-markup statuses rest on Base UI's built-in `role="tooltip"`/`aria-describedby` wiring and this wrapper's hover/focus triggers documented above; contrast and RTL are marked partial because the source confirms the design tokens and the Positioner's logical placement but not the rendered contrast values or `dir="rtl"` behavior directly; text-expansion is passed on the wrapping behavior confirmed in **very-long-text-wraps**; the four exports are themed pass-throughs of base-ui's `Tooltip` primitives with no logic of their own (separation-of-concerns passed), and no test in the web workspace imports this source — the candidate tests matched by name are unrelated macOS `Chrome`-pane Swift files (unit-test-coverage failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Restated Positioner and Base UI wording as component outcomes, made the arrow and disabled-trigger rules testable, fixed the WinUI 3 delay note, moved the arrow radius into Appearance, and marked inherited Base UI guarantees as assumed. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Narrowed frontmatter platforms to typescript/web, matching the component's single web source. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; restate must-use-portal/must-support-custom-className as outcomes and move their React specifics into the React/Web platform note; rewrite non-web Platform Notes around each platform's native tooltip API and correct unsupported/inaccurate claims (SwiftUI, Compose, WinUI 3, 200ms default); add dismiss/hover-persist requirements and test vectors plus an RTL test vector; rewrite edge cases as RFC 2119 requirements with vectors; resolve the z-index and arrow-size contradictions; reformat Design Decisions to the three-line form; normalize the Compliance table and fix frontmatter platforms/related drift |
 | 1.0.1 | 2026-09-22 | Claude Haiku 4.5 | Remove review marker from Accessibility section; state that wrapper inherits Base UI Tooltip's role and aria-describedby wiring for screen reader announcement |

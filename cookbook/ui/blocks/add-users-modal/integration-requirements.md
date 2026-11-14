@@ -21,6 +21,9 @@
   entry fields), and call `onClose()` — immediately, regardless of `busy`. The
   modal does not wait for `busy` to clear before calling `onClose()`; the
   caller's `open` prop still governs whether the dialog remains mounted.
+  `onAdd` returns `void`, so the modal cannot tell whether the caller's submit
+  succeeded: a caller that wants to retry after a failure MUST keep its own
+  copy of the rows.
 - **confirm-cancel-when-dirty**: Cancel or Esc MUST open a discard-confirm
   `UnsavedChangesAlert` when the staged table has rows OR the entry row has
   content (name, email, phone, or note is non-blank); otherwise it MUST close

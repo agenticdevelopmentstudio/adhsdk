@@ -6,10 +6,13 @@
 | empty.no-filter | "Nothing here." | Message when list is empty with no active filter |
 | empty.filtered | "Nothing matches these filters." | Message when list is empty due to active filters |
 | selection.count | "{count} selected" | Selection count button text |
-| selection.hidden | "({count} not shown)" | Hidden selection count (appended in gold color) |
+| selection.hidden | "({count} not shown)" | Hidden selection count (appended in the accent color) |
 | selection.clear | "Clear selection" | Screen-reader label for clear-selection button |
 | table.error | "Couldn't load {ariaLabel}" | Error alert title (default, overridable via `errorTitle` prop) |
-| table.error.with-rows | "— showing the last rows that loaded." | Error alert description when rows exist |
+| table.error.with-rows | "{message} — showing the last rows that loaded." | Error alert description when rows exist; a single template so a locale can reorder the message |
+| table.select-all | "Select all" | Accessible label of the header checkbox; hardcoded in `DataTable` |
+| table.empty | "No items." | `DataTable`'s own default empty text; `EditableList` always overrides it with `emptyLabel` or `emptyFilteredLabel` |
+| table.resize-column | "Resize column {key}" | Accessible label of a column's resize handle; hardcoded in `DataTable` |
 | details.label | "Details" | Default label for details pane header |
 | details.empty | "Select a row to see its details." | Message when details pane has no selection |
 | details.many | "Select a single row to see its details." | Message when details pane has multiple selections |

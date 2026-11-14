@@ -16,6 +16,6 @@
 **Approved**: pending
 
 **Decision**: `isDark` is `relativeLuminance < 0.5`, and `hexStringRGB` is lower-case with no alpha.
-**Rationale**: The 0.5 cut is the source's classifier for theme appearance (`ITermColorsParser` uses it to pick dark or light) and does not match its own "can host light text" comment for mid tones (see the open question on `is-dark-contract`). The lower-case six-digit form matches the terminal palette's color string, per the doc comment.
+**Rationale**: The 0.5 cut is the source's classifier for theme appearance (`ITermColorsParser` uses it to pick dark or light) and does not match its own "can host light text" comment for mid tones (see the open question on `is-dark-contract`). The lower-case six-digit form matches the terminal palette's color string, per the doc comment, so `ColorTheme` can project onto `TerminalSessionColorPalette` (the rationale for `hex-rgb-purpose`).
 **Approved**: pending
 

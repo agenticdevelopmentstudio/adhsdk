@@ -4,6 +4,10 @@
   no `@Observable`, no `View`, no SwiftUI-specific types anywhere in either
   file. A SwiftUI host binds to it only indirectly, through a view model
   (e.g. `ObservableChatViewModel`) that subscribes to `inboundEvents`.
+  `PersonaChatCoordinator` is an `actor`; `inboundEvents`, `participantID`,
+  `conversationsURL` and `control` are `nonisolated`. `TurnControl` is a
+  `final class: @unchecked Sendable` whose `task` and `isDestroyed` state sit
+  behind an `NSLock`, so `destroy()` can mutate it synchronously.
 - **Compose**: Start from `kotlinx.coroutines` and `kotlinx.serialization`.
   `AsyncStream<InboundEvent>` maps to a `kotlinx.coroutines.flow.Flow`, or a
   `Channel<InboundEvent>` if buffering semantics need to match

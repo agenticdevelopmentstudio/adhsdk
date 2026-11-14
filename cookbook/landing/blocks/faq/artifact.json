@@ -4,11 +4,11 @@
     "id": "42e7a2ea-f138-4edb-899f-43c1946e4ef8",
     "title": "FAQ",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1cdce1d08ee7ed7b",
+  "synced": "e724e35989285082",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

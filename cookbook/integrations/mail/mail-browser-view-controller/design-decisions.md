@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: Each tick calls the model's refresh-if-synced action, a read of the local store that never calls the remote mail provider.
-**Rationale**: The class comment says it is "a read of the local store, never a Gmail call"; the poll costs no network or API quota. How the model decides a sync has landed belongs to the `MailBrowserModel` artifact.
+**Rationale**: The class comment says it is "a read of the local store, never a Gmail call"; the poll costs no network or API quota. How the model decides a sync has landed belongs to the `MailBrowserModel` artifact ([adhsdk.ingredient.integrations.mail.mail-browser-model](cookbook:b3edb32d-7473-464b-acfb-c19cdd44e99e)).
 **Approved**: pending
 
 **Decision**: The poll runs only between appear and disappear.
@@ -20,7 +20,7 @@
 **Approved**: pending
 
 **Decision**: Pane widths are 180 to 320 for the sidebar, 280 minimum for the list and 360 minimum for the reader, with divider positions saved under "MailBrowserSplit".
-**Rationale**: The values are fixed in source with no comment; their reasons are not recorded there, so this records what the code does.
+**Rationale**: The values are fixed in source with no comment, and no reason for them is recorded anywhere, so they are unexplained, not design intent; this records what the code does.
 **Approved**: pending
 
 **Decision**: The controller's alert strings are literals, and `init(coder:)` traps.
@@ -28,9 +28,10 @@
 **Approved**: pending
 
 **Decision**: The refresh interval is accepted as given, with no check for zero or negative values.
-**Rationale**: The source takes a `Duration` and passes it to the sleep; a very short interval only makes the local-store read run more often, and the only caller uses the default. Rejecting bad values at construction is left to a future change.
+**Rationale**: The source takes a `Duration` and passes it to the sleep; a very short interval only makes the local-store read run more often, and the only caller uses the default. Rejecting bad values at construction is left to a future change. The debt is retired when the initializer rejects a zero or negative interval or a second caller sets a non-default one.
 **Approved**: pending
 
 **Decision**: Overlapping errors each present their own alert; the controller neither coalesces nor queues them.
 **Rationale**: The source presents one alert per non-nil error value and leaves stacking to AppKit. A port to a platform that allows one dialog at a time (WinUI `ContentDialog`) needs a queue or coalescing step, which this spec does not define yet.
 **Approved**: pending
+

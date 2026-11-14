@@ -4,15 +4,15 @@
     "id": "c9c48e65-6905-4035-b8e1-e053219599f1",
     "title": "DocBreadcrumbs",
     "type": "ingredient",
-    "version": "1.3.1",
+    "version": "1.3.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Semantic breadcrumb trail for documentation navigation, always with home crumb first.",
+    "summary": "Semantic breadcrumb trail for documentation navigation, with the home crumb first whenever it renders.",
     "platforms": [
       "typescript",
       "web"
@@ -23,12 +23,15 @@
       "documentation"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "ef7191ff-63a9-442a-b6d0-f8452a0aa1d6",
+      "0fe9833b-2a5c-47d5-a455-87e00d3797cf"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ce1f5dbecd4df680",
+  "synced": "ab96011c7d3ff857",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

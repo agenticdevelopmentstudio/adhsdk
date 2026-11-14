@@ -4,11 +4,11 @@
     "id": "ba2377b1-f831-4ef8-bf2c-d8393e5eb2c1",
     "title": "Status Pill",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ac5d111930f96dbc",
+  "synced": "7a3d22adcad61c8b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

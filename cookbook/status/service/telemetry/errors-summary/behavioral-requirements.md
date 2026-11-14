@@ -6,7 +6,7 @@
 - **purity**: `errorsSummary` MUST NOT mutate the input array or any of its rows.
 - **no-side-effects**: `errorsSummary` MUST NOT perform I/O, read the clock, or consult any state
   other than its argument; the same input MUST yield an equal result.
-- **no-errors-raised**: `errorsSummary` does not validate its input and has no error path; the
+- **no-errors-raised**: `errorsSummary` MUST NOT validate its input or raise an error; the
   caller MUST pass an array of rows shaped like `ErrorDTO` (the parameter type declares it).
 
 ### Figures
@@ -32,16 +32,11 @@
 - **top-cap**: `top` MUST contain at most `ERRORS_TOP_COUNT` rows, the exported constant `5`.
 - **top-rows-unchanged**: Each entry of `top` MUST be the original `ErrorDTO` row, unmodified; the
   summary adds no fields to it.
-- **count-not-guarded-in-sort**: The sort compares `b.count - a.count` without the falsy guard
-  used by `events`; the order of `top` is therefore only defined when every active row has a
-  numeric `count`. `ErrorDTO.count` is typed `number`, which is the documented precondition.
 
 ### Attachment rule (owned by the caller)
 
-- **judged-rows-only**: The doc comment declares that the summary is only attached where every row
-  was judged. `errorsSummary` itself cannot tell a judged row from an unjudged one (both read as
-  backlog); the guarantee is the caller's. `GET /telemetry` passes the rows returned by its
-  `judged` step and always attaches the result.
-- **snapshot-field**: `TelemetrySnapshot.errorsSummary` is optional; a snapshot without it makes no
-  claim about errors. A stored row has no verdict, so the summary exists on the live snapshot only.
+- **judged-rows-only**: The caller MUST pass only rows that have been judged, with each row's
+  `active` verdict stamped. `errorsSummary` itself cannot tell a judged row from an unjudged one
+  (both read as backlog), so the guarantee is the caller's. `GET /telemetry` passes the rows
+  returned by its `judged` step and attaches the result every time.
 

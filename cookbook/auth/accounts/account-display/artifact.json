@@ -4,7 +4,7 @@
     "id": "86eccc6f-cd1b-4ac7-bb98-851eb7c54324",
     "title": "Account Display",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -24,12 +24,15 @@
       "display"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "9cf9784d-48c9-4b29-b553-c72ffdfce7b9",
+      "f46b9323-7954-4f66-a476-970fcc9db372"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0d606790c11ea8e4",
+  "synced": "48244cf73dfead36",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: 46b0cb5d-bd0c-45d0-ab14-95054e1c59ab
 title: "Email Signup Form"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -48,17 +48,17 @@ The Email Signup Form is an embeddable React component that collects email addre
 - **show-unavailable-state**: Component MUST display "Signups are unavailable right now." with a clickable "Try again" button when the config fetch fails, allowing the user to retry without a page reload.
 - **show-ready-state**: Component MUST render the signup form when config is loaded and status is "open".
 - **validate-email-locally**: Component MUST validate the email address against the pattern `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` before submission.
-- **reject-invalid-email**: Component MUST display the validation error "Enter a valid email address." and MUST NOT submit when email fails local validation. The email input is also `required` and `type="email"`, and the `<form>` has no `noValidate`, so for a real user click on the submit button, the browser's own native constraint validation runs first: for an empty field or one that fails the browser's `type="email"` check, the browser blocks the `submit` event with its own message, and this handler (and the message above) never runs. The component's own message is reachable by a real click only for input that passes the browser's check but fails the stricter local pattern (e.g. `"a@b"`), or by any submit that bypasses native validation (a synthetic/programmatic `submit` event).
+- **reject-invalid-email**: Component MUST display the validation error "Enter a valid email address." and MUST NOT submit when email fails local validation. Native constraint validation can pre-empt this check; see the Empty email field edge case.
 - **trim-email-before-submit**: Component MUST trim whitespace from the email value before both validation and submission.
 - **trim-name-before-submit**: Component MUST trim whitespace from the name value before submission (if collectName is true).
 - **wait-for-nonce-age**: Component MUST wait until the nonce age (time since config.nonce was received) exceeds config.minAgeMs before submitting, if minAgeMs is specified.
 - **add-timing-buffer**: Component MUST add 250ms to any nonce age wait to account for `setTimeout`'s lower-bound rounding and other measurement noise — not for clock differences between client and server; the elapsed-duration measurement used by **wait-for-nonce-age** is already immune to clock skew on its own.
-- **enter-submitting-state**: Component MUST set phase to "submitting" and disable the submit button before sending the POST request.
-- **post-submission**: Component MUST POST the signup data to `{apiBaseUrl}/public/signup-lists/{publicKey}/signups` with method "POST", Content-Type "application/json", and body containing email, name (if provided), nonce, website (honeypot), and sourceUrl.
+- **enter-submitting-state**: Component MUST set phase to "submitting" and disable the submit button (with `aria-busy`) before the nonce-age wait and the POST request, and MUST keep that state for the whole wait plus the POST.
+- **post-submission**: Component MUST POST the signup data to `{apiBaseUrl}/public/signup-lists/{publicKey}/signups` with method "POST", Content-Type "application/json", and body containing email, name (if provided), nonce, website (honeypot), and sourceUrl. The POST has no client-side timeout of its own; only the config fetch is pinned at 10,000ms.
 - **include-honeypot-in-post**: Component MUST send the honeypot field value to the server in the POST body as `website`, on every submission — empty for a legitimate visitor, non-empty only if something else filled it in.
 - **include-source-url**: Component MUST capture and send `window.location.href` as `sourceUrl` in the POST body, unless running on the server (SSR).
 - **handle-submission-ok**: Component MUST enter the "done" state and display the success message when the POST response status is 2xx.
-- **handle-submission-error**: Component MUST catch POST errors (any status not 2xx, network failure, or timeout) and display "Something went wrong. Please try again." with a generic error message.
+- **handle-submission-error**: Component MUST catch POST errors (any status not 2xx or a network failure; the POST has no client-side timeout) and display "Something went wrong. Please try again." with a generic error message.
 - **return-to-ready-on-error**: Component MUST return to the "ready" state after an error, allowing the user to retry.
 - **refresh-nonce-on-error**: Component MUST fetch a fresh config (with a new nonce) after a submission error, in case the original nonce has expired.
 - **suppress-server-error-details**: Component MUST NOT display server error reasons or HTTP status codes to the visitor; errors MUST NOT leak anti-abuse gate details.
@@ -68,15 +68,15 @@ The Email Signup Form is an embeddable React component that collects email addre
 - **render-name-label-when-enabled**: Component MUST render a visible `<label>` with text "Name" for the name input field when collectName is true.
 - **mark-email-required**: Component MUST set the `required` attribute on the email input.
 - **set-email-type**: Component MUST set type="email" on the email input.
-- **set-name-autocomplete**: Component MUST set autoComplete="name" on the name input.
-- **set-email-autocomplete**: Component MUST set autoComplete="email" on the email input.
+- **set-name-autocomplete**: Component MUST set the name autofill hint to "name" on the name input (web: `autoComplete="name"`).
+- **set-email-autocomplete**: Component MUST set the email autofill hint to "email" on the email input (web: `autoComplete="email"`).
 - **mark-email-invalid-on-validation-error**: Component MUST set `aria-invalid="true"` on the email input when a validation error exists, and set it to false when there is no error.
 - **associate-error-with-field**: Component MUST set `aria-describedby` on the email input to reference the error message when a validation error exists.
-- **render-honeypot-hidden**: Component MUST render the honeypot input with `aria-hidden="true"`, `tabIndex={-1}`, and CSS positioning that removes it from the visual and tab order flow (e.g., `position: absolute; left: -9999px`).
+- **render-honeypot-hidden**: Component MUST render the honeypot input hidden from assistive tech, out of the tab order, and positioned off the visual flow (web: `aria-hidden="true"`, `tabIndex={-1}`, `position: absolute; left: -9999px`).
 - **opt-out-honeypot-autofill**: Component MUST apply autofill opt-out properties to the honeypot field to prevent password managers from filling it.
 - **mark-error-alert**: Component MUST set `role="alert"` on the error message container.
-- **display-error-when-present**: Component MUST render an error message only when an error object exists, MUST NOT pre-render an empty error container.
-- **use-unique-ids**: Component MUST generate unique instance-scoped IDs for all inputs and labels using React.useId(), to support multiple forms on the same page.
+- **display-error-when-present**: Component MUST render an error message only when a validation or submission error exists, MUST NOT pre-render an empty error container.
+- **use-unique-ids**: Component MUST generate unique instance-scoped IDs for all inputs and labels using an instance-unique ID source (React: `useId()`), to support multiple forms on the same page.
 - **mark-submit-disabled-during-submit**: Component MUST set the `disabled` attribute on the submit button when phase is "submitting".
 - **mark-submit-busy**: Component MUST set `aria-busy="true"` on the submit button when the form is submitting.
 - **change-submit-label-on-submit**: Component MUST change the button text to "Signing up…" when submitting.
@@ -84,13 +84,13 @@ The Email Signup Form is an embeddable React component that collects email addre
 - **replace-form-on-success**: Component MUST render only the success message (not the form) when phase is "done".
 - **focus-success-message**: Component MUST programmatically focus the success message container — which exposes `tabIndex={-1}` so it is focusable — to ensure screen readers announce it.
 - **set-success-role-status**: Component MUST set `role="status"` on the success message container to indicate it is a status update.
-- **title-fallback**: Component MUST display the provided `title` prop when supplied, and MUST fall back to `config.name` when it is not (`title ?? config?.name`); this is unconditional, not a soft preference.
+- **title-fallback**: Component MUST display the provided `title` prop when supplied, and MUST fall back to `config.name` when it is not (`title ?? config?.name`).
 - **description-fallback**: Component MUST display the provided `description` prop when supplied, and MUST fall back to `config.description` when it is not.
 - **button-label-default**: Component MUST use the provided `buttonLabel` prop when supplied, and MUST default to "Sign up" when it is not.
 - **success-message-default**: Component MUST use the provided `successMessage` prop when supplied, and MUST default to "Thanks for signing up! Check your inbox for a confirmation." when it is not.
 - **collect-name-default**: Component MUST default `collectName` to `true` when the prop is not specified.
-- **apply-classname**: Component MAY apply the provided className prop to the root element for styling customization.
-- **handle-missing-min-age**: Component MAY handle backends that do not return minAgeMs by treating it as undefined and submitting without a nonce age delay.
+- **apply-classname**: Component MUST apply the provided className prop to the root element for styling customization.
+- **handle-missing-min-age**: Component MUST handle backends that do not return minAgeMs by treating it as undefined and submitting without a nonce age delay.
 
 ## Appearance
 
@@ -115,7 +115,7 @@ The Email Signup Form is an embeddable React component that collects email addre
 | Ready | Full form visible with email and optional name fields; submit button enabled |
 | Submitting | Submit button disabled and at 50% opacity; button text changes to "Signing up…"; aria-busy="true" |
 | Done | Form hidden; success message displayed with focus |
-| Closed | Message "{list name} is closed to new signups right now." (`config?.name ?? "This list"`: falls back to "This list" only when config.name is `null` or missing/`undefined`; an empty-string `config.name` renders as a blank subject, e.g. " is closed to new signups right now.") ; no form |
+| Closed | Message "{list name} is closed to new signups right now." (`config?.name ?? "This list"`: falls back to "This list" only when config.name is `null` or missing/`undefined`; an empty-string `config.name` renders as a blank subject, e.g. " is closed to new signups right now."; see the Closed-State Name Fallback design decision); no form |
 | Unavailable | Error message "Signups are unavailable right now." with a "Try again" button |
 
 ## Accessibility
@@ -139,7 +139,7 @@ The Email Signup Form is an embeddable React component that collects email addre
 | esf-003 | timeout-config-request, show-unavailable-state | Config fetch hangs beyond 10,000ms | Component enters unavailable state and displays "Try again" button |
 | esf-004 | handle-config-not-ok, show-unavailable-state | Config fetch returns 404 or 500 | Component enters unavailable state; console error logged with public key |
 | esf-005 | show-closed-state | Config fetch returns 200 with status "closed" | Component displays "{list name} is closed to new signups right now." with no form |
-| esf-006 | validate-email-locally, reject-invalid-email | User enters "notanemail" and clicks submit | The browser's native constraint validation (`type="email"`) blocks the `submit` event first and shows its own bubble ("Please include an '@' in the email address…"); the component's handler does not run and its "Enter a valid email address." message does not appear. The component's own check and message are exercised only by a value that passes native `type="email"` but fails the stricter local pattern (e.g. "a@b"), or by a submit that bypasses native validation |
+| esf-006 | native-constraint-validation (see the Empty email field edge case) | User enters "notanemail" and clicks submit | The browser's native constraint validation (`type="email"`) blocks the `submit` event first and shows its own bubble; the component's handler does not run and its "Enter a valid email address." message does not appear |
 | esf-007 | validate-email-locally | User enters "user@example.com" | Form passes validation check |
 | esf-008 | trim-email-before-submit | User enters "  user@example.com  " | Email is trimmed before validation and submission |
 | esf-009 | wait-for-nonce-age, add-timing-buffer | Config returned with minAgeMs 3000; user submits after 1000ms | Submission waits `(3000 - 1000) + 250` = 2250ms before sending |
@@ -168,17 +168,24 @@ The Email Signup Form is an embeddable React component that collects email addre
 | esf-032 | description-fallback | Mount with description="Custom description" | Description displays "Custom description" instead of config.description |
 | esf-033 | success-message-default | Mount without successMessage prop | Success state displays the default "Thanks for signing up! Check your inbox for a confirmation." message |
 | esf-034 | show-unavailable-state | Click "Try again" after config fetch fails | Phase returns to loading, and the config fetch is retried |
-
+| esf-035 | validate-email-locally, reject-invalid-email, mark-email-invalid-on-validation-error | User enters "a@b" (passes native `type="email"`, fails the local pattern) and submits | "Enter a valid email address." is shown with `role="alert"`; no POST is sent |
+| esf-036 | enter-submitting-state, mark-submit-busy, mark-submit-disabled-during-submit | Config returned with minAgeMs 3000; user submits after 1000ms | The button is disabled with `aria-busy="true"` immediately, throughout the 2250ms wait and the POST |
+| esf-037 | render-email-label, mark-email-required, set-email-type | Inspect DOM | A visible label "Email address" is tied to the email input, which has `required` and `type="email"` |
+| esf-038 | opt-out-honeypot-autofill | Inspect DOM | The honeypot has `autocomplete="off"` and the `data-form-type`, `data-1p-ignore`, `data-lpignore`, `data-bwignore` and `data-protonpass-ignore` attributes |
+| esf-039 | enter-submitting-state | User double-clicks submit | Only one POST is sent; the second invocation is a no-op |
+| esf-040 | refresh-nonce-on-error, log-failures-to-console | Submission fails and the follow-up config refresh also fails | The form stays usable and the console logs `[EmailSignupForm] could not refresh the signup nonce for public key "{publicKey}": {reason}` |
+| esf-041 | show-closed-state | Config returns status "closed" with `name` null or missing | Component displays "This list is closed to new signups right now." |
+| esf-042 | include-honeypot-in-post, handle-submission-ok | Honeypot is non-empty and the server returns 200 | Component enters `done` and shows the success message; the POST body carried the honeypot value as `website` |
 ## Edge Cases
 
 - **Empty or missing list name**: If the server returns `config.name` as `null` or an empty string and no `title` prop is supplied, the heading renders no text — an empty `<h3>` for `""`, nothing at all for `null` (React renders `null` as nothing). There is no fallback placeholder heading text in the component. `config.description` (or the `description` prop), if present, still renders normally underneath.
 - **Multiple embeds on same page**: Each instance generates unique IDs via React.useId(); form submissions from one instance do not affect others.
 - **Retry before the nonce refresh completes**: After a submission error, the phase returns to `ready` and the error message displays immediately — it is not held pending the follow-up config refresh, which continues in the background (see **refresh-nonce-on-error**). If the visitor clicks submit again before that refresh resolves, the retry proceeds using whichever nonce is currently held in state (the same one that just failed, unless the refresh has already landed); it clears the previous error and is a normal submission subject to the same nonce-age wait, and may itself fail and trigger another refresh.
 - **Double submit**: The submit button is disabled (`disabled={busy}`) the instant the phase becomes `submitting`, and `submit()` independently returns immediately if `phase !== "ready"`. A rapid double-click therefore cannot send two POST requests; the second invocation is a no-op.
-- **Nonce expiration mid-session**: If a tab remains open past the server's nonce lifetime — a backend-defined duration, referenced in source comments as `audience/nonce.ts` `MAX_AGE_MS`, but not a value this component hardcodes or depends on — a retry uses the stale nonce, the server rejects it, an error is shown, and a refresh fetches a new nonce. This MUST succeed; the visitor is not stuck.
+- **Nonce expiration mid-session**: If a tab remains open past the server's nonce lifetime — a backend-defined duration, referenced in source comments as `audience/nonce.ts` `MAX_AGE_MS`, but not a value this component hardcodes or depends on — a retry uses the stale nonce, the server rejects it, an error is shown, and a refresh fetches a new nonce. The visitor is not stuck, because the refresh fetches a new nonce; if that refresh itself fails, the old form stays usable (see Silent Config Refresh).
 - **Clock skew between client and server**: The nonce age is measured as a duration from the receive timestamp (Date.now()), not as a comparison between server and client clocks, so a visitor's skewed clock cannot shorten the required wait.
 - **Extended form-fill delay**: A visitor who takes 8 seconds to fill the form before submitting will submit immediately upon clicking, with no additional wait. The required wait is `(minAgeMs − elapsed) + 250`ms whenever `minAgeMs − elapsed` is positive, and `0` otherwise; once the visitor's own form-filling time already exceeds `minAgeMs`, that difference is negative and the wait is `0`. This edge case is about elapsed time, not connection speed — nothing here depends on network quality.
-- **Network failure during POST**: Any error during the POST (timeout, connection refused, non-2xx status) is treated identically: the component shows "Something went wrong" and returns to ready.
+- **Network failure during POST**: Any error during the POST (connection refused, network failure, non-2xx status; the POST has no client-side timeout) is treated identically: the component shows "Something went wrong" and returns to ready.
 - **Honeypot-tripped submission**: Per the component's own source comments, the backend returns a uniform `200 OK` for a honeypot-tripped submission so the response is indistinguishable from a real success (`publicSignup.ts`: non-empty `website` ⇒ uniform 200, nothing written). The component therefore proceeds to the `done` phase and displays the success message exactly as it would for a legitimate signup — nothing on the page indicates that the submission was silently discarded.
 - **Password manager autofilling honeypot**: The honeypot field has autofill opt-out properties; if a password manager ignores these and fills the field anyway, the server treats any non-empty value as a bot submission and silently rejects it.
 - **Validation error persists until the next submit**: Editing the email field after a validation error does not itself clear the error — `error` is only reset to `null` inside `submit()`, at the point a resubmission passes local validation. The message and the `aria-invalid`/`aria-describedby` state therefore remain on screen while the visitor is still typing, until they submit again.
@@ -207,8 +214,6 @@ Not applicable: Email Signup Form is an embedded component within a page, not a 
 Not fully externalized. `title`, `description`, `buttonLabel`, and `successMessage` are overridable via props, so a consuming app can localize those four strings. Every other user-facing string is a hardcoded English literal with no override mechanism: "Loading…", "Enter a valid email address.", "Something went wrong. Please try again.", "Signups are unavailable right now.", "Try again", "Email address", "Name", "Signing up…", and the footer disclosure "We'll only email you about this. Unsubscribe any time." See Compliance (`string-externalization`, `no-hardcoded-strings`).
 
 ## Accessibility Options
-
-Document which accessibility display options (Rule 15) this component responds to:
 
 | Option | Behavior |
 |--------|----------|
@@ -244,16 +249,16 @@ Subsystem: Application console (developer-facing only)
 ## Platform Notes
 
 - **React/Web**: The component is a functional React component using hooks (`useState`, `useRef`, `useCallback`, `useEffect`, `useId`) — it uses no React context. Styling is applied via Tailwind CSS utility classes; applications must have Tailwind configured. The component does not depend on any external UI library (buttons and inputs are bare HTML elements with CSS classes). It uses the `cn` utility (`clsx` + `tailwind-merge`, merging conditional Tailwind classes) and opts the honeypot out of autofill with the exact attributes `autocomplete="off"`, `data-form-type="other"`, `data-1p-ignore="true"`, `data-lpignore="true"`, `data-bwignore="true"`, and `data-protonpass-ignore="true"`. Source: `packages/web/packages/ui/src/components/email-signup-form.tsx`.
-- **SwiftUI**: Start from a `Form` container with `TextField` for email and optional name input. SwiftUI's async/await patterns replace the useEffect-based config fetching; use `Task` in `.onAppear`. Replace phase states with an `@State` property. Implement the honeypot as a hidden `TextField` with `.hidden()`. Render the heading as a plain `Text` styled with `.font(.headline)` inside the form — not `.navigationTitle`, which addresses the enclosing screen's navigation bar, not an embedded form heading. Handle the 10-second timeout using `URLSession` with `.timeoutInterval`. `sourceUrl` has no direct SwiftUI equivalent; substitute whatever the host app uses to identify the current screen (a route name or deep-link path), or omit the field. A DOM-crawling honeypot has no native analog — bots don't walk a `View` tree the way they walk HTML — so this defense is better dropped on this platform in favor of the nonce-age check alone.
-- **Compose**: Use `Box` or `Column` for layout with `spacedBy = 12.dp`. Replace phase states with `MutableState` or ViewModel-backed state. Implement email validation with the same regex (`EMAIL_RE`). Use `TextField` for email/name inputs and `Button` for submit — there is no `BasicButton` in Compose. The honeypot is a `TextField` conditionally excluded from the composable tree rather than `.hidden()`. Handle async config fetch and POST with coroutines in a `ViewModel` or `LaunchedEffect`. Substitute a host-supplied route/screen identifier for `sourceUrl`; as with SwiftUI, the honeypot pattern does not translate to a non-DOM UI and should be dropped in favor of nonce aging alone.
-- **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) for layout — not `NSForm`, which is deprecated. Replace React state management with properties and delegation (`UITextFieldDelegate`, `URLSessionDelegate`). Implement the loading state with `NSProgressIndicator` (AppKit) or `UIActivityIndicatorView` (UIKit). The honeypot is a hidden `NSTextField` / `UITextField` with `.isHidden = true`, positioned off-screen or given zero size. Use `URLSession` for config and submission fetches with a 10-second timeout. Substitute a host-supplied identifier for `sourceUrl`; the DOM honeypot has no native equivalent and should be dropped in favor of nonce aging alone.
-- **WinUI 3**: Use `StackPanel` with `Spacing="12"` for the form container. Use `TextBox` for email and name fields, bound to ViewModel properties via data binding. Implement phase states with a `VisualStateManager` that swaps visibility of form vs. loading vs. error states — not a `Pivot`'s `SelectedIndex`, which is for user-navigable tabs, not internal phase switching. Use `Button` for submit with a binding to an `ICommand` that handles submission. The honeypot is a `TextBox` with `Visibility="Collapsed"`. Handle async config and POST via `HttpClient` with `Timeout = TimeSpan.FromSeconds(10)`. Implement the nonce-age wait with `Task.Delay`. Validation errors are shown as `TextBlock` elements bound to the error state. Substitute a host-supplied identifier for `sourceUrl`; the DOM honeypot has no native equivalent and should be dropped in favor of nonce aging alone.
+- **SwiftUI**: Start from a `Form` container with `TextField` for email and optional name input. SwiftUI's async/await patterns replace the useEffect-based config fetching; use `Task` in `.onAppear`. Replace phase states with an `@State` property. Render the heading as a plain `Text` styled with `.font(.headline)` inside the form — not `.navigationTitle`, which addresses the enclosing screen's navigation bar, not an embedded form heading. Handle the 10-second timeout with `URLRequest.timeoutInterval` (or `URLSessionConfiguration.timeoutIntervalForRequest`). `sourceUrl` has no direct SwiftUI equivalent; substitute whatever the host app uses to identify the current screen (a route name or deep-link path), or omit the field. A DOM-crawling honeypot has no native analog — bots don't walk a `View` tree the way they walk HTML — so drop the honeypot on this platform and rely on the nonce-age check alone.
+- **Compose**: Use `Box` or `Column` for layout with `spacedBy = 12.dp`. Replace phase states with `MutableState` or ViewModel-backed state. Implement email validation with the same regex (`EMAIL_RE`). Use `TextField` for email/name inputs and `Button` for submit — there is no `BasicButton` in Compose. Handle async config fetch and POST with coroutines in a `ViewModel` or `LaunchedEffect`. Substitute a host-supplied route/screen identifier for `sourceUrl`; as with SwiftUI, drop the honeypot on this platform and rely on nonce aging alone.
+- **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) for layout — not `NSForm`, which is deprecated. Replace React state management with properties and delegation (`UITextFieldDelegate`, `URLSessionDelegate`). Implement the loading state with `NSProgressIndicator` (AppKit) or `UIActivityIndicatorView` (UIKit). Use `URLSession` for config and submission fetches with a 10-second timeout on the config request (`URLRequest.timeoutInterval`). Substitute a host-supplied identifier for `sourceUrl`; drop the honeypot on this platform and rely on nonce aging alone.
+- **WinUI 3**: Use `StackPanel` with `Spacing="12"` for the form container. Use `TextBox` for email and name fields, bound to ViewModel properties via data binding. Implement phase states with a `VisualStateManager` that swaps visibility of form vs. loading vs. error states — not a `Pivot`'s `SelectedIndex`, which is for user-navigable tabs, not internal phase switching. Use `Button` for submit with a binding to an `ICommand` that handles submission. Handle async config and POST via `HttpClient` with `Timeout = TimeSpan.FromSeconds(10)`. Implement the nonce-age wait with `Task.Delay`. Validation errors are shown as `TextBlock` elements bound to the error state. Substitute a host-supplied identifier for `sourceUrl`; drop the honeypot on this platform and rely on nonce aging alone.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/email-signup-form.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/email-signup-form.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -269,7 +274,7 @@ Subsystem: Application console (developer-facing only)
 
 **Generic Server Errors**
 **Decision**: The component does not expose server error reasons (e.g., "invalid submission", "rate limit") to the visitor.
-**Rationale**: Those reasons describe the anti-abuse gate, and leaking which defense tripped is an attack surface. Developers see the real error in the console; visitors see only "Something went wrong."
+**Rationale**: Those reasons describe the anti-abuse gate, and leaking which defense tripped is an attack surface. Visitors see only "Something went wrong." A submission failure is not logged to the console (only config-load and nonce-refresh failures are), so the generic message is the only record on the client.
 **Approved**: pending
 
 **Silent Config Refresh on Submission Error**
@@ -277,14 +282,14 @@ Subsystem: Application console (developer-facing only)
 **Rationale**: If the refresh itself fails, the visitor still has the form, and retrying (with a stale nonce) is still better than showing a dead end. This trades silent nonce staleness for a form that remains usable.
 **Approved**: pending
 
-**Honeypot over CSRF Tokens**
-**Decision**: The component uses a honeypot (a form field invisible to humans) rather than CSRF token validation.
-**Rationale**: CSRF tokens require a shared session or state between the page and backend. A public endpoint has no session, so a honeypot is the only bot defense available at this layer (the server layer separately enforces nonce aging and IP rate limits).
+**Honeypot and Nonce Aging over CAPTCHA**
+**Decision**: The component uses a honeypot (a form field invisible to humans) plus nonce aging rather than a CAPTCHA or similar challenge.
+**Rationale**: A challenge such as a CAPTCHA adds friction and a third-party dependency to an embeddable form. The honeypot catches content-filling bots, and the client-side nonce-age wait defeats rapid-fire submissions; the server separately enforces nonce aging and IP rate limits. (CSRF tokens are a different defense, against forged cross-site requests, and need a session that a public endpoint does not have.)
 **Approved**: pending
 
 **sourceUrl Captures window.location.href**
-**Decision**: The POST body's `sourceUrl` field is `window.location.href` (undefined during SSR).
-**Rationale**: The backend stores this as the consent record's provenance, proving the address opted in at this specific page. This is necessary for compliance and dispute resolution.
+**Decision**: The POST body's `sourceUrl` field is `window.location.href` (undefined during SSR), including any query string or fragment.
+**Rationale**: The backend stores this as the consent record's provenance, proving the address opted in at this specific page. This is necessary for compliance and dispute resolution. The full href can carry tokens or personal data in a query string or fragment, so a host page that puts such values in its URL should know they are sent; the component does not strip them.
 **Approved**: pending
 
 **No Optimistic Submission**
@@ -312,6 +317,15 @@ Subsystem: Application console (developer-facing only)
 **Rationale**: The field's validation state is always readable by assistive tech and tests, not just its failure half. This is more maintainable than conditionally rendering the attribute.
 **Approved**: pending
 
+**Closed-State Name Fallback**
+**Decision**: The Closed state renders `config?.name ?? "This list"`, so an empty-string `config.name` produces a blank subject instead of "This list".
+**Rationale**: This records what the source does today and treats it as a known defect, not a goal. A port may use an empty-name-aware fallback (`||`) without breaking any other requirement.
+**Approved**: pending
+
+**Accepted Accessibility and Localization Gaps**
+**Decision**: The touch-target size (about 36px), Increase Contrast handling, string externalization and hardcoded English strings are known gaps that this version leaves open.
+**Rationale**: The component ships as a self-contained embed with fixed English copy and Tailwind defaults; closing these gaps needs a localization layer and larger control sizing, which are changes to the component itself. The Compliance table records each as `failed` or `partial` so that no reader mistakes them for passes.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -326,10 +340,10 @@ Subsystem: Application console (developer-facing only)
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
 | [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | Security |
-| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | partial | Privacy and Data |
 | [adc.check.privacy-and-data.consent-before-collection](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9392776b-2f00-5519-869a-dce90d9ee468) | passed | Privacy and Data |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
-| [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | failed | Privacy and Data |
+| [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | partial | Privacy and Data |
 | [adc.check.privacy-and-data.third-party-disclosure](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/036c9768-1c60-543d-b692-4adb3d3c884f) | partial | Privacy and Data |
 | [adc.check.user-safety.abuse-prevention](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b5685271-fbb7-5160-aeb5-9884034fc2d4) | passed | User Safety |
 | [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | passed | User Safety |
@@ -341,7 +355,7 @@ Subsystem: Application console (developer-facing only)
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on the component source (`email-signup-form.tsx`) and its `lib/autofill.ts` / `lib/utils.ts` helpers: what the source directly shows — Tailwind class output, ARIA attributes, `console.error` calls, the trim/regex logic, the absence of any callback props — is marked `passed` or `failed`; anything that depends on the host page or the backend (background color and root font size for contrast/dynamic-type, the TLS scheme of `apiBaseUrl`, retention policy owned by the hub) is marked `partial` or, where the component plainly does nothing about it (retention, string externalization), `failed`. `separation-of-concerns` is `passed` because the nonce/timing/submission state machine is isolated in named helpers and effects rather than tangled into the JSX; `unit-test-coverage` is `passed` because `emailSignupForm.test.tsx` renders `EmailSignupForm` directly and exercises its phases with meaningful assertions.
+Statuses rest on the component source (`email-signup-form.tsx`) and its `lib/autofill.ts` / `lib/utils.ts` helpers: what the source directly shows — Tailwind class output, ARIA attributes, `console.error` calls, the trim/regex logic, the absence of any callback props — is marked `passed` or `failed`; anything that depends on the host page or the backend (background color and root font size for contrast/dynamic-type, the TLS scheme of `apiBaseUrl`, retention policy owned by the hub) is marked `partial` or, where the component plainly does nothing about it (string externalization), `failed`. `data-minimization` is `partial` because `sourceUrl` sends the full `window.location.href`, query string and fragment included. `separation-of-concerns` is `passed` because the nonce/timing/submission state machine is isolated in named helpers and effects rather than tangled into the JSX; `unit-test-coverage` is `passed` because `emailSignupForm.test.tsx` renders `EmailSignupForm` directly and exercises its phases with meaningful assertions.
 
 ## Change History
 
@@ -350,3 +364,4 @@ Statuses rest on the component source (`email-signup-form.tsx`) and its `lib/aut
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names and reconsidered should-/may- keywords on merits; corrected Compliance statuses/links and expanded categories beyond Accessibility; reformatted Design Decisions into Decision/Rationale/Approved blocks; fixed Appearance measurements and made them platform-neutral; corrected Platform Notes APIs (SwiftUI heading, Compose button, AppKit/UIKit form, WinUI 3 phase switching) and added sourceUrl/honeypot native guidance; resolved Closed-state, Privacy, and timing-buffer internal contradictions; rewrote garbled edge cases and added missing ones (double submit, retry during refresh, honeypot-tripped success); filled frontmatter references and Accessibility Options; added missing test vectors. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Documented native constraint validation gating real user submits (empty/invalid email never reaches the component check); fixed Closed-state ?? fallback to note it misses empty-string names. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | States that the POST has no timeout, that submitting covers the nonce wait, corrects the Generic Server Errors and honeypot rationales, adds design decisions for the closed-name fallback and accepted gaps, makes apply-classname and handle-missing-min-age MUST, gives one honeypot instruction per platform, corrects the URLRequest timeout API, adds eight test vectors, and marks data-minimization and data-retention-policy partial. |

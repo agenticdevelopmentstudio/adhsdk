@@ -7,8 +7,7 @@
 - **kind-constants**: `DaemonStrategyReport` MUST expose the static constants `timingKind` equal to `"timing"`, `eventKind` equal to `"event"` and `compositeKind` equal to `"composite"`, which are the kinds DaemonKit's `TimingStrategy`, `EventStrategy` and `CompositeStrategy` report.
 - **kind-open**: `DaemonStrategyReport.kind` MUST accept any String value, because a daemon may report its own kind; a consumer SHOULD treat an unknown kind as opaque.
 - **children-recursive**: `DaemonStrategyReport.children` MUST hold the child strategies of a composite and MUST be empty for a leaf strategy.
-- **workunit-fields**: `DaemonWorkUnitReport` MUST carry `name` (String), `state` (a `State`), `nextActivation` (optional Date), `consecutiveFailures` (Int), `isBlocklisted` (Bool) and `lastMessage` (optional String).
-- **workunit-optional-fields**: A `DaemonWorkUnitReport` field that does not apply to a work unit MUST be `nil`; the source names `nextActivation` and `lastMessage` as the optional fields.
+- **workunit-fields**: `DaemonWorkUnitReport` MUST carry `name` (String), `state` (a `State`), `nextActivation` (optional Date), `consecutiveFailures` (Int), `isBlocklisted` (Bool) and `lastMessage` (optional String). `nextActivation` and `lastMessage` are the optional fields: one that does not apply to a work unit MUST be `nil`.
 - **workunit-state-values**: `DaemonWorkUnitReport.State` MUST be a String-backed enum with exactly the raw values `idle`, `running`, `disabled` and `blocklisted`.
 - **workunit-memberwise-defaults**: The `DaemonWorkUnitReport` initializer MUST default `nextActivation` to `nil`, `consecutiveFailures` to `0`, `isBlocklisted` to `false` and `lastMessage` to `nil`.
 - **strategy-memberwise-default**: The `DaemonStrategyReport` initializer MUST default `children` to an empty array.
@@ -32,11 +31,11 @@
 
 **Probe**
 
-- **probe-url**: `DaemonHealthProbe.http(baseURL:timeout:)` MUST build the probe URL by appending the path component `health` to `baseURL` parsed as a URL.
-- **probe-request**: Each invocation of the returned closure MUST issue one GET request with a request timeout of `timeout` seconds.
+- **probe-url**: `DaemonHealthProbe.http(baseURL:timeout:)` MUST build the probe URL by appending the path component `health` to `baseURL` parsed as a URL. A trailing slash on `baseURL` MUST NOT produce a double slash, and a path on `baseURL` MUST be kept: `http://h:9000/` gives `http://h:9000/health` and `http://h/api` gives `http://h/api/health`.
+- **probe-request**: Each invocation of the returned closure MUST issue one GET request that gives up when no data has been received for `timeout` seconds. The timeout is an idle timeout: a server that keeps sending bytes slowly MUST NOT trip it, and the total duration of the request is not bounded.
 - **probe-default-timeout**: The `timeout` parameter MUST default to 2 seconds.
 - **probe-200-only**: The returned closure MUST return the response body only when the HTTP status code is exactly 200.
-- **probe-nil-on-failure**: The returned closure MUST return `nil` for any other status code, for a transport error and for a timeout.
+- **probe-nil-on-failure**: The returned closure MUST return `nil` for any other status code, for a transport error and for an idle timeout.
 - **probe-nil-on-bad-url**: The returned closure MUST return `nil`, without making a request, when `baseURL` cannot be parsed as a URL.
 - **probe-non-http-response**: The returned closure MUST return `nil` when the response is not an `HTTPURLResponse`.
 - **probe-body-raw**: The returned closure MUST return the body bytes undecoded; decoding is a separate call to `DaemonHealthReport.decode(_:)`.

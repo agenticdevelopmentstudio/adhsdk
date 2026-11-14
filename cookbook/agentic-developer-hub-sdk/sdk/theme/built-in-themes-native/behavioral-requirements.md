@@ -12,9 +12,9 @@
 - **fishlamp-project-replaced**: The Fishlamp adjustment MUST replace the theme's whole `project` value, discarding any `highlightActivePane` or `paneOutline` already present.
 - **fishlamp-overrides-merged**: The Fishlamp adjustment MUST add or replace only the `card` and `selectionEdge` keys of `roleOverrides` and MUST leave every other key (for example the chat roles the generator emitted) as generated.
 - **fishlamp-untouched-fields**: The Fishlamp adjustment MUST NOT change `id`, `name`, `appearance`, `foreground`, `background`, `cursor`, `ansi` or `typography`.
-- **ember-shared**: The Fishlamp adjustment MUST use one value, named `ember` (`#17130fff`, the theme's own ANSI slot 8), for both the card colour and the pane backdrop.
-- **hex-literals**: The adjustment parses its colours with `RGBAColor(hexString:)` and force-unwraps the result; the three literals are valid 8-digit `RRGGBBAA` strings, so the parse does not fail at runtime.
-- **access**: `webPortedNative` and `nativeAdjusted` are internal to the SDK module (no `public`), and `fishlampNative` is `private`; consumers read the result only through `BuiltInThemes.all` and `BuiltInThemes.theme(withID:)`.
-- **concurrency**: Both members are pure and synchronous. `webPortedNative` is a `static let`, initialised once, lazily and thread-safely, by the language runtime on first access; the file declares no actor, lock or queue.
-- **side-effects**: The file performs no file, network, process or notification side effects and writes no logs.
+- **ember-shared**: The Fishlamp adjustment MUST make the card colour and the pane backdrop equal, both `#17130fff` (the theme's own ANSI slot 8).
+- **hex-literals**: Every colour literal in the adjustment MUST be a valid 8-digit `RRGGBBAA` string, because the Swift implementation parses it with `RGBAColor(hexString:)` and force-unwraps the result.
+- **access**: `webPortedNative` and `nativeAdjusted` MUST NOT be `public` (they are internal to the SDK module), and `fishlampNative` MUST be `private`; consumers MUST read the result only through `BuiltInThemes.all` and `BuiltInThemes.theme(withID:)`.
+- **concurrency**: `webPortedNative` and `nativeAdjusted` MUST be pure and synchronous, and MUST be safe to call from any thread. In Swift `webPortedNative` is a `static let`, initialised once, lazily and thread-safely, by the language runtime on first access; the file declares no actor, lock or queue.
+- **side-effects**: The adjustment MUST NOT perform file, network, process or notification side effects and MUST NOT write logs.
 

@@ -2,11 +2,11 @@
 id: b3edb32d-7473-464b-acfb-c19cdd44e99e
 title: "Mail Browser Model"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -73,6 +73,7 @@ It is a `@MainActor` `ObservableObject` built on a `MailClient` given at initial
 - **first-page-replaces**: A loaded first page MUST replace `messages`, `nextCursor` and `hasMore`, with `hasMore` true only when the page has a next cursor.
 - **first-page-drops-missing-selection**: When the open message's id is not in a refreshed list, the model MUST close the open message.
 - **first-page-failure**: When the first page fails, the model MUST set `errorMessage` to the failure's `localizedDescription`.
+- **generation-bump-points**: `listGeneration` MUST be bumped each time a first page starts loading (`select(mailbox:)`, and `reload` when a selected mailbox is kept) and whenever the list is cleared; `messageGeneration` MUST be bumped by `select(messageId:)` when the id differs from `selectedMessageId`, and whenever the list is cleared.
 - **stale-list-dropped**: A page, or a page failure, that answers a list replaced since the request began MUST be discarded without changing the model.
 - **load-more-appends**: `loadMore` MUST request the page named by the stored cursor and append its messages to `messages`.
 - **load-more-dedupes**: `loadMore` MUST NOT append a message whose id is already in `messages`.
@@ -89,7 +90,7 @@ It is a `@MainActor` `ObservableObject` built on a `MailClient` given at initial
 - **mark-read-on-open**: When the opened message carries the `UNREAD` label, the model MUST send a modify-labels request for that message that removes `UNREAD` and adds nothing.
 - **mark-read-no-request-when-read**: When the opened message does not carry `UNREAD`, the model MUST NOT send a modify-labels request.
 - **mark-read-updates-copies**: After marking read, the model MUST copy the returned labels and label names onto the matching message in `messages` and onto `openedMessage`.
-- **mark-read-lowers-counts**: After marking read, the model MUST lower by one the unread count of each of the account's mailboxes whose label id is among the opened message's labels.
+- **mark-read-lowers-counts**: After marking read, the model MUST lower by one the unread count of each mailbox of the account that the opened message was loaded for (the account found by **select-message-account-by-email**, which may be the fallback to the selected account) whose label id is among the opened message's labels.
 - **unread-count-floor**: A lowered unread count MUST NOT go below zero.
 - **unread-count-nil-untouched**: A mailbox with a nil label id (All Mail) or a nil unread count MUST be left unchanged when counts are lowered.
 - **mark-read-superseded**: A modify-labels answer that arrives after another message was opened MUST still be copied onto the matching message in `messages` and lowered into the counts, and MUST be copied onto `openedMessage` only when that is the same message. A failure of that request MUST still set `errorMessage`, because the mark-read call carries no generation check.
@@ -109,7 +110,7 @@ It is a `@MainActor` `ObservableObject` built on a `MailClient` given at initial
 - **list-date-locale**: `listDate` MUST format with the calendar's time zone and the given locale.
 - **date-parse-fractional**: The date helpers MUST accept ISO 8601 text with or without fractional seconds.
 - **date-unparseable**: `listDate` and `fullDate` MUST return the input text unchanged when it is not ISO 8601.
-- **full-date**: `fullDate` MUST return the complete date with the short time (`Date.FormatStyle` date `.complete`, time `.shortened`). It takes no locale or calendar and uses the current ones, so unlike `listDate` it cannot be tested deterministically.
+- **full-date**: `fullDate` MUST return the complete date with the short time (`Date.FormatStyle` date `.complete`, time `.shortened`).
 - **is-unread**: `isUnread` MUST be true only when the message's labels contain `UNREAD`.
 
 ## Appearance
@@ -160,37 +161,52 @@ Test names are the Swift Testing functions in `MailBrowserModelTests`.
 | mail-browser-009 | mark-read-on-open, mark-read-updates-copies, mark-read-lowers-counts | m1 labeled INBOX and UNREAD, Inbox unread 2; open m1 (test `openingAnUnreadMessageMarksItReadAndLowersTheCount`) | A modify-labels request removes UNREAD from m1; `isUnread` is false for the listed and opened copies; the Inbox unread count is 1 |
 | mail-browser-010 | mark-read-no-request-when-read | m1 labeled INBOX only; open m1 (test `openingAReadMessageChangesNoLabels`) | No modify-labels request is sent |
 | mail-browser-011 | refresh-if-synced, refresh-if-synced-unchanged, refresh-if-synced-local-only | Store gains m0; `refreshIfSynced` with an unchanged `lastSyncAt`; then `lastSyncAt` becomes "2026-11-07T12:00:00.000Z" and `refreshIfSynced` again (test `aFinishedSyncReloadsTheList`) | First call: ids stay m1. Second call: ids are m0, m1 |
-| mail-browser-012 | reload-keeps-valid-selection, refresh-keeps-row-count | Open m1, change `lastSyncAt`, call `refreshIfSynced` (test `aRefreshKeepsTheOpenMessage`) | `selectedMessageId` is m1 and `openedMessage` id is m1; the refresh list request's limit equals max(pageSize, rows showing) |
+| mail-browser-012 | reload-keeps-valid-selection, refresh-keeps-row-count | Open m1, change `lastSyncAt`, call `refreshIfSynced` (test `aRefreshKeepsTheOpenMessage`) | `selectedMessageId` is m1 and `openedMessage` id is m1; the refresh list request's limit equals max(pageSize, rows showing): with page size 2 and 4 rows showing it is 4, and with page size 50 and 3 rows showing it is 50 |
 | mail-browser-013 | mailbox-order, mailbox-attribute-labels-omitted, mailbox-nested-title, mailbox-user-sorted, mailbox-unread-count | Labels TRASH, Label_2 "Work/Clients" (user), UNREAD, CATEGORY_UPDATES, SENT, INBOX (3 unread), Label_1 "Work" (user), SPAM (test `mailboxesFollowGmailsOrderAndSkipAttributeLabels`) | Titles are Inbox, Sent, All Mail, Work, Clients, Spam, Trash; depths are 0, 0, 0, 0, 1, 0, 0; Inbox unread is 3 |
 | mail-browser-014 | sender-name, sender-name-address-only | "PayPal <service@paypal.com>", "\"Doe, Jane\" <jane@example.com>", "<only@example.com>", "plain@example.com" (test `senderNameTakesTheDisplayName`) | "PayPal", "Doe, Jane", "only@example.com", "plain@example.com" |
-| mail-browser-015 | list-date-today, list-date-this-year, list-date-older, list-date-locale, date-parse-fractional | UTC, locale en_US, now 2026-11-07T20:00:00Z; dates 2026-11-07T18:59:24.000Z, 2026-03-02T10:00:00.000Z, 2024-03-02T10:00:00.000Z (test `listDateShowsTimeTodayAndDayOtherwise`) | Today contains "6:59"; this year equals "Mar 2"; older equals "Mar 2, 2024" |
-| mail-browser-016 | date-unparseable | `listDate("not a date")` and `fullDate("not a date")` | Both return "not a date" |
-| mail-browser-017 | select-mailbox-noop | Account `a1`, `reload` done with messages m1, m2 showing and m1 open; call `select(mailbox:)` with `MailboxID(accountId: "a1", labelId: "INBOX")` again | No list request is sent; `selectedMessageId` is still m1 and `openedMessage` id is m1 |
-| mail-browser-018 | load-more-dedupes | Page size 2; `reload` lists m1, m2 with next cursor "c1"; the request with cursor "c1" returns m2, m3 and no next cursor; call `loadMore` | `messages` ids are m1, m2, m3; `hasMore` is false |
-| mail-browser-019 | mailbox-system-present-only, mailbox-all-mail | `mailboxes(for: "a1", labels: [UNREAD])` where UNREAD has type "system" | Exactly one row: labelId nil, title "All Mail", depth 0, unread nil |
-| mail-browser-020 | refresh-if-synced-silent | `reload` done; `accounts()` then throws "offline"; call `refreshIfSynced` | `errorMessage` is nil; no list request and no labels request is sent after the failure |
-| mail-browser-021 | select-message-unlisted | `reload` lists m1, m2; call `select(messageId: "zz")` | `selectedMessageId` is "zz"; `openedMessage` is nil; no `message` request is sent |
-| mail-browser-022 | unread-count-floor, unread-count-nil-untouched | Account `a1`; INBOX label with `messagesUnread` 0; m1 labeled INBOX and UNREAD; `reload`, then `select(messageId: "m1")` | Inbox `unread` is 0; the All Mail row's `unread` is nil |
-| mail-browser-023 | mark-read-failure | m1 labeled INBOX and UNREAD; the modify-labels request throws "denied"; `reload`, then `select(messageId: "m1")` | `errorMessage` is "denied"; `openedMessage` id is m1 |
-| mail-browser-024 | select-message-account-by-email | Account `a1` (email "a1@example.com") has the selected mailbox; m1 has `account` "other@example.com"; `select(messageId: "m1")` | The `message` request names account `a1` and `openedMessage` id is m1 |
-| mail-browser-025 | select-message-clears-open | m1 open; hold the `message` request for m2; call `select(messageId: "m2")` | While held: `selectedMessageId` is m2 and `openedMessage` is nil; after release: `openedMessage` id is m2 |
-| mail-browser-026 | sender-name-unclosed | `senderName("<only@example.com")` | "only@example.com" |
-| mail-browser-027 | mark-read-superseded | m1 labeled INBOX and UNREAD, Inbox unread 2; m2 already read; hold the modify-labels request for m1; open m1, then open m2, then release the request | The listed m1 no longer has UNREAD; `openedMessage` id is m2; Inbox unread is 1 |
-| mail-browser-028 | full-date | `fullDate("2026-11-07T18:59:24.000Z")` | Equals `date.formatted(date: .complete, time: .shortened)` for that date in the current locale; no fixed text is asserted |
+| mail-browser-015 | list-date-today, list-date-this-year, list-date-older, list-date-locale, date-parse-fractional | UTC, locale en_US, now 2026-11-07T20:00:00Z; dates 2026-11-07T18:59:24.000Z, 2026-03-02T10:00:00.000Z, 2024-03-02T10:00:00.000Z (test `listDateShowsTimeTodayAndDayOtherwise`) | Today starts with "6:59" and ends with "PM" (the space before PM varies by OS release, so assert the prefix and suffix); this year equals "Mar 2"; older equals "Mar 2, 2024" |
+| mail-browser-016 | date-unparseable | `listDate("not a date")` and `fullDate("not a date")` (planned test `dateHelpersReturnUnparseableTextUnchanged`) | Both return "not a date" |
+| mail-browser-017 | select-mailbox-noop | Account `a1`, `reload` done with messages m1, m2 showing and m1 open; call `select(mailbox:)` with `MailboxID(accountId: "a1", labelId: "INBOX")` again (planned test `reselectingTheSelectedMailboxDoesNothing`) | No list request is sent; `selectedMessageId` is still m1 and `openedMessage` id is m1 |
+| mail-browser-018 | load-more-dedupes | Page size 2; `reload` lists m1, m2 with next cursor "c1"; the request with cursor "c1" returns m2, m3 and no next cursor; call `loadMore` (planned test `loadMoreSkipsMessagesAlreadyListed`) | `messages` ids are m1, m2, m3; `hasMore` is false |
+| mail-browser-019 | mailbox-system-present-only, mailbox-all-mail | `mailboxes(for: "a1", labels: [UNREAD])` where UNREAD has type "system" (planned test `aMailboxWithOnlyAttributeLabelsListsAllMailOnly`) | Exactly one row: labelId nil, title "All Mail", depth 0, unread nil |
+| mail-browser-020 | refresh-if-synced-silent | `reload` done; `accounts()` then throws "offline"; call `refreshIfSynced` (planned test `aFailedSyncPollIsSilent`) | `errorMessage` is nil; no list request and no labels request is sent after the failure |
+| mail-browser-021 | select-message-unlisted | `reload` lists m1, m2; call `select(messageId: "zz")` (planned test `anUnlistedMessageIdOpensNothing`) | `selectedMessageId` is "zz"; `openedMessage` is nil; no `message` request is sent |
+| mail-browser-022 | unread-count-floor, unread-count-nil-untouched | Account `a1`; INBOX label with `messagesUnread` 0; m1 labeled INBOX and UNREAD; `reload`, then `select(messageId: "m1")` (planned test `unreadCountsNeverGoBelowZero`) | Inbox `unread` is 0; the All Mail row's `unread` is nil |
+| mail-browser-023 | mark-read-failure | m1 labeled INBOX and UNREAD; the modify-labels request throws "denied"; `reload`, then `select(messageId: "m1")` (planned test `aFailedMarkReadIsReportedAndKeepsTheMessageOpen`) | `errorMessage` is "denied"; `openedMessage` id is m1 |
+| mail-browser-024 | select-message-account-by-email | Account `a1` (email "a1@example.com") has the selected mailbox; m1 has `account` "other@example.com"; `select(messageId: "m1")` (planned test `aMessageFindsItsAccountByEmail`) | The `message` request names account `a1` and `openedMessage` id is m1 |
+| mail-browser-025 | select-message-clears-open | m1 open; hold the `message` request for m2; call `select(messageId: "m2")` (planned test `openingAMessageClearsTheOldOneFirst`) | While held: `selectedMessageId` is m2 and `openedMessage` is nil; after release: `openedMessage` id is m2 |
+| mail-browser-026 | sender-name-unclosed | `senderName("<only@example.com")` (planned test `anUnclosedSenderBracketStillGivesTheAddress`) | "only@example.com" |
+| mail-browser-027 | mark-read-superseded | m1 labeled INBOX and UNREAD, Inbox unread 2; m2 already read; hold the modify-labels request for m1; open m1, then open m2, then release the request (planned test `aSupersededMarkReadStillUpdatesTheList`) | The listed m1 no longer has UNREAD; `openedMessage` id is m2; Inbox unread is 1 |
+| mail-browser-028 | full-date | `fullDate("2026-11-07T18:59:24.000Z")` (planned test `fullDateUsesTheCompleteStyle`) | Equals `date.formatted(date: .complete, time: .shortened)` for that date in the current locale; no fixed text is asserted |
+| mail-browser-029 | reload-provider-status, reload-accounts-only-when-configured | Provider status `configured` false; call `reload` (planned test `reloadReadsTheProviderStatusFirst`) | The client received `providerStatus` before any `accounts` read, and no `accounts` read was sent; `accounts` is empty |
+| mail-browser-030 | reload-loading-flag | Make `labels` throw "offline"; call `reload` and watch `loading` (planned test `loadingIsTrueUntilReloadReturnsEvenOnFailure`) | `loading` is true while `reload` runs and false after it returns, with `errorMessage` "offline" |
+| mail-browser-031 | reload-failure-reported, reload-keeps-valid-selection | Inbox selected; make the next `labels` read throw "offline"; call `reload` (planned test `aFailedLabelReadIsReportedAndSelectionStillRuns`) | `errorMessage` is "offline"; `mailboxes` is unchanged; the selection is kept and its first page is requested |
+| mail-browser-032 | reload-mailboxes-per-account | Accounts `a1` and `a2`, each with INBOX; call `reload` (planned test `mailboxesAreKeyedByAccount`) | `mailboxes` has keys `a1` and `a2`, each with its own Inbox row |
+| mail-browser-033 | mailbox-duplicate-label | Two INBOX labels, the first with `messagesUnread` 4 and the second 9 (planned test `aDuplicateLabelUsesTheFirst`) | One Inbox row with unread 4 |
+| mail-browser-034 | select-mailbox-reselect-empty | Inbox selected with an empty list (empty first page); call `select(mailbox:)` for it again (planned test `reselectingAnEmptyMailboxReloads`) | A second list request is sent |
+| mail-browser-035 | filter-account, mailbox-label-filter | Accounts `a1` and `a2`; select the `a2` Inbox (planned test `listRequestsNameTheSelectedAccount`) | The list request names account `a2` and the single label INBOX |
+| mail-browser-036 | load-more-failure | `reload` leaves `hasMore` true; the next page request throws "offline"; call `loadMore` (planned test `aFailedPageIsReportedAndKeepsTheList`) | `errorMessage` is "offline"; `messages` is unchanged |
+| mail-browser-037 | select-message-failure | `reload`; the `message` request throws "gone"; call `select(messageId: "m1")` (planned test `aFailedMessageLoadIsReported`) | `errorMessage` is "gone"; `openedMessage` is nil; `selectedMessageId` is m1 |
+| mail-browser-038 | stale-message-dropped | Hold the `message` request for m1; call `select(messageId: "m2")`; release the m1 request (planned test `aMessageForAnEarlierSelectionIsDropped`) | `selectedMessageId` is m2; `openedMessage` is not m1; no mark-read request is sent for m1 |
+| mail-browser-039 | first-page-drops-missing-selection | m1 open; a sync changes the list so a refresh no longer holds m1; call `refreshIfSynced` (planned test `aRefreshWithoutTheOpenMessageClosesIt`) | `selectedMessageId` and `openedMessage` are nil |
+| mail-browser-040 | selected-account | Accounts `a1` and `a2`; `a2` Inbox selected; then nothing selected (planned test `selectedAccountFollowsTheSelectedMailbox`) | `selectedAccount` is `a2`; then nil |
+| mail-browser-041 | is-unread | A message with labels INBOX and UNREAD; one with INBOX only (planned test `isUnreadChecksTheUnreadLabel`) | `isUnread` is true; false |
+| mail-browser-042 | published-state, main-actor-isolation, injected-client, page-size-default | Create the model with only a client and read its state; every service call goes through that client (planned test `publishedStateStartsEmptyAndIsReadOnly`) | The state starts empty with `loading` false; page requests use `MailMessageFilter.defaultLimit`; the properties are not settable from outside the model |
 
-Vectors 016 to 028 are derived from the source behavior; the test file has no test for them.
+Vectors 016 to 042 are derived from the source behavior; the test file has no test for them, and each names the test it needs.
 
 ## Edge Cases
 
 - **Empty account list (MUST)**: With no accounts, `reload` clears the list and the open message and sets `selectedMailbox` to nil (`withNoAccountsNothingIsSelected`).
 - **Provider not configured (MUST)**: When the status says `configured` is false, `reload` sets `accounts` to empty and reads no labels.
-- **Label read fails partway (MAY, known debt)**: Current behavior: a failure on any account's labels abandons the whole mailboxes assignment, so `mailboxes` keeps its earlier value, `errorMessage` is set and `reload` still goes on to the selection step. A previously valid selection is therefore kept and its first page reloaded. A fix should assign `mailboxes` per account as each read succeeds, so one failure does not discard the others; a port may do that instead of copying the abandonment.
-- **Accounts replaced on a failed reload (MAY, known debt)**: Current behavior: `accounts` and the recorded sync values are assigned before the labels are read, so a label failure leaves new accounts beside old mailboxes. A fix should assign `accounts`, the recorded sync values and `mailboxes` together after every read succeeds, so a port can repair this rather than copy it.
+- **Label read fails partway (MAY, known debt)**: Covered by the shared error path decision in Design Decisions.
+- **Accounts replaced on a failed reload (MAY, known debt)**: Covered by the shared error path decision in Design Decisions.
+- **Full date has no injectable locale**: `fullDate` always uses the current locale and calendar, so unlike `listDate` it cannot be tested deterministically. The source has no test seam for it, so tests assert only the unparseable path.
 - **Selection no longer exists (MUST)**: When the selected mailbox is gone after a reload, the first account's Inbox is selected, or its first mailbox when it has no Inbox.
 - **Empty first page (MUST)**: A mailbox with no messages gives an empty `messages`, `hasMore` false and no error.
 - **Boundary page size (MUST)**: A page with no next cursor sets `hasMore` to false and further `loadMore` calls send no request (`pagesAppendUntilTheLast`).
 - **Refresh row count (MUST)**: A refresh asks for the larger of `pageSize` and the rows showing, so the list does not shrink; the cursor then comes from that single larger request.
-- **Concurrent selections (MUST)**: A list or message answer for a superseded selection is dropped through the generation counters (`aPageForAnEarlierMailboxIsDropped`). Because the check applies to failures too, a superseded failure never reaches `errorMessage`. The mark-read request is the exception: it has no generation check (see `mark-read-superseded`).
+- **Concurrent selections (MUST)**: A list or message answer for a superseded selection is dropped through the generation counters (`aPageForAnEarlierMailboxIsDropped`). Because the check applies to failures too, a superseded failure never reaches `errorMessage`. The mark-read request is the exception: it has no generation check (see `#requirements/mark-read-superseded`).
 - **Concurrent load more (MUST)**: A second `loadMore` while one is running does nothing.
 - **Load more across a refresh (MUST)**: Refreshing or switching the list while `loadMore` is running discards that page, because the list generation has changed.
 - **Open message leaves the list (MUST)**: When a refresh no longer contains the open message, the message closes.
@@ -198,9 +214,8 @@ Vectors 016 to 028 are derived from the source behavior; the test file has no te
 - **Mark read when messages disagree (MUST)**: The copies in `messages` and `openedMessage` take the labels returned by the service, not the locally computed ones.
 - **Mark read after another message opened (MUST)**: The labels and the lowered unread counts still apply to the message that was marked, but `openedMessage` keeps the newer message, and a failure of the superseded request still sets `errorMessage`.
 - **Unread counts drift (SHOULD)**: Local count changes are an estimate. The next `reload` replaces them with the service's counts.
-- **Full date has no injectable locale (MUST)**: `fullDate` always uses the current locale and calendar and the source has no test seam for it, so tests assert only the unparseable path.
 - **Unparseable date (MUST)**: `listDate` and `fullDate` return the input text rather than failing.
-- **Sender header without a closing bracket (MUST)** (`sender-name-unclosed`): When the display name before the last "<" is empty, `senderName` uses the text after it with ">" and spaces trimmed from both ends.
+- **Sender header without a closing bracket (MUST)** (`#requirements/sender-name-unclosed`): When the display name before the last "<" is empty, `senderName` uses the text after it with ">" and spaces trimmed from both ends.
 - **Offline or store unavailable (MUST)**: Every client failure surfaces as `errorMessage`, and the model keeps its previous data, except that selecting a mailbox has already emptied the list and closed the open message before its first page is requested. There is no retry and no backoff; the user's next action or the next sync poll tries again. The one exception is the sync poll, which swallows an account-read failure.
 - **Error cleared (MUST NOT)**: A successful call does not clear `errorMessage`; only `dismissError` does.
 - **Concurrent access (MUST)**: The model is main-actor isolated, so state changes are serialized. Overlap is possible only across `await` points, which the generation counters and the `loadMore` flag guard.
@@ -265,14 +280,14 @@ Not applicable: the source writes no log. Failures become `errorMessage` and `re
 - **SwiftUI**: Translation note. A SwiftUI view can observe the model directly as an `@ObservedObject` or `@StateObject`, and the display-text helpers are static, so a port may move them into a separate formatter unit.
 - **Compose**: Translate to a `ViewModel` exposing a `StateFlow` of one immutable state class, with actions as `suspend` functions on `viewModelScope`. Keep the two generation counters and the `loadMore` flag, because coroutines can overlap. Page with Paging 3 or a manual cursor list. Format dates with `java.time.format.DateTimeFormatter` and a locale.
 - **React/Web**: Translate to a hook or store with async actions. Browser code is single-threaded, so keep the generation counters to drop stale responses (an `AbortController` can replace them for fetches). Use `Intl.DateTimeFormat` for the three list-date shapes and for the full date.
-- **AppKit / UIKit**: Source platform. The source is `macOS/Features/Integrations/Mail/MailBrowserModel.swift`. It is a `@MainActor` `ObservableObject` with `@Published` properties that have private setters, uses Swift concurrency (`async` functions and `defer`), and has pure `static` helpers for display text. The date helper takes `now`, a `Calendar` and a `Locale` so tests are repeatable; it formats with `Date.FormatStyle`, and parses with `Date.ISO8601FormatStyle`. Tests use Swift Testing with a scripted `MailClient`. Reuse the model unchanged and bind with Combine sinks on the `@Published` properties. The source's view controllers subscribe this way: a source list for the sidebar, a table for messages with a load-more trigger near the end, and a reader.
+- **AppKit / UIKit**: Source platform. The source is `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserModel.swift`. It is a `@MainActor` `ObservableObject` with `@Published` properties that have private setters, uses Swift concurrency (`async` functions and `defer`), and has pure `static` helpers for display text. The date helper takes `now`, a `Calendar` and a `Locale` so tests are repeatable; it formats with `Date.FormatStyle`, and parses with `Date.ISO8601FormatStyle`. Tests use Swift Testing with a scripted `MailClient`. Reuse the model unchanged and bind with Combine sinks on the `@Published` properties. The source's view controllers subscribe this way: a source list for the sidebar, a table for messages with a load-more trigger near the end, and a reader.
 - **WinUI 3**: Implement as a view-model class (a C# class using CommunityToolkit.Mvvm `ObservableObject` with `[ObservableProperty]` and `AsyncRelayCommand` actions). Bind the sidebar to a `TreeView` through `x:Bind` in `OneWay` mode, using each mailbox's depth as indent, or flatten it into a `ListView` with an `ItemTemplate` whose left margin is `Depth` times a fixed step. Bind messages to a `ListView` with `ItemsSource` set to an `ObservableCollection`, and call the load-more command from `IncrementalLoadingTrigger` or an `ISupportIncrementalLoading` collection, using `HasMore` as the guard. Bind `SelectedItem` one way to the model and send changes through the select command, because the model decides what a selection means. Marshal each await back with `DispatcherQueue.TryEnqueue`, which stands in for main-actor isolation, and keep the two generation integers to drop stale results. Show `ErrorMessage` in an `InfoBar` with `IsOpen` bound to a non-empty value and its `CloseButtonClick` calling dismiss. Drive `loading` with a `ProgressRing`. Format the list date with `DateTimeFormatter` or `DateTimeOffset.ToString` using the current culture, and keep the mailbox titles as fixed English text, as the source does.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserModel.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserModel.swift` | confirmed (1.0.1) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -309,11 +324,11 @@ Not applicable: the source writes no log. Failures become `errorMessage` and `re
 **Approved**: pending
 
 **Decision**: The status, account and label reads of `reload` share one error path; the first failure abandons the rest of that step.
-**Rationale**: The source wraps status, accounts and labels in one `do` block, so a failure leaves `mailboxes` unchanged while `accounts` may already be new. This is technical debt that affects behavior, recorded here so a port does not smooth it over.
+**Rationale**: The source wraps status, accounts and labels in one `do` block, so a failure leaves `mailboxes` unchanged while `accounts` may already be new. This is technical debt that affects behavior, recorded here so a port does not smooth it over. Current behavior: a failure on any account's labels abandons the whole `mailboxes` assignment, so `mailboxes` keeps its earlier value, `errorMessage` is set and `reload` still goes on to the selection step, which keeps a previously valid selection and reloads its first page. Because `accounts` and the recorded sync values are assigned before the labels are read, a label failure also leaves new accounts beside old mailboxes. A fix should assign `accounts`, the recorded sync values and `mailboxes` together after every read succeeds, or assign `mailboxes` per account as each read succeeds; a port may do that instead of copying the abandonment.
 **Approved**: pending
 
 **Decision**: The sender name, the list date, the full date and the unread test stay in the model as static functions instead of a separate formatter.
-**Rationale**: They are pure and hold no state, so they test without a client, and keeping them beside the model gives the view controllers one import. The cost is that the model has two concerns; a port may move them into their own unit without changing behavior.
+**Rationale**: They are pure and hold no state, so they test without a client, and keeping them beside the model gives the view controllers one import. The cost is that the model has two concerns, which is why the separation-of-concerns check is partial; a port may move them into their own unit without changing behavior.
 **Approved**: pending
 
 **Decision**: System mailbox titles are fixed English strings.
@@ -324,16 +339,17 @@ Not applicable: the source writes no log. Failures become `errorMessage` and `re
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 | [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | passed | Access Patterns |
 | [adc.check.internationalization.locale-aware-formatting](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c87ff1f1-9d77-5167-b0c4-f13f2aae5acb) | passed | Internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
-The model holds all state and every action while the view controllers only read it and call it, so separation of concerns passes. Unit test coverage is partial: the tests cover loading, paging, stale answers, opening, read marking, sync refresh, mailbox order, sender names and the list date, but not `loadMore` failures, `fullDate`, the account fallback, the unparseable date path or the unread floor. Error handling is partial because every failure is surfaced as `errorMessage` except the sync poll, which drops its failure with no signal. Pagination passes through the cursor, the `hasMore` flag and the de-duplicating append. Locale-aware formatting passes because the date helpers format through `Date.FormatStyle` with a locale and calendar. Hardcoded strings fail because the system mailbox titles and "All Mail" are fixed English text in the model.
+The model holds all state and every action while the view controllers only read it and call it, so separation of concerns is mostly met; it is partial because the sender-name, date and unread helpers live in the model too (see the static-helpers decision in Design Decisions). Unit test coverage is partial: the tests cover loading, paging, stale answers, opening, read marking, sync refresh, mailbox order, sender names and the list date, but vectors mail-browser-016 to mail-browser-042 have no test. That leaves untested: the unparseable date path, `select(mailbox:)` no-op and reselect, `loadMore` de-duplication and failure, the message failure and stale-message paths, the account fallback and unlisted selection, the open message clearing, the mark-read failure and superseded paths, the unread floor, the silent sync poll, the unclosed sender bracket, system mailboxes present only when labelled, the duplicate label rule, the provider status order, the loading flag, reload failures, per-account mailboxes, the account filter, the dropped selection, `selectedAccount`, `isUnread`, the published state and `fullDate`. Error handling is partial because every failure is surfaced as `errorMessage` except the sync poll, which drops its failure with no signal. Pagination passes through the cursor, the `hasMore` flag and the de-duplicating append. Locale-aware formatting passes because the date helpers format through `Date.FormatStyle` with a locale and calendar. Hardcoded strings fail because the system mailbox titles and "All Mail" are fixed English text in the model.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Named the mark-read account and generation bump points, set separation-of-concerns to partial, added vectors 029 to 042 with planned test names and exact limits, and tidied edge-case duplication and keywords. |

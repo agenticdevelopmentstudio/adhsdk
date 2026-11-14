@@ -2,7 +2,7 @@
 id: 7fd507a8-73a6-48f0-83c8-36789f3c9be4
 title: "Daemon Health Report"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,8 @@ tags:
   - health
   - networking
 depends-on: []
-related: []
+related:
+  - 9c7c78d3-23ca-4ca6-a519-9968b440b8c6
 references: []
 approved-by: ""
 approved-date: ""
@@ -42,8 +43,7 @@ A client-side mirror of the `GET /health` wire format that every DaemonKit daemo
 - **kind-constants**: `DaemonStrategyReport` MUST expose the static constants `timingKind` equal to `"timing"`, `eventKind` equal to `"event"` and `compositeKind` equal to `"composite"`, which are the kinds DaemonKit's `TimingStrategy`, `EventStrategy` and `CompositeStrategy` report.
 - **kind-open**: `DaemonStrategyReport.kind` MUST accept any String value, because a daemon may report its own kind; a consumer SHOULD treat an unknown kind as opaque.
 - **children-recursive**: `DaemonStrategyReport.children` MUST hold the child strategies of a composite and MUST be empty for a leaf strategy.
-- **workunit-fields**: `DaemonWorkUnitReport` MUST carry `name` (String), `state` (a `State`), `nextActivation` (optional Date), `consecutiveFailures` (Int), `isBlocklisted` (Bool) and `lastMessage` (optional String).
-- **workunit-optional-fields**: A `DaemonWorkUnitReport` field that does not apply to a work unit MUST be `nil`; the source names `nextActivation` and `lastMessage` as the optional fields.
+- **workunit-fields**: `DaemonWorkUnitReport` MUST carry `name` (String), `state` (a `State`), `nextActivation` (optional Date), `consecutiveFailures` (Int), `isBlocklisted` (Bool) and `lastMessage` (optional String). `nextActivation` and `lastMessage` are the optional fields: one that does not apply to a work unit MUST be `nil`.
 - **workunit-state-values**: `DaemonWorkUnitReport.State` MUST be a String-backed enum with exactly the raw values `idle`, `running`, `disabled` and `blocklisted`.
 - **workunit-memberwise-defaults**: The `DaemonWorkUnitReport` initializer MUST default `nextActivation` to `nil`, `consecutiveFailures` to `0`, `isBlocklisted` to `false` and `lastMessage` to `nil`.
 - **strategy-memberwise-default**: The `DaemonStrategyReport` initializer MUST default `children` to an empty array.
@@ -67,11 +67,11 @@ A client-side mirror of the `GET /health` wire format that every DaemonKit daemo
 
 **Probe**
 
-- **probe-url**: `DaemonHealthProbe.http(baseURL:timeout:)` MUST build the probe URL by appending the path component `health` to `baseURL` parsed as a URL.
-- **probe-request**: Each invocation of the returned closure MUST issue one GET request with a request timeout of `timeout` seconds.
+- **probe-url**: `DaemonHealthProbe.http(baseURL:timeout:)` MUST build the probe URL by appending the path component `health` to `baseURL` parsed as a URL. A trailing slash on `baseURL` MUST NOT produce a double slash, and a path on `baseURL` MUST be kept: `http://h:9000/` gives `http://h:9000/health` and `http://h/api` gives `http://h/api/health`.
+- **probe-request**: Each invocation of the returned closure MUST issue one GET request that gives up when no data has been received for `timeout` seconds. The timeout is an idle timeout: a server that keeps sending bytes slowly MUST NOT trip it, and the total duration of the request is not bounded.
 - **probe-default-timeout**: The `timeout` parameter MUST default to 2 seconds.
 - **probe-200-only**: The returned closure MUST return the response body only when the HTTP status code is exactly 200.
-- **probe-nil-on-failure**: The returned closure MUST return `nil` for any other status code, for a transport error and for a timeout.
+- **probe-nil-on-failure**: The returned closure MUST return `nil` for any other status code, for a transport error and for an idle timeout.
 - **probe-nil-on-bad-url**: The returned closure MUST return `nil`, without making a request, when `baseURL` cannot be parsed as a URL.
 - **probe-non-http-response**: The returned closure MUST return `nil` when the response is not an `HTTPURLResponse`.
 - **probe-body-raw**: The returned closure MUST return the body bytes undecoded; decoding is a separate call to `DaemonHealthReport.decode(_:)`.
@@ -109,13 +109,19 @@ Not applicable — this is a data model and a network probe, not a visual compon
 | daemon-health-report-012 | kind-constants | Read the three static constants | `"timing"`, `"event"` and `"composite"` |
 | daemon-health-report-013 | probe-200-only, probe-body-raw | A server answering `GET /health` with status 200 and a JSON body | The closure returns the exact body bytes |
 | daemon-health-report-014 | probe-nil-on-failure | A server answering `GET /health` with status 503 | The closure returns `nil` |
-| daemon-health-report-015 | probe-nil-on-failure, probe-default-timeout | A server that accepts the connection and sends nothing for longer than 2 seconds | The closure returns `nil` after about 2 seconds |
+| daemon-health-report-015 | probe-request, probe-nil-on-failure, probe-default-timeout | A server that accepts the connection and sends no data for longer than 2 seconds | The closure returns `nil` after about 2 seconds of silence |
 | daemon-health-report-016 | probe-nil-on-failure | No server listening at `baseURL` | The closure returns `nil` |
 | daemon-health-report-017 | probe-nil-on-bad-url | `baseURL` set to a string `URL(string:)` rejects, such as the empty string | The closure returns `nil` and issues no request |
 | daemon-health-report-018 | probe-url | `baseURL` `http://127.0.0.1:9000` | The request is a GET to `http://127.0.0.1:9000/health` |
-| daemon-health-report-019 | probe-ephemeral-session, probe-no-retry | Invoke the closure twice against a server that answers 500 | Two requests are made, one per invocation, and both return `nil` |
+| daemon-health-report-019 | probe-no-retry | Invoke the closure twice against a server that answers 500 | Two requests are made, one per invocation, and both return `nil` |
 | daemon-health-report-020 | kind-open | Body with a strategy whose `kind` is `"custom"` | Decodes; `kind == "custom"` |
-
+| daemon-health-report-021 | probe-request | A server that sends a valid 200 response body in small pieces, one piece every second, for longer than 2 seconds in total | The closure returns the complete body bytes; the idle timeout never fires |
+| daemon-health-report-022 | probe-non-http-response | A probe over a transport whose response is not an `HTTPURLResponse` (for example a `file:` URL as `baseURL`) | The closure returns `nil` |
+| daemon-health-report-023 | strategy-memberwise-default | `DaemonStrategyReport(name: "t", kind: "timing", workUnits: [])` | `children == []` |
+| daemon-health-report-024 | children-recursive | A composite strategy with one child that itself has one child; a leaf strategy | The composite's `children` holds the child, whose `children` holds the grandchild; the leaf's `children` is empty |
+| daemon-health-report-025 | status-opaque | A well-formed body whose `status` is `"degraded"` | Decodes; `status == "degraded"` |
+| daemon-health-report-026 | decode-iso8601, decode-nil-on-mismatch | A well-formed body whose `nextActivation` is `"2026-01-01T00:00:00.500Z"` | `decode` returns `nil` for the whole report |
+| daemon-health-report-027 | probe-url | `baseURL` `http://127.0.0.1:9000/` and, separately, `http://127.0.0.1:9000/api` | The requests are GETs to `http://127.0.0.1:9000/health` and `http://127.0.0.1:9000/api/health` |
 ## Edge Cases
 
 - **Null and empty input**: An empty `Data` passed to `decode` MUST return `nil`. An empty `workUnits` array is valid and decodes as an empty array. A null `nextActivation` or `lastMessage` decodes as `nil`.
@@ -124,10 +130,11 @@ Not applicable — this is a data model and a network probe, not a visual compon
 - **Boundary values**: `uptimeSeconds` and `consecutiveFailures` are not range-checked; negative or very large values pass through unchanged.
 - **Deep or wide trees**: `first(ofKind:)` recurses without a depth limit, and a tree is bounded only by what the daemon sends.
 - **Unreachable server**: A refused connection, DNS failure or lost connectivity MUST make the probe closure return `nil`; the closure does not distinguish those causes from one another or from a non-200 status.
-- **Timeout**: A response not completed within `timeout` seconds MUST make the closure return `nil`.
+- **Timeout**: A request that receives no data for `timeout` seconds MUST make the closure return `nil`. A server that sends bytes slowly but steadily never trips the timeout, so the closure can run longer than `timeout` seconds.
+- **Base URL with a trailing slash or a path**: `http://h:9000/` MUST probe `http://h:9000/health`, and `http://h/api` MUST probe `http://h/api/health`.
 - **Non-200 status**: Any status other than 200, including other 2xx codes and redirects the session does not follow to a 200, MUST return `nil`; the body of such a response is discarded.
 - **Cancellation**: The closure has no explicit cancellation handling; its `try?` turns a cancelled request into `nil`, so cancellation is indistinguishable from failure.
-- **Concurrent access**: The report types are immutable value types marked `Sendable`, so they are safe to share. Concurrent invocations of one probe closure each issue an independent request and share the one ephemeral session; the source adds no serialisation, and none is needed because the closure holds no mutable state.
+- **Concurrent access**: The report types are immutable value types marked `Sendable`, so they are safe to share. Concurrent invocations of one probe closure each issue an independent request and share the one ephemeral session; the probe adds no serialisation, and none is needed because the closure holds no mutable state.
 - **Offline state**: There is no offline mode; losing connectivity mid-request is the same as an unreachable server and returns `nil`.
 - **Daemon up but different schema**: A 200 response whose body is in the daemon's own shape returns the body from the probe, and `decode` then returns `nil`; a caller can treat that combination as reachable but opaque.
 
@@ -174,16 +181,16 @@ Not applicable: The source calls no logging API; failures are returned as `nil` 
 ## Platform Notes
 
 - **SwiftUI**: The source is `Core/DaemonHealth/DaemonHealthReport.swift` and imports only `Foundation`, so a SwiftUI host uses it unchanged. The three report types are plain `struct`s, `DaemonHealthProbe` is a caseless `enum` whose `http` returns a `@Sendable () async -> Data?` closure, and the probe's session comes from `URLSession(configuration: .ephemeral)`. Poll the closure from a `.task` or a view model and publish the decoded report.
-- **Compose**: Model the report as Kotlin `data class`es with `kotlinx.serialization` (`@Serializable`, a default of `emptyList()` for `children`, and an enum with `@SerialName` per state). Return `null` from a `suspend` probe built on `OkHttp` with `callTimeout(2, SECONDS)`, and decode with `Json.decodeFromString` inside `runCatching` to match the nil-on-mismatch rule. Parse ISO-8601 dates with `java.time.Instant.parse`.
-- **React/Web**: Use TypeScript interfaces for the three shapes and a union of the four state strings. The probe is `fetch(base + "/health", { signal: AbortSignal.timeout(2000) })`, returning the parsed body only when `response.ok` and the status is exactly 200, and `null` on any rejection. Write a validating `decode` that returns `null` for a missing required key or unknown state, since `JSON.parse` does not enforce a schema; convert date strings with `Date.parse` or `new Date`.
+- **Compose**: Model the report as Kotlin `data class`es with `kotlinx.serialization` (`@Serializable`, a default of `emptyList()` for `children`, and an enum with `@SerialName` per state). Return `null` from a `suspend` probe built on `OkHttp` with `readTimeout(2, SECONDS)` (an idle timeout; do not use `callTimeout`, which bounds the whole call), and decode with `Json.decodeFromString` inside `runCatching` to match the nil-on-mismatch rule. Parse ISO-8601 dates with `java.time.Instant.parse`.
+- **React/Web**: Use TypeScript interfaces for the three shapes and a union of the four state strings. The probe is `fetch(base + "/health", { signal: AbortSignal.timeout(2000) })`, returning the raw text or `ArrayBuffer` body only when `response.status === 200`, and `null` on any rejection. `AbortSignal.timeout` bounds the whole request, so for the idle timeout the spec requires, use an `AbortController` whose timer restarts each time a chunk of the response body is read. Write a validating `decode` that returns `null` for a missing required key or unknown state, since `JSON.parse` does not enforce a schema; convert date strings with `Date.parse` or `new Date`.
 - **AppKit / UIKit**: Identical to the SwiftUI note: the contract is UI-framework-agnostic, and a menu bar app (the stated consumer) calls the probe on a timer from its status item delegate. Only the embedding differs.
-- **WinUI 3**: Use records or classes with `System.Text.Json` (`JsonSerializer.Deserialize` wrapped in a `try`/`catch (JsonException)` that returns `null`), `JsonStringEnumConverter` for `State` with `JsonSerializerOptions` configured so an unknown value throws, and `List<T>` for the arrays, defaulting `Children` to an empty list when absent. Required members use the C# `required` modifier so a missing key fails, and `DateTimeOffset?` carries `NextActivation`. Build the probe as `Func<Task<byte[]?>>` over one shared `HttpClient` (the analogue of the shared ephemeral session; create it once, not per call) with `Timeout = TimeSpan.FromSeconds(2)`, catch `HttpRequestException` and `TaskCanceledException` to return `null`, and return the body only when `StatusCode == HttpStatusCode.OK`. A view model exposing the decoded report implements `INotifyPropertyChanged` and is updated from a `DispatcherQueueTimer`.
+- **WinUI 3**: Use records or classes with `System.Text.Json` (`JsonSerializer.Deserialize` wrapped in a `try`/`catch (JsonException)` that returns `null`), `JsonStringEnumConverter` for `State` with `JsonSerializerOptions` configured so an unknown value throws, and `List<T>` for the arrays, defaulting `Children` to an empty list when absent. Required members use the C# `required` modifier so a missing key fails, and `DateTimeOffset?` carries `NextActivation`. Build the probe as `Func<Task<byte[]?>>` over one shared `HttpClient` (the analogue of the shared ephemeral session; create it once, not per call) with `Timeout = Timeout.InfiniteTimeSpan`, read the response stream with `HttpCompletionOption.ResponseHeadersRead` and a `CancellationTokenSource` that is re-armed for 2 seconds each time data arrives (`HttpClient.Timeout` bounds the whole call, which is not the idle timeout the spec requires), catch `HttpRequestException` and `TaskCanceledException` to return `null`, and return the body only when `StatusCode == HttpStatusCode.OK`. A view model exposing the decoded report implements `INotifyPropertyChanged` and is updated from a `DispatcherQueueTimer`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/DaemonHealth/DaemonHealthReport.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/DaemonHealth/DaemonHealthReport.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -191,7 +198,7 @@ Not applicable: The source calls no logging API; failures are returned as `nil` 
 ## Design Decisions
 
 **Decision**: The report types mirror DaemonKit's wire format in this file rather than importing DaemonKit.
-**Rationale**: A menu bar app or other client reads a daemon's health with Foundation only, the same arrangement `StenographerHTTPClient` uses for stenographerd, and the JSON keys alone are the contract between the two.
+**Rationale**: A menu bar app or other client reads a daemon's health with Foundation only, the same arrangement [adhsdk.ingredient.foundation.stenographer.stenographer-http-client](cookbook:9c7c78d3-23ca-4ca6-a519-9968b440b8c6) uses for stenographerd, and the JSON keys alone are the contract between the two.
 **Approved**: pending
 
 **Decision**: The Swift names (`DaemonHealthReport`, `DaemonStrategyReport`, `DaemonWorkUnitReport`) differ from DaemonKit's `HealthStatus`, `StrategySnapshot` and `WorkUnitSnapshot`.
@@ -199,19 +206,19 @@ Not applicable: The source calls no logging API; failures are returned as `nil` 
 **Approved**: pending
 
 **Decision**: `decode` returns `nil` for any undecodable body and discards the error.
-**Rationale**: The source's doc comment states the contract: a daemon may answer `/health` in its own shape and still be up, so a mismatch is a normal outcome, not an error to surface. The cost is that a caller cannot tell which key failed.
+**Rationale**: A daemon may answer `/health` in its own shape and still be up, so a mismatch is a normal outcome, not an error to surface. The cost is that a caller cannot tell which key failed.
 **Approved**: pending
 
 **Decision**: `status` and `kind` are Strings while the work-unit `State` is a closed enum.
-**Rationale**: The source's comment on `kind` says a daemon may report its own value and a consumer should treat unknown kinds as opaque. The closed `State` enum has no fallback, so a daemon reporting a fifth state makes the whole report fail to decode; this is the actual behavior and a port must reproduce it.
+**Rationale**: A daemon may report its own `kind` value, so a consumer treats unknown kinds as opaque. The closed `State` enum has no fallback, so a daemon reporting a fifth state makes the whole report fail to decode; this is the actual behavior and a port must reproduce it.
 **Approved**: pending
 
 **Decision**: `DaemonStrategyReport` has a hand-written `init(from:)` that makes `children` optional on the wire, while the other two structs use synthesized decoding.
-**Rationale**: A leaf strategy need not send `children`, per the source comment that it is empty for a leaf. For the work unit, the initializer defaults are not used when decoding, so its non-optional fields are required keys.
+**Rationale**: A leaf strategy need not send `children`, because it is empty for a leaf. For the work unit, the initializer defaults are not used when decoding, so its non-optional fields are required keys.
 **Approved**: pending
 
 **Decision**: The probe collapses every failure (non-200, transport error, timeout, bad URL, cancellation) into `nil`.
-**Rationale**: A menu bar app polling for reachability needs a binary answer. The source documents `nil` for "any other status, a transport error or a timeout". It also does not retry, because the caller owns the polling cadence.
+**Rationale**: A menu bar app polling for reachability needs a binary answer. The probe returns `nil` for any other status, a transport error or a timeout. It also does not retry, because the caller owns the polling cadence.
 **Approved**: pending
 
 **Decision**: The probe takes a 2 second default timeout and uses an ephemeral session created once per probe.
@@ -233,4 +240,5 @@ Not applicable: The source calls no logging API; failures are returned as `nil` 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Restated the probe timeout as an idle timeout with a slow-server vector, added the stenographer-http-client link and related entry, merged the optional-field requirement into workunit-fields, added vectors for the uncovered requirements and trailing-slash base URLs, and corrected the timeout and response handling in the Compose, React and WinUI notes. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

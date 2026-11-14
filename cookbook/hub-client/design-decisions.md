@@ -40,7 +40,8 @@
   **Rationale**: the doc comment states this is "a transport detail, not a
   place to crash a sign-in" — the one real caller needing arbitrary headers
   (`hub-client-auth`'s `exchangeOAuthCode`) must not have an unrelated
-  malformed header abort authentication.
+  malformed header abort authentication. This is a deliberate exception to
+  failing fast: the drop gives the caller no signal.
   **Approved**: pending
 
 - **Decision**: The 16 MiB buffering cap (`ADHBodyLimit.maxBuffered`) is a
@@ -51,3 +52,20 @@
   contract avoids the two call sites silently drifting to different limits.
   **Approved**: pending
 
+- **Decision**: `RawResponse.headers` is a single-value `[String: String]`, so
+  repeated response headers collapse to the last value.
+  **Rationale**: the source states no reason; the type is the simple shape the
+  one known caller can use. Headers that repeat, such as `Set-Cookie` or
+  `Link`, lose their earlier values, so a caller needing them must not use
+  `rawJSON`. A multi-value representation is the alternative and is an open
+  question for the maintainer.
+  **Approved**: pending
+
+- **Decision**: The Daemon transport targets `DaemonContract`, not a running
+  daemon.
+  **Rationale**: `DaemonContract`'s doc comment says the real `adhd` daemon
+  does not exist yet and the type defines what it must implement. That was the
+  state of the source on 2026-11-14; recheck the comment before relying on a
+  daemon being present, and prefer `.resolved(...)`, which falls back to
+  Direct.
+  **Approved**: pending

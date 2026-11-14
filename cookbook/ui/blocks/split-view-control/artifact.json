@@ -4,11 +4,11 @@
     "id": "6e0e27bf-5f7d-46bf-85d0-fb5bdf5dab8a",
     "title": "Split View Control",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a2041c6947ce7020",
+  "synced": "36f78085ee775e06",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

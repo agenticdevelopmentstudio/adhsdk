@@ -4,15 +4,16 @@
 - **SwiftUI**: `VStack`/`HStack` do not wrap, so use a custom flow `Layout` for the chip row.
   Each reaction is a SwiftUI `Button` with its pressed state driven from the `mine` input, not
   from local state, and announced via `.accessibilityAddTraits(mine ? .isSelected : [])` — the
-  equivalent of `aria-pressed`. The palette could be a `Menu` or custom `Popup`/`Popover` with
-  emoji buttons. Count display uses `Text` with `.monospacedDigit()` font modifier. `@State` is
+  equivalent of `aria-pressed`. The palette could be a `Menu` or a `.popover(isPresented:)` with
+  emoji buttons (SwiftUI has no `Popup`). Count display uses `Text` with `.monospacedDigit()` font modifier. `@State` is
   used only for whether the palette is open or closed.
 
 - **Compose**: `Row` with `Modifier.fillMaxWidth()` does not wrap, so use `FlowRow` for the chip
-  row. Each reaction is a `Button` composable with the pressed state exposed via
-  `Modifier.toggleable(value = mine, onValueChange = { ... })` or
-  `Modifier.semantics { selected = mine }` — the equivalent of `aria-pressed` — plus a separate
-  trigger `Button` styled as a circular icon for the palette. Palette is a `Popup` or
+  row. Each reaction is a `FilterChip(selected = mine)`, or a `Button` with
+  `Modifier.semantics { toggleableState = ToggleableState(mine) }` — the equivalent of
+  `aria-pressed`. Do not stack `Modifier.toggleable` on a `Button`: that creates two competing
+  click handlers, and `semantics { selected }` is selection semantics, not a pressed state. A
+  separate trigger `Button` styled as a circular icon opens the palette. Palette is a `Popup` or
   `DropdownMenu`. Counts display in `Text` with `style = TextStyle(fontFeatureSettings = "tnum")`
   for monospaced digits (`fontFeatureSettings` is a `TextStyle` parameter, not a modifier). Use
   `remember { mutableStateOf(false) }` only for palette open state.
@@ -22,12 +23,16 @@
   with a flow layout. Each chip is an `NSButton` (AppKit) with `.pushOnPushOff` for toggle
   semantics, or a `UIButton` (UIKit) with the `.selected` trait bound to `mine`. The palette is
   an `NSPopover` (AppKit) or a `UIMenu`/`UIAction` presented via a
-  `UIPopoverPresentationController` (UIKit; `UIMenuActions` does not exist). Accessibility via
-  `NSAccessibilityRole` (AppKit) or `accessibilityTraits` (UIKit) set to `.button`, with custom
-  `NSAccessibilityElement` / `accessibilityLabel` construction for each chip and trigger.
+  `UIPopoverPresentationController` (UIKit; `UIMenuActions` does not exist). Accessibility: on AppKit give
+  each chip a toggle role (`NSAccessibility.Role.checkBox`) or an `accessibilityValue` that
+  states the pressed state; on UIKit add `.selected` to `accessibilityTraits` alongside
+  `.button`, driven from `mine`. Either way, a plain `.button` role alone drops the pressed
+  state that `announces-own-reaction` requires. Build `accessibilityLabel` for each chip and
+  trigger.
 
 - **WinUI 3**: `StackPanel` has no `TextWrapping` property, so use an `ItemsRepeater` with a
-  `WrapLayout` (or a `WrapPanel`) for the row. Each reaction is a `ToggleButton` with `IsChecked`
+  `WrapLayout` (or a `WrapPanel`) for the row; both come from the Windows Community Toolkit, not the
+  platform, so the port takes that dependency. Each reaction is a `ToggleButton` with `IsChecked`
   bound to `mine` (`Button` has no `IsToggled` property), styled per the Fluent 2 Design System.
   The palette is a `Flyout` or `MenuFlyout` attached to a `Button` trigger. Count display uses
   `TextBlock` with `FontFamily="Segoe UI Variable"` and `Typography.NumeralAlignment="Tabular"`

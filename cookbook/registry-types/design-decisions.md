@@ -24,6 +24,6 @@
 **Approved**: pending
 
 **Decision**: `evaluateShowIf` reads the controlling value as `values[rule.field]` — a direct bracket lookup, not an `Object.hasOwn`-guarded one.
-**Rationale**: `rule.field` is owner-authored data from the same untrusted `jsonb` origin the module explicitly reasons about elsewhere (see the decision above), but this particular lookup was not brought under the same guard. See the open question recorded in Behavioral Requirements' cross-cutting notes and the corresponding marker below.
+**Rationale**: `rule.field` is owner-authored data from the same untrusted `jsonb` origin the module explicitly reasons about elsewhere (see the decision above), but this particular lookup was not brought under the same guard. The open question is the NEEDS REVIEW marker on **show-if-field-lookup** in Behavioral Requirements.
 **Approved**: pending
 

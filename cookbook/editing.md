@@ -2,11 +2,11 @@
 id: 72243a76-93f2-412b-985d-719511fcd19c
 title: "Content Editing"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -135,7 +135,7 @@ control outside one.
 - **select-value-off-the-option-list-is-an-error**: A `select` field holding
   a non-empty value that is not `Object.is`-equal to any of its declared
   `options[].value` MUST report `"<value>" is not one of the available
-  choices."` even when the field declares no `validate`, so a retired option
+  choices.` even when the field declares no `validate`, so a retired option
   still stored on a row is surfaced rather than silently accepted
   (`validation.ts` `fieldError`, `unlistedChoiceMessage`; `validation.test.ts`
   "reports the stored value instead of passing it as valid").
@@ -187,7 +187,9 @@ control outside one.
   that does not exist").
 - **layout-faults-logged-and-rendered**: Each layout fault MUST be logged via
   `console.error` prefixed `[@adh-sdk/editing]` and rendered
-  in a `role="alert"` block above the sections; rendering MUST continue
+  in a `role="alert"` block above the sections; the log MUST fire once each time the set of faults changes (an effect
+  keyed on the memoized fault list, which recomputes when `sections` or
+  `fields` change identity), not on every render; rendering MUST continue
   rather than throwing (`container.tsx` `layoutFaults` effect + JSX;
   `container.test.tsx` "says nothing about a layout that covers every field
   exactly once" as the negative case).
@@ -262,8 +264,8 @@ control outside one.
   context)`) exactly once for each distinct baseline identity, not once per
   render (`container.tsx` `inspectedRef` effect; `repair-flow.test.tsx`
   "prompts once, not once per render").
-- **repair-plan-defines-broken**: A field counts as broken in the repair
-  plan when it declares a `repair` function, its loaded value is non-empty,
+- **repair-plan-defines-broken**: A field MUST count as broken in the repair
+  plan when, and only when, it declares a `repair` function, its loaded value is non-empty,
   and `fieldError` for that value is non-null (`repair.ts` `planRepairs`;
   `repair.test.ts` "repairs the stored value that made Save unreachable").
 - **repair-skips-empty-values**: `planRepairs` MUST NOT attempt to repair a
@@ -271,7 +273,8 @@ control outside one.
   `validate`/`repair`, since repairing "" would invent a value never entered
   (`repair.ts` `planRepairs`; `repair.test.ts` "never repairs an empty value
   into an invented one").
-- **repair-skips-required-empty-fields**: A `required` field left empty MUST
+- **repair-skips-required-empty-fields**: This is **repair-skips-empty-values**
+  applied to a `required` field: a `required` field left empty MUST
   NOT be treated as broken by the repair pass — there is nothing to derive
   the missing value from, and it stays a visible field error the user must
   fill in themselves (`descriptors.ts` `RequirableFieldOptions.required`;
@@ -320,7 +323,8 @@ control outside one.
   never `onSave` (`container.tsx` `onRepair = props.onRepair ?? onSave`;
   `repair-flow.test.tsx` "sends the repair write to onRepair when the
   caller separates the two").
-- **repair-suppressed-in-read-only**: The repair-inspection effect MUST NOT
+- **repair-suppressed-in-read-only**: This is the repair clause of
+  **read-only-suppresses-save-bar-and-repair**: the repair-inspection effect MUST NOT
   run at all when the container is `readOnly` (`container.tsx`
   `if (readOnly) return`; `container.test.tsx` "offers no Save bar, arms no
   guard, and repairs nothing").
@@ -374,6 +378,15 @@ control outside one.
   !readOnly)`, comment above `isRoot && <host.UnsavedChangesGuard>`;
   `nesting.test.tsx` "still guards an editable row inside a read-only
   pane").
+
+- **guard-transport**: The root container MUST render the host's
+  `UnsavedChangesGuard` with `when` equal to the aggregate dirtiness, so that
+  while any container under it is dirty, closing the page and an in-app link
+  click raise the platform's one unsaved-changes prompt, and once the work is
+  saved, cancelled or unmounted neither is intercepted (`container.tsx`
+  `isRoot && <host.UnsavedChangesGuard when={aggregateDirty} />`;
+  `guard.test.tsx` "raises the platform's one unsaved-changes prompt", "is
+  clear once the work is saved").
 
 ### Read-only containers
 
@@ -455,13 +468,13 @@ control outside one.
 
 ### Execution context, persistence and side effects
 
-- **single-threaded-execution**: The container performs no locking or actor
+- **single-threaded-execution**: The container MUST NOT perform locking or actor
   isolation of its own; every file in the package (`container.tsx`,
   `controls.tsx`, `host.tsx`, `scope.tsx`) is marked `"use client"` and runs
   entirely on the browser's single JS thread through React's `useState`/
   `useEffect` scheduler, so overlapping user interactions are serialized by
   the event loop, not by this code.
-- **no-own-persistence**: The container itself persists nothing; `draft` and
+- **no-own-persistence**: The container itself MUST NOT persist anything; `draft` and
   `baseline` live in React state only and are discarded on unmount.
   Persisting the record is entirely the responsibility of the caller-
   supplied `onSave`/`onRepair` functions, which the container treats as
@@ -477,11 +490,8 @@ control outside one.
 
 ## Appearance
 
-Not applicable — this is a data-editing container with no visual identity of
-its own; every visible element it produces (`FieldGroup`, `BoundField`,
-`ButtonBar`, `AlertModal`) is a shared component from
-`@adh-sdk/ui` with its own recipe.
-
+The container draws no chrome of its own beyond four surfaces; every other visible element (`FieldGroup`, `BoundField`, `ButtonBar`, `AlertModal`) is a shared component from
+`@adh-sdk/ui` with its own recipe. The four surfaces are the layout-fault alert block (red-bordered, monospaced, `role="alert"`, above the sections), the form-level `validate` message and the save-error line (red, monospaced, `role="alert"`, below the sections), the optional section description line (dim, monospaced), and the danger-zone styling, which colors a `dangerZone` section's title and border red.
 ## States
 
 Not applicable — this is a logic container, not a visual component. Its
@@ -560,14 +570,28 @@ is `aria-invalid` toggling on a failing control, captured under
 | content-editing-055 | rdid-lowercases-on-input | User types `"ADH.Team"` into an `rdid` control | Reported value is `"adh.team"` — `controls.test.tsx: "lowercases as the user types, so the shift key is not a decision"` |
 | content-editing-056 | field-disabled-independent-of-siblings | One field descriptor sets `disabled: true`; sibling fields do not | Only the disabled field is locked — `controls.test.tsx: "is disabled on its own, without locking the rest of the pane"` |
 | content-editing-057 | error-replaces-hint | Field has both a `hint` and a validation `error` | Only the error text renders, with `aria-invalid="true"` — `controls.test.tsx: "shows the error in place of the hint, and marks itself invalid"` |
-| content-editing-058 | root-guard-renders-even-when-root-is-read-only | (transport) Guarded page's `beforeunload`/in-app-link interception | Prompt raised on close/navigate while dirty, cleared on save/cancel/unmount — `guard.test.tsx: "raises the platform's one unsaved-changes prompt"`, `"is clear once the work is saved"`, `"is clear once the edit is cancelled"`, `"is clear once the pane unmounts mid-edit"` |
-
+| content-editing-058 | guard-transport | (transport) Guarded page's `beforeunload`/in-app-link interception | Prompt raised on close/navigate while dirty, cleared on save/cancel/unmount — `guard.test.tsx: "raises the platform's one unsaved-changes prompt"`, `"is clear once the work is saved"`, `"is clear once the edit is cancelled"`, `"is clear once the pane unmounts mid-edit"` |
+| content-editing-059 | draft-seeded-from-record | Container mounted with a `record`, nothing edited | `draft` and baseline equal the record and `dirty === false` — `container.test.tsx: "is inert until something actually changes"` |
+| content-editing-060 | cancel-availability | Clean pane, with `onCancel` supplied and then omitted | Cancel is offered with `onCancel` and absent without it; once dirty it is offered either way — derived from `container.tsx` `canCancel` (no test covers it) |
+| content-editing-061 | descriptor-defaults | `text({ label })` with no `required` or `disabled` | `required === false` and `disabled === false` — derived from `descriptors.ts` `common` (no test covers it) |
+| content-editing-062 | no-numeric-control | `ControlKind` of the package | Exactly `text`, `textarea`, `rdid`, `checkbox`, `select`; no numeric kind — derived from `descriptors.ts` (no test covers it) |
+| content-editing-063 | server-entry-has-no-react-dependency | Evaluate `./server` outside a React runtime | The plain-data builders and `section`/`dangerZone` import and run; no React or `"use client"` module loads — derived from `server.ts` (no test covers it) |
+| content-editing-064 | bound-controls-unreachable-outside-container | Import `BoundField` from either package entry point | The import fails; neither entry exports it — derived from `package.json` exports (no test covers it) |
+| content-editing-065 | checkbox-control-shape | A `checkbox` field with a stored value, then toggled both ways | Renders the box with its label beside it, reflects the stored value, and toggles both ways — `controls.test.tsx: "labels itself beside the box and toggles both ways"`, `"reflects the stored value on the way in"` |
+| content-editing-066 | textarea-control-rows | A `textarea` field with `rows: 6` | Renders a textarea at the declared height carrying its value — `controls.test.tsx: "renders as a textarea at the declared height and carries its value"` |
+| content-editing-067 | select-adds-no-extra-option-when-listed | A `select` whose stored value is on its option list | No extra option is rendered — `controls.test.tsx: "adds no such option when the stored value IS on the list"` |
+| content-editing-068 | all-controls-locked-while-saving | Save clicked, `onSave` pending | Every control is locked until the write settles — `controls.test.tsx: "is locked while a save is in flight"` |
+| content-editing-069 | dirty-rolls-up-to-parent-scope | Nested child dirty, parent's own fields untouched | The enclosing container is dirty — `nesting.test.tsx: "marks the enclosing container dirty even though its own fields are untouched"` |
+| content-editing-070 | rollup-propagates-through-multiple-levels | Three levels of nested containers, the innermost dirty | Every level up to the root reports dirty — `nesting.test.tsx: "rolls dirtiness up through more than one level"` |
+| content-editing-071 | validate-receives-context | A field `validate` and `repair` that read `context`, container given a `context` | Each is invoked with the exact `context` prop — `validation.test.ts: "runs the field's own rule on a non-empty value, with the container's context"` |
+| content-editing-072 | layout-faults-logged-and-rendered | A layout with a fault, re-rendered with unchanged `sections` and `fields` | The fault is rendered in a `role="alert"` block and logged once with the `[@adh-sdk/editing]` prefix, not again on re-render — `container.test.tsx: "reports a field laid out twice"`; the single-log timing is derived from `container.tsx` (no test covers it) |
 ## Edge Cases
 
 - **Null/empty field values** (MUST): `null`, `undefined`, a blank
   (whitespace-only) string, and an empty array all count as "empty" via
   `isEmptyValue`; `false` and `0` do NOT, so a deliberately unticked
-  required checkbox is a valid answer, never a missing one
+  checkbox is a valid answer, never a missing one (`required` does not
+  compile on a `checkbox`)
   (`validation.ts` `isEmptyValue`; `validation.test.ts` "treats false and
   zero as entered values, not as absence").
 - **Structurally-identical replacement values** (MUST): setting a field to
@@ -610,11 +634,11 @@ is `aria-invalid` toggling on a failing control, captured under
   path (`save-failure-preserves-draft-and-shows-reason` /
   `repair-write-failure-keeps-draft-editable` above); the container itself
   does not detect connectivity, retry or queue a write.
-- **A required field validator and a repair function both declared** (MUST
-  NOT, structurally): the type system makes `required` and the repair pass
-  independent concerns — `required` never enters `planRepairs`, so an empty
-  required field is never "fixed" on the caller's behalf
-  (`descriptors.ts` `RequirableFieldOptions.required` docblock).
+- **A required field with a `validate`/`repair` pair** (MUST NOT, at
+  runtime): `planRepairs` skips every empty value, so an empty required
+  field is never "fixed" on the caller's behalf; the rule is the runtime
+  check in **repair-skips-empty-values** and **repair-skips-required-empty-fields**,
+  not a type-system property (`repair.ts` `planRepairs`).
 
 ## Configuration
 
@@ -627,14 +651,14 @@ is `aria-invalid` toggling on a failing control, captured under
 | `onRepair` | `(values: TRecord) => void \| Promise<void>` | `onSave` | Persists a repaired record; use when `onSave` has side effects (closing a pane, navigating) that a system-initiated repair write should not trigger. |
 | `onCancel` | `() => void` | `undefined` | Extra work Cancel should do after the draft is discarded. |
 | `context` | `TContext` | `undefined` | Whatever the record's field `validate`/`repair` functions need. |
-| `readOnly` | `boolean` | `false` | Renders the values without controls, Save bar, repair pass, or (own) contribution to the navigation guard. |
+| `readOnly` | `boolean` | `false` | Renders every control locked, and omits the Save bar, the repair pass and the container's own contribution to the navigation guard. |
 | `validate` | `(values: TRecord) => string \| null` | `undefined` | A cross-field rule no single field descriptor can express; a non-null return blocks Save. |
 | `children` | `React.ReactNode` | `undefined` | Rendered after the sections — the usual place for a nested container (a table of rows). |
 | `className` | `string` | `undefined` | Extra class names on the outer container `div`. |
 | Field option: `label` | `string` | required | Caption above the control (or beside it, for `checkbox`). |
 | Field option: `hint` | `React.ReactNode` | `undefined` | Dim helper text below the control; replaced by the error when the field is invalid. |
 | Field option: `disabled` | `boolean` | `false` | Locks this control independent of the container's own `readOnly`/`saving` state. |
-| Field option: `required` | `boolean` | `false` | Blocks Save while empty and shows `"Required."`; not applicable to `checkbox`. |
+| Field option: `required` | `boolean` | `false` | Blocks Save while empty and shows `"Required."`; not available on `checkbox`, where it does not compile, because an unticked box is a valid answer. |
 | Field option: `placeholder` | `string` | `undefined` | Greyed sample text; `text`, `rdid`, `textarea` only. |
 | Field option: `rows` | `number` | `undefined` | `textarea` only. |
 | Field option: `options` | `readonly { value, label }[]` | required for `select` | The closed choice list. |
@@ -648,7 +672,7 @@ its sibling source files parse or construct a URL.
 
 ## Localization
 
-Not marked not-applicable: the package's own English strings are user-facing
+The package's own English strings are user-facing
 and hardcoded, with no localization mechanism in the given sources.
 
 | String Key | Default (en) | Context |
@@ -707,7 +731,7 @@ Subsystem: `@adh-sdk` | Category: `editing`
 
 | Event | Level | Message |
 |-------|-------|---------|
-| Layout fault detected | error | `[@adh-sdk/editing] <fault text>` — once per fault, on every render where `layoutFaults` is non-empty (`container.tsx`). |
+| Layout fault detected | error | `[@adh-sdk/editing] <fault text>` — once per fault, each time the fault list changes (an effect keyed on the memoized `layoutFaults`, so not on every render) (`container.tsx`). |
 | Repair produced a still-invalid value | error | `[@adh-sdk/editing] repair() left a value still invalid — <key>: <message>[; <key>: <message> ...]` (`container.tsx`). |
 
 ## Platform Notes
@@ -718,8 +742,9 @@ Subsystem: `@adh-sdk` | Category: `editing`
   array/object-content comparison `useDirtyDraft` hand-rolls in TypeScript
   for free). Field descriptors become an enum or protocol-witness list
   (`FieldDescriptor<Value, Context>` as a generic `struct`); layout coverage
-  can be checked at compile time with a `CaseIterable` key enum rather than
-  TypeScript's mapped-type trick. The repair pass and `EditingScope` rollup
+  gets a compile-time check only from an exhaustive `switch` over the key
+  enum; a `CaseIterable` conformance alone checks nothing at compile time, so
+  pair it with a unit test that walks `allCases` against the sections. The repair pass and `EditingScope` rollup
   (an `@Environment`-injected parent reporter) both port directly; the
   navigation guard maps to `.interactiveDismissDisabled` plus a
   confirmation `.alert`.
@@ -760,18 +785,17 @@ Subsystem: `@adh-sdk` | Category: `editing`
   `useDirtyDraft`'s `sameValue` does for plain objects/arrays). Field-level
   errors surface through `INotifyDataErrorInfo` so bound `TextBox`/
   `ComboBox`/`CheckBox` controls show validation state natively instead of
-  through a hand-rolled error prop; `TextBox.MaxLength`/`InputScope` cover
-  `placeholder`/`rows`-equivalent options, and a `ComboBox` bound to an
+  through a hand-rolled error prop; `TextBox.PlaceholderText` covers `placeholder`,
+  and `AcceptsReturn` with `TextWrapping` and a set `Height` covers `rows`; a `ComboBox` bound to an
   `ObservableCollection<SelectOption>` needs an explicit "insert the current
   unlisted value as an extra item" step to match
   `select-shows-unlisted-stored-value`, since WinUI's `ComboBox` has no
   built-in equivalent. The repair pass's non-dismissible prompt maps to a
   `ContentDialog` with `CloseButtonText` unset and `IsPrimaryButtonEnabled`
   bound to the "not yet applying" state, `DefaultButton` set so Enter
-  confirms, and no `system-close` handling — WinUI's `ContentDialog` does
-  not raise Escape as a distinct event the way a web `Escape` keydown does,
-  so the equivalent guard is simply omitting the close (`X`) affordance
-  that `ContentDialog` would otherwise show. Section/field coverage has no
+  confirms. `ContentDialog` still closes on Escape with `Result == None`, so
+  handle `Closing`: when `Result == None` and the repair write has not run,
+  set `args.Cancel = true` so Escape does not confirm the write. Section/field coverage has no
   compile-time equivalent in C#'s type system (no literal-tuple inference);
   the nearest practical equivalent is a source generator or a unit test
   that walks a `[Field(nameof(...))]`-attributed list against the view
@@ -786,7 +810,7 @@ Subsystem: `@adh-sdk` | Category: `editing`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/editing/src/` | unverified |
+| web | `packages/web/packages/editing/src/` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -855,6 +879,9 @@ Server-Component-safe entry into a client-only one with no compiler error
 (`server.ts` module docblock).
 **Approved**: pending
 
+**Decision**: the package's user-facing English strings stay hardcoded for now, with no localization key or i18n library, and are externalized when the first localized surface adopts `EditingContainer`.
+**Rationale**: no host surface is localized yet, so a key scheme designed now would be guessed; the strings are all listed under Localization, which makes the later extraction mechanical, and the `string-externalization` check is recorded as failed until then (`validation.ts`, `container.tsx`).
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -883,8 +910,7 @@ seeding/layout-fault paths, nesting/rollup, every control kind, the guard
 integration and the full repair UX flow in detail, plus a dedicated
 compile-time suite for the generic contract — but `useDirtyDraft`'s own
 equality semantics are tested in the `ui` package rather than duplicated
-here, and nothing in this package's tests exercises two containers editing
-the *same* record concurrently. `graceful-degradation` passes: a layout
+here. The recipe specifies no behaviour for two containers editing the same record, so that case is not a reason for the partial. `graceful-degradation` passes: a layout
 fault renders as a visible alert and the pane continues rendering rather
 than throwing; an unlisted `select` value is shown rather than crashing or
 silently substituting the first option. `fault-tolerance` passes: a
@@ -897,11 +923,12 @@ above. `string-externalization` fails: every user-facing string this
 package produces — `"Required."`, the unlisted-choice and layout-fault
 messages, the three repair-flow alert titles and their description — is a
 hardcoded English literal with no localization key or i18n library
-involved, as detailed under Localization above.
+involved, as detailed under Localization above; the accepted exception is recorded under Design Decisions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Fixed the unlisted-choice typo, logging timing, readOnly/required/Appearance contradictions, WinUI and SwiftUI notes, Localization boilerplate, three MUST rewrites, a guard-transport requirement with vector 058 remapped, fourteen new vectors, the compliance rationale and the edge-case label; added a string-externalization decision. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Repair-prompt Design Decision corrected: non-dismissible means Escape/backdrop/close are ignored, not routed to confirm; Change History 1.0.0 row's blank Date/Author filled per K14d (history-table finding, authorized exception). |
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |

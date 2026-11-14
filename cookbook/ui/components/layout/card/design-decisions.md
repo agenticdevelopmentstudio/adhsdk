@@ -7,3 +7,7 @@
 **Rationale**: The UI Card family sets no ARIA role, label association, or tap target, because it is not an interactive control in source — it is a static container. This ingredient does not invent accessibility behavior that is not present in the code (see Accessibility).
 **Approved**: pending
 
+**Decision**: Native ports SHOULD add a group label and a heading trait or level on the title, even though the web source adds neither.
+**Rationale**: SwiftUI, Compose, AppKit and WinUI all have first-class heading and grouping semantics, so a port that omits them is less accessible than the platform allows. The web source's plain `div` is not a model to copy on those platforms.
+**Approved**: pending
+

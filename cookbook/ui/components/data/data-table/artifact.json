@@ -4,11 +4,11 @@
     "id": "d04eef56-2dbf-4148-964b-c095f242227f",
     "title": "DataTable",
     "type": "ingredient",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bc43370e9815b5b4",
+  "synced": "22401cdd9470fb90",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

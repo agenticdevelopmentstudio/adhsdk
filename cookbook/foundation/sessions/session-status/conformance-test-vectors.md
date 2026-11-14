@@ -6,9 +6,9 @@
 | session-status-003 | status-raw-init-optional | `SessionStatus(rawValue: "Active")` | `nil`; the match is case-sensitive |
 | session-status-004 | status-raw-init-optional | `SessionStatus(rawValue: "")` | `nil` |
 | session-status-005 | status-raw-init-optional | `SessionStatus(rawValue: "closed")` | `nil` |
-| session-status-006 | status-raw-values, status-stored-as-raw | A session row whose status column holds `"active"`, compared with `SessionStatus.active.rawValue` | Equal; the row counts as active in the liveness pass |
-| session-status-007 | active-meaning | Test in `LivenessServiceTests`: a live `claude` process maps to a session not yet `active` | The session is set to `active` and the status-change callback receives `active` |
-| session-status-008 | ended-meaning | Test in `LivenessServiceTests`: an active session with a non-empty `cwd` and no live process | The session is set to `ended` and the callback receives `ended` |
-| session-status-009 | stale-declared | Decode a stored value `"stale"` with `SessionStatus(rawValue:)` | `.stale` |
+| session-status-006 | status-raw-values, status-stored-as-raw | `SessionStatus(rawValue: "active")` and `SessionStatus.active.rawValue == "active"` | `.active`; the stored string and the enum agree |
+| session-status-007 | status-cases | `SessionStatus(rawValue:)` for each of `"active"`, `"stale"`, `"ended"` | `.active`, `.stale`, `.ended`; no other raw string yields a value |
+| session-status-008 | status-vs-activity | Inspect the enum's API surface | `SessionStatus` offers no operation that returns a `SessionActivity`; activity comes only from `SessionActivity.derive` ([Session Activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4)) |
+| session-status-009 | stale-declared, status-raw-init-optional | Decode a stored value `"stale"` with `SessionStatus(rawValue:)` | `.stale` |
 | session-status-010 | status-published-as-raw | `SessionEventEncoding.encodeSessionStatus(sessionId: "s1", status: .stale)` | JSON whose `status` is `"stale"` |
-
+| session-status-011 | status-sendable | Pass a `SessionStatus` value across a task boundary | Compiles without a `Sendable` diagnostic |

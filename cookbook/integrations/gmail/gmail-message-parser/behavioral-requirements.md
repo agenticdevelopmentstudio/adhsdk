@@ -13,7 +13,7 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 - **snippet-default**: The record `snippet` MUST equal the message `snippet`, or the empty string when it is absent.
 - **label-ids-passthrough**: The record `labelIds` MUST equal the message `labelIds`, or an empty list when they are absent.
 - **history-id-passthrough**: The record `historyId` MUST equal the message `historyId` and stay nil when it is absent.
-- **mail-class-derived**: The record `mailClass` MUST be the result of `MailClassifier.classify` (cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43) applied to the same label ids that populate `labelIds`.
+- **mail-class-derived**: The record `mailClass` MUST be the result of the `MailClassifier.classify` function ([adhsdk.ingredient.integrations.model.mail-classification](cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43)) applied to the same label ids that populate `labelIds`.
 
 ### Headers and addresses
 
@@ -24,6 +24,10 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 - **recipient-lists**: The record `toAddresses` and `ccAddresses` MUST each be the `To` and `Cc` header value passed through the address splitter, and MUST be empty lists when the header is absent.
 - **address-split-commas**: The address splitter MUST split on every comma that is outside double quotes.
 - **address-split-escapes**: Inside double quotes, a backslash MUST cause the next character to be kept literally, so an escaped quote does not close the quoted section.
+- **address-split-unbalanced-quote**: An opening double quote with no closing quote MUST keep the rest of the header, commas included, as one piece, and MUST NOT raise an error.
+- **address-split-backslash-outside-quotes**: A backslash outside a double-quoted section MUST be kept as an ordinary character and MUST NOT escape the next character.
+- **address-split-unbalanced-quote**: An opening double quote with no closing quote MUST keep the rest of the header, commas included, as one piece, and MUST NOT raise an error.
+- **address-split-backslash-outside-quotes**: A backslash outside a double-quoted section MUST be kept as an ordinary character and MUST NOT escape the next character.
 - **address-split-trim**: The address splitter MUST trim leading and trailing horizontal whitespace (spaces, tabs and other Unicode space separators, but not newlines) from each piece and MUST drop pieces that are empty after trimming.
 - **address-split-keeps-text**: The address splitter MUST keep each piece's text, including display names and angle brackets, exactly as written apart from that trimming.
 
@@ -54,11 +58,13 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 
 ### Decoding
 
-- **base64url-decode**: Body data MUST be decoded as base64url: `-` read as `+`, `_` read as `/`, and `=` padding appended until the length is a multiple of four.
+- **base64url-decode**: Body data MUST be decoded as base64url: `-` read as `+`, `_` read as `/`, and `=` padding appended until the length is a multiple of four. Standard-alphabet `+` and `/` already in the input MUST be accepted unchanged, and any whitespace in the input MUST make the decode fail (a nil body), because the source calls `Data(base64Encoded:)` without ignoring unknown characters. Standard-alphabet `+` and `/` already in the input MUST be accepted unchanged, and any whitespace in the input MUST make the decode fail (a nil body), because the source calls `Data(base64Encoded:)` without ignoring unknown characters.
 - **charset-declared**: Body bytes MUST be decoded with the charset named by the `charset` parameter of that part's own `Content-Type` header when the name is a recognised IANA charset and the bytes are valid in it.
+- **charset-declaration-wins**: When the declared charset is recognised and decodes the bytes, its result MUST be used even if the bytes are really in another encoding, so a body declared Latin-1 that is really UTF-8 reads as Latin-1; the parser does no content sniffing.
+- **charset-declaration-wins**: When the declared charset is recognised and decodes the bytes, its result MUST be used even if the bytes are really in another encoding, so a body declared Latin-1 that is really UTF-8 reads as Latin-1; the parser does no content sniffing.
 - **charset-parameter-parsing**: The `charset` parameter name MUST be matched case-insensitively, and its value MUST have surrounding spaces and surrounding single or double quotes removed.
 - **charset-fallback**: When no usable charset is declared, or decoding with it fails, the bytes MUST be decoded as UTF-8, and when that fails as ISO Latin-1.
-- **undecodable-body-data**: A part whose `body.data` is not valid base64url MUST yield a nil body for that part with no log, error or flag, and a later part of the same type MUST then fill the body instead. Whether a dropped body should be surfaced is a pending Design Decision.
+- **undecodable-body-data**: A part whose `body.data` is not valid base64url MUST yield a nil body for that part with no log, error or flag, and a later part of the same type MUST then fill the body instead. Whether a dropped body should be surfaced is recorded as deliberate prudent debt in Design Decisions.
 
 ### Concurrency and side effects
 

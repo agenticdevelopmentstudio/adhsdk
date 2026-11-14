@@ -4,11 +4,11 @@
     "id": "1be6e1bd-ee8c-4247-9020-c0d84356eb10",
     "title": "CategoryField",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,10 +35,11 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "06ce20121c75b665",
+  "synced": "4caffdc092f9c6c1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
+    {"part": "props", "heading": "Props"},
     {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
     {"part": "appearance", "heading": "Appearance"},
     {"part": "states", "heading": "States"},
@@ -56,7 +57,6 @@
     {"part": "platform-notes", "heading": "Platform Notes"},
     {"part": "design-decisions", "heading": "Design Decisions"},
     {"part": "compliance", "heading": "Compliance"},
-    {"part": "props", "heading": "Props"},
     {"part": "history", "heading": "Change History"}
   ]
 }

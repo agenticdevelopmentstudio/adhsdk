@@ -4,11 +4,11 @@
     "id": "3d12c073-edc3-44fb-a988-5edec20575e0",
     "title": "MailCommandSupport",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "57d45478ac08379c",
+  "synced": "602ec3f911a27a64",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

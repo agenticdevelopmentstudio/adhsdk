@@ -1,3 +1,2 @@
 
-Not fully inert: `CRUD_LETTER` exports the single-letter labels `"C"`, `"R"`, `"U"`, `"D"` as hardcoded English identifiers with no localization lookup. These values MUST be treated as internal identifiers, not user-facing text — a caller MUST NOT display `CRUD_LETTER`'s values directly to end users without localizing them first, and SHOULD instead expose its own localizable label keyed by `CrudKey`.
-
+`CRUD_LETTER` exports the compact single-letter labels `"C"`, `"R"`, `"U"`, `"D"` as hardcoded English, with no localization lookup. The source uses them as short labels: on the permission toggles and in the joined summary of a grant. They are not translated, so a surface that wants a localized label would supply its own, keyed by `CrudKey`, rather than change these values.

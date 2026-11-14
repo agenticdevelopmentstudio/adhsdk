@@ -13,9 +13,9 @@
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | passed | privacy-and-data |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
-| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | reliability |
+| [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | reliability |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | reliability |
-| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | reliability |
+| [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | partial | reliability |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
@@ -34,7 +34,7 @@ nothing itself and delegates all storage to the `CredentialProvider`
 a transient failure is attempted at this layer (delegated to the caller).
 `idempotent-operations` is `partial`: `push` forwards the caller's body
 verbatim with no idempotency key or dedup logic of its own; the opId-based
-idempotency `offline-sync-client.md` describes is enforced by the caller's
+idempotency [adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f-92c0-43c1-b04c-77638eb72044) describes is enforced by the caller's
 `SyncEngine`, not by this transport. `unit-test-coverage` is `partial`:
 `ADHSyncAPITests` covers the pull/push request shape and the three explicit
 status mappings plus one transport failure, but not the nil-credential path,
@@ -42,3 +42,4 @@ the non-HTTP-response path, or the default `baseURL`/`session` values (see
 Conformance Test Vectors 001, 002, 006, 012, 014, 016, and 017, none of which
 cite an existing test).
 
+`fault-tolerance` is `partial`: failures surface as typed values, but `ADHSyncAPI` makes a single attempt with no retry, so tolerance of a transient fault is delegated to the caller. `timeout-handling` is `partial`: no timeout is set beyond the `URLSession` default, matching the Design Decision that this type performs no timeout customization.

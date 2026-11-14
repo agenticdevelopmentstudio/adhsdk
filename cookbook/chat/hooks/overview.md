@@ -1,5 +1,5 @@
 
-This recipe covers the thirteen React hooks in `@adh-sdk/chat`'s
+This ingredient covers the thirteen React hooks in `@adh-sdk/chat`'s
 `src/hooks/` directory: `useAllImagesLoaded`, `useBlockCursor`, `useCaretGaze`,
 `useCaretTracker` (which also exports the standalone `caretMetrics` function),
 `useChatSession`, `useChatSizing`, `useConnectRitual`,

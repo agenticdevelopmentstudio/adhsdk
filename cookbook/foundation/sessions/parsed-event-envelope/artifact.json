@@ -4,7 +4,7 @@
     "id": "7dfeb441-3681-45d3-a11b-049294168607",
     "title": "Parsed Event Envelope",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,14 +23,17 @@
       "claude-hooks",
       "serialization"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "81735174-d7d7-4103-87df-7be5944c78cc",
+      "67b656ef-78a2-41ae-a910-f87f527360b1"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The component parses Claude Code hook events and settings; the host's name, events and paths are its subject.",
-  "synced": "51d4ef950d212b01",
+  "synced": "75b3cfb96b1d3e09",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

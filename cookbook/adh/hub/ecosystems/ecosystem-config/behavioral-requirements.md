@@ -45,11 +45,11 @@
   `auth-settings:<ecosystem.id>`.
 - **auth-no-delete-action**: the detail's delete action MUST be absent — auth
   settings can be edited but never removed.
-- **auth-allowed-providers-not-editable**: the user-auth record's `allowedProviders`
-  list decodes from the read operation's response, but the detail's form
-  specification never reads, displays, or edits it, and the update shape has no
-  field to write it back; this component offers no way to view or change the
-  allowed providers.
+- **auth-allowed-providers-not-editable**: the Swift user-auth detail's form
+  specification MAY leave the record's `allowedProviders` list out. Today the list
+  decodes from the read operation's response, but the form never reads, displays, or
+  edits it, and the update shape has no field to write it back, so the Swift topic
+  offers no way to view or change the allowed providers.
 - **auth-login-allow-list-wire**: the web data layer's `AuthSettings` (and so
   `ClientAuthPolicy`) MUST carry `loginAllowedCustomerIds: string[] | null`, read
   from the wire's `login_allowed_customer_ids`. `null` means every customer may
@@ -130,9 +130,10 @@
   **signinapps-origin-validation**) live in a separate presentation-layer file
   outside this component's given sources, not in the data-client layer itself (see
   Design Decisions).
-- **leaf-helper-absent**: the alternate client's own data shape has no equivalent of
-  the leaf-computation step; a caller on that side that needs the ecosystem-stripped
-  leaf must recompute it from `slug` and the ecosystem's own slug itself.
+- **leaf-helper-absent**: the alternate client's own data shape MAY omit an
+  equivalent of the leaf-computation step. A caller on that side that needs the
+  ecosystem-stripped leaf MUST recompute it from `slug` and the ecosystem's own slug
+  itself.
 
 ### Feature Flags
 
@@ -158,12 +159,14 @@
   falls back to its default.`.
 - **flags-detail-id-format**: the detail id MUST be
   `feature-flag:<ecosystem.id>:<flag.key>`.
-- **flags-key-charset-unrestricted**: neither the create form's `key` field in the primary
-  implementation nor the alternate client's create operation/dialog state enforces any
-  character-set restriction on a feature-flag key — only non-blank and non-duplicate are checked —
-  yet the key is later embedded unescaped in the colon-delimited composite id
-  `feature-flag:<ecosystem.id>:<flag.key>` and used directly as a navigation-item id, so a key
-  containing a colon could collide with another item's composite id.
+- **flags-key-charset-unrestricted**: a feature-flag key SHOULD NOT contain a colon,
+  because the key is embedded unescaped in the colon-delimited composite id
+  `feature-flag:<ecosystem.id>:<flag.key>` and used directly as a navigation-item id,
+  so a key containing a colon could collide with another item's composite id. A port
+  SHOULD reject such a key on the create form's `key` field. Today neither the primary
+  implementation's create form nor the alternate client's create operation and dialog
+  state enforces any character-set restriction: only non-blank and non-duplicate are
+  checked.
 - **flag-key-immutable-in-path**: the alternate client's update/delete operations
   MUST address a flag by embedding its `key` in the request path, never in the
   body — the key is immutable once created, matching the primary implementation's
@@ -229,10 +232,11 @@
 - **tokens-name-pattern**: the create form's `name` field MUST validate against the
   shared slug-format rule ("Use lowercase letters, numbers and hyphens.").
 - **tokens-create-three-way-catch**: the create form's save action MUST catch
-  errors in three tiers: a conflict error becomes a validation error with a fixed
-  "name taken" message; any other shared error kind MUST be re-thrown unchanged;
-  any error outside that shared taxonomy MUST become a generic unexpected error
-  with a fixed message, discarding the original error's own message. This is an
+  errors in three tiers: a conflict error becomes a validation error reading `That name is already in use.
+  Token names stay reserved even after revoke — pick a different one.`; any other
+  shared error kind MUST be re-thrown unchanged; any error outside that shared
+  taxonomy MUST become a generic unexpected error reading `Couldn't create the
+  token. Please try again.`, discarding the original error's own message. This is an
   explicitly different pattern from the shared error-wrapping convention used
   everywhere else in this component (see Design Decisions).
 - **tokens-reveal-once-on-create**: on a successful create, the raw secret MUST be
@@ -271,7 +275,6 @@
   carries only a `prefix`); the alternate client gives no other route through which
   the raw secret can be retrieved again.
 
-
 ### Sync tables (web)
 
 Which catalog resources one ecosystem syncs to offline clients. The backend
@@ -309,3 +312,4 @@ and pane. It is web-only for now.
   user continues or stops, and leaving earlier saves in place.
 - **sync-tables-pane-reseed**: after each write the pane MUST replace its cached
   catalog with the catalog the write returned, then refetch once the write settles.
+

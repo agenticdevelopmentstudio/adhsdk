@@ -2,7 +2,7 @@
 id: c116715f-2986-4554-a779-97e99d875c54
 title: "Runtime Errors"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,7 +20,8 @@ tags:
   - vercel
   - status-server
 depends-on: []
-related: []
+related:
+  - 8648272e-2da3-46fc-b9e8-5148dacdbcff
 references: []
 approved-by: ""
 approved-date: ""
@@ -55,18 +56,18 @@ approved-date: ""
 
 ### Normalization and shape
 
-- **id-segment**: A path segment MUST read as an id when it is all digits, a UUID, a hex run of 12 or more characters containing a digit, or a token of 20 or more characters of letters, digits, `_` and `-` mixing letters and digits.
+- **id-segment**: A path segment MUST read as an id when it is all digits, a UUID, a hex run of 12 or more characters containing a digit, or a token of 20 or more characters of letters, digits, `_` and `-` containing at least one letter and at least one digit. The UUID and hex tests MUST ignore case (`3F2504E0-...` and `3f2504e0-...` both match).
 - **normalize-path**: `normalizePath` MUST replace each non-empty id segment with `:id`, keep every other segment, keep the slashes, and return null for null.
-- **message-head**: `messageHead` MUST return the first line (split on a line break), trimmed, cut to at most 200 characters.
-- **message-shape**: `messageShape` MUST replace every id-like token (letters, digits, `_`, `-`) that is not all digits with `:id`, then replace every run of digits with `#`.
+- **message-head**: `messageHead` MUST return the first line, trimmed, cut to at most 200 characters. A line break is `\n` or `\r\n`; a lone `\r` is not a break.
+- **message-shape**: `messageShape` MUST replace every id-like token with `:id`, then replace every run of digits with `#`. A token is a maximal run of letters, digits, `_` and `-`; it is id-like when it is not all digits and passes the `id-segment` test (a UUID, a hex run of 12 or more characters containing a digit, or a token of 20 or more characters containing a letter and a digit).
 - **shape-before-cut**: `groupIdentity` MUST compute the shape from the whole first line and only then cut it to 200 characters, never from the cut head.
-- **group-key**: `groupIdentity` MUST return a `key` that is the first 32 hex characters of a SHA-256 over a JSON array of `project`, `source`, `method`, normalized `path`, `status` and the cut message shape. Deployment, domain, level and request id MUST NOT enter the key.
+- **group-key**: `groupIdentity` MUST return a `key` that is the first 32 characters of the lower-case hex SHA-256 of the UTF-8 bytes of a JSON array of `project`, `source`, `method`, normalized `path`, `status` and the cut message shape, in that order. The array is serialized as JSON: strings quoted and escaped, a null as `null`, `status` as a bare number. Deployment, domain, level and request id MUST NOT enter the key.
 - **group-identity-fields**: `groupIdentity` MUST also return the normalized `path` and the message head as written, for a group to show as its sample.
 
 ### Grouping a read
 
 - **group-fold**: `groupRuntimeEntries` MUST produce one group per distinct key, with `count` the number of entries in it.
-- **group-level**: A group's `level` MUST be the worst level of its entries by `worseLevel`.
+- **group-level**: A group's `level` MUST be the worst level of its entries by `worseLevel`. A group made only of unknown levels keeps its first entry's level, because `worseLevel` keeps `a` unless `b` ranks strictly higher.
 - **group-times**: `firstSeen` MUST be the earliest entry timestamp and `lastSeen` the latest, both as ISO strings.
 - **group-newest-event**: The group's `deploymentId` MUST come from its newest entry; an entry with a timestamp equal to or later than the current `lastSeen` replaces it, so on a tie the later entry in input order wins.
 - **group-fallbacks**: When the newest entry has a null `domain` or `requestId`, the group MUST keep the earlier non-null `domain` and `sampleRequestId`. `deploymentId` has no such fallback.
@@ -75,7 +76,7 @@ approved-date: ""
 
 ### Report
 
-- **report-order**: `compareRuntimeGroups` MUST order worst level first, then higher `count`, then later `lastSeen`, then ascending `key`.
+- **report-order**: `compareRuntimeGroups` MUST order worst level first, then higher `count`, then later `lastSeen`, then ascending `key`. `lastSeen` (a fixed-format ISO string) and `key` (lower-case hex) MUST be compared as plain strings, ordinally; the source's `localeCompare` gives the same order for strings of these shapes.
 - **report-cap**: `runtimeErrorsReport` MUST return at most `RUNTIME_ERROR_REPORT_CAP` (200) groups while `total` counts all of them.
 - **report-fields**: The report MUST carry `generatedAt` (from `nowMs`), `window` `24h`, `readAt`, `complete` and `total`.
 - **report-read-dating**: `readAt` MUST be the ISO time of `read.readAtMs`, or null when there is no read. `complete` MUST be `read.complete`, or true when there is no read.
@@ -83,7 +84,6 @@ approved-date: ""
 - **report-input-untouched**: `runtimeErrorsReport` MUST sort a copy and leave the given groups array unchanged.
 - **report-load**: `loadRuntimeErrorsReport` MUST call `store.load()` and `store.lastRead()` concurrently and build the report from both, with `nowMs` defaulting to `Date.now()`.
 - **report-load-errors**: A rejection from either store call MUST propagate to the caller unchanged; the function has no catch.
-- **report-load-consistency**: NEEDS REVIEW: Not implemented in source. `loadRuntimeErrorsReport` reads the groups and the last read in two separate store calls, while `save` replaces both in one transaction, so a save landing between them can pair groups with another read's `readAt` and `complete`. Evidence needed: whether the libsql store serializes `load`, `lastRead` and `save` on one connection, or a single transactional read method.
 
 ### Scope notes
 
@@ -104,7 +104,7 @@ Not applicable — this is shared logic with no visual surface or interaction.
 
 ## Conformance Test Vectors
 
-Vectors 1 to 13 are assertions of `runtime-errors.test.ts` (test names in brackets); 14 to 16 are read from the source. Constant NOW is 2026-11-06T12:00:00Z; PROJECTS maps `prj_site` to name `site-production`, domain `site.example.com`.
+Vectors 1 to 13 are assertions of `runtime-errors.test.ts` (test names in brackets); 14 to 26 are read from the source and have no test yet. Constant NOW is 2026-11-06T12:00:00Z; PROJECTS maps `prj_site` to name `site-production`, domain `site.example.com`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -124,7 +124,16 @@ Vectors 1 to 13 are assertions of `runtime-errors.test.ts` (test names in bracke
 | runtime-errors-014 | level-rank-unknown, level-rank | `levelRank("fatal")`, `levelRank("trace")`, `levelRank("mystery")`, `levelRank(null)` | 5, 0, -1, -1 |
 | runtime-errors-015 | group-newest-event | two entries with equal timestamps, deployments d1 then d2 | `deploymentId` d2 |
 | runtime-errors-016 | report-load-errors | store whose `load()` rejects | `loadRuntimeErrorsReport` rejects with that error |
-
+| runtime-errors-017 | level-order | `RUNTIME_LEVELS` | `["fatal", "error", "warning", "info", "debug", "trace"]` |
+| runtime-errors-018 | log-entry-fields | Log event, level `error`, valid project and timestamp, no `source`, `message` the number 42 | Entry with `source` `unknown`, `status` null, `message` `""` |
+| runtime-errors-019 | common-fields | Log event, level `error`, valid project and timestamp, no `deploymentId` | Entry with `deploymentId` `""` |
+| runtime-errors-020 | group-fallbacks, group-newest-event | Two same-key entries: at 1000 with domain `d.example.com`, requestId `r1`, deployment `d1`; at 3000 with domain null, requestId null, deployment `""` | One group: `domain` `d.example.com`, `sampleRequestId` `r1`, `deploymentId` `""` |
+| runtime-errors-021 | group-first-entry-sample | Two same-key entries, the first path `/o/1` message `Order 1 not found`, the second path `/o/2` message `Order 2 not found` | Group `path` `/o/:id`, `message` `Order 1 not found` |
+| runtime-errors-022 | report-input-untouched | Groups array `[few, many]`, then `runtimeErrorsReport` over it | The report lists `many` then `few`; the original array is still `[few, many]` |
+| runtime-errors-023 | report-load | A store whose `load()` and `lastRead()` both record that they were called; `loadRuntimeErrorsReport(store)` with no `nowMs` | Both calls started before either result is awaited; the report holds the loaded groups and the read's `readAt`; `generatedAt` is the current time |
+| runtime-errors-024 | group-level | Two same-key entries with levels `mystery` and `other` | Group `level` `mystery` |
+| runtime-errors-025 | message-head | `a\r\nb`; `a\nb`; `a\rb` | `a`; `a`; `a\rb` |
+| runtime-errors-026 | id-segment | `/u/3F2504E0-4F89-11D3-9A0C-0305E82C3301`; `/b/DEADBEEF1234` | `/u/:id`; `/b/:id` |
 ## Edge Cases
 
 - **Empty entries**: `groupRuntimeEntries([])` MUST return `[]`; `runtimeErrorsReport([], null, now)` MUST give `total` 0, `readAt` null, `complete` true.
@@ -136,13 +145,14 @@ Vectors 1 to 13 are assertions of `runtime-errors.test.ts` (test names in bracke
 - **Long message**: the head MUST be cut to 200 characters but the shape MUST be taken first.
 - **Ids of varying length in messages or paths**: MUST land in one group.
 - **Digit-only word in a path**: `/2024` reads `:id`; `facebook-account` stays a word.
-- **Unknown level in a group**: `worseLevel` keeps the known level; a group made only of unknown levels keeps the first entry's.
+- **Unknown level in a group**: `worseLevel` keeps the known level; a group made only of unknown levels keeps the first entry's (see `#requirements/group-level`).
 - **Equal sort keys**: report order falls through count, `lastSeen`, then `key`, so it is total and stable.
 - **More than 200 groups**: the report MUST cap at 200 and keep `total` at the true count.
 - **Stale read**: groups from an old read MUST stay, dated by `readAt`.
 - **No read yet**: `readAt` null and `complete` true.
 - **Store unavailable**: a rejecting `load` or `lastRead` MUST propagate; this module neither retries nor falls back.
-- **Concurrent access**: the pure functions share no state and cannot interleave; the two store reads are concurrent and not atomic (see `report-load-consistency`).
+- **Concurrent access**: the pure functions share no state and cannot interleave; the two store reads are concurrent and not atomic (see `report-load-consistency`, below).
+- **report-load-consistency**: NEEDS REVIEW: Not implemented in source. `loadRuntimeErrorsReport` reads the groups and the last read in two separate store calls, while `save` replaces both in one transaction, so a save landing between them can pair groups with another read's `readAt` and `complete`. Evidence needed: whether the libsql store serializes `load`, `lastRead` and `save` on one connection, or a single transactional read method.
 - **Offline or network**: not applicable here; the network belongs to the fetcher (`fetchers/vercel-runtime.ts`).
 
 ## Configuration
@@ -182,7 +192,7 @@ Not applicable: the module emits no event or metric.
 - **Data collected**: Vercel log messages (first line, 200 characters), request paths with ids replaced by `:id` in groups, methods, statuses, domains, deployment ids and one request id per group. Messages can contain whatever the application logged.
 - **Storage**: Not stored by this module; the store behind `RuntimeErrorsStore` keeps the grouped snapshot. The query string and fragment are removed before grouping.
 - **Transmission**: Not transmitted by this module; the report is returned to the route that serves it.
-- **Retention**: Each save replaces the stored groups, so nothing older than the last read's 24-hour window persists.
+- **Retention**: Each successful read replaces the stored groups, so what persists is the 24-hour window of the last successful read, not a window ending now. While reads fail, that older snapshot stays (see `#requirements/report-no-rewindow`).
 
 ## Logging
 
@@ -200,10 +210,11 @@ Not applicable: the source contains no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/runtime-errors.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/telemetry/runtime-errors.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| web | `packages/web/packages/status-server/test/runtime-errors.test.ts` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -240,13 +251,14 @@ Not applicable: the source contains no log call.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | passed | Privacy and Data |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
-`separation-of-concerns` passes because the rules take no network or SQL. `unit-test-coverage` passes: `runtime-errors.test.ts` covers entry building, grouping, shape, ordering, the cap and the stale-read dating. `data-retention-policy` passes because each save replaces the snapshot, so only the last 24-hour window persists. `data-integrity` is partial: the loader reads groups and the last read in two calls while the store saves them in one transaction, which is the open question on `report-load-consistency`.
+`separation-of-concerns` passes because the rules take no network or SQL. `unit-test-coverage` is partial: `runtime-errors.test.ts` covers entry building, grouping, shape, ordering, the cap and the stale-read dating; vectors 14 to 16 and 17 to 26 are read from the source and have no test behind them. `data-retention-policy` passes because each save replaces the snapshot, so only the last 24-hour window persists. `data-integrity` is partial: the loader reads groups and the last read in two calls while the store saves them in one transaction, which is the open question on `report-load-consistency`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Stated the id-token, case, line-break, hash-input and ordinal-comparison rules in the requirements, moved the report-load-consistency open question out of the requirements list into Edge Cases, added ten vectors for the uncovered requirements, marked unit-test coverage partial, clarified retention as bounded by the last successful read, and linked the fetchers recipe. |

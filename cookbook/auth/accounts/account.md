@@ -33,6 +33,7 @@ approved-date: ""
 
 ## Behavioral Requirements
 
+- **account-declaration**: The protocol MUST be declared as `@MainActor public protocol Account: AnyObject` with get-only `id`, `displayName`, `summary` (`String`), `state` (`AccountState`), `message` (`String?`) and `signupURL` (`URL?`); a get-set `onChange` of type `@MainActor () -> Void`; a synchronous `func restore()`; a synchronous `func presentSignIn(from anchor: AccountPresentationAnchor)`; and `func signOut() async`.
 - **account-protocol-main-actor**: `Account` MUST be a class-bound protocol (`AnyObject`) isolated to `@MainActor`, so every property read and verb call happens on the main actor.
 - **account-id**: An `Account` MUST expose a `String` `id`.
 - **account-display-name**: An `Account` MUST expose a `String` `displayName`, the account's title.
@@ -41,9 +42,9 @@ approved-date: ""
 - **account-message**: An `Account` MUST expose `message` as an optional `String`: an error or status line, `nil` when there is none.
 - **account-signup-url**: An `Account` MUST expose `signupURL` as an optional `URL`; `nil` means the account has no web sign-up and Signup is hidden.
 - **account-on-change-fires**: An `Account` MUST call `onChange` after any change to `state` or `message`.
-- **account-on-change-single-slot**: `onChange` is a single settable slot of type `@MainActor () -> Void`; assigning it again MUST replace the earlier observer. The accounts UI that shows the account is its one observer.
+- **account-on-change-single-slot**: `onChange` MUST be a single settable slot of type `@MainActor () -> Void`; assigning it again MUST replace the earlier observer, so an account MUST NOT keep more than one observer. The accounts UI that shows the account is its one observer.
 - **account-restore-purpose**: `restore()` MUST start finding out whether a stored login is still good and MUST leave `.restoring` when done.
-- **account-restore-lazy**: The accounts UI calls `restore()` when it first shows the account, so the check (a Keychain read, a network call) is paid only when someone looks.
+- **account-restore-lazy**: The accounts UI SHOULD call `restore()` when it first shows the account, so the check (a Keychain read, a network call) is paid only when someone looks.
 - **account-restore-idempotent**: Calling `restore()` again MUST do nothing.
 - **account-present-sign-in**: `presentSignIn(from:)` MUST take an `AccountPresentationAnchor` and let the account present its own sign-in UI from it; the protocol takes no credentials.
 - **account-sign-out**: `signOut()` MUST be `async` and non-throwing; it returns when sign-out work finishes. The protocol declares no error return and names no other failure channel.
@@ -52,14 +53,14 @@ approved-date: ""
 - **account-state-equatable**: `AccountState` MUST be `Sendable` and `Equatable`; `signedIn` states compare equal when their `AccountUser` values are equal.
 - **account-user-fields**: `AccountUser` MUST carry `id`, `name` and `email` as `String` and `avatarURL` as an optional `URL`, all immutable, set by `init(id:name:email:avatarURL:)`.
 - **account-user-sendable-equatable**: `AccountUser` MUST be `Sendable` and `Equatable`.
-- **account-user-initials-words**: `AccountUser.initials` MUST be the uppercased first character of each of the name's first two whitespace-separated words, joined in order.
+- **account-user-initials-words**: `AccountUser.initials` MUST be the uppercased first `Character` of each of the name's first two words, joined in order, where words are separated by characters whose `isWhitespace` is true. Uppercasing is `String.uppercased()` on that one `Character`, so it MAY yield more than one character (`ß` gives `SS`).
 - **account-user-initials-email**: When the name has no words, `initials` MUST be the uppercased first character of `email`.
 - **account-user-initials-placeholder**: When the name has no words and `email` is empty, `initials` MUST be `"?"`, so the value is never empty.
 - **anchor-weak-reference**: `AccountPresentationAnchor` MUST hold its `object` weakly and type-erased (`AnyObject`), so the Foundation-only tier does not import AppKit or UIKit and the anchor does not extend the presenter's lifetime.
 - **anchor-nil-after-release**: `AccountPresentationAnchor.object` MUST read `nil` once the presenter is released.
 - **anchor-platform-object**: The platform MUST supply an `NSWindow` or `NSViewController` on macOS and a `UIViewController` on iOS as the anchor's object, per the type's documentation comment.
 - **no-validation**: The types MUST NOT validate their inputs: `AccountUser` accepts any strings, and `AccountPresentationAnchor.init` accepts any object.
-- **no-persistence**: The contract performs no file, network, process or notification side effects; those belong to conformers.
+- **no-persistence**: The contract's types MUST NOT perform file, network, process or notification side effects; those belong to conformers.
 
 ## Appearance
 
@@ -75,7 +76,7 @@ Not applicable — this is a protocol and value types, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors AC-001 to AC-003 and AC-006 are derived from `AccountUserTests` and `AccountPresentationAnchorTests` in `AccountsTests.swift`. The others are derived from the declarations in `Account.swift`.
+Vectors AC-001 to AC-003 and AC-006 are derived from `AccountUserTests` and `AccountPresentationAnchorTests` in `AccountsTests.swift`. The others are derived from the declarations in `Account.swift` and have no test yet (AC-004, AC-005 and AC-007 to AC-013).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -91,6 +92,7 @@ Vectors AC-001 to AC-003 and AC-006 are derived from `AccountUserTests` and `Acc
 | AC-010 | account-restore-idempotent | Call `restore()` twice on a conformer whose stored login is good | One check runs; `state` leaves `.restoring` once |
 | AC-011 | account-signup-url | A conformer with `signupURL == nil` | The accounts UI hides Signup |
 | AC-012 | no-validation | `AccountUser(id: "", name: "", email: "", avatarURL: nil)` | Construction succeeds with all fields stored as given |
+| AC-013 | account-user-initials-words | name `"ßa"`, email `"x@y.z"` | `"SS"` (uppercasing one `Character` yields two characters) |
 
 ## Edge Cases
 
@@ -167,23 +169,23 @@ Not applicable: the source makes no log calls.
 ## Design Decisions
 
 **Decision**: Login is `presentSignIn(from:)` rather than a method that takes credentials.
-**Rationale**: The doc comment says how an account signs in is its own business; a hosted web login, a passkey or a social provider can all fit one verb.
+**Rationale**: A credentials method would exclude passkeys, social login and hosted web login; one verb that lets the account present its own UI fits all of them.
 **Approved**: pending
 
 **Decision**: `AccountPresentationAnchor` is a weak, type-erased wrapper over `AnyObject`.
-**Rationale**: The doc comment says this keeps the Foundation-only tier from importing AppKit or UIKit; weak storage keeps the anchor from retaining a window or controller.
+**Rationale**: Holding the presenter as `AnyObject` keeps the Foundation-only tier from importing AppKit or UIKit; weak storage keeps the anchor from retaining a window or controller after it closes.
 **Approved**: pending
 
 **Decision**: `onChange` is a single slot, and assigning it again replaces the earlier observer.
-**Rationale**: The doc comment names the accounts UI that shows the account as its one observer.
+**Rationale**: One account is shown by one accounts UI, so one observer is enough; a single slot avoids observer lists and the cleanup they need.
 **Approved**: pending
 
 **Decision**: `restore()` is explicit, lazy and idempotent.
-**Rationale**: The doc comment says an app pays for the stored-login check only when someone looks at the account.
+**Rationale**: Explicit and lazy means the stored-login check (a Keychain read, a network call) is paid only when someone looks at the account; idempotent means a second view cannot start a second check.
 **Approved**: pending
 
 **Decision**: `initials` never returns an empty string.
-**Rationale**: The doc comment says an avatar always has a face; the fallbacks are the email's first letter, then `"?"`.
+**Rationale**: An avatar always needs a face to draw; the fallbacks are the email's first letter, then `"?"`.
 **Approved**: pending
 
 ## Compliance

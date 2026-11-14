@@ -2,11 +2,11 @@
 id: cdadfe1d-e4a2-4e2d-96a7-a5eb615a1302
 title: "Gmail Message Parser"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,7 +36,7 @@ approved-date: ""
 
 `GmailMessageParser` is a caseless `enum` of static functions that converts one decoded Gmail API message (`GmailMessageDTO`, requested with `format=full`) into an `EmailMessage` record. It keeps no shared state, performs no I/O and raises no errors: every malformed or missing input degrades to an empty value or a fallback. Use it wherever a Gmail message is mirrored into local storage.
 
-The input is a tree of `GmailPart` values (`mimeType`, `filename`, `headers`, `body`, `parts`). `GmailBody` carries `attachmentId`, `size` and base64url `data`. The output is a flat record: sender, recipients, subject, snippet, plain and HTML bodies, label ids, an ISO 8601 date, the history id, a list of attachment references (`EmailAttachmentRef`) and a `MailClass` derived by `MailClassifier.classify` (cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43) from the label ids. The output types `EmailMessage` and `EmailAttachmentRef` are specified in the integration records recipe (cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f). `MailClassifier` and the persistence of the record are separate components; `MailIntegrationService` (cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) is the caller that mirrors parsed messages into storage.
+The input is a tree of `GmailPart` values (`mimeType`, `filename`, `headers`, `body`, `parts`). `GmailBody` carries `attachmentId`, `size` and base64url `data`. The output is a flat record: sender, recipients, subject, snippet, plain and HTML bodies, label ids, an ISO 8601 date, the history id, a list of attachment references (`EmailAttachmentRef`) and a `MailClass` derived by the `MailClassifier.classify` function ([adhsdk.ingredient.integrations.model.mail-classification](cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43)) from the label ids. The output types `EmailMessage` and `EmailAttachmentRef` are specified in the integration records recipe ([adhsdk.ingredient.integrations.model.integration-records](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f)), which also holds `IntegrationClock`, the formatter that fixes the three-digit UTC output. `MailClassifier` and the persistence of the record are separate components; the `MailIntegrationService` type ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) is the caller that mirrors parsed messages into storage.
 
 ## Behavioral Requirements
 
@@ -54,7 +54,7 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 - **snippet-default**: The record `snippet` MUST equal the message `snippet`, or the empty string when it is absent.
 - **label-ids-passthrough**: The record `labelIds` MUST equal the message `labelIds`, or an empty list when they are absent.
 - **history-id-passthrough**: The record `historyId` MUST equal the message `historyId` and stay nil when it is absent.
-- **mail-class-derived**: The record `mailClass` MUST be the result of `MailClassifier.classify` (cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43) applied to the same label ids that populate `labelIds`.
+- **mail-class-derived**: The record `mailClass` MUST be the result of the `MailClassifier.classify` function ([adhsdk.ingredient.integrations.model.mail-classification](cookbook:ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43)) applied to the same label ids that populate `labelIds`.
 
 ### Headers and addresses
 
@@ -65,6 +65,10 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 - **recipient-lists**: The record `toAddresses` and `ccAddresses` MUST each be the `To` and `Cc` header value passed through the address splitter, and MUST be empty lists when the header is absent.
 - **address-split-commas**: The address splitter MUST split on every comma that is outside double quotes.
 - **address-split-escapes**: Inside double quotes, a backslash MUST cause the next character to be kept literally, so an escaped quote does not close the quoted section.
+- **address-split-unbalanced-quote**: An opening double quote with no closing quote MUST keep the rest of the header, commas included, as one piece, and MUST NOT raise an error.
+- **address-split-backslash-outside-quotes**: A backslash outside a double-quoted section MUST be kept as an ordinary character and MUST NOT escape the next character.
+- **address-split-unbalanced-quote**: An opening double quote with no closing quote MUST keep the rest of the header, commas included, as one piece, and MUST NOT raise an error.
+- **address-split-backslash-outside-quotes**: A backslash outside a double-quoted section MUST be kept as an ordinary character and MUST NOT escape the next character.
 - **address-split-trim**: The address splitter MUST trim leading and trailing horizontal whitespace (spaces, tabs and other Unicode space separators, but not newlines) from each piece and MUST drop pieces that are empty after trimming.
 - **address-split-keeps-text**: The address splitter MUST keep each piece's text, including display names and angle brackets, exactly as written apart from that trimming.
 
@@ -95,11 +99,13 @@ Contract: `parse(_ dto: GmailMessageDTO, connectionId: String, existingId: Strin
 
 ### Decoding
 
-- **base64url-decode**: Body data MUST be decoded as base64url: `-` read as `+`, `_` read as `/`, and `=` padding appended until the length is a multiple of four.
+- **base64url-decode**: Body data MUST be decoded as base64url: `-` read as `+`, `_` read as `/`, and `=` padding appended until the length is a multiple of four. Standard-alphabet `+` and `/` already in the input MUST be accepted unchanged, and any whitespace in the input MUST make the decode fail (a nil body), because the source calls `Data(base64Encoded:)` without ignoring unknown characters. Standard-alphabet `+` and `/` already in the input MUST be accepted unchanged, and any whitespace in the input MUST make the decode fail (a nil body), because the source calls `Data(base64Encoded:)` without ignoring unknown characters.
 - **charset-declared**: Body bytes MUST be decoded with the charset named by the `charset` parameter of that part's own `Content-Type` header when the name is a recognised IANA charset and the bytes are valid in it.
+- **charset-declaration-wins**: When the declared charset is recognised and decodes the bytes, its result MUST be used even if the bytes are really in another encoding, so a body declared Latin-1 that is really UTF-8 reads as Latin-1; the parser does no content sniffing.
+- **charset-declaration-wins**: When the declared charset is recognised and decodes the bytes, its result MUST be used even if the bytes are really in another encoding, so a body declared Latin-1 that is really UTF-8 reads as Latin-1; the parser does no content sniffing.
 - **charset-parameter-parsing**: The `charset` parameter name MUST be matched case-insensitively, and its value MUST have surrounding spaces and surrounding single or double quotes removed.
 - **charset-fallback**: When no usable charset is declared, or decoding with it fails, the bytes MUST be decoded as UTF-8, and when that fails as ISO Latin-1.
-- **undecodable-body-data**: A part whose `body.data` is not valid base64url MUST yield a nil body for that part with no log, error or flag, and a later part of the same type MUST then fill the body instead. Whether a dropped body should be surfaced is a pending Design Decision.
+- **undecodable-body-data**: A part whose `body.data` is not valid base64url MUST yield a nil body for that part with no log, error or flag, and a later part of the same type MUST then fill the body instead. Whether a dropped body should be surfaced is recorded as deliberate prudent debt in Design Decisions.
 
 ### Concurrency and side effects
 
@@ -120,15 +126,15 @@ Not applicable — this is a data-transformation function, not a visual componen
 
 ## Conformance Test Vectors
 
-Tests live in `GmailMessageParserTests.swift` beside the SDK; fixtures are `gmail-message-multipart.json`, `gmail-message-html-only.json`, `gmail-message-latin1.json`, `gmail-message-windows1252.json` and `gmail-message-quoted-charset.json`. Vectors marked "derived" come from the code, not from a named test.
+Tests live in `GmailMessageParserTests.swift` beside the SDK; fixtures live in `Fixtures/` under the tests and are `gmail-message-multipart.json`, `gmail-message-html-only.json`, `gmail-message-latin1.json`, `gmail-message-windows1252.json` and `gmail-message-quoted-charset.json`. Vectors marked "derived" come from the code, not from a named test.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| parser-001 | total-function, part-walk, first-text-wins, attachment-listed, from-raw, subject-raw, external-id-passthrough, mail-class-derived | Test `parsesPlainAndHtmlFromNestedAlternative`: fixture `message-multipart`, connection `c1`, no existing id | `bodyText` is `Hello plain`; `bodyHtml` is `<b>Hi</b>`; `attachments` is one ref (`att1`, `a.pdf`, `application/pdf`, 1234); `fromAddress` is `Jane <j@x.com>`; `subject` is `Hi`; `mailClass` is `filed`; `externalId` is `m1` |
-| parser-002 | no-body-is-nil, mail-class-derived | Test `parsesHtmlOnly`: fixture `message-html-only` | `bodyText` is nil; `bodyHtml` is `<p>x</p>`; `mailClass` is `trash` |
-| parser-003 | charset-declared | Test `decodesLatin1Charset`: bytes C3 A9 with declared Latin-1 | `bodyText` is U+00C3 U+00A9, not the UTF-8 reading |
-| parser-004 | charset-declared | Test `decodesWindows1252Charset`: fixture `message-windows1252`, part header `Content-Type: text/plain; charset=windows-1252`, data the single byte 80 | `bodyText` is U+20AC |
-| parser-005 | charset-parameter-parsing | Test `decodesQuotedMixedCaseCharsetParameter`: fixture `message-quoted-charset`, part header `Content-Type: text/plain; CharSet="iso-8859-1"`, data bytes C3 A9 | `bodyText` is U+00C3 U+00A9 |
+| parser-001 | total-function, part-walk, first-text-wins, attachment-listed, from-raw, subject-raw, external-id-passthrough, mail-class-derived | Test `parsesPlainAndHtmlFromNestedAlternative`: fixture `gmail-message-multipart.json`, connection `c1`, no existing id | `bodyText` is `Hello plain`; `bodyHtml` is `<b>Hi</b>`; `attachments` is one ref (`att1`, `a.pdf`, `application/pdf`, 1234); `fromAddress` is `Jane <j@x.com>`; `subject` is `Hi`; `mailClass` is `filed`; `externalId` is `m1` |
+| parser-002 | no-body-is-nil, mail-class-derived | Test `parsesHtmlOnly`: fixture `gmail-message-html-only.json` | `bodyText` is nil; `bodyHtml` is `<p>x</p>`; `mailClass` is `trash` |
+| parser-003 | charset-declared, charset-declaration-wins | Test `decodesLatin1Charset`: bytes C3 A9 with declared Latin-1 | `bodyText` is U+00C3 U+00A9, not the UTF-8 reading |
+| parser-004 | charset-declared | Test `decodesWindows1252Charset`: fixture `gmail-message-windows1252.json`, part header `Content-Type: text/plain; charset=windows-1252`, data the single byte 80 | `bodyText` is U+20AC |
+| parser-005 | charset-parameter-parsing | Test `decodesQuotedMixedCaseCharsetParameter`: fixture `gmail-message-quoted-charset.json`, part header `Content-Type: text/plain; CharSet="iso-8859-1"`, data bytes C3 A9 | `bodyText` is U+00C3 U+00A9 |
 | parser-006 | recipient-lists, address-split-commas, address-split-keeps-text, headers-absent | Test `splitsAddressListsRespectingQuotes`: `To` is `"Doe, Jane" <j@x.com>, b@y.com`, no `Cc` | `toAddresses` is two entries, `"Doe, Jane" <j@x.com>` and `b@y.com`; `ccAddresses` is empty |
 | parser-007 | date-from-internal-date, date-output-format | Test `internalDateConvertsToISO`: `internalDate` `1730800000000` | `internalDate` is `2024-11-05T09:46:40.000Z` |
 | parser-008 | header-lookup, recipient-lists | Test `parsesANonEmptyCcList`: header named lowercase `cc` | `ccAddresses` is `"Roe, Ann" <a@x.com>` and `b@y.com` |
@@ -162,26 +168,33 @@ Tests live in `GmailMessageParserTests.swift` beside the SDK; fixtures are `gmai
 | parser-036 | embedded-fallback-all-or-nothing | Derived: own HTML only, embedded message with plain text | `bodyHtml` is the own HTML; `bodyText` is nil |
 | parser-037 | headers-absent, total-function, no-body-is-nil | Derived: DTO with `payload` nil and no `internalDate` | `fromAddress`, `subject` empty; no bodies; no attachments; `internalDate` from `now` |
 | parser-038 | undecodable-body-data, first-text-wins | Derived: first `text/plain` part has data `a`, second has `Ym9keQ` | `bodyText` is `body` |
-| parser-039 | no-shared-state, no-io | Derived: two parses of the same DTO with `existingId` set and the same `now` | The two records are equal except that `createdAt` and `updatedAt` are the call-time clock and may differ |
+| parser-039 | no-shared-state | Derived: two parses of the same DTO with `existingId` set and the same `now` | The two records are equal except that `createdAt` and `updatedAt` are the call-time clock and may differ |
+| parser-040 | address-split-unbalanced-quote | Derived: `splitAddresses` on `"Doe, Jane <j@x.com>, b@y.com` | One entry, the whole text unchanged; no error |
+| parser-041 | address-split-backslash-outside-quotes | Derived: `splitAddresses` on `a\, b@x.com` | Two entries, `a\` and `b@x.com`; the backslash did not escape the comma |
+| parser-042 | address-split-trim | Derived: `splitAddresses` on `a@x.com`, a newline, then `, b@y.com` | Two entries; the first still ends with the newline, because only horizontal whitespace is trimmed |
+| parser-043 | base64url-decode | Derived: `base64URLDecode` on `Pz8/` and on `Pz8_` | Both give the three bytes `???`; the standard-alphabet `/` is accepted unchanged |
+| parser-044 | base64url-decode, undecodable-body-data | Derived: `base64URLDecode` on `SGVs bG8` (a space in the middle) | nil; whitespace is rejected, not skipped |
+| parser-045 | record-defaults | Derived: record the clock before and after a parse | `createdAt` and `updatedAt` each fall between the two readings and are not taken from `now` |
+| parser-046 | no-io | Derived: inspect `GmailMessageParser.swift` | It imports only Foundation and makes no file, network, process, notification or logging call |
 
 ## Edge Cases
 
-- **Null and empty input**: A DTO with no payload yields empty `fromAddress`, `subject`, address lists and attachments, and nil bodies. The parse MUST still return a record.
-- **Empty address header**: A `To` header that is empty or only commas and spaces yields an empty list. This MUST hold.
-- **Missing label ids**: Absent `labelIds` become an empty list, and the classifier decides the class from that empty list. This MUST hold.
-- **Malformed numeric date**: An `internalDate` that is not a number, such as `not-a-number`, falls through to the `Date` header and then to `now`. This MUST hold.
-- **Unreadable Date header**: A header that matches none of the three layouts, or that is empty after trimming, falls through to `now`. This MUST hold. Layouts without a zone, or without a weekday and with no seconds, are not recognised.
+- **Null and empty input**: A DTO with no payload yields empty `fromAddress`, `subject`, address lists and attachments, and nil bodies. See #requirements/total-function and #requirements/headers-absent.
+- **Empty address header**: A `To` header that is empty or only commas and spaces yields an empty list. See #requirements/recipient-lists and #requirements/address-split-trim.
+- **Missing label ids**: Absent `labelIds` become an empty list, and the classifier decides the class from that empty list. See #requirements/label-ids-passthrough.
+- **Malformed numeric date**: An `internalDate` that is not a number, such as `not-a-number`, falls through to the `Date` header and then to `now`. See #requirements/date-from-header and #requirements/date-now-fallback.
+- **Unreadable Date header**: A header that matches none of the three layouts, or that is empty after trimming, falls through to `now`. See #requirements/date-header-formats and #requirements/date-now-fallback. Layouts without a zone, or without a weekday and with no seconds, are not recognised.
 - **Boundary lengths in base64url**: Padding is added by length modulo four; a length remainder of one produces three pad characters that Foundation rejects, so the part's body is nil, and a later part of the same type then fills the body. A remainder of zero adds none.
-- **Unbalanced quote in an address header**: An opening quote with no close keeps the remainder of the header, commas included, as one piece. This is the splitter's behavior and no error is raised. Ports MUST keep this behavior.
-- **Backslash outside quotes**: A backslash outside a double-quoted section is kept as an ordinary character and does not escape anything. Ports MUST keep this behavior.
-- **Whitespace trimming scope**: Address pieces are trimmed of horizontal whitespace only (spaces, tabs and Unicode space separators); newlines stay. Ports MUST keep this behavior.
-- **Duplicate headers**: The first header with a matching name wins, so a second `Subject` is ignored. This MUST hold.
-- **Multiple bodies of one type**: Only the first plain text and the first HTML part in document order are kept. This MUST hold.
-- **Unknown or invalid charset**: An unrecognised charset name, or bytes invalid in the declared charset, falls back to UTF-8 and then ISO Latin-1, so decoding always succeeds when the base64url is valid. This MUST hold.
-- **Mislabelled charset**: A body declared Latin-1 that is really UTF-8 is decoded as Latin-1, because the declaration wins when it decodes. Ports MUST keep this behavior, because correcting it needs content sniffing that the source does not do.
-- **Wrapper message with only an embedded message**: A bounce or forward whose only content is a `message/rfc822` shows the embedded body. This MUST hold.
-- **Embedded message beside an own body**: The embedded body never merges into the outer body, though files inside it are still listed. This MUST hold.
-- **Named part Gmail inlined**: A named part whose data came inline (no attachment id) is dropped from both body and attachments. This MUST hold, and the part is not recoverable from the record.
+- **Unbalanced quote in an address header**: An opening quote with no close keeps the remainder of the header, commas included, as one piece. No error is raised. See #requirements/address-split-unbalanced-quote.
+- **Backslash outside quotes**: A backslash outside a double-quoted section is kept as an ordinary character and does not escape anything. See #requirements/address-split-backslash-outside-quotes.
+- **Whitespace trimming scope**: Address pieces are trimmed of horizontal whitespace only (spaces, tabs and Unicode space separators); newlines stay. See #requirements/address-split-trim.
+- **Duplicate headers**: The first header with a matching name wins, so a second `Subject` is ignored. See #requirements/header-lookup.
+- **Multiple bodies of one type**: Only the first plain text and the first HTML part in document order are kept. See #requirements/first-text-wins.
+- **Unknown or invalid charset**: An unrecognised charset name, or bytes invalid in the declared charset, falls back to UTF-8 and then ISO Latin-1, so decoding always succeeds when the base64url is valid. See #requirements/charset-fallback.
+- **Mislabelled charset**: A body declared Latin-1 that is really UTF-8 is decoded as Latin-1, because the declaration wins when it decodes. See #requirements/charset-declaration-wins; correcting it needs content sniffing that the source does not do.
+- **Wrapper message with only an embedded message**: A bounce or forward whose only content is a `message/rfc822` shows the embedded body. See #requirements/embedded-message-fallback.
+- **Embedded message beside an own body**: The embedded body never merges into the outer body, though files inside it are still listed. See #requirements/embedded-message-isolated.
+- **Named part Gmail inlined**: A named part whose data came inline (no attachment id) is dropped from both body and attachments. See #requirements/named-inline-unlisted; the part is not recoverable from the record.
 - **Part types other than text and message**: Parts such as `text/calendar` or `image/png` without a filename are ignored for the body and for attachments, though their children are still walked.
 - **Deeply nested parts**: Recursion has no depth or count limit, so an adversarially deep tree is bounded only by the stack. No limit exists and none is applied. This is deliberate prudent debt recorded in Design Decisions with a trigger for revisiting it.
 - **Concurrent access**: The parser keeps no shared state, so concurrent calls need no coordination. Only the generated id and the current-time defaults (`createdAt`, `updatedAt`) differ between runs.
@@ -189,15 +202,7 @@ Tests live in `GmailMessageParserTests.swift` beside the SDK; fixtures are `gmai
 - **Cancellation and timeouts**: Not applicable: the function is synchronous and has no suspension point.
 
 ## Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `dto` | `GmailMessageDTO` | none | The decoded `format=full` message. |
-| `connectionId` | `String` | none | Copied to the record. |
-| `existingId` | `String?` | none | Local record id to keep; nil generates a new one. |
-| `now` | `Date` | `Date()` | The date given to a message with neither a numeric `internalDate` nor a readable `Date` header. |
-
-There are no environment variables, settings keys or injected dependencies; `MailClassifier` and `IntegrationClock` are called directly.
+Not applicable: the parser has no configuration options, environment variables, settings keys or injected dependencies; `MailClassifier` and `IntegrationClock` are called directly. The function parameters (`dto`, `connectionId`, `existingId` and `now`) are the contract in Behavioral Requirements.
 
 ## Deep Linking
 
@@ -230,16 +235,16 @@ Not applicable: the source makes no log call.
 ## Platform Notes
 
 - **SwiftUI**: Not a view, so nothing to translate. A SwiftUI caller reads the finished `EmailMessage` fields and renders `bodyHtml` or `bodyText` itself; the parser has no SwiftUI or `Observable` dependency.
-- **Compose**: Port as a Kotlin `object` of stateless functions. Use `java.util.Base64.getUrlDecoder()` (it accepts missing padding; check its rejection of invalid input to match the nil result), `java.nio.charset.Charset.forName` guarded by `try`/`catch` for unknown names with a fallback to UTF-8 then ISO-8859-1, `java.util.UUID.randomUUID().toString()` (already lowercase), and `java.time.Instant.ofEpochMilli` formatted with `DateTimeFormatter.ISO_INSTANT` forced to three fractional digits. Use `DateTimeFormatter` with `Locale.US` for the three Date layouts.
-- **React/Web**: Port as a module of stateless functions in TypeScript. Decode with `atob` after swapping the alphabet and padding, then `TextDecoder` with the declared label (it throws `RangeError` for unknown labels and supports `windows-1252` and `iso-8859-1`) in a fallback chain with `fatal: true` on every decoder, the declared-charset one included, so invalid bytes throw and fall through as `charset-fallback` requires instead of becoming U+FFFD. Dates need an explicit parser for the three layouts because `Date.parse` is implementation-defined; format output with `toISOString`, which already gives three fractional digits in UTC.
+- **Compose**: Port as a Kotlin `object` of stateless functions. Decode with `java.util.Base64.getDecoder()` after replacing `-` with `+`, `_` with `/` and appending padding, as the source does, because `getUrlDecoder()` rejects the `+` and `/` that `base64url-decode` accepts; catch `IllegalArgumentException` (thrown for whitespace, bad characters and a length remainder of one) and map it to a null body, `java.nio.charset.Charset.forName` guarded by `try`/`catch` for unknown names with a fallback to UTF-8 then ISO-8859-1, `java.util.UUID.randomUUID().toString()` (already lowercase), and `java.time.Instant.ofEpochMilli` formatted with `DateTimeFormatter.ISO_INSTANT` forced to three fractional digits. Use `DateTimeFormatter` with `Locale.US` for the three Date layouts.
+- **React/Web**: Port as a module of stateless functions in TypeScript. Decode with `atob` after swapping the alphabet and padding, first failing on any whitespace because `atob` silently strips it, then `TextDecoder` with the declared label (it throws `RangeError` for unknown labels and supports `windows-1252` and `iso-8859-1`) in a fallback chain with `fatal: true` on every decoder, the declared-charset one included, so invalid bytes throw and fall through as `charset-fallback` requires instead of becoming U+FFFD. Dates need an explicit parser for the three layouts because `Date.parse` is implementation-defined; format output with `toISOString`, which already gives three fractional digits in UTC.
 - **AppKit / UIKit**: Source platform. The code is in `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailMessageParser.swift`. It uses Foundation only: `Data(base64Encoded:)`, `CFStringConvertIANACharSetNameToEncoding` with `CFStringConvertEncodingToNSStringEncoding` to resolve a charset name (the Core Foundation call makes it Apple-only), `String(data:encoding:)`, a `DateFormatter` with the `en_US_POSIX` locale, and `Date.ISO8601FormatStyle(includingFractionalSeconds: true)` inside `IntegrationClock.string(from:)`. The DTO types `GmailMessageDTO`, `GmailPart`, `GmailBody` and `GmailHeader` are `Decodable, Sendable` in `GmailAPI.swift`; the output `EmailMessage` and `EmailAttachmentRef` are in `IntegrationRecords.swift`. The enum has no stored state and every type it touches is `Sendable`.
-- **WinUI 3**: Write a `static class GmailMessageParser` in C# with a `public static EmailMessage Parse(GmailMessageDto dto, string connectionId, string? existingId, DateTimeOffset? now = null)` method, using `DateTimeOffset.UtcNow` when `now` is null. Model the DTOs as `record` types with nullable members and deserialize with `System.Text.Json` (`JsonSerializer.Deserialize` with `PropertyNameCaseInsensitive`). Decode body data with `Convert.FromBase64String` after replacing `-` and `_` and padding to a multiple of four; catch `FormatException` to return null, the equivalent of the Swift nil. Resolve the charset with `Encoding.GetEncoding(name, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback)` inside `try`/`catch` for `ArgumentException` and `DecoderFallbackException`, because plain `Encoding.GetString` replaces invalid bytes instead of failing and would not reproduce the fall-through to UTF-8; call `Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)` once so `windows-1252` resolves on .NET (the Swift call needs no registration). Parse the Date header with `DateTimeOffset.TryParseExact`, `CultureInfo.InvariantCulture`, `DateTimeStyles.None` and the three format strings `ddd, d MMM yyyy HH:mm:ss zzz`, `d MMM yyyy HH:mm:ss zzz` and `ddd, d MMM yyyy HH:mm zzz`; the Swift `Z` pattern accepts `+0000` without a colon while .NET `zzz` wants `+00:00`, so normalise the zone first. Format output with `ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)` on the UTC value. The function returns plain immutable values, so no `ObservableCollection` or `INotifyPropertyChanged` belongs in it; a view model can wrap the result.
+- **WinUI 3**: Write a `static class GmailMessageParser` in C# with a `public static EmailMessage Parse(GmailMessageDto dto, string connectionId, string? existingId, DateTimeOffset? now = null)` method, using `DateTimeOffset.UtcNow` when `now` is null. Model the DTOs as `record` types with nullable members and deserialize with `System.Text.Json` (`JsonSerializer.Deserialize` with `PropertyNameCaseInsensitive`). Decode body data with `Convert.FromBase64String` after replacing `-` and `_` and padding to a multiple of four; reject any whitespace first because `Convert.FromBase64String` skips it, and catch `FormatException` to return null, the equivalent of the Swift nil. Resolve the charset with `Encoding.GetEncoding(name, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback)` inside `try`/`catch` for `ArgumentException` and `DecoderFallbackException`, because plain `Encoding.GetString` replaces invalid bytes instead of failing and would not reproduce the fall-through to UTF-8; call `Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)` once so `windows-1252` resolves on .NET (the Swift call needs no registration). Parse the Date header with `DateTimeOffset.TryParseExact`, `CultureInfo.InvariantCulture`, `DateTimeStyles.None` and the three format strings `ddd, d MMM yyyy HH:mm:ss zzz`, `d MMM yyyy HH:mm:ss zzz` and `ddd, d MMM yyyy HH:mm zzz`; the Swift `Z` pattern accepts `+0000` without a colon while .NET `zzz` wants `+00:00`, so normalise the zone first. Format output with `ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture)` on the UTC value. The function returns plain immutable values, so no `ObservableCollection` or `INotifyPropertyChanged` belongs in it; a view model can wrap the result.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailMessageParser.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailMessageParser.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -275,11 +280,7 @@ Not applicable: the source makes no log call.
 **Approved**: pending
 
 **Decision**: Deliberate prudent debt: undecodable body data is dropped without a signal, and recursion over parts has no depth limit.
-**Rationale**: Both affect malformed or hostile input only, and the source handles neither. Revisit the silent drop when the sync worker needs to show or count messages whose body failed to decode; revisit the depth limit when the parser reads messages from a source other than the Gmail API, or when a crash from a deeply nested message is reported. Until then a port copies both behaviors, or adds a deliberate signal or limit and says so.
-**Approved**: pending
-
-**Decision**: Whether a dropped body should be surfaced is open: today `undecodable-body-data` yields nil with no log, error or flag.
-**Rationale**: Settling it needs the Gmail API contract for `data` and a decision from the owner of the sync worker. The recipe states the current behavior as a MUST until then.
+**Rationale**: Both affect malformed or hostile input only, and the source handles neither. Revisit the silent drop when the sync worker needs to show or count messages whose body failed to decode; revisit the depth limit when the parser reads messages from a source other than the Gmail API, or when a crash from a deeply nested message is reported. Surfacing a dropped body needs the Gmail API contract for `data` and a decision from the owner of the sync worker. Until then `undecodable-body-data` states the current behavior as a MUST, and a port copies both behaviors, or adds a deliberate signal or limit and says so.
 **Approved**: pending
 
 **Decision**: The parser is not pure: it keeps no shared state, but `createdAt`, `updatedAt` and the generated id read the wall clock and a random UUID inside `parse`, and `now` feeds only the date fallback.
@@ -297,9 +298,10 @@ Not applicable: the source makes no log call.
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | internationalization |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | privacy-and-data |
 
-The parser separates concerns cleanly: it only maps a DTO to a record, delegating classification to `MailClassifier`, time formatting to `IntegrationClock` and storage to other components. Unit-test coverage is partial: `GmailMessageParserTests` covers bodies, charsets, embedded messages, address splitting and both date fallbacks, but not the date comment stripping, the second and third date layouts, escaped quotes in addresses, unknown charset names or undecodable data (vectors parser-016 to parser-039 are derived from the code). Explicit error handling is partial because every failure degrades to an empty or fallback value, which is deliberate and total, yet an undecodable body vanishes with no signal. Graceful degradation passes because each missing input has a defined fallback. Unicode support passes because declared charsets are honoured with UTF-8 and ISO Latin-1 fallbacks. No-PII-in-logs passes because the source never logs.
+The parser separates concerns cleanly: it only maps a DTO to a record, delegating classification to `MailClassifier`, time formatting to `IntegrationClock` and storage to other components. Unit-test coverage is partial: `GmailMessageParserTests` covers bodies, charsets, embedded messages, address splitting and both date fallbacks, but not the date comment stripping, the second and third date layouts, escaped quotes in addresses, unknown charset names or undecodable data (vectors parser-016 to parser-046 are derived from the code). Explicit error handling is partial because every failure degrades to an empty or fallback value, which is deliberate and total, yet an undecodable body vanishes with no signal. Graceful degradation passes because each missing input has a defined fallback. Unicode support passes because declared charsets are honoured with UTF-8 and ISO Latin-1 fallbacks. No-PII-in-logs passes because the source never logs.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Merged the two silent-drop decisions, replaced repeated edge-case MUSTs with requirement references, added requirements and vectors for unbalanced quotes, backslashes outside quotes, declared-charset-wins, base64 plus/slash/whitespace, createdAt bounds and no-io, linked classifier and service in rdid form, pinned Compose decode errors to null, marked Configuration not applicable and used real fixture file names. |

@@ -29,4 +29,14 @@
   `toolbarExtras` enabled: `MarkdownQuickReference` exposes no `disabled` prop
   to receive, and `toolbarExtras` content is the consumer's own to disable (see
   **Design Decisions**).
+- **fill-parent-height**: When `fill` is set, the editor MUST make its root a
+  `min-h-0 flex-1` column and let the textarea flex to the parent's height
+  (`min-h-0 flex-1 resize-none`, no `rows` attribute, no manual resize grip);
+  `rows` is ignored. The parent MUST supply a bounded height — a fill editor
+  inside a scroller has nothing to fill. Without `fill`, the textarea is `rows`
+  tall (default 16).
+- **forward-textarea-props**: The editor MUST set the textarea's `placeholder`
+  from `placeholder`, and MUST merge `textareaClassName` onto the textarea after
+  its own classes; `className` MUST be merged onto the root element after the
+  root's own classes. These three props are plain pass-throughs.
 

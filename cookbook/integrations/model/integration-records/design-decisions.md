@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: Keep `EmailLabel.type`, `ActionLog.status` and `ActionLog.requestPayload` as plain strings rather than enums or typed payloads.
-**Rationale**: The value sets are documented only in comments, and this version keeps them as strings. Enum text that is not a known raw value fails to decode the whole row, so a new provider-side label type or action state would make existing rows unreadable. A port may promote them to enums stored as raw-value TEXT, as `ConnectionStatus` is, once the sets are closed.
+**Rationale**: The value sets are documented only in comments, and this version keeps them as strings. Enum text that is not a known raw value fails to decode the whole row, so a new provider-side label type or action state would make existing rows unreadable. A port may promote them to enums stored as raw-value TEXT, as `ConnectionStatus` is, once the sets are closed. `ConnectionStatus` and `MailClass` are enums because this SDK owns both sets and treats them as closed: adding a case is a coordinated change across the store and every port, so an unknown stored value signals a version mismatch instead of a new provider-side value.
 **Approved**: pending
 
 **Decision**: Store every timestamp as an ISO-8601 UTC string with fractional seconds.

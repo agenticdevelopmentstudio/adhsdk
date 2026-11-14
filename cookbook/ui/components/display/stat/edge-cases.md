@@ -10,6 +10,7 @@
   error, not a runtime fallback.
 - No truncation or wrapping is imposed — a very long value in `StatRow` competes with
   the label across `justify-between`; the host sizes the container.
-- The two forms are separate exports on one grammar: pick `StatRow` inside cards,
-  `Stat` for a right-aligned hero strip; there is no orientation prop.
+- The forms are separate exports on one grammar: pick `StatRow` inside cards and
+  `Stat` for a hero strip. `Stat` has no orientation prop; its only layout option is
+  `align` (`"end"` default, `"start"`), and `StatStrip` wraps several `Stat`s.
 

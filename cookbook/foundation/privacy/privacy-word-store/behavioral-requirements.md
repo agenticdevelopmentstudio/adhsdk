@@ -18,13 +18,12 @@
 - **save-empty-removes**: `save` with an empty array MUST leave no item stored, and MUST NOT add one.
 - **delete-tolerates-missing**: `save` MUST treat a delete status of success or item-not-found as proceeding, and MUST throw `StoreError.keychain(status)` for any other delete status without adding anything.
 - **add-error**: `save` MUST throw `StoreError.keychain(status)` when adding the new item fails.
-- **save-rewrites-unguarded**: Because `save` deletes and re-adds, an item saved under the older `userPresence` guard MUST come out rewritten without that guard once read with an authenticated context and saved again; the store does this by construction and holds no migration step of its own.
 - **encode-errors-propagate**: An error thrown by `JSONEncoder` while encoding the pairs MUST propagate unchanged from `save`, after the old item has already been deleted.
 - **authenticate**: `authenticate(reason:)` MUST be an async static function that evaluates the `deviceOwnerAuthentication` policy (Touch ID or the account password) with `reason` as the prompt text and return the `LAContext` that proved it.
 - **authenticate-cannot-evaluate**: `authenticate` MUST throw `StoreError.authenticationFailed` carrying the system's localized description, or `This Mac cannot authenticate its owner.` when none is given, when the policy cannot be evaluated.
 - **authenticate-rejected**: `authenticate` MUST throw `StoreError.authenticationFailed` carrying the system's localized description, or `Authentication failed.` when none is given, when the user fails or cancels the evaluation.
 - **error-descriptions**: `StoreError` MUST conform to `Error`, `LocalizedError` and `Equatable`; `errorDescription` MUST return the reason for `authenticationFailed`, the sentence `The privacy words need you to authenticate once before they can be read.` for `needsAuthentication`, the system message for the status (or `Keychain error <status>.`) for `keychain`, and `The privacy words in the keychain could not be read.` for `unreadable`.
 - **no-in-process-gate**: The store itself MUST NOT require authentication for `load` or `save`; showing, opening and saving the words are guarded by the caller taking `authenticate(reason:)` first. `PrivacyWordsVault` is the caller that does this.
-- **blocking-calls**: `load` and `save` are synchronous keychain calls that run on the calling thread and MUST be called off any latency-sensitive thread when the caller cares; the store provides no queue or actor.
-- **no-retry-no-timeout**: The store MUST NOT retry a failed keychain call and has no timeout.
+- **blocking-calls**: `load` and `save` MUST be synchronous and MUST NOT dispatch to another queue or actor; they run on the calling thread.
+- **no-retry**: The store MUST NOT retry a failed keychain call.
 

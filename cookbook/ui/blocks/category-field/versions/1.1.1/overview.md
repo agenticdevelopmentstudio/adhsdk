@@ -1,0 +1,3 @@
+
+CategoryField is a form row component for selecting a single category from a hierarchy maintained by the owner. It combines autocomplete search (flat names) with a hierarchical browser, and displays the selected value as one or more breadcrumbs showing all filing paths when the category exists in multiple places in the hierarchy (DAG support). When a hierarchy is provided, breadcrumbs are interactive: clicking a breadcrumb crumb opens a modal to rename that category node in-place. The component adapts its terminology to the host's domain via the `noun` prop (e.g., "category", "topic", "tag class").
+

@@ -16,7 +16,7 @@
 **Approved**: pending
 
 **Decision**: The `range` is interpolated into the path without encoding or validation.
-**Rationale**: The type `AnalyticsRange` allows only `"24h"`, `"7d"` and `"30d"`, none of which needs encoding, and the source leaves checking any other value to the backend, whose error the read would surface through the non-ok path. This avoids a second copy of the validation, at the cost of a round trip for a bad value.
+**Rationale**: The type `AnalyticsRange` allows only `"24h"`, `"7d"` and `"30d"`, none of which needs encoding (a port that accepts a looser type MAY encode), and the source leaves checking any other value to the backend, whose error the read would surface through the non-ok path. This avoids a second copy of the validation, at the cost of a round trip for a bad value.
 **Approved**: pending
 
 **Decision**: The `enabled` option exists so the board shell can fetch and poll only the topic that is open.
@@ -24,6 +24,6 @@
 **Approved**: pending
 
 **Decision**: No retry, staleness, timeout or persistence policy is set in this module.
-**Rationale**: The module takes the shared cache's defaults, so one place sets the dashboard's retry and staleness behavior. A port must supply those defaults separately, which Platform Notes call out. A hung request has no ceiling, which is technical debt that affects behavior.
+**Rationale**: The module takes the shared cache's defaults, so one place sets the dashboard's retry and staleness behavior. A port must supply those defaults separately, which Platform Notes call out. A hung request has no ceiling, which is deliberate, prudent debt: it is worth paying down if a dashboard is ever observed stuck fetching, and the intended fix is an abort signal passed through the client's raw request operation (or a client-level timeout) that ends the request and lets the read enter its error state.
 **Approved**: pending
 

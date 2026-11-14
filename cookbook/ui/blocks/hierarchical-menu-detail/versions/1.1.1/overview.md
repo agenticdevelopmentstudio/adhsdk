@@ -1,0 +1,3 @@
+
+HierarchicalMenuDetail is a container for rendering cascading hierarchies of topic/detail rails where each level's selection scopes the next. A consumer passes a flat `levels` array; the component renders each as a side-by-side column (wide mode) or full-width pane (narrow mode), connecting selections via breadcrumb trail. Three disclosure styles control how ancestor lists yield room to the detail pane as the window narrows: minimized (icon strips then slide off), covered (stack under child), and cascading (each deeper list opens to the right of its parent, stepped down one header-height per level, like a nested menu).
+

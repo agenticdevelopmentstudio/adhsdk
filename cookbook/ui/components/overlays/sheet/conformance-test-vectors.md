@@ -17,10 +17,13 @@
 | sheet-014 | close-on-overlay-click | Click the overlay while the drawer is open | Drawer closes; `onOpenChange` fires with a pointer/outside-press dismissal reason. |
 | sheet-015 | width-constrained-on-sides | Render SheetContent with `side="right"` on a small+ (≥640px) viewport | Width is 75% of viewport width, capped at 24rem (`sm:max-w-sm` applies once 75% would exceed 24rem). |
 | sheet-016 | content-composition-props | Render SheetContent with additional `className` | Additional class is applied to the drawer element. |
-| sheet-017 | header-footer-divs | Render SheetHeader and SheetFooter | Both render as `<div>` elements with padding (`p-4`) and flex layout. |
+| sheet-017 | header-footer-divs | Render SheetHeader and SheetFooter | Both render as container elements (`div` on the web) with padding (`p-4`) and a column flex layout. |
 | sheet-018 | title-description-typography | Render SheetTitle and SheetDescription | Title renders with `font-medium`, description with muted foreground color. |
-| sheet-019 | Edge case: null/empty content | Render SheetContent with no children | Drawer renders visible but empty; no error is thrown. |
-| sheet-020 | Edge case: multiple sheets | Render two Sheet instances simultaneously, both open | Both render independently via separate Base UI Portals; because SheetOverlay and SheetContent both use a fixed `z-50`, relative stacking order between the two is determined by DOM order, not managed by the component. |
-| sheet-021 | Edge case: animation interruption | Toggle the drawer open, then toggle it closed before the opening transition finishes | The CSS transition is interrupted and reverses from its current computed value (standard CSS transition-interruption behavior); no additional interruption handling exists in source beyond this. |
-| sheet-022 | Edge case: side boundary | Render SheetContent with `side="left"` on a 320px-wide viewport | Drawer renders at 75% of viewport width (240px); no additional minimum-width or narrow-viewport safeguard is applied by the component. |
-
+| sheet-019 | `#edge-cases/null-empty-content` | Render SheetContent with no children | Drawer renders visible but empty; no error is thrown. |
+| sheet-020 | `#edge-cases/multiple-sheets` | Render two Sheet instances simultaneously, both open | Both render independently via separate Base UI Portals; because SheetOverlay and SheetContent both use a fixed `z-50`, relative stacking order between the two is determined by DOM order, not managed by the component. |
+| sheet-021 | `#edge-cases/animation-interruption` | Toggle the drawer open, then toggle it closed before the opening transition finishes | The CSS transition is interrupted and reverses from its current computed value (standard CSS transition-interruption behavior); no additional interruption handling exists in source beyond this. |
+| sheet-022 | `#edge-cases/side-boundary` | Render SheetContent with `side="left"` on a 320px-wide viewport | Drawer renders at 75% of viewport width (240px); no additional minimum-width or narrow-viewport safeguard is applied by the component. |
+| sheet-023 | close-on-escape | Open the drawer, then press Escape | Drawer closes; `onOpenChange` fires with `false`. |
+| sheet-024 | restore-focus-on-close | Activate a SheetTrigger, then close the drawer | Focus moves into the drawer when it opens and returns to the SheetTrigger when it closes. |
+| sheet-025 | full-width-on-top-bottom | Render SheetContent with `side="bottom"` | Drawer spans the full viewport width (`inset-x-0`). |
+| sheet-026 | content-composition-props | Render SheetContent with `aria-label="Settings"` and no SheetTitle | The dialog's accessible name is "Settings". |

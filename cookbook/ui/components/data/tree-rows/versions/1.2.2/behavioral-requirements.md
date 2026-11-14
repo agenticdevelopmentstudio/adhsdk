@@ -1,0 +1,30 @@
+
+- **flatten-parent-child-forest**: The flatten algorithm MUST accept a flat array of rows and output them in display order with depth and hierarchy metadata.
+- **order-by-roots-first**: The algorithm MUST place root nodes (those without a parent in the input) at depth 0, in the order they appear in the input.
+- **order-siblings-in-input-order**: The algorithm MUST order siblings of each parent in the input order unless a sort comparison function is provided.
+- **sort-if-provided**: If a comparison function is provided in options, the algorithm MUST sort both roots and all sibling groups according to that function.
+- **treat-orphans-as-roots**: A row whose `parentId()` result is not present in the input (filtered out, deleted, or missing) MUST be treated as a root at depth 0.
+- **handle-self-parenting**: A row that is parented to itself MUST be treated as a root.
+- **handle-cycles**: Rows that form a cycle (a→b→c→a) and are not reached by the depth-first descent MUST be surfaced at depth 0 in input order.
+- **omit-collapsed-descendants**: When `expanded` is provided, the algorithm MUST withhold from the output any row whose nearest ancestor's id is not in `expanded`. The row is still walked (so cycle detection accounts for it) but is never pushed to the output until that ancestor is expanded.
+- **surface-every-row-exactly-once**: Subject to **omit-collapsed-descendants** and to unique `id()` values across the input (see Edge Cases → Duplicate IDs), the output MUST contain every row from the input exactly once, in some order. The algorithm MUST NOT drop any row outside those two cases.
+- **track-children-availability**: For each output row, a boolean `hasChildren` MUST indicate whether that row has any immediate children, regardless of expansion state.
+- **compute-ancestor-path**: The `ancestorIds()` function MUST return the set of all ancestor IDs between a target ID and the root, given a list of rows and ID/parentId accessors.
+- **halt-ancestor-search-at-cycle**: The `ancestorIds()` function MUST terminate if a parent is already in the result set (preventing infinite loops in malformed data).
+- **halt-ancestor-search-at-missing-parent**: The `ancestorIds()` function MUST terminate if a parent ID is not present in the input.
+- **render-label-span**: `TreeRowLabel` MUST render a `<span>` element containing indent, toggle (or spacer), and children.
+- **indent-with-ems**: The label MUST apply inline padding based on depth: `depth * 1.25em`.
+- **render-toggle-button-if-children**: If `hasChildren` is true, the label MUST render a button for toggling expansion.
+- **render-spacer-if-no-children**: If `hasChildren` is false, the label MUST render a spacer element of identical width to the button (to align content).
+- **show-toggle-icon**: The toggle button MUST display a chevron icon (ChevronRight from lucide-react, 14px).
+- **rotate-icon-when-expanded**: When `expanded` is true, the chevron MUST be rotated 90 degrees.
+- **call-on-toggle-on-click**: Clicking the toggle button MUST call the `onToggle()` callback without arguments.
+- **set-aria-label-on-toggle**: The toggle button MUST have an `aria-label` attribute with the text "Expand {label}" or "Collapse {label}" depending on `expanded`.
+- **set-aria-expanded-on-toggle**: The toggle button MUST have an `aria-expanded` attribute reflecting the current `expanded` boolean.
+- **provide-title-on-toggle**: The toggle button MUST have a `title` attribute (tooltip) matching the `aria-label`.
+- **use-flex-layout-in-label**: The label MUST use a flex layout with items centered on the cross axis and a small, consistent gap between the toggle/spacer and the content.
+- **allow-shrinking-toggle**: The toggle/spacer element MUST NOT shrink when flex layout would otherwise compress it (web: `flex-shrink: 0`).
+- **allow-content-truncation**: The label's outer `<span>` MUST allow its inline size to shrink below its content's natural width (an inline-size floor of 0) so a caller can truncate overflowing content with its own text-overflow styling.
+- **accept-custom-classname**: `TreeRowLabel` MUST accept an optional `className` prop that is merged with the default classes.
+- **accept-children-prop**: `TreeRowLabel` MUST render the `children` prop as content after the toggle/spacer.
+

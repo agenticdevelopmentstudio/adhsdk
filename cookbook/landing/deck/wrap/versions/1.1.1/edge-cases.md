@@ -1,0 +1,5 @@
+
+- **Empty children**: Wrap MUST render an empty div when children is undefined, null, or an empty array. The `lp-wrap` class is still applied.
+- **Undefined or empty-string className**: TypeScript's `className?: string` signature restricts the prop to `string | undefined`, so only these two falsy shapes can reach `.filter(Boolean)`; both are dropped, leaving only `lp-wrap` (see **class-composition**).
+- **Direct child of a non-centered Screen**: When Wrap is a direct child of `.lp-screen` (excluding `.lp-screen--center`), it additionally receives `min-height: max(0px, calc(100vh / 3 - var(--lp-screen-pad-top, ...)))` and `align-content: safe center` (the `.lp-screen:not(.lp-screen--center) > .lp-wrap` rule in `base.css`). This is Screen's rule reaching into its Wrap child, not a property of Wrap in isolation. The `safe` keyword falls back to start alignment when the content is taller than that band, so overflow pushes content down into view rather than up and out of reach behind the fixed header.
+

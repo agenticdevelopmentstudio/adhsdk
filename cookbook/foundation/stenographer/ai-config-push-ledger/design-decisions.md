@@ -19,3 +19,6 @@
 **Rationale**: A stable stored order makes the entry deterministic; the source does not state a further reason.
 **Approved**: pending
 
+**Decision**: A corrupt or non-array ledger entry reads as an empty ledger, silently.
+**Rationale**: `lastPushed()` has no failure channel and uses `stringArray(forKey:)` with `compactMap`, so the ledger neither throws nor logs; the cost is that the next push names no removals for configurations the ledger no longer remembers.
+**Approved**: pending

@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: Visual appearance is delegated entirely to CSS (base class `lp-glow` plus an optional caller-supplied `className`) rather than exposed through component props.
-**Rationale**: Decouples visual design from component logic, allowing design changes without code modification.
+**Rationale**: Decouples visual design from component logic: visual changes stay in the stylesheet, not in the component's props or logic.
 **Approved**: pending
 
 **Decision**: Inside a hero, the glow's vertical offset is computed from the hero's own `--lp-hero-pad-top` / `--lp-hero-pad-bottom` custom properties rather than a hardcoded constant.

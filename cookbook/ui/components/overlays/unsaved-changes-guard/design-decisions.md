@@ -8,7 +8,7 @@
   **Approved**: pending
 
 - **Decision**: Multiple guards may be armed at once (e.g. a root layout mounting a settings-panel guard alongside a page-level guard). Only the primary answers `confirmNavigation()`, so one navigation raises exactly one prompt.
-  **Rationale**: The prompt is generic ("you have unsaved changes") and Discard means discard everything, so asking every armed guard would ask the same question repeatedly. Non-primary guards still block `beforeunload` (the browser coalesces those into one native prompt), and their click listeners bail once the primary's `preventDefault()` has run. If the primary disarms, the first still-registered guard takes over — registration order (the order each guard's mount effect called `registerNavigationGuard`), never creation or render order — matching **coalesce-multiple-guards**.
+  **Rationale**: The prompt is generic ("you have unsaved changes") and Discard means discard everything, so asking every armed guard would ask the same question repeatedly. Non-primary guards still block `beforeunload` (the browser coalesces those into one native prompt), and their click listeners bail once the primary's `preventDefault()` has run. If the primary disarms, the first still-registered guard takes over — registration order (the order each guard's mount effect called `registerNavigationGuard`), never creation or render order — matching #requirements/coalesce-multiple-guards.
   **Approved**: pending
 
 - **Decision**: Attach the click interceptor to `document` in the capture phase rather than to individual anchors.

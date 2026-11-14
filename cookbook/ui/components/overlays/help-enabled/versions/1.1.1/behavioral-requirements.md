@@ -1,0 +1,22 @@
+
+- **renders-children**: Component MUST render the provided `children` prop as the primary text content.
+- **renders-badge**: Component MUST render an Info icon badge adjacent to the children.
+- **marks-badge-data-slot**: Component MUST apply `data-slot="help-enabled-badge"` to the Info icon badge.
+- **accepts-id-prop**: Component MUST accept an `id` prop (string) to look up help content in the help store.
+- **opens-popover-on-trigger**: Component MUST open a Popover containing help content when the trigger element is clicked or activated.
+- **shows-popover-content**: Component MUST render a HelpPopoverContent component with the retrieved help entry inside the Popover.
+- **accepts-fallback**: Component MUST accept an optional `fallback` prop (string) to display when no help entry exists for the given `id`.
+- **wraps-fallback-as-info-entry**: When `fallback` is provided and no stored entry exists for `id`, Component MUST wrap the fallback string in a HelpEntry with `flavor: "info"` before rendering it in the popover.
+- **suppresses-warning-when-fallback-given**: Component MUST NOT emit the missing-entry console warning when a `fallback` prop is provided, even though `id` has no stored entry.
+- **accepts-classname**: Component MUST accept an optional `className` prop and apply it to the root element.
+- **renders-plain-text-fallback**: When no help entry exists for the `id` and no `fallback` is provided, component MUST render the children as plain text in a span element without opening a popover.
+- **marks-plain-text-variant**: Component MUST apply `data-slot="help-enabled-plain"` to the span when rendering the plain text fallback variant.
+- **preserves-layout-on-missing-entry**: Component MUST preserve the `className` prop on the plain text fallback to maintain layout and styling applied by the caller.
+- **warns-on-missing-entry**: Component MUST emit a console warning once per missing help `id` (throttled by `id`, not per render) indicating the missing help entry.
+- **marks-interactive-variant**: Component MUST apply `data-slot="help-enabled"` to the PopoverTrigger element when rendering the interactive variant.
+- **badge-hidden-by-default**: Component MUST render the Info badge at 0 opacity by default so it does not reflow the layout.
+- **shows-badge-on-hover**: Component MUST transition the badge to 70% opacity when the user hovers over the trigger element.
+- **shows-badge-on-focus**: Component MUST transition the badge to 70% opacity when the trigger element receives keyboard focus.
+- **shows-badge-when-popover-open**: Component MUST transition the badge to 70% opacity when the popover is open.
+- **marks-badge-aria-hidden**: Component MUST apply `aria-hidden="true"` to the Info badge icon.
+

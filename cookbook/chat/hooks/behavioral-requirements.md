@@ -40,8 +40,9 @@
 - **session-teardown**: On unmount, the hook MUST remove its observer and
   MUST call `session.destroyBackend()`, which for an owned, adapter-wrapped
   session MUST call `destroy()` on the wrapped backend (the adapter itself),
-  never directly on the raw backend, so the adapter's own teardown (its
-  `AbortController` and event queue) runs.
+  never directly on the raw backend; the adapter's own teardown (its
+  `AbortController` and event queue) runs, and the adapter forwards
+  `destroy()` to the raw backend.
 - **session-draft-stamp-eviction**: Before each projection, the hook MUST
   evict any cached `draft:`-prefixed timestamp whose draft no longer exists
   among the orchestrator's active drafts.
@@ -360,6 +361,8 @@
 
 **Input focus reclaim (`useInputFocusReclaim`)**
 
+- **focus-reclaim-no-match**: If no element matches `selector`, the hook MUST
+  install its listeners as usual but MUST NOT claim focus, and MUST NOT throw.
 - **focus-reclaim-disabled-noop**: With `enabled` `false`, the hook MUST
   install no listeners and MUST NOT claim focus.
 - **focus-reclaim-immediate**: On enable, the hook MUST attempt to reclaim

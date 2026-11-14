@@ -2,11 +2,11 @@
 id: abd8ebe3-468d-4dda-8da2-cb00a97ae84c
 title: "Markdown Result Row"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,18 +36,18 @@ The Markdown Result Row is a specialized search result component designed to dis
 
 ## Behavioral Requirements
 
-- **render-title**: Component MUST render the document title from `hit.title`, defaulting to the string "Untitled" when the title is null or empty.
+- **render-title**: Component MUST render the document title from `hit.title`, defaulting to the string "Untitled" when the title is null or empty (a whitespace-only title is truthy and renders as is).
 - **highlight-title**: Component MUST wrap query-matching terms in the title with `<mark>` elements styled as search highlights; exact match boundaries are determined by `splitHighlightSegments(text, query)`.
 - **render-per-kind-badge**: Component MUST render a Badge component using the variant and label supplied by `kindRendererFor(hit.kind).badge`; a missing or unrecognized `hit.kind` MUST fall back to a default renderer and MUST NOT throw.
 - **render-snippet**: Component MUST render a snippet (or subtitle) derived from `kindRendererFor(hit.kind).rowSnippet(hit)`, trimmed of leading and trailing whitespace; if the trimmed snippet is empty, the snippet section MUST NOT be rendered.
 - **highlight-snippet**: When the snippet is rendered, Component MUST highlight query-matching terms within it with `<mark>` elements, using the same `splitHighlightSegments(text, query)` mechanism as the title.
 - **limit-snippet-lines**: Component MUST clamp snippet display to a maximum of 2 lines using CSS line clamping; line overflow MUST be indicated by ellipsis.
 - **render-tags**: Component MUST render each entry in `hit.tags` as a separate element prefixed with `#` (not comma-joined); if `hit.tags` is empty, the tags section MUST NOT be rendered.
-- **render-category**: Component MUST render the `hit.category` as an optional uppercase label; if `hit.category` is null or empty, the category section MUST NOT be rendered.
-- **render-author-display**: Component MUST display author attribution as "by [displayName]" when `hit.author.displayName` is a non-empty string; if displayName is null or empty after trimming, the name portion falls back to `@[slug]`, rendering as "by @[slug]".
+- **render-category**: Component MUST render the `hit.category` as an optional uppercase label; if `hit.category` is null or empty, the category section MUST NOT be rendered (a whitespace-only category is truthy and renders as is).
+- **render-author-display**: Component MUST display author attribution as "by [displayName]" when `hit.author.displayName` is a non-empty string; if displayName is null or empty after trimming, the name portion MUST fall back to `@[slug]`, rendering as "by @[slug]".
 - **render-updated-date**: Component MUST display the updated date, preceded by the literal separator " · Updated ", in the format produced by `formatDate(hit.updatedAt)` (e.g. "Jun 24, 2026") when `hit.updatedAt` is present; if `hit.updatedAt` is absent, the date MUST NOT be rendered.
 - **bind-select-callback**: Component MUST invoke `onSelect(hit)` when the button is clicked, passing the entire hit object.
-- **highlight-selected-state**: Component MUST render a visually distinct border state when `selected` is true; the selected state MUST use the design system's accent color token for the border (`apt-gold` on web); when false, borders MUST use a neutral color token and MAY show a hover state.
+- **highlight-selected-state**: Component MUST render a visually distinct border state when `selected` is true; the selected state MUST use the design system's accent token for the border; when false, borders MUST use the neutral border token and MAY show a stronger border token on hover. Selection is currently conveyed by border color alone, a known gap recorded under Accessibility.
 - **indicate-pressed-state**: Component MUST set the `aria-pressed` attribute to the value of `selected`, correctly indicating to assistive technology whether the row is selected.
 - **implement-roving-tabindex**: Component MUST support roving tabindex for list integration: when `active` is true, `tabIndex` MUST be 0; when `active` is false, `tabIndex` MUST be -1; when `active` is undefined, the native tab order MUST be used (no tabindex attribute).
 - **forward-ref-to-button**: Component MUST forward the `controlRef` to the internal button element, enabling external focus management by the containing list.
@@ -60,18 +60,19 @@ The Markdown Result Row is a specialized search result component designed to dis
 ## Appearance
 
 - **Container**: Rounded article element with flex column layout, 8px gaps between sections, 8px corner radius (`--radius-lg` token), 1px border, 16px padding
-- **Background**: Neutral background color (`apt-bg`); selected state uses accent border color (`apt-gold`)
-- **Border**: 1px width; neutral color (`apt-border`) in default state; accent color (`apt-gold`) when selected; hover state shows strong border (`apt-border-strong`)
+- **Background**: Neutral background token; selected state uses the accent border token
+- **Border**: 1px width; neutral border token in default state; accent token when selected; hover state shows the strong border token
 - **Button (select control)**: Flex column, 8px gap, text-left alignment, no default outline, `--radius-md` corner radius, rounded focus ring (2px) in accent color with 25% opacity
 - **Badge**: Per-kind variant from renderer; self-aligned to start
-- **Title (h3)**: Base font size (16px), semibold weight, text color (`apt-text`)
-- **Highlight mark**: Gold background at 25% opacity (`apt-gold/25`), small rounded corners, horizontal padding (0.125rem), text color matches body (`apt-text`)
-- **Category label**: 1px border, neutral border color, 8px horizontal padding, 4px vertical padding, monospace font, 12px size, uppercase, letter-spacing 0.08em, dim text color (`apt-text-dim`)
-- **Snippet**: 14px size, muted text color (`apt-text-muted`), maximum 2 lines with ellipsis clamp
+- **Title (h3)**: Base font size (16px), semibold weight, text color (primary text token)
+- **Highlight mark**: Accent background at 25% opacity, small rounded corners, horizontal padding (0.125rem), text color matches body (primary text token)
+- **Category label**: 1px border, neutral border color, 8px horizontal padding, 4px vertical padding, monospace font, 12px size, uppercase, letter-spacing 0.08em, dim text token
+- **Snippet**: 14px size, muted text token, maximum 2 lines with ellipsis clamp
 - **Tags**: List with 4px gaps, 12px font size, muted text color
-- **Footer (author + date)**: Flex wrap with justified spacing, 12px gap (horizontal and vertical), 12px font size, dim text color; author name in muted text; "View paper" link in accent color with underline offset (8px) and hover underline
+- **Footer (author + date)**: Flex wrap with justified spacing, 12px gap (horizontal and vertical), 12px font size, dim text color; author name in muted text; "View paper" link in the accent token with underline offset (8px) and hover underline
 - **Link touch target overlay**: Invisible pseudo-element, full width, 24px height, centered vertically (using `top: 50%` and `-translate-y-1/2`)
 
+The semantic tokens above map to the web `apt-*` tokens as listed in the React/Web platform note.
 ## States
 
 | State | Appearance change |
@@ -118,7 +119,7 @@ The Markdown Result Row is a specialized search result component designed to dis
 | mrr-017 | render-updated-date | `hit.updatedAt = ISO 8601 date string` | Renders " · Updated {formatDate(hit.updatedAt)}" (e.g. " · Updated Jun 24, 2026") after the author line |
 | mrr-018 | render-updated-date | `hit.updatedAt = null` or undefined | Date portion of footer is not rendered |
 | mrr-019 | bind-select-callback | User clicks the button | `onSelect(hit)` is called with the hit object |
-| mrr-020 | highlight-selected-state | `selected = true` | Border color is accent (`apt-gold`) |
+| mrr-020 | highlight-selected-state | `selected = true` | Border color is the accent token (`apt-gold` on web) |
 | mrr-021 | highlight-selected-state | `selected = false` | Border color is neutral; hover state applies strong border |
 | mrr-022 | indicate-pressed-state | `selected = true` | `aria-pressed="true"` on button element |
 | mrr-023 | indicate-pressed-state | `selected = false` | `aria-pressed="false"` on button element |
@@ -127,11 +128,13 @@ The Markdown Result Row is a specialized search result component designed to dis
 | mrr-026 | implement-roving-tabindex | `active = undefined` | No tabindex attribute set; natural tab order applies |
 | mrr-027 | forward-ref-to-button | `controlRef` is a React ref object | `controlRef.current` points to the button DOM element |
 | mrr-028 | manage-link-tabindex | `active = true` (button's tabIndex is 0) | Link element also has `tabIndex={0}` |
+| mrr-034 | manage-link-tabindex | `active = false` (button's tabIndex is -1) | Link element also has `tabIndex={-1}` |
+| mrr-035 | manage-link-tabindex | `active = undefined` (button has no tabindex attribute) | Link element also has no tabindex attribute |
 | mrr-029 | enlarge-link-touch-target | "View paper" link is rendered | Invisible `::after` overlay covers full link width with 24px height |
 | mrr-030 | enlarge-link-touch-target | User touches link near but outside text bounds | Touch target is activated if within the 24px overlay zone |
 | mrr-031 | set-link-href | `href = "/paper/123"` | Link element has `href="/paper/123"` |
 | mrr-032 | escape-content | `hit.title` contains `<script>alert('xss')</script>` | Content is rendered as text, script is not executed |
-| mrr-033 | render-rounded-corners | Component is rendered | Article, badge, and focus rings display consistent rounded corners |
+| mrr-033 | render-rounded-corners | Component is rendered | Computed `border-radius` of the article equals `--radius-lg`; computed `border-radius` of the select button's focus ring equals `--radius-md` |
 
 ## Edge Cases
 
@@ -143,7 +146,7 @@ The Markdown Result Row is a specialized search result component designed to dis
 - **Very long snippet**: Clamped to 2 lines via CSS line-clamp (**limit-snippet-lines**); overflow is truncated with an ellipsis.
 - **Very long author displayName or slug**: Author text may wrap within its footer area; no ellipsis applied (browser wraps).
 - **Missing hit.author.displayName and hit.author.slug**: Component renders "@undefined" or similar; no error handling for missing author fields.
-- **Very long category name**: Category capsule text may overflow; rendering depends on browser and container width (Tailwind's `whitespace-nowrap` is not applied to category, allowing wrap).
+- **Very long category name**: The category capsule does not wrap (`whitespace-nowrap`) and does not shrink (`shrink-0`), so a very long name widens the capsule and can overflow the row; the source applies no truncation.
 - **Future-dated hit.updatedAt**: `formatDate` is called as-is; output depends on the formatter's handling of future dates (no special case defined in component).
 - **Roving tabindex with active = undefined**: This occurs only for standalone rendering outside list context — a list that manages roving tabindex always passes an explicit `active` boolean. The native tab order applies with no overriding tabindex logic.
 
@@ -160,17 +163,17 @@ Not applicable: Component does not handle deep linking. Navigation to the paper 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
 | `markdown-result-row.untitled` | Untitled | Fallback title when `hit.title` is null or empty |
-| `markdown-result-row.author-prefix` | by | Prefix for author attribution |
-| `markdown-result-row.updated-prefix` | · Updated | Separator + prefix before the formatted updated-at date |
+| `markdown-result-row.author` | by {name} | Author attribution; `{name}` is the display name or `@slug` |
+| `markdown-result-row.updated` | Updated {date} | Updated-at label; `{date}` is the formatted date, and the leading "· " separator is layout, not part of the string |
 | `markdown-result-row.view-paper-link` | View paper | Text label for the public link |
 
-All other text (title, snippet, tags, category, author name) is sourced from the data object (`hit`) and not localized by the component. Localization of data content is the responsibility of the backend or indexing layer. The updated date's formatting locale (`en-US`) is currently hardcoded in `formatDate` rather than derived from the user's locale — see Compliance (`locale-aware-formatting`).
+The source currently concatenates "by ", the name, " · Updated " and the date as separate literals; the placeholder templates above are the proposed contract so a translation controls word order. All other text (title, snippet, tags, category, author name) is sourced from the data object (`hit`) and not localized by the component. Localization of data content is the responsibility of the backend or indexing layer. The updated date's formatting locale (`en-US`) is currently hardcoded in `formatDate` rather than derived from the user's locale — see Compliance (`locale-aware-formatting`).
 
 ## Accessibility Options
 
-- **Reduce Motion**: Not applicable. Component is static; no animations are defined (transitions in the Tailwind `transition-colors` class are applied to the border color on state change, but no explicit animation keyframes are used). Reduce Motion preferences do not require special handling.
+- **Reduce Motion**: Not disabled by the component. The Tailwind `transition-colors` class fades the border color on selection and hover; it involves no movement or keyframes, and the source does not turn it off under `prefers-reduced-motion`.
 - **Increase Contrast**: Not applicable. Component uses design tokens from the `apt-*` system; contrast requirements are managed at the token level, not within this component.
-- **Differentiate Without Color**: Not applicable. Selection state is indicated by both color (border) and structural change (visual containment); color is not the sole indicator.
+- **Differentiate Without Color**: Not met for selection. The selected state is conveyed by border color alone, with no icon, fill or thicker border; see the Accessibility section.
 
 ## Feature Flags
 
@@ -193,7 +196,7 @@ Not applicable: Component does not emit log messages. Logging of search result i
 
 ## Platform Notes
 
-- **React/Web** (TypeScript source): The component is rendered as an `<article>` with a nested `<button>` and `<a>` sibling for interactive controls (preserving valid and accessible DOM structure); styling uses Tailwind utility classes scoped to the `apt-*` design token system. The `Highlighted` helper function uses `splitHighlightSegments` utility to locate query matches and wraps them in `<mark>` elements; React's default escaping prevents XSS. Per-kind customization is pluggable via `kindRendererFor(hit.kind)` registry. Roving tabindex is managed externally by the list container; this component respects the `active` prop to set `tabIndex` accordingly. The link's touch target is enlarged via CSS `::after` pseudo-element (invisible overlay), implementing WCAG 2.2 SC 2.5.8 without changing the visual layout.
+- **React/Web** (TypeScript source): The component is rendered as an `<article>` with a nested `<button>` and `<a>` sibling for interactive controls (preserving valid and accessible DOM structure); styling uses Tailwind utility classes scoped to the `apt-*` design token system, which maps the semantic tokens used in this recipe as follows: accent is `apt-gold`, background is `apt-bg`, border is `apt-border`, strong border is `apt-border-strong`, primary text is `apt-text`, dim text is `apt-text-dim`, muted text is `apt-text-muted`. The `Highlighted` helper function uses `splitHighlightSegments` utility to locate query matches and wraps them in `<mark>` elements; React's default escaping prevents XSS. Per-kind customization is pluggable via `kindRendererFor(hit.kind)` registry. Roving tabindex is managed externally by the list container; this component respects the `active` prop to set `tabIndex` accordingly. The link's touch target is enlarged via CSS `::after` pseudo-element (invisible overlay), implementing WCAG 2.2 SC 2.5.8 without changing the visual layout.
 - **SwiftUI**: A SwiftUI equivalent would use a `VStack` with sections for badge, title, snippet, tags, category, and footer. The per-kind badge variant and subtitle source would map to SwiftUI view parameters; a passed-in `selected: Bool` parameter (not `@State`, since selection is owned by the parent list, mirroring the `selected` prop here) would track selection. Roving focus would be managed by SwiftUI's `.focusable()` and `FocusState` mechanisms. The enlarged link touch target would be implemented as a larger transparent overlay frame behind the link text, or by increasing the native button frame size. Title and snippet highlighting would require attributed strings or custom text rendering to apply inline styling (background highlight color, rounded corners) to matched segments.
 - **Compose** (Android): A Compose equivalent would use a `Column` with `Row` layouts for header (badge + title), category, snippet, tags, footer. Per-kind customization would be factored into a composable parameter block (badge variant, snippet source). Selected state would modify border color and stroking; state would be held in a `MutableState` or via ViewModel. Roving tab/focus would use Compose's `FocusRequester` with `Modifier.focusRequester()` / `Modifier.focusable()` (not the deprecated `focusModifier()`). The link's touch target would be enlarged by padding the clickable `Modifier.clickable()` area or by wrapping in a larger `Box`. Highlighted text segments in title and snippet would use `AnnotatedString` with `SpanStyle` for background highlights and rounding.
 - **AppKit / UIKit**: A UIKit/AppKit equivalent would use `UIStackView` (iOS) or `NSStackView` (macOS) with `UIView`/`NSView` subviews for badge, title, snippet, tags, category, and footer. Per-kind badge variant would be a delegate or registry lookup. Selected state would modify the border (using a `CAShapeLayer` or `UIBezierPath` for rounded borders) and background. Keyboard focus (roving tabindex simulation) would use `UIView.canBecomeFocused`, `setNeedsFocus()`, or `becomeFirstResponder()` on relevant subviews. The link's touch target would be enlarged by overriding `hitTest(_:with:)` or by applying a larger `UIButton` frame. Text highlighting for matched query terms would use `NSMutableAttributedString` with background color and paragraph style attributes applied to specific ranges.
@@ -203,7 +206,7 @@ Not applicable: Component does not emit log messages. Logging of search result i
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/search/src/components/markdown/MarkdownResultRow.tsx` | unverified |
+| web | `packages/web/packages/search/src/components/markdown/MarkdownResultRow.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -255,12 +258,13 @@ Not applicable: Component does not emit log messages. Logging of search result i
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-Statuses rest on the source: roving tabindex is fully implemented and exercised by test vectors (keyboard-navigable: passed); the button's accessible name is verbose because an `<h3>`, badge, and tags sit inside it, the 24px touch-target overlay is smaller than platform touch minimums (44×44pt/48×48dp), the focus ring's opacity-based color hasn't been verified against a 3:1 non-text contrast requirement, and Tailwind's rem-based text sizing only partially matches OS-level Dynamic Type behavior (all: partial); `formatDate` hardcodes the `'en-US'` locale and the labels ("Untitled", "by", "Updated", "View paper") are hardcoded English strings rather than externalized resources (both: failed); date formatting, highlighting, and per-kind rendering live in separate `lib`/`registry` modules rather than inline in the component (separation-of-concerns: passed), while no test file exercises `MarkdownResultRow` itself (unit-test-coverage: failed).
+Statuses rest on the source: roving tabindex is fully implemented and exercised by test vectors (keyboard-navigable: passed); the button's accessible name is verbose because an `<h3>`, badge, and tags sit inside it, the 24px touch-target overlay is smaller than platform touch minimums (44×44pt/48×48dp), the focus ring's opacity-based color hasn't been verified against a 3:1 non-text contrast requirement, the selected border color is the only selection indicator (a WCAG 1.4.1 gap recorded under Accessibility, counted in the `contrast-ratio` partial), and Tailwind's rem-based text sizing only partially matches OS-level Dynamic Type behavior (all: partial); `formatDate` hardcodes the `'en-US'` locale and the labels ("Untitled", "by", "Updated", "View paper") are hardcoded English strings rather than externalized resources (both: failed); date formatting, highlighting, and per-kind rendering live in separate `lib`/`registry` modules rather than inline in the component (separation-of-concerns: passed), while no test file exercises `MarkdownResultRow` itself (unit-test-coverage: failed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Rewrote Accessibility Options to match the color-only selection gap, stated requirements and appearance in semantic tokens with the apt-* mapping in the React/Web note, added the missing MUST on the author fallback, corrected the long-category edge case to the source's no-wrap behavior, made the localization strings placeholder templates, and made the radius vector testable and added false/undefined tabindex vectors. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and split snippet highlighting into its own requirement; tightened tag/author/date/touch-target/corner-radius wording to observable, testable outcomes; replaced Compliance with a real check table; reformatted Design Decisions and added one for the aria-pressed choice; corrected accessibility-role, WCAG-reference, and platform-notes inaccuracies; resolved the title/snippet overflow and roving-tabindex edge-case contradictions; fixed Localization keys; documented component inputs; linked the Badge recipe. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

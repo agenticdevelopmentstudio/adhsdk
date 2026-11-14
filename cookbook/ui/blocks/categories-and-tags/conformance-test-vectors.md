@@ -9,8 +9,9 @@
 | cat-tag-006 | accept-tags-data | `tags.label="Tags"`, `tags.noun="tag"`, `tags.options=["x","y"]`, `tags.value=["x"]`, `tags.onChange=spy` | `TagSetField` receives `label`, `noun`, `options`, and `value` equal to the values in `tags`; the `onChange` reference `TagSetField` receives is the same function passed as `tags.onChange` |
 | cat-tag-007 | disable-both-rows | `disabled=true` | Both `CategoryField` and `TagSetField` receive `disabled={true}` |
 | cat-tag-008 | forward-classname | `className="custom-class"` | Root element's classList includes `custom-class` alongside the component's own classes |
-| cat-tag-009 | use-gap-between-rows | Render with both rows | Root element has 12px of vertical spacing between rows (`gap-3` class on React/Web) |
+| cat-tag-009 | use-gap-between-rows | Render with both rows | Root element has the vertical spacing between rows set by `#requirements/use-gap-between-rows` (`gap-3` class on React/Web) |
 | cat-tag-010 | require-category-label-noun | Construct props with `category.label` or `category.noun` omitted | TypeScript fails to compile: both are required string properties, not optional |
 | cat-tag-011 | require-tags-label-noun | Construct props with `tags.label` or `tags.noun` omitted | TypeScript fails to compile: both are required string properties, not optional |
 | cat-tag-012 | preserve-tab-order | Render with both rows and tab in from outside the component | Focus lands on `CategoryField`'s first interactive control before `TagSetField`'s |
-
+| cat-tag-013 | disable-both-rows | Render with `disabled` omitted | Both `CategoryField` and `TagSetField` receive `disabled={false}` |
+| cat-tag-014 | share-label-width, forward-classname | Render with `className="[--apt-field-label-w:9rem]"` | The root element's class list contains `[--apt-field-label-w:9rem]` and does not contain `[--apt-field-label-w:6.5rem]` |

@@ -2,7 +2,7 @@
 id: a6b177ee-dc1e-441d-9844-eee2ef48ed8d
 title: "TrackedApp"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,8 @@ tags:
   - work-tracking
   - allowlist
   - bundle-id
-depends-on: []
+depends-on:
+  - d525cc69-4d2c-4d17-a570-f71e8d5aa273
 related: []
 references: []
 approved-by: ""
@@ -32,7 +33,7 @@ approved-date: ""
 
 `TrackedApp` is one app whose frontmost time is recorded: a bundle identifier, a display name and a `PathResolverKind` saying how the app's working path is found. `AppAllowlist` is the immutable set of tracked apps built from `WorkTrackingPreferences`: the built-in defaults, minus the bundle ids the user removed, plus the bundle ids the user added. Its own doc comment states the rule: anything not on the list is never stored. Callers ask it whether a bundle id is allowed and for the `TrackedApp` behind an id.
 
-This is shared logic with no visual surface. It does no I/O and holds no mutable state; a new allowlist is built whenever the preferences change.
+This is shared logic with no visual surface. It does no I/O and holds no mutable state; a new allowlist is built whenever the preferences change. The activity recorder holds an `AppAllowlist` and looks up the focused app's bundle id with `app(for:)`; an app that is not found is not recorded.
 
 ## Behavioral Requirements
 
@@ -40,10 +41,10 @@ This is shared logic with no visual surface. It does no I/O and holds no mutable
 - **path-resolver-codable**: `PathResolverKind` MUST be `Codable` and `Sendable`.
 - **tracked-app-fields**: `TrackedApp` MUST carry `bundleId`, `name` and `resolver` as immutable fields set by its initializer.
 - **tracked-app-identity**: `TrackedApp.id` MUST equal `bundleId`.
-- **tracked-app-equality**: `TrackedApp` MUST be `Equatable`, `Codable` and `Sendable`.
-- **defaults-list**: `AppAllowlist.defaults` MUST list 32 built-in apps: Xcode, Simulator, Instruments, Android Studio, the JetBrains IDEs, Visual Studio Code and VS Code Insiders, Cursor, Windsurf, Zed, Nova, BBEdit, Sublime Text, four terminals and four git clients.
+- **tracked-app-conformances**: `TrackedApp` MUST be `Equatable`, `Codable`, `Sendable` and `Identifiable`.
+- **defaults-list**: `AppAllowlist.defaults` MUST list exactly the 32 built-in apps in the Default apps table below, each with the name and resolver given there.
 - **defaults-unique-ids**: Every bundle id in `AppAllowlist.defaults` MUST be unique.
-- **defaults-resolver-assignment**: Xcode, Zed, Nova, BBEdit and Sublime Text MUST use `document`; Terminal, iTerm2, Ghostty and Warp MUST use `terminal`; Simulator, Instruments, Tower, Sublime Merge, Fork and GitHub Desktop MUST use `none`; every other default MUST use `editor`.
+- **defaults-resolver-assignment**: Each default MUST use the resolver in the Default apps table below.
 - **construct-from-preferences**: `AppAllowlist.init(preferences:defaults:)` MUST take a `WorkTrackingPreferences` and an optional `defaults` list that defaults to `AppAllowlist.defaults`.
 - **removed-excluded**: The initializer MUST drop every default whose `bundleId` is in `preferences.removedBundleIds`.
 - **added-appended**: The initializer MUST append a `TrackedApp` for each id in `preferences.addedBundleIds` that is not a `defaults` bundle id and is not in `removedBundleIds`.
@@ -51,15 +52,51 @@ This is shared logic with no visual surface. It does no I/O and holds no mutable
 - **removed-beats-added**: An id present in both `addedBundleIds` and `removedBundleIds` MUST NOT appear in the allowlist.
 - **added-default-ignored**: An added id equal to a `defaults` bundle id MUST NOT create a second entry; the default entry, with its own name and resolver, stays.
 - **added-duplicates-collapsed**: The same id listed more than once in `addedBundleIds` MUST yield one entry.
-- **sorted-apps**: `apps` MUST be sorted ascending by the pair `(name, bundleId)`, using Swift's default `String` ordering for each.
+- **sorted-apps**: `apps` MUST be sorted ascending by the pair `(name, bundleId)`, comparing each string in Unicode scalar order after normalizing it to NFC (Swift's default `String` ordering), not by locale and not by UTF-16 code unit.
 - **apps-immutable**: `apps` MUST be a `let`; an `AppAllowlist` MUST NOT change after it is built.
 - **is-allowed**: `isAllowed(_:)` MUST return `true` exactly when the bundle id is in `apps`, compared as an exact string match.
 - **app-lookup**: `app(for:)` MUST return the `TrackedApp` for the bundle id, or `nil` when the id is not in `apps`.
 - **lookup-first-wins**: When the `defaults` argument repeats a bundle id, the lookup MUST return the first of those entries in the sorted `apps` order (the table is built after the sort), while `apps` still contains both.
 - **allowlist-equatable**: `AppAllowlist` MUST be `Equatable` and `Sendable`.
 - **pure-no-side-effects**: Building and querying an `AppAllowlist` MUST NOT read or write files, use the network, start processes or post notifications.
-- **consumer-gating**: The activity recorder holds an `AppAllowlist` and looks up the focused app's bundle id with `app(for:)`; an app that is not found is not recorded. A replacement allowlist is supplied through the recorder's `update(allowlist:)`.
+- **empty-id-not-validated**: The initializer MUST NOT validate or reject bundle ids; an empty string in `addedBundleIds` MUST become an entry whose bundle id and name are both empty.
 
+### Default apps
+
+| bundleId | name | resolver |
+|----------|------|----------|
+| `com.apple.dt.Xcode` | Xcode | `document` |
+| `com.apple.iphonesimulator` | Simulator | `none` |
+| `com.apple.dt.Instruments` | Instruments | `none` |
+| `com.google.android.studio` | Android Studio | `editor` |
+| `com.jetbrains.intellij` | IntelliJ IDEA | `editor` |
+| `com.jetbrains.intellij.ce` | IntelliJ IDEA CE | `editor` |
+| `com.jetbrains.pycharm` | PyCharm | `editor` |
+| `com.jetbrains.pycharm.ce` | PyCharm CE | `editor` |
+| `com.jetbrains.WebStorm` | WebStorm | `editor` |
+| `com.jetbrains.goland` | GoLand | `editor` |
+| `com.jetbrains.CLion` | CLion | `editor` |
+| `com.jetbrains.rubymine` | RubyMine | `editor` |
+| `com.jetbrains.rider` | Rider | `editor` |
+| `com.jetbrains.PhpStorm` | PhpStorm | `editor` |
+| `com.jetbrains.rustrover` | RustRover | `editor` |
+| `com.jetbrains.fleet` | Fleet | `editor` |
+| `com.microsoft.VSCode` | Visual Studio Code | `editor` |
+| `com.microsoft.VSCodeInsiders` | VS Code Insiders | `editor` |
+| `com.todesktop.230313mzl4w4u92` | Cursor | `editor` |
+| `com.exafunction.windsurf` | Windsurf | `editor` |
+| `dev.zed.Zed` | Zed | `document` |
+| `com.panic.Nova` | Nova | `document` |
+| `com.barebones.bbedit` | BBEdit | `document` |
+| `com.sublimetext.4` | Sublime Text | `document` |
+| `com.apple.Terminal` | Terminal | `terminal` |
+| `com.googlecode.iterm2` | iTerm2 | `terminal` |
+| `com.mitchellh.ghostty` | Ghostty | `terminal` |
+| `dev.warp.Warp-Stable` | Warp | `terminal` |
+| `com.fournova.Tower3` | Tower | `none` |
+| `com.sublimemerge` | Sublime Merge | `none` |
+| `com.DanPristupov.Fork` | Fork | `none` |
+| `com.github.GitHubClient` | GitHub Desktop | `none` |
 ## Appearance
 
 Not applicable — this is a data model and lookup table, not a visual component.
@@ -76,11 +113,11 @@ Not applicable — this is a data model and lookup table, not a visual component
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| tracked-app-001 | is-allowed, defaults-list | `AppAllowlist(preferences: .default)`, ids `com.apple.dt.Xcode` and `com.apple.Safari` (AppAllowlistTests.testDefaultsAreAllowedAndOthersAreNot) | `isAllowed("com.apple.dt.Xcode")` is `true`; `isAllowed("com.apple.Safari")` is `false` |
-| tracked-app-002 | removed-excluded | Preferences removing `com.apple.Terminal` (AppAllowlistTests.testRemovedDefaultIsNotAllowedAndAddedAppIs) | `isAllowed("com.apple.Terminal")` is `false` |
-| tracked-app-003 | added-appended, added-app-shape | Preferences adding `org.example.Editor` (same test) | `isAllowed("org.example.Editor")` is `true`; `app(for:)?.resolver` is `.editor` (both asserted by the test); `name` is `org.example.Editor` (from the source, not asserted by the test) |
-| tracked-app-004 | defaults-resolver-assignment | `app(for: "com.sublimemerge")` on default preferences (AppAllowlistTests.testSublimeMergeIsAGitClientWithNoPath) | `resolver` is `PathResolverKind.none` |
-| tracked-app-005 | defaults-unique-ids | `AppAllowlist.defaults` (AppAllowlistTests.testDefaultBundleIdsAreUnique) | the set of bundle ids has the same count as the list |
+| tracked-app-001 | is-allowed, defaults-list | `AppAllowlist(preferences: .default)`, ids `com.apple.dt.Xcode` and `com.apple.Safari` | `isAllowed("com.apple.dt.Xcode")` is `true`; `isAllowed("com.apple.Safari")` is `false` |
+| tracked-app-002 | removed-excluded | Preferences removing `com.apple.Terminal` | `isAllowed("com.apple.Terminal")` is `false` |
+| tracked-app-003 | added-appended, added-app-shape | Preferences adding `org.example.Editor` | `isAllowed("org.example.Editor")` is `true`; `app(for:)?.resolver` is `.editor` (both asserted by the test); `name` is `org.example.Editor` (from the source, not asserted by the test) |
+| tracked-app-004 | defaults-resolver-assignment | `app(for: "com.sublimemerge")` on default preferences | `resolver` is `PathResolverKind.none` |
+| tracked-app-005 | defaults-unique-ids | `AppAllowlist.defaults` | the set of bundle ids has the same count as the list |
 | tracked-app-006 | removed-beats-added | Preferences adding and removing `org.example.Editor` | `isAllowed("org.example.Editor")` is `false` |
 | tracked-app-007 | added-default-ignored | Preferences adding `com.apple.dt.Xcode` | `apps` contains one Xcode entry; `app(for:)?.resolver` is `.document` |
 | tracked-app-008 | sorted-apps | Default preferences | `apps` is ordered by `name` then `bundleId`; `Android Studio` precedes `BBEdit` |
@@ -88,9 +125,9 @@ Not applicable — this is a data model and lookup table, not a visual component
 | tracked-app-010 | added-duplicates-collapsed | `addedBundleIds` of `["a.b", "a.b"]` | `apps` contains exactly one entry with bundle id `a.b` |
 | tracked-app-011 | lookup-first-wins | `defaults` of two apps sharing a bundle id, names "B" then "A" | `apps` has both, sorted "A" then "B"; `app(for:)` returns the "A" entry, the first in sorted order |
 | tracked-app-012 | tracked-app-identity | `TrackedApp(bundleId: "x.y", name: "N", resolver: .none)` | `id` is `"x.y"` |
-| tracked-app-013 | construct-from-preferences | Empty `defaults` and `.default` preferences | `apps` is empty; `isAllowed` is `false` for every id |
+| tracked-app-013 | construct-from-preferences | Empty `defaults` and `.default` preferences | `apps` is empty; `isAllowed("com.apple.dt.Xcode")` and `isAllowed("")` are both `false` |
 
-Vectors 006 to 013 are derived from the source and have no test beside them; the four tests above cover vectors 001 to 005.
+Vector 001 is covered by `AppAllowlistTests.testDefaultsAreAllowedAndOthersAreNot`, vectors 002 and 003 by `AppAllowlistTests.testRemovedDefaultIsNotAllowedAndAddedAppIs`, vector 004 by `AppAllowlistTests.testSublimeMergeIsAGitClientWithNoPath` and vector 005 by `AppAllowlistTests.testDefaultBundleIdsAreUnique`. Vectors 006 to 013 are derived from the source and have no test beside them; those four tests cover vectors 001 to 005.
 
 ## Edge Cases
 
@@ -147,17 +184,17 @@ Not applicable: the code calls no logging API.
 
 ## Platform Notes
 
-- **SwiftUI**: `TrackedApp` is `Identifiable`, so a `List` or `ForEach` over `allowlist.apps` needs no `id:` argument. Source file: `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/TrackedApp.swift` in the Core module; the settings panel is in the macOS target.
+- **SwiftUI**: `TrackedApp` is `Identifiable`, so a `List` or `ForEach` over `allowlist.apps` needs no `id:` argument.
 - **Compose**: A `data class TrackedApp(val bundleId: String, val name: String, val resolver: PathResolverKind)` with an enum class for the resolver. Android has no bundle id; use the application package name. Build the list with `filter`, `plus` and `sortedWith(compareBy({ it.name }, { it.bundleId }))`, and a `Map` built from the sorted list with `putIfAbsent` to keep the first duplicate.
-- **React/Web**: A `readonly` type and a frozen array, with a `Map` for lookup. Swift's default string ordering is not locale-aware, so compare by code unit rather than `localeCompare` to match it.
+- **React/Web**: A `readonly` type and a frozen array, with a `Map` for lookup. Swift's default string ordering is not locale-aware, so normalize both names with `normalize("NFC")` and compare by code point, not with `localeCompare` and not by UTF-16 code unit.
 - **AppKit / UIKit**: Match `NSRunningApplication.bundleIdentifier` against the allowlist on focus change. The allowlist itself imports only Foundation and has no AppKit dependency.
-- **WinUI 3**: Model `TrackedApp` as a C# `record` (value equality) with `enum PathResolverKind` serialised as a string through `System.Text.Json` with `JsonStringEnumConverter`. Windows has no bundle id; use the process executable name or the packaged app's `AppUserModelId`. Build the list with LINQ (`Where`, `Concat`, `OrderBy(a => a.Name, StringComparer.Ordinal).ThenBy(a => a.BundleId, StringComparer.Ordinal)`), expose it as `IReadOnlyList<TrackedApp>` and keep a `Dictionary<string, TrackedApp>` for lookup, built from the sorted list with `TryAdd` so the first duplicate wins. The class is immutable, so it needs no `INotifyPropertyChanged`; a settings page binds to an `ObservableCollection<TrackedApp>` rebuilt from a new allowlist when preferences change. Use `StringComparer.Ordinal` to match Swift's exact, case-sensitive matching.
+- **WinUI 3**: Model `TrackedApp` as a C# `record` (value equality) with `enum PathResolverKind` serialised as a string through `System.Text.Json` with `JsonStringEnumConverter`. Windows has no bundle id; use the process executable name or the packaged app's `AppUserModelId`. Build the list with LINQ (`Where`, `Concat`, `OrderBy` and `ThenBy` over NFC-normalized (`NormalizationForm.FormC`) strings compared by Unicode scalar (`Rune`), because `StringComparer.Ordinal` compares UTF-16 code units and differs for non-BMP text), expose it as `IReadOnlyList<TrackedApp>` and keep a `Dictionary<string, TrackedApp>` for lookup, built from the sorted list with `TryAdd` so the first duplicate wins. The class is immutable, so it needs no `INotifyPropertyChanged`; a settings page binds to an `ObservableCollection<TrackedApp>` rebuilt from a new allowlist when preferences change. Use `StringComparer.Ordinal` for the id lookup to match Swift's exact, case-sensitive matching.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/TrackedApp.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/TrackedApp.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -194,3 +231,4 @@ The type separates the data model and lookup from recording, persistence and dis
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Added a table of the 32 default apps with resolvers, fixed the sort order to NFC Unicode scalar order across platform notes, recorded empty-id handling as a requirement, renamed the conformance requirement to include Identifiable, moved the recorder behavior to prose, made vector inputs concrete and platform-neutral, added depends-on for the preferences, and removed the source path. |

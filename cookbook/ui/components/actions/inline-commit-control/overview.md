@@ -8,9 +8,11 @@ discarded. It also owns the inline delete grammar: the trash arms a *pending*
 delete — the consumer dims and strikes the content — and the same ✓ then
 commits the removal.
 
-Five cooperating exports form the pattern, all from
-`@adh-sdk/ui/components/inline-commit-control` (plus the sibling
-`unsaved-changes-guard`):
+Five cooperating exports form the pattern. `InlineCommitControl`,
+`InlineEditableText` and `inlineCommitDeletingClass` come from
+`@adh-sdk/ui/components/inline-commit-control`, `UnsavedChangesGuard` from
+`@adh-sdk/ui/components/unsaved-changes-guard`, and `useInlineDrafts` from
+`@adh-sdk/ui/hooks/useInlineDrafts`:
 
 - `InlineCommitControl` — the stateless control itself.
 - `InlineEditableText` — click-to-edit text (the shared `Input` with its field
@@ -24,7 +26,7 @@ Five cooperating exports form the pattern, all from
   AlertModal, hard navigation via `beforeunload`, Back/Forward via a
   history sentinel, and opted-in programmatic navigation via the
   navigation-guard registry).
-- `useInlineDrafts` (`@adh-sdk/ui/hooks/useInlineDrafts`) — the
+- `useInlineDrafts` — the
   optional per-row state machine consumers were copy-pasting: PATCH-based
   drafts (only touched fields, so a commit never clobbers a field a
   background refetch changed), per-row in-flight gating, per-row errors, and

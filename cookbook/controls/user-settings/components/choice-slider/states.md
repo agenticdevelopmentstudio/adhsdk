@@ -1,7 +1,6 @@
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Range input is interactive; caption displays current choice label. |
-| Disabled | Range input has `disabled` attribute; pointer interaction disabled (browser default styling applied). |
-| Focused | Range input receives keyboard focus; browser default focus indicator visible. |
-
+| Default | The slider is interactive; the caption displays the current choice label. |
+| Disabled | The slider is disabled and ignores pointer and keyboard input, drawn in the platform's disabled style. |
+| Focused | The slider has keyboard focus and shows the platform's default focus indicator. |

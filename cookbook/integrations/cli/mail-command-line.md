@@ -2,11 +2,11 @@
 id: be4db0fe-628d-41f8-9fdf-25a6d46844cf
 title: "MailCommandLine"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -61,45 +61,48 @@ The commands are `accounts`, `labels`, `list`, `get`, `thread`, `label add`, `la
 - **json-flag**: The `--json` option MUST be accepted anywhere after the command name (for `label`, after the `add` or `remove` verb) in every command and MUST switch the output to JSON; as the first argument, or as the verb of `label`, it is not a command or verb and is a usage error.
 - **unknown-option**: Any argument beginning with `--` that is neither `--json` nor an option the command declares MUST be a usage error.
 - **value-required**: A value-taking option appearing as the last argument MUST be a usage error.
-- **value-consumption**: A value-taking option MUST consume the next argument as its value whatever that argument looks like, so `--limit -3` reaches the limit check as the value `-3`.
+- **value-consumption**: A value-taking option MUST consume the next argument as its value whatever that argument looks like, except `-h` and `--help`, which #behavioral-requirements/help-before-parse has already handled, so `--limit -3` reaches the limit check as the value `-3`.
 - **single-dash-positional**: An argument that does not begin with `--` and is not a consumed value MUST be a positional, including a single-dash token other than `-h`.
-- **positional-count-fixed**: `accounts` MUST take exactly 0 positionals, `labels` exactly 1 (account), `get` exactly 2 (account, id), `thread` exactly 2 (account, id) and `list` exactly 1 (account); any other count MUST be a usage error. `label` and `move` take their counts from **label-arity** and **move-arity**.
+- **positional-count-fixed**: `accounts` MUST take exactly 0 positionals, `labels` exactly 1 (account), `get` exactly 2 (account, id), `thread` exactly 2 (account, id) and `list` exactly 1 (account); any other count MUST be a usage error. `label` and `move` take their counts from #behavioral-requirements/label-arity and #behavioral-requirements/move-arity.
 - **repeated-option-last-wins**: When `--since`, `--until`, `--limit`, `--cursor` or `--query` is given more than once, the last occurrence MUST be used.
 
 ### accounts and labels
 
 - **accounts-call**: `accounts` MUST call `client.accounts()`.
-- **accounts-text**: In text mode each account MUST print as one line `<email>  <status raw value>  <lastSyncAt or "never">`, separated by two spaces.
+- **accounts-text**: In text mode each account MUST print as one line `<email>  <status raw value>  <lastSyncAt or "never">`, separated by two spaces. The status raw value is the `ConnectionStatus` string (`active`, `error`, `revoked` or `pending`) and `lastSyncAt` is printed as the service sent it (a string, not reformatted).
+- **accounts-json**: In JSON mode the array of `MailAccount` values MUST be encoded.
 - **labels-call**: `labels <account>` MUST call `client.labels(account:)`.
 - **labels-text**: In text mode each label MUST print as one line `<name>  <id>  <type>`, separated by two spaces.
+- **labels-json**: In JSON mode the array of `MailLabel` values MUST be encoded.
 
 ### list
 
-- **message-line**: Every command that prints a message in text mode (`list`, `thread` without `--bodies`, `label add`, `label remove`, `move`) MUST use one message line: `<date>  <id>  <from>  <subject>  [<label names joined by ", ">]`, with fields separated by two spaces, `date` printed exactly as the message's `date` field was received, and the label names always inside square brackets (`[]` when there are none).
+- **message-line**: Every command that prints a message in text mode (`list`, `thread` without `--bodies`, `label add`, `label remove`, `move`) MUST use one message line: `<date>  <id>  <from>  <subject>  [<label names joined by ", ">]`, with fields separated by two spaces, `date` printed exactly as the message's `date` field was received, `from` printed as the message's `from` string as received (whatever the service sent, not parsed into address and name), and the label names always inside square brackets (`[]` when there are none).
 
-- **list-call**: `list <account>` MUST build a `MailMessageFilter` for the account and call `client.messages` with it.
+- **list-call**: `list <account>` MUST build a `MailMessageFilter` (the filter type in [adhsdk.ingredient.integrations.service.mail-rpc](cookbook:fc9671be-170c-436e-9628-892624952191)) for the account and call `client.messages` with it.
 - **list-label-options**: Each `--label` MUST be appended to the filter's `labels` and each `--any-label` to its `anyLabels`, in the order given.
-- **list-date-bounds**: `--since` MUST be normalized as the start edge and `--until` as the end edge through `MailDateBound.normalize`: `YYYY-MM-DD` becomes `T00:00:00.000Z` for `--since` and `T23:59:59.999Z` for `--until`, and an ISO-8601 timestamp is converted to UTC with millisecond precision.
+- **list-date-bounds**: `--since` MUST be normalized as the start edge and `--until` as the end edge through `MailDateBound.normalize` (see [adhsdk.ingredient.integrations.service.mail-command-support](cookbook:3d12c073-edc3-44fb-a988-5edec20575e0)): `YYYY-MM-DD` becomes `T00:00:00.000Z` for `--since` and `T23:59:59.999Z` for `--until`, and an ISO-8601 timestamp is converted to UTC with millisecond precision.
 - **list-date-invalid**: A `--since` or `--until` value that `MailDateBound.normalize` rejects (not a date or timestamp, or a nonexistent date such as 2026-02-30) MUST be a usage error.
 - **list-limit-valid**: `--limit` MUST be a base-10 integer greater than 0, otherwise a usage error.
-- **list-limit-clamp**: A valid `--limit` MUST be assigned to the filter, whose `limit` property clamps it into 1 through 500; with no `--limit` the filter keeps its default of 50.
+- **list-limit-clamp**: A valid `--limit` MUST be assigned to the filter, whose `limit` property clamps it into 1 through 500 (see [adhsdk.ingredient.integrations.service.mail-rpc](cookbook:fc9671be-170c-436e-9628-892624952191)); with no `--limit` the filter keeps its default of 50.
 - **list-cursor**: `--cursor` MUST be passed through to the filter's `cursor` unmodified.
-- **list-bodies**: `--bodies` MUST set the filter's `includeBodies` to true; without it `includeBodies` MUST stay false.
+- **list-bodies**: `--bodies` MUST set the filter's `includeBodies` to true; without it `includeBodies` MUST stay false. Text mode is unchanged by it: `list --bodies` still prints only message lines and the cursor line, and the bodies appear only in the JSON page.
 - **list-query-valid**: `--query` MUST be passed to the filter's `query` unmodified.
 - **list-query-blank**: A `--query` value that is empty or only whitespace and newlines MUST be a usage error, because an empty query would quietly list synced mail instead of searching.
 - **list-any-label-with-query**: The command line MUST NOT itself reject `--any-label` combined with `--query`; it forwards both and the mail service refuses the combination.
 - **list-text**: In text mode each message MUST print as a message line, and when the page has a `nextCursor` a final line `next cursor: <cursor>` MUST follow the message lines.
 - **list-json**: In JSON mode the whole `MailMessagePage` MUST be encoded, including `nextCursor`.
-- **list-ignored-filter**: When the client throws because the service ignored `--any-label` or `--query` (`MailClient` rejects a page whose `appliedAnyLabels` or `appliedQuery` is false), `run` MUST treat it as an ordinary failure: status 1, the message on `stderr`, nothing on `stdout`.
+- **list-ignored-filter**: When the client throws because the service ignored `--any-label` or `--query` (the `MailClient` type in [adhsdk.ingredient.integrations.service.mail-rpc](cookbook:fc9671be-170c-436e-9628-892624952191) rejects a page whose `appliedAnyLabels` or `appliedQuery` is false), `run` MUST treat it as an ordinary failure: status 1, the message on `stderr`, nothing on `stdout`.
 
 ### get and thread
 
 - **get-call**: `get <account> <id>` MUST call `client.message(account:id:)`.
 - **get-text**: In text mode `get` MUST print the header lines `From:`, `To:` (recipients joined by ", "), `Date:` (the message's `date` field, as received), `Subject:` and `Labels:` (label names joined by ", "), a blank line, then the body.
-- **body-fallback**: The body MUST be `bodyText` when present; otherwise the plain text converted from `bodyHtml` by `HTMLText.plainText(fromHTML:)` when that is non-empty; otherwise the `snippet`.
+- **body-fallback**: The body MUST be `bodyText` when present; otherwise the plain text converted from `bodyHtml` by `HTMLText.plainText(fromHTML:)` (see [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.text.html-text](cookbook:9a4dcb9e-5e7e-479b-922c-37d066a8a18a)) when that is non-empty; otherwise the `snippet`.
 - **html-without-text**: HTML that converts to the empty string (an image-only message) MUST fall through to the snippet.
+- **get-json**: In JSON mode the whole `MailMessage` MUST be encoded.
 - **thread-call**: `thread <account> <id> [--bodies]` MUST call `client.thread(account:id:includeBodies:)`, where `id` is a thread id or the id of any message in the thread.
-- **thread-text-summary**: Without `--bodies`, text mode MUST print a header `thread <thread id>  <n> message` (`messages` when n is not 1) followed by one message line (see **message-line**) per message in the order the client returned them.
+- **thread-text-summary**: Without `--bodies`, text mode MUST print a header `thread <thread id>  <n> message` (`messages` when n is not 1) followed by one message line (see #behavioral-requirements/message-line) per message in the order the client returned them.
 - **thread-sent-marker**: A message whose `labels` contain `SENT` MUST be marked `(you)`: appended after two spaces on its message line without `--bodies`, and as a `(you)` line before its detail block with `--bodies`.
 - **thread-text-bodies**: With `--bodies`, text mode MUST print the header and then each message's `get` detail block, with the blocks separated by a blank line, a line of four hyphens and a blank line.
 - **thread-json**: In JSON mode the whole `MailThread` MUST be encoded.
@@ -111,17 +114,18 @@ The commands are `accounts`, `labels`, `list`, `get`, `thread`, `label add`, `la
 - **label-arity**: `label add` and `label remove` MUST require at least three positionals after the verb (account, label, and one or more ids), otherwise a usage error.
 - **label-call**: `label add` MUST call `client.modifyLabels` with the label as the only `add` entry and no `remove`; `label remove` MUST do the reverse; both MUST pass all ids in the order given.
 - **label-options**: `label add` and `label remove` MUST accept only `--json` as an option; any other `--` option MUST be a usage error.
-- **label-text**: In text mode `label add` and `label remove` MUST print one message line (see **message-line**) per returned message.
+- **label-text**: In text mode `label add` and `label remove` MUST print one message line (see #behavioral-requirements/message-line) per returned message.
+- **label-json**: In JSON mode the array of `MailMessage` values returned by `modifyLabels` MUST be encoded.
 - **move-arity**: `move` MUST require at least two positionals (account and one or more ids) and exactly one `--to`, otherwise a usage error; zero or two `--to` are both usage errors.
 - **move-from**: Each `--from` MUST be collected in order; with no `--from` the `from` argument MUST be nil (not an empty list) so the service applies its default of removing INBOX.
 - **move-call**: `move` MUST call `client.moveMessages` with the account, the ids in the order given, the single `--to` value as `destination` and the collected `from`.
 - **move-position-free**: `--to`, `--from` and ids MAY appear in any order after the account.
-- **move-text**: In text mode `move` MUST print one line per `MailMoveResult`: the message line (see **message-line**), two spaces, then each added label as `+<name>` followed by each removed label as `-<name>`, separated by single spaces, or `(no change)` when both are empty.
+- **move-text**: In text mode `move` MUST print one line per `MailMoveResult`: the message line (see #behavioral-requirements/message-line), two spaces, then each added label as `+<name>` followed by each removed label as `-<name>`, separated by single spaces, or `(no change)` when both are empty.
 - **move-json**: In JSON mode the array of `MailMoveResult` values MUST be encoded.
 
 ### Output encoding and concurrency
 
-- **json-encoding**: JSON output MUST be produced by `MailJSON.encode`, pretty printed with sorted keys, as UTF-8 text; a failure to produce UTF-8 text is an encoding error reported as a failure (status 1).
+- **json-encoding**: JSON output MUST be produced by `MailJSON.encode` (see [adhsdk.ingredient.integrations.service.mail-command-support](cookbook:3d12c073-edc3-44fb-a988-5edec20575e0)), pretty printed with sorted keys, as UTF-8 text; a failure to produce UTF-8 text is an encoding error reported as a failure (status 1).
 - **one-client-call**: Each successful invocation MUST make exactly one call on the client.
 - **no-shared-state**: `run` MUST hold no state between calls: parsing builds local values, so concurrent invocations with different clients do not interact.
 
@@ -145,7 +149,7 @@ Test names are in `MailCommandLineTests` unless stated. `ScriptedMail` is the te
 |----|-------------|-------|----------|
 | mailcli-001 | help-request, usage-text | args `["--help"]`, `["-h"]`, `["help"]`, `["list", "--help"]`, `["label", "add", "-h"]` (helpPrintsUsageToStdoutAndSucceeds) | Status 0; `stdout` is exactly the usage text; `stderr` empty |
 | mailcli-002 | usage-text | args `["--help"]` with `program: "{{app_name_lower}} mail"` (usageNamesTheCommandAsTheHostSpellsIt) | Output starts `usage: {{app_name_lower}} mail <command>`, contains `  {{app_name_lower}} mail list <account>` and has no line starting `  mail ` |
-| mailcli-003 | command-selection, usage-error-status | args `["frobnicate"]` and `[]` (unknownSubcommandReturns64) | Status 64; for `frobnicate`, `stderr` is exactly the usage text |
+| mailcli-003 | command-selection, usage-error-status | args `["frobnicate"]` and `[]` (unknownSubcommandReturns64) | Status 64; for both inputs, `stderr` is exactly the usage text and `stdout` is empty |
 | mailcli-004 | unknown-option, positional-count-fixed, usage-error-status | `["list", "a", "--bogus"]` then `["accounts", "--limit", "5"]` (unknownOptionIsUsageError) | Status 64 both times; `stderr` is the usage text; client receives no request |
 | mailcli-005 | value-required | `["list", "a", O]` for each of `--since`, `--until`, `--label`, `--any-label`, `--limit`, `--cursor`, `--query` (optionMissingValueIsUsageError) | Status 64 for every option |
 | mailcli-006 | list-call, list-date-bounds, list-label-options, list-limit-valid, list-cursor, list-bodies | `["list", "me@example.com", "--since", "2026-01-01", "--until", "2026-01-31", "--label", "Work", "--label", "INBOX", "--limit", "10", "--cursor", "20", "--bodies"]` (listParsesDateOnlyBounds) | Status 0; one request: filter with since `2026-01-01T00:00:00.000Z`, until `2026-01-31T23:59:59.999Z`, labels `["Work", "INBOX"]`, limit 10, cursor `20`, includeBodies true |
@@ -153,7 +157,7 @@ Test names are in `MailCommandLineTests` unless stated. `ScriptedMail` is the te
 | mailcli-008 | list-date-invalid | `--since yesterday`; `--until 2026-13-45`; `--since 2026-02-30` (badDateIsUsageError, impossibleDateIsUsageError) | Status 64 each |
 | mailcli-009 | list-limit-valid | `--limit` of `0`, `-3`, `abc` (badLimitIsUsageError) | Status 64 each |
 | mailcli-010 | list-label-options | `["list", "a", "--any-label", "INBOX", "--label", "STARRED", "--any-label", "Projects/Inbox"]` (listParsesAnyLabelAsItsOwnRepeatableOption) | Filter labels `["STARRED"]`, anyLabels `["INBOX", "Projects/Inbox"]` |
-| mailcli-011 | list-ignored-filter, failure-handling | `["list", "a", "--any-label", "INBOX"]` against a service reply with `appliedAnyLabels` false (anyLabelFromAServiceThatIgnoresItFailsInsteadOfListingEverything) | Status 1; `stdout` empty; `stderr` starts with `Error: ` (the exact wording belongs to `MailClient`'s own spec) |
+| mailcli-011 | list-ignored-filter, failure-handling | `["list", "a", "--any-label", "INBOX"]` against a service reply with `appliedAnyLabels` false (anyLabelFromAServiceThatIgnoresItFailsInsteadOfListingEverything) | Status 1; `stdout` empty; `stderr` starts with `Error: ` (the exact wording belongs to the `MailClient` spec, [adhsdk.ingredient.integrations.service.mail-rpc](cookbook:fc9671be-170c-436e-9628-892624952191)) |
 | mailcli-012 | list-query-valid | `["list", "a", "--query", "from:example", "--label", "INBOX"]` (listPassesQueryToTheService) | Status 0; filter labels `["INBOX"]`, query `from:example` |
 | mailcli-013 | list-query-blank | `--query ""` and `--query "   "` (blankQueryIsUsageError) | Status 64 each; no client request |
 | mailcli-014 | list-ignored-filter | `["list", "a", "--query", "from:x"]` against a service reply with `appliedQuery` false (queryFromAServiceThatIgnoresItFails) | Status 1; `stdout` empty |
@@ -181,14 +185,20 @@ Test names are in `MailCommandLineTests` unless stated. `ScriptedMail` is the te
 | mailcli-036 | failure-handling | `["accounts"]` against a client failure "boom" (remoteFailureReturns1) | Status 1; `stderr` is `["Error: boom"]` |
 | mailcli-037 | usage-documents-exit-statuses, usage-documents-label-combination, usage-lists-commands | `MailCommandLine.usage()` (usageDocumentsExitStatuses, usageDocumentsHowLabelFiltersCombine, usageDocumentsThreadAndQuery) | Contains `3 a message id matches nothing`, `[--label L]... [--any-label L]...`, `every --label (AND)`, `[--query Q]` and `thread <account> <id> [--bodies]` |
 | mailcli-038 | list-limit-clamp | `["list","a","--limit","9999"]` (derived from `MailMessageFilter.clamp`, not a named test) | Filter limit is 500 |
-| mailcli-039 | value-consumption, repeated-option-last-wins | `["list","a","--limit","5","--limit","7"]` and `["list","a","--limit","-3"]` (derived from `split`, not a named test; the second is covered by badLimitIsUsageError) | First: limit 7. Second: status 64 |
-
+| mailcli-039 | value-consumption, repeated-option-last-wins | `["list","a","--limit","5","--limit","7"]` and `["list","a","--limit","-3"]` (derived from the argument parser, not a named test; the second is covered by badLimitIsUsageError) | First: limit 7. Second: status 64 |
+| mailcli-040 | json-flag, command-selection | `["--json"]` (derived from the source, not a named test; no test asserts this yet) | Status 64; `stderr` is the usage text |
+| mailcli-041 | json-flag, label-verb | `["label", "--json", "a", "Work", "m1"]` (derived from the source; no test asserts this yet) | Status 64; `--json` is not a verb |
+| mailcli-042 | label-verb | `["label", "frob", "a", "Work", "m1"]` (derived from the source; no test asserts this yet) | Status 64; no client request |
+| mailcli-043 | label-options | `["label", "add", "a", "Work", "m1", "--bogus"]` (derived from the source; no test asserts this yet) | Status 64; no client request |
+| mailcli-044 | label-text, message-line | `["label", "add", "a", "Work", "m1"]` with one returned message (derived from the source; no test asserts this yet) | `stdout` is one message line, `<date>  m1  <from>  <subject>  [<label names>]` |
+| mailcli-045 | labels-json, get-json, label-json | `["labels", "a", "--json"]`, `["get", "a", "m1", "--json"]`, `["label", "add", "a", "Work", "m1", "--json"]` (derived from the source; no test asserts this yet) | `stdout` is the `MailJSON` encoding of the labels array, of the message, and of the returned messages array; `accounts --json` is mailcli-017 |
+| mailcli-046 | list-bodies, list-text | `["list", "a", "--bodies"]` with a message that has `bodyText` (derived from the source; no test asserts this yet) | The request has includeBodies true; `stdout` has the message line and no body text |
 ## Edge Cases
 
 - **Null and empty input**: An empty argument list MUST return 64 with the usage text on `stderr`. An empty-string positional (an account or id of `""`) is accepted by the parser and sent to the client; the client or service decides what it matches. The `list` empty page prints nothing and returns 0; an empty page with a cursor prints only `next cursor: <cursor>`. A blank `--query` MUST be a usage error.
 - **Boundary values**: `--limit 0` and negative limits MUST be usage errors; `--limit` above 500 MUST be clamped to 500 by `MailMessageFilter`, not rejected. `--since 2026-02-30` MUST be a usage error; a date-only `--until` MUST end at `23:59:59.999Z`. A thread of exactly one message MUST say `1 message`.
 - **Malformed input**: A `--limit` that is not an integer, a date in a shape other than `YYYY-MM-DD` or ISO-8601, an unknown `--` option and a missing option value MUST each return 64. A `--` token is never taken as a positional, but a value after a valued option is consumed even if it starts with `-`.
-- **Help anywhere**: `-h` or `--help` anywhere, even as the value of another option, MUST print help and return 0; the check precedes parsing.
+- **Help anywhere**: `-h` or `--help` anywhere, even as the value of another option (so #behavioral-requirements/value-consumption does not apply to them), MUST print help and return 0; the check precedes parsing.
 - **Duplicated options**: Repeating `--since`, `--until`, `--limit`, `--cursor` or `--query` uses the last value silently; repeating `--to` is a usage error.
 - **Error states**: A `notFound` error MUST return 3; every other client or encoding error MUST return 1 with `Error: <localizedDescription>` on `stderr`. A service too old to apply `--any-label`, `--query` or threads surfaces as a status-1 failure through `MailClient`, never as an unfiltered listing.
 - **Concurrent access**: `run` keeps no state between calls and holds no locks, and the host provides the `@Sendable` closures; two calls interleave only through their own clients and closures. One call is a single sequential `async` flow: parse, one client call, format, write.
@@ -212,6 +222,48 @@ Test names are in `MailCommandLineTests` unless stated. `ScriptedMail` is the te
 
 The component reads no environment variables, settings keys or files.
 
+### Options accepted by each command
+
+Value-taking options consume the next argument. Every command also accepts `--json`.
+
+| Command | Value-taking options | Flags |
+|---------|----------------------|-------|
+| `accounts` | none | none |
+| `labels` | none | none |
+| `list` | `--since`, `--until`, `--label`, `--any-label`, `--limit`, `--cursor`, `--query` | `--bodies` |
+| `get` | none | none |
+| `thread` | none | `--bodies` |
+| `label add`, `label remove` | none | none |
+| `move` | `--to`, `--from` | none |
+
+### Usage text
+
+`usage(program:)` returns this text, with `{{program}}` replaced by `program` and `{{notFoundStatus}}` by 3. Lines are joined by a newline with no trailing newline.
+
+```
+usage: {{program}} <command> [--json]
+  {{program}} accounts
+  {{program}} labels <account>
+  {{program}} list <account> [--since D] [--until D] [--label L]... [--any-label L]... [--limit N]
+      [--cursor C] [--bodies] [--query Q]
+  {{program}} get <account> <id>
+  {{program}} thread <account> <id> [--bodies]
+  {{program}} label add <account> <label> <id>...
+  {{program}} label remove <account> <label> <id>...
+  {{program}} move <account> <id>... --to <label> [--from <label>]...
+D is YYYY-MM-DD or an ISO-8601 timestamp. L is a label id or exact name. An id is our
+message id or Gmail's.
+list: a message must carry every --label (AND) and, if any are given, at least one
+  --any-label (OR); the two combine.
+list --query: searches Gmail itself with Q in Gmail's search syntax ("from:greenhouse"),
+  beyond the synced mail; --since, --until and --label narrow it, --any-label is refused
+  (write {label:a label:b} in Q).
+thread: the whole conversation from Gmail, oldest first; <id> is a thread id or the id of
+  any message in it. A message you sent is marked (you).
+move: adds the --to label and removes every --from label, in one Gmail write. With no
+  --from it removes INBOX (nothing for --to INBOX).
+exit status: 0 success, 1 failure, {{notFoundStatus}} a message id matches nothing, 64 usage error.
+```
 ## Deep Linking
 
 Not applicable: `MailCommandLine` is a command-line parser with no URL, scheme or route handling.
@@ -246,7 +298,7 @@ Not applicable: the code makes no log calls. Failures are written to the `stderr
 ## Platform Notes
 
 - **SwiftUI**: Not a view. A SwiftUI app would not use a command line directly; if it needs the same operations it would call `MailClient` and bind the results to `@Observable` state, reusing the filter and date-bound rules rather than the printers.
-- **Compose**: Not a view. A Kotlin port would expose the same operations on a client interface and could back a console tool with a `suspend fun run(args, program, client, stdout, stderr): Int`; parse arguments with a hand-written loop like `split` (a library such as Clikt prefers its own help and error statuses, which would have to be overridden to keep 0, 1, 3 and 64) and serialize with kotlinx.serialization using sorted keys.
+- **Compose**: Not a view. A Kotlin port would expose the same operations on a client interface and could back a console tool with a `suspend fun run(args, program, client, stdout, stderr): Int`; parse arguments with a hand-written loop over the arguments (a library such as Clikt prefers its own help and error statuses, which would have to be overridden to keep 0, 1, 3 and 64) and serialize with kotlinx.serialization using sorted keys.
 - **React/Web**: Source is Swift only; a TypeScript port would be an `async function run(args: string[], opts)` returning `Promise<number>`, taking `stdout` and `stderr` callbacks, with the same `--`-prefix option rules and `JSON.stringify` of a key-sorted value with 2-space indentation. Single-threaded JavaScript removes the concurrency question. Replace `Calendar` and `ISO8601DateFormatter` with explicit UTC date validation, since `new Date("2026-02-30")` does not reject impossible dates.
 - **AppKit / UIKit**: Source is `packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift`, in the Integrations target. It depends on `AgenticDeveloperHubSDKCore` (for `HTMLText`) and `Foundation`, and on `MailClient`, `MailMessageFilter`, `MailJSON` and `MailDateBound` from the sibling `Integrations/Service` files. It is a caseless `public enum` with static methods, so there is nothing to instantiate and nothing for AppKit or UIKit; the `@Sendable` closure parameters let the host forward to `FileHandle.standardOutput` and `FileHandle.standardError`. Private `Command`, `Options` and `Parsed` types hold the parse result.
 - **WinUI 3**: Build it as a .NET class library, a static class `MailCommandLine` with `public static string Usage(string program = "mail")` and `public static async Task<int> RunAsync(string[] args, string program, IMailClient client, Action<string> stdout, Action<string> stderr)`. Model `Command` as a C# record hierarchy and the parse result as a nullable tuple (null for a usage error). Do not use `System.CommandLine` unless it is configured to return 3 for not found and 64 for usage errors and to treat `--help` and `-h` anywhere as help. Print with the `Console.Out` and `Console.Error` supplied by the host `Program.Main`, returning the integer from `Main` as the process exit code. Encode JSON with `System.Text.Json.JsonSerializer` and `WriteIndented = true`; it has no built-in sorted-key option, so serialize through `JsonNode` after sorting properties explicitly to match the source's sorted keys. Map `MailClientError.notFound` to a `MailNotFoundException` caught before a general `Exception` handler that prints `Error: ` plus `ex.Message`. Parse date-only bounds with `DateTime.TryParseExact` using `yyyy-MM-dd` and `CultureInfo.InvariantCulture`, parse timestamps with `DateTimeOffset.TryParse`, then format with `ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'")`. Use `HttpClient` only inside the injected client. Where the host is a WinUI 3 app, route `stdout` to a `TextBlock` or an `ObservableCollection<string>` log rather than a console.
@@ -255,10 +307,11 @@ Not applicable: the code makes no log calls. Failures are written to the `stderr
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -298,6 +351,9 @@ Not applicable: the code makes no log calls. Failures are written to the `stderr
 **Rationale**: The service's `list` handler refuses the combination, so the command line forwards the filter unchanged and one place owns the rule.
 **Approved**: pending
 
+**Decision**: All output text is English only, with no string table.
+**Rationale**: The command line is a developer tool whose output scripts read and parse, so stable English wording matters more than localization; translating the usage text, the `Error: ` prefix or the field labels would break callers that match on them.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -308,10 +364,11 @@ Not applicable: the code makes no log calls. Failures are written to the `stderr
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | security |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 
-`MailCommandLine` keeps parsing and formatting apart from the transport by taking an injected `MailClient` and output closures, so separation-of-concerns passes. `MailCommandLineTests` asserts every command, the main usage-error paths, the exit statuses and the text and JSON forms, so unit-test-coverage is partial. Mailcli-038 and mailcli-039 are derived from the source, not named tests, and no vector covers `single-dash-positional`, the `--json` placement errors, `label-verb`, `label-options`, `label-text`, `list-any-label-with-query`, `one-client-call`, `no-shared-state` or the UTF-8 failure path of `json-encoding`. Every thrown error is mapped to a status and a message on `stderr`, so explicit-error-handling passes. Input sanitization is partial: limits, dates and blank queries are validated, but account names, label names and ids are forwarded unmodified for the client and service to validate. No-hardcoded-strings fails because every user-facing string is English text in the source, with no externalization; this is a deliberate property of a developer command line, recorded under Localization.
+`MailCommandLine` keeps parsing and formatting apart from the transport by taking an injected `MailClient` and output closures, so separation-of-concerns passes. `MailCommandLineTests` asserts every command, the main usage-error paths, the exit statuses and the text and JSON forms, so unit-test-coverage is partial. and the vectors derived from the source (mailcli-038 to mailcli-046) are asserted by no test; no vector covers `single-dash-positional`, `list-any-label-with-query`, `one-client-call`, `no-shared-state` or the UTF-8 failure path of `json-encoding`. Every thrown error is mapped to a status and a message on `stderr`, so explicit-error-handling passes. Input sanitization is partial: limits, dates and blank queries are validated, but account names, label names and ids are forwarded unmodified for the client and service to validate. No-hardcoded-strings fails because every user-facing string is English text in the source, with no externalization; this is a deliberate property of a developer command line, recorded under Localization and in Design Decisions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Linked types, stated field formats and JSON output requirements, completed the usage text and options table, and added vectors 040 to 046. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

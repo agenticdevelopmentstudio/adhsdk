@@ -1,5 +1,5 @@
 
-The view controller has no test of its own. The model it reads has tests in `MailBrowserModelTests`, notably `mailboxesFollowGmailsOrderAndSkipAttributeLabels`, which asserts depths of `0, 0, 0, 0, 1, 0, 0` and an inbox unread count of 3; the rows below that name no test are derived from the source.
+The view controller has no test of its own. Rows whose input is "Inspect" are inspection-only, and mail-sidebar-023 is inspection-only too, because the source traps at run time and a test cannot observe that. The model it reads has tests in `MailBrowserModelTests`, notably `mailboxesFollowGmailsOrderAndSkipAttributeLabels`, which asserts depths of `0, 0, 0, 0, 1, 0, 0` and an inbox unread count of 3; the rows below that name no test are derived from the source.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -20,12 +20,12 @@ The view controller has no test of its own. The model it reads has tests in `Mai
 | mail-sidebar-015 | selection-from-model | The model selects All Mail (label id nil) | The All Mail row is selected. |
 | mail-sidebar-016 | selection-no-match | The model's `selectedMailbox` is nil | The outline selection is unchanged. |
 | mail-sidebar-017 | selection-no-match | The model selects a mailbox that is not listed | The outline selection is unchanged. |
-| mail-sidebar-018 | selection-no-op | The model sets `selectedMailbox` to the row already selected | No selection call reaches the outline. |
+| mail-sidebar-018 | selection-no-op | The model sets `selectedMailbox` to the row already selected, with the outline stubbed or its selection-change notification counted | No selection call reaches the outline, and the selection-change notification count is zero. |
 | mail-sidebar-019 | selection-clear-ignored | The outline selection clears | The model is not called. |
 | mail-sidebar-020 | accessibility-identifier | Inspect the outline | Identifier is `mail.sidebar`. |
 | mail-sidebar-021 | mailbox-accessibility-label | Mailbox titled `Inbox` | Row accessibility label is `Inbox`. |
 | mail-sidebar-022 | single-column-outline, source-list-style | Inspect the outline | One column `mailbox`, no header, source list style, group rows do not float. |
-| mail-sidebar-023 | model-injection | Build the controller from a coder | The process stops with the fatal error `init(coder:) has not been implemented`. |
+| mail-sidebar-023 | model-injection | Inspect the controller's coder initializer (inspection-only) | `init(coder:)` calls `fatalError("init(coder:) has not been implemented")`; the only working initializer takes a `MailBrowserModel`. |
 | mail-sidebar-024 | selection-single | Inbox row selected; the model selects the Sent row | Only the Sent row is selected. |
 | mail-sidebar-025 | mailbox-row-title-yields | A mailbox with a long title and unread 12 in a narrow sidebar | The title truncates at the tail; the symbol and the `12` count stay fully visible. |
 | mail-sidebar-026 | account-row-truncation | Account email longer than the sidebar width | The group row text truncates at the tail. |
@@ -33,5 +33,7 @@ The view controller has no test of its own. The model it reads has tests in `Mai
 | mail-sidebar-028 | selection-after-rebuild | Inbox of `a1` is selected, then the model's `mailboxes` changes | After the reload the Inbox row of `a1` is selected again. |
 | mail-sidebar-029 | empty-accounts | The model has no accounts | The outline has zero rows and no message is drawn. |
 | mail-sidebar-030 | group-expandable-with-children | One account with no mailboxes and one with Inbox | The first group row is not expandable; the second is. |
-| mail-sidebar-031 | unread-count-plain-integer | Mailbox with unread 1234 | The count label reads `1234`. |
-| mail-sidebar-032 | selection-task-unhandled | The model's `select(mailbox:)` fails and sets `errorMessage` | The sidebar shows no error itself and the model's `errorMessage` is set. |
+| mail-sidebar-031 | unread-count-localized | Mailbox with unread 1234, locale en_US | The count label reads `1,234`; the source reads `1234`, a known deviation. |
+| mail-sidebar-032 | selection-task-unhandled | The model's `select(mailbox:)` fails | The sidebar shows no error UI of its own and does not await the task. |
+| mail-sidebar-033 | selection-no-match | Collapse the group of account `a1`, then the model selects the Inbox of `a1` | The outline selection stays unchanged. |
+

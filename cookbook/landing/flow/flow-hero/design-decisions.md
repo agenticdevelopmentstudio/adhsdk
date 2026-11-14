@@ -8,14 +8,10 @@
   **Approved**: pending
 
 - **Decision**: Gate the `children`, `meta`, and `shot` containers on `!== undefined`.
-  **Rationale**: Only `undefined` suppresses a section's container. Passing `null` or an empty string still renders the (empty) container, since neither is excluded by `!== undefined`. Hosts must omit the prop, or pass `undefined` explicitly, to hide a section — see **Edge Cases**.
-  **Approved**: pending
-
-- **Decision**: Render `children` as bare `Btn` elements, never wrapped in a `Cta`.
-  **Rationale**: `.lp-hero-actions` is already the centered, wrapping flex row; a `Cta` ([adhsdk.ingredient.landing.blocks.cta](cookbook:f98e53f7-ac16-48b0-afa5-544d05bf3f70)) inside it nests a second one whose own 0.75rem gap wins over the hero's own spacing, leaving it inert.
+  **Rationale**: Only `undefined` suppresses a section's container. Passing `null` or an empty string still renders the (empty) container, since neither is excluded by `!== undefined`. Hosts must omit the prop, or pass `undefined` explicitly, to hide a section. This is the one canonical statement of the gating; Edge Cases and Platform Notes point here.
   **Approved**: pending
 
 - **Decision**: Uppercase the `meta` text via CSS `text-transform`, not JavaScript.
-  **Rationale**: Hosts cannot override that transform on the `<p>` element itself, since the component renders it, not the host. A host needing non-uppercase content (e.g. a product name) wraps that content in its own child element with an inline style resetting `text-transform`, because the property is inherited and a descendant element can override it.
+  **Rationale**: The source text stays intact in the DOM, so copy and paste, screen readers and locale-aware casing all see what the host wrote, and the transform follows the document's language. Hosts cannot override that transform on the `<p>` element itself, since the component renders it, not the host. A host needing non-uppercase content (e.g. a product name, which Apple's guidelines forbid setting in all caps) wraps that content in its own child element with an inline style resetting `text-transform`, because the property is inherited and a descendant element can override it. This is the one canonical statement of the opt-out; Accessibility, Edge Cases and Localization point here.
   **Approved**: pending
 

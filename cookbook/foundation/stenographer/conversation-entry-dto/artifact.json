@@ -4,7 +4,7 @@
     "id": "08d59319-de4b-438a-a144-dcf3912aa2e5",
     "title": "Conversation Entry DTO",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "b923ae3a71a3a430",
+  "synced": "4ba31fc653e8bde1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

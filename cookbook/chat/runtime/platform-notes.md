@@ -31,7 +31,7 @@
   `Orchestrator`-conforming reference type works as a plain reference type
   whose `ChatStateObserver`s are AppKit/UIKit controllers implementing
   `chatDidUpdate`. Source notifies synchronously and inline, with no thread
-  hop of its own, so an AppKit/UIKit host MUST hop to the main queue itself
+  hop of its own, so an AppKit/UIKit host SHOULD hop to the main queue itself
   before touching views — `DefaultOrchestrator.ts` performs no such hop.
 - **WinUI 3**: Model `ChatViewModel`'s mutable array-valued fields
   (`messages`, `participants`, `activeDrafts`, `activeCommands`,
@@ -52,6 +52,6 @@
   wrapping a `Dictionary<string, PermissionDecision>` guarded by a `lock` (or
   a `ConcurrentDictionary`) — .NET gives no free single-threaded guarantee the
   way the JS runtime does, so the "no internal synchronization" characteristic
-  documented in Design Decisions MUST become an explicit lock on this
+  documented in Design Decisions SHOULD become an explicit lock on this
   platform rather than staying implicit.
 

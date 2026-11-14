@@ -22,6 +22,6 @@
 | selection-actions-019 | confirm-button-label | onDelete provided, user clicks Delete | Confirmation modal's confirm button label is "Delete" |
 | selection-actions-020 | cancel-button-label | onDelete provided, user clicks Delete | Confirmation modal's cancel button label is "Cancel" |
 | selection-actions-021 | close-modal-on-confirm | onDelete provided, selectedIds=["row1"], user clicks Delete then confirms | Modal is closed immediately after confirming |
-| selection-actions-022 | ondelete-selection-argument | onDelete provided, selectedIds=["row1"], user clicks Delete, selectedIds prop changes to ["row1","row2"] while the modal is open, user confirms | onDelete is called with ["row1","row2"], not ["row1"] |
+| selection-actions-022 | ondelete-selection-argument | onDelete provided, selectedIds=["row1"], user clicks Delete, selectedIds prop changes to ["row1","row2"] while the modal is open, user confirms | onDelete is called with ["row1","row2"], not ["row1"] (the documented hazard; callers SHOULD NOT change `selectedIds` while the modal is open) |
 | selection-actions-023 | duplicate-action-ids | actions=[{id:"a1", label:"Archive", onClickA}, {id:"a1", label:"Rename", onClickB}] | Both "Archive" and "Rename" buttons render and each invokes its own onClick; the shared id is a caller error the component does not correct |
-
+| selection-actions-024 | use-default-delete-message | onDelete provided, deleteConfirm={title:"Remove items?"}, user clicks Delete | Modal shows the title "Remove items?" and no description |

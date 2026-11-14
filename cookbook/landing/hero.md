@@ -2,11 +2,11 @@
 id: fae23662-e69b-4472-9c7d-049feadf1211
 title: "Hero"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -40,12 +40,13 @@ The Hero component is a centered landing screen containing a mark (brand image),
 - **render-tagline**: Component MUST render the `tagline` prop as supporting text within a `<p>` element with class `lp-tag`.
 - **accept-mark**: Component MUST accept an optional `mark` prop as a `ReactNode`, allowing the host to supply its own `<Image>` or `<img>` element before the headline.
 - **accept-children**: Component MUST accept optional `children` as a `ReactNode` to compose call-to-action, trust, and status pill components below the tagline.
-- **support-glow**: Component MUST support a `glow` prop (default `true`) that controls the glow effect on the Screen container.
+- **support-glow**: Component MUST support a `glow` prop (default `true`) that controls the glow effect on the Screen container. The glow element MUST be decorative: hidden from assistive technology (`aria-hidden`) and empty.
 - **support-id**: Component MUST accept an optional `id` prop to set the HTML `id` attribute for semantic identification.
 - **center-content**: Component MUST center all content horizontally and render as a centered Screen (align="center").
 - **render-as-div**: Component MUST render the Screen container with `as="div"` to output a non-semantic container, deferring any landmark role to the host — see **root-is-non-semantic** under Design Decisions.
 - **hero-styling-class**: Component MUST render with the `lp-hero` class alongside Screen's own `lp-screen` class, so the hero-specific rules in `css/blocks.css` (padding-inline, headline/tagline type) apply.
-
+- **tagline-phrasing-content**: A host MUST pass only phrasing content (text and inline elements such as `<em>` or `<a>`) as `tagline`, because the component renders it inside a `<p>`; block-level content is out of contract and produces invalid HTML.
+- **single-hero**: A host MUST render at most one Hero per page. Hero is the page's sole centered screen and its `headline` is the page's single `<h1>` claim; the component does not enforce this, and a page-level recipe that composes Hero is where it is checked.
 ## Appearance
 
 - **Corner radius**: Inherited from Screen component; no additional radius applied
@@ -80,10 +81,10 @@ The Hero component is a centered landing screen containing a mark (brand image),
 | hero-002 | render-tagline | `tagline="Supporting text"` | A `<p class="lp-tag">` containing "Supporting text" renders |
 | hero-003 | accept-mark | `mark={<img src="logo.svg" />}` | The mark element renders before the `<h1>` |
 | hero-004 | accept-children | `children={<button>CTA</button>}` | The CTA button renders after the tagline |
-| hero-005 | support-glow | `glow={true}` | A decorative glow element (`aria-hidden`, no content) renders behind the mark and headline |
+| hero-005 | support-glow | `glow={true}` | A decorative glow element (`aria-hidden="true"`, no content) renders behind the mark and headline |
 | hero-006 | support-glow | `glow={false}` | No glow element renders |
 | hero-007 | support-id | `id="hero-section"` | The root element has `id="hero-section"` |
-| hero-008 | center-content | Any props | Content renders horizontally centered within the screen |
+| hero-008 | center-content | Any props | `Screen` receives `align="center"`; on web the root carries the `lp-screen--center` class |
 | hero-009 | render-as-div | Any props | The root element is a non-semantic container (`<div>` on web), never a `<section>` |
 | hero-010 | hero-styling-class | Any props | The root carries the hero's own styling identity (`lp-hero` on web) in addition to the generic screen styling |
 | hero-011 | accept-mark (edge case: mark omitted) | `mark` undefined | No mark element renders; the `<h1>` and `<p class="lp-tag">` still render as normal |
@@ -92,8 +93,8 @@ The Hero component is a centered landing screen containing a mark (brand image),
 | hero-014 | render-headline (edge case: nested ReactNode) | `headline={<>Claim <b>emphasized</b></>}` | The nested markup renders inside the `<h1>` unchanged |
 | hero-015 | accept-children (edge case: multiple children) | `children={<><Cta/><Trust/><StatusPill/></>}` | All three render, in the given order, after the tagline |
 | hero-016 | support-glow (edge case: glow omitted) | `glow` undefined | Same as hero-005: the glow element renders by default |
-| hero-017 | render-tagline (edge case: tagline must be phrasing content) | `tagline={<em>Emphasis</em>}` | The inline content renders nested inside the `<p>`; block-level content (e.g. a `<div>`) is out of contract and produces invalid, browser-auto-corrected HTML |
-
+| hero-017 | render-tagline, tagline-phrasing-content (edge case: tagline must be phrasing content) | `tagline={<em>Emphasis</em>}` | The inline content renders nested inside the `<p>`; block-level content (e.g. a `<div>`) is out of contract and produces invalid, browser-auto-corrected HTML |
+| hero-018 | single-hero | A page that renders one `Hero` | Exactly one element with the hero's styling identity (`lp-hero` on web) and exactly one `<h1>` from Hero are present; a page with two Heroes is out of contract |
 ## Edge Cases
 
 - **Mark omitted**: When `mark` is undefined, no image element renders; headline and tagline render as expected. See hero-011.
@@ -128,7 +129,7 @@ Not applicable: Hero accepts ReactNode props for headline, tagline, and children
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Nothing in the hero animates: the glow is a static radial gradient (`.lp-glow` in base.css), not a keyframe animation. base.css also carries a `prefers-reduced-motion` reset that sets `animation: none` and `transition: none` on every element of a deck or flow page, so any host-added motion inside the hero stops too. |
-| Increase Contrast | Not implemented in source. Behavior undefined. |
+| Increase Contrast | Not implemented in source; the web component adds no rule of its own. A port SHOULD honor the platform's increased-contrast setting by raising the tagline's dim ink toward the full ink color; on web a host does this by overriding `--lp-ink-dim` under `@media (prefers-contrast: more)`. |
 | Differentiate Without Color | Not applicable; Hero uses no color-only differentiation. |
 
 ## Feature Flags
@@ -149,18 +150,18 @@ Not applicable: Hero component has no logging.
 
 ## Platform Notes
 
-- **TypeScript/Web**: Defined in `packages/web/packages/landing/src/blocks/Hero.tsx`. Renders a `Screen` component with `align="center"` and `className="lp-hero"`. The component never supplies its own `<Image>` or `<img>` element; the host provides mark via `ReactNode` to avoid a top-level `next/image` dependency.
-- **SwiftUI**: Use a `VStack` with `alignment: .center`; apply a `.heroSpacing()` view modifier that sets the vertical gap and horizontal inset (matching `.lp-hero`'s `padding-inline`). Render the mark (`Image`), headline (`Text`, large/thin-weight styling matching the claim treatment), tagline (`Text`, secondary/dimmer styling), and child views in vertical order. Apply a `.heroGlow(_:)` modifier that conditionally places a `RadialGradient` behind the stack via `.background`, matching `.lp-glow`.
-- **Compose**: Use a `Column` with `horizontalAlignment: Alignment.CenterHorizontally` and `modifier: Modifier.fillMaxWidth()`. Render the mark (`Image` composable), headline (`Text` with `style: MaterialTheme.typography.headlineLarge`), tagline (`Text` with `style: MaterialTheme.typography.bodyLarge`), and child composables in order. Apply the glow as a `Box` behind the content with a `Brush.radialGradient` background, toggled by the glow boolean.
-- **AppKit / UIKit**: **AppKit** — use an `NSStackView` with vertical orientation and `.centerX` alignment. **UIKit** — use a vertical `UIStackView` with `.center` alignment. Render the mark (`NSImageView` / `UIImageView`), headline (`NSTextField` / `UILabel` with a large, light-weight font), tagline (`NSTextField` / `UILabel` with secondary styling), and child views in order. Apply the glow as a `CAGradientLayer` (`type: .radial`) inserted behind the stack's layer, toggled by the glow boolean.
-- **WinUI 3**: Use a `StackPanel` with `Orientation: Vertical` and `HorizontalAlignment: Center`. Bind the mark (`Image` control), headline (`TextBlock` with `FontSize: 32` and `FontWeight: Bold`), tagline (`TextBlock` with secondary foreground), and child controls in order. Render the glow as a `Rectangle` (or `Border`) behind the content filled with a native `RadialGradientBrush`, toggled by the glow boolean property — not `DropShadowPanel` (a Community Toolkit control, not a platform primitive, and a shadow rather than the radial-gradient light `.lp-glow` describes).
+- **TypeScript/Web**: Defined in `packages/web/packages/landing/src/blocks/Hero.tsx`. Renders a `Screen` component with `align="center"` and `className="lp-hero"`. The component never supplies its own `<Image>` or `<img>` element; the host provides `mark` as a `ReactNode` (see the `mark` Design Decision).
+- **SwiftUI**: Use a `VStack` with `alignment: .center`; apply a `.heroSpacing()` view modifier that sets the vertical gap and horizontal inset (matching `.lp-hero`'s `padding-inline`). Render the mark (`Image`), headline (`Text`, large styling with `.fontWeight(.ultraLight)` to match the claim treatment's weight 200), tagline (`Text`, secondary/dimmer styling), and child views in vertical order. Apply a `.heroGlow(_:)` modifier that conditionally places a `RadialGradient` behind the stack via `.background`, matching `.lp-glow`.
+- **Compose**: Use a `Column` with `horizontalAlignment: Alignment.CenterHorizontally` and `modifier: Modifier.fillMaxWidth()`. Render the mark (`Image` composable), headline (`Text` with `style: MaterialTheme.typography.headlineLarge` and `fontWeight = FontWeight.ExtraLight`, matching `.lp-hero h1`'s weight 200), tagline (`Text` with `style: MaterialTheme.typography.bodyLarge`), and child composables in order. Apply the glow as a `Box` behind the content with a `Brush.radialGradient` background, toggled by the glow boolean.
+- **AppKit / UIKit**: **AppKit** — use an `NSStackView` with vertical orientation and `.centerX` alignment. **UIKit** — use a vertical `UIStackView` with `.center` alignment. Render the mark (`NSImageView` / `UIImageView`), headline (`NSTextField` / `UILabel` with a large font at ultra-light weight, matching `.lp-hero h1`'s weight 200), tagline (`NSTextField` / `UILabel` with secondary styling), and child views in order. Apply the glow as a `CAGradientLayer` (`type: .radial`) inserted behind the stack's layer, toggled by the glow boolean.
+- **WinUI 3**: Use a `StackPanel` with `Orientation: Vertical` and `HorizontalAlignment: Center`. Bind the mark (`Image` control), headline (`TextBlock` with `FontSize: 32` and `FontWeight: ExtraLight`, matching `.lp-hero h1`'s weight 200 rather than a bold weight), tagline (`TextBlock` with secondary foreground), and child controls in order. Render the glow as a `Rectangle` (or `Border`) behind the content filled with a native `RadialGradientBrush`, toggled by the glow boolean property — not `DropShadowPanel` (a Community Toolkit control, not a platform primitive, and a shadow rather than the radial-gradient light `.lp-glow` describes).
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Hero.tsx` | unverified |
-| web | `packages/web/packages/landing/src/page/hero.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Hero.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/landing/src/page/hero.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -197,7 +198,7 @@ Not applicable: Hero component has no logging.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on `Hero.tsx` and its CSS: the root `<div>` carries no ARIA role even though the `<h1>`/`<p>` it wraps remain correctly semantic (semantic-markup: partial); headline/tagline sizes are `rem`-based and scale with the root font-size dial in `css/base.css` (dynamic-type-support: passed); the default `--lp-ink`/`--lp-ink-dim` tokens against `--lp-ground` compute well above WCAG AA but are host-overridable custom properties (contrast-ratio: partial); the Accessibility Options row above documents the `prefers-reduced-motion` reset (reduced-motion: passed); and `headline`/`tagline` are always host-supplied `ReactNode`s with no strings in source, rendered in flexible `ch`-based containers that tolerate expansion without truncation (no-hardcoded-strings, text-expansion-tolerance: passed). `separation-of-concerns` passes because the component is pure presentation over its props, delegating all layout to `Screen`; `unit-test-coverage` passes on `blocks-close.test.tsx`'s dedicated `Hero` suite, which asserts the mark/headline/tagline/children slots and the `glow` toggle.
+Statuses rest on `Hero.tsx` and its CSS: the root `<div>` carries no ARIA role even though the `<h1>`/`<p>` it wraps remain correctly semantic (semantic-markup: partial); headline/tagline sizes are `rem`-based and scale with the root font-size dial in `css/base.css` (dynamic-type-support: passed); the default `--lp-ink`/`--lp-ink-dim` tokens against `--lp-ground` compute well above WCAG AA but are host-overridable custom properties (contrast-ratio: partial); the Accessibility Options row above documents the `prefers-reduced-motion` reset (reduced-motion: passed); and `headline`/`tagline` are always host-supplied `ReactNode`s with no strings in source, rendered in flexible `ch`-based containers that tolerate expansion without truncation (no-hardcoded-strings, text-expansion-tolerance: passed). `separation-of-concerns` passes because the component is pure presentation over its props, delegating all layout to `Screen`; `unit-test-coverage` passes on `blocks-close.test.tsx`'s dedicated `Hero` suite, which asserts the `<div>` tag name (**render-as-div**), the `id` (**support-id**), the `lp-screen`, `lp-screen--center` and `lp-hero` classes (**center-content**, **hero-styling-class**), the `aria-hidden` glow element and its absence under `glow={false}` (**support-glow**), and the mark, `h1`, `p.lp-tag` and children slots (**accept-mark**, **render-headline**, **render-tagline**, **accept-children**). **center-content** is covered only through the `lp-screen--center` class, not by measuring rendered layout; **tagline-phrasing-content** and **single-hero** are host contracts and have no component test.
 
 ## Change History
 
@@ -206,3 +207,4 @@ Statuses rest on `Hero.tsx` and its CSS: the root `<div>` carries no ARIA role e
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and updated every citation; corrected the div/section semantics claim and the tap-target unit/citation; reformatted Design Decisions into Decision/Rationale/Approved and added a single-Hero-per-page decision; added a Compliance table plus `depends-on`/`related`; rewrote Conformance Test Vectors to assert observable outcomes (added `hero-styling-class` and a tagline phrasing-content edge case) with full edge-case coverage; fixed the WinUI 3 and AppKit/UIKit platform notes; corrected the headline foreground description; normalized frontmatter date quoting |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added requirements for the aria-hidden empty glow, tagline phrasing content and single-hero, made hero-008 observable, listed exactly what the test covers, set a light weight on every platform note, stated Increase Contrast guidance, and linked the mark decision from Platform Notes. |

@@ -1,0 +1,8 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Highlight (grouped) vs Enter (ranked) index divergence documented; selectedIndex resets to 0, not -1. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case and cross-referenced the duplicates it removed; corrected the focus-trap and WCAG tap-target claims in Accessibility; converted Design Decisions to the Decision/Rationale/Approved form and softened unsupported claims within them; rebuilt Compliance as canonical linked checks with partial status where the source can't confirm; corrected Platform Notes API names (WinUI 3, AppKit/UIKit, Compose) and added the missing AppKit mapping; fixed the localization empty-state quoting and its forking advice; reworded the caller-owned state's retention and reset rationale to remove the contradiction; marked Analytics and Logging as unimplemented documentation rather than a caller MUST contract; fixed edge-case bound precision and restated defect-flavored edge cases as caller preconditions; and linked the related dialog and search-dialog-connected recipes. |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Clarify review marker with evidence criteria; relabel Platform Notes Windows bullet to WinUI 3; clarify "Not applicable" sections; remove implementation-specific language from Accessibility Options |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

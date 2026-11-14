@@ -2,7 +2,7 @@
 id: e8286557-84ee-4f45-b78c-f1d184c51a37
 title: "Stenographer Wire"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -14,13 +14,15 @@ summary: "The one JSON spelling shared by steno, the daemon and the app: snake_c
 platforms:
   - swift
   - macos
+  - ios
 tags:
   - foundation
   - stenographer
   - wire
   - json
 depends-on: []
-related: []
+related:
+  - 9c7c78d3-23ca-4ca6-a519-9968b440b8c6
 references: []
 approved-by: ""
 approved-date: ""
@@ -32,7 +34,7 @@ approved-date: ""
 
 `StenographerWire` defines the JSON spelling a request body or reply takes between `steno`, the daemon and the app: snake_case keys and ISO-8601 dates. It is one definition, so the three ends of a relayed request cannot drift into three dialects; a `Date` added to a DTO decodes the same everywhere it travels.
 
-It is a caseless enum with two factory functions. Each call returns a new `JSONEncoder` or `JSONDecoder` configured with the two strategies. The HTTP client and the app's preference push use it; the one deliberate exception is the provider registry push, which uses a default encoder (see the HTTP client recipe).
+It is a caseless enum with two factory functions. Each call returns a new `JSONEncoder` or `JSONDecoder` configured with the two strategies. The HTTP client and the app's preference push use it; the one deliberate exception is the provider registry push, which uses a default encoder (see the HTTP client recipe, [adhsdk.ingredient.foundation.stenographer.stenographer-http-client](cookbook:9c7c78d3-23ca-4ca6-a519-9968b440b8c6)).
 
 ## Behavioral Requirements
 
@@ -40,7 +42,7 @@ It is a caseless enum with two factory functions. Each call returns a new `JSONE
 - **decoder-factory**: `StenographerWire.decoder()` MUST return a `JSONDecoder` whose key strategy is `convertFromSnakeCase` and whose date strategy is `iso8601`.
 - **fresh-instance**: Each call MUST return a new instance, so a caller may keep or change its own copy without affecting any other caller.
 - **round-trip**: A type encoded with `encoder()` MUST decode with `decoder()` to an equal value, for property names that survive the snake_case conversion in both directions.
-- **nil-omitted**: An optional property that is nil MUST be absent from the encoded object, because the encoder uses the synthesized `Codable` behavior for optionals.
+- **nil-omitted**: Every DTO that travels through `encoder()` MUST omit a nil optional property from the encoded object. This holds for a synthesized `Encodable` conformance, which uses `encodeIfPresent`; a DTO with a hand-written `encode(to:)` MUST do the same itself, because the factory does not enforce it.
 - **no-other-settings**: The encoder and decoder MUST NOT set any other strategy: data, non-conforming floats and output formatting stay at the `Foundation` defaults.
 - **no-validation**: The functions MUST NOT validate input; a malformed body is reported by the `decode` call that uses the decoder, as the standard `DecodingError`.
 
@@ -64,10 +66,10 @@ Not applicable — this is a pair of coder factories, not a visual component.
 | stenographer-wire-002 | decoder-factory | Decode a snake_case summary preference reply. | `SummaryPreferenceResponse` with `maxWords` 8, `activityLines` 60 and the other fields from the body (test: testSummaryResponseDecodesSnakeCase). |
 | stenographer-wire-003 | round-trip | Encode then decode an `OversightPreferenceResponse`. | The decoded value equals the original (test: testOversightRoundTrip). |
 | stenographer-wire-004 | decoder-factory | Decode a `SessionDTO` from daemon JSON with `session_id` `s1`, `event_count` 3 and `started_at` `2026-10-12T00:00:00Z`. | `sessionId` `s1` and `eventCount` 3; `SessionDTO.startedAt` is a `String`, so the timestamp is carried as text and the date strategy is not exercised (test: testSessionDTOStillDecodesFromDaemonJSON). |
-| stenographer-wire-005 | fresh-instance | Call `encoder()` twice. | Two different instances (derived from the source; no test). |
-| stenographer-wire-006 | encoder-factory | Encode a struct with a `Date` of 2026-10-12 00:00:00 UTC. | The field is the string `2026-10-12T00:00:00Z` (derived from the strategy; no test). |
-| stenographer-wire-007 | decoder-factory | Decode a date written with fractional seconds, `2026-10-12T00:00:00.123Z`. | Decoding throws a `DecodingError`, because Foundation's `iso8601` strategy accepts only whole seconds (derived from the strategy; no test). |
-| stenographer-wire-008 | no-validation | Decode `{}` as `SummaryPreferenceResponse` with `decoder()`. | Throws a `DecodingError` for the missing keys (derived from the source; no test). |
+| stenographer-wire-005 | fresh-instance | Call `encoder()` twice. | Two different instances (unverified: derived from the source; no test). |
+| stenographer-wire-006 | encoder-factory | Encode a struct with a `Date` of 2026-10-12 00:00:00 UTC. | The field is the string `2026-10-12T00:00:00Z` (unverified: derived from the strategy; no test). |
+| stenographer-wire-007 | decoder-factory | Decode a date written with fractional seconds, `2026-10-12T00:00:00.123Z`. | Decoding throws a `DecodingError`, because Foundation's `iso8601` strategy accepts only whole seconds (unverified: derived from the strategy; no test). |
+| stenographer-wire-008 | no-validation | Decode `{}` as `SummaryPreferenceResponse` with `decoder()`. | Throws a `DecodingError` for the missing keys (unverified: derived from the source; no test). |
 
 ## Edge Cases
 
@@ -117,21 +119,22 @@ Not applicable: the type calls no logging API.
 ## Platform Notes
 
 - **SwiftUI**: Source is `Core/Stenographer/StenographerWire.swift`, a caseless `enum` with two `static` functions using `JSONEncoder.keyEncodingStrategy`, `JSONDecoder.keyDecodingStrategy` and the `iso8601` date strategies from `Foundation`. Nothing is SwiftUI-specific.
-- **Compose**: Use kotlinx.serialization `Json` with `namingStrategy = JsonNamingStrategy.SnakeCase` and `explicitNulls = false`, with a serializer for ISO-8601 dates (`java.time.Instant`). Define it once in a single holder object.
-- **React/Web**: Write one pair of functions that map keys between camelCase and snake_case and convert `Date` to and from `toISOString()`; nothing else in the app should call `JSON.stringify` on a DTO directly.
-- **AppKit / UIKit**: Same source and calls; `Foundation` behaves the same on iOS and macOS.
-- **WinUI 3**: Use `System.Text.Json.JsonSerializerOptions` with `PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower`, `DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull` and a `JsonConverter<DateTime>` for ISO-8601, exposed through a static factory that returns a new options object. `System.Text.Json` accepts fractional seconds in ISO-8601 dates, which the source's strategy does not; keep that difference in mind if a test asserts the failure.
+- **Compose**: Use kotlinx.serialization `Json` with `namingStrategy = JsonNamingStrategy.SnakeCase` and `explicitNulls = false` and `ignoreUnknownKeys = true` (kotlinx.serialization rejects unknown keys by default, while the Foundation decoder ignores them), with a serializer for ISO-8601 dates (`java.time.Instant`). Define it once in a single holder object.
+- **React/Web**: Write one pair of functions that map keys between camelCase and snake_case and convert `Date` to and from `toISOString()`. JSON has no date type, so revive date fields per DTO from an explicit field list or schema, never by guessing from the string pattern; nothing else in the app should call `JSON.stringify` on a DTO directly.
+- **AppKit / UIKit**: Same source and calls; `Foundation` behaves the same on iOS and macOS, and this recipe lists `ios` among its platforms.
+- **WinUI 3**: Use `System.Text.Json.JsonSerializerOptions` with `PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower`, `DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull` and a `JsonConverter<DateTime>` for ISO-8601, exposed through a static factory that returns a new options object. `System.Text.Json` accepts fractional seconds in ISO-8601 dates, which the source's strategy does not; the whole-second-only failure is Swift-specific, so vector 007 applies to the Swift implementation only; a port MAY accept the looser input.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerWire.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerWire.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
 
 ## Design Decisions
+
 **Decision**: The JSON spelling is defined once, as factories, and used by every end of a relayed request.
 **Rationale**: The source comment states the aim: the three ends cannot drift into three dialects, and a `Date` added to a DTO decodes the same everywhere.
 **Approved**: pending
@@ -143,6 +146,7 @@ Not applicable: the type calls no logging API.
 **Decision**: Factories return new instances.
 **Rationale**: The source returns a new `JSONEncoder` or `JSONDecoder` per call, so no mutable coder is shared through a global.
 **Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -156,4 +160,5 @@ Not applicable: the type calls no logging API.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the HTTP client recipe, scoped nil-omitted to DTOs, flagged unverified vectors, added ios, and clarified Compose, web and WinUI port notes. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |

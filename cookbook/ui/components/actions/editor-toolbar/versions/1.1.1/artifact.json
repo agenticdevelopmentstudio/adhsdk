@@ -1,0 +1,57 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "3c65c844-6c3c-43e2-b792-8575f5dda9cf",
+    "title": "EditorToolbar",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Semantic HTML toolbar wrapper with flexbox layout and ARIA accessibility for text editor surfaces.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "toolbar",
+      "layout",
+      "accessibility",
+      "editor"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "3a4cfabe81cb3a54",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

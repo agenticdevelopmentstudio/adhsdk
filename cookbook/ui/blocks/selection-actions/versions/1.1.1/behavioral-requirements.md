@@ -1,0 +1,24 @@
+
+- **render-action-buttons**: The component MUST render each provided action as a `Button` element.
+- **duplicate-action-ids**: The component uses each action's `id` as the React list key for its wrapping `Fragment`. A duplicate `id` across actions MUST NOT prevent either action from rendering or from invoking its own `onClick` — React's key collision affects reconciliation identity only, not render count or event wiring. Callers MUST still treat `id` as unique; the component does not deduplicate or otherwise correct a collision.
+- **pass-selected-ids-on-action**: When an action button is clicked, the component MUST call the action's `onClick` callback with the array of currently selected IDs.
+- **disable-selection-required-actions**: Actions with `requiresSelection: true` MUST be disabled when the `selectedIds` array is empty.
+- **keep-standalone-actions-enabled**: Actions without `requiresSelection` or with `requiresSelection: false` MUST remain enabled regardless of selection state.
+- **use-ghost-variant-by-default**: Each action button MUST use the `ghost` variant unless the action specifies a different variant.
+- **render-divider-before-action**: If an action has `dividerBefore: true`, the component MUST render a vertical separator before that action.
+- **divider-separator-role**: Dividers MUST use the ARIA `separator` role with `aria-orientation="vertical"` to communicate grouping to assistive technology.
+- **render-delete-button-conditionally**: The Delete button MUST render only if the `onDelete` callback is provided.
+- **disable-delete-when-no-selection**: The Delete button MUST be disabled when the `selectedIds` array is empty.
+- **use-destructive-ghost-delete-variant**: The Delete button MUST use the `destructive-ghost` variant.
+- **include-trash-icon-on-delete**: The Delete button MUST display a Trash2 icon with the label "Delete".
+- **delete-requires-confirmation**: When the Delete button is clicked, the component MUST display a confirmation modal before calling the `onDelete` callback.
+- **confirm-modal-destructive-style**: The confirmation modal MUST render with destructive styling — the component always passes `destructive={true}` to the modal.
+- **confirm-button-label**: The confirmation modal's confirm button MUST use the label "Delete".
+- **cancel-button-label**: The confirmation modal's cancel button MUST use the label "Cancel".
+- **use-default-delete-message**: If `deleteConfirm` is not provided, the modal MUST display the default title "Delete selected?".
+- **use-custom-delete-message**: If `deleteConfirm` is provided with a `title` and optional `description`, the modal MUST use those values instead of the defaults.
+- **close-modal-on-cancel**: When the user cancels the delete confirmation modal, the component MUST close the modal without calling `onDelete`.
+- **close-modal-on-confirm**: When the user confirms deletion, the component MUST close the modal before invoking `onDelete`.
+- **call-ondelete-only-after-confirm**: The `onDelete` callback MUST be called only after the user confirms deletion in the modal.
+- **ondelete-selection-argument**: The `onDelete` callback MUST be called with the `selectedIds` array as it stands at the moment of confirmation. The component holds no snapshot of `selectedIds` taken when Delete was first clicked — the confirm handler closes over the current `selectedIds` prop on every render, so a caller that mutates `selectedIds` while the modal is open changes what `onDelete` receives.
+

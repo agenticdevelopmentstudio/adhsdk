@@ -2,7 +2,7 @@
 id: e75d7d1e-2a25-452d-9c26-ea5f7cd7fa6d
 title: "Git Context Fingerprint"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -38,15 +38,15 @@ It stores a fingerprint and not the text because a prompt change re-caches the w
 ### Sampling
 
 - **sample-nil-outside-repo**: `sample(directory:)` MUST return nil when the branch cannot be resolved (the directory is not a repository, or the lookup fails or is empty), because there is then no block in the prompt to fingerprint.
-- **sample-fields**: A sample MUST be a dictionary of exactly `branch`, `status_char_count`, `status_entry_count`, `status_sha256`, `recent_commits_char_count`, `recent_commits_sha256` and `sampled_at`.
+- **sample-fields**: A sample MUST be a dictionary of exactly these keys and JSON types: `branch` (string), `status_char_count` (integer), `status_entry_count` (integer), `status_sha256` (string), `recent_commits_char_count` (integer), `recent_commits_sha256` (string) and `sampled_at` (string).
 - **sample-branch**: `branch` MUST be the trimmed abbreviated name of `HEAD`.
 - **sample-directory-scope**: When a directory is given every command MUST run with `-C <directory>`, and when it is nil the commands MUST run against the inherited working directory.
 - **sample-config-pinned**: The status and log commands MUST be pinned against user configuration (the branch lookup is not pinned) so the fingerprint moves when the tree moves and only then: status MUST use `core.quotePath=true`, `-unormal` (matching Claude Code's own block) and `--no-renames`; the log MUST use `log.showSignature=false`, `--oneline`, `--no-decorate` and a limit of `recentCommitCount`.
-- **sample-status-untrimmed**: The status output MUST be read untrimmed, because porcelain's two-column prefix is significant and an unstaged-only change on the alphabetically first path starts with a literal space.
+- **sample-status-untrimmed**: The status output MUST be read untrimmed, see Design Decisions.
 - **sample-entry-count**: `status_entry_count` MUST be the number of non-empty lines of the status output, not the number of pieces after splitting on newline, which would count the empty string after the final newline.
 - **sample-counts-characters**: The two character counts MUST be the character counts of the untrimmed status text and of the trimmed commit text, and each hash MUST be the lowercase hex SHA-256 of that same text's UTF-8 bytes.
 - **sample-clean-tree**: A clean tree MUST give a status count of 0, an entry count of 0 and the SHA-256 of the empty string for `status_sha256`.
-- **sample-sampled-at**: `sampled_at` MUST be the ISO 8601 time of the sample, so a consumer can tell a render-time sample from one taken later on the drop-file path.
+- **sample-sampled-at**: `sampled_at` MUST be the UTC time of the sample in the exact form `yyyy-MM-ddTHH:mm:ssZ` (no fractional seconds, a literal `Z`), so a consumer can tell a render-time sample from one taken later on the drop-file path.
 - **sample-recent-count**: `recentCommitCount` MUST be 5, the number of commits Claude Code's block lists.
 - **sample-subcommand-failure**: NEEDS REVIEW: Not implemented in source. When the branch resolves but the status or log command then fails, the failure (a non-zero exit, a timeout of five seconds in `ReadOnlyGit`, or output that is not valid UTF-8) yields the empty string, which is indistinguishable from a clean tree or an empty history, so the sample reports a clean tree with the empty-string hash and no signal that the sample is wrong.
 
@@ -56,9 +56,8 @@ It stores a fingerprint and not the text because a prompt change re-caches the w
 - **enrich-fallback**: `enriched(payload:)` MUST return the payload byte for byte unchanged when it is not a JSON object, the directory is not a repository, the fingerprint is not a valid JSON object, or the fingerprint cannot be encoded, because enrichment is best effort and a fumbled sample must never cost the daemon the row it decorates.
 - **enrich-directory**: The directory sampled MUST be the payload's top-level `cwd` when it is a string, else `workspace.current_dir`, else nil, so the sample cannot drift onto whatever directory the process inherited.
 - **enrich-splice**: The original bytes MUST be spliced, never re-encoded: the text up to the payload's last `}` is kept, a comma is added when the object is not empty, then `"stenographer_git":` and the fingerprint's JSON, then the remainder from that `}` on.
-- **enrich-splice-reason**: Splicing MUST be used because a decode and re-encode collapses a JSON `1.0` to `1` and a schema that types a column from its first value would then type it integer permanently, and because it keeps key order stable for subtrees stored as literal JSON text.
 - **enrich-empty-object**: An empty object `{}` MUST get the fingerprint with no leading comma.
-- **enrich-valid-check**: `JSONSerialization.isValidJSONObject` MUST be checked before encoding rather than relying on `try?`, because encoding an unrepresentable value raises an Objective-C exception that is not a Swift error and would kill the status-line command.
+- **enrich-valid-check**: `JSONSerialization.isValidJSONObject` MUST be checked before encoding rather than relying on `try?`, see Design Decisions.
 - **enrich-encoding**: The fingerprint MUST be encoded with sorted keys, so the spliced text is stable.
 
 ## Appearance
@@ -85,29 +84,33 @@ Not applicable — this is a sampling and payload-enrichment helper, not a visua
 | git-context-fingerprint-006 | sample-status-untrimmed | The raw command helper on output with leading whitespace; `testRawGitKeepsWhitespaceThatGitTrimsAway` | Whitespace is kept by the raw form and trimmed by the plain form |
 | git-context-fingerprint-007 | enrich-nesting | A payload with several keys, inside a repository; `testEnrichedNestsTheFingerprintAndKeepsEveryOriginalKey` | Every original key is present and `stenographer_git` holds the fingerprint |
 | git-context-fingerprint-008 | enrich-directory | No `cwd`, a `workspace.current_dir`; `testEnrichedFallsBackToTheWorkspaceCurrentDir` | The repository at `current_dir` is sampled |
-| git-context-fingerprint-009 | enrich-splice, enrich-splice-reason | A payload holding `"hit_ratio":1.0` beside `cwd`; `testEnrichedPreservesTheOriginalBytesOfEveryValue` | The output text still contains `"hit_ratio":1.0` and the output parses with the fingerprint key present |
+| git-context-fingerprint-009 | enrich-splice | A payload holding `"hit_ratio":1.0` beside `cwd`; `testEnrichedPreservesTheOriginalBytesOfEveryValue` | The output text still contains `"hit_ratio":1.0` and the output parses with the fingerprint key present |
 | git-context-fingerprint-010 | enrich-nesting | `payloadKey`; `testEnrichedNamespacesTheFingerprintSoTheDaemonCanStripIt` | The key has the prefix `stenographer_` (it is `stenographer_git`) |
 | git-context-fingerprint-011 | enrich-fallback | The text `not json at all`; `testEnrichedReturnsThePayloadUnchangedWhenItIsNotJSONObject` | Returned byte for byte unchanged |
 | git-context-fingerprint-012 | enrich-fallback, sample-nil-outside-repo | A valid payload whose `cwd` is not a repository; `testEnrichedReturnsThePayloadUnchangedOutsideAGitRepository` | Returned byte for byte unchanged |
-
+| git-context-fingerprint-013 | sample-entry-count | A repository with two untracked files | `status_entry_count` is 2, not 3 |
+| git-context-fingerprint-014 | sample-sampled-at | Any sample | `sampled_at` matches `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$` |
+| git-context-fingerprint-015 | sample-recent-count | A repository with seven commits | `recent_commits_char_count` is the length of the five newest `--oneline` lines |
+| git-context-fingerprint-016 | enrich-empty-object | The payload `{}` inside a repository | The output is `{"stenographer_git":{...}}` with no leading comma and parses |
+| git-context-fingerprint-017 | sample-directory-scope | A directory argument other than the process's working directory | The sample describes the repository at that directory |
 ## Edge Cases
 
-- Null and empty input: a nil directory samples the inherited directory (MUST); an empty payload is not a JSON object and returns unchanged (MUST); an empty object `{}` gets the fingerprint with no leading comma (MUST).
-- Malformed input: a payload that is not a JSON object returns unchanged (MUST); a payload whose `cwd` is not a string falls back to `workspace.current_dir` (MUST); a payload whose top level is an array returns unchanged (MUST).
-- Boundary values: a repository with fewer than five commits lists those it has (MUST); a repository with no commits has no `HEAD` to abbreviate, so the branch lookup fails and the sample is nil (MUST).
-- Concurrent access: the type holds no state, so concurrent calls are independent; two samples of a moving tree may differ and that is the point (MUST).
-- Error states: an unreadable branch gives nil, never a thrown error (MUST); a failed status or log command after the branch resolved is silently read as empty, see the open question on `sample-subcommand-failure`.
-- Trailing content: whitespace after the payload's last `}` is preserved by the splice (MUST); a `}` inside a string value does not matter because the last `}` of a parsed object always closes it.
+- Null and empty input: a nil directory samples the inherited directory (`sample-directory-scope`); an empty payload is not a JSON object and returns unchanged (`enrich-fallback`); an empty object `{}` gets the fingerprint with no leading comma (`enrich-empty-object`).
+- Malformed input: a payload that is not a JSON object returns unchanged (`enrich-fallback`); a payload whose `cwd` is not a string falls back to `workspace.current_dir` (`enrich-directory`); a payload whose top level is an array returns unchanged (`enrich-fallback`).
+- Boundary values: a repository with fewer than five commits lists those it has; a repository with no commits has no `HEAD` to abbreviate, so the branch lookup fails and the sample is nil (`sample-nil-outside-repo`).
+- Concurrent access: the type holds no state, so concurrent calls are independent; two samples of a moving tree may differ, and that is the point.
+- Error states: an unreadable branch gives nil, never a thrown error (`sample-nil-outside-repo`); a failed status or log command after the branch resolved is silently read as empty, see the open question on `sample-subcommand-failure`.
+- Trailing content: whitespace after the payload's last `}` is preserved by the splice (`enrich-splice`); a `}` inside a string value does not matter because the last `}` of a parsed object always closes it.
 - Offline or disconnected state: not applicable; the commands read the local repository only.
-- Exotic paths: non-ASCII file names are escaped identically across machines by the pinned `core.quotePath=true` (MUST), and signed commits do not add signature text to the log (MUST).
-- Hashing: the hash input is the exact text counted, so a status text with a trailing newline hashes with it (MUST).
+- Exotic paths: non-ASCII file names are escaped identically across machines by the pinned `core.quotePath=true`, and signed commits do not add signature text to the log (`sample-config-pinned`).
+- Hashing: the hash input is the exact text counted, so a status text with a trailing newline hashes with it (`sample-counts-characters`).
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `directory` | `String?` | nil | The session's working directory; nil samples the inherited one |
-| `recentCommitCount` | `Int` | `5` | Commits in the log sample |
+| `recentCommitCount` | fixed | `5` | Commits in the log sample; a constant, not a caller option (`sample-recent-count`) |
 | `payloadKey` | `String` | `stenographer_git` | Key the fingerprint is nested under; any future injected key carries the same prefix |
 | status flags | fixed | `-unormal --no-renames` with `core.quotePath=true` | Pinned against user configuration |
 | log flags | fixed | `--oneline --no-decorate` with `log.showSignature=false` | Pinned against user configuration |
@@ -150,14 +153,14 @@ Not applicable: this code uses no OSLog; a failed sample yields nil or unchanged
 - **SwiftUI**: Not used; there is no view layer.
 - **Compose**: Port with `ProcessBuilder` running the same pinned arguments, `java.security.MessageDigest` for SHA-256 and `kotlinx.serialization.json` or Jackson to read `cwd`; splice with `ByteArray` operations, not a re-serialisation.
 - **React/Web**: Node `child_process.execFile` with the same arguments, `crypto.createHash('sha256')`, and `Buffer` slicing for the splice; never `JSON.stringify` the payload back, which would rewrite `1.0` as `1`.
-- **AppKit / UIKit**: `Core/ClaudeHooks/GitContextFingerprint.swift`, using CryptoKit's `SHA256`, `JSONSerialization` with `.sortedKeys` for the fingerprint only, `ISO8601DateFormatter`, and `ReadOnlyGit` in `Core/Process/ReadOnlyGit.swift` for the trimmed and untrimmed command wrappers. macOS only in practice, since iOS cannot run `git`.
-- **WinUI 3**: Use `System.Diagnostics.Process` with `ArgumentList` (not a joined string) to run `git.exe`, redirecting standard output as UTF-8 and reading it untrimmed for status. Hash with `System.Security.Cryptography.SHA256.HashData` and format with `Convert.ToHexStringLower`, and read `cwd` with `System.Text.Json.JsonDocument`, which never rewrites the original bytes, so splice with `Span<byte>` or `ReadOnlyMemory<byte>` and `Utf8JsonWriter` for the fingerprint only, with `JsonSerializerOptions` sorting the keys by an explicit ordering. Format `sampled_at` with `DateTimeOffset.UtcNow.ToString("o")`. Call it from a `Task` off the UI thread; resolve the working directory through `Windows.Storage` only when the path comes from a package.
+- **AppKit / UIKit**: `Core/ClaudeHooks/GitContextFingerprint.swift`, using CryptoKit's `SHA256`, `JSONSerialization` with `.sortedKeys` for the fingerprint only, `ISO8601DateFormatter` (UTC, `Z`, no fractional seconds), and `ReadOnlyGit` in `Core/Process/ReadOnlyGit.swift` for the trimmed and untrimmed command wrappers. macOS only in practice, since iOS cannot run `git`.
+- **WinUI 3**: Use `System.Diagnostics.Process` with `ArgumentList` (not a joined string) to run `git.exe`, redirecting standard output as UTF-8 and reading it untrimmed for status. Hash with `System.Security.Cryptography.SHA256.HashData` and format with `Convert.ToHexStringLower`, and read `cwd` with `System.Text.Json.JsonDocument`, which never rewrites the original bytes, so splice with `Span<byte>` or `ReadOnlyMemory<byte>` and `Utf8JsonWriter` for the fingerprint only, writing its fields by hand in lexicographic key order because `System.Text.Json` has no key-sorting option. Format `sampled_at` with `DateTimeOffset.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)` to match the pinned form. Call it from a `Task` off the UI thread.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/GitContextFingerprint.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/GitContextFingerprint.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -188,6 +191,14 @@ Not applicable: this code uses no OSLog; a failed sample yields nil or unchanged
 **Rationale**: An unrepresentable value raises an Objective-C exception that `try?` does not catch, which would kill the status-line command and blank the line.
 **Approved**: pending
 
+**Decision**: When the branch resolves but the status or log command then fails, report the sample as failed (nil, or a marked field) instead of as a clean tree with the empty-string hash.
+**Rationale**: Today the failure is read as `""`, so the fingerprint claims no drift when the truth is unknown; see the open question on `sample-subcommand-failure`.
+**Approved**: pending
+
+**Decision**: When the branch resolves but the status or log command then fails, report the sample as failed (nil, or a marked field) instead of as a clean tree with the empty-string hash.
+**Rationale**: Today the failure is read as `""`, so the fingerprint claims no drift when the truth is unknown; see the open question on `sample-subcommand-failure`.
+**Approved**: pending
+
 **Decision**: Any failure returns the payload unchanged.
 **Rationale**: Enrichment decorates a row; losing the decoration is cheaper than losing the row.
 **Approved**: pending
@@ -203,10 +214,11 @@ Not applicable: this code uses no OSLog; a failed sample yields nil or unchanged
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-separation-of-concerns passes: running commands lives in `ReadOnlyGit`, and this type decides what is sampled, hashes it and splices the result. unit-test-coverage is partial: `GitContextFingerprintTests` covers sampling, hash movement, the untrimmed status, nesting, byte preservation and every fallback, but nothing exercises a failing status or log command after the branch resolved.
+separation-of-concerns passes: running commands lives in `ReadOnlyGit`, and this type decides what is sampled, hashes it and splices the result. unit-test-coverage is partial: `GitContextFingerprintTests` covers sampling, hash movement, the untrimmed status, nesting, byte preservation and every fallback, but nothing exercises a failing status or log command after the branch resolved, and vectors 013 to 017 (entry count, `sampled_at` form, the five-commit limit, the empty object and the directory scope) have no test yet.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Pinned field types and the sampled_at format, dropped the splice-reason requirement and duplicated rationale, fixed the recentCommitCount and WinUI notes, added five test vectors and a pending decision on subcommand failure. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

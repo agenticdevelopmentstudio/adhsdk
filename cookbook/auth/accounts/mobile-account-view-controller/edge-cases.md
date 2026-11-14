@@ -10,6 +10,6 @@
 - **Sign-out failure**: The sign-out task discards any result. Any error is only visible through the account's message and state; the screen does nothing else with it.
 - **Concurrent access**: The screen is main-actor confined; render, selection handlers and the account's callback all run on the main actor, and the sign-out task starts from the selection handler.
 - **Offline or disconnected**: Not applicable: the screen performs no network calls itself; connectivity is the account's concern and reaches the screen only as account state and message.
-- **Boundary values**: Not applicable: the screen has no numeric or size inputs; row count is at most three, because the user row never appears with Login or Signup.
+- **Boundary values**: Not applicable: the screen has no numeric or size inputs; row count is at most three, because `AccountDisplay` shows the user only with Logout (never with Login or Signup), and shows the spinner status row with at most two of the others.
 - **Weakly held anchor**: The sign-in anchor wraps this screen weakly; if the screen is gone before the account uses it, the anchor holds nothing.
 

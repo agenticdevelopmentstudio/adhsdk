@@ -2,7 +2,7 @@
 id: 826153e3-cae8-4917-a1d3-c298a54ab558
 title: "Hook Capture Command"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,11 +19,13 @@ tags:
   - hook
   - envelope
   - drop-file
-depends-on: []
-related: []
-references:
-  - packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookCaptureCommand.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookCaptureTests.swift (adhsdk)
+depends-on:
+  - f3326f3a-cccd-4ac5-8dc1-84d660ed4581
+related:
+  - 9e4aba28-ae2b-4733-b6a5-62e9ad5c7a19
+  - 704d4ae9-e344-44d4-b19c-eadfec082077
+  - 9eb46f78-0ceb-455f-9584-b6b43ddf0871
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -34,9 +36,9 @@ approved-date: ""
 
 `HookCaptureCommand` is what a hook helper executable runs when Claude Code fires a registered hook. The registered command line has the shape `<helper> hook --event <Type> [--ppid <int>]`. The command reads the hook payload that Claude Code piped to standard input, wraps it in an envelope together with a snapshot of the process context, and writes the envelope as a drop file that a daemon scans in later. It is the fallback transport: it writes the file whether or not a daemon is listening.
 
-The contract of a hook is "never fail, never produce stdout". The entry point `run` therefore returns exit status 0 whatever goes wrong, so a broken hook never blocks Claude Code. Everything specific to one daemon (the drop directory and its override variable) comes from a `ClaudeHookConfiguration`; the account lookups are injected closures because the toolkit core has no account store.
+The contract of a hook is "never fail, never produce stdout". The entry point `run` therefore returns exit status 0 whatever goes wrong, so a broken hook never blocks Claude Code. Everything specific to one daemon (the drop directory and its override variable) comes from a `ClaudeHookConfiguration` ([ClaudeHookConfiguration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871)); the account lookups are injected closures because the toolkit core has no account store.
 
-The type is a caseless enum with two public static entry points, `run` and `buildEnvelope`, plus an internal `systemInfo` and `iso8601UTC` that `HookEnvelopeBuilder` reuses. The directory and file mechanics live in the drop-writer component (`HookDropWriter`); the socket-path twin of the envelope lives in the envelope-builder component (`HookEnvelopeBuilder`); the status-line command that reuses `buildEnvelope` lives in the status-line-capture component (`StatusLineCapture`).
+The type is a caseless enum with two public static entry points, `run` and `buildEnvelope`, plus an internal `systemInfo` and `iso8601UTC` that `HookEnvelopeBuilder` reuses. The directory and file mechanics live in the drop-writer component ([HookDropWriter](cookbook:f3326f3a-cccd-4ac5-8dc1-84d660ed4581)); the socket-path twin of the envelope lives in the envelope-builder component ([HookEnvelopeBuilder](cookbook:9e4aba28-ae2b-4733-b6a5-62e9ad5c7a19)); the status-line command that reuses `buildEnvelope` lives in the status-line-capture component ([StatusLineCapture](cookbook:704d4ae9-e344-44d4-b19c-eadfec082077)).
 
 ## Behavioral Requirements
 
@@ -44,9 +46,10 @@ The type is a caseless enum with two public static entry points, `run` and `buil
 
 - **exit-status-zero**: `run` MUST return 0 on every path: a missing event flag, a tracked-out event, a malformed payload and a failed drop-file write alike.
 - **event-flag-required**: `run` MUST write nothing and return 0 when the arguments carry no `--event` value or an empty one.
-- **no-stdout**: The command MUST NOT write to standard output or standard error; the source contains no print, log or stderr call, and the comment on the write explains that stderr from a hook can confuse Claude Code.
-- **write-failure-swallowed**: `run` MUST swallow any error thrown while writing the drop file and still return 0; the source comment gives the reason as "the next event brings the same information".
+- **no-stdout**: The command MUST NOT write to standard output or standard error.
+- **write-failure-swallowed**: `run` MUST swallow any error thrown while writing the drop file and still return 0.
 - **flag-parsing**: The argument parser MUST accept only `--key value` pairs, where a value is the next argument and does not begin with `--`; positional arguments and `--key=value` forms are ignored.
+- **duplicate-flag-last-wins**: When the same `--key` appears more than once, the argument parser MUST keep the later value.
 - **ppid-flag-optional**: `--ppid` MAY be omitted; the registered command does not pass it.
 
 ### Envelope content
@@ -111,20 +114,23 @@ Derived from `HookCaptureTests` where a test is named, and from the source other
 | capture-011 | hook-data-from-stdin | `buildEnvelope` with stdin empty, then stdin `not json`, then stdin `[1,2]` | In each case `hook_data` holds only the lifted keys `term_program` and `term_session_id` |
 | capture-012 | flag-parsing | arguments `--event=Stop` | No `--event` value is found; `run` writes nothing and returns 0 |
 | capture-013 | flag-parsing, event-flag-required | arguments `--event --ppid 5` | `--event` has no value because the next argument starts with `--`; nothing is written |
-| capture-014 | context-claude-booleans | live environment `CLAUDECODE=TRUE`, `CLAUDE_YOLO=0` | `context.claude.running` is true and `context.claude.yolo` is false |
-| capture-015 | context-omits-unset, context-groups | live environment with no `LC_TERMINAL` and an empty `TMPDIR` | `context.terminal` has no `lc_terminal` key and `context.session` has no `tmpdir` key |
+| capture-014 | context-claude-booleans | integration-only (reads the live process environment, which `buildEnvelope` does not take as an argument); live environment `CLAUDECODE=TRUE`, `CLAUDE_YOLO=0` | `context.claude.running` is true and `context.claude.yolo` is false |
+| capture-015 | context-omits-unset, context-groups | integration-only (reads the live process environment); live environment with no `LC_TERMINAL` and an empty `TMPDIR` | `context.terminal` has no `lc_terminal` key and `context.session` has no `tmpdir` key |
 | capture-016 | write-failure-swallowed, exit-status-zero | `run` with a drop-directory variable naming a path under a regular file | Returns 0, writes nothing, prints nothing |
 | capture-017 | timestamp-format | any built envelope | `timestamp` matches `YYYY-MM-DDTHH:MM:SSZ` |
 | capture-018 | context-process | `buildEnvelope` with ppid string `99` | `context.process.ppid` is 99; with ppid nil and `claudePid` nil it is this process's parent pid |
+| capture-019 | token-recovery | `buildEnvelope` with an environment holding `CLAUDE_CODE_OAUTH_TOKEN=tok` and a process tree that yields no token | `accountName` is called with `tok` |
+| capture-020 | token-recovery, account-email | `buildEnvelope` with no token in the tree and none in the environment | `accountName` is called with nil |
+| capture-021 | context-system | any built envelope | `context.system` has string keys `hostname`, `os` (two words separated by one space) and `arch` |
+| capture-022 | duplicate-flag-last-wins | arguments `--event Stop --event Start` | The event is `Start` |
 
 SHOULD requirements: the document contains none, so no omission needs a rationale.
-
 ## Edge Cases
 
 - **Null and empty input**: empty stdin, non-JSON stdin and JSON that is not an object each yield an empty `hook_data` before the lifted keys are added, and the event is still captured (MUST, per `hook-data-from-stdin`). A payload without `session_id` is still captured; this command does not require one, unlike `HookEnvelopeBuilder`.
 - **Empty event**: `--event ""` is treated as absent and nothing is written (MUST, per `event-flag-required`).
 - **Boundary values**: `--ppid` that does not parse as an integer, including the empty string and values with trailing characters, falls through to `claudePid` (MUST, per `ppid-resolution`). `SHLVL` that does not parse as an integer is omitted from `context.shell`.
-- **Duplicate flags**: when the same key appears twice the later value replaces the earlier (the parser assigns into a dictionary); this is how the source behaves and is MAY-level for callers.
+- **Duplicate flags**: when the same key appears twice the later value replaces the earlier (the parser assigns into a dictionary); see `duplicate-flag-last-wins`.
 - **Error states**: a payload that cannot be parsed, an unreadable working directory (`cwd` becomes the empty string), a failed `uname` call (`system` becomes an empty object) and a failed drop-file write are all absorbed, and the exit status stays 0 (MUST). The write failure leaves no trace: nothing is logged and the event is lost for that invocation.
 - **Concurrent access**: hook commands for different events can run as separate processes at the same time. The type holds no shared state, and unique drop-file names are the drop writer's responsibility (see `HookDropWriter`). Within one process the code is synchronous and single-threaded.
 - **Offline or disconnected state**: not applicable — this command never opens a network connection or a socket; it only writes a file, which is how it behaves when no daemon is listening.
@@ -184,21 +190,22 @@ Not applicable: the command makes no log call and writes nothing to stderr by de
 - **Compose**: not used. An Android or JVM port would be a small launcher program (`ProcessBuilder` or a Gradle application) that reads `System.in` with `readBytes`, builds the envelope with `kotlinx.serialization` or `org.json`, and writes it with `java.nio.file.Files.move` using `StandardCopyOption.ATOMIC_MOVE`; there is no `getppid`, so the process-tree walk uses `ProcessHandle.current().parent()`.
 - **React/Web**: a Node.js port is a CLI script: read all of `process.stdin`, `JSON.parse` inside try/catch, take values from `process.env`, `process.ppid`, `os.hostname()`, `os.type()`, `os.release()`, `os.arch()` and `os.userInfo()`, and write with `fs.writeFileSync` then `fs.renameSync`. A browser has no equivalent. Environment values in Node are always strings, matching the empty-string rule here.
 - **AppKit / UIKit**: this is the source platform. Files: `Core/ClaudeHooks/HookCaptureCommand.swift`, tested by `HookCaptureTests`. It is a Foundation-only enum using `JSONSerialization`, `ISO8601DateFormatter`, `uname`, `getcwd`, `getppid` and `ProcessEnv` for the process-tree walk. It is macOS only in practice because `ProcessEnv` reads `KERN_PROCARGS2`; nothing in it touches AppKit or UIKit.
-- **WinUI 3**: build the helper as a small .NET console executable (`dotnet new console`) that Claude Code runs as the hook command. Read stdin with `Console.OpenStandardInput` into a `MemoryStream`, parse with `System.Text.Json.JsonDocument` or `JsonNode.Parse` inside try/catch (an empty or non-object payload becomes an empty `JsonObject`), read the environment with `Environment.GetEnvironmentVariable`, and take host facts from `Environment.MachineName`, `RuntimeInformation.OSDescription` and `RuntimeInformation.ProcessArchitecture`. There is no `getppid` or `SHLVL`; find the parent process with `NtQueryInformationProcess` (`PROCESS_BASIC_INFORMATION.InheritedFromUniqueProcessId`) or `System.Management` `Win32_Process.ParentProcessId`, and read another process's environment through `ReadProcessMemory` on its PEB, which needs matching rights. Uid, euid and gid have no Windows counterpart and should be omitted or replaced by the user SID from `WindowsIdentity.GetCurrent`. Wrap the whole `Main` in try/catch and return 0, and never write to `Console.Out` or `Console.Error`. Write the drop file with `File.WriteAllBytes` to a `.tmp` name in the same directory and `File.Move`; there is no `rename(2)`, but `File.Move` within one volume is atomic enough for a scan that filters on the `.json` extension.
+- **WinUI 3**: build the helper as a small .NET console executable (`dotnet new console`) that Claude Code runs as the hook command. Read stdin with `Console.OpenStandardInput` into a `MemoryStream`, parse with `System.Text.Json.JsonDocument` or `JsonNode.Parse` inside try/catch (an empty or non-object payload becomes an empty `JsonObject`), read the environment with `Environment.GetEnvironmentVariable`, and take host facts from `Environment.MachineName`, `RuntimeInformation.OSDescription` and `RuntimeInformation.ProcessArchitecture`. There is no `getppid` or `SHLVL`; find the parent process with `NtQueryInformationProcess` (`PROCESS_BASIC_INFORMATION.InheritedFromUniqueProcessId`) or `System.Management` `Win32_Process.ParentProcessId`, and read another process's environment through `ReadProcessMemory` on its PEB, which needs matching rights. Uid, euid and gid have no Windows counterpart and should be omitted or replaced by the user SID from `WindowsIdentity.GetCurrent`. Wrap the whole `Main` in try/catch and return 0, and never write to `Console.Out` or `Console.Error`. Write the drop file with `File.WriteAllBytes` to a `.tmp` name in the same directory and `File.Move`; there is no `rename(2)`, but `File.Move` within one volume is a single rename in the file system, so a scan that filters on the `.json` extension never sees a partial file, but it throws when the target name already exists unless `overwrite: true` is passed.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookCaptureCommand.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookCaptureCommand.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookCaptureTests.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
 **Decision**: The command swallows every failure and always returns 0 with no output.
-**Rationale**: The source comment says stderr from a hook can confuse Claude Code and the next event brings the same information; the type comment states the contract as "never fail, never produce stdout". The cost is that a failed write leaves no trace.
+**Rationale**: The source contains no print, log or stderr call, and the comment on the write says stderr from a hook can confuse Claude Code and that the next event brings the same information; the type comment states the contract as "never fail, never produce stdout". The cost is that a failed write leaves no trace.
 **Approved**: pending
 
 **Decision**: The headless check lives in this command as well as in the shell hook and the socket path.
@@ -229,12 +236,15 @@ Not applicable: the command makes no log call and writes nothing to stderr by de
 **Rationale**: The two builders are described in their own comments as producing the same context shape, and the differences follow from where each runs (a short-lived hook process versus a daemon). A port MUST pick one behavior per side deliberately.
 **Approved**: pending
 
+**Decision**: The drop file is written with the file system's default permissions, not owner-only.
+**Rationale**: The envelope holds the OAuth login email, `PATH`, `HOME`, `argv` and user ids, so owner-only permissions (0600 on the file, 0700 on the directory) may be warranted; the source sets none today and this is recorded as an open choice.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | reliability |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
@@ -242,10 +252,11 @@ Not applicable: the command makes no log call and writes nothing to stderr by de
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | privacy-and-data |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | passed | security |
 
-The component separates concerns: argument parsing, envelope building, context capture and file writing are distinct functions, and the file mechanics sit in `HookDropWriter`. Unit-test coverage is passed because `HookCaptureTests` covers the entry point, headless suppression, pid resolution, account injection and the drop file, although the live-process `context` groups and the token walk have no direct assertion. Explicit error handling is partial: failures are deliberately swallowed per the hook contract, so the code never reports them. Fault tolerance is passed because no failure can change the exit status. Data integrity is passed because the file is written through the drop writer's temporary-then-rename sequence. Data minimization is partial because the snapshot captures `PATH`, `HOME`, `argv` and other host details without a filter. No-PII-in-logs is passed because the command logs nothing. Token lifecycle is passed because the token is recovered per invocation, used only for the account lookup and never written to the envelope.
+The component separates concerns: argument parsing, envelope building, context capture and file writing are distinct functions, and the file mechanics sit in `HookDropWriter`. Unit-test coverage is partial: `HookCaptureTests` covers the entry point, headless suppression, pid resolution, account injection and the drop file, but the live-process `context` groups and the token walk have no direct assertion, so vectors capture-014, capture-015 and capture-019 to capture-021 have no test yet. Explicit error handling is partial: failures are deliberately swallowed per the hook contract, so the code never reports them. Fault tolerance is passed because no failure can change the exit status. Data integrity is passed because the file is written through the drop writer's temporary-then-rename sequence. Data minimization is partial because the snapshot captures `PATH`, `HOME`, `argv` and other host details without a filter. No-PII-in-logs is passed because the command logs nothing. Token lifecycle is passed because the token is recovered per invocation, used only for the account lookup and never written to the envelope.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Moved source paths out of references, linked sibling recipes in depends-on and related, added a duplicate-flag requirement and four vectors, downgraded unit-test coverage to partial, and corrected the WinUI File.Move claim. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

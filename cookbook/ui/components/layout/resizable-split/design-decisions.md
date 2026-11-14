@@ -27,3 +27,6 @@
 **Rationale**: Without this, a small accidental drag while aiming for the chevron would also toggle collapse — the "dancing divider" problem.
 **Approved**: pending
 
+**Decision**: Accept the open Compliance gaps (dynamic type, both internationalization checks, chevron touch target) for now: the header-bar title stays at a fixed `text-[11px]`, `bottomLabel` keeps its English default `"Details"`, and the chevron button keeps its glyph-plus-padding hit area.
+**Rationale**: Each fix changes the component's public contract or layout (a token font size, a required `bottomLabel`, a larger button), so it needs its own change; until then consumers pass a localized `bottomLabel` (see Localization) and rely on the grab band for the seam drag.
+**Approved**: pending

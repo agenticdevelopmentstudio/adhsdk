@@ -6,7 +6,7 @@
   **Rationale**: Stated in the source comment: a check that reports them "is not chipped again as an issue".
   **Approved**: pending
 - **Decision**: Never chip the internal `cron` check.
-  **Rationale**: Stated in the source comment: it is "wallboard noise". It is a hardcoded id, so a renamed check would reappear in the bar.
+  **Rationale**: Stated in the source comment: it is "wallboard noise". It is a hardcoded id with no shared constant tying it to the code that creates the cron check, so a renamed check would reappear in the bar. This coupling is a known risk.
   **Approved**: pending
 - **Decision**: Collapse correlated provider failures into the Connectivity chip by excluding them from `issues`.
   **Rationale**: Stated in the source comment; the `correlated` flag and the synthetic `connectivity` check come from `self-check-stability.ts`.

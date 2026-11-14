@@ -3,7 +3,7 @@
 - **inset-style**: The table MUST use the inset table style.
 - **row-count**: The list MUST show one row per entry in the model's `messages`, in the model's order.
 - **reload-on-messages**: The list MUST reload its rows, re-apply the selection and refresh the empty label whenever the model's `messages` changes.
-- **main-queue-hop**: UI updates from model changes MUST run on the main actor. The source delivers them through a main-queue hop, so the table reloads one hop after the model changes; see **stale-row-guard**.
+- **main-queue-hop**: UI updates from model changes MUST run on the main actor.
 - **row-sender**: A row MUST show the sender as the display name from the `from` header, or the bare address when the header has no name.
 - **row-date**: A row MUST show the date as the time for a message sent today, the abbreviated month and day for a message from earlier this year, and the year, abbreviated month and day for an older message. "Today" and "this year" use the current calendar and time zone.
 - **row-date-unparsed**: A row MUST show the original date text when it cannot be parsed as an ISO 8601 date.

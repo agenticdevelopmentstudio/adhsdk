@@ -8,7 +8,7 @@
 **Approved**: pending
 
 **Decision**: Rewrite the stylesheet text with ordered regular expressions into an `@scope` block instead of authoring scoped stylesheets.
-**Rationale**: Inferred from the source: the same shipped theme stylesheets (the source comments count 41; the manifest lists 39 themes) serve both document-wide and scoped use. The cost, documented in the comments, is that an unrecognised anchor drops the whole palette with no error, which is why a test runs every shipped theme.
+**Rationale**: Inferred from the source: the same shipped theme stylesheets (the source comments give a theme count that is out of date against the manifest) serve both document-wide and scoped use. The cost, documented in the comments, is that an unrecognised anchor drops the whole palette with no error, which is why a test runs every shipped theme.
 **Approved**: pending
 
 **Decision**: Move document-state qualifiers (`[data-color-mode]`, `:not(.dark)`, `[data-contrast=...]`) onto an `html` ancestor of `:scope`.
@@ -28,10 +28,13 @@
 **Approved**: pending
 
 **Decision**: Keep the legacy `:root`, `:root.dark` and `:root:not(.dark)` rewrites although no shipped theme uses them.
-**Rationale**: The source test calls this a contract regression test: `buildScopedCss` is public and an external stylesheet may still use that shape.
+**Rationale**: The source test calls this a contract regression test: `buildScopedCss` is exported and an external stylesheet may still use that shape. Whether `buildScopedCss` is a supported API, given it has no package subpath or index export, is undecided; adding a `./ThemeStyle` subpath or index export would make it one, and dropping the claim would retire the legacy rewrites.
 **Approved**: pending
 
 **Decision**: Return `null` for an unknown theme key rather than throw.
 **Rationale**: The source comment: a throw would take down a whole page over a style tag.
 **Approved**: pending
 
+**Decision**: Fail silently, with no dev-mode warning, when an anchor is unrecognised or `scope` is not a valid selector.
+**Rationale**: The source does nothing in either case, and the shipped-theme sweep test is what catches a new anchor shape. A warning when the rewritten body has no `:scope`, or when `scope` fails `CSS.supports('selector(...)')`, would shorten that failure but is not in the source.
+**Approved**: pending

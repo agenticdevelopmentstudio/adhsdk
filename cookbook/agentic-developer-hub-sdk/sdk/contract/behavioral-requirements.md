@@ -57,7 +57,7 @@
   catch the mistake.
 - **draft-commit-or-abort**: `draftCleared` MUST end a participant's draft. If
   the draft finalized, a `messageReceived` for the same content MUST follow;
-  if it was aborted, no `messageReceived` MUST arrive for it.
+  if it was aborted, a `messageReceived` MUST NOT arrive for it.
 - **draft-never-in-messages**: An active draft MUST NOT appear in
   `ChatViewModel.messages` before it commits as a `Message` via
   `messageReceived`.
@@ -131,6 +131,11 @@
 - **command-activity-in-place-update** (apple): A `commandCompleted` event
   MUST fill the matching `CommandActivity`'s `result` in place, at the same
   `id` and index, rather than appending a second entry.
+- **command-activity-is-a-struct-not-a-protocol** (apple): `CommandActivity`
+  MUST be a concrete `struct`, unlike its sibling `[any Protocol]`-typed
+  properties on `ChatViewModel`, because it only pairs two protocols
+  (`CommandInvocation`, `CommandResult`) the host already supplies, with
+  nothing left for a conformer to vary.
 
 ### Configuration & Hooks
 
@@ -191,6 +196,33 @@
   that needs to serialize concurrent access MUST do so itself (see Edge
   Cases), since the protocol grants no actor isolation.
 
+### Optional Fields
+
+- **optional-fields-may-be-absent**: Every optional field in this contract
+  (`Message.id`, `Message.timestamp`, `Attachment.displayName`,
+  `Attachment.byteSize`, `DisplayConfig.maxParticipants`,
+  `DisplayConfig.themeIdentifier`, `Permission.defaultDecision`,
+  `CommandResult.resultJSON`, `CommandResult.errorMessage`,
+  `Conversation.title`) MUST be treated as legitimately absent, never as an
+  error state, including when all of them are absent at once.
+
+### Status Vocabulary (apple)
+
+- **chat-status-kind-mapping**: `ChatStatusKind.init(_:)` MUST map
+  `TurnStatus.thinking`, `.responding` and `.retrying` to `.think`,
+  `.respond` and `.retry` respectively, exhaustively.
+- **shufflebag-no-back-to-back**: `ShuffleBag.next()` MUST NOT return the same
+  element twice in a row when the source holds more than one element, even
+  across the boundary where the bag refills and reshuffles.
+- **shufflebag-exhaust-before-repeat**: `ShuffleBag.next()` MUST return every
+  element of the source exactly once before any element repeats.
+- **shufflebag-single-element**: A `ShuffleBag` over a one-element source MUST
+  return that element on every `next()` call; the no-repeat rule does not
+  apply because a one-element bag cannot satisfy it.
+- **shufflebag-empty-returns-nil**: A `ShuffleBag` over an empty source MUST
+  return `nil` from `next()` rather than trap (see Cross-Platform
+  Divergences for web's differing behavior).
+
 ### ScriptedBackend (reference conformer, apple)
 
 - **scripted-backend-two-modes**: `ScriptedBackend` MUST support exactly two
@@ -220,7 +252,7 @@
   `statusChanged(participantID:status:)` and `ChatViewModel` adds
   `statuses: [String: ChatStatus]`, matched by
   `ChatUpdate.statusChanged(participantID:)`; the web `InboundEvent`,
-  `ChatUpdate`, and `ChatViewModel` given here have no equivalent case or
+  `ChatUpdate`, and `ChatViewModel` (under `packages/web/packages/chat/src/contract/`) have no equivalent case or
   property. `ChatStatus.swift`'s own documentation places web's equivalent
   signal on a separate `onStatus`-style callback the consuming component
   subscribes to, not on this union — a port targeting web parity MUST NOT
@@ -243,13 +275,13 @@
   choose one lifecycle deliberately per platform rather than assuming parity
   (see Design Decisions).
 - **shufflebag-empty-behavior-divergence**: apple's `ShuffleBag.next()` MUST
-  return `nil` for an empty source and MUST NOT trap; the given source states
-  that web's `ShuffleBag` throws in the same situation. A port MUST choose
+  return `nil` for an empty source and MUST NOT trap; web's `ShuffleBag`
+  (`packages/web/packages/chat/src/backends/ShuffleBag.ts`) throws in the same situation. A port MUST choose
   its own failure mode deliberately here rather than copying the other
   platform's.
-- **command-activity-is-a-struct-not-a-protocol** (apple): `CommandActivity`
-  MUST be a concrete `struct`, unlike its sibling `[any Protocol]`-typed
-  properties on `ChatViewModel`, because it only pairs two protocols
-  (`CommandInvocation`, `CommandResult`) the host already supplies, with
-  nothing left for a conformer to vary.
-
+- **participants-changed-departure-divergence**: A `participantDeparted` for an
+  id that was never in the roster removes nothing. apple's
+  `ObservableChatViewModel` still emits `ChatUpdate.participantsChanged`
+  in that case; web's `DefaultOrchestrator` emits `participantsChanged` only
+  when an entry was actually removed. A port MUST choose one of these
+  deliberately rather than assuming parity.

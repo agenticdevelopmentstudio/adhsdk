@@ -2,7 +2,7 @@
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `AnimContext` (`config`, `channels`, `tweens`, `prng`, deps) | struct/object, constructor argument | — (required) | The loaded `CharacterConfig`, the runtime `Channels`/`Tweens` instances, and the shared seeded `Prng` every Arbiter/Reflexes instance is built against. |
-| `ReflexDeps` (`mood`, `reducedMotion`, `mutter`, and related closures) | injected callbacks | — (required) | Host-supplied functions Reflexes reads every poll: the currently resolved mood, whether reduced motion is active, and the mutter callback invoked on eligible moods. |
+| `ReflexDeps` | struct/object, constructor argument | — (required) | The `AnimContext` parts and the shared `Prng` (`ctx`/`prng` in Swift; `config`, `channels`, `tweens`, `scheduler` and `prng` in TypeScript), plus three host callbacks: `mood: () -> String` (the currently resolved mood), `reducedMotion: () -> Bool` (whether reduced motion is active, read every poll) and `mutter: (Double) -> Void` (called with the time, only on mutter-eligible moods). |
 | `config.behavior.ladder` (`LadderDef`) | config, loaded JSON | — (authored per character) | The idle rung thresholds/moods, `pollMs` poll cadence, and `alertAfterTypingMs` typing-pin window `Arbiter`/`Reflexes` share one poll cadence from. |
 | `config.behavior.poke` (`[PokeRule]`) | config, loaded JSON | — (authored per character) | Ordered `from`/`"*"`-matched poke reactions and their hold windows. |
 | `config.behavior.waking` (`WakingDef`) | config, loaded JSON | — (authored per character) | The waking transition's starting mood, destination mood, and window duration. |

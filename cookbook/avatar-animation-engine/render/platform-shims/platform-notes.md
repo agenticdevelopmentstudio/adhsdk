@@ -15,7 +15,7 @@
   a stable `key` on `item.id` plus an imperative attribute write in a
   `useLayoutEffect`/ref callback — rather than trusting React's virtual-DOM
   diff, which does not guarantee the same node survives frame to frame.
-- **SwiftUI**: There is no SwiftUI layer in this recipe's sources; the
+- **SwiftUI**: There is no SwiftUI layer in this ingredient's sources; the
   consuming renderer drives raw `CAShapeLayer`s directly. A SwiftUI port
   would replace that with a `Canvas`/`GraphicsContext` view (or a custom
   `Shape`) driven by `TimelineView(.animation)` instead of `CADisplayLink`.
@@ -31,7 +31,7 @@
   `Settings.Global.ANIMATOR_DURATION_SCALE` or an
   `AccessibilityManager`-based check. Compose's `Canvas` redraws imperatively
   inside one lambda rather than mutating retained nodes, so the "create once,
-  reuse forever" node cache this recipe relies on (both the Apple layer cache
+  reuse forever" node cache this ingredient relies on (both the Apple layer cache
   and the web `Map`) has no direct analogue; a port would need `remember`ed
   `Path` objects keyed by `item.id` to avoid re-parsing `item.d` every frame.
 - **WinUI 3**: A `Microsoft.UI.Xaml.Shapes.Path` per `DisplayItem`, held in a
@@ -39,7 +39,7 @@
   `Map<string, SVGPathElement>` and the Apple layer cache do — one `Path`
   created the first time an `id` is seen, its `Data` (a `PathGeometry` or
   Win2D `CanvasGeometry`, parsed from the same `M`/`L`/`C`/`Z` string this
-  recipe's path parser reads), `RenderTransform` (a `MatrixTransform` built
+  ingredient's path parser reads), `RenderTransform` (a `MatrixTransform` built
   from the same six fields as `Mat`/`CGAffineTransform` —
   `Matrix(a, b, c, d, e/OffsetX, f/OffsetY)`), `Opacity` (from `paint.alpha`,
   mirroring the alpha-on-opacity-not-color decision below), and `Fill`/
@@ -49,9 +49,8 @@
   driver is `CompositionTarget.Rendering` (the `CADisplayLink`/
   `requestAnimationFrame` equivalent); the update must stay synchronous —
   `CompositionTarget.Rendering` fires on the UI thread, and a `Task`/`async`
-  write would land a frame late. There is no `HttpClient`/`System.Text.Json`/
-  `Windows.Storage` surface to port here, since this component neither talks
-  to the network nor persists anything. Reduce Motion reads
-  `Windows.UI.ViewManagement.UISettings.AnimationsEnabled`, matching
-  `Platform.reduceMotion()`'s AppKit/UIKit calls.
+  write would land a frame late. Reduce Motion reads
+  `Windows.UI.ViewManagement.UISettings.AnimationsEnabled`, whose sense is
+  inverted relative to `Platform.reduceMotion()`: use
+  `reduceMotion = !AnimationsEnabled`.
 

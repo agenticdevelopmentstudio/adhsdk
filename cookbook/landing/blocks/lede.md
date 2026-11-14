@@ -2,15 +2,15 @@
 id: 811cc18f-e33a-42bb-bd2d-dfc3dc21bc77
 title: "Lede"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Introductory paragraph component that renders semantic text content under headings."
+summary: "Introductory paragraph component that with a constrained measure, used after headings or other content blocks."
 platforms:
   - typescript
   - web
@@ -39,7 +39,8 @@ A paragraph component used for introductory or emphasized text following heading
 - **apply-lede-class**: Component MUST apply the `lp-lede` CSS class to the rendered element.
 - **accept-additional-class**: Component MUST accept an optional `className` prop that is concatenated with `lp-lede`.
 - **clean-class-attribute**: The rendered `class` attribute MUST contain no `undefined` or empty-string tokens: falsy `className` values (`undefined`, `null`, `""`) are filtered out before the attribute is joined. A whitespace-only value is truthy and is therefore not filtered (see Edge Cases).
-- **constrain-paragraph-measure**: Component MUST constrain the paragraph to a maximum measure of 72 characters (`max-width: 72ch`, defined by the `lp-lede` CSS rule) for readability.
+- **constrain-paragraph-measure**: Component MUST constrain the paragraph to a maximum measure of 72 characters (`max-width: 72ch`, defined by the `lp-lede` CSS rule) for readability. `ch` is the width of the `0` glyph of the paragraph's font; the font-family is a host-configurable assumption (the shipped site uses one monospace font-family token), not part of this component.
+- **meet-contrast-ratio**: Paragraph text MUST meet WCAG AA contrast (at least 4.5:1) against the background it sits on, using the `--lp-ink-dim` token (fallback `#a0a0a0`). Hosts that override the token or the background own this check.
 
 ## Appearance
 
@@ -47,12 +48,11 @@ A paragraph component used for introductory or emphasized text following heading
 - **Base class**: `lp-lede`
 - **Color**: `var(--lp-ink-dim, #a0a0a0)`
 - **Font**: weight 300, size `1.02rem`
-- **Measure**: `max-width: 72ch` (see **constrain-paragraph-measure**) — wider than the 60ch a proportional face would want, because the site is set in one monospace face where a character is narrower than average
+- **Measure**: `max-width: 72ch` (see **constrain-paragraph-measure** and the 72ch Design Decision); `ch` is the width of the `0` glyph of the paragraph's font, which the host chooses (the shipped site sets one monospace font-family token)
 - **Spacing**: `margin-top: 1.15rem` by default; `0.9rem` between two consecutive ledes (`.lp-lede + .lp-lede`); `1.8rem` when a lede is the first child of `.lp-wrap`
 - **Text wrapping**: `text-wrap: pretty`
-- **Emphasis (`<em>`)**: rendered in `var(--lp-accent-bright, #d8d8d8)` with `font-style: normal` — color signals emphasis instead of italics
+- **Emphasis (`<em>`)**: rendered in `var(--lp-accent-bright, #d8d8d8)` with `font-style: normal` — color signals emphasis instead of italics. This styling is informative only; the component has no requirement for it and no test vector covers it.
 - **Additional styling**: Applied via optional `className` prop
-- **Styling source**: `packages/web/packages/landing/src/css/blocks.css` (`.lp-lede` rule)
 
 ## States
 
@@ -74,10 +74,11 @@ Not applicable: Lede is a static presentational component with no interactive or
 | lede-004 | accept-additional-class | `<Lede className="extra">Text</Lede>` | Rendered element includes both `lp-lede` and `extra` classes |
 | lede-005 | clean-class-attribute | `<Lede className={undefined}>Text</Lede>` | Rendered element class is `lp-lede` only (undefined filtered out) |
 | lede-006 | clean-class-attribute | `<Lede className="">Text</Lede>` | Rendered element class is `lp-lede` only (empty string filtered out) |
-| lede-007 | clean-class-attribute | `<Lede className=" ">Text</Lede>` | Rendered element class attribute is `lp-lede  ` (two spaces): a whitespace-only value is truthy, so it is not filtered and leaves a stray blank token |
-| lede-008 | constrain-paragraph-measure | `<Lede>Text</Lede>` | Computed style of the rendered `<p>` has `max-width: 72ch` |
-| lede-009 | Edge Case: empty children | `<Lede></Lede>` | Component renders `<p className="lp-lede"></p>` with no children guard |
-
+| lede-007 | Edge Case: whitespace-only className | `<Lede className=" ">Text</Lede>` | Rendered element class attribute is `lp-lede  ` (two spaces): a whitespace-only value is truthy, so it is not filtered and leaves a stray blank token. This documents current behavior and is not a requirement; **clean-class-attribute** covers only `undefined`, `null` and `""`. |
+| lede-008 | constrain-paragraph-measure | `<Lede>Text</Lede>` | The `.lp-lede` rule in `blocks.css` declares `max-width: 72ch` (jsdom applies no stylesheets and `getComputedStyle` reports pixels, so assert the rule text, or use a Playwright check of the rendered width) |
+| lede-009 | Edge Case: empty children | `<Lede></Lede>` | Component renders `<p class="lp-lede"></p>` with no children guard |
+| lede-010 | accept-additional-class | `<Lede className="a b">Text</Lede>` | Rendered element class is `lp-lede a b` |
+| lede-011 | meet-contrast-ratio | Rendered paragraph with `--lp-ink-dim` unset (fallback `#a0a0a0`) on the host's page background | The contrast ratio between `#a0a0a0` and the background is at least 4.5:1 |
 ## Edge Cases
 
 - **Empty children**: If children is empty string or not provided, component renders an empty paragraph; no guard prevents this (lede-009).
@@ -107,7 +108,7 @@ Not applicable: Lede contains no text strings of its own. All text content is pr
 | Option | Behavior |
 |--------|----------|
 | Dynamic Type / Font Scaling | Font size (`1.02rem`) and measure (`max-width: 72ch`, see **constrain-paragraph-measure**) are set in relative units, so the rendered paragraph scales with the user's font-size and browser-zoom preference without truncation. |
-| Color Contrast | Text renders in the `--lp-ink-dim` token (fallback `#a0a0a0`); it MUST meet WCAG AA contrast against its background (see **Compliance**). |
+| Color Contrast | Text renders in the `--lp-ink-dim` token (fallback `#a0a0a0`); it MUST meet WCAG AA contrast against its background (see **meet-contrast-ratio** and **Compliance**). |
 | Reduce Motion | Not applicable — Lede has no animation or transition. |
 
 ## Feature Flags
@@ -128,22 +129,26 @@ Not applicable: Lede is a presentational component with no operational state or 
 
 ## Platform Notes
 
-- **React/Web**: Render as `<p>` with `className` attribute; base class `lp-lede`, measure constrained to `max-width: 72ch`. Source file: `packages/web/packages/landing/src/blocks/Lede.tsx` (styling in `packages/web/packages/landing/src/css/blocks.css`). Implementation filters falsy class values before joining with a space; a whitespace-only `className` value is not filtered.
-- **SwiftUI**: Use a `Text` view; apply font, size, and color with `.font()` and `.foregroundStyle()` (not the deprecated `.foregroundColor()`), and constrain width with `.frame(maxWidth:)` sized to the same measure to match `lp-lede` styling. `Text` wraps by default.
-- **Compose**: Use the `Text` composable, passing `color` directly (or a `style = TextStyle(color = ...)`) — Compose has no `.color()` modifier — along with `fontWeight` and `fontSize` parameters, and `Modifier.widthIn(max = ...)` sized to the same measure to match `lp-lede` styling. `Text` wraps by default.
-- **AppKit / UIKit**: Use `NSTextField(wrappingLabelWithString:)` (macOS) or `UILabel` with `numberOfLines = 0` (iOS) to match `lp-lede` styling; both wrap by default. Constrain width to the same measure via a layout constraint. Configure font, size, and text color properties.
-- **WinUI 3**: Use a `TextBlock` control with the `Text` property for content and `TextWrapping="Wrap"`; constrain width with `MaxWidth` sized to the same measure (rather than `Margin` padding) to match web styling. Set `FontSize`, `FontFamily`, and `Foreground` (color) properties.
+- **React/Web**: Render as `<p>` with `className` attribute; base class `lp-lede`, measure constrained to `max-width: 72ch`. Implementation filters falsy class values before joining with a space; a whitespace-only `className` value is not filtered.
+- **SwiftUI**: Use a `Text` view; apply font, size, and color with `.font()` and `.foregroundStyle()` (not the deprecated `.foregroundColor()`), and constrain width with `.frame(maxWidth:)` where `maxWidth = 72 × the width of "0" in the chosen font` to match `lp-lede` styling. `Text` wraps by default.
+- **Compose**: Use the `Text` composable, passing `color` directly (or a `style = TextStyle(color = ...)`) — Compose has no `.color()` modifier — along with `fontWeight` and `fontSize` parameters, and `Modifier.widthIn(max = ...)` where the max is 72 × the width of "0" in the chosen font, to match `lp-lede` styling. `Text` wraps by default.
+- **AppKit / UIKit**: Use `NSTextField(wrappingLabelWithString:)` (macOS) or `UILabel` with `numberOfLines = 0` (iOS) to match `lp-lede` styling; both wrap by default. Constrain width with a layout constraint of `maxWidth = 72 × the width of "0" in the chosen font`. Configure font, size, and text color properties.
+- **WinUI 3**: Use a `TextBlock` control with the `Text` property for content and `TextWrapping="Wrap"`; constrain width with `MaxWidth = 72 × the width of "0" in the chosen font` (rather than `Margin` padding) to match web styling. Set `FontSize`, `FontFamily`, and `Foreground` (color) properties.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Lede.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Lede.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 **Decision**: Lede is implemented as a standalone component rather than scoped to appear only under a specific heading component (e.g. `Head`).
 **Rationale**: The same voice and measure (`max-width: 72ch`, see **constrain-paragraph-measure**) are wanted for the odd paragraph that follows a card grid, a chip list, or another content block, not only the one under a heading.
+**Approved**: pending
+
+**Decision**: The paragraph measure is `max-width: 72ch`.
+**Rationale**: The CSS comment in `blocks.css` says 72ch is wider than the 60ch a proportional face would want, because a monospace character is narrower than the average proportional one. That reasoning does not hold: in a monospace face every glyph is exactly 1ch wide, so 72ch is exactly 72 characters per line. The value is kept as the shipped measure. Because `ch` follows the host's font, a host that changes the font-family changes the physical width of the measure.
 **Approved**: pending
 
 ## Compliance
@@ -164,6 +169,7 @@ Not applicable: Lede is a presentational component with no operational state or 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Reworded the summary, moved the 72ch rationale to a Design Decision with the monospace reasoning corrected, promoted contrast to the meet-contrast-ratio requirement, made lede-007 informative, fixed lede-008 and lede-009, added vectors for multiple classes and contrast, gave native notes a measure formula, and removed the repeated implementation paths. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case, promote accept-additional-class to MUST, restate class filtering as observable clean-class-attribute with new edge-case vectors, add constrain-paragraph-measure with concrete lp-lede appearance values, reformat design decision, replace Compliance with an applicable-checks table, correct Platform Notes APIs and add wrapping guidance, add accessibility-options text-scaling guidance, unquote frontmatter dates, add tags |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

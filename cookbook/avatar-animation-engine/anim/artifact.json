@@ -4,11 +4,11 @@
     "id": "a7c91832-4059-4e06-b8c6-e8c727567c66",
     "title": "Avatar Engine Anim",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,13 +27,15 @@
       "mood",
       "reflexes"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "74ba9dde-4963-42cb-aa03-bf1ee4dcc794"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5255fa0811092d3d",
+  "synced": "0a426cc1fa2cdc95",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

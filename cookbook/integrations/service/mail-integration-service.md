@@ -2,11 +2,11 @@
 id: aed9acc9-6340-487b-acfb-b7b13f14e59a
 title: "Mail Integration Service"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -32,15 +32,16 @@ approved-date: ""
 
 # Mail Integration Service
 
+`MailIntegrationService` is the host-agnostic Gmail service a daemon hosts.
 ## Overview
 
-`MailIntegrationService` is the host-agnostic Gmail service a daemon hosts. It is a Swift `actor` that answers `MailRequest` values with `MailResponse` values, runs a poll scheduler that syncs each connected Gmail account on its own interval, signs accounts in through a browser OAuth flow, and writes label changes (modify and move) back to Gmail. It does not talk to Gmail or Google directly: it composes an `IntegrationsStore`, a `SecretStoring` Keychain wrapper, a `GoogleSignInFlow`, a `GoogleTokenEndpoint`, a `GoogleTokenProvider`, a `GmailAPI` factory and `GmailSyncWorker`; all but the worker are injected or derived in `init`, and each sync builds its own worker.
+The service is a Swift `actor` that answers `MailRequest` values with `MailResponse` values, runs a poll scheduler that syncs each connected Gmail account on its own interval, signs accounts in through a browser OAuth flow, and writes label changes (modify and move) back to Gmail. It does not talk to Gmail or Google directly: it composes an `IntegrationsStore`, a `SecretStoring` Keychain wrapper, a `GoogleSignInFlow`, a `GoogleTokenEndpoint`, a `GoogleTokenProvider`, a `GmailAPI` factory and `GmailSyncWorker`; all but the worker are injected or derived in `init`, and each sync builds its own worker.
 
-Use it as the single owner of Gmail state in a process. Per-connection sync serialisation, status recording (`active`, `error`, `revoked`), the sign-in slot, the provider-removal fence and the paging cursors all live here, so the sync worker, the REST client and the UI stay free of them. The contract is also carried over a JSON transport: `handle(requestData:)` takes encoded request bytes and returns encoded response bytes.
+Use it as the single owner of Gmail state in a process. Per-connection sync serialisation, status recording (`active`, `error`, `revoked`), the sign-in slot, the provider-removal fence and the paging cursors all live here, so the sync worker, the REST client and the UI stay free of them. The contract is also carried over a JSON transport: `handle(requestData:)` takes encoded request bytes and returns encoded response bytes. The request and response types and their JSON shape are defined in the MailRPC artifact ([adhsdk.ingredient.integrations.service.mail-rpc](cookbook:fc9671be-170c-436e-9628-892624952191)).
 
 ## Behavioral Requirements
 
-Contract: `public actor MailIntegrationService` with `public init(store:secrets:signIn:tokenEndpoint:makeAPI:now:)`, `public func handle(_ request: MailRequest) async -> MailResponse`, `public nonisolated func handle(requestData: Data) async -> Data`, `public func start(tick: Duration = .seconds(60))`, `public func stop(timeout: Duration = .seconds(5)) async` and `public func runDueSyncs() async`. Internal members (`runningSyncCount`, `schedulerTask`, `setObserver`, `waitForIdle`, `MailServiceEvent`) exist for tests. Mutable state is `running` (one `RunningSync` per connection id), `scheduler`, `observer`, `lastAttempt`, `removing`, `pendingSignIn`, `providerGeneration` and `providerRemovals`.
+Contract: `public actor MailIntegrationService` with `public init(store:secrets:signIn:tokenEndpoint:makeAPI:now:)`, `public func handle(_ request: MailRequest) async -> MailResponse`, `public nonisolated func handle(requestData: Data) async -> Data`, `public func start(tick: Duration = .seconds(60))`, `public func stop(timeout: Duration = .seconds(5)) async` and `public func runDueSyncs() async`. Internal members (`runningSyncCount`, `schedulerTask` (a read of `scheduler`), `setObserver`, `waitForIdle`, `MailServiceEvent`) exist for tests. Mutable state is `running` (one `RunningSync` per connection id), `scheduler`, `observer`, `lastAttempt`, `removing`, `pendingSignIn`, `providerGeneration` and `providerRemovals`.
 
 ### Isolation and construction
 
@@ -56,7 +57,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **unknown-message-not-found**: An `IntegrationError.unknownMessage` MUST become `MailResponse.notFound(...)` with that error's `localizedDescription`, which is `.failure` with `notFound: true`.
 - **request-data-decoding**: `handle(requestData:)` MUST decode the bytes as a `MailRequest` with `JSONDecoder`, call `handle(_:)` and return the response encoded with `JSONEncoder`.
 - **bad-request**: `handle(requestData:)` MUST answer `.failure("bad request")` (the value of `MailClient.badRequest`) when the bytes do not decode as a `MailRequest`.
-- **encoding-fallback**: When the response cannot be encoded, `handle(requestData:)` MUST return the literal bytes of `{"failure":{"_0":"encoding failed"}}`.
+- **encoding-fallback**: When the response cannot be encoded, `handle(requestData:)` MUST return the literal bytes of `{"failure":{"_0":"encoding failed"}}`. This is Swift's synthesized `Codable` shape for the `failure` case with one unlabelled string payload; the full request and response schema is in the MailRPC artifact ([adhsdk.ingredient.integrations.service.mail-rpc](cookbook:fc9671be-170c-436e-9628-892624952191)), and a port must reproduce it.
 - **dispatch-providerStatus**: `.providerStatus` MUST answer `.providerStatus` with the current provider status.
 - **dispatch-importOAuthClient**: `.importOAuthClient(json:)` MUST answer `.providerStatus` with the status after the import.
 - **dispatch-removeProvider**: `.removeProvider` MUST answer `.ok` after the provider has been removed.
@@ -112,7 +113,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **remove-account-dedupe**: A removal of an account already being removed MUST return at once without a second removal.
 - **remove-account-no-sync**: A sync MUST NOT start for an account while its removal runs.
 - **remove-account-revoke-best-effort**: A failure to revoke at Google MUST NOT fail the removal.
-- **remove-account-keychain-failure**: A credential the secret store will not remove MUST fail the removal and leave the connection in place.
+- **remove-account-keychain-failure**: A credential the secret store will not remove MUST fail the removal and leave the connection in place. The service writes no status on this path, so the connection keeps the status it had; the revoke at Google is not undone, and the next sync records the outcome (`revoked` when Google reports the grant revoked).
 - **settings-validated**: `updateSettings` MUST validate the settings first and fail with `IntegrationError.invalidSettings` unless `windowDays` is in 1...3650 and `pollIntervalMinutes` is in 1...1440.
 - **settings-unchanged**: When the new settings equal the stored ones, `updateSettings` MUST return the current account without stopping or starting a sync.
 - **settings-quiesce**: Otherwise `updateSettings` MUST cancel and await the account's running sync before it changes anything.
@@ -139,12 +140,12 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **record-cancellation**: A sync that fails by cancellation MUST record nothing.
 - **record-revoked**: A sync that fails with `IntegrationError.revoked` MUST set the connection status to `revoked`.
 - **record-error**: Any other sync failure MUST set status `error` with the error's `localizedDescription` as `lastError`, preserving the stored cursor and `lastSyncAt`.
-- **status-write-errors**: The status write in `record` MUST swallow a store failure: a failure while recording `error` or `revoked` is neither logged nor signalled (see the Design Decision on swallowed store failures).
-- **scheduler-store-read**: `startDueSyncs` MUST start nothing when reading connections fails, without a log or signal (see the Design Decision on swallowed store failures).
+- **status-write-errors**: The status write in `record` MUST swallow a store failure, and a port MUST keep this behavior: a failure while recording `error` or `revoked` is neither logged nor signalled (see the Design Decision on swallowed store failures).
+- **scheduler-store-read**: A port MUST keep this behavior: `startDueSyncs` MUST start nothing when reading connections fails, without a log or signal (see the Design Decision on swallowed store failures).
 - **sync-now-targets**: `syncNow(account:)` MUST target the named account, or every syncable `gmail` connection when `account` is nil.
 - **sync-now-bypasses-due**: `syncNow` MUST start syncs regardless of due-ness.
 - **sync-now-joins**: When a sync is already running for a target, `syncNow` MUST notify the observer with `.joinedRunningSync(id)` and wait for that sync rather than start another.
-- **sync-now-not-syncable**: `syncNow` for a named account MUST fail with `IntegrationError.revoked` when its status is `revoked`, and with `account <email> is not ready to sync` for any other non-syncable status.
+- **sync-now-not-syncable**: `syncNow` for a named account MUST fail with `IntegrationError.revoked` when its status is `revoked`, and with `account <email> is not ready to sync` for a `pending` account (the only other non-syncable status, since the statuses are `active`, `error`, `revoked` and `pending`).
 - **sync-now-failures-in-status**: A sync that fails inside `syncNow` MUST NOT fail the request; the failure appears as the account's `status` and `lastError` in the returned accounts.
 
 ### Listing messages
@@ -211,7 +212,7 @@ Contract: `public actor MailIntegrationService` with `public init(store:secrets:
 - **sync-serialised-per-connection**: Syncs MUST be serialised per connection (see one-sync-per-connection) and MAY run in parallel across connections.
 - **quiesce-loop**: Stopping one connection's sync MUST cancel it and await it, repeating until the `running` entry is gone.
 - **suspension-rechecks**: After any await that precedes a write to the store, the service MUST re-read the connection or provider generation it depends on, not rely on a snapshot taken before the await.
-- **fetch-tasks-parallel**: Message re-reads MAY run in parallel up to 8; every other operation within one request MUST run sequentially.
+- **fetch-tasks-parallel**: Message re-reads MAY run in parallel up to 8; every other operation within one connection's request path MUST run sequentially. The exceptions are syncs for different connections: `run-due-syncs` and `syncNow` with a nil account start several at once, and `sign-in-starts-sync` starts one without awaiting it.
 
 ### Persistence and side effects
 
@@ -238,7 +239,7 @@ Vectors are drawn from `MailIntegrationServiceTests` (the test name is given) an
 |----|-------------|-------|----------|
 | mail-service-001 | request-data-decoding, dispatch-listAccounts | `handle(requestData:)` with the encoded `.listAccounts` and no accounts (`requestRoundTripsThroughData`) | Decodes as `.accounts([])` |
 | mail-service-002 | bad-request | `handle(requestData:)` with the bytes `nope` (`undecodableRequestIsBadRequest`) | Decodes as `.failure("bad request")` |
-| mail-service-003 | oauth-config-required, error-to-failure | `.signIn` with no provider imported (`signInWithoutProviderFails`) | `.failure` whose message contains `not configured`; the sign-in flow is called 0 times |
+| mail-service-003 | oauth-config-required, error-to-failure | `.signIn` with no provider imported (`signInWithoutProviderFails`) | `.failure` whose message contains `not configured` (`Gmail is not configured — import an OAuth client JSON first`); the sign-in flow is called 0 times |
 | mail-service-004 | status-configured, secret-never-leaves, secret-suffix-rule | Import a client with secret `GOCSPX-abcdefghij12345`, then `.providerStatus` (`providerStatusShowsOnlyTheLastFiveCharactersOfTheSecret`) | `configured: true`, `clientSecretSuffix: "12345"`; the encoded response does not contain `GOCSPX` |
 | mail-service-005 | secret-suffix-rule | `visibleSuffix(ofSecret:)` with "", 14 characters and 15 characters (`visibleSuffixKeepsAtLeastTwiceAsMuchHidden`) | nil, nil, `12345` |
 | mail-service-006 | sign-in-reuses-account, sign-in-email-key | Sign in, then sign in again with the same email in another case (`reSignInWithDifferentCaseReusesAccount`) | One account, same id, email lowercased |
@@ -287,11 +288,11 @@ Vectors are drawn from `MailIntegrationServiceTests` (the test name is given) an
 | mail-service-049 | sign-in-supersedes, dispatch-cancelSignIn | A second sign-in while one is pending, then `.cancelSignIn` with and without a pending one (`aSecondSignInSupersedesThePendingOneAndCancelSignInEndsIt`) | The first sign-in is cancelled; `.cancelSignIn` answers `.ok` both times |
 | mail-service-050 | keychain-read-failure, record-error | The Keychain is locked and a due sync runs (`aKeychainReadFailureMarksTheAccountErrorNotRevoked`) | Status `error`, `lastError` is `Keychain error: Could not read the Google credential: locked` |
 | mail-service-051 | record-revoked | A token refresh answers invalid grant (`invalidGrantOnRefreshMarksAccountRevoked`) | Status `revoked` |
-| mail-service-052 | stop-bounded-wait | `stop(timeout: .milliseconds(200))` while a sync ignores cancellation (`stopGivesUpOnASyncThatIgnoresCancellation`) | `stop` returns after about 200 milliseconds |
+| mail-service-052 | stop-bounded-wait | `stop(timeout: .milliseconds(200))` while a sync ignores cancellation (`stopGivesUpOnASyncThatIgnoresCancellation`) | `stop` returns within 300 milliseconds (the 200 ms timeout plus 100 ms tolerance) and the stuck sync is still running |
 | mail-service-053 | stop-cancels | `stop()` with syncs running (`stopWaitsForTheCancelledSyncsToEnd`) | Every running sync is cancelled and has ended when `stop` returns |
 | mail-service-054 | start-loop, loop-weak-self | `start(tick:)` then `stop`; and a started service that is released (`schedulerTicksAndStops`, `schedulerDoesNotRetainService`) | The observer sees ticks and the loop ends; the service is deallocated and the loop ends |
 | mail-service-055 | sync-now-joins, one-sync-per-connection | `syncNow` while a scheduled sync runs (`syncNowDuringScheduledSyncRunsOnce`) | The sync runs once; the observer sees `.joinedRunningSync` |
-| mail-service-056 | sync-now-not-syncable | Derived: `syncNow` for a named account whose status is `revoked`, and for one in another non-syncable status | `.failure` with the revoked message; `account <email> is not ready to sync` |
+| mail-service-056 | sync-now-not-syncable | Derived: `syncNow` for a named account whose status is `revoked`, and for one whose status is `pending` | `.failure` with the revoked message; `account <email> is not ready to sync` |
 | mail-service-057 | account-resolution | Derived: `.listLabels` with an account that matches no id or email | `.failure` with `No connected account matches “<account>”` |
 | mail-service-058 | import-keychain-failure | Derived: `.importOAuthClient` when the secret store refuses the write | `.failure("Could not save the OAuth client secret to the Keychain")`; no provider config row |
 | mail-service-059 | cursor-invalid | Derived: `decodeCursor("abc")`, `decodeCursor("|x")`, `decodeCursor("1|")` | Each throws `invalid cursor: <value>` |
@@ -300,7 +301,16 @@ Vectors are drawn from `MailIntegrationServiceTests` (the test name is given) an
 | mail-service-062 | encoding-fallback | Derived: a response that fails to encode in `handle(requestData:)` | The bytes of `{"failure":{"_0":"encoding failed"}}` |
 | mail-service-063 | search-bounds | Derived: `gmailQuery("x", since: "2026-01-01T00:00:00Z", until: "2026-01-02T00:00:00Z")` | `(x) after:1767225600 before:1767312001` |
 | mail-service-064 | sign-in-profile-failure-no-revoke | The Gmail profile call throws `revoked` during `.signIn` (`revokedProfileAtSignInFails`) | `.failure("Google access was revoked — sign in again")`; no connection is stored; the grant is not revoked at Google |
-
+| mail-service-065 | remove-account-dedupe | Derived: `.removeAccount` for an account whose removal is already held at the revoke call | The second request returns at once with `.ok`; the revoke at Google is called once |
+| mail-service-066 | remove-account-keychain-failure | Derived: `.removeAccount` when the secret store refuses to forget the credential | `.failure` with the Keychain error; the connection is still stored with its previous status |
+| mail-service-067 | remove-provider-cancels-sign-in | Derived: `.removeProvider` while a sign-in is pending | The pending sign-in is cancelled and cleared; the sign-in fails with `signInCancelled` |
+| mail-service-068 | sign-in-slot-ownership | Derived: a first sign-in superseded by a second, then the first ends | The first ending does not clear `pendingSignIn`; the second can still be cancelled by `.cancelSignIn` |
+| mail-service-069 | sign-in-rereads-state | Derived: sync state is written for the account while the credential save is held, then sign-in finishes | `lastSyncAt` and `syncCursor` written meanwhile are kept, not rolled back |
+| mail-service-070 | search-revoked | Derived: a Gmail search that fails with `revoked` | The connection status becomes `revoked`; the request fails with the revoked message |
+| mail-service-071 | refetch-concurrency | Derived: `.modifyLabels` for 20 message ids | No more than 8 re-reads are in flight at once; all 20 messages are returned in request order |
+| mail-service-072 | resolve-order | Derived: `.modifyLabels` with three stored message ids given in an order different from the store's (c, a, b) | The resolved and returned messages are in the order c, a, b |
+| mail-service-073 | token-provider-shared-clock | Derived: construct the service with a controlled clock and a token whose expiry falls between two clock readings | Token refresh decisions follow the injected clock, not the system clock |
+| mail-service-074 | label-refresh | Derived: label resolution for an unknown name, with the account removed while the labels are being read | `.failure("account <email> was removed")`; no labels are stored |
 ## Edge Cases
 
 - **Null and empty input**: A `listMessages` filter with no labels, no query and no cursor MUST list the first page of the mirror. A blank `query` MUST be treated as no query. `.modifyLabels` with empty ids and labels MUST return without a write (modify-noop). An empty `from` on a move MUST remove nothing (move-default-sources).
@@ -355,6 +365,9 @@ Every user-facing error is a hardcoded English string, not a localised key.
 | none (inline) | `labels applied; refreshing messages failed: <message>` | Re-read failed after a write |
 | none (inline) | `No connected account matches “<account>”` | `IntegrationError.unknownAccount`, an account that matches no id or email |
 | none (inline) | `Invalid sync settings: <reason>` (for example `windowDays must be 1–3650, got <n>`) | `IntegrationError.invalidSettings`, a refused `updateSettings` |
+| none (inline) | `Gmail is not configured — import an OAuth client JSON first` | `IntegrationError.notConfigured`, an operation that needs the OAuth client with none imported |
+| none (inline) | `Google access was revoked — sign in again` | `IntegrationError.revoked` |
+| none (inline) | `Keychain error: <reason>` (for example `Keychain error: Could not read the Google credential: locked`) | `IntegrationError.keychain`, a locked or denied Keychain |
 | none (inline) | `encoding failed` | Response could not be encoded |
 
 The `IntegrationError` cases (`notConfigured`, `unknownAccount`, `revoked` and the rest) supply their own English `errorDescription` in the Model layer.
@@ -400,7 +413,7 @@ This is the only log call in the file. Sync failures are recorded on the connect
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailIntegrationService.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailIntegrationService.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -456,26 +469,27 @@ This is the only log call in the file. Sync failures are recorded on the connect
 **Approved**: pending
 
 **Decision**: Accept swallowed store failures on background paths for now, instead of logging or signalling them.
-**Rationale**: `startDueSyncs` reads connections with `try?`, `performSync` skips when the connection read fails, and `record` writes status with `try?`. A store outage therefore appears as no sync and no status change, not as an error. Revisit when a store failure needs to be visible to a user; until then a port should keep the behavior or log it as a deliberate change.
+**Rationale**: `startDueSyncs` reads connections with `try?`, `performSync` skips when the connection read fails, and `record` writes status with `try?`. A store outage therefore appears as no sync and no status change, not as an error. A port MUST keep this behavior; making store failures visible is a change to this spec, to be made when one needs to reach a user.
 **Approved**: pending
 
 **Decision**: Accept that a Gmail profile failure during sign-in leaves the issued grant unrevoked, instead of revoking it.
-**Rationale**: Only the provider-removed paths revoke the discarded credential; a profile error (`sign-in-profile-failure-no-revoke`) leaves the grant at Google. Revisit when sign-in failures are reported to users; until then a port must either match this or change it deliberately.
+**Rationale**: Only the provider-removed paths revoke the discarded credential; a profile error (`sign-in-profile-failure-no-revoke`) leaves the grant at Google. A port MUST match this; revoking on a profile failure is a change to this spec, to be made when sign-in failures are reported to users.
 **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | best-practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | security |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | partial | security |
 
-The service separates concerns by composing injected parts: the store, Keychain, sign-in flow, token endpoint, Gmail client factory and clock are all parameters, and sync, parsing, transport, retry and pacing live in other types, so it can be tested against fakes. Unit-test coverage is partial: `MailIntegrationServiceTests` covers requests, sign-in, removal, settings, scheduling, searching, threads and writes, with gates for the interleavings, but vectors mail-service-056 to 063 are derived from the code and not asserted by a named test. Explicit error handling is partial: most errors surface as `.failure` or connection status, but `startDueSyncs`, `performSync` and `record` swallow store failures with `try?`, which the Design Decision on swallowed store failures records. Secure storage passes because the client secret and credentials go to the Keychain, only a 5-character suffix of the secret is ever returned, and a Keychain read failure is not mistaken for absence. Token lifecycle is partial: the service revokes grants on account and provider removal and on a discarded sign-in, and marks accounts `revoked` on a revoked response, but a profile failure at sign-in leaves the issued grant unrevoked, and refresh lifetimes are owned by `GoogleTokenProvider`, outside this file.
+Separation of concerns is partial: the store, Keychain, sign-in flow, token endpoint, Gmail client factory and clock are injected, and sync, parsing, transport, retry and pacing live in other types, so it can be tested against fakes; but this one actor also owns provider configuration, sign-in, scheduling, mirror listing, Gmail search, thread lookup and label writes, which is a wide set of responsibilities for one type. Unit-test coverage is partial: `MailIntegrationServiceTests` covers requests, sign-in, removal, settings, scheduling, searching, threads and writes, with gates for the interleavings, but vectors mail-service-056 to 063 and 065 to 074 are derived from the code and not asserted by a named test. Explicit error handling is partial: most errors surface as `.failure` or connection status, but `startDueSyncs`, `performSync` and `record` swallow store failures with `try?`, which the Design Decision on swallowed store failures records. Secure storage passes because the client secret and credentials go to the Keychain, only a 5-character suffix of the secret is ever returned, and a Keychain read failure is not mistaken for absence. Token lifecycle is partial: the service revokes grants on account and provider removal and on a discarded sign-in, and marks accounts `revoked` on a revoked response, but a profile failure at sign-in leaves the issued grant unrevoked, and refresh lifetimes are owned by `GoogleTokenProvider`, outside this file.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Linked the MailRPC wire format, defined the pending status and the connection status after a failed credential removal, narrowed the parallelism requirement, made the swallowed-failure rules binding, added localization strings and ten derived vectors, and moved the opening statement into the intro. |

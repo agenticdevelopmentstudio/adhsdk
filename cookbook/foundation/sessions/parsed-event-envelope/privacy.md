@@ -1,3 +1,4 @@
-
-Not applicable: the envelope carries the event's payload and the account and oauth emails into the bytes the caller stores, but this code stores and transmits nothing itself; the spool owns where the bytes go and how long they stay.
-
+- **Data handled**: The envelope contains personal data: the account email and, when resolved, the oauth account email, plus the event's `hookData` and `context`, which can hold prompts, file paths and working directories.
+- **Storage**: This code stores nothing; the caller stores the bytes, and the spool owns where they go and how long they are retained.
+- **Transmission**: None; the encoder performs no network access.
+- **Retention**: None here; retention belongs to the spool that holds the bytes.

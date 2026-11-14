@@ -2,15 +2,15 @@
 id: 81f8c0bd-ce00-43b3-816e-b63e96baeacc
 title: "Avatar Engine Path"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Shared SVG path grammar, primitive shape builders, anchor-for-anchor morph, and polyline-to-cubic promotion the avatar engine's Apple and web code both draw from."
+summary: "Shared SVG path grammar, shape builders, morph and polyline promotion for the avatar engine (Swift + web)."
 platforms:
   - swift
   - macos
@@ -23,7 +23,10 @@ tags:
   - svg
   - morphing
 depends-on: []
-related: []
+related:
+  - c708a65f-4d6c-40e4-b1b8-a24584cd45a1
+  - a7c91832-4059-4e06-b8c6-e8c727567c66
+  - 39f26055-c002-40fe-81e2-74c0f9c9311d
 references: []
 approved-by: ""
 approved-date: ""
@@ -37,7 +40,8 @@ Avatar Engine Path is the shared path-data layer under the avatar animation
 engine: a deliberately tiny SVG path grammar (`parsePath`/`emitPath`), a set of
 primitive shape builders (`disc`, `ring`, `arc`, `polyline`, `bezier`), an
 anchor-for-anchor path morph (`morphPath`), and a polyline-to-cubic
-re-expression (`promotePolyline`). Every rig shape the engine draws — mouths,
+re-expression (`promotePolyline`; on Apple it lives in
+`Sources/Anim/Timelines.swift`, not in the Path folder). Every rig shape the engine draws — mouths,
 brows, rings, discs — becomes a `ParsedPath` built or parsed through this
 layer, and every `.shape` channel a pose or timeline animates is a path-data
 string this layer produced, morphed, or promoted. It is a headless, non-visual
@@ -88,10 +92,7 @@ path-data output byte-for-byte across platforms.
   for `Z`) before it accepts the next command letter.
 - **truncated-command-rejected**: `parsePath` MUST fail with a "truncated"
   error when a new command letter appears, or the input ends, while a
-  pending command still needs arguments. Web's message names the pending
-  command letter (`` `truncated ${pending} in path: ${d}` ``); Apple's
-  message uses the literal word `command` and does not name which one
-  (`"truncated command in path: \(s)"`) — the message text differs between
+  pending command still needs arguments. The message text differs between
   platforms (see Design Decisions).
 - **stray-number-rejected**: `parsePath` MUST fail with a "stray number" error
   when a numeric token appears with no command pending to receive it.
@@ -133,7 +134,9 @@ path-data output byte-for-byte across platforms.
   higher-precision value.
 - **cubic-o-shape**: `cubicO(cx, cy, rx, ry)` MUST return a single closed path
   of kind `"MCCCCZ"` starting at `(cx, cy − ry)`, with each control point
-  offset from its anchor by `rx * 0.5523` or `ry * 0.5523`.
+  offset from its anchor by `rx * 0.5523` or `ry * 0.5523`. The anchors run
+  top `(cx, cy − ry)`, right `(cx + rx, cy)`, bottom `(cx, cy + ry)`, left
+  `(cx − rx, cy)`, and back to top.
 - **disc-is-cubic-o**: `disc(cx, cy, r)` MUST return the same path as
   `cubicO(cx, cy, r, r)`.
 - **ring-is-outer-then-reversed-inner**: `ring(cx, cy, r, band)` MUST return
@@ -149,7 +152,9 @@ path-data output byte-for-byte across platforms.
   `A` command.
 - **arc-segment-count**: `arc` MUST use
   `max(1, ceil(|to − from in radians| / (π/2)))` cubic segments, so that no
-  single segment spans more than a quarter circle.
+  single segment spans more than a quarter circle. The span is divided into
+  equal steps, and each cubic's control offset is
+  `(4/3) * tan(step / 4) * r`, perpendicular to the radius at its anchor.
 - **polyline-minimum-points**: `polyline` MUST throw an error when given
   fewer than 2 points, and otherwise MUST emit `M` to the first point followed
   by one `L` per remaining point.
@@ -222,7 +227,7 @@ technology to reach (the same source files as Appearance).
 | path-001 | supported-commands, decimal-point-restarts-number | `parsePath("M1.2.3")` | `kind = "M"`, `points = [1.2, 0.3]` — `PathTests.swift`'s `testASecondDecimalPointStartsAFreshNumber`, `parse.test.ts`'s "agrees with Swift on the whole grammar" |
 | path-002 | supported-commands, separator-set | `parsePath("M187,233 L200,246 L213,233")` | `kind = "MLL"`, `points = [187, 233, 200, 246, 213, 233]` — `PathTests.swift`'s `testReadsAThreePointMouthPolyline`, `parse.test.ts`'s "reads a 3-point mouth polyline" |
 | path-003 | arity-enforced | `parsePath` on the closed 4-anchor cubic-O string (`"M200,224C204.97,224…Z"`) | `kind = "MCCCCZ"`, `points.count == 2 + 4 * 6` — `PathTests.swift`'s `testReadsAClosedFourAnchorCubicO`, `parse.test.ts`'s "reads a closed 4-anchor cubic O" |
-| path-004 | no-character-silently-skipped | `parsePath("m0,0 l1,1")` and `parsePath("M0,0 A45,45 0 0 1 10,10")` | Both throw an "unsupported path syntax" error — `PathTests.swift`'s `testRejectsCommandsOutsideTheSubset`, `parse.test.ts`'s "rejects commands outside the subset" |
+| path-004 | no-character-silently-skipped, supported-commands | `parsePath("m0,0 l1,1")` and `parsePath("M0,0 A45,45 0 0 1 10,10")` | Both throw an "unsupported path syntax" error — `PathTests.swift`'s `testRejectsCommandsOutsideTheSubset`, `parse.test.ts`'s "rejects commands outside the subset" |
 | path-005 | separator-set | `parsePath("M0,0\u{000B}L1,1")` (vertical tab) | Throws — `parse.test.ts`'s "agrees with Swift on the whole grammar" (rejected list) |
 | path-006 | truncated-command-rejected | `parsePath("M0,0 C1,1")` | Throws a "truncated" error — `parse.test.ts`'s "agrees with Swift on the whole grammar" (rejected list) |
 | path-007 | stray-number-rejected | `parsePath("0,0")` | Throws a "stray number" error — `parse.test.ts`'s "agrees with Swift on the whole grammar" (rejected list) |
@@ -230,7 +235,7 @@ technology to reach (the same source files as Appearance).
 | path-009 | fmt-rounds-half-away-from-zero | `fmt(-1.5e-6)`, `fmt(-187.0000005)` | `"-0.000002"`, `"-187.000001"` — `PathTests.swift`'s `testRoundsNegativeHalfStepsAwayFromZero`, `parse.test.ts`'s "rounds negative half-steps the way Swift does" |
 | path-010 | fmt-zero-has-no-sign | `fmt(-0.0000004)` and `fmt(-0)` | Both `"0"` — same tests as path-009 |
 | path-011 | emit-path-format, fmt-rounds-half-away-from-zero | `emitPath({kind: "ML", points: [-0.0000005, 0, 1, -1.5e-6]})` | `"M-0.000001,0L1,-0.000002"` — `PathTests.swift`'s `testEmitsANegativeCoordinateTheSameWayTheWebDoes`, `parse.test.ts`'s "emits a negative coordinate the same way Swift does" |
-| path-012 | cubic-o-shape, disc-is-cubic-o | `Build.disc(cx: 152, cy: 200, r: 9)` | Exact string `"M152,191C156.9707,191 161,195.0293 161,200C161,204.9707 156.9707,209 152,209C147.0293,209 143,204.9707 143,200C143,195.0293 147.0293,191 152,191Z"` — `PathTests.swift`'s `testMatchesTheWebsTextByteForByte` |
+| path-012 | cubic-o-shape, disc-is-cubic-o | `Build.disc(cx: 152, cy: 200, r: 9)` | Exact string `"M152,191C156.9707,191 161,195.0293 161,200C161,204.9707 156.9707,209 152,209C147.0293,209 143,204.9707 143,200C143,195.0293 147.0293,191 152,191Z"` — `PathTests.swift`'s `testMatchesTheWebsTextByteForByte`; the web has no exact-string test for `disc` (`build.test.ts` checks only the kind, and the `K` offset for `cubicO`) |
 | path-013 | ring-is-outer-then-reversed-inner | `parsePath(Build.ring(cx: 152, cy: 200, r: 35, band: 8)).kind` | `"MCCCCZMCCCCZ"` — `PathTests.swift`'s `testBuildsARingAsTwoConcentricCirclesOuterThenInnerReversed`, `build.test.ts`'s "builds a ring as two concentric circles" |
 | path-014 | arc-emits-only-cubics, arc-segment-count | `parsePath(Build.arc(cx: 152, cy: 200, r: 45, from: 233.1301, to: 306.8699))` | Kind starts with `M` then only `C`s; first point within `1e-3` of `(125, 164)`, last point within `1e-3` of `(179, 164)` — `PathTests.swift`'s `testEmitsAnArcAsCubicsWithNoACommand` / `testPlacesTheBrowEndpointsAtCxPlusMinus27AtY164`, `build.test.ts`'s "places the brow endpoints at cx +/- 27, y 164" |
 | path-015 | polyline-minimum-points | `Build.polyline([[187, 233]])` (1 point) | Throws with message `"polyline needs at least 2 points"` — traced to `Build.swift`'s `PathError.badPointCount` guard and the identical `build.ts` throw text |
@@ -244,18 +249,26 @@ technology to reach (the same source files as Appearance).
 | path-023 | promote-preserves-anchors | `promotePolyline(parsePath("M10,20L30,40L50,20"), 4)` | Anchors (every 3rd point pair) equal `[[10,20],[20,30],[30,40],[40,30],[50,20]]` — `promote.test.ts`'s "draws the same ink: every original anchor survives as an anchor" |
 | path-024 | promote-requires-open-polyline | `promotePolyline(parsePath("M0,0C1,1,2,2,3,3"), 2)` and `promotePolyline(parsePath("M0,0L9,9Z"), 2)` | Both throw an error matching `/open polyline/` — `promote.test.ts`'s "refuses anything but an open polyline" |
 | path-025 | promote-requires-whole-multiple | `promotePolyline(parsePath("M0,0L5,5L10,0"), 3)` and the same path with `segments=1` | Both throw an error matching `/whole multiple/` — `promote.test.ts`'s "refuses a segment count that is not a whole multiple" |
-
+| path-026 | malformed-input-not-skipped | `parsePath` of each of `"M0,0-"`, `"M5.,3"`, `"M5..3"`, `"M0,0 Q1,1"` | Every call throws — the malformed corpus in `parse.test.ts`'s "agrees with Swift on the whole grammar" |
+| path-027 | number-token-grammar | `parsePath("M1e2,.5")` and `parsePath("M-1.5E-1,2")` | `points` equal `[100, 0.5]` and `[-0.15, 2]` — the token pattern `-?(\d+(\.\d+)?\|\.\d+)([eE]-?\d+)?` |
+| path-028 | empty-input-parses-empty | `parsePath("")` | `kind = ""`, `points = []`, no throw |
+| path-029 | fmt-integers-and-no-exponent | `fmt(5)`, `fmt(1e21)` | `"5"`, and a string with no `e` in it — `parse.test.ts`'s "rounds negative half-steps the way Swift does" |
+| path-030 | quarter-circle-constant | `Build.cubicO(cx: 200, cy: 235, rx: 13, ry: 1.4)`, first control point x | `200 + 13 * 0.5523` (within `1e-9`) — `build.test.ts`'s "builds cubicO with K = 0.5523" |
+| path-031 | ring-parameterized-by-band | `Build.ring(cx: 152, cy: 200, r: 35, band: 8)` | The inner circle has radius `27`: its top anchor is `(152, 173)` |
+| path-032 | arc-segment-count | `Build.arc(cx: 0, cy: 0, r: 10, from: 0, to: 270)` | Parsed kind is `"MCC"` (two segments, since 270° is over a quarter circle but under two) |
+| path-033 | arc-segment-count | `Build.arc(cx: 0, cy: 0, r: 10, from: 20, to: 20)` | Parsed kind is `"MC"`: a zero span still emits one segment |
+| path-034 | round-trip | `parsePath(emitPath(parsePath("M0.1234567,0.7654321")))` | `points` equal `[0.123457, 0.765432]`: an off-grid input round-trips to the 1e-6 grid |
 ## Edge Cases
 
-- **Empty path string.** `parsePath("")` MUST return `ParsedPath(kind: "", points: [])` rather than throwing — the loop over an empty character array never executes and the "all arities satisfied" guard trivially passes.
-- **Empty coordinate list.** `Build.polyline([])` and `Build.bezier([])` MUST throw the same "at least 2 points" / "3n+1 points, got 0" errors as any other under-count input (edge case of `polyline-minimum-points` / `bezier-point-count`, not a separate code path).
-- **Boundary: `segments == lines` in `promotePolyline`.** The minimum accepted `segments` (one cubic per original line, `per = 1`) MUST succeed, not be treated as a no-op or a rejection — exercised directly by `promote.test.ts`'s "rewrites one line as the cubic that draws it" (`lines = 1`, `segments = 1`).
-- **Boundary: `t == 0` / `t == 1` in `morphPath`.** These MUST return the input endpoint exactly (see `morph-exact-endpoints`) rather than the arithmetically equivalent lerp, because `v + (b - v) * 1` is not always bit-identical to `b` in floating point.
-- **Boundary: zero-length arc.** `arc(cx, cy, r, from, to)` with `from == to` MUST still emit a valid single-segment path (`segments = max(1, ceil(0 / (π/2))) = 1`) rather than an empty string or a division-related failure.
-- **Malformed input the tokenizer must not silently skip.** A dangling sign (`"M0,0-"`), a dangling exponent marker (`"M0,0e"`), a lone `.` (`"M5.,3"`, `"M5..3"`), and a mid-path SVG command outside the four-letter subset (`"M0,0 Q1,1"`) MUST all be rejected (SHOULD-equivalent leniency is explicitly ruled out by `no-character-silently-skipped`) rather than silently dropped, matching both platforms' tests for the same corpus.
-- **Concurrent access.** Not applicable — every function in this layer is a pure, synchronous computation over its own arguments with no shared mutable state; `ParsedPath` is declared `Sendable` in `ParsedPath.swift`, and neither the Swift nor the TypeScript sources use a lock, an actor, `async`/`await`, or any I/O that could race. There is no ordering or serialization rule to define.
-- **Error states (external dependencies).** Not applicable — this layer has no network, database, or file-system dependency to fail; every error this layer raises is an input-validation failure on the caller-supplied path string or point list, already covered by the "malformed input" and grammar requirements above.
-- **Offline / disconnected state.** Not applicable — this layer performs no network operation, so connectivity loss cannot occur within it; none of `Build.swift`, `Morph.swift`, `ParsedPath.swift`, `build.ts`, `morph.ts`, `parse.ts`, or `promote.ts` imports a networking API.
+- **empty-path-string**: `parsePath("")` MUST return `ParsedPath(kind: "", points: [])` rather than throwing — the loop over an empty character array never executes and the "all arities satisfied" guard trivially passes.
+- **empty-coordinate-list**: `Build.polyline([])` and `Build.bezier([])` MUST throw the same "at least 2 points" / "3n+1 points, got 0" errors as any other under-count input (edge case of `polyline-minimum-points` / `bezier-point-count`, not a separate code path).
+- **promote-segments-equal-lines**: The minimum accepted `segments` (one cubic per original line, `per = 1`) MUST succeed, not be treated as a no-op or a rejection — exercised directly by `promote.test.ts`'s "rewrites one line as the cubic that draws it" (`lines = 1`, `segments = 1`).
+- **morph-boundary-t**: These MUST return the input endpoint exactly (see `morph-exact-endpoints`) rather than the arithmetically equivalent lerp, because `v + (b - v) * 1` is not always bit-identical to `b` in floating point.
+- **arc-zero-length**: `arc(cx, cy, r, from, to)` with `from == to` MUST still emit a valid single-segment path (`segments = max(1, ceil(0 / (π/2))) = 1`) rather than an empty string or a division-related failure.
+- **malformed-input-not-skipped**: A dangling sign (`"M0,0-"`), a dangling exponent marker (`"M0,0e"`), a lone `.` (`"M5.,3"`, `"M5..3"`), and a mid-path SVG command outside the four-letter subset (`"M0,0 Q1,1"`) MUST all be rejected (SHOULD-equivalent leniency is explicitly ruled out by `no-character-silently-skipped`) rather than silently dropped, matching both platforms' tests for the same corpus.
+- **concurrent-access**: Not applicable — every function in this layer is a pure, synchronous computation over its own arguments with no shared mutable state; `ParsedPath` is declared `Sendable` in `ParsedPath.swift`, and neither the Swift nor the TypeScript sources use a lock, an actor, `async`/`await`, or any I/O that could race. There is no ordering or serialization rule to define.
+- **error-states-external-dependencies**: Not applicable — this layer has no network, database, or file-system dependency to fail; every error this layer raises is an input-validation failure on the caller-supplied path string or point list, already covered by the "malformed input" and grammar requirements above.
+- **offline-disconnected-state**: Not applicable — this layer performs no network operation, so connectivity loss cannot occur within it; none of `Build.swift`, `Morph.swift`, `ParsedPath.swift`, `build.ts`, `morph.ts`, `parse.ts`, or `promote.ts` imports a networking API.
 - **ring-band-bound**: NEEDS REVIEW: Not implemented in source. `ring(cx, cy, r, band)` does not validate `0 < band <= r`. When `band > r`, `inner = r - band` is negative, so the inner `cubicO` call receives `rx = -inner` (positive) and `ry = inner` (negative) — a sign-mismatched radius pair the function's own "negative `rx` reverses winding" design does not anticipate (only `rx` is meant to flip). Neither `Build.swift`'s `ring` nor `build.ts`'s `ring` guards this, and no test in `BuildTests`/`build.test.ts` exercises `band > r`. Evidence that would settle it: confirming with whoever owns the rig/config schema whether `band <= r` is already enforced upstream (e.g. JSON-schema validation in `avatar-engine/src/config`) — if so, this layer's lack of a guard is intentional and this note can be dropped.
 - **parse-path-leading-command**: NEEDS REVIEW: Not implemented in source. `parsePath` does not require the first command to be `M`. A string like `"L1,1"` or `"Z"` alone parses successfully (kind `"L"` or `"Z"`, no error), even though every accepted-corpus example in both `PathTests.swift` and `parse.test.ts` begins with `M` and every `Build`/`build` function always emits one first. Evidence that would settle it: confirming whether any caller ever feeds `parsePath` a fragment that is not expected to start with `M` — if not, a port should decide once whether to add a leading-`M` check rather than silently accepting a path no renderer can usefully draw.
 - **parsed-path-arity-invariant**: NEEDS REVIEW: Not implemented in source. `ParsedPath.init(kind:points:)` (Swift) and the equivalent object-literal construction of the `ParsedPath` interface (TypeScript) do not validate that `points.count` equals the sum of each `kind` letter's arity. A caller who constructs a `ParsedPath` directly, bypassing `parsePath`, can hand `emitPath` a mismatched pair; `emitPath` will then either trap (Swift array slice out of range) on too few points or silently drop trailing values on too many. Neither `ParsedPath.swift` nor `parse.ts` guards this at construction. Evidence that would settle it: confirming with the engine team whether every call site that builds a `ParsedPath` directly (outside `parsePath`) is already trusted by convention — if so, a port need not add a check; if not, this is the one place a malformed `.shape` channel value could reach `emitPath` unchecked.
@@ -333,7 +346,7 @@ Not applicable: none of `Build.swift`, `Morph.swift`, `ParsedPath.swift`,
   `addLine(to:)`/`addCurve(to:control1:control2:)` calls, and a morph can be
   driven either by feeding `morphPath`'s per-frame output into a fresh `Path`
   or by exposing the flat `points` array as a `Shape`'s `animatableData`.
-- **AppKit / UIKit — this recipe's actual Swift consumer**: `Build.swift`,
+- **AppKit / UIKit — this ingredient's actual Swift consumer**: `Build.swift`,
   `Morph.swift`, and `ParsedPath.swift`
   (`packages/apple/AvatarAnimationEngine/Sources/Path/`) are Foundation-only
   and framework-agnostic; the engine's own render layer
@@ -351,7 +364,8 @@ Not applicable: none of `Build.swift`, `Morph.swift`, `ParsedPath.swift`,
   port `parsePath`'s tokenizer to walk the same `(letter, arity)` grammar and
   call `moveTo`/`lineTo`/`cubicTo`; morph by lerping the shared `FloatArray` of
   points the way `morphPath` does, then re-tokenizing into a `Path` on the
-  animated frame that needs it.
+  animated frame that needs it. Format numbers with `Locale.ROOT` and never
+  in exponent form, so the path text matches the other platforms.
 - **WinUI 3**: Model `ParsedPath` as a `readonly record struct(string Kind,
   double[] Points)` and port `ParsePath`/`EmitPath`/`Fmt` as ordinary static
   methods on a `PathGrammar` class, always parsing/formatting through
@@ -364,81 +378,87 @@ Not applicable: none of `Build.swift`, `Morph.swift`, `ParsedPath.swift`,
   `Microsoft.UI.Xaml.Shapes.Path`'s `Data` (a `Geometry` built the same way,
   via `PathGeometry`/`PathFigure`/`LineSegment`/`BezierSegment`), with a
   `Storyboard`/`CompositionAnimation` driving the frame-by-frame `t` that
-  `MorphPath` consumes; `Math.Round(x, 6, MidpointRounding.AwayFromZero)` is
-  the direct equivalent of Swift's `Double.rounded()` and is what `Fmt` MUST
-  use to keep this platform's path-data output byte-identical to the other
-  two.
+  `MorphPath` consumes; `Fmt` MUST match the other two platforms: scale by 1e6, round half away
+  from zero (`Math.Round(v, MidpointRounding.AwayFromZero)`), divide by 1e6,
+  print `-0` as `0`, and format with `InvariantCulture` in fixed-point form so
+  no exponent appears.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/avatar-engine/src/path/` | unverified |
-| apple | `packages/apple/AvatarAnimationEngine/Sources/Path/` | unverified |
+| web | `packages/web/packages/avatar-engine/src/path/` | confirmed (1.0.3) |
+| apple | `packages/apple/AvatarAnimationEngine/Sources/Path/` | confirmed (1.0.3) |
+| apple | `packages/apple/AvatarAnimationEngine/Sources/Anim/Timelines.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
-- **Decision**: Pin the quarter-circle control-point constant to `0.5523`
-  rather than the mathematically precise `0.5522847498`.
-  **Rationale**: Per `Build.swift`'s doc comment, the higher-precision value
-  would move every circle by roughly `1e-5` units and fail the byte-for-byte
-  golden comparison between the Swift and web output; the four-digit pin is a
-  deliberate cross-platform-agreement choice, not a rounding shortcut.
-  **Approved**: pending
-- **Decision**: `fmt` rounds half-away-from-zero, matching Swift's
-  `Double.rounded()`; the web's `fmt` was rewritten to match Swift rather than
-  the reverse.
-  **Rationale**: Per `parse.ts`'s comment and `PathTests.swift`'s
-  `testRoundsNegativeHalfStepsAwayFromZero`, JavaScript's `Math.round` is
-  half-toward-positive-infinity, which disagrees with Swift on every negative
-  half-step. A `back.out` easing extrapolates past `t = 1` and is the
-  realistic route to a negative coordinate landing exactly on that boundary,
-  so the web side moved to match the Swift behavior the animation goldens
-  already depended on.
-  **Approved**: pending
-- **Decision**: `morphPath` does not clamp `t` to `[0, 1]`.
-  **Rationale**: Per `Morph.swift`'s and `morph.ts`'s comments, an eased `t`
-  from a `back.out(3)` curve crosses `1` a quarter of the way through the
-  tween and stays above it for the remaining three quarters. Clamping here
-  would delete the overshoot the original animation relies on — a measured
-  `3.16` design-unit difference on the `startled` pose and `2.26` on
-  `surprised` — and visibly soften every `back.out` pose.
-  **Approved**: pending
-- **Decision**: `ring(cx, cy, r, band)` takes an outer radius and a band
-  width, not an outer and an inner radius.
-  **Rationale**: Per `Build.swift`'s doc comment, a character drawn at a
-  single stroke weight holds that band constant across every ring it has;
-  making the band the datum keeps that invariant in the data instead of a
-  comment, so a visual variant can patch one number (the band) instead of two
-  (both radii) to change optical weight.
-  **Approved**: pending
-- **Decision**: `promotePolyline` lives in `Sources/Anim/Timelines.swift` on
-  Apple, not alongside `Build.swift`/`Morph.swift`/`ParsedPath.swift` under
-  `Sources/Path/`, while its web equivalent lives in `src/path/promote.ts`.
-  **Rationale**: The Apple port grew `promotePolyline` as a helper local to
-  the timeline-promotion feature (`Timelines.swift`'s `tryPromote`) rather
-  than placing it in the shared Path module; the two implementations are
-  contract-identical — confirmed line-for-line against `promote.ts` and its
-  exact-string assertions in `promote.test.ts` — but a port to a new platform
-  should place this function alongside the other Path primitives (matching
-  the web's layout) rather than copying Apple's file location.
-  **Approved**: pending
-- **Decision**: Apple types its path errors (`PathError: Error,
-  CustomStringConvertible`, with distinct `unsupported`/`truncated`/`stray`/
-  `badPointCount`/`shapeMismatch` cases); the web throws untyped `Error`
-  objects instead.
-  **Rationale**: This is an observed platform divergence, not a design
-  recommendation: `ParsedPath.swift` declares a closed enum with a computed
-  `description`, while `parse.ts`/`build.ts`/`morph.ts`/`promote.ts` all throw
-  a plain `new Error(message)`. The `unsupported`/`stray` message text does
-  match across platforms, but the `truncated` text does not (see
-  truncated-command-rejected): Apple's version never names the pending
-  command. No test on either platform asserts this text — both are bare
-  `.toThrow()`/`XCTAssertThrowsError` checks — so a port cannot preserve one
-  exact truncated-message text for both platforms at once; it must pick
-  one, and the `unsupported`/`stray` text is the only text a port can match
-  on both.
-  **Approved**: pending
+**Decision**: Pin the quarter-circle control-point constant to `0.5523`
+rather than the mathematically precise `0.5522847498`.
+**Rationale**: Per `Build.swift`'s doc comment, the higher-precision value
+would move every circle by roughly `1e-5` units and fail the byte-for-byte
+golden comparison between the Swift and web output; the four-digit pin is a
+deliberate cross-platform-agreement choice, not a rounding shortcut.
+**Approved**: pending
+
+**Decision**: `fmt` rounds half-away-from-zero, matching Swift's
+`Double.rounded()`; the web's `fmt` was rewritten to match Swift rather than
+the reverse.
+**Rationale**: Per `parse.ts`'s comment and `PathTests.swift`'s
+`testRoundsNegativeHalfStepsAwayFromZero`, JavaScript's `Math.round` is
+half-toward-positive-infinity, which disagrees with Swift on every negative
+half-step. A `back.out` easing extrapolates past `t = 1` and is the
+realistic route to a negative coordinate landing exactly on that boundary,
+so the web side moved to match the Swift behavior the animation goldens
+already depended on.
+**Approved**: pending
+
+**Decision**: `morphPath` does not clamp `t` to `[0, 1]`.
+**Rationale**: Per `Morph.swift`'s and `morph.ts`'s comments, an eased `t`
+from a `back.out(3)` curve crosses `1` a quarter of the way through the
+tween and stays above it for the remaining three quarters. Clamping here
+would delete the overshoot the original animation relies on — a measured
+`3.16` design-unit difference on the `startled` pose and `2.26` on
+`surprised` — and visibly soften every `back.out` pose.
+**Approved**: pending
+
+**Decision**: `ring(cx, cy, r, band)` takes an outer radius and a band
+width, not an outer and an inner radius.
+**Rationale**: Per `Build.swift`'s doc comment, a character drawn at a
+single stroke weight holds that band constant across every ring it has;
+making the band the datum keeps that invariant in the data instead of a
+comment, so a visual variant can patch one number (the band) instead of two
+(both radii) to change optical weight.
+**Approved**: pending
+
+**Decision**: `promotePolyline` lives in `Sources/Anim/Timelines.swift` on
+Apple, not alongside `Build.swift`/`Morph.swift`/`ParsedPath.swift` under
+`Sources/Path/`, while its web equivalent lives in `src/path/promote.ts`.
+**Rationale**: The Apple port grew `promotePolyline` as a helper local to
+the timeline-promotion feature (`Timelines.swift`'s `tryPromote`) rather
+than placing it in the shared Path module; the two implementations are
+contract-identical — confirmed line-for-line against `promote.ts` and its
+exact-string assertions in `promote.test.ts` — but a port to a new platform
+should place this function alongside the other Path primitives (matching
+the web's layout) rather than copying Apple's file location.
+**Approved**: pending
+
+**Decision**: Apple types its path errors (`PathError: Error,
+CustomStringConvertible`, with distinct `unsupported`/`truncated`/`stray`/
+`badPointCount`/`shapeMismatch` cases); the web throws untyped `Error`
+objects instead.
+**Rationale**: This is an observed platform divergence, not a design
+recommendation: `ParsedPath.swift` declares a closed enum with a computed
+`description`, while `parse.ts`/`build.ts`/`morph.ts`/`promote.ts` all throw
+a plain `new Error(message)`. The `unsupported`/`stray` message text does
+match across platforms, but the `truncated` text does not (see
+truncated-command-rejected): Apple's version never names the pending
+command. No test on either platform asserts this text — both are bare
+`.toThrow()`/`XCTAssertThrowsError` checks — so a port cannot preserve one
+exact truncated-message text for both platforms at once; it must pick
+one, and the `unsupported`/`stray` text is the only text a port can match
+on both.
+**Approved**: pending
 
 ## Compliance
 
@@ -464,3 +484,4 @@ explicit, handled error conditions.
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial extraction from `Build.swift`, `Morph.swift`, `ParsedPath.swift`, `build.ts`, `morph.ts`, `parse.ts`, and `promote.ts`. |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | round-trip now scoped to already-grid-quantized points, with the off-grid case spelled out; truncated-command-rejected and the error-representation Decision corrected for the Swift/web message-text divergence; renamed cubicO-shape/disc-is-cubicO to kebab-case. |
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Shortened the summary, linked related ingredients, labeled every edge case, added nine vectors for the malformed corpus, number grammar, fmt, arc and band behavior, added the arc and cubic-O formulas, deduplicated the truncated-message note, and tightened the Compose and WinUI notes. |

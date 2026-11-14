@@ -2,11 +2,11 @@
 id: 79f7ed30-3193-49bc-856b-d7dd01303baa
 title: "EntityChooser"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -61,8 +61,10 @@ set, value-bearing trigger).
 - **accept-single-value**: In single mode, accepting an option or a created entry MUST report it through `onChange(next)` as the new value, replacing any prior one.
 - **show-trigger-label-single-when-null**: In single mode, when the value is `null` the trigger MUST show the configured trigger label.
 - **show-trigger-value-single**: In single mode, when the value is non-null the trigger MUST show that value.
+- **close-on-accept-single**: In single mode, accepting an option or a created entry MUST close the browser.
 - **add-to-set-multi**: In multi mode, accepting an option or a created entry MUST append it to the set via `onChange([...value, entry])`.
-- **prevent-duplicates-multi**: In multi mode, an entry already in the set MUST NOT be added again — no duplicate and no `onChange`.
+- **keep-open-on-accept-multi**: In multi mode, accepting an option or a created entry MUST leave the browser open, so one visit can add several entries.
+- **prevent-duplicates-multi**: In multi mode, an entry already in the set MUST NOT be added again — no duplicate and no `onChange`. Entries are compared by exact, case-sensitive string equality (`Vision` and `vision` are different entries); created text is trimmed by the embedded `ListChooser` before it reaches `EntityChooser`.
 - **hide-selected-options-multi**: In multi mode, options already in the set MUST be omitted from the browser's list so they cannot be re-offered.
 - **render-removable-chips-multi**: In multi mode, the current set MUST render as chips, each with a control labelled `Remove <value>` that removes that entry via `onChange`.
 - **show-empty-hint-multi**: In multi mode, when the set is empty the chip area MUST show the empty-selection hint instead of chips.
@@ -70,6 +72,9 @@ set, value-bearing trigger).
 - **delegate-list-behavior**: Filtering, the roving-keyboard highlight, OK/Cancel, and add-new MUST be delegated to the embedded `ListChooser`, not re-implemented.
 - **block-create-when-disallowed**: When `allowCreate` is false, typed text matching no option MUST NOT be acceptable (no create row shown).
 - **respect-disabled**: When `disabled`, the trigger and every chip-remove control MUST be non-interactive.
+- **chips-remove-calls-onRemove**: `EntitySelectionChips` MUST call `onRemove(value)` when a chip's remove control is activated, and MUST NOT call it when `disabled`.
+- **chips-omit-empty-hint-when-unset**: `EntitySelectionChips` with an empty set MUST render the `emptySelectionLabel` hint when one is supplied and MUST render nothing at all when it is omitted.
+- **min-touch-target-controls**: The trigger and chip-remove controls SHOULD present a hit area of at least 44×44 CSS px (WCAG 2.5.5; 24×24 CSS px is the 2.5.8 minimum). The component sets no sizing itself, so this rests on inherited styling.
 - **host-mode-renders-trigger-only**: In multi mode with `selectionPlacement="host"`, the component MUST render only the trigger; the caller is responsible for rendering the selected set (via `EntitySelectionChips`).
 
 ## Appearance
@@ -130,26 +135,32 @@ belong to the caller that fetches the options (mirroring `ListChooser` /
 - The trigger is labelled by `ariaLabel`; the filter/add field by `inputLabel` (falling back to `ariaLabel`).
 - Multi mode wraps the chips + trigger in a `role="group"` labelled by `ariaLabel`; each chip's remove control is a `<button>` with `aria-label="Remove <value>"`.
 - Keyboard operability (arrows, Enter, Esc, OK/Cancel) is inherited unchanged from `ListChooser`.
-- Minimum touch target size for trigger and chip-remove controls is expected to be 44×44pt (per platform guidelines); the source sets no explicit sizing for either control, so this rests on inherited styling rather than something the component enforces itself.
+- Minimum touch target size for trigger and chip-remove controls is expected to be at least 44×44 CSS px on web (WCAG 2.5.5; 24×24 CSS px is the 2.5.8 minimum; 44×44pt on Apple platforms) — see **min-touch-target-controls**; the source sets no explicit sizing for either control, so this rests on inherited styling rather than something the component enforces itself.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | accept-single-value, delegate-list-behavior | single, open, click "engineering" | `onChange("engineering")`; browser closes |
-| T2 | accept-single-value | single, type "design", Enter | `onChange("design")`; browser closes |
-| T3 | accept-single-value | single, `value="engineering"`, open, click "design" | `onChange("design")`, replacing the prior value; browser closes |
+| T1 | accept-single-value, close-on-accept-single, delegate-list-behavior | single, open, click "engineering" | `onChange("engineering")`; browser closes |
+| T2 | accept-single-value, close-on-accept-single | single, type "design", Enter | `onChange("design")`; browser closes |
+| T3 | accept-single-value, close-on-accept-single | single, `value="engineering"`, open, click "design" | `onChange("design")`, replacing the prior value; browser closes |
 | T4 | block-create-when-disallowed | single, `allowCreate=false`, type "nope", Enter | no `onChange`; no create row shown |
 | T5 | show-trigger-value-single | single, `value="research"` | trigger shows "research" |
 | T6 | show-trigger-label-single-when-null | single, `value=null` | trigger shows the configured trigger label (e.g. "Choose…") |
 | T7 | render-removable-chips-multi, show-empty-hint-multi | multi, `value=[]` then `["vision"]` | empty hint shown; then "vision" chip shown |
 | T8 | trigger-label-only-multi | multi, `value=["vision"]`, closed | trigger reads the trigger label (e.g. "Choose…"), not "vision" |
-| T9 | add-to-set-multi | multi, `value=["vision"]`, open, click "attention" | `onChange(["vision","attention"])`; browser stays open |
+| T9 | add-to-set-multi, keep-open-on-accept-multi | multi, `value=["vision"]`, open, click "attention" | `onChange(["vision","attention"])`; browser stays open |
 | T10 | hide-selected-options-multi | multi, `value=["vision"]`, open | "vision" option absent; "attention" and others present |
 | T11 | render-removable-chips-multi | multi, `value=["vision","attention"]`, click "Remove vision" | `onChange(["attention"])` |
 | T12 | prevent-duplicates-multi | multi, `value=["vision"]`, type "vision", Enter | no `onChange` |
 | T13 | host-mode-renders-trigger-only | multi, `selectionPlacement="host"` | only the trigger renders; no chip group |
-| T14 | respect-disabled | `disabled=true` | trigger non-interactive; chip remove buttons non-interactive |
+| T14 | respect-disabled | single, `disabled=true` | trigger non-interactive |
+| T15 | respect-disabled | multi, `value=["vision"]`, `disabled=true` | trigger non-interactive; the "Remove vision" button non-interactive |
+| T16 | chips-remove-calls-onRemove | `EntitySelectionChips`, `values=["vision","attention"]`, click "Remove vision" | `onRemove("vision")` |
+| T17 | chips-remove-calls-onRemove | `EntitySelectionChips`, `disabled=true`, click "Remove vision" | no `onRemove` |
+| T18 | chips-omit-empty-hint-when-unset | `EntitySelectionChips`, `values=[]`, no `emptySelectionLabel` | nothing renders |
+| T19 | chips-omit-empty-hint-when-unset | `EntitySelectionChips`, `values=[]`, `emptySelectionLabel="None"` | the hint "None" renders in a labelled group |
+| T20 | prevent-duplicates-multi | multi, `value=["vision"]`, type "Vision", Enter | `onChange(["vision","Vision"])`: comparison is case-sensitive |
 
 ## Edge Cases
 
@@ -157,7 +168,7 @@ belong to the caller that fetches the options (mirroring `ListChooser` /
 - **Single free text vs. option.** A single `value` that matches no option still shows on the trigger as free text (inherited from `ListChooser`'s value resolution).
 - **Empty options.** With no options, an empty filter shows `ListChooser`'s empty message; typing surfaces the create row when `allowCreate`.
 - **Trigger label vs. value.** In multi mode the trigger always reads the trigger label (the inner `ListChooser` value is held at `null`); in single mode it reflects the chosen value.
-- **Multi selectionPlacement host mode.** When `selectionPlacement="host"`, the chooser renders only the trigger (`w-auto` removed, `className` applied to trigger); the caller owns rendering `EntitySelectionChips` alongside and manages the selected values independently.
+- **Multi selectionPlacement host mode.** When `selectionPlacement="host"`, the chooser renders only the trigger (`w-auto` removed, `className` applied to trigger); the caller renders `EntitySelectionChips` alongside and only draws the set. `EntityChooser`'s `value` and `onChange` remain the single source of truth for the selection, and still drive hiding selected options and the duplicate guard.
 
 ## Configuration
 
@@ -200,11 +211,14 @@ Not applicable: `EntityChooser` is a presentational form control with no deep-li
 
 | String Key | Default (en) | Context |
 |---|---|---|
+| `placeholder` | `ListChooser` default (inherited) | Filter/add field placeholder when no `placeholder` prop is passed. |
+| `createLabel` | `ListChooser` default (inherited) | Create-row label when no `createLabel` prop is passed. |
+| `emptyLabel` | `ListChooser` default (inherited) | Browser "no matches" message when no `emptyLabel` prop is passed. |
 | `triggerLabel` | `Choose…` | Trigger text when no `triggerLabel` prop is passed; also what the trigger shows for a `null` single value. |
 | `emptySelectionLabel` | `Nothing selected yet` | Multi-mode hint shown when the set is empty and no `emptySelectionLabel` prop is passed. |
-| chip `removeLabel` | `Remove <value>` | Built by `EntityChooser`/`EntitySelectionChips` from the chip's value; not itself overridable — a caller localizing `<value>` upstream localizes this label too. |
+| chip `removeLabel` | `Remove <value>` | Built by `EntityChooser`/`EntitySelectionChips` from the chip's value; not itself overridable, which is a known gap: a caller can localize `<value>` but not the word "Remove", and no `removeLabel(value)` prop exists yet. |
 
-Callers targeting a non-English locale MUST pass `triggerLabel` and `emptySelectionLabel` explicitly rather than rely on the English defaults.
+Callers targeting a non-English locale MUST pass `triggerLabel`, `emptySelectionLabel`, `placeholder`, `createLabel` and `emptyLabel` explicitly rather than rely on the English defaults.
 
 ## Accessibility Options
 
@@ -231,14 +245,14 @@ Not applicable: `EntityChooser` emits no structured log events. Logging of user 
 - **React/Web (TypeScript)**: Source is `packages/web/packages/ui/src/components/entity-chooser.tsx`. The component exports `EntityChooser` (the main control) and `EntitySelectionChips` (a companion for rendering the multi-mode selection outside the chooser when `selectionPlacement="host"`). Both are React functional components using hooks for state management. Import from `@adh-sdk/ui/components/entity-chooser`.
 - **SwiftUI**: Start with `Picker` or a custom presentation wrapping `List` with a search/filter field. Mirror the dual-mode dispatch: single uses a standard picker binding, multi uses a `State` set that appends on selection and omits selected values from the list. Render selected items as removable chips using `HStack` with a trailing `Image(systemName: "xmark.circle.fill")` per item.
 - **Compose (Kotlin)**: Build on `LazyColumn` for the filtered list with `TextField` for the search input. Single mode: update a mutable state holder; multi mode: maintain a mutable set, append on accept, filter the list to exclude already-selected items. Use Material 3's `InputChip` (with its trailing icon slot) for removable chips. Handle focus transitions (focus to input on open, return focus to trigger on close) via `FocusRequester`.
-- **UIKit / AppKit**: On iOS, use `UISearchController` to manage the filtered list within a `UITableViewController` popover. Present modally for consistency with navigation. On macOS, use an `NSSearchField` + `NSTableView` in a popover or sheet. Single mode stores the selection as a string; multi mode as a `Set<String>` or array. Render chips with removable `NSButton` subviews in a wrapping `NSStackView` (NSView-based) or `UIStackView` (UIKit).
-- **WinUI 3 (C#)**: Use a single native approach end to end: an `AutoSuggestBox` as the filter/add field, presented inside a `Flyout` anchored to the trigger `Button` (`IsLightDismissEnabled="false"` while the flyout should stay open across accepts, mirroring `keepOpenOnCommit`; closed only via Done/Cancel or Esc). Bind `AutoSuggestBox.ItemsSource` to the filtered options and handle `TextChanged` for filtering and `SuggestionChosen`/`QuerySubmitted` for accept vs. create. For multi mode, bind the selected set to an `ObservableCollection<string>` and render each entry as a `Button` containing a `TextBlock` (the value) and a `SymbolIcon Symbol="Cancel"` (removal), laid out in a wrapping `ItemsRepeater`. `INotifyCollectionChanged` keeps the flyout's list and the chip rendering in sync.
+- **UIKit / AppKit**: On iOS, use `UISearchController` to manage the filtered list within a `UITableViewController` popover. Present it as a popover on iPad and as a sheet on iPhone. On macOS, use an `NSSearchField` + `NSTableView` in a popover or sheet. Single mode stores the selection as a string; multi mode as a `Set<String>` or array. Render chips with removable `NSButton` subviews in a wrapping `NSStackView` (NSView-based) or `UIStackView` (UIKit).
+- **WinUI 3 (C#)**: Use a single native approach end to end: an `AutoSuggestBox` as the filter/add field, presented inside a `Flyout` anchored to the trigger `Button` (to keep the flyout open across accepts, mirroring `keepOpenOnCommit`, cancel the `FlyoutBase.Closing` event unless the user chose Done or Esc; `Flyout` has no `IsLightDismissEnabled`, which belongs to `Popup`, so use a `Popup` instead if you need that property). Bind `AutoSuggestBox.ItemsSource` to the filtered options and handle `TextChanged` for filtering and `SuggestionChosen`/`QuerySubmitted` for accept vs. create. For multi mode, bind the selected set to an `ObservableCollection<string>` and render each entry as a `Button` containing a `TextBlock` (the value) and a `SymbolIcon Symbol="Cancel"` (removal), laid out in a wrapping `ItemsRepeater`. `INotifyCollectionChanged` keeps the flyout's list and the chip rendering in sync.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/entity-chooser.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/components/entity-chooser.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -271,12 +285,13 @@ Not applicable: `EntityChooser` emits no structured log events. Logging of user 
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`screen-reader-support` and `keyboard-navigable` rest on the `aria-label`/role wiring described in Accessibility and the delegation to `ListChooser`'s keyboard model (**delegate-list-behavior**); `touch-target-size` is `partial` because the source sets no explicit sizing for the trigger or chip-remove controls, so compliance depends on inherited styling this file can't verify. `separation-of-concerns` is `passed` because the list/keyboard/add-new logic lives entirely in `ListChooser`, leaving this file only the single/multi selection semantics; `unit-test-coverage` is `passed` because `entityChooser.test.tsx` renders `EntityChooser` directly and exercises both single and multi selection.
+`screen-reader-support` and `keyboard-navigable` rest on the `aria-label`/role wiring described in Accessibility and the delegation to `ListChooser`'s keyboard model (**delegate-list-behavior**); `touch-target-size` is `partial` (see **min-touch-target-controls**) because the source sets no explicit sizing for the trigger or chip-remove controls, so compliance depends on inherited styling this file can't verify. `separation-of-concerns` is `passed` because the list/keyboard/add-new logic lives entirely in `ListChooser`, leaving this file only the single/multi selection semantics; `unit-test-coverage` is `passed` because `entityChooser.test.tsx` renders `EntityChooser` directly and exercises both single and multi selection.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Adds close-on-accept-single, keep-open-on-accept-multi, chip and min-touch-target requirements with vectors, states the duplicate equality rule, keeps the host-mode value as the single source of truth, lists inherited localization defaults and the Remove-label gap, and corrects the WinUI 3 flyout and UIKit presentation notes. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Reshaped Design Decisions into `**Decision**`/`**Rationale**`/`**Approved**` line triples, marking each decision's approval status as pending. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename Behavioral Requirements to subject-only kebab-case and narrow forward-allow-create's scope; add show-trigger-value-single, trigger-label-only-multi, and host-mode-renders-trigger-only requirements; resolve the "browser stays open" contradiction between Overview/Design Decisions and the test vectors; add/renumber Conformance Test Vectors for value replacement, the null-trigger case, the multi trigger-label case, and host mode; add an EntitySelectionChips configuration table; rewrite Localization to list the hardcoded default strings; correct the Compliance table to canonical links, add missing accessibility checks, and mark touch-target-size partial; fix WinUI 3 (single native approach, real Symbol names) and Compose (InputChip) Platform Notes and drop the off-platform watchOS aside; move the guideline reference from references to related and set references to []; declare the RemovableChip dependency; remove list-chooser's duplicate related entry; fix the States/Localization empty-hint string mismatch; and remove the app-specific example from Overview. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Revise recipe: fix domain URI, add missing test vectors, document selectionPlacement host mode, clarify Platform Notes with all five platforms, add Edge Cases entry for host mode, refine Behavioral Requirements naming. |

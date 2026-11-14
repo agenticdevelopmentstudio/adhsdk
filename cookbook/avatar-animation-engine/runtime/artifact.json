@@ -4,11 +4,11 @@
     "id": "74ba9dde-4963-42cb-aa03-bf1ee4dcc794",
     "title": "Avatar Engine Runtime",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -25,13 +25,19 @@
       "engine",
       "animation"
     ],
-    "depends-on": [],
-    "related": [],
+    "depends-on": [
+      "471eb7b8-6821-4fd3-ab89-022c56757421",
+      "81f8c0bd-ce00-43b3-816e-b63e96baeacc"
+    ],
+    "related": [
+      "bd101720-9fd3-4978-a0aa-7671e301e64b",
+      "d3e1f776-8ad1-431f-9485-386ac285a039"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "05ec6041fca22d40",
+  "synced": "73cc3f781d88bb2f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

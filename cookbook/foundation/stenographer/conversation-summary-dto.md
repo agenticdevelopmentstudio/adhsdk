@@ -2,7 +2,7 @@
 id: e74bbbe4-cc41-40dc-a063-e262522c2301
 title: "Conversation Summary DTOs"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,8 @@ tags:
   - foundation
   - dto
   - wire
-depends-on: []
+depends-on:
+  - 25b6559b-69c1-450f-85b3-fc026d55f469
 related: []
 references: []
 approved-by: ""
@@ -30,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-A conversation is a live terminal session in which a person is talking to an agent. These types say the daemon's `SessionDTO` the way a conversation reader asks: `ConversationAgent` (the agent name), `ConversationStatus` (busy, idle, waiting, ended), `ConversationSummaryDTO` (one row of `steno conversations list`), `ConversationInfoDTO` (the row plus the rest of what the daemon knows, for `steno conversation info`) and `ConversationSendability` (the one answer `steno conversation send` acts on and `info`'s `canSend` reports). The session is the conversation; these types add no storage. Every session the daemon records is a Claude Code session, so the agent is stated as a field (`claude`) so that a second agent is a new value and not a new shape.
+A conversation is a live terminal session in which a person is talking to an agent. These types present the daemon's `SessionDTO` (see [Session DTOs](cookbook:25b6559b-69c1-450f-85b3-fc026d55f469)) in the shape a conversation reader needs: `ConversationAgent` (the agent name), `ConversationStatus` (busy, idle, waiting, ended), `ConversationSummaryDTO` (one row of `steno conversations list`), `ConversationInfoDTO` (the row plus the rest of what the daemon knows, for `steno conversation info`) and `ConversationSendability` (the one answer `steno conversation send` acts on and `info`'s `canSend` reports). The session is the conversation; these types add no storage. Every session the daemon records is a Claude Code session, so the agent is stated as a field (`claude`) so that a second agent is a new value and not a new shape.
 
 ## Behavioral Requirements
 
@@ -47,8 +48,8 @@ A conversation is a live terminal session in which a person is talking to an age
 - **summary-id**: `id` MUST be the session id, the id every `steno conversation` verb takes.
 - **summary-terminal**: `terminal` MUST be the terminal's name from `KnownTerminals` for the session's `termProgram` (for example `iTerm2`), else the raw `termProgram`.
 - **summary-cwd**: `cwd` MUST be the session's working directory written `~`-relative when it is under the home directory.
-- **summary-session-name**: `sessionName` MUST be the session's `transcriptTitle`, and MUST be an empty string when the session is unnamed.
-- **summary-git-branch**: `gitBranch` MUST be the session's `gitBranch` unchanged.
+- **summary-session-name**: `sessionName` MUST be the session's `transcriptTitle`, and MUST be an empty string, never nil, when the session is unnamed.
+- **summary-git-branch**: `gitBranch` MUST be the session's `gitBranch` unchanged, and MUST be an empty string, never nil, when the session is not in a repository.
 - **summary-last-activity**: `lastActivity` MUST be `UTCTimestamp.canonical` of the session's `lastActivityAt`, and MUST fall back to the raw `lastActivityAt` when that does not parse.
 - **summary-home-default**: `ConversationSummaryDTO.init(session:homeDirectory:)` MUST default `homeDirectory` to `NSHomeDirectory()`.
 - **home-relative-equal**: `homeRelative(_:homeDirectory:)` MUST return `~` when the path equals the home directory.
@@ -67,21 +68,21 @@ A conversation is a live terminal session in which a person is talking to an age
 - **info-fields**: A `ConversationInfoDTO` MUST carry `id`, `agent`, `terminal`, `termProgram`, `cwd`, `projectRoot`, `sessionName`, `gitBranch`, `model`, `startedAt`, `lastActivity`, `status`, `lastEvent`, `lastTool`, `summary`, `pid`, `canSend` and `sendRefusal`.
 - **info-from-summary**: `ConversationInfoDTO.init` MUST take `id`, `agent`, `terminal`, `cwd`, `sessionName`, `gitBranch`, `lastActivity` and `status` from the `ConversationSummaryDTO` built from the same session.
 - **info-raw-fields**: `ConversationInfoDTO.init` MUST copy `termProgram`, `model`, `lastTool`, `summary` and `pid` from the session, and `lastEvent` from the session's `lastEventType`.
-- **info-project-root**: `projectRoot` MUST be the session's `projectRoot` written `~`-relative, and is an empty string until resolved.
+- **info-project-root**: `projectRoot` MUST be the session's `projectRoot` written `~`-relative, and MUST be an empty string when the session has no `projectRoot`.
 - **info-started-at**: `startedAt` MUST be `UTCTimestamp.canonical` of the session's `startedAt`, falling back to the raw value when it does not parse.
 - **info-can-send**: `canSend` MUST be true exactly when `ConversationSendability.refusal` returns nil.
 - **info-send-refusal**: `sendRefusal` MUST be the refusal sentence, and MUST be an empty string when `canSend` is true.
 - **info-live-sessions**: `ConversationInfoDTO.init` MUST take the active sessions as `liveSessions`, which the pane-sharing check reads.
 - **info-attachment-probe**: `ConversationInfoDTO.init` MUST take an `attachment` probe that defaults to `ConversationSendability.processAttachment`, so a test can inject the answer.
-- **refusal-ended**: `refusal` MUST return `conversation <id> has ended.` for an `ended` conversation.
-- **refusal-waiting**: `refusal` MUST refuse a `waiting` conversation with a sentence beginning `conversation <id> is waiting on a prompt`, because its pane holds a permission or question prompt and the Return that follows typed text would pick the highlighted choice.
+- **refusal-ended**: `refusal` MUST return exactly `conversation <id> has ended.` for an `ended` conversation.
+- **refusal-waiting**: `refusal` MUST refuse a `waiting` conversation with exactly `conversation <id> is waiting on a prompt (a permission or a question); answer it in its terminal. A message typed now would land in the prompt, and its Return would pick the highlighted choice.`, because its pane holds a permission or question prompt and the Return that follows typed text would pick the highlighted choice.
 - **refusal-order**: `refusal` MUST test in this order: ended, waiting, unsupported terminal, detached process, pane sharer; the first match wins.
-- **refusal-terminal**: `refusal` MUST refuse a session whose terminal `TerminalTextInjector.isSupported` rejects, with a sentence naming the `termProgram`, or `an unknown terminal` when it is empty.
-- **refusal-detached**: `refusal` MUST refuse a session whose process the probe reports as `detached`, with a sentence saying it is a headless claude that never reads a terminal.
-- **refusal-pane-sharer**: `refusal` MUST refuse a session when another active session's pane resolves to the same `TerminalTextInjector.Target`, naming the sharer's id first and then the session's id.
+- **refusal-terminal**: `refusal` MUST refuse a session whose terminal `TerminalTextInjector.isSupported` rejects, with exactly `typing into a conversation needs iTerm2 or Terminal.app; <id> runs in <termProgram>.`, where `<termProgram>` is `an unknown terminal` when it is empty.
+- **refusal-detached**: `refusal` MUST refuse a session whose process the probe reports as `detached`, with exactly `conversation <id> is a headless claude (claude -p, run by a script or shell), which reads its prompt once and never a terminal, so nothing typed into a pane can reach it.`
+- **refusal-pane-sharer**: `refusal` MUST refuse a session when another active session's pane resolves to the same `TerminalTextInjector.Target`, with exactly `conversation <sharer id> runs in the same terminal pane as <id> (a nested or headless claude shares its parent's), so a message can't be aimed at <id> alone.`
 - **refusal-sharer-excused**: A pane sharer whose probe reports `detached` MUST NOT block the session.
 - **refusal-sharer-unknown**: A pane sharer whose probe returns nil MUST still block the session, because an unreadable process might be on the pane.
-- **refusal-sharer-active-only**: Only a sharer whose `status` is the raw value of `SessionStatus.active` MAY block; an ended sharer MUST NOT.
+- **refusal-sharer-active-only**: A sharer whose `status` is not the raw value of `SessionStatus.active` MUST NOT block the session.
 - **refusal-busy-idle**: `refusal` MUST return nil for a `busy` or `idle` conversation that passes the later checks, so a busy conversation's message queues.
 - **refusal-no-pane**: `refusal` MUST NOT run the pane-sharer check for a session whose pane does not resolve.
 - **attachment-probe-type**: `AttachmentProbe` MUST be a `@Sendable` function from `SessionDTO` to an optional `ProcessLiveness.TerminalAttachment`, where nil means the process cannot be read.
@@ -129,12 +130,19 @@ Vectors come from `ConversationSummaryDTOTests` (Core test target) and the sourc
 | conversation-summary-dto-021 | refusal-sharer-unknown | a probe that always returns nil, same sessions | refusal for parent is non-nil |
 | conversation-summary-dto-022 | refusal-ended | `refusal` for an ended session `s1` | `conversation s1 has ended.` |
 | conversation-summary-dto-023 | summary-last-activity | `lastActivityAt` of `not a date` | `lastActivity` equals `not a date` |
-
+| conversation-summary-dto-024 | refusal-order | an ended session in an unsupported terminal (`vscode`) | the refusal is `conversation <id> has ended.`, not the terminal sentence (derived from the source order; no test) |
+| conversation-summary-dto-025 | refusal-terminal | a live session with `termProgram` `` | `typing into a conversation needs iTerm2 or Terminal.app; <id> runs in an unknown terminal.` (derived from the source; no test) |
+| conversation-summary-dto-026 | refusal-no-pane | two live sessions whose pane does not resolve | neither is refused for sharing a pane (derived from the source; no test) |
+| conversation-summary-dto-027 | terminal-name, summary-terminal | `termProgram` `iTerm.app`, then `ghostty` | `iTerm2`, then `ghostty` (derived from `KnownTerminals`; no test) |
+| conversation-summary-dto-028 | matches-ignores-empty-names | app `x` against a session with an empty `termProgram` | the empty name does not match (derived from the source; no test) |
+| conversation-summary-dto-029 | info-raw-fields, info-project-root, info-started-at | an info built from a session with `projectRoot` `/Users/me/src/app`, `startedAt` `2026-11-10 10:00:00`, home `/Users/me` | `projectRoot` `~/src/app`, `startedAt` equals `UTCTimestamp.canonical("2026-11-10 10:00:00")`, and `termProgram`, `model`, `lastTool`, `summary`, `pid` equal the session's (derived from the source; no test) |
+| conversation-summary-dto-030 | process-attachment | a session whose recorded `pid` exceeds the `pid_t` range | the probe is asked about the clamped value (derived from `pid_t(clamping:)`; no test) |
+| conversation-summary-dto-031 | summary-home-default | a summary built without `homeDirectory` | paths are rewritten against `NSHomeDirectory()` (derived from the source default; no test) |
 ## Edge Cases
 
 - **Unparsable timestamps**: a `lastActivityAt` or `startedAt` that `UTCTimestamp.canonical` rejects MUST pass through unchanged; no error is raised.
 - **Unknown terminal**: an empty or unrecognised `TERM_PROGRAM` yields the raw value as `terminal`; for send it is refused with `an unknown terminal` when empty.
-- **Unnamed session**: `sessionName` is `` and `gitBranch` is `` for a session with no title or repo; both MUST be carried as empty strings, never nil.
+- **Unnamed session**: `sessionName` and `gitBranch` are empty strings for a session with no title or repo (see **summary-session-name** and **summary-git-branch**).
 - **Home directory of `/`**: dropping its one trailing slash leaves an empty home, so `homeRelative` returns the path unchanged.
 - **Path equal to home with a trailing slash in the path**: only the home directory's trailing slash is stripped; a path `/Users/me/` against `/Users/me` starts with the home and a slash, so it returns `~/`.
 - **Detached checkout**: `HEAD` is a base branch, so a detached checkout outside a worktree is not work in progress.
@@ -152,8 +160,9 @@ Vectors come from `ConversationSummaryDTOTests` (Core test target) and the sourc
 | homeDirectory | String | `NSHomeDirectory()` | Home used to write paths `~`-relative. |
 | liveSessions | array of `SessionDTO` | none (caller supplies) | Active sessions the pane-sharer check reads. |
 | attachment | `AttachmentProbe` | `ConversationSendability.processAttachment` | Reports whether a session's process has a terminal; nil when unreadable. |
-| baseBranches | Set of String | empty, `main`, `master`, `HEAD` | Branches that do not count as work in progress. |
 
+
+`baseBranches` is a fixed constant (see **base-branches**), not an option.
 ## Deep Linking
 
 Not applicable: these shapes define no URL or deep link.
@@ -187,17 +196,17 @@ Not applicable: this code makes no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: Not used; a conversation picker lists `ConversationSummaryDTO` rows and disables its send control from `ConversationInfoDTO.canSend`, showing `sendRefusal` as the reason.
+- **SwiftUI**: A conversation picker lists `ConversationSummaryDTO` rows and disables its send control from `ConversationInfoDTO.canSend`, showing `sendRefusal` as the reason.
 - **Compose**: Kotlin data classes with `kotlinx.serialization`; model `ConversationStatus` as an enum class with `@SerialName` lowercase values and the refusal decision as a pure function over a session snapshot and a probe lambda.
 - **React/Web**: TypeScript string-literal union for status; the refusal logic is a pure function taking a live-sessions array and an injected probe; `homeRelative` needs the home directory passed in because a browser has none.
-- **AppKit / UIKit**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationSummaryDTO.swift`; it depends on `SessionDTO`, `SessionActivity`, `KnownTerminals`, `UTCTimestamp`, `TerminalTextInjector` and `ProcessLiveness`, uses `NSHomeDirectory()` and `pid_t(clamping:)`, and declares `AttachmentProbe` as a `@Sendable` typealias.
+- **AppKit / UIKit**: The types are UI-agnostic; the Swift implementation depends on `SessionDTO`, `SessionActivity`, `KnownTerminals`, `UTCTimestamp`, `TerminalTextInjector` and `ProcessLiveness`, uses `NSHomeDirectory()` and `pid_t(clamping:)`, and declares `AttachmentProbe` as a `@Sendable` typealias.
 - **WinUI 3**: Use C# records with `System.Text.Json` (`JsonStringEnumConverter` with a lowercase naming policy for `ConversationStatus`), a static class for the sendability rule, a `Func<SessionDto, TerminalAttachment?>` for the probe, `Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)` for the home directory, `Path.DirectorySeparatorChar` splitting for the worktree check, and `Process.GetProcessById` plus a Win32 console query in place of the Darwin process probe; the pane is a Windows Terminal or console host, so `TerminalTextInjector` has no direct equivalent and the terminal check needs its own support list.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationSummaryDTO.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationSummaryDTO.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -224,17 +233,22 @@ Not applicable: this code makes no log calls.
 **Rationale**: The source defines it as a session on a feature branch or inside a `.claude/worktrees/<name>` directory; a path ending at `worktrees` with no name is not a worktree.
 **Approved**: pending
 
+
+**Decision**: Refusal sentences are English text built in the type, not reason codes.
+**Rationale**: The only callers are the `steno conversation send` and `info` verbs, which print the sentence as is, so a code-to-text mapping would add a layer nothing needs yet; a second audience would call for returning a code.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
-| [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | passed | user-safety |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | partial | User Safety |
 
-separation-of-concerns passes: the file maps a session to a conversation reading and decides send eligibility; storage, transport and the terminal injection itself are other types. unit-test-coverage is partial: `ConversationSummaryDTOTests` covers status, home-relative paths, summary fields, app matching, work in progress and the send refusals, but no test covers `ConversationInfoDTO`'s raw fields, `terminalName`, the unsupported-terminal sentence or the unparsable-timestamp fallback, so vectors 022 and 023 rest on the source alone. safe-defaults passes: any unreadable or ambiguous state refuses a send rather than permitting it.
+separation-of-concerns passes: the file maps a session to a conversation reading and decides send eligibility; storage, transport and the terminal injection itself are other types. unit-test-coverage is partial: `ConversationSummaryDTOTests` covers status, home-relative paths, summary fields, app matching, work in progress and the send refusals, but no test covers `ConversationInfoDTO`'s raw fields, `terminalName`, the unsupported-terminal sentence or the unparsable-timestamp fallback, so vectors 022, 023 and 024 to 031 rest on the source alone. safe-defaults is partial: an ended, waiting, unsupported-terminal, detached or pane-sharing session refuses a send, and a sharer whose process cannot be read blocks, but a session whose own process cannot be read (the probe returns nil) is not refused for that reason.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Gave full refusal sentences, rewrote RFC 2119 wording, folded empty-string rules into named requirements, added eight vectors and a localization decision, and made safe-defaults partial. |

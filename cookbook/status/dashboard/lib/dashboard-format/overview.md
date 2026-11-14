@@ -12,3 +12,11 @@ It exports:
 
 The callers are the analytics and errors pages and the board shell, which feeds the site rail from `listedSites` and `withSite`. For general number and duration formatting see Format ([adhsdk.ingredient.status.dashboard.logic.format](cookbook:564c6102-e100-41ad-9c92-14606a33c394)); this module covers only the dashboard-specific wording.
 
+### API
+
+- `bucketLabel(iso: string, range: AnalyticsRange): string` — `iso` is an ISO 8601 timestamp for the start of a bucket; `range` is `"24h"`, `"7d"` or `"30d"`, and `"24h"` chooses the hour format while any other value takes the day format.
+- `bucketDetail(iso: string, range: AnalyticsRange): string` — the same parameters as `bucketLabel`.
+- `formatVital(vital: Vital, value: number): string` — `vital` is `"lcp"`, `"inp"`, `"cls"` or `"fcp"` and picks the unit; `value` is the raw measurement.
+- `listedSites(body: { views?: { sites?: string[] } } | undefined): string[] | null` — a dashboard response body, or the absence of one.
+- `withSite(sites: readonly string[], site: string | null): string[]` — the server's list and the site the URL names.
+- `siteReportFor<T>(reports: Readonly<Record<string, T>>, site: string, none: T): T` — the server's per-site reports, the URL's site, and what to return when there is none.

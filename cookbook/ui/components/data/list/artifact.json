@@ -4,11 +4,11 @@
     "id": "3785363d-118e-4d7e-98e6-afaca8bf0838",
     "title": "List",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -23,12 +23,14 @@
       "collection"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "40827b84-406e-4091-951b-9498b2f78253"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "990fcb47c650ba3b",
+  "synced": "e1000ee76641989d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

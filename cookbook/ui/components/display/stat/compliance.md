@@ -12,7 +12,7 @@ through `apt-*` tokens — no raw hex, no `!important` — without itself assert
 measured ratio. `semantic-markup` passes because the component renders plain,
 non-interactive `<span>`/`<div>` elements with no ARIA misuse. `platform-theming`
 passes because every color comes from the shared `apt-*` theme tokens, which the
-Appearance section states resolve consistently in light and dark. `StatRow`/`Stat`
+`apt-*` theme CSS defines for light and dark. `StatRow`/`Stat`
 are pure presentation over props with no business logic (separation-of-concerns
 passed), and `stat.test.tsx` directly renders both and asserts on tone-class output
 (unit-test-coverage passed).

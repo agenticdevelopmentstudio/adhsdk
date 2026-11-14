@@ -2,7 +2,7 @@
 id: 0a3f46c1-aa22-4af3-91f0-6631c9fdddfd
 title: "Partner Paths"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -34,8 +34,8 @@ approved-date: ""
 
 ## Behavioral Requirements
 
-- **value-semantics**: `PartnerPaths` MUST be a value type that is `Sendable` and `Equatable`, holding exactly the two stored values `home` (a URL) and `token` (a string) given to its initializer.
-- **equality**: Two `PartnerPaths` values MUST be equal when their `home` and `token` are equal.
+- **value-semantics**: `PartnerPaths` MUST be a value type that is `Sendable`, holding exactly the two stored values `home` (a URL) and `token` (a string) given to its initializer.
+- **equality**: `PartnerPaths` MUST be `Equatable`, and two values MUST be equal when their `home` and `token` are equal.
 - **partner-directory**: `directory` MUST be `home`, then a path component of a dot followed by `token`, then the component `partner`.
 - **mcp-config-file**: `mcpConfig` MUST be the file `mcp.json` inside `directory`.
 - **system-prompt-file**: `systemPrompt` MUST be the file `system-prompt.md` inside `directory`.
@@ -44,7 +44,7 @@ approved-date: ""
 - **skills-directory**: `skillsDirectory` MUST be `home`, then `.claude`, then `skills`; it MUST NOT depend on `token`.
 - **skill-file**: `skillFile(jobID:)` MUST be the file `SKILL.md` inside a directory named `adkitchen-partner-` followed by the job ID, inside `skillsDirectory`.
 - **no-file-access**: Every derived location MUST be computed from the two stored values alone; no property or function MAY read, create or check the file system.
-- **no-validation**: The type MUST NOT validate `home`, `token` or `jobID`; a caller that takes any of them from outside the app owns checking it before use. The macOS `PartnerGuidelinesInstaller` checks each job ID through its own `jobFile` before it calls `skillFile(jobID:)`.
+- **no-validation**: The type MUST NOT validate `home`, `token` or `jobID`; a caller that takes any of them from outside the app owns checking it before use.
 
 ## Appearance
 
@@ -69,11 +69,12 @@ Not applicable — this is a pure value type that derives file locations, not a 
 | partner-paths-005 | skills-directory | Two values with the same `home` and different tokens. | Both `skillsDirectory` values are `<home>/.claude/skills`. |
 | partner-paths-006 | equality | `PartnerPaths(home: /h, token: a)` against `PartnerPaths(home: /h, token: a)` and against `PartnerPaths(home: /h, token: b)`. | The first pair is equal; the second pair is not. |
 | partner-paths-007 | no-file-access | `home` is a directory that does not exist; read every property. | Each returns a URL and nothing is created on disk. |
+| partner-paths-008 | no-validation, skill-file | `home` `/h`; read `skillFile(jobID: "../x").path`. | `/h/.claude/skills/adkitchen-partner-../x/SKILL.md`, pinning the unvalidated result so a later decision to validate shows as a deliberate change. |
 
 ## Edge Cases
 
-- **Null / empty input**: An empty `token` is not rejected; `directory` is built from the component `.` followed by `partner`, so the result is whatever URL path joining makes of those components. An empty `jobID` gives the directory name `adkitchen-partner-`. The type does not guard either (MUST NOT validate, per no-validation).
-- **Boundary values**: A `token` or `jobID` that contains a path separator or `..` is joined as written and can place the result outside the intended directory. The type neither detects nor refuses it; the caller owns the check.
+- **Null / empty input**: An empty `token` is not rejected; `directory` is built from the component `.` followed by `partner`, so the result is `/h/./partner` for a home of `/h` (URL path joining keeps the `.` component). An empty `jobID` gives the directory name `adkitchen-partner-`. The type does not guard either (MUST NOT validate, per no-validation).
+- **Boundary values**: A `token` or `jobID` that contains a path separator or `..` is joined as written and can place the result outside the intended directory. The type neither detects nor refuses it; the caller owns the check, and `skillFile(jobID:)` takes a raw string, so nothing in the type stops a separator in the job ID from adding path levels.
 - **Concurrent access**: The type is an immutable value; copies are safe to read from any thread or actor (it is `Sendable`).
 - **Error states**: Nothing can fail; no property or function throws or returns an optional.
 - **Offline / disconnected state**: Not applicable: the type performs no network or file access.
@@ -130,7 +131,7 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerPaths.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerPaths.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -142,19 +143,24 @@ Not applicable: the source calls no logging API.
 **Approved**: pending
 
 **Decision**: The skills directory ignores the token and lives under `.claude/skills`.
-**Rationale**: The skills are read by the `claude` command line tool, which looks in its own folder, not the app's; each job's directory is prefixed `adkitchen-partner-` so the app can recognise its own.
+**Rationale**: The skills are read by the `claude` command line tool, which looks in its own folder, not the app's; each job's directory is prefixed `adkitchen-partner-` so the app can recognise its own. The prefix is fixed to the app's name and is not a template value.
 **Approved**: pending
 
+**Decision**: `skillFile(jobID:)` takes a raw `String`, not a parsed job-ID type.
+**Rationale**: The type is a pure location builder with no notion of a valid ID; the caller that takes an ID from outside the app checks it before calling, so one parsed type would have to live in a layer that owns job identity rather than here.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 
-`separation-of-concerns` passes because the type only computes locations; creating, reading and removing files is left to callers such as the guidelines installer. `unit-test-coverage` is partial: `PartnerProcessConfigurationTests` covers `pathsDeriveFromHomeAndToken` for the MCP config and skill file locations, and other suites use the type as a fixture, but no test asserts the system prompt, jobs, reviews or skills directory locations.
+`separation-of-concerns` passes because the type only computes locations; creating, reading and removing files is left to callers such as the guidelines installer. `input-sanitization` is partial: `token` and `jobID` are joined as written, so a path separator in either changes the result, and the type leaves the check to the caller (see no-validation). `unit-test-coverage` is partial: `PartnerProcessConfigurationTests` covers `pathsDeriveFromHomeAndToken` for the MCP config and skill file locations, and other suites use the type as a fixture, but no test asserts the system prompt, jobs, reviews or skills directory locations.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Pinned the empty-token and traversal results, recorded the raw-string and fixed-prefix decisions, added an input-sanitization compliance row and removed the duplicated Equatable and installer text. |

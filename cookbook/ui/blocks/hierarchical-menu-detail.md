@@ -2,15 +2,15 @@
 id: aaebd90e-991f-4133-a12d-0783586eae5a
 title: "Hierarchical Menu Detail"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A nested-menu framework rendering hierarchical lists with three disclosure styles and optional detail pane."
+summary: "A nested-menu framework rendering hierarchical lists with three disclosure styles and a required detail pane."
 platforms:
   - typescript
   - web
@@ -20,8 +20,7 @@ tags:
   - hierarchy
 depends-on:
   - 8fa7aaae-df62-44ea-b10c-182f3094ed9f
-related:
-  - 8fa7aaae-df62-44ea-b10c-182f3094ed9f
+related: []
 references: []
 approved-by: ""
 approved-date: ""
@@ -41,8 +40,12 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 - **navigate-breadcrumb**: When breadcrumb crumbs are interactive (`onNavigate` provided), clicking a crumb MUST call the level's `onClear()` for all levels deeper than the clicked crumb, leaving the clicked level's selection in place.
 - **deselect-on-reclick**: Clicking a row whose `id` is already `selectedId` MUST call the level's `onClear()`.
 - **disclosure-styles**: Component MUST support three `disclosureStyle` values — "minimized", "covered", "cascading" — each controlling how ancestor lists are hidden or revealed when viewport narrowness prevents showing all columns (see also **covered-peek** for the covered style's specific hidden-list treatment).
-- **autohide**: When `autoHideTopics` is true (default), only the frontier level (deepest rendered) MUST remain disclosed; all ancestor lists MUST be hidden by their child, even when space permits. The root-level header MUST carry a toggle to flip this behavior (flipping it clears every pin — see **pin-toggle**).
-- **pin-toggle**: In `covered` and `cascading` styles, every rendered list's header except the ROOT's MUST carry a `«`/`»` toggle that pins or covers that list's PARENT (not the list itself), independent of `autoHide`, persisting across selections; the root list carries no `«`/`»` toggle — its header holds only the auto-hide toggle (see **autohide**). The frontier list's own cover toggle rides the detail pane's leading strip in `covered` style; in `cascading` style the frontier list has no cover toggle at all (the detail strip's immersion toggle takes its place). In `minimized` style, a separate manual pin toggle — present only when `manualCollapse` is true (default) — pins the list it appears on directly. A parent pin overrides `autoHide` for that parent: pinned-hidden (`true`) MUST keep it hidden; pinned-disclosed (`false`) MUST keep it disclosed unless width pressure forbids it. Flipping `autoHide` MUST clear every pin.
+- **autohide**: When `autoHideTopics` is true (default), only the frontier level (deepest rendered) MUST remain disclosed; all ancestor lists MUST be hidden by their child, even when space permits. The root-level header MUST carry a toggle to flip this behavior (flipping it clears every pin — see **pin-reset-on-autohide**).
+- **pin-parent-toggle**: In `covered` and `cascading` styles, every rendered list's header except the ROOT's MUST carry a `«`/`»` toggle that pins or covers that list's PARENT (not the list itself), independent of `autoHide`, persisting across selections. The root list carries no `«`/`»` toggle — its header holds only the auto-hide toggle (see **autohide**).
+- **frontier-cover-toggle**: The frontier list's own cover toggle rides the detail pane's leading strip in `covered` style. In `cascading` style the frontier list has no cover toggle at all; the detail strip's immersion toggle takes its place.
+- **minimized-manual-pin**: In `minimized` style, a separate manual pin toggle, present only when `manualCollapse` is true (default), MUST pin the list it appears on directly.
+- **pin-precedence**: A parent pin overrides `autoHide` for that parent: pinned-hidden (`true`) MUST keep it hidden; pinned-disclosed (`false`) MUST keep it disclosed unless width pressure forbids it.
+- **pin-reset-on-autohide**: Flipping `autoHide` MUST clear every pin.
 - **covered-peek**: In `covered` style, a list hidden by autoHide, a pin, or width pressure MUST remain rendered but visually covered by its child: clipped to a fixed peek width (40px) showing only its leading icon column, with the covering child casting a left drop-shadow so the stack reads as physically layered. No Back button is rendered in `covered` style.
 - **render-detail**: Component MUST render the `children` into a detail pane that sits beside the list columns as the rightmost pane in wide mode, or as the only visible pane in narrow mode.
 - **render-toolbar**: When `toolbar` is provided, component MUST render it in a full-width strip above the breadcrumb, collapsing the strip if the toolbar slot is empty.
@@ -51,9 +54,9 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 - **guard-exit**: When `exitGuard` is provided (non-null), any of the following MUST show an unsaved-changes alert before proceeding, while the guard's `isDirty` is true: switching to a sibling at the deepest level, clicking a shallower row, navigating breadcrumb-up, or re-clicking the deepest selected row (deselect) — every change that would clear or replace the open leaf editor's content.
 - **cascading-layout**: In cascading mode, only the root list spans full height; deeper lists open to the right of their parent, positioned just under the parent header, with height hugging their rows (capped at container bottom). The detail pane sits beside the root.
 - **render-connectors**: When two or more levels are rendered in wide mode, component MUST draw a visual chain (selection connector) from each selected parent row to its selected child row, using an elbow path in the theme's selection accent colour from parent to child.
-- **narrow-mode**: When `layoutMode` is "narrow", or when "auto" and the container is narrower than the wide-mode floor, or when the browser reports a phone user agent (checked after mount, via a user-agent pattern for iPhone/iPod or Android + Mobile), component MUST render one full-width pane at a time (the frontier list, or the detail once every level is selected), with a Back button — shown for every disclosure style — to navigate up the hierarchy by clearing the deepest selected level. The wide-mode floor is `minDetailWidth` plus a fixed strip (40px in `covered`/`cascading` style, 48px in `minimized` style), clamped to never go below 480px regardless of `minDetailWidth` — deliberately NOT `minDetailWidth` plus one full topic list's width, which would switch to narrow mode while the wide layout still had ancestor lists left to cover progressively.
+- **narrow-mode**: When `layoutMode` is "narrow", or when "auto" and the container is narrower than the wide-mode floor, or when "auto" and the browser reports a phone user agent (checked after mount, via a user-agent pattern for iPhone/iPod or Android + Mobile; an explicit `layoutMode="wide"` is never overridden by the user agent), component MUST render one full-width pane at a time (the frontier list, or the detail once every level is selected), with a Back button — shown for every disclosure style — to navigate up the hierarchy by clearing the deepest selected level. The wide-mode floor is `minDetailWidth` plus a fixed strip (40px in `covered`/`cascading` style, 48px in `minimized` style), clamped to never go below 480px regardless of `minDetailWidth` — deliberately NOT `minDetailWidth` plus one full topic list's width, which would switch to narrow mode while the wide layout still had ancestor lists left to cover progressively.
 - **render-trailing-crumbs**: When `trailingCrumbs` is provided, component MUST append each as a non-interactive crumb after the level crumbs in the breadcrumb trail.
-- **hide-offscreen**: Lists that do not fit in the visible viewport (after considering autoHide, pins, width pressure, and disclosure style) MAY be rendered but hidden via `aria-hidden` and pointer-events-none.
+- **hide-offscreen**: Lists that do not fit in the visible viewport (after considering autoHide, pins, width pressure, and disclosure style) MAY be rendered, but a list that is rendered while offscreen MUST be hidden via `aria-hidden` and pointer-events-none.
 - **hover-reveal**: In covered and cascading modes, a pointer ENTER on a covered list row MAY reveal every on-screen ancestor list above it for the duration of the pointer's presence in the menu stack, re-hiding when the pointer exits.
 
 ## Appearance
@@ -64,7 +67,7 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 - **Text styling**: List headers use monospace, 0.8rem (12.8px), muted color. Breadcrumb uses the same monospace + 0.75rem.
 - **Border**: 1px solid, using the theme's border colour token.
 - **Background**: Lists use the navigation-surface background colour; the detail pane uses the content-surface background colour.
-- **Spacing**: Breadcrumb has 4px–16px padding, 12px gaps between crumbs. Rails have no padding outside the item list (scrollable area consumes container).
+- **Spacing**: The toolbar strip and the breadcrumb bar each have 16px left/right and 8px top/bottom padding; the breadcrumb bar leaves a 12px gap between the trail and the help affordance, and crumbs sit 4px apart horizontally (2px between wrapped rows). Rails have no padding outside the item list (scrollable area consumes container).
 - **Selection connector**: Elbow path in the theme's selection accent colour, 2px stroke, drawn over the list area (pointer-events-none).
 - **Toggle icons**: 16px icons — a panel-open/closed pictogram for the auto-hide toggle, and a chevrons-left/right pictogram for both the per-list pin toggle and, in cascading style, the detail-immersion toggle (same icon pair, two different controls).
 - **Focus indicator**: 2px ring in the theme's selection accent colour at reduced opacity, on keyboard focus for breadcrumb crumbs and header toggles.
@@ -81,7 +84,7 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 | List pinned hidden | Hidden despite autoHide being false; toggle shows pin state. |
 | List pinned disclosed | Disclosed despite autoHide being true; toggle shows pin state. |
 | Covered style — covered list | List clipped to a 40px icon-only peek, occluded by its child list with a left drop-shadow (see **covered-peek**); header stays visible. |
-| Cascading mode — revealed branch (hover) | All ancestor lists above hovered row expanded to full width for duration of pointer presence. |
+| Covered or cascading mode — revealed branch (hover) | All ancestor lists above hovered row expanded to full width for duration of pointer presence. |
 | Narrow mode — alternate panes | One full-width pane visible; others hidden. Back button shows to navigate up. |
 | Breadcrumb crumb hovered | Crumb colour changes to the primary text colour (lighter than the muted default). |
 | Breadcrumb crumb focused | Focus-visible ring applied. |
@@ -92,31 +95,31 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 - **Role**: The root is a flex container wrapping a `nav` (breadcrumb) and multiple aside-like sections (rail columns). The `nav` element carries `aria-label="Breadcrumb"`.
 - **Breadcrumb navigation**: Semantic nav + ol/li structure. Current crumb marked with `aria-current="page"`. Crumb buttons use `aria-label` or visible text; chevron separators marked `aria-hidden`.
 - **Column identification**: Each list column carries an internal index marker used to locate the selected row's endpoint for connector paths; selection within each column is marked with `aria-current="true"` on the selected row element. Rail-internal roles, accessible names, and row-level keyboard navigation (arrow keys) are the TopicRail ingredient's concern — see [adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f).
-- **Header toggles**: AutoHide toggle has `aria-label`, `aria-pressed` showing toggle state. Pin toggles have descriptive `aria-label` ("Auto-hide parent lists: on/off", "Expand/collapse this list").
+- **Header toggles**: AutoHide toggle has `aria-label`, `aria-pressed` showing toggle state; its labels are the `htd.autoHide.on` and `htd.autoHide.off` strings (see Localization). Pin toggles carry `aria-label` from `htd.cover.cover` and `htd.cover.uncover`, and the cascading immersion toggle from `htd.immerse.hide` and `htd.immerse.show`.
 - **Offscreen columns**: Hidden columns marked `aria-hidden="true"` and `pointer-events-none`.
 - **Back button (narrow mode)**: Labeled `aria-label="Back"`, showing a chevron-left icon + text.
 - **Decorative elements**: Icons used as decoration (chevron-right in breadcrumb, icon-only toggles) marked `aria-hidden`.
 - **Selection connectors**: SVG path overlay marked `aria-hidden` and `pointer-events-none`.
 - **Minimum touch target**: Header toggles measure roughly 2.15rem (~34px) tall with small icon padding; breadcrumb crumbs are text-sized click targets. Neither meets the 44×44px touch-target guideline (see Compliance).
-- **Keyboard navigation**: Breadcrumb crumbs, header toggles, and the Back button are native `<button>` elements, focusable and activatable via standard keyboard controls (Tab, Enter/Space). Row-level keyboard navigation is the TopicRail ingredient's concern — see [adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f). Escape MAY close a revealed branch (not implemented in source; no explicit MUST).
+- **Keyboard navigation**: Breadcrumb crumbs, header toggles, and the Back button are native `<button>` elements, focusable and activatable via standard keyboard controls (Tab, Enter/Space). Row-level keyboard navigation is the TopicRail ingredient's concern — see [adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f).
 - **Label clarity**: Breadcrumb uses visible text; toggles use `aria-label` + visible icon. Lists inherit labels from TopicRail.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| hmd-001 | render-levels | `levels` with 2 items, level 0 has 3 items, level 1 has 2 items | Both levels render as columns with correct item counts. |
+| hmd-001 | render-levels | 2 `levels`; level 0 has 3 items and `selectedId="a"`, level 1 has 2 items and `selectedId=null` | Both levels render as columns with correct item counts. |
 | hmd-002 | scope-by-selection | 3 levels; level 0 `selectedId="a"`, level 1 `selectedId=null`, level 2 `selectedId="c"` | Level 0 and level 1 render (level 1 is the frontier: all its items visible, none selected); level 2 does not render. |
 | hmd-003 | show-breadcrumb | `showBreadcrumb=true`, `rootLabel="Root"`, level 0 selected | Breadcrumb shows "Root" + selected item label. |
 | hmd-004 | navigate-breadcrumb | Breadcrumb crumb clicked for level 0 | `onClear()` called for levels 1+; level 0 selection unchanged. |
 | hmd-005 | deselect-on-reclick | Row with `id="x"` already selected, row clicked again | `onClear()` called for that level. |
 | hmd-006 | disclosure-styles | `disclosureStyle` set to each of "minimized", "covered", "cascading" | Each style renders lists with correct layout/hiding strategy. |
-| hmd-007 | autohide | `autoHideTopics=true`, 3 levels rendered | Only frontier (level 2) visible; levels 0–1 hidden. Root header toggle exists. |
-| hmd-008 | pin-toggle | `autoHideTopics=true`, level 0 pinned disclosed (`pins["level-0"]=false`) | Level 0 remains visible despite autoHide. |
-| hmd-009 | pin-toggle | `disclosureStyle="minimized"`, `manualCollapse=true`, list header toggle clicked | List pin state flips; layout re-renders immediately. |
+| hmd-007 | autohide | `autoHideTopics=true`, `disclosureStyle="covered"`, wide mode, 3 levels; levels 0 and 1 have selections, level 2 `selectedId=null` (frontier), no pins | Only frontier (level 2) disclosed; levels 0–1 hidden (covered to a 40px peek). Root header toggle exists. |
+| hmd-008 | pin-precedence | `autoHideTopics=true`, level 0 pinned disclosed (`pins["level-0"]=false`) | Level 0 remains visible despite autoHide. |
+| hmd-009 | minimized-manual-pin | `disclosureStyle="minimized"`, `manualCollapse=true`, list header toggle clicked | List pin state flips; layout re-renders immediately. |
 | hmd-010 | render-detail | `children` provided with text "Detail" | Text "Detail" appears in the rightmost pane, beside the list columns. |
 | hmd-011 | render-toolbar | `toolbar` with a button | Button renders in strip above breadcrumb. |
-| hmd-012 | min-detail-width | `minDetailWidth="28rem"`, window width 32rem, 2 levels at 10rem each | Detail pane shows at 28rem; level 0 hidden off-screen. |
+| hmd-012 | min-detail-width | `minDetailWidth="28rem"`, `layoutMode="wide"`, `disclosureStyle="covered"`, container width 44rem, 2 levels at 10rem each; level 0 selected, level 1 `selectedId=null` (frontier) | Detail pane is at least 28rem wide; level 1 (frontier) is disclosed at 10rem; level 0 is covered to its 40px peek. |
 | hmd-013 | default-select | Level 0 appears with `defaultSelectedId="x"` and `selectedId=null` | `onSelect("x", { replace: true })` called once. Subsequent renders do not re-fire. |
 | hmd-014 | guard-exit | `exitGuard` with `isDirty=true`, breadcrumb crumb clicked | Unsaved-changes alert shown; navigation blocked until user confirms. |
 | hmd-015 | cascading-layout | `disclosureStyle="cascading"`, 2 levels selected | Root list spans full height; level 1 opens to right of root, below root header. |
@@ -125,7 +128,9 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 | hmd-018 | render-trailing-crumbs | `trailingCrumbs=[{label:"Leaf"}]` | "Leaf" appears after level crumbs, non-interactive. |
 | hmd-019 | hover-reveal | `disclosureStyle="covered"`, pointer ENTER on covered list row | Ancestor lists reveal at full width for pointer duration. |
 | hmd-020 | covered-peek | `disclosureStyle="covered"`, 2 levels, level 0 covered by width pressure | Level 0 renders clipped to a 40px peek (icon only); level 1 casts a left drop-shadow; no Back button appears. |
-
+| hmd-021 | pin-parent-toggle | `disclosureStyle="covered"`, 2 levels, level 0 selected | Level 1 header carries a `«`/`»` toggle that covers or uncovers level 0; level 0 header has no such toggle. |
+| hmd-022 | frontier-cover-toggle | `disclosureStyle="cascading"`, 2 levels both selected | Frontier list has no cover toggle; the detail strip shows the immersion toggle. |
+| hmd-023 | pin-reset-on-autohide | Level 0 pinned (`pins["level-0"]=false`), root auto-hide toggle clicked | Every pin is cleared. |
 ## Edge Cases
 
 - **Empty levels array**: Component MUST render without error (no columns, only toolbar and breadcrumb if provided).
@@ -136,9 +141,9 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 - **Width below minDetailWidth**: If container width is less than `minDetailWidth`, detail pane shows at container width (no horizontal scroll); ancestor columns remain hidden.
 - **exitGuard isDirty flip during alert**: If `exitGuard.isDirty` becomes false while the alert is shown, the alert MUST still block the pending action (the guard check happens once, not re-checked while rendering).
 - **Pin state on hidden list**: A pinned-disclosed list that is later hidden by width pressure MUST remain pinned (the toggle preserves the intent); when space recovers, the list is re-disclosed.
-- **Pointer exit during reveal**: If pointer leaves the menu area while a branch is revealed, the reveal MUST close and the stack MUST re-settle to the configured disclosure style on the next render.
+- **Pointer exit during reveal**: If pointer leaves the menu area while a branch is revealed, if the reveal is implemented, it MUST close and the stack MUST re-settle to the configured disclosure style on the next render.
 - **Multiple levels with same defaultSelectedId**: Each level applies its own default independently; sharing the same `defaultSelectedId` is valid and not a conflict.
-
+- **Shared root level id**: Two component instances whose first level has the same `id` share one surface state (autoHide, pins, hover id, detail hold), because that state is keyed by the root level's id. The state lives for the lifetime of the page and is never evicted; tests that mount the component repeatedly MUST use distinct root ids or reset the store between tests.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -151,8 +156,8 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 | `showBreadcrumb` | `boolean` | `true` | Show the breadcrumb trail. |
 | `minDetailWidth` | `string` (CSS length) | `"28rem"` | Minimum width of the detail pane; the component drills down (hides ancestor lists) to protect it. |
 | `detailTitle` | `ReactNode` | — | Title shown in the detail pane's top strip. |
-| `exitGuard` | `PaneExitGuard \| null` | `null` | The leaf editor's unsaved-work guard (see **guard-exit**). |
-| `manualCollapse` | `boolean` | `true` | Keep the per-list manual pin toggle in `minimized` style (see **pin-toggle**). |
+| `exitGuard` | `PaneExitGuard \| null` | `null` | The leaf editor's unsaved-work guard: an object with one method, `isDirty(): boolean`. When it returns true, the component itself renders the unsaved-changes alert and holds the pending action; **Discard** runs the held action and **Stay** drops it. The guard never saves (see **guard-exit**). |
+| `manualCollapse` | `boolean` | `true` | Keep the per-list manual pin toggle in `minimized` style (see **minimized-manual-pin**). |
 | `disclosureStyle` | `"minimized" \| "covered" \| "cascading"` | `"covered"` | How ancestor lists yield room to the detail as the window narrows (see **disclosure-styles**). |
 | `autoHideTopics` | `boolean` | `true` | Start with every list above the frontier hidden (see **autohide**). |
 | `layoutMode` | `"auto" \| "wide" \| "narrow"` | `"auto"` | Wide (columns beside detail) vs. narrow (one full-width pane at a time). |
@@ -166,6 +171,8 @@ HierarchicalMenuDetail is a container for rendering cascading hierarchies of top
 | `title` | `string` | — | Heading shown above the rows. |
 | `items` | `TopicDetailItem[]` | — (required) | The rows for this level (rendered by the TopicRail ingredient — see [adhsdk.ingredient.ui.blocks.topic-detail](cookbook:8fa7aaae-df62-44ea-b10c-182f3094ed9f)). |
 | `selectedId` | `string \| null` | — (required) | This level's current selection. |
+| `emptyLabel` | `string` | `"Nothing here yet."` | Text shown when the level has no items. |
+| `newLabel` | `string` | `"New"` | Accessible name and tooltip for the level's create (`+`) affordance. |
 | `defaultSelectedId` | `string` | — | Item to select the moment this level appears with nothing chosen (see **default-select**). |
 | `onSelect` | `(id: string, opts?: { replace?: boolean }) => void` | — (required) | Make `id` the selection at this level. |
 | `onClear` | `() => void` | — (required) | Clear this level and everything below it. |
@@ -186,6 +193,8 @@ Not applicable: Deep linking is managed by the host via the `selectedId` values 
 | `htd.immerse.hide` | "Hide the topic lists" | `aria-label`/`title` on the cascading style's detail-immersion toggle when the lists are shown. |
 | `htd.immerse.show` | "Show the topic lists" | `aria-label`/`title` on the same toggle when the lists are immersed. |
 
+The `htd.` key prefix is historical: the keys were first written for the sibling topic-detail block and are kept so existing translations still apply; `hmd` names this component and its test vectors.
+
 All other user-facing strings (row labels, `rootLabel`, `trailingCrumbs`, `detailTitle`, `help`, item labels, `emptyLabel`, `newLabel`) are supplied by the host as props; the keys above are the ones the component generates itself and does not externalize.
 
 ## Accessibility Options
@@ -194,9 +203,9 @@ Responds to platform accessibility preferences as inherited by React/Web:
 
 | Option | Behavior |
 |--------|----------|
-| Reduce Motion | No transition in this component is gated on `prefers-reduced-motion` — a deliberate decision, not a gap (see Design Decision 8). |
+| Reduce Motion | No transition in this component is gated on `prefers-reduced-motion` — a deliberate decision, not a gap (see the reduced-motion Design Decision). |
 | Increase Contrast | Focus rings and borders use the applied theme's contrast tokens. Component does not override or adapt further. |
-| Differentiate Without Color | Selection is marked with `aria-current` and a text-colour change, not colour alone. |
+| Differentiate Without Color | Selection is marked for assistive technology with `aria-current="true"`; the visual highlight is the selection accent colour (delegated to TopicRail), so the non-colour cue for sighted users is TopicRail's concern. |
 
 ## Feature Flags
 
@@ -211,12 +220,10 @@ Not applicable: Component does not emit analytics events. The host's `onSelect` 
 Not applicable: Component does not collect, store, or transmit data. It renders provided props and calls host callbacks.
 
 ## Logging
-
-Not applicable: Source includes an internal debug log (gated behind a dev-only switch) for development; no production logging is implemented.
-
+Not applicable: This component specifies no logging. Its development-time debug log is described in the React/Web platform note.
 ## Platform Notes
 
-- **React/Web**: Implemented in TypeScript + React with Tailwind CSS. Layout state (autoHide, pins, hover id, detail hold, cascade mode) persists in a module-scoped `Map` keyed by the root level's id, outside React state, so it survives the remount that a selection (route change) causes. Columns carry an internal index attribute and the selected row carries `aria-current="true"` so the selection-connector SVG paths can find their endpoints. Visual tokens are Tailwind custom-property color tokens (a selection-accent colour, a border colour, a nav-surface colour, and text/muted-text colours). Toggle icons are drawn from an icon library: a panel-open/closed pair for the auto-hide toggle, a chevrons-left/right pair for both the per-list pin toggle and the cascading style's detail-immersion toggle, and a chevron-left/right pair for Back and the breadcrumb separator. An internal debug log (behind a dev-only switch) traces surface-state transitions; no production logging is implemented. No framework-specific behavior beyond React hooks (useCallback, useState, useLayoutEffect, useReducer, useRef, useEffect).
+- **React/Web**: Implemented in TypeScript + React with Tailwind CSS. Layout state (autoHide, pins, hover id, detail hold, cascade mode) persists in a module-scoped `Map` keyed by the root level's id, outside React state, so it survives the remount that a selection (route change) causes. Columns carry an internal index attribute and the selected row carries `aria-current="true"` so the selection-connector SVG paths can find their endpoints. Visual tokens are Tailwind custom-property color tokens (a selection-accent colour, a border colour, a nav-surface colour, and text/muted-text colours). Toggle icons are drawn from an icon library: a panel-open/closed pair for the auto-hide toggle, a chevrons-left/right pair for both the per-list pin toggle and the cascading style's detail-immersion toggle, and a chevron-left/right pair for Back and the breadcrumb separator. An internal debug log (behind a dev-only switch) traces surface-state transitions; no production logging is implemented. The surface-state `Map` is never evicted. Escape does not close a revealed branch. No framework-specific behavior beyond React hooks (useCallback, useState, useLayoutEffect, useReducer, useRef, useEffect).
 - **Compose (Android)**: Compose equivalent would use a LazyRow for the level columns (or a single pane in narrow mode) with a Column for detail. A Modifier for selection state replaces `aria-current`. Manual state management (e.g. a ViewModel) replaces the persisted surface-state map. Three layout modes map to different Arrangement strategies (Row vs Column vs overlay). No direct equivalent to CSS transforms/transitions; use Compose animations and LazyRow scroll + visibility state.
 - **UIKit / AppKit (iOS/macOS)**: UIKit port would use a UICollectionView for each level (horizontal scroll, one column per level) or a UINavigationController for narrow mode. Stacking and hiding use views' `isHidden` + `alpha` or removal from hierarchy. A manual state store replaces the persisted surface-state map. Selection state in UICollectionViewCell selection model. Accessibility via VoiceOver rotor + custom focus engine. AppKit is similar (NSView hierarchy, NSSplitView for columns).
 - **SwiftUI**: SwiftUI would use a ScrollView per level, arranged in an HStack for wide mode or NavigationStack for narrow mode. State stored in an `@Observable` object placed in the environment (preferred over a singleton) to mirror the persisted surface state across the equivalent of a route change. Selection managed via @State and @Binding. Connectors drawn with Canvas or overlay Shape. Animations via .transition and .animation. Accessibility via accessibilityElement(children:) and custom accessibility labels.
@@ -226,16 +233,16 @@ Not applicable: Source includes an internal debug log (gated behind a dev-only s
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/hierarchical-menu-detail.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/hierarchical-menu-detail.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
-1. **Decision**: Surface state (autoHide, pins, hover reveal, detail hold) is stored outside per-render component state, keyed by the root level's id, so it survives the remount that a selection causes.
+1. **Decision**: Surface state (autoHide, pins, hover reveal, detail hold) is stored outside per-render component state, keyed by the root level's id, so it survives the remount that a selection causes. The store is module-scoped, so tests need distinct root ids or an explicit reset.
    **Rationale**: Storing this in ordinary component state would lose pins, hover reveal, and the held detail on every selection, because selecting a row is a route change that remounts the component subtree. Keying by the root level's id keeps the state stable across navigations within one surface; a page reload starts fresh, which is the correct seam for a deliberate fresh start.
    **Approved**: pending
 
 2. **Decision**: Three disclosure styles — minimized (icon strips), covered (layered stacks), cascading (stepped nested-menu) — cover different screen sizes and interaction patterns.
-   **Rationale**: Minimized suits phones with a Back button; covered maximizes list visibility without a Back button; cascading mimics native nested-menu hover-reveal behavior.
+   **Rationale**: In wide mode, minimized shrinks ancestor lists to icon strips; covered maximizes list visibility by layering lists with no Back button; cascading mimics native nested-menu hover-reveal behavior. In narrow mode every style shows one pane with a Back button (see **narrow-mode**).
    **Approved**: pending
 
 3. **Decision**: Per-list pins persist in the same outside-of-component surface state as autoHide, not in component state.
@@ -246,11 +253,11 @@ Not applicable: Source includes an internal debug log (gated behind a dev-only s
    **Rationale**: Without `replace: true`, the Back gesture would land on the bare parent, which would immediately re-apply the default and bounce forward, costing two Back presses to escape instead of one.
    **Approved**: pending
 
-5. **Decision**: The unsaved-changes guard runs on breadcrumb-up navigation (deselecting shallower levels), sibling swaps at the deepest selected level, breadcrumb-up clicks on a shallower row, and re-clicking a selected row (deselect) — any selection change that would clear or replace the open leaf editor.
+5. **Decision**: The unsaved-changes guard covers every selection change that would clear or replace the open leaf editor; the exact list is the **guard-exit** requirement.
    **Rationale**: Each of these can discard in-progress work in the detail pane, so each must be able to raise the unsaved-changes alert before proceeding.
    **Approved**: pending
 
-6. **Decision**: Selection connectors are measured on demand (via a resize observer) and re-measured on a short loop (400ms default) while animations play, rather than computed on every render.
+6. **Decision**: Selection connectors are measured on demand (via a resize observer) and re-measured on a short loop (a fixed 400ms constant, not exposed as an option) while animations play, rather than computed on every render.
    **Rationale**: This avoids computing paths for connectors that are off-screen or not rendered, and keeps the selection chain in sync while the lists slide.
    **Approved**: pending
 
@@ -287,3 +294,4 @@ Statuses rest on the source's native `<button>`/`aria-*`/`nav`+`ol`/`li` markup 
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only names and fixed the dangling hmd-019 citation; merged the pin and manual-collapse requirements into pin-toggle and gave the pin and detail-immersion toggles distinct icon-role descriptions; added the re-click case to guard-exit; fixed the frontier, detail-position, and cascading-direction contradictions; added a covered-peek requirement and test vector; defined narrow-mode Back scope and phone detection, and "once per appearance" for default-select; replaced Configuration and Localization "Not applicable" prose with real tables; reformatted Design Decisions into Decision/Rationale/Approved form and added the reduced-motion decision; built a real Compliance table and corrected the touch-target and reduced-motion claims; corrected the WinUI 3 and SwiftUI platform notes; moved React-specific names out of the platform-neutral sections into the React/Web platform note. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected pin-toggle: root has no pin toggle (auto-hide only), each non-root list pins its PARENT, frontier toggle location per style (bucket-02_0); corrected narrow-mode wide-floor formula to minDetailWidth+strip clamped to 480px, not one-list+minDetailWidth (bucket-02_3). Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Split pin-toggle into five named requirements, made offscreen hiding and UA detection explicit, repaired test vectors hmd-001/007/012 and added hmd-021 to hmd-023, defined PaneExitGuard, emptyLabel and newLabel, and gave the padding values, the Localization-key labels and a shared-root-id edge case. |

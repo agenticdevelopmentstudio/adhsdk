@@ -2,7 +2,7 @@
 - **main-actor-isolation**: The model and the tracker MUST be isolated to the main actor.
 - **injected-client**: The model MUST send every service call through the `MailClient` given at initialization.
 - **shared-tracker-default**: The model MUST use `GmailSignInTracker.shared` when no tracker is given at initialization.
-- **reload-after-every-action**: After every action that goes through the shared call path, the model MUST read the provider status from the client.
+- **reload-after-every-action**: After every action that goes through the shared call path, the model MUST read the provider status from the client. The shared call path serves `reload`, `importClientJSON(from:)`, `saveClientDraft` (only when the form is complete), `addAccount`, `remove(accountId:)`, `update(accountId:_:)`, `syncNow(accountId:)` and `removeIntegration`; `cancelSignIn` and the incomplete-form path of `saveClientDraft` do not use it.
 - **accounts-only-when-configured**: The model MUST read the account list only when the provider status reports `configured` as true, and MUST set the account list to empty otherwise.
 - **error-cleared-at-call-start**: The model MUST set `errorMessage` to nil when a call starts.
 - **error-from-first-failure**: When the action fails, the model MUST set `errorMessage` to the failure's `localizedDescription` and MUST still perform the reload.
@@ -37,7 +37,7 @@
 - **update-failure-restores**: When a settings send fails, the model MUST drop the pending value for that account, set `errorMessage`, and show the service's settings from the reload that follows.
 - **reload-keeps-chosen-settings**: A reload that finishes while a settings send is in flight MUST show the newest settings the user chose for that account rather than the service's previous value.
 - **chosen-settings-released**: When the sends for an account finish, the model MUST stop overriding that account's settings with the user's choice.
-- **account-error-alert**: After a reload, when an account has status error and a non-nil `lastError` that has not been alerted, and no alert is showing, the model MUST set `accountError` to an alert for the first such account in list order.
+- **account-error-alert**: After a reload, when an account has status error and a non-nil `lastError` that has not been alerted, and no alert is showing, the model MUST set `accountError` to an alert for the first such account in list order. The alert MUST carry the account's id (`accountId`), its email address (`email`) and the account's `lastError` text as `message`; the view builds the title and layout.
 - **account-error-once**: The model MUST NOT alert again about the same message for the same account while the account stays in error.
 - **account-error-new-message**: The model MUST alert again when an account in error reports a different message than the one last alerted.
 - **account-error-after-recovery**: The model MUST forget an account once it is no longer in error, so a later failure alerts even when the message is identical.
@@ -46,13 +46,13 @@
 - **show-error**: `showError(accountId:)` MUST set `accountError` for that account when it is in error with a `lastError`, and MUST do nothing otherwise.
 - **show-error-marks-alerted**: `showError(accountId:)` MUST record the message as alerted so the next reload does not repeat it.
 - **client-imported**: `isClientImported` MUST be true only when the provider status is loaded and `configured` is true.
-- **oauth-client-text**: `oauthClientText` MUST be "Checking for an OAuth client…" before the first load, the instruction to enter or import a client when not configured, and the replace-client text when configured.
+- **oauth-client-text**: `oauthClientText` MUST be "Checking for an OAuth client…" before the first load, "Enter the client ID and secret of your Google Cloud Desktop app OAuth client, or import its downloaded JSON. One client serves every Gmail account." when not configured, and "Gmail signs in with this OAuth client. To change it, enter new values below or import a new JSON file." when configured.
 - **current-client-id**: `currentClientId` MUST return the provider's client id when a client is imported, and nil otherwise.
 - **masked-secret**: `maskedClientSecret` MUST return ten "•" characters followed by the provider's secret suffix when a client is imported and the suffix is non-empty.
 - **masked-secret-hidden**: `maskedClientSecret` MUST return "Stored (hidden)" when a client is imported and the suffix is nil or empty, and nil when no client is imported.
 - **masked-secret-fixed-length**: The mask MUST be a fixed ten characters so it does not reveal the secret's length.
 - **status-text**: `statusText` MUST map active to "Connected", error to "Error", revoked to "Reconnect needed" and pending to "Pending".
-- **last-synced-text**: `lastSyncedText` MUST return "Last synced " followed by the full-style relative date from the formatter in the given locale, relative to the given clock.
+- **last-synced-text**: `lastSyncedText` MUST return "Last synced " followed by the relative date in the given locale, relative to the given clock, produced by `RelativeDateTimeFormatter` with `unitsStyle = .full` (a port uses its platform's full-style relative formatter).
 - **last-synced-never**: `lastSyncedText` MUST return "Never synced" when the timestamp is nil or is not an ISO 8601 date with fractional seconds.
 - **last-synced-defaults**: The overload without clock and locale MUST use the current date and the current locale.
 

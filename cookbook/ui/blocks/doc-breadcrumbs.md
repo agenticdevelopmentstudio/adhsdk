@@ -2,15 +2,15 @@
 id: c9c48e65-6905-4035-b8e1-e053219599f1
 title: "DocBreadcrumbs"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Semantic breadcrumb trail for documentation navigation, always with home crumb first."
+summary: "Semantic breadcrumb trail for documentation navigation, with the home crumb first whenever it renders."
 platforms:
   - typescript
   - web
@@ -19,7 +19,9 @@ tags:
   - breadcrumb
   - documentation
 depends-on: []
-related: []
+related:
+  - ef7191ff-63a9-442a-b6d0-f8452a0aa1d6
+  - 0fe9833b-2a5c-47d5-a455-87e00d3797cf
 references: []
 approved-by: ""
 approved-date: ""
@@ -29,12 +31,12 @@ approved-date: ""
 
 ## Overview
 
-DocBreadcrumbs renders a semantic breadcrumb trail for document navigation. It always includes a home crumb and an ancestor trail, with the current page (last crumb) rendered as plain text rather than a link. When the component is at the root (no ancestors), it renders nothing to avoid showing a redundant "Home" link pointing to the current page.
+DocBreadcrumbs renders a semantic breadcrumb trail for document navigation. Whenever it renders, it includes a home crumb first and then the ancestor trail, with the current page (last crumb) rendered as plain text rather than a link. When the component is at the root (no ancestors), it renders nothing to avoid showing a redundant "Home" link pointing to the current page.
 
 ## Behavioral Requirements
 
 - **render-navigation-element**: Component MUST render a `<nav>` element with `aria-label="Breadcrumb"`.
-- **include-home-crumb**: Component MUST always include a home crumb as the first item, rendered as a link to `homeHref` (default `"/"`).
+- **include-home-crumb**: Component MUST include a home crumb as the first item whenever it renders (see **render-nothing-at-root**), rendered as a link to `homeHref` (default `"/"`).
 - **render-crumbs-list**: Component MUST render crumbs as an ordered list (`<ol>`) with each crumb as a list item (`<li>`).
 - **render-current-as-text**: Component MUST render the last crumb (current page) as plain text, not a link.
 - **render-ancestors-as-links**: Component MUST render all crumbs except the last as links to their `path` values.
@@ -48,13 +50,13 @@ DocBreadcrumbs renders a semantic breadcrumb trail for document navigation. It a
 
 ## Appearance
 
-- **Font family**: monospace (font-mono)
-- **Font size**: extra-small (text-xs)
+- **Font family**: monospace
+- **Font size**: 0.75rem (12px)
 - **Text color**: dim secondary color (`var(--color-text-dim)`)
 - **Link hover color**: secondary color (`var(--color-text-secondary)`)
 - **Separator color**: border color (`var(--color-border)`)
-- **Margin**: 4 units bottom (mb-4)
-- **Gap between items**: 1 unit (gap-1)
+- **Margin**: 1rem (16px) below the component
+- **Gap between items**: 0.25rem (4px)
 - **Crumb layout**: horizontal flex with centered items
 
 ## States
@@ -91,13 +93,16 @@ DocBreadcrumbs renders a semantic breadcrumb trail for document navigation. It a
 | breadcrumb-011 | accept-crumbs-array | `crumbs={[{label:"Docs", path:"/docs"}, {label:"Guides", path:"/docs/guides"}]}` | Both crumbs render in correct order |
 | breadcrumb-012 | forward-html-attributes | `crumbs={[{label:"Docs", path:"/docs"}]} data-testid="breadcrumb"` | `<nav>` element has `data-testid="breadcrumb"` |
 
+| breadcrumb-013 | render-current-as-text | `crumbs={[{label:"Docs", path:"/docs"}]}` | Single crumb "Docs" renders as plain text after the home link, not as a link |
+| breadcrumb-014 | accept-crumbs-array | `crumbs={[{label:"", path:"/docs"}, {label:"API", path:"/docs/api"}]}` | First crumb renders an empty link between separators; no error |
+| breadcrumb-015 | render-ancestors-as-links | `crumbs={[{label:"Docs", path:""}, {label:"API", path:"/docs/api"}]}` | First crumb link receives `to=""` unchanged |
 ## Edge Cases
 
 - **Empty crumbs array**: When `crumbs.length === 0`, component returns null (no render). This avoids displaying a redundant "Home" link pointing to the current page. See **render-nothing-at-root**.
 - **Single crumb**: When `crumbs` has exactly one element, it renders as: Home / [CrumbLabel] (where CrumbLabel is plain text).
 - **Deeply nested breadcrumbs**: All crumbs except the last are rendered as links; the implementation does not enforce a maximum nesting depth.
 - **Missing crumb properties**: Every crumb MUST supply both a `label` and a `path` — the `crumbs` prop type declares both fields as required and non-nullable, so a crumb that omits either, or supplies `null` for one, is a compile-time error at the call site and never reaches the component. The component performs no runtime check for this; the type already excludes the case.
-- **Empty strings in crumbs**: If a crumb has an empty `label`, it renders as an empty text node between separators. If `path` is empty, the link's `to` attribute MAY be set to an empty string — the component performs no validation and passes the value through unchanged.
+- **Empty strings in crumbs**: If a crumb has an empty `label`, it renders as an empty text node between separators. If `path` is empty, the link's `to` prop is passed through unchanged as an empty string — the component performs no validation.
 - **Null or undefined crumbs prop**: `crumbs` MUST be a required, non-nullable array; passing `null` or `undefined` is a compile-time error at the call site, not a case the component handles at runtime. The empty array is the one defined "nothing to show" input, and the component MUST treat it as such (see **render-nothing-at-root**), so an absent trail collapses to nothing rather than to a bare "Home" link.
 
 ## Configuration
@@ -122,7 +127,7 @@ Not applicable: DocBreadcrumbs is passed localized `label` values in the `crumbs
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: component performs no animations. |
-| Increase Contrast | Partial: hovered links respond to the platform's contrast color tokens (`var(--color-text-secondary)`), but the token pairing itself is not verified against WCAG contrast ratios by this component. |
+| Increase Contrast | Not supported: the component does not react to `prefers-contrast` or `forced-colors`; colors come from fixed theme tokens, and the token pairing is not verified against WCAG contrast ratios by this component. |
 | Differentiate Without Color | Partial: an ancestor link and the current-page crumb are distinguished by semantics (link vs. plain text) and by hover-only color change; at rest, an unvisited link and the current crumb are not distinguished by anything but color. |
 
 ## Feature Flags
@@ -139,21 +144,21 @@ Not applicable: DocBreadcrumbs renders no sensitive data. It displays only the n
 
 ## Logging
 
-Not applicable: DocBreadcrumbs does not emit any log messages. Debug output is delegated to the `LinkComponent` implementation.
+Not applicable: DocBreadcrumbs does not emit any log messages.
 
 ## Platform Notes
 
-- **React/Web**: Source is React 18+ component using hooks. Styled with Tailwind CSS classes and CSS custom properties. Uses semantic HTML `<nav>`, `<ol>`, `<li>` elements and ARIA labels. Accepts `HTMLAttributes<HTMLElement>` for `<nav>` element and custom `LinkComponent` for routing integration. Render conditionally based on router/navigation context via the `crumbs` array passed by the caller.
-- **SwiftUI**: SwiftUI has no native breadcrumb control, so build the trail from primitives: an `HStack` with the home link, then a `ForEach` over the ancestors rendering each as its own `Link` or `Button`, and the final element as `Text` (not a link). Keep each link a separate, individually focusable accessibility element — do not wrap the row in `.accessibilityElement(children: .combine)`, which would merge every crumb into one non-selectable element and make the individual links unreachable.
-- **Compose**: Compose has no native breadcrumb control. Render ancestor crumbs as an annotated string with `LinkAnnotation.Clickable` per segment (the modern replacement for the deprecated `ClickableText`), or as separate `Text` composables with `Modifier.clickable`; render the current page as plain `Text`. Apply Material 3 color tokens for text dimming and hover/pressed states, and give each link its own `Role.Button`/`Role.Link` semantics rather than merging the row into one semantic node.
-- **AppKit / UIKit**: Neither framework has a native breadcrumb control or the SwiftUI `.accessibilityElement(children: .combine)` modifier. Implement as a custom `NSView` or `UIView` subclass. Use `NSAttributedString` or `UILabel` for the static current-page text, and `NSButton`/a custom tap handler (AppKit) or a tappable `UILabel`/`UIButton` (UIKit) for ancestor links, each exposed as its own accessibility element (`NSAccessibilityElement` with `accessibilityLabel`/`accessibilityRole` on AppKit; `isAccessibilityElement` with `accessibilityTraits = .link` on UIKit) rather than one combined element. Apply platform system colors for text and link states.
-- **WinUI 3**: Use the native `BreadcrumbBar` control (Windows App SDK / WinUI 3), bound to an `ItemsSource` built from the crumbs array, handling `ItemClicked` for ancestor crumbs and letting `BreadcrumbBar` render the last item as the current, non-clickable node. Apply `ThemeResource` brushes (XAML has no CSS custom properties) for the text-dim and text-secondary equivalents. `BreadcrumbBar` provides keyboard focus and automation support natively, so no separate `AutomationProperties` wiring is needed beyond `AutomationProperties.Name` on the control itself.
+- **React/Web**: Source is React 19 function component with no hooks or state. Styled with Tailwind CSS classes (`font-mono`, `text-xs`, `mb-4`, `gap-1`) and CSS custom properties. Uses semantic HTML `<nav>`, `<ol>`, `<li>` elements and ARIA labels. Accepts `HTMLAttributes<HTMLElement>` for `<nav>` element and custom `LinkComponent` for routing integration.
+- **SwiftUI**: SwiftUI has no native breadcrumb control, so build the trail from primitives: an `HStack` with the home link, then a `ForEach` over the ancestors rendering each as its own `Link` or `Button`, and the final element as `Text` (not a link). Hide the whole row when there are no ancestors. Keep each link a separate, individually focusable accessibility element — do not wrap the row in `.accessibilityElement(children: .combine)`, which would merge every crumb into one non-selectable element and make the individual links unreachable.
+- **Compose**: Compose has no native breadcrumb control. Render ancestor crumbs as an annotated string with `LinkAnnotation.Clickable` per segment (the modern replacement for the deprecated `ClickableText`), or as separate `Text` composables with `Modifier.clickable`; render the current page as plain `Text`. Apply Material 3 color tokens for text dimming and hover/pressed states, and give each link its own `Role.Button`/`Role.Link` semantics rather than merging the row into one semantic node. Hide the view when there are no ancestors.
+- **AppKit / UIKit**: Neither framework has a native breadcrumb control or the SwiftUI `.accessibilityElement(children: .combine)` modifier. Implement as a custom `NSView` or `UIView` subclass. Use `NSAttributedString` or `UILabel` for the static current-page text, and `NSButton`/a custom tap handler (AppKit) or a tappable `UILabel`/`UIButton` (UIKit) for ancestor links, each exposed as its own accessibility element (`NSAccessibilityElement` with `accessibilityLabel`/`accessibilityRole` on AppKit; `isAccessibilityElement` with `accessibilityTraits = .link` on UIKit) rather than one combined element. Hide the view when there are no ancestors. Apply platform system colors for text and link states.
+- **WinUI 3**: Use the native `BreadcrumbBar` control (Windows App SDK / WinUI 3), bound to an `ItemsSource` built from the crumbs array, handling `ItemClicked` for ancestor crumbs. `BreadcrumbBar` raises `ItemClicked` for the last item too, so ignore clicks on the last index to keep the current page non-navigating (**render-current-as-text**), and collapse the control when `crumbs` is empty (**render-nothing-at-root**). Apply `ThemeResource` brushes (XAML has no CSS custom properties) for the text-dim and text-secondary equivalents. `BreadcrumbBar` provides keyboard focus and automation support natively, so no separate `AutomationProperties` wiring is needed beyond `AutomationProperties.Name` on the control itself.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx` | confirmed (1.3.1) |
+| web | `packages/web/packages/ui/src/blocks/doc-breadcrumbs.tsx` | confirmed (1.3.2) |
 
 ## Design Decisions
 
@@ -166,7 +171,7 @@ Not applicable: DocBreadcrumbs does not emit any log messages. Debug output is d
 **Approved**: pending
 
 **Decision**: The component deliberately does not derive breadcrumbs from the URL or page slug; crumbs are caller-supplied.
-**Rationale**: Each site has its own URL structure and labeling convention (e.g., cookbook's `slugToBreadcrumbs` title-cases domain segments; another site might look labels up in a manifest). Deriving them here would bake one site's URL convention into the toolkit. Responsibility for breadcrumb construction belongs to the host application.
+**Rationale**: Each site has its own URL structure and labeling convention (e.g., one site title-cases URL segments; another looks labels up in a manifest). Deriving them here would bake one site's URL convention into the toolkit. Responsibility for breadcrumb construction belongs to the host application.
 **Approved**: pending
 
 **Decision**: The component accepts a `LinkComponent` prop instead of hardcoding native `<a>` elements.
@@ -193,6 +198,7 @@ Semantic structure and the landmark label come directly from the rendered `<nav 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.2 | 2026-11-14 | Mike Fullerton | Reworded the home-crumb claim to hold only when the component renders, marked Increase Contrast not supported, dropped the logging delegation sentence, replaced Tailwind sizes with units, corrected the React note to React 19 without hooks, added WinUI and native empty-crumbs guidance, linked related recipes, and added three test vectors. |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case, correct the SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes to real native APIs, define the `DocLinkComponent` contract and default `<a>` rendering, unify the crumb `label` type as `ReactNode` everywhere, resolve the separator and hover-state contradictions, add the missing `crumbs` prop to two test vectors, mark keyboard-navigable compliance `partial` and downgrade the two color-dependent accessibility options, reformat Design Decisions into Decision/Rationale/Approved rows, link Compliance rows to canonical check IDs, drop source-file citations from Edge Cases, and unquote frontmatter dates |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | State the crumb shape the props type requires, and the empty-array fallback, as Edge Cases requirements |

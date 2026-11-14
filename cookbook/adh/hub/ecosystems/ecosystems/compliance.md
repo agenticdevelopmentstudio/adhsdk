@@ -3,7 +3,7 @@
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
 | [adc.check.access-patterns.offline-behavior](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/df7f401a-39be-5c60-bab4-85dd95bd1ab1) | failed | Access Patterns |
@@ -22,8 +22,8 @@ separate from the UI-facing `Ecosystem` type. `explicit-error-handling`
 (`HubError.notFound`→`.empty`, `HubError.conflict`→`.validation`,
 `isNotFound`→`null`, a 409→`rethrowConflict`) or wraps/rethrows
 unconditionally (`HubError.wrap`) — no path silently swallows a failure.
-`unit-test-coverage` **passed**: `EcosystemsModuleTests.swift` exercises
-every public path this recipe documents (root listing, manageability
+`unit-test-coverage` **partial**: `EcosystemsModuleTests.swift` exercises
+every public path this ingredient documents (root listing, manageability
 gate, topic dispatch, settings save/delete, child-ecosystem recursion,
 create-form validation and prefix resolution), and `ecosystems.test.ts`
 does the same for the web client's mapper, create/update body shapes, and
@@ -35,10 +35,10 @@ calls and their hooks' cache writes have no direct test). `error-response-handli
 consistently distinguish "missing" from "already exists" from every other
 failure on both platforms, and `ecosystemIdForSlug` explicitly rethrows a
 non-404 rather than treating it as license to fall back
-(hub-domain-ecosystems-035). `retry-with-backoff` **failed**: no file in
+(ecosystems-035). `retry-with-backoff` **failed**: no file in
 either implementation retries a failed ecosystems/identifiers request —
 the underlying `authedJson`'s 401-refresh-and-retry-once is a different,
-cross-cutting auth concern (see `auth-client`), not a retry of this
+cross-cutting auth concern (see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)), not a retry of this
 domain's own operations. `offline-behavior` **failed**: neither
 implementation defines an offline-cache-first read path or a
 queued-write-when-offline behavior; every operation is a live round-trip
@@ -58,14 +58,15 @@ pure slice with no validation of its own by design (see Edge Cases); the
 server's unique-address constraint and `id`-vs-leaf assertion are the
 real authority on both platforms, which this component deliberately
 relies on rather than duplicating. `data-minimization` **passed**: every
-field this component reads or writes is ecosystem/product metadata, never
-end-user personal data. `no-hardcoded-strings` **failed**: every
-user-facing string this recipe documents (labels, warnings, validation
+field this component reads or writes is ecosystem/product metadata, apart from
+the `loginAllowedCustomerIds` customer ids and the provisioner principal id,
+which identify people and are carried only as opaque ids, never as names or contact details. `no-hardcoded-strings` **failed**: every
+user-facing string this ingredient documents (labels, warnings, validation
 messages) is fixed English with no lookup table or locale parameter on
 either platform (see Localization) — a plain, honestly-reported gap, not
 a hidden one. `fault-tolerance` **partial**: `useApplyFeatureChange`
 keeps going past a failed removal and reports it by name rather than
 aborting, and `FeatureSubscriptionTier` is an open string so an unknown
 tier cannot break parsing; but the feature mutation hooks accept a
-nullable `ecosystemId` and send it unguarded (see the features-mutation-null-id-unguarded requirement).
+nullable `ecosystemId` and send it unguarded (a known gap) (see #requirements/features-mutation-null-id-unguarded).
 

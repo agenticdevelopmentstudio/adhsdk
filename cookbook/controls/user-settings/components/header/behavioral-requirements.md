@@ -1,7 +1,7 @@
 
 - **h2-element**: Component MUST render a semantic `<h2>` HTML element.
 - **default-class**: Component MUST always include the `aws-header` CSS class on the rendered element.
-- **class-composition**: Component MUST combine the `aws-header` class with any `className` prop provided, filtering out falsy values before joining.
+- **class-composition**: Component MUST accept an optional `className` prop and combine the `aws-header` class with it, filtering out falsy values before joining.
 - **children-content**: Component MUST render the content passed via the `children` prop (if any) inside the heading element.
-- **classname-prop**: Component MUST accept an optional `className` prop to allow consumer-supplied CSS classes to be applied alongside the default class.
+- **non-empty-label**: Consumers MUST supply non-empty, meaningful content in `children`; an empty heading has no accessible label and is a barrier for screen reader users. The component still renders without error when `children` is empty (see #edge-cases).
 

@@ -4,7 +4,7 @@
     "id": "794a60b5-7833-4dc3-a7b9-8280333cde8b",
     "title": "ThemeOptions",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e14af3a96e879262",
+  "synced": "b9bdf748afdd9384",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

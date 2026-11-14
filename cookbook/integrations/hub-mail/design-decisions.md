@@ -14,3 +14,4 @@
 **Decision**: A label change is written into the mirror right after the hub accepts it, keeping the row's sync version.
 **Rationale**: The hub's `modify_labels` action changes Gmail, not the hub's table; the worker's next run brings the new labels back. Writing them locally meanwhile keeps the UI honest, and leaving the sync version alone means the next pulled copy still wins, so the mirror never drifts from the hub for long.
 **Approved**: pending
+

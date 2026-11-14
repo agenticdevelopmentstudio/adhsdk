@@ -2,7 +2,7 @@
 id: 0de17653-f56d-418f-b212-33e9017972cd
 title: "Short Text"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -10,7 +10,7 @@ modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "String.shortened(to:) returns the text unchanged or cut to limit-3 characters plus an ellipsis, one 60-character default for every error line."
+summary: "Cuts a string to limit-3 Characters plus `…` (default 60): one shared budget for one-line messages."
 platforms:
   - swift
   - macos
@@ -30,7 +30,7 @@ approved-date: ""
 
 ## Overview
 
-`String.shortened(to:)` is a public extension that returns a string unchanged when it fits a character budget, and otherwise cuts it to its first `limit - 3` characters followed by one ellipsis. The default budget is 60. It is one budget in one place: a quota card gives an error line about sixty characters before it wraps, and that number had been written out three separate times (in the refresher, in the evaluator and in the probe), so tuning any one of them would have left the other two saying something a different width.
+`String.shortened(to:)` is a public extension that returns a string unchanged when it fits a character budget, and otherwise cuts it to its first `limit - 3` characters followed by one ellipsis. The default budget is 60. It is one budget in one place: a width-limited card gives a one-line message about sixty characters before it wraps, and that number had been written out at three separate call sites, so tuning any one of them would have left the others saying something a different width.
 
 ## Behavioral Requirements
 
@@ -40,11 +40,10 @@ approved-date: ""
 - **cut-length**: When the text's `Character` count is greater than `limit`, the method MUST return the first `limit - 3` characters followed by the single character `…` (U+2026), so a cut result is `limit - 2` characters long, two under the limit.
 - **count-in-characters**: The length and the cut MUST be measured in Swift `Character`s (extended grapheme clusters), not UTF-8 bytes or UTF-16 units, so a cut never splits a character.
 - **ellipsis-single**: The ellipsis MUST be the one character `…` and MUST NOT be three full stops.
-- **minimum-limit**: A caller MUST pass a `limit` of at least 3 whenever the text may be longer than the limit; the doc comment declares this precondition and the method does not validate it.
+- **minimum-limit**: When the text is longer than a `limit` under 3, the method has no defined result: the Swift source traps on the negative prefix count, and no caller may rely on any returned value.
 - **limit-three**: With a `limit` of exactly 3 and a text longer than 3 characters, the result MUST be the ellipsis alone.
 - **pure**: The method MUST have no side effect and MUST NOT mutate the receiver.
 - **no-word-boundary**: The cut MUST fall at a character position, not a word boundary, and the method MUST NOT trim trailing whitespace before the ellipsis.
-- **single-budget**: Callers that show a one-line message in a width-limited card SHOULD use this method with its default instead of writing the number 60 again, which is the reason the source gives for the helper's existence.
 - **dependencies**: The component MUST depend only on Foundation.
 
 ## Appearance
@@ -70,7 +69,7 @@ Not applicable — this is a string-truncation extension, not a visual component
 | short-text-005 | default-limit, cut-length | A 61-character string of `a`, then `.shortened()` (derived from the source; no test). | 57 `a` characters and `…`, 58 characters in all. |
 | short-text-006 | limit-three | `"abcd".shortened(to: 3)` (derived from the source; no test). | `…`. |
 | short-text-007 | fits-unchanged | `"".shortened(to: 0)` and `"ab".shortened(to: 2)` (derived from the source; no test). | The empty string and `ab`; no cut, so the minimum-limit precondition is never reached. |
-| short-text-008 | count-in-characters | Six family emoji (each one Character) with `.shortened(to: 5)` (derived from the source; no test). | Two whole family emoji then `…`: no emoji is split. |
+| short-text-008 | count-in-characters | Six repetitions of the family emoji `👨‍👩‍👧` (scalars U+1F468 U+200D U+1F469 U+200D U+1F467, one Character each) with `.shortened(to: 5)` (derived from the source; no test). | Two whole family emoji then `…` (`👨‍👩‍👧👨‍👩‍👧…`): no emoji is split. |
 | short-text-009 | no-word-boundary | `"hello world and more".shortened(to: 9)` (derived from the source; no test). | `hello …`: six characters (`hello ` with its trailing space) then the ellipsis. |
 
 ## Edge Cases
@@ -125,7 +124,7 @@ Not applicable: The source calls no logging API.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/Text/ShortText.swift`, imports only `Foundation`, and has no SwiftUI dependency. A SwiftUI `Text` can truncate by itself with `.lineLimit(1)` and `.truncationMode(.tail)`; this method is for a string that is built or stored before display. Its tests are `ShortTextTests` in `AgenticDeveloperHubSDKCoreTests/Text`.
+- **SwiftUI**: The component imports only `Foundation` and has no SwiftUI dependency. A SwiftUI `Text` can truncate by itself with `.lineLimit(1)` and `.truncationMode(.tail)`; this method is for a string that is built or stored before display.
 - **Compose**: An extension `fun String.shortened(limit: Int = 60)` that counts grapheme clusters, since `String.length` counts UTF-16 units; use `java.text.BreakIterator.getCharacterInstance()` or `android.icu.text.BreakIterator`. A `Text` with `maxLines = 1` and `overflow = TextOverflow.Ellipsis` covers display-only truncation.
 - **React/Web**: An exported function `shortened(text, limit = 60)` using `Intl.Segmenter` with `granularity: "grapheme"` to count and cut, since `String.length` and `slice` work in UTF-16 units and would split an emoji. CSS `text-overflow: ellipsis` covers display-only truncation but cuts by width, not by count.
 - **AppKit / UIKit**: Identical to the SwiftUI note for the method; for display only, `NSTextField` and `UILabel` truncate by width through `lineBreakMode = .byTruncatingTail`, which is not the same as this character-count cut.
@@ -135,7 +134,7 @@ Not applicable: The source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Text/ShortText.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Text/ShortText.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -151,11 +150,11 @@ Not applicable: The source calls no logging API.
 **Approved**: pending
 
 **Decision**: One shared helper with a default of 60.
-**Rationale**: A quota card gives an error line about sixty characters before it wraps, and the number had been written three times (refresher, evaluator, probe), so tuning one would have left the others a different width.
+**Rationale**: A width-limited card gives a one-line message about sixty characters before it wraps, and the number had been written at three call sites, so tuning one would have left the others a different width. The number belongs to that card; callers that show a one-line message in such a card should use the default instead of writing 60 again.
 **Approved**: pending
 
 **Decision**: The method does not guard a limit under 3.
-**Rationale**: The doc comment documents the precondition ("`limit` must be at least 3: a smaller value makes `prefix` trap on a negative count"); the method does not check it, so the contract belongs to the caller. This is recorded as the contract, not a gap.
+**Rationale**: The doc comment documents the precondition ("`limit` must be at least 3: a smaller value makes `prefix` trap on a negative count"); the method does not check it, so the contract belongs to the caller. This is recorded as the contract, not a gap: a precondition that fails only for long text can pass every short-string test, so a caller needs to know it.
 **Approved**: pending
 
 **Decision**: The cut is not at a word boundary and does not trim trailing whitespace.
@@ -176,4 +175,5 @@ separation-of-concerns passes: the extension only shortens a string; where the b
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Shortened the summary, made the card context generic, moved single-budget into a Design Decision, restated minimum-limit as component behavior, removed paths from the SwiftUI note and gave vector 008 its exact scalars. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

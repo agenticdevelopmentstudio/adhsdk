@@ -31,3 +31,18 @@
 **Rationale**: Wrapping is more useful than "nothing happens," letting users cycle through short lists without reaching for the mouse.
 **Approved**: pending
 
+**Decision**: `onOpenChange(false)` runs before the selected item's `onSelect()`.
+**Rationale**: Any state the command sets itself, such as opening another dialog, is applied after the palette's close and so is not overridden by it.
+**Approved**: pending
+
+**Decision**: Accepted debt: item rows are about 24px tall, below the 44×44pt and 48×48dp touch-target minimums (WCAG 2.5.8's 24×24 CSS px floor is met).
+**Rationale**: The palette is a dense, keyboard-first overlay; enlarging rows is not planned, and the Compliance table records touch-target-size as failed.
+**Approved**: pending
+
+**Decision**: Accepted debt: the layout uses physical-direction classes (`pl-9`, `left-6`, `pr-10`) and truncates long text, so it does not mirror under right-to-left layouts or tolerate text expansion.
+**Rationale**: No logical-property variants (such as `ps-` and `start-`) have been applied; the Compliance table records rtl-layout-support and text-expansion-tolerance as failed.
+**Approved**: pending
+
+**Decision**: Accepted debt: the "Searching…" text is hardcoded and not a prop, and the highlight has no non-color cue.
+**Rationale**: Neither has a prop or visual treatment yet; the Compliance table records no-hardcoded-strings as failed, and a sighted user who cannot distinguish the highlight color has no other way to see the active item.
+**Approved**: pending

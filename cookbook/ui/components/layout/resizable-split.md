@@ -2,11 +2,11 @@
 id: c21473ee-a075-4800-96db-ff3de0888515
 title: "ResizableSplit"
 type: ingredient
-version: 2.2.1
+version: 2.2.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -45,8 +45,8 @@ It adapts the hand-rolled divider in `status-backend`'s `Dashboard.tsx` (ratio s
 - **drag-maps-to-ratio**: On pointer-move while captured, the component MUST map `clientY` within the container bounding rect to a top-pane ratio (`(clientY - rect.top) / rect.height`).
 - **drag-clamps-ratio**: The component MUST clamp the ratio to `[minRatio, maxRatio]`.
 - **drag-releases-on-pointerup**: On pointer-up, the component MUST release the pointer capture via `releasePointerCapture()`.
-- **drag-cursor-and-no-select**: While dragging, the component MUST show `cursor: row-resize`. The header-bar variant additionally suppresses text selection via `user-select: none` (Tailwind `select-none`); both variants set `touch-action: none` on the drag surface to prevent touch-scroll interception during a drag.
-- **persist-ratio-when-keyed**: When `storageKey` is set, the component MUST write the ratio to `localStorage[storageKey]` on drag release and MUST restore it on mount, guarded for SSR contexts and parse errors.
+- **drag-cursor-and-no-select**: While dragging, the component MUST show `cursor: row-resize`. The header-bar variant MUST also suppress text selection via `user-select: none` (Tailwind `select-none`). Both variants MUST set `touch-action: none` on the drag surface to prevent touch-scroll interception during a drag.
+- **persist-ratio-when-keyed**: When `storageKey` is set, the component MUST write the ratio to `localStorage[storageKey]` on drag release and on every keyboard nudge (see **keyboard-nudges-ratio**), and MUST restore it on mount, guarded for SSR contexts and parse errors. Without `storageKey` it MUST write nothing.
 - **collapse-toggles-bottom**: Activating the divider chevron MUST toggle `collapsed`; collapsed MUST give the bottom pane height 0 via `flex-basis`, let the top fill, and flip the chevron icon.
 - **collapse-remembers-ratio**: The component MUST remember the last drag ratio while collapsed and restore it on expand.
 - **collapse-controlled-or-internal**: The component MUST be controlled whenever `collapsed !== undefined` — the visible state always reflects that prop; otherwise the visible state MUST come from internal state. Independently, `onCollapsedChange` MUST fire whenever it is provided, in both controlled and uncontrolled configurations.
@@ -57,7 +57,7 @@ It adapts the hand-rolled divider in `status-backend`'s `Dashboard.tsx` (ratio s
 - **header-bar-always-visible**: The header bar MUST stay visible while the bottom pane is collapsed — only the bar remains (the bar has no `inert` wrapper).
 - **header-bar-drag-anywhere**: Pointer-down anywhere on the header bar EXCEPT on its interactive controls (buttons, links, inputs, selects, textareas, or `[data-no-drag]` elements) MUST start a resize drag; while expanded the bar MUST show `cursor: row-resize`. While collapsed, pointer-down on the bar (other than the chevron) MUST be a no-op — no drag starts and the cursor is `default`; only the chevron reopens the pane.
 - **toggle-animates**: Collapse/expand MUST animate the shared boundary for 0.3s (ease-in-out) via `flex-basis` transition. It MUST NOT animate when the app-level appearance setting `html[data-reduce-motion="on"]` is active. Drags are direct manipulation and MUST never animate.
-- **expand-to-content**: With `expandToContent` (default on for the header-bar variant), expanding from collapsed MUST open the bottom pane exactly far enough to show ALL its content (via `scrollHeight`), clamped to `[minRatio, maxRatio]`; when the container/content can't be measured it MUST fall back to the last drag ratio.
+- **expand-to-content**: With `expandToContent` (default on for the header-bar variant), expanding from collapsed MUST open the bottom pane exactly far enough to show ALL its content (via `scrollHeight`), clamped to `[minRatio, maxRatio]`. The ratio is `1 − (scrollHeight + barHeight) / containerHeight`, where `barHeight` is the rendered height of the divider (seam or header bar). When the container/content can't be measured (zero container or content height) it MUST fall back to the last drag ratio.
 - **bottom-stays-mounted**: The bottom pane MUST stay mounted while collapsed (height 0 via flex-basis, clipped by `overflow-hidden`, marked `inert`) so its state survives a hide/show cycle and reveal-to-fit can measure the hidden content.
 
 ## Appearance
@@ -101,10 +101,10 @@ collapsed (either form):
 
 ## Accessibility
 
-- **Divider handle**: `role="separator"`, `aria-orientation="horizontal"`, `aria-valuenow`/`aria-valuemin`/`aria-valuemax` reflecting the ratio as percentages, `tabIndex=0`.
+- **Divider handle**: `role="separator"`, `aria-orientation="horizontal"`, `aria-valuenow`/`aria-valuemin`/`aria-valuemax` reflecting the ratio as percentages, `tabIndex=0`. While the pane is collapsed, `aria-valuenow` keeps reporting the remembered ratio (the ratio the pane returns to), and the arrow keys do nothing.
 - **Collapse button**: a real native `<button>` with `aria-expanded` (reflects `!isCollapsed`) and `aria-label` from `bottomLabel` (default "Details").
 - **Keyboard support**: ↑/↓ on the focused divider nudges the ratio; Enter/Space on the button toggles collapse (native button behavior).
-- **Touch targets**: The chevron glyph is 14px (header bar) or 12px (seam), but the touch/click target is larger: on the seam, a full-width, 24px-tall transparent grab band (`h-6`, `inset-x-0`) meets the WCAG 2.5.8 minimum of 24×24 CSS px; on the header bar, the whole full-width row — not just the glyph — is the drag/click surface.
+- **Touch targets**: The chevron glyph is 14px (header bar) or 12px (seam). On the seam, the full-width, 24px-tall transparent grab band (`h-6`, `inset-x-0`) meets the WCAG 2.5.8 minimum of 24×24 CSS px for the drag, but it does not enlarge the chevron button: that button's own hit area is the glyph plus `px-1` padding, below 24×24 (the `partial` touch-target status in Compliance). On the header bar, the whole full-width row is the drag surface; the chevron button's hit area is the same glyph plus padding.
 
 ## Conformance Test Vectors
 
@@ -117,7 +117,7 @@ collapsed (either form):
 | T5 | persist-ratio-when-keyed | set `storageKey`, drag to 0.5, unmount, remount | ratio restores to 0.5 from `localStorage` |
 | T6 | keyboard-nudges-ratio | focus divider, press ↑ | ratio nudges down by 0.03, clamped |
 | T7 | keyboard-nudges-ratio | focus divider, press ↓ | ratio nudges up by 0.03, clamped |
-| T8 | drag-captures-pointer | pointer-down on divider, move mouse, pointer-up | split ratio follows the pointer throughout; motion past 3px is tracked internally |
+| T8 | drag-captures-pointer | pointer-down on divider, move mouse, pointer-up | `setPointerCapture(pointerId)` is called on pointer-down, and the split ratio follows the pointer until pointer-up |
 | T9 | keyboard-toggles-collapse | focus chevron button, press Enter | collapse toggles |
 | T10 | keyboard-toggles-collapse | focus chevron button, press Space | collapse toggles |
 | T11 | header-bar-variant | render with `header="Details"` | the separator renders as a bar containing the title; chevron is inside, far right |
@@ -125,7 +125,7 @@ collapsed (either form):
 | T13 | header-bar-drag-anywhere | pointer-down on `headerActions` button element | no drag starts; the button's native click fires |
 | T14 | expand-to-content | collapsed; content `scrollHeight` 300px in 1000px container (28px bar); expand | top pane ratio ≈ 0.672 = 1 − (300 + 28) / 1000 |
 | T15 | bottom-stays-mounted | collapse the component | bottom content remains in the DOM inside an `overflow-hidden` wrapper with `inert` attribute |
-| T16 | toggle-animates | set `html[data-reduce-motion="on"]`, toggle collapse | boundary animates with zero duration (no transition style applied) |
+| T16 | toggle-animates | set `html[data-reduce-motion="on"]`, toggle collapse | no transition is applied; the boundary jumps |
 | T17 | toggle-animates | toggle collapse with `html[data-reduce-motion]` unset | boundary animates 0.3s ease-in-out |
 | T18 | drag-cursor-and-no-select | drag the divider | cursor shows `row-resize`; `touch-action: "none"` blocks touch-scroll; the header-bar variant additionally suppresses text selection via `user-select: none` |
 | T19 | chevron-toggle-suppressed-by-drag | press on the chevron, move 5px, release | no toggle occurs (collapse state unchanged) |
@@ -133,14 +133,19 @@ collapsed (either form):
 | T21 | drag-releases-on-pointerup | pointer-down, drag, pointer-up | `releasePointerCapture()` is called with the same `pointerId` that was captured |
 | T22 | drag-maps-to-ratio | container top at `clientY=0`, height 1000px; pointer-move to `clientY=400` | ratio updates to 0.4 |
 | T23 | collapse-remembers-ratio | drag to ratio 0.5, collapse, then expand (seam, `expandToContent` off) | ratio restores to 0.5, not the default |
-
+| T24 | collapse-controlled-or-internal | `collapsed={false}` and `onCollapsedChange` provided; click the chevron, the caller does not update the prop | callback fires with `true`; the visible state stays expanded |
+| T25 | collapse-controlled-or-internal | `collapsed` omitted, no `onCollapsedChange`; click the chevron | visible state collapses from internal state |
+| T26 | header-bar-drag-anywhere | header bar collapsed; pointer-down on the bar away from the chevron | no drag starts; cursor is `default`; ratio unchanged |
+| T27 | expand-to-content | expand with a zero-height container or zero content height | ratio falls back to the last drag ratio |
+| T28 | persist-ratio-when-keyed | `localStorage[storageKey]` holds `0.99` (above `maxRatio`); mount | ratio restores clamped to `maxRatio` |
+| T29 | persist-ratio-when-keyed | set `storageKey`, focus divider, press ↓ | `localStorage[storageKey]` is written immediately with the nudged ratio |
 ## Edge Cases
 
 - **localStorage access failure (SSR, sandboxed iframes, disabled storage)**: Wrapped in try-catch; on any error the component silently falls back to `defaultRatio` or the in-memory ratio.
 - **Restored value outside bounds**: A persisted `localStorage` value outside `[minRatio, maxRatio]` (e.g. after the bounds changed since it was saved) is clamped to the current bounds on restore, the same as any other ratio update.
 - **Zero-height container or content**: `revealRatioForContent()` guards against `containerH <= 0` or `contentH <= 0` by returning the fallback ratio; prevents NaN.
-- **Concurrent collapse requests**: When controlled via `onCollapsedChange`, rapid toggles are handled by React state; uncontrolled (internal) state updates synchronously per toggle, with no queue.
-- **Drag-over-chevron suppression**: A fresh pointer-down — including one that lands on the chevron — always resets the drag-passed-over-target state, so a short drag over the chevron does not also trigger its click. See **chevron-toggle-suppressed-by-drag**.
+- **Concurrent collapse requests**: When controlled via the `collapsed` prop, rapid toggles are handled by React state; uncontrolled (internal) state updates synchronously per toggle, with no queue.
+- **Drag-over-chevron suppression**: See `#requirements/chevron-toggle-suppressed-by-drag`.
 - **Animation timer cleanup**: The animation timer is cleared on unmount to prevent dangling timeouts.
 
 ## Configuration
@@ -194,16 +199,16 @@ No logging. ResizableSplit is a presentational layout primitive; it emits no str
 ## Platform Notes
 
 - **React/Web** (TypeScript, source platform): Component in `packages/web/packages/ui/src/components/resizable-split.tsx`. Uses Lucide React icons (`ChevronDown`, `ChevronUp`). Flex layout with `flex-basis` for ratio and collapse animation. Pointer events for drag; keyboard handlers for nudge and toggle. `localStorage` for optional persistence, guarded for SSR. The seam variant uses an invisible 24px grab band centered on a 1px seam; the header-bar variant is always-visible and full-width draggable. Demo in `ui-showcase`.
-- **SwiftUI**: Use a `VStack` with `Divider` or a custom separator shape; bind the top pane to a `@State` proportion and animate via `.animation()` gated on an app-level reduce-motion flag (mirroring the web version's `data-reduce-motion` attribute), not `@Environment(\.accessibilityReduceMotion)` directly — apps whose own accessibility settings already derive that flag from the OS setting would otherwise double-gate. Drag gesture on the divider maps `translation.height` to the proportion; keyboard support via `.onKeyPress()` for ↑/↓ nudge and chevron button. Persist via `UserDefaults` on drag release. Header-bar variant renders the divider as the bottom pane's header with drag anywhere (except buttons). Seam variant uses a thin opacity-variable separator with a pill-shaped accent.
-- **Kotlin/Compose**: Use `Column` with `weight()` for ratio; `Draggable` modifier on the divider for drag input, map `delta` to proportion. Animate via `.animateTo()` for collapse/expand, respecting the platform's animator-duration-scale setting (`Settings.Global.ANIMATOR_DURATION_SCALE`) or an app-level reduce-motion flag mirroring the web version's `data-reduce-motion` attribute — not `LocalAccessibilityManager.current.isScreenReaderEnabled`, which reflects screen-reader use, not a reduced-motion preference. Persist via `DataStore` on drag release. Header-bar variant: compose the divider as a full-width `Row` above the bottom pane. Seam variant: thin `Divider()` with a centered pill accent.
+- **SwiftUI**: On macOS, use `VSplitView` (the native resizable split); on iOS, which has no equivalent, use a `VStack` with `Divider` or a custom separator shape; bind the top pane to a `@State` proportion and animate via `.animation()` gated on an app-level reduce-motion flag (mirroring the web version's `data-reduce-motion` attribute), not `@Environment(\.accessibilityReduceMotion)` directly — apps whose own accessibility settings already derive that flag from the OS setting would otherwise double-gate. Drag gesture on the divider maps `translation.height` to the proportion; keyboard support via `.onKeyPress()` for ↑/↓ nudge and chevron button. Persist via `UserDefaults` on drag release. Header-bar variant renders the divider as the bottom pane's header with drag anywhere (except buttons). Seam variant uses a thin opacity-variable separator with a pill-shaped accent.
+- **Compose**: Use `Column` with `weight()` for ratio; `Modifier.draggable(rememberDraggableState { delta -> … })` on the divider for drag input, map `delta` to proportion. Animate via `Animatable.animateTo` for collapse/expand, respecting the platform's animator-duration-scale setting (`Settings.Global.ANIMATOR_DURATION_SCALE`) or an app-level reduce-motion flag mirroring the web version's `data-reduce-motion` attribute — not `LocalAccessibilityManager.current.isScreenReaderEnabled`, which reflects screen-reader use, not a reduced-motion preference. Persist via `DataStore` on drag release. Header-bar variant: compose the divider as a full-width `Row` above the bottom pane. Seam variant: thin `Divider()` with a centered pill accent.
 - **AppKit / UIKit**: On AppKit, use `NSSplitView` — the native vertical/horizontal resizable split container with a divider, delegate-based min/max constraints, and autosave-position support (mirrors `storageKey` persistence). UIKit has no equivalent built-in control; compose a `UIStackView` with a custom pan-gesture-driven divider view, mapping `translation` to the ratio and clamping to `[minRatio, maxRatio]`; persist via `UserDefaults`. Collapse maps to a zero-height divider constraint; the header-bar variant renders the divider view's content with the title left, actions and chevron far right.
-- **WinUI 3**: Use a `Grid` with two `RowDefinition`s (top/bottom panes) and the CommunityToolkit `GridSplitter` between them for the draggable divider — `GridSplitter` handles pointer capture and a resize cursor natively. Bind `RowDefinition.Height` to the ratio; drag updates it live. Model collapse as setting the bottom `RowDefinition.Height` to `0`, animated via a `Storyboard`/`ThemeTransition` on the `Height` property (gated on the app's reduce-motion flag). For the header-bar variant, render the bottom pane's header content — title left, actions and chevron far right — spanning the full row width, layered above or templated into the `GridSplitter`. Persist via `ApplicationData.Current.LocalSettings` on drag release.
+- **WinUI 3**: Use a `Grid` with two `RowDefinition`s (top/bottom panes) and the CommunityToolkit `GridSplitter` between them for the draggable divider — `GridSplitter` handles pointer capture and a resize cursor natively. Bind `RowDefinition.Height` to the ratio; drag updates it live. Model collapse as setting the bottom `RowDefinition.Height` to `0`, animated by driving a double-valued property (a `Storyboard` `DoubleAnimation` on a ratio or pane-height value) and converting it to a star or pixel `GridLength` on each step, because `RowDefinition.Height` is a `GridLength` and cannot be animated directly (gated on the app's reduce-motion flag). For the header-bar variant, render the bottom pane's header content — title left, actions and chevron far right — spanning the full row width, layered above or templated into the `GridSplitter`. Persist via `ApplicationData.Current.LocalSettings` on drag release.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/resizable-split.tsx` | confirmed (2.2.1) |
+| web | `packages/web/packages/ui/src/components/resizable-split.tsx` | confirmed (2.2.2) |
 
 ## Design Decisions
 
@@ -235,6 +240,9 @@ No logging. ResizableSplit is a presentational layout primitive; it emits no str
 **Rationale**: Without this, a small accidental drag while aiming for the chevron would also toggle collapse — the "dancing divider" problem.
 **Approved**: pending
 
+**Decision**: Accept the open Compliance gaps (dynamic type, both internationalization checks, chevron touch target) for now: the header-bar title stays at a fixed `text-[11px]`, `bottomLabel` keeps its English default `"Details"`, and the chevron button keeps its glyph-plus-padding hit area.
+**Rationale**: Each fix changes the component's public contract or layout (a token font size, a required `bottomLabel`, a larger button), so it needs its own change; until then consumers pass a localized `bottomLabel` (see Localization) and rely on the grab band for the seam drag.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -256,6 +264,7 @@ Keyboard, ARIA, and reduced-motion statuses rest on the `role="separator"`/nativ
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 2.2.2 | 2026-11-14 | Mike Fullerton | Lint findings applied: MUST wording for no-select and touch-action, both persistence triggers, the expand-to-content formula, collapsed ARIA values, an honest chevron touch-target note, six new test vectors, tightened T8 and T16, a debt Design Decision, and corrected SwiftUI, Compose and WinUI notes. |
 | 2.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 2.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: shorten summary; correct drag-cursor-and-no-select, collapse-controlled-or-internal, and keyboard-nudges-ratio to match source; add chevron-toggle-suppressed-by-drag requirement and vector; add missing test vectors for drag-releases-on-pointerup, drag-maps-to-ratio, collapse-remembers-ratio, and bottom-stays-mounted; add restored-value-clamped edge case; remove internal identifier names from requirements and edge cases; rewrite AppKit/UIKit, WinUI 3, SwiftUI, and Compose platform notes for correct APIs and consistent reduce-motion gating; rename touch-target bullet and correct target-size claim; correct Localization and Privacy sections; reformat Design Decisions to Decision/Rationale/Approved; replace Compliance prose with a checks table. |
 | 2.1.0 | 2026-09-22 | Mike Fullerton | Correct domain URI to `agenticdevelopercookbook://recipes/resizable-split`; add missing template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy) marked not applicable; expand conformance test vectors to 18 (separate keyboard up/down, add drag-over-chevron, reduce-motion with and without); document edge cases including animation timer cleanup; clarify platform notes with specific control names and patterns for SwiftUI, Compose, WinUI 3; strengthen requirements with implementation details (latest.current, scrollHeight, moved flag, flex-basis). |

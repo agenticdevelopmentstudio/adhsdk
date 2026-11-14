@@ -2,7 +2,7 @@
 id: d4e7dd53-4771-425f-af0a-0186ba89c3ef
 title: "Analytics Ranges"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,10 +20,12 @@ tags:
   - dashboard
   - time-series
 depends-on: []
-related: []
-references:
-  - packages/web/packages/status-server/src/telemetry/dashboard/ranges.ts (adhsdk)
-  - packages/web/packages/status-server/test/telemetry-dashboard-sections.test.ts (adhsdk)
+related:
+  - f06a7f7a-1b36-4dfc-a17d-71d20d576155
+  - 77587f0b-5a27-44d9-a507-46bb90c9046a
+  - 4dc15a9e-c129-412a-9f14-e35146563d8d
+  - 55ffb81c-6a7d-4837-9180-0b5d3fe952ec
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -42,7 +44,7 @@ Every provider's answer is aligned onto the same buckets, so a quiet hour reads 
 
 - **range-names**: `ANALYTICS_RANGES` MUST be the ordered list `"24h"`, `"7d"`, `"30d"`.
 - **range-type**: `AnalyticsRange` MUST be the union of exactly those three strings.
-- **range-validation-by-callers**: Callers that accept a range from outside the process validate it against `ANALYTICS_RANGES`. The analytics dashboard route answers HTTP 400 with `{ "error": "invalid range" }` for any other value, and the report parameter parser rejects it with the message `range must be one of 24h, 7d, 30d`. This module does not validate; `rangeWindow` is typed to take only an `AnalyticsRange`.
+- **range-validation-by-callers**: Callers that accept a range from outside the process MUST validate it against `ANALYTICS_RANGES` first. This module does not validate; `rangeWindow` takes only an `AnalyticsRange`, and any other value is outside its contract.
 
 **Window shape**
 
@@ -56,7 +58,7 @@ Every provider's answer is aligned onto the same buckets, so a quiet hour reads 
 
 - **window-24h-unit**: For `"24h"`, `unit` MUST be `"hour"` and the step MUST be 3,600,000 ms.
 - **window-24h-start**: For `"24h"`, the first bucket MUST start 24 hours before the start of the hour that contains `nowMs`.
-- **window-24h-count**: For `"24h"`, `buckets` MUST hold 25 entries: the partial hour the window starts in, 23 full hours, and the current hour. The source comment states it as "both the partial hour it starts in and the current one, so 25 buckets".
+- **window-24h-count**: For `"24h"`, `buckets` MUST hold 25 entries: 24 full hours plus the current, partial hour.
 - **window-24h-last-bucket**: For `"24h"`, the last bucket MUST be the start of the hour that contains `nowMs`.
 
 **The 7d and 30d windows**
@@ -72,17 +74,17 @@ Every provider's answer is aligned onto the same buckets, so a quiet hour reads 
 - **align-length**: `alignToBuckets(buckets, points)` MUST return an array the same length as `buckets`, in the same order.
 - **align-zero-fill**: A bucket that no point lands in MUST hold `0`.
 - **align-sum**: Points that land in the same bucket MUST be summed, not replaced or averaged.
-- **align-exact-match**: A point lands in a bucket only when its timestamp, parsed and re-serialised with `toISOString`, equals the bucket string exactly. The module does not round a timestamp down to the containing bucket; a provider whose timestamps are not already on a bucket boundary has them dropped.
+- **align-exact-match**: A point MUST land in a bucket only when its timestamp, parsed and re-serialised with `toISOString`, equals the bucket string exactly. The module MUST NOT round a timestamp down to the containing bucket; a provider whose timestamps are not already on a bucket boundary has them dropped.
 - **align-timestamp-spellings**: A timestamp MAY be a string or a number. Both `"2026-11-04T00:00:00Z"` and `"2026-11-04T00:00:00.000Z"` MUST land on the bucket `"2026-11-04T00:00:00.000Z"`.
 - **align-drop-off-axis**: A point whose timestamp matches no bucket MUST be dropped.
 - **align-drop-unparseable**: A point whose timestamp is neither a string nor a number, or whose string or number does not parse to a valid date, MUST be dropped without throwing. `null`, `undefined`, objects and `"nope"` all fall in this case.
 - **align-input-iterable**: `points` MAY be any iterable of `[timestamp, value]` pairs; it is consumed once.
-- **align-value-added-as-is**: The value of a matched point is added to the bucket total as given. The function does not validate it; a caller that passes a non-numeric or `NaN` value gets whatever JavaScript addition produces. The callers in the sibling modules coerce values to numbers before the call.
+- **align-value-added-as-is**: The value of a matched point MUST be added to the bucket total as given. The function does not validate it, and a non-numeric or `NaN` value is outside its contract; callers MUST coerce values to numbers before the call, as the sibling modules do.
 - **align-pure**: `alignToBuckets` MUST NOT modify `buckets` or its input pairs.
 
 **Side effects**
 
-- **no-side-effects**: Neither function reads a clock, performs I/O, logs or keeps state. The same inputs MUST give the same outputs.
+- **no-side-effects**: Neither function MUST read a clock, perform I/O, log or keep state. The same inputs MUST give the same outputs.
 
 ## Appearance
 
@@ -109,14 +111,14 @@ The vectors use `NOW = 2026-11-04T15:30:20.000Z`, the clock reading in `telemetr
 | ranges-005 | window-buckets-order, window-24h-count | `rangeWindow("24h", NOW).buckets` | Strictly ascending; every consecutive pair 3,600,000 ms apart |
 | ranges-006 | align-zero-fill, align-timestamp-spellings, align-sum | Test "zero-fills, tolerates either timestamp spelling, and sums repeats": buckets `["2026-11-03T00:00:00.000Z", "2026-11-04T00:00:00.000Z"]`, points `["2026-11-04T00:00:00Z", 2]` and `["2026-11-04T00:00:00.000Z", 3]` | `[0, 5]` |
 | ranges-007 | align-drop-off-axis, align-drop-unparseable | Test "drops what is off the axis or unparseable": same buckets, points `["2026-01-01T00:00:00Z", 9]`, `["nope", 9]`, `[null, 9]` | `[0, 0]`; nothing thrown |
-| ranges-008 | window-day-boundaries, window-day-no-local-time | `rangeWindow("7d", Date.parse("2026-11-04T00:00:00.000Z"))` run under any host time zone | Last bucket `"2026-11-04T00:00:00.000Z"`; first `"2026-10-29T00:00:00.000Z"` |
+| ranges-008 | window-day-boundaries, window-day-no-local-time | `rangeWindow("7d", Date.parse("2026-11-04T00:00:00.000Z"))` run once under `TZ=UTC` and once under `TZ=Pacific/Chatham`, with identical output | Last bucket `"2026-11-04T00:00:00.000Z"`; first `"2026-10-29T00:00:00.000Z"` |
 | ranges-009 | window-24h-start, window-24h-last-bucket | `rangeWindow("24h", Date.parse("2026-11-04T15:00:00.000Z"))` (exactly on the hour) | First `"2026-11-03T15:00:00.000Z"`; last `"2026-11-04T15:00:00.000Z"`; 25 buckets |
 | ranges-010 | align-exact-match | Buckets as in ranges-006, point `["2026-11-04T06:00:00Z", 4]` (inside the day, not on its boundary) | `[0, 0]`; the point is dropped, not rounded |
 | ranges-011 | align-timestamp-spellings | Buckets as in ranges-006, point `[Date.parse("2026-11-03T00:00:00.000Z"), 6]` (a number) | `[6, 0]` |
 | ranges-012 | align-length, align-zero-fill | `alignToBuckets([], [["2026-11-04T00:00:00Z", 1]])` | `[]` |
-| ranges-013 | align-input-iterable | Points supplied as a generator yielding one matching pair | The pair is counted; the array result has one 1 in the matching bucket |
+| ranges-013 | align-input-iterable | Buckets as in ranges-006; points supplied as a generator yielding the one pair `["2026-11-04T00:00:00.000Z", 1]` | The pair is counted once; the result is `[0, 1]` |
 | ranges-014 | align-pure | Call `alignToBuckets` twice with the same arrays | Equal results; the `buckets` array is unchanged |
-| ranges-015 | range-validation-by-callers | `GET /analytics/dashboard?range=1y` | HTTP 400 with `{ "error": "invalid range" }` (enforced by the route, not by this module) |
+| ranges-015 | window-day-includes-today, window-day-count | `rangeWindow("30d", NOW)` | 30 buckets; first `"2026-10-06T00:00:00.000Z"`; last `"2026-11-04T00:00:00.000Z"` |
 
 ## Edge Cases
 
@@ -127,10 +129,10 @@ The vectors use `NOW = 2026-11-04T15:30:20.000Z`, the clock reading in `telemetr
 - **Unparseable or non-scalar timestamp**: `"nope"`, `null` and any value that is not a string or number MUST be skipped without an error.
 - **Timestamp outside the window**: Points older than `since` or newer than the last bucket MUST be dropped.
 - **Time of day exactly on an hour or day boundary**: For `"24h"`, a `nowMs` on the hour still yields 25 buckets, with the current hour as the last and zero elapsed time in it. For day ranges, a `nowMs` of 00:00:00.000 UTC makes that new day the last bucket.
-- **Range outside the union**: Not handled here. At runtime an unexpected string would index `DAYS` as `undefined`, so `since` is an invalid `Date` and `buckets` is empty (no throw), and callers MUST validate against `ANALYTICS_RANGES` first, as the dashboard route and the report parameter parser do.
-- **Invalid `nowMs`**: Not validated. A `NaN` clock reading gives invalid dates, and `toISOString` throws a `RangeError`. Callers pass `Date.now()` or a fixed test value.
+- **Range outside the union**: Undefined behaviour: the module does not handle it, and a port MUST NOT copy what any one runtime happens to do. Callers MUST validate against `ANALYTICS_RANGES` first.
+- **Invalid `nowMs`**: Undefined behaviour: a non-finite clock reading is outside the contract and is not validated. Callers pass `Date.now()` or a fixed test value.
 - **Concurrent access**: Not applicable: both functions are synchronous and pure, JavaScript runs them without interleaving, and no state is shared.
-- **Error states and offline**: Not applicable: the module does no I/O and has no dependency that can be unavailable. Its only throw is the `RangeError` described above.
+- **Error states and offline**: Not applicable: the module does no I/O and has no dependency that can be unavailable. It has no defined error path.
 
 ## Configuration
 
@@ -174,50 +176,45 @@ Not applicable: the source makes no log calls.
 ## Platform Notes
 
 - **SwiftUI**: Port as a Swift `enum AnalyticsRange: String, CaseIterable` with `"24h"`, `"7d"`, `"30d"` raw values, and a pure function `rangeWindow(_:now:)`. Use a `Calendar` fixed to the UTC time zone, or plain `TimeInterval` arithmetic on `timeIntervalSince1970`, so day buckets are UTC rather than local. Format bucket strings with `ISO8601DateFormatter` and `.withFractionalSeconds` to match the `.000Z` spelling. A Swift Charts view takes the aligned arrays directly.
-- **Compose**: Use `java.time.Instant` and `ChronoUnit.HOURS` or `DAYS` with `truncatedTo` for the floors, and `Instant.toString` for buckets (add the fraction digits if the wire format needs `.000Z`). Port `alignToBuckets` over a `LinkedHashMap` from bucket string to index with a `DoubleArray` result.
+- **Compose**: Use `java.time.Instant` and `ChronoUnit.HOURS` or `DAYS` with `truncatedTo` for the floors, and `Instant.toString` for buckets, but `Instant.toString` drops a zero fraction, so a formatter that always writes `.000Z` is MANDATORY (for example `DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")` in UTC). Port `alignToBuckets` over a `LinkedHashMap` from bucket string to index with a `DoubleArray` result.
 - **React/Web**: This is the source platform. `ranges.ts` in `packages/web/packages/status-server/src/telemetry/dashboard/` is pure TypeScript with no dependencies. `ANALYTICS_RANGES` is a `const` tuple, and `types.ts` in the same folder re-exports it. The tests are in `test/telemetry-dashboard-sections.test.ts`.
 - **AppKit / UIKit**: The same Foundation-only Swift port serves both. Charts built on Swift Charts or a custom `NSView` or `UIView` read the aligned arrays; keep the axis labels formatting in the view layer, not in this helper.
-- **WinUI 3**: Port as a static C# class. Use a `enum AnalyticsRange { H24, D7, D30 }` with a lookup from the wire strings `"24h"`, `"7d"`, `"30d"`, since C# identifiers cannot start with a digit. Compute windows with `DateTimeOffset.FromUnixTimeMilliseconds(nowMs)` and floor with integer arithmetic on `ToUnixTimeMilliseconds()` (not `DateTime.Today`, which is local time). Produce bucket strings with `ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture)` to match `toISOString`. For alignment, parse incoming timestamps with `DateTimeOffset.TryParse` using `DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal` and a `Dictionary<string, int>` index. Return `double[]` or `IReadOnlyList<double>`. The chart control (for example a WinUI chart library bound through `ObservableCollection<double>` and `INotifyPropertyChanged`) takes the arrays; no Windows storage or networking APIs are involved.
+- **WinUI 3**: Port as a static C# class. Use an `enum AnalyticsRange { H24, D7, D30 }` with a lookup from the wire strings `"24h"`, `"7d"`, `"30d"`, since C# identifiers cannot start with a digit. Compute windows with `DateTimeOffset.FromUnixTimeMilliseconds(nowMs)` and floor with integer arithmetic on `ToUnixTimeMilliseconds()` (not `DateTime.Today`, which is local time). Convert to UTC first (`.UtcDateTime` or `ToUniversalTime()`), then produce bucket strings with `ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture)` to match `toISOString`. For alignment, parse incoming timestamps with `DateTimeOffset.TryParse` using `DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal` and a `Dictionary<string, int>` index. Return `double[]` or `IReadOnlyList<double>`. The chart control (for example a WinUI chart library bound through `ObservableCollection<double>` and `INotifyPropertyChanged`) takes the arrays; no Windows storage or networking APIs are involved.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/dashboard/ranges.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/telemetry/dashboard/ranges.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| web | `packages/web/packages/status-server/test/telemetry-dashboard-sections.test.ts` | confirmed (1.0.1) |
 
 ## Design Decisions
 
 **Decision**: The 24h range has 25 buckets, not 24.
-**Rationale**: The source comment states the window holds "both the partial hour it starts in and the current one". Anchoring the first bucket to the hour boundary 24 hours before the current hour start keeps every bucket on a whole hour, so provider data grouped by hour lines up exactly.
-
+**Rationale**: The window holds 24 full hours plus the current, partial hour. Anchoring the first bucket to the hour boundary 24 hours before the current hour start keeps every bucket on a whole hour, so provider data grouped by hour lines up exactly.
 **Approved**: pending
 
 **Decision**: Day ranges are UTC days including today, so the last bucket is a partial day.
 **Rationale**: The source comment says "that many UTC days including today". A fixed UTC boundary gives the same buckets for every viewer and matches providers that group by UTC day; a rolling 7 or 30 times 24 hours would not align to those groupings.
-
 **Approved**: pending
 
 **Decision**: Alignment matches bucket starts exactly and drops everything else, instead of rounding timestamps into the containing bucket.
 **Rationale**: The source comment says "Anything off the axis is dropped". The providers are queried with the same grouping as the buckets, so exact matching is enough, and it keeps stray out-of-window points from inflating the edge buckets.
-
 **Approved**: pending
 
 **Decision**: Quiet buckets hold zero instead of being absent.
 **Rationale**: The module's header comment states it: "a quiet hour reads as a zero rather than a gap", so that PostHog's and Vercel's series can share one chart.
-
 **Approved**: pending
 
 **Decision**: Timestamps are normalised through `new Date(ms).toISOString()` before lookup, and both a string and a number are accepted.
 **Rationale**: Providers spell the same instant differently (`...00Z` against `...00.000Z`). The test "zero-fills, tolerates either timestamp spelling, and sums repeats" pins this.
-
 **Approved**: pending
 
 **Decision**: The module does not validate its range argument or the clock reading.
 **Rationale**: The function is typed to `AnalyticsRange`, and validation of outside input happens at the edge, in the dashboard route and the report parameter parser, both of which check against `ANALYTICS_RANGES`.
-
 **Approved**: pending
 
 ## Compliance
@@ -235,3 +232,4 @@ Separation of concerns passes: the file holds the axis arithmetic and alignment 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Kept route and parser behavior out of the module, marked undefined inputs as outside the contract, added RFC 2119 keywords, fixed the 24h bucket description, made vectors 008, 013 and 015 concrete, tightened the Compose and WinUI 3 notes, added related specs and emptied references. |

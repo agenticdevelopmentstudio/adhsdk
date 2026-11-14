@@ -8,3 +8,5 @@
 | `MarkdownText.excerptSourceCharacters` | `Int` (constant) | `2000` | Apple-side constant windowing `excerptSource` to this many Unicode scalars before excerpt derivation runs. |
 | `titleCharacterLimit` / `MAX_TITLE` | `Int` / `number` (constant) | `500` | Shared cap, on both Apple and web, on a derived or written title's length. |
 
+
+The abort reason `'mdv-timeout'` and the `adh-mv-*` class prefix (`adh-mv-prose`, `adh-mv-alert`) are fixed parts of the hook's and the stylesheet's contract, not options; they are not placeholders for a host to substitute.

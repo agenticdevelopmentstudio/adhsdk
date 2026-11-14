@@ -4,7 +4,7 @@
   **Approved**: pending
 
 - **Decision**: Escape collapses the preview dock AND deselects the hit — both list Escape (**handle-escape-in-list**) and preview Escape (**handle-escape-in-preview**) call the same `clearSelection`, which sets `selectedId` to `null` as well as collapsing the dock.
-  **Rationale**: Escape is a single "back out of what I opened" action; there is no code path that collapses the dock while leaving a hit selected, so re-expanding via the collapse toggle afterward shows the no-selection empty state, not the hit. A consumer that wants the selection preserved across Escape needs to layer that behavior on top — it is not what the shipped component does.
+  **Rationale**: Escape is a single "back out of what I opened" action; Escape never leaves a hit selected, so re-expanding via the collapse toggle afterward shows the no-selection empty state, not the hit. The collapse toggle is different: it collapses the dock and keeps the selection (see the disclosure-independence decision below). A consumer that wants the selection preserved across Escape needs to layer that behavior on top — it is not what the shipped component does.
   **Approved**: pending
 
 - **Decision**: "Clear filters" clears the active facets (category, tag) only, never the query.
@@ -43,3 +43,6 @@
   **Rationale**: When collapsed there is nothing to resize (the dock is its natural header height); omitting the divider when it would be non-functional reduces visual clutter.
   **Approved**: pending
 
+- **Decision**: A click on a result row selects it and opens its preview without moving the roving-focus cursor (`activeIndex`).
+  **Rationale**: Only keyboard navigation (Arrow/Home/End) moves the cursor, so the cursor stays where the keyboard user left it. The cost is that Escape from the preview returns focus to the cursor row, which after a click is not the row that was opened (see **handle-escape-in-preview**, vector search-view-042). Requiring a click to move the cursor would remove that surprise; it is not what the shipped component does.
+  **Approved**: pending

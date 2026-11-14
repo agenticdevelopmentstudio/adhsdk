@@ -1,6 +1,6 @@
 
 `PersonaChatCoordinator` is the Apple implementation of the
-`persona-chat-coordinator` ingredient: a `Backend`-conforming actor that
+`persona-chat-coordinator` ingredient of the [persona-chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b) recipe: a `Backend`-conforming actor that
 turns a chat UI's `send`/`inboundEvents` contract into calls against adh's
 chat API. adh orchestrates the turn — it resolves the persona from its slug,
 assembles the prompt, reads and writes history, calls the provider, and

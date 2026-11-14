@@ -4,7 +4,7 @@
     "id": "e74bbbe4-cc41-40dc-a063-e262522c2301",
     "title": "Conversation Summary DTOs",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,14 +23,16 @@
       "dto",
       "wire"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "25b6559b-69c1-450f-85b3-fc026d55f469"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "ff51d2b4a32e251b",
+  "synced": "7d7c52b55955acac",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -30,4 +30,16 @@
 | log-panel-027 | enforce-max-lines | lines=[{id:'1',...},{id:'2',...}], maxLines=0 | Zero rows are visible; empty message is shown |
 | log-panel-028 | honor-follow-tail-toggle | followTail=false, user scrolled away from the bottom, then followTail=true, line appended | The next append scrolls the container to the bottom |
 | log-panel-029 | apply-cell-mono-font | cell={mono: undefined}, column={defaultMono:true} | fontFamily is 'var(--font-mono, ui-monospace, SFMono-Regular, monospace)' |
-
+| log-panel-030 | apply-cell-mono-font | cell={mono:false}, column={defaultMono:true} | fontFamily is not set to the monospace stack |
+| log-panel-031 | apply-cell-level-color | cell has no level, column={defaultLevel:'warn'} | Cell color matches the 'warn' row of the Level Colors table |
+| log-panel-032 | apply-cell-level-color | cell has no color or level, column has no defaultLevel | No inline color is set; text inherits |
+| log-panel-033 | support-max-height | maxHeight=300 (number) | Body container has CSS maxHeight of 300px |
+| log-panel-034 | enforce-max-lines | 3 lines, maxLines=-1 | Zero rows are visible; empty message is shown |
+| log-panel-035 | enforce-max-lines | 3 lines, maxLines=NaN | All 3 rows are visible |
+| log-panel-036 | enforce-max-lines | 3 lines, maxLines=1.5 | The last 2 rows are visible (the fractional slice start truncates toward zero) |
+| log-panel-037 | stop-event-propagation | Cell with no onCellClick, nested in a parent with its own click handler; click the cell | The parent's click handler is invoked (the event bubbles) |
+| log-panel-038 | handle-cell-double-click | Column defines both onCellClick and onCellDoubleClick; double-click a cell | onCellClick is called for the preceding clicks and onCellDoubleClick is called with the LogLine |
+| log-panel-039 | apply-cell-title-attribute | cell={text:'<b>x</b>'} | The cell shows the literal text `<b>x</b>` and contains no `<b>` element |
+| log-panel-040 | apply-cell-text-alignment | column={align:'end'} | Header cell and body cells both have textAlign 'end' |
+| log-panel-041 | show-interactive-indicator | column={isClickable:false}, no onCellClick, cell.link not set | CSS class 'lp-cell--interactive' is absent |
+| log-panel-042 | show-interactive-indicator | column defines only onCellDoubleClick | CSS class 'lp-cell--interactive' is absent |

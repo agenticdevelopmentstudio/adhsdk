@@ -37,14 +37,3 @@
   daemon is up," and avoiding a shared cache/cookie jar keeps loopback
   daemon traffic from interacting with any HTTPS backend session state.
   **Approved**: pending
-
-- **Decision**: Concurrent first-time `resolve()` calls are left able to
-  launch duplicate probes (see Edge Cases), and out-of-range `port` values
-  are left to crash at a forced URL unwrap rather than being validated.
-  **Rationale**: neither is addressed anywhere in
-  `TransportResolver.swift`/`DaemonContract.swift`, and neither is exercised
-  by `TransportResolverTests.swift`; both are recorded as open questions
-  under Edge Cases rather than resolved here, since resolving them would
-  mean inventing behavior the source does not define.
-  **Approved**: pending
-

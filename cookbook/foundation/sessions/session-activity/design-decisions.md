@@ -1,18 +1,18 @@
 
 **Decision**: The activity is derived on each read from recorded inputs and is not stored.
-**Rationale**: The source says the daemon records what happened, not what it means, so the meaning can be re-read or re-mapped for a new event type without a schema change.
+**Rationale**: The doc comment on `SessionActivity.derive` in `SessionActivity.swift` says the daemon records what happened, not what it means, so the meaning can be re-read or re-mapped for a new event type without a schema change.
 **Approved**: pending
 
 **Decision**: A live subagent promotes an `idle` turn to `working` but never overrides `waiting`.
-**Rationale**: The source says a live subagent reads as working because it is, and a session blocked on a permission prompt still needs the user whatever its subagents are doing. The quieter reading must not bury the louder one, as the test `testALiveSubagentNeverOverridesWaiting` records.
+**Rationale**: The same `derive` doc comment says a live subagent reads as working because it is, and a session blocked on a permission prompt still needs the user whatever its subagents are doing. The quieter reading must not bury the louder one, as the test `testALiveSubagentNeverOverridesWaiting` records.
 **Approved**: pending
 
 **Decision**: Any event type not listed, including events added later, reads as `working`; the empty string is listed and reads `idle`.
-**Rationale**: The source's default branch says "everything else: the agent is mid-turn", so an unmapped hook event shows as busy rather than silently idle. The cost is that a new turn-ending event reads `working` until it is added to the idle list.
+**Rationale**: The comment on the `default` branch of `turnActivity(lastEventType:)` in `SessionActivity.swift` says the agent is mid-turn for everything else, so an unmapped hook event shows as busy rather than silently idle. The cost is that a new turn-ending event reads `working` until it is added to the idle list.
 **Approved**: pending
 
 **Decision**: One enum serves both the Sessions window icon and `steno conversation status`.
-**Rationale**: The source states this is so the two can never disagree about what a session is doing.
+**Rationale**: The doc comment on the `SessionActivity` enum in `SessionActivity.swift` states this is so the two can never disagree about what a session is doing.
 **Approved**: pending
 
 **Decision**: `SessionActivity` is kept separate from `SessionStatus`.

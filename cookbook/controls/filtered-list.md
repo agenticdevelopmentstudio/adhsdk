@@ -2,11 +2,11 @@
 id: 17433dd1-f3db-4d7b-9f58-997996a2b92e
 title: "Filtered List"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,7 +41,7 @@ FilteredList is a searchable list component that renders a text input field abov
 - **enter-selection**: When the user presses Enter and an item is highlighted, component MUST call the onSelect callback with the highlighted item and prevent the default form submission via the input's own keydown handling. When no item is highlighted, pressing Enter MUST NOT call onSelect; the form's onSubmit handler independently prevents the browser's default submission regardless of highlight state (see **prevent-form-submission**).
 - **escape-clears-highlight**: When the user presses Escape and an item is highlighted, component MUST clear the highlight by setting highlightedIndex to -1 and prevent the default action.
 - **reset-highlight-on-input-change**: When the user types in the input field, component MUST reset the highlighted item index to -1.
-- **clamp-highlight-when-visible-shrinks**: When the visible items list shrinks and the currently highlighted index exceeds the new length, component MUST adjust the highlight to the last item in the visible list, or to -1 if the list is now empty.
+- **clamp-highlight-when-visible-shrinks**: When the visible items list shrinks and the currently highlighted index exceeds the new length, component MUST adjust the highlight to the last item in the visible list, or to -1 if the list is now empty. Typing resets the highlight first (see **reset-highlight-on-input-change**), so in practice this applies when the `items` prop shrinks.
 - **render-item-list**: Component MUST render all visible items as `<li>` elements within a `<ul>` list with role="listbox".
 - **item-role-option**: Each rendered `<li>` item MUST have role="option", identifying it as a listbox option.
 - **render-item-title**: When renderItem is not provided, each item MUST render its title via the getTitle callback in a `fl-title` element.
@@ -65,17 +65,22 @@ FilteredList is a searchable list component that renders a text input field abov
 - **prevent-form-submission**: The form MUST prevent default submission on submit event, regardless of whether an item is highlighted.
 - **autofill-prevention**: Component MUST apply noAutofillProps to the input to disable browser autofill.
 - **autofocus-on-mount**: Component MUST focus the input on mount when autoFocus is true.
-- **arrow-keys-noop-when-no-items**: Component MUST NOT prevent the default behavior for arrow keys if no visible items exist.
-
+- **arrow-keys-noop-when-no-items**: When no visible items exist, component MUST ignore ArrowUp, ArrowDown, Enter and Escape: it MUST NOT call preventDefault, change the highlight, or call onSelect.
+- **initial-query**: Component MUST start with the query and the input text set to `initialQuery` (default `""`), filtering the items by it on first render.
+- **root-class-name**: When `className` is provided, component MUST render the root element with class `fl-root {className}`; otherwise `fl-root`.
+- **custom-match**: When `match` is provided, component MUST use it instead of the default matcher, calling it with the item and the lower-cased, trimmed query, and keep the items for which it returns true.
+- **escape-restores-query**: After Escape clears the highlight, the input MUST show the current query text again, not the title of the previously highlighted item.
+- **selection-keeps-state**: Selecting an item by Enter or click MUST call onSelect only; the component does not change the query or clear the highlight, so the input keeps showing the selected item's title while it stays highlighted.
+- **footer-visibility**: When `total === 0` the list element is absent, so the footer MUST NOT render; when `total > 0` and filtering leaves zero visible items, the footer MUST render after the no-matches message.
 ## Appearance
 
-- **Corner radius**: Not specified in source; uses CSS classes (fl-input, fl-item, etc.)
-- **Padding**: Not specified in source; controlled by CSS classes
-- **Font**: Not specified in source; controlled by CSS classes
-- **Background**: Not specified in source; controlled by CSS classes
-- **Foreground/Text**: Not specified in source; controlled by CSS classes
+- **Corner radius**: `.fl-input` `6px`; `.fl-item-button` `4px` (source: filtered-list.css).
+- **Padding**: `.fl-input` `0.55rem 0.75rem`; `.fl-item` `0.5rem 0` (`0` when clickable); `.fl-item-button` `0.5rem 0.6rem`; `.fl-empty` `0.75rem 0.25rem`; `.fl-footer` `0.5rem 0 0`.
+- **Font**: `.fl-root` uses `var(--font-sans, Inter, system-ui, sans-serif)`; `.fl-input` `0.9rem`; `.fl-title` `0.9rem` weight 500; `.fl-subtitle` `0.75rem` uppercase with `0.04em` letter-spacing; `.fl-details` `0.75rem` monospace.
+- **Background**: `.fl-input` `var(--color-surface-raised, #fff)`; `.fl-item--active` `var(--color-accent-dim, rgba(0,0,0,0.06))`; item buttons are transparent, with a hover/focus-visible background of `var(--color-surface-hover, ...)`.
+- **Foreground/Text**: `.fl-root` and `.fl-title` `var(--color-text-primary, #1a1a24)`; `.fl-subtitle` `var(--color-text-secondary, ...)`; `.fl-details`, `.fl-empty` and the input placeholder `var(--color-text-dim, ...)`.
 - **Border**: `.fl-input` has a 1px border by default; on `:focus` its border-color changes to `var(--color-accent, #1e3a5f)` with an added 2px box-shadow ring (`var(--color-accent-dim)`), and `.fl-item-button` shows a background change (no outline) on `:focus-visible` (source: filtered-list.css). Other border details are otherwise controlled by CSS classes.
-- **Shadow**: Not specified in source; controlled by CSS classes
+- **Shadow**: None, except the 2px focus ring on `.fl-input:focus` (see Border).
 - **Min/Max size**: Input is width: 100%; list items are full-width within the root container
 - **CSS class structure**:
   - `fl-root`: Root container wrapper
@@ -98,7 +103,7 @@ FilteredList is a searchable list component that renders a text input field abov
 | Default | No item highlighted, input shows query text | Initial state |
 | Highlighted | Item has fl-item--active class, input shows item title, aria-selected="true" | Arrow keys, mouse hover |
 | Filtered | List shows only matching items, empty state shown if no matches | User types in input |
-| Disabled/Empty | "No items." message shown, list not rendered | total === 0 |
+| Empty | "No items." message shown, list not rendered | total === 0 |
 | Focused | Input has keyboard focus | User clicks input or autoFocus=true |
 
 ## Accessibility
@@ -127,7 +132,7 @@ FilteredList is a searchable list component that renders a text input field abov
 | filtered-list-008 | enter-selection | Item highlighted + Enter pressed | onSelect callback is called with highlighted item |
 | filtered-list-009 | escape-clears-highlight | Item highlighted + Escape pressed | Highlight is cleared |
 | filtered-list-010 | reset-highlight-on-input-change | Item highlighted + user types in input | Highlight is reset to -1 |
-| filtered-list-011 | clamp-highlight-when-visible-shrinks | Highlight on item 5, query changes to show 3 items | Highlight moves to item 3 (last visible) |
+| filtered-list-011 | clamp-highlight-when-visible-shrinks | Highlight on item 5, then the `items` prop is replaced with 3 items | Highlight moves to item 3 (last visible) |
 | filtered-list-012 | render-item-list | Items provided via props | The `<ul>` renders with role="listbox" and all visible items render as `<li>` children |
 | filtered-list-013 | render-item-title | Item with getTitle callback, renderItem not provided | Title is rendered in fl-title element |
 | filtered-list-014 | render-item-subtitle | Item with getSubtitle callback, renderItem not provided | Subtitle is rendered in fl-subtitle element |
@@ -152,18 +157,26 @@ FilteredList is a searchable list component that renders a text input field abov
 | filtered-list-033 | escape-clears-highlight | Escape pressed with no item highlighted | No highlight change occurs; default action is not prevented (edge case) |
 | filtered-list-034 | render-item-details | Item with getDetails callback, renderItem not provided | Details are rendered in fl-details element |
 | filtered-list-035 | custom-item-render | renderItem provided | `renderItem(item)` return value is rendered instead of the default title/subtitle/details layout |
-| filtered-list-036 | arrow-keys-noop-when-no-items | No visible items, ArrowDown pressed | Default browser behavior is not prevented (no e.preventDefault call); no highlight change occurs |
+| filtered-list-036 | arrow-keys-noop-when-no-items | No visible items, ArrowDown, ArrowUp, Enter or Escape pressed | Default browser behavior is not prevented (no e.preventDefault call); no highlight change occurs; onSelect is not called |
 | filtered-list-037 | default-no-matches-message | Query yields zero visible items, total > 0, no emptyContent | List's only item is the literal text `No matches for "{query}".` |
 | filtered-list-038 | item-role-option | Items rendered | Each `<li>` has role="option" |
 | filtered-list-039 | enter-selection | Enter pressed with no item highlighted | onSelect is not called; form submission is still prevented by the form wrapper (see prevent-form-submission) |
-
+| filtered-list-040 | initial-query | `initialQuery="app"` | Input value is "app" and only items matching "app" are visible on first render |
+| filtered-list-041 | root-class-name | `className="extra"` | Root element has classes `fl-root` and `extra` |
+| filtered-list-042 | custom-match | `match` returns true only for items with id "b" | Only item "b" is visible; `match` was called with the lower-cased, trimmed query |
+| filtered-list-043 | escape-restores-query | Query "ap" typed, item highlighted, Escape pressed | Highlight cleared and the input shows "ap" |
+| filtered-list-044 | selection-keeps-state | Item highlighted, Enter pressed | onSelect called once; the input still shows the item's title and it stays highlighted |
+| filtered-list-045 | footer-visibility | `footer` provided, total === 0 | Footer is not rendered |
+| filtered-list-046 | footer-visibility | `footer` provided, total > 0, query matches nothing | No-matches message and footer are both rendered, footer last |
+| filtered-list-047 | clickable-items-when-onselect-provided | onSelect provided, user clicks an item's button | onSelect is called with that item |
+| filtered-list-048 | clickable-items-when-onselect-provided | onSelect provided | Each item button has `tabIndex=-1` |
 ## Edge Cases
 
-- **Empty item list** (total === 0): Component displays "No items." text and does not render the list element. No keyboard navigation occurs (see **empty-state-when-no-items**).
-- **No visible items after filter** (total > 0, visible.length === 0): Empty state message is displayed — custom emptyContent if provided, otherwise the default `No matches for "{query}".` message (see **default-no-matches-message**, **custom-empty-content**).
+- **Empty item list** (total === 0): Component displays "No items." text and does not render the list element, so the footer is not rendered either. No keyboard navigation occurs (see **empty-state-when-no-items**).
+- **No visible items after filter** (total > 0, visible.length === 0): The footer, if provided, still renders after the message. Empty state message is displayed — custom emptyContent if provided, otherwise the default `No matches for "{query}".` message (see **default-no-matches-message**, **custom-empty-content**).
 - **Query is empty string or only whitespace**: Filtering is cleared; all items are visible. Input shows the query text, not a highlighted item's title, until an item is highlighted via keyboard or mouse.
 - **Highlight index exceeds visible array**: When visible.length shrinks, highlightedIndex is automatically clamped to the last visible index or -1 if empty (see **clamp-highlight-when-visible-shrinks**).
-- **Keyboard navigation with no visible items**: Arrow keys, Enter, and Escape do nothing; the handler returns early without calling preventDefault (see **arrow-keys-noop-when-no-items**).
+- **Keyboard navigation with no visible items**: ArrowUp, ArrowDown, Enter, and Escape do nothing; the handler returns early without calling preventDefault (see **arrow-keys-noop-when-no-items**).
 - **Mouse hover while item is already highlighted via keyboard**: Hover changes highlight to the hovered item; onHighlightChange is called.
 - **Escape when no item is highlighted**: No action; default is not prevented.
 - **Enter when no item is highlighted**: onSelect is not called and the input's own keydown handler does not call preventDefault; the form's onSubmit still prevents the browser's default submission unconditionally (see **enter-selection**, **prevent-form-submission**).
@@ -197,11 +210,13 @@ Not applicable: FilteredList is a form-like UI component without a standalone UR
 
 ## Localization
 
-| String Key | Default (en) | Context |
+| Proposed String Key | Default (en) | Context |
 |-----------|-------------|---------|
 | `placeholder` | "Filter…" | Input field placeholder; customizable via props |
 | `empty.no-items` | "No items." | Shown when total === 0 |
 | `empty.no-matches` | "No matches for "{query}"." | Shown when filter returns zero results; customizable via emptyContent prop |
+
+The source hardcodes these literals (`"Filter…"`, `"No items."`, `"No matches for …"`) with no localization lookup; the keys are proposed names for a future string table, and no i18n layer exists in the component.
 
 The default filter match lower-cases both the query and each searched field using the platform's default (locale-sensitive) case folding (see **filter-items**); this is appropriate for search-as-you-type but is not a substitute for a linguistically exact comparison, and no invariant-culture-insensitive call is used or recommended for this user-facing text.
 
@@ -231,18 +246,16 @@ Not implemented in source. Component does not emit analytics events; tracking is
 Not implemented in source. Component does not emit log messages; logging is the responsibility of the consuming application.
 
 ## Platform Notes
-
-- **React/Web**: Component is implemented as a React functional component using hooks (useState, useEffect, useLayoutEffect, useId, useRef). The filtering logic is delegated to the custom `useFilteredList` hook. Styling is applied via CSS class names (fl-*). Component is marked `'use client'` for Next.js client-side rendering. See `/packages/web/packages/controls/src/filtered-list/FilteredList.tsx` and `/useFilteredList.ts` for implementation.
 - **SwiftUI**: Use `.searchable(text:)` on the list to provide the filtered input field — the platform's native filter-as-you-type control — bound to a query `@State`. Track the highlighted item in a separate `@State`; do not conflate it with `List` selection, since highlight and selection are distinct concepts in this component. Handle ArrowUp/ArrowDown/Enter/Escape via the `onKeyPress` modifier (not `onKeyDown`, which does not exist in SwiftUI). Use `ScrollViewReader` with `scrollTo` to implement scroll-into-view when the highlight moves. Respect the user's text-size preference via `@Environment(\.dynamicTypeSize)`, the modern replacement for the deprecated `sizeCategory`.
 - **Compose**: Start from TextField and LazyColumn composition. Use mutableStateOf for query and highlighted index, kept separate from any selection concept. Implement keyboard navigation via KeyEvent handling and Key.DirectionUp/Key.DirectionDown. Use LazyListState with layoutInfo to implement scroll-into-view behavior. Use Modifier.semantics to set ARIA-like roles and state. Apply Material Design 3 spacing and typography tokens from the theme for appearance.
+- **React/Web**: Component is implemented as a React functional component using hooks (useState, useEffect, useLayoutEffect, useId, useRef). The filtering logic is delegated to the custom `useFilteredList` hook. Styling is applied via CSS class names (fl-*). Component is marked `'use client'` for Next.js client-side rendering. See `packages/web/packages/controls/src/filtered-list/FilteredList.tsx` and `packages/web/packages/controls/src/filtered-list/useFilteredList.ts` for implementation.
 - **AppKit / UIKit**: For AppKit, use NSSearchField for the input and NSTableView for the list; bind the search field's stringValue to filter the table's data source. The field editor intercepts NSResponder keyDown events before they reach the window, so implement arrow/enter/escape handling via NSTextFieldDelegate's `control(_:textView:doCommandBy:)` rather than overriding keyDown. Track the highlighted row in a separate property, not the table's selection, since highlight and selection are distinct concepts here. For UIKit (iOS), use UISearchController or a custom UISearchBar with UITableViewController; use UITableViewDelegate's didHighlightRowAt (not didSelectRowAt) to mirror the highlight-vs-selection distinction, and UITableView's scrollToRow(at:at:animated:) for scroll-into-view. Apply UIAccessibilityElement roles for accessibility.
-- **WinUI 3**: Use `AutoSuggestBox` — the native filter-as-you-type control — for the input instead of a hand-built TextBox, binding its text-changed event to update the filtered item source. Track the highlighted item in a separate property rather than a ListView's SelectedIndex, since highlight and selection are distinct concepts. Implement arrow-key handling via the PreviewKeyDown event, checking for VirtualKey.Up/VirtualKey.Down. Use FrameworkElement.UpdateLayout with ScrollIntoView for scroll-into-view behavior. Apply AutomationProperties (Name, ControlledBy, ItemStatus) to mirror the ARIA roles and aria-selected state.
-
+- **WinUI 3**: Use a `TextBox` for the input and a separate, always-visible `ListView` for the list, binding the `TextBox`'s `TextChanged` event to update the filtered item source. Do not use `AutoSuggestBox`: it owns its own suggestion popup, which would clash with the always-visible list this component renders. Track the highlighted item in a separate property rather than a ListView's SelectedIndex, since highlight and selection are distinct concepts. Implement arrow-key handling via the PreviewKeyDown event, checking for VirtualKey.Up/VirtualKey.Down. Use FrameworkElement.UpdateLayout with ScrollIntoView for scroll-into-view behavior. Apply AutomationProperties (Name, ControlledBy, ItemStatus) to mirror the ARIA roles and aria-selected state.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/filtered-list/FilteredList.tsx` | unverified |
+| web | `packages/web/packages/controls/src/filtered-list/FilteredList.tsx` | confirmed (1.2.3) |
 
 ## Design Decisions
 
@@ -270,7 +283,7 @@ Not implemented in source. Component does not emit log messages; logging is the 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
@@ -281,14 +294,15 @@ Not implemented in source. Component does not emit log messages; logging is the 
 | [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | failed | Internationalization |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Statuses rest on the source: the `combobox`/`listbox`/`option` roles, `aria-selected`/`aria-expanded`/`aria-activedescendant`, and full keyboard handling in `FilteredList.tsx` (screen-reader-support, keyboard-navigable, semantic-markup); `.fl-item-button`'s padding-only sizing and the `rem`-based font sizing in `filtered-list.css`, which scale with browser zoom but aren't verified against OS-level text-size settings (touch-target-size, dynamic-type-support); the hardcoded `"Filter…"`, `"No items."`, and `"No matches for…"` strings and the locale-sensitive `toLowerCase()` substring match in `FilteredList.tsx`/`useFilteredList.ts` (string-externalization, no-hardcoded-strings, unicode-support); `.fl-item-button`'s hardcoded `text-align: left` in `filtered-list.css`, which does not adapt for RTL locales (rtl-layout-support); and the component's plain JSX text rendering plus its pure client-side string comparison, with no `dangerouslySetInnerHTML` or `eval` of user input (input-sanitization). `separation-of-concerns` is `passed` because the filtering logic lives entirely in the `useFilteredList` hook, leaving `FilteredList.tsx` only keyboard/highlight view state; `unit-test-coverage` is `passed` because `FilteredList.test.tsx` and `useFilteredList.test.ts` exercise both the component and its hook directly.
+Statuses rest on the source: the `combobox`/`listbox`/`option` roles, `aria-selected`/`aria-expanded`/`aria-activedescendant`, and full keyboard handling in `FilteredList.tsx` (keyboard-navigable, semantic-markup; screen-reader-support is only partial because the input has no accessible name beyond its placeholder and `FilteredListProps` has no `aria-label` or `label` prop); `.fl-item-button`'s padding-only sizing and the `rem`-based font sizing in `filtered-list.css`, which scale with browser zoom but aren't verified against OS-level text-size settings (touch-target-size, dynamic-type-support); the hardcoded `"Filter…"`, `"No items."`, and `"No matches for…"` strings and the locale-sensitive `toLowerCase()` substring match in `FilteredList.tsx`/`useFilteredList.ts` (string-externalization, no-hardcoded-strings, unicode-support); `.fl-item-button`'s hardcoded `text-align: left` in `filtered-list.css`, which does not adapt for RTL locales (rtl-layout-support); and the component's plain JSX text rendering plus its pure client-side string comparison, with no `dangerouslySetInnerHTML` or `eval` of user input (input-sanitization). `separation-of-concerns` is `passed` because the filtering logic lives entirely in the `useFilteredList` hook, leaving `FilteredList.tsx` only keyboard/highlight view state; `unit-test-coverage` is `partial`: `FilteredList.test.tsx` covers arrow-down-navigation, arrow-up-navigation, enter-selection, reset-highlight-on-input-change, onhighlight-callback, input-shows-highlighted-title and clickable-items-when-onselect-provided, and `useFilteredList.test.ts` covers filter-items (title, subtitle, details, `getSearchableExtras`, a custom matcher and a whitespace-only query); no test covers the empty states, the footer, clamping, Escape, hover highlight, `initialQuery` or `className`, and no tool maps requirements to tests.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.3 | 2026-11-14 | Mike Fullerton | Downgraded screen-reader-support and unit-test-coverage to partial with reasons; added requirements and vectors for initialQuery, className, match, Escape, selection, footer and click behavior; fixed vector 011, platform-note order and paths, WinUI guidance, Appearance values and the Empty state name. |
 | 1.2.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added item-role-option and default-no-matches-message requirements; clarified arrow-down non-wrapping, the renderItem signature, and default filter-match semantics (case-insensitive substring across title/subtitle/details/searchable-extras, with locale-sensitive lower-casing noted); fixed the focus-management and touch-target-size contradictions; corrected the Reduce Motion claim and the "debounced" terminology; corrected SwiftUI (.searchable, onKeyPress, dynamicTypeSize), AppKit (doCommandBy:), and WinUI 3 (AutoSuggestBox) platform notes and kept highlight distinct from selection throughout; reformatted Design Decisions to the Decision/Rationale/Approved form; rebuilt the Compliance table with canonical checks; split and added conformance test vectors for coverage gaps |

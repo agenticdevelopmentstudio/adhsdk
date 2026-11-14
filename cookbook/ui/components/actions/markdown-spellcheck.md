@@ -2,11 +2,11 @@
 id: 81b8d777-f5c2-4a9a-8d5f-bbddf6e4e094
 title: "Markdown Spell Check"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -69,22 +69,32 @@ focus restore) and `Button`, and holds no source of its own.
   in a Web Worker), not a main-thread `LocalLinter`, so the UI thread is not
   blocked.
 - **lint-markdown-source**: The control MUST lint in markdown source mode
-  (`language: 'markdown'`) so fenced code blocks and markdown syntax are skipped
+  (`language: 'markdown'`, `dedup: true`) so fenced code blocks and markdown syntax are skipped
   and only prose is checked.
 - **list-problems**: When enabled and problems exist, the control MUST list
   each problem as the flagged text plus harper's message in the panel.
 - **offer-suggestions**: For a problem that has suggestions, the control MUST
   render one apply action per suggestion, capped at the first four; applying it
   MUST call `onApply` with the next markdown source.
-- **relint-on-settle**: While the panel is open, the control MUST re-lint
+- **relint-on-settle**: While the check is enabled, the control MUST re-lint
   when the source settles after a change, debounced so a burst of edits coalesces
   into one check.
+- **keep-list-during-relint**: A re-lint after the first pass MUST keep the
+  prior list visible until fresh results replace it, with no "Checking…" flash.
+- **show-problem-count**: While the check is enabled and problems exist, the
+  toggle MUST show a count badge of the open problems.
 - **show-empty-state**: When enabled and no problems are found, the control
   MUST show an explicit "No issues found." state rather than an empty panel.
 - **show-error-state**: If harper fails to load or lint, the control MUST
   show an inline "unavailable" state instead of crashing.
 - **reset-on-disable**: Toggling the check off MUST close the panel and clear
   the listed problems.
+- **dismiss-turns-off**: Dismissing the panel with Escape or an outside click
+  MUST turn the check off, exactly as toggling it off does, and MUST return
+  focus to the toggle.
+- **drop-stale-lint**: The control MUST ignore the result of a lint that a newer
+  source change, or turning the check off, has superseded, so an older result
+  never replaces a newer one in the list.
 - **be-client-only**: The control MUST be a client component
   (`"use client"`); it MUST NOT execute harper or worker code during SSR.
 - **dispose-on-unmount**: The control MUST call the linter's `dispose()` when
@@ -99,8 +109,8 @@ focus restore) and `Button`, and holds no source of its own.
 toolbar ─────────────────────────────────────────────
   […other controls]  [✓ Check spelling  (3)]   ← toggle Button (outline, sm);
                               │                   SpellCheck icon + label +
-                              │                   count Badge (error) when open
-                              ▼ on enable (popover, side=bottom align=end, w-80)
+                              │                   count Badge (error) when enabled
+                              ▼ when enabled (popover, side=bottom align=end, w-80)
   ┌ SPELLING & GRAMMAR ───────────────────────────┐
   │ ┌───┐                                          │
   │ │teh│  Did you mean "the"?                      │  ← flagged chip (mono, red)
@@ -161,7 +171,7 @@ toolbar ────────────────────────
 | T2 | default-off, lazy-load-harper | Render with a spy `createLinter`, then enable | `createLinter` is not called on render; it is called exactly once after the toggle is enabled |
 | T3 | list-problems, offer-suggestions | Enable over source `"teh cat sat"` (fake flags `teh`→`the`) | The panel shows `teh`, the message, and an apply action named `Replace "teh" with "the"`; the toggle is `aria-pressed="true"` |
 | T4 | show-empty-state | Enable over clean source `"the cat sat"` | The panel shows "No issues found." |
-| T5 | offer-suggestions, apply-latest-lint | Enable over source with two flagged problems (`teh`, `recieve`), click the apply action for the second problem | `onApply` is called with `recieve` replaced, not `teh` — the index resolves against the latest `lint()` result |
+| T5 | offer-suggestions, apply-latest-lint | Enable over source with two flagged problems (`teh`, `recieve`); change the source and let a second `lint()` finish with a different list; click the apply action for the second problem | `apply` receives the second index and resolves it against the second `lint()` result, not the first |
 | T6 | show-error-state | Enable with a fake `createLinter` whose returned promise rejects | The panel shows the red `CircleAlert` "Spell check is unavailable in this browser." state instead of throwing |
 | T7 | reset-on-disable | Enable over source with problems, disable, then re-enable before the fake linter's `lint()` resolves | On re-enable the panel shows "Checking…", not the previously listed problems — the prior list was cleared on disable |
 | T8 | relint-on-settle | Enable (immediate first lint resolves), then fire several source changes in quick succession using a spy `lint` and fake timers, then advance past `debounceMs` | `lint` is called once for the initial open and exactly once more after the timers settle — not once per change |
@@ -169,6 +179,13 @@ toolbar ────────────────────────
 | T10 | be-client-only | Import the component module in a simulated server environment (no `window`/`document`) and render without enabling | No throw, and no harper import or worker/WASM code executes |
 | T11 | dispose-on-unmount | Enable with a fake linter exposing a spied `dispose`, then unmount the component | The spied `dispose()` is called exactly once |
 | T12 | offer-suggestions | Enable over source flagged with an empty suggestion (`Remove` kind, `suggestions: [""]`) | The apply chip reads "Remove"; clicking it calls `onApply` with the flagged span deleted |
+| T13 | drop-stale-lint | Enable, change the source twice, and resolve the older `lint()` after the newer one | The list shows the newer result only |
+| T14 | dismiss-turns-off | Enable, then press Escape (and separately click outside) | The check is off (`aria-pressed="false"`), the listed problems are cleared, and focus is on the toggle |
+| T15 | show-problem-count | Enable over source with three problems | The toggle shows a count badge reading `3` |
+| T16 | keep-list-during-relint | Enable, let the first lint finish, change the source, and hold the second `lint()` pending | The prior list stays visible and "Checking…" is not shown |
+| T17 | offer-suggestions | Enable over a problem with six suggestions | Only the first four apply actions are rendered |
+| T18 | offer-suggestions | Enable over a problem with no suggestions | The row shows "No suggestion." and no apply action |
+| T19 | show-error-state | Enable with a linter whose `lint()` rejects | The panel shows the "Spell check is unavailable in this browser." state |
 
 > Tests inject a fake `MarkdownLinter` through the `createLinter` prop so no WASM
 > runs in jsdom; this also makes the lazy-load contract (T2) directly assertable.
@@ -181,10 +198,14 @@ toolbar ────────────────────────
   "Remove" and applying deletes the flagged span. harper's own `applySuggestion`
   performs the edit, so `Replace` / `Remove` / `InsertAfter` kinds are all handled
   correctly (not a naive `[start,end)` splice).
+- A lint superseded by a newer source change or by turning the check off is
+  ignored by the control (**drop-stale-lint**). The default harper linter keeps
+  the issues of whichever `lint()` call resolved last for `apply`, so an
+  out-of-order resolution could still leave `apply` indexing the older results.
 - Suggestions are capped at the first four per problem to keep the panel light.
 - Fenced code, inline code, and markdown punctuation are not prose, so harper's
   markdown parser does not flag them.
-- Dismissing the popover (Escape / outside-click) turns the check off; re-enabling
+- Dismissing the panel (Escape / outside-click) turns the check off; re-enabling
   re-lints the current source from scratch.
 - The first lint after enabling runs immediately; later re-lints debounce, so a
   fast typist triggers one check, not one per keystroke.
@@ -236,7 +257,7 @@ export function MarkdownSpellCheck(props: {
 ```
 
 The default `createHarperLinter` dynamically imports `harper.js` +
-`harper.js/binary`, constructs a `WorkerLinter` (American dialect), and lints with
+`harper.js/binaryInlined`, constructs a `WorkerLinter` (American dialect), and lints with
 `{ language: 'markdown', dedup: true }`. The exported types never reference
 harper, so consumers do not need harper resolvable to type-check.
 
@@ -249,18 +270,18 @@ Not applicable: this is a reusable UI primitive exported for toolbar integration
 Known gap, not "not applicable": the component hard-codes its user-facing
 copy — the "Checking…" loading text, "No issues found." empty state, and the
 "Spell check is unavailable…" error state, plus the per-suggestion
-`Replace "<flagged>" with "<suggestion>"` accessible names — with no
+`Replace "<flagged>" with "<suggestion>"` accessible names (with "nothing" for
+a removal), the "Remove" chip, the "No suggestion." fallback, the
+`Spelling and grammar issues` list label, and the "Spelling & grammar" panel
+caption (rendered uppercase) — with no
 locale-sensitive formatting per source. Only the toggle's own text is
 externalized, via the `label` prop (default `"Check spelling"`); a consumer
-cannot localize the rest without editing this component.
+cannot localize the rest without editing this component. The linter is also
+fixed to the American English dialect, so non-US English cannot be selected.
 
 ## Accessibility Options
 
-This control inherits focus management and keyboard dismissal from the shared
-`Popover` primitive, and every interactive element is a real `<button>` with
-an accessible name and `aria-pressed`/state attributes. See **default-off**,
-**list-problems**, and **offer-suggestions** in Behavioral Requirements.
-
+See Accessibility; this control adds no accessibility options of its own.
 ## Feature Flags
 
 Not applicable: this ingredient is a reusable UI component and is not gated by feature flags.
@@ -271,7 +292,7 @@ Not applicable: this ingredient is presentational. Consumers may instrument togg
 
 ## Privacy
 
-Not applicable: harper.js lints entirely client-side (see **use-worker-linter**), so the component makes no network calls and collects or stores no data of its own; it only holds the `value` source string and reports edits back through `onApply`.
+Not applicable: harper.js lints entirely client-side (see **use-worker-linter**), so the component makes no third-party calls, sends no document content off the device, and collects or stores no data of its own (the lazy load fetches harper's code chunk, with its inlined WASM, from the host that serves the app); it only holds the `value` source string and reports edits back through `onApply`.
 
 ## Logging
 
@@ -294,25 +315,25 @@ is surfaced to the user via the error state rather than logged.
   `MarkdownEditor` `toolbarExtras` slot). Demo lives in `ui-showcase` (Overlays
   group); regenerate `sources.generated.ts` via `gen-sources.py` after source changes.
 - **AppKit / UIKit**: On AppKit, back the toggle with an `NSButton` presenting an `NSPopover` (an `NSViewController` whose view lays out an `NSTableView`/`NSStackView` of flagged text + message + one `NSButton` per suggestion). On UIKit, back it with a `UIButton` presenting a `UIViewController` via popover presentation (`UIPopoverPresentationController`) laying out a `UITableView`/stack the same way. Lazy-load the checker only when the popover/view controller is first presented, keep one instance for the control's lifetime, and release it when it's dismissed for good (lazy-load-harper, dispose-on-unmount). An `NSProgressIndicator`/`UIActivityIndicatorView` covers loading, a label the empty state, and a label paired with a warning glyph the error state. macOS and iOS apps implement native spell-check using `NSSpellChecker` (macOS) or `UITextChecker` (iOS). To apply markdown-aware filtering (skipping code blocks and markup), iterate the document to identify prose-only ranges and spell-check those ranges in isolation.
-- **WinUI 3**: Back the toggle with a `ToggleButton` presenting the panel via a `Flyout`/`FlyoutPresenter` anchored to it, containing a `ListView` of flagged text + message + one `Button` per suggestion (list-problems/offer-suggestions). Lazy-load the checker only when the `Flyout` is first opened (its `Opened` event), keep one instance for the control's lifetime, and release it on unload (lazy-load-harper, dispose-on-unmount). A `ProgressRing` covers loading, a `TextBlock` the empty state, and a `TextBlock` paired with a warning `FontIcon` the error state. Windows desktop applications use `TextBox` with `IsSpellCheckEnabled` set to `true`, or `RichEditBox` with spell-checking enabled, for the underlying check. To replicate the markdown-aware exclusion of code blocks and markdown syntax, implement a custom spell-check pass: parse the document to identify prose sections (exclude fenced code blocks, inline code, and markdown markers), then iterate over those prose ranges and invoke the platform spell-checker for each range, similar to harper.js's markdown source mode.
+- **WinUI 3**: Back the toggle with a `ToggleButton` presenting the panel via a `Flyout`/`FlyoutPresenter` anchored to it, containing a `ListView` of flagged text + message + one `Button` per suggestion (list-problems/offer-suggestions). Lazy-load the checker only when the `Flyout` is first opened (its `Opened` event), keep one instance for the control's lifetime, and release it on unload (lazy-load-harper, dispose-on-unmount). A `ProgressRing` covers loading, a `TextBlock` the empty state, and a `TextBlock` paired with a warning `FontIcon` the error state. `TextBox.IsSpellCheckEnabled` (and `RichEditBox`) only turns on the control's own squiggles and has no API for checking chosen ranges in code. To replicate the markdown-aware exclusion of code blocks and markdown syntax, parse the document to identify prose sections (exclude fenced code blocks, inline code, and markdown markers), then check each prose range with the Windows Spell Checking API (`ISpellCheckerFactory` / `ISpellChecker`), similar to harper.js's markdown source mode.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/markdown-spellcheck.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/components/markdown-spellcheck.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
 - **Decision**: A popover panel/list, not inline squiggles on the textarea.
   **Rationale**: Per-character overlay positioning over a `<textarea>` is costly
-  and brittle; a list of problems with explicit apply actions is cheaper, more
-  accessible, and matches the "lightweight panel" brief.
+  and brittle; a list of problems with explicit apply actions is cheaper and
+  more accessible.
   **Approved**: pending
 - **Decision**: harper's `WorkerLinter`, lazy-loaded on first enable.
   **Rationale**: The WASM is multi-MB; keeping it off the initial bundle and off
   the UI thread (a Web Worker) is essential. Loading only when the user opts in
-  honors the opt-in principle.
+  means nobody pays that cost unless they want the check.
   **Approved**: pending
 - **Decision**: Markdown source mode (`language: 'markdown'`).
   **Rationale**: The reason to add this over native spellcheck is to skip code
@@ -341,7 +362,7 @@ is surfaced to the user via the error state rather than logged.
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | partial | Internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 `screen-reader-support` and `keyboard-navigable` pass because the toggle and every
 apply action are real `<button>` elements with an accessible name (`aria-label`,
@@ -357,19 +378,20 @@ dimensions are defined outside this file. `no-hardcoded-strings` fails because
 literal English strings with no i18n layer; `string-externalization` is partial
 because the toggle's own label is externalized via the `label` prop but those
 other strings are not. Security, Privacy and Data, and User Safety are omitted:
-the component makes no network calls (harper runs offline), stores/collects no
+the component makes no third-party calls and sends no document content off the device (harper runs offline), stores/collects no
 data of its own, and produces no logs (see Logging above). `separation-of-concerns`
 passes because the component isolates harper behind the `MarkdownLinter`/
 `CreateMarkdownLinter` DI seam, so the UI never references harper directly and
-a fake linter can stand in for tests. `unit-test-coverage` passes because
-`markdownSpellcheck.test.tsx` covers the off-by-default toggle, lazy linter
-creation, linting and listing problems, the empty state, and applying a
-suggestion.
+a fake linter can stand in for tests. `unit-test-coverage` is `partial`
+because `markdownSpellcheck.test.tsx` covers only the off-by-default toggle
+(T1), lazy linter creation (T2), linting and listing problems (T3), the empty
+state (T4) and applying a suggestion; the other vectors have no test yet.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Downgraded unit-test-coverage to partial, added requirements and vectors for stale lint, dismissal, count badge, re-lint and suggestion cap, fixed localization, privacy, dedup and harper binary wording, and pointed WinUI at ISpellChecker. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Restored 1.0.0 period; added 6 missing sections, fixed Decision triples, best-practices rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab names (RFC 2119 keyword stays in the sentence); cap offer-suggestions at four in the requirement text; add dispose-on-unmount and apply-latest-lint requirements; add test vectors for show-error-state, reset-on-disable, the relint-on-settle debounce, lint-markdown-source/use-worker-linter, be-client-only, dispose-on-unmount, and the Remove-kind edge case; correct Platform Notes (drop the discontinued Grammarly SDK and the non-existent UITextInputDelegate/EditText spell-check APIs) and map the toggle/lazy-load/popover-panel/empty-error-state contract onto each platform's native popover-presentation control; replace the Compliance table with real accessibility/internationalization checks; add Approved lines to Design Decisions; trim tags to five; drop the duplicate markdown-editor related entry; shorten the summary; name gen-sources.py in the React/Web note |
 | 1.1.1 | 2026-09-22 | Claude Haiku 4.5 | Remove "Not applicable" phrasing from Platform Notes; add concrete guidance for markdown-aware filtering on all platforms (SwiftUI, Compose, AppKit/UIKit, WinUI 3 with TextBox/RichEditBox and document range iteration) |

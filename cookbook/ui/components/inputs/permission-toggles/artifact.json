@@ -4,11 +4,11 @@
     "id": "00f63479-58b8-47e3-9ac7-7f1b944a5007",
     "title": "Permission Toggles",
     "type": "ingredient",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,11 +24,14 @@
     ],
     "depends-on": [],
     "related": [],
-    "references": [],
+    "references": [
+      "https://developer.apple.com/design/human-interface-guidelines/accessibility",
+      "https://m3.material.io/foundations/accessible-design/accessibility-basics"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ed0f1cb8148d3ab8",
+  "synced": "ea1c52c8193b1632",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

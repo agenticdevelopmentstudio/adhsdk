@@ -18,4 +18,4 @@ window-level `pointerup`/`pointercancel` — rather than over the internal
 - **forwarded-handler-invoked-when-provided**: PressableButton MUST invoke a caller-supplied `onPointerDown`, `onPointerUp`, `onPointerLeave`, `onPointerEnter`, or `onPointerCancel` prop, when one is provided, every time the corresponding pointer event fires on the rendered primitive.
 - **pressed-unaffected-by-keyboard-activation**: PressableButton MUST NOT change the `data-pressed` attribute in response to keyboard activation (Space or Enter).
 - **no-pointer-capture**: PressableButton MUST NOT call `setPointerCapture` on any pointer event it handles.
-
+- **no-window-listener-after-unmount**: PressableButton MUST leave no `window` `pointerup` or `pointercancel` listener attached after it unmounts, including when it unmounts during an active press.

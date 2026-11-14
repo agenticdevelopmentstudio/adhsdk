@@ -2,13 +2,13 @@
 id: 4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d
 title: "Built-In Themes (Web Catalogue)"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
 modified: 2026-11-14
-author: mfullerton
-copyright: 2026 mfullerton
+author: Mike Fullerton
+copyright: 2026 Mike Fullerton
 license: MIT
 summary: "The 21 generated brand themes ported from the web CSS catalogue: stable ids, derived ANSI fill, exact chat role overrides, web font stacks and type scales."
 platforms:
@@ -21,8 +21,14 @@ tags:
   - typography
   - built-in
   - chat
-depends-on: []
-related: []
+depends-on:
+  - 932449c9-b57f-4e2c-992a-1e27584742b6
+  - 1f80f43d-5aa4-42cf-bc3e-fb742662b615
+  - ccc0d121-4927-4a83-b0e5-337116edebc0
+  - ad5bae6b-0172-4cd4-a4b7-297eb58eb28d
+related:
+  - 359491fd-36ee-4e07-9971-76260183f243
+  - fd1f8d3c-6110-4687-a715-c8fa7c7caa5b
 references: []
 approved-by: ""
 approved-date: ""
@@ -32,7 +38,7 @@ approved-date: ""
 
 ## Overview
 
-`BuiltInThemes.webPorted` is an ordered list of 21 `ColorTheme` values that the Swift SDK generates from the web theme stylesheets (`packages/web/packages/themes/src/styles/*.css`), so the Swift and web catalogues match. They are brand themes with no ANSI palette of their own. Each carries a 16-colour `ansi` array filled in from its semantic colours, a `roleOverrides` map holding the exact web chat values, and a `typography` value holding the web font stack and type scale. The list is generated (`scripts/generate_web_theme_swift.py`, fed by `scripts/extract_web_themes.py`) and must be changed by re-running the generator, never by hand. This recipe specifies the contract of the generated data: which themes exist, what shape each one has, and how the web values were projected onto it.
+`BuiltInThemes.webPorted` is an ordered list of 21 `ColorTheme` values that the Swift SDK generates from the web theme stylesheets (`packages/web/packages/themes/src/styles/*.css`), so the Swift and web catalogues match. They are brand themes with no ANSI palette of their own. Each carries a 16-colour `ansi` array filled in from its semantic colours, a `roleOverrides` map holding the exact web chat values, and a `typography` value holding the web font stack and type scale. The list is generated (`scripts/generate_web_theme_swift.py`, fed by `scripts/extract_web_themes.py`) and must be changed by re-running the generator, never by hand. This ingredient specifies the contract of the generated data: which themes exist, what shape each one has, and how the web values were projected onto it.
 
 The catalogue is 21 of the web manifest's 39 keys. The eight `adh*` font-variant themes are absent because they share one palette and differ only in typography, a web font-loading concern. The ten editor palettes (dracula, nord, gruvbox, solarized, catppuccin, github, monokai, one-dark, tokyo-night, rose-pine) are absent because Swift already ships them as terminal themes with real ANSI palettes.
 
@@ -41,7 +47,7 @@ The catalogue is 21 of the web manifest's 39 keys. The eight `adh*` font-variant
 - **catalogue-membership**: `webPorted` MUST contain exactly these 21 themes by `name`, in this order: Charcoal, Signal, Terminal, Terminal Split, Green Matrix, Green Matrix (Glass), Old School Terminal, CRT Monitor, Handheld Communicator, Synthwave '84, Cobalt2, Vesper, Professional, Techy, Whimsical, Fishlamp, Dev Team, Mike Fullerton, My Projects, Projects Overview, Agentic Development Studio.
 - **catalogue-names-verbatim**: Each `name` MUST be the web manifest's own label, including the parentheses in "Green Matrix (Glass)" and the apostrophe in "Synthwave '84".
 - **catalogue-no-editor-duplicates**: `webPorted` MUST NOT contain a theme whose `name` equals the name of any hand-authored theme in `BuiltInThemes.all`.
-- **catalogue-visibility**: Every theme in `webPorted` MUST appear in `BuiltInThemes.all`. The list the app ships is `webPortedNative`, which is `webPorted` mapped through `nativeAdjusted` in `BuiltInThemes+Native.swift`.
+- **catalogue-visibility**: Every theme in `webPorted` MUST appear in `BuiltInThemes.all`, matched by `id`. `BuiltInThemes.all` holds `webPortedNative`, not `webPorted`: `webPortedNative` is `webPorted` mapped through `nativeAdjusted` in `BuiltInThemes+Native.swift`, so an entry of `all` can differ from its `webPorted` entry in the fields the native adjustment changes. Consumers MUST read themes from `BuiltInThemes.all`, never from `webPorted`.
 - **theme-id-stable**: Each theme's `id` MUST be the fixed string `B1B6F0E2-0000-4000-8000-000000000NNN`, where `NNN` runs from `101` (Charcoal) to `121` (Agentic Development Studio) in list order. Ids are never derived at runtime.
 - **theme-id-unique**: The ids of `BuiltInThemes.all` MUST be pairwise distinct.
 - **theme-appearance**: Every theme MUST declare `appearance: .dark`.
@@ -50,19 +56,19 @@ The catalogue is 21 of the web manifest's 39 keys. The eight `adh*` font-variant
 - **theme-base-colours**: Each theme MUST give `foreground`, `background`, `cursor` and `selection` as `RGBAColor` values built from 8-digit `#RRGGBBAA` strings. The values per theme are in the catalogue table below.
 - **theme-selection-from-cursor**: Each theme's `selection` MUST be its `cursor` colour at alpha `4d` (about 30%).
 - **ansi-count**: Each theme's `ansi` MUST hold exactly 16 colours, so `hasValidPalette` is true (`ColorTheme.ansiColorCount` is 16).
-- **ansi-derived-fill**: `ansi` is a best-effort fill derived from the theme's semantic colours for the terminal feature, not a palette the web theme defines. In every theme index 0 MUST equal `background` and index 15 MUST equal `foreground`.
+- **ansi-derived-fill**: `ansi` is a fill derived from the theme's semantic colours for the terminal feature, not a palette the web theme defines. In every theme index 0 MUST equal `background` and index 15 MUST equal `foreground`. The slots this ingredient does not state a value for (indices 1 to 3, 6 to 8 and their repeats in 9 to 14, in the themes where no requirement or table row names them) MUST hold valid colours, but their values are unspecified and non-normative.
 - **ansi-bright-repeats-normal**: In every theme, indices 1 to 6 MUST equal indices 9 to 14 respectively (the bright half repeats the normal half for those six slots).
-- **ansi-accent-slots**: In every theme except CRT Monitor and Handheld Communicator, indices 4 and 5 MUST equal the theme's `cursor` (its accent). In CRT Monitor and Handheld Communicator, indices 3 and 4 MUST equal the accent `#00ff41ff`.
+- **ansi-accent-slots**: In every theme except CRT Monitor and Handheld Communicator, indices 4 and 5 MUST equal the theme's `cursor` (its accent). In CRT Monitor and Handheld Communicator, index 4 MUST equal the accent `#00ff41ff`; index 3 is given by **ansi-no-warning-no-link**.
 - **ansi-no-warning-no-link**: CRT Monitor and Handheld Communicator have no `--color-warning` or `--color-link` in their CSS. Their `ansi[3]` and `ansi[11]` MUST fall back to the accent, and their `ansi[5]` and `ansi[13]` MUST be `#005fffff`, the accent shifted toward magenta in place of `--color-link` as the source comment describes.
 - **ansi-transparent-background**: CRT Monitor and Handheld Communicator MUST carry a fully transparent `background` (`#00000000`), and therefore a fully transparent `ansi[0]`; their `ansi[8]` MUST be `#050805ff`.
 - **role-overrides-keyed**: `roleOverrides` MUST be keyed by `ThemeRole.rawValue` and hold `RGBAColor` values. Any role a theme does not list is left to `SemanticPalette` to derive.
 - **role-overrides-universal**: Every theme MUST override the nine chat roles every web theme defines: `chatSurface`, `chatInputBackground`, `chatInputBorder`, `chatInputFocus`, `personaName`, `personaText`, `userName`, `userText` and `timestampText`.
 - **role-overrides-bubble-fills**: Every theme MUST override `personaBubble` and `userBubble`, either with the web fill or, where web declares none, with `#00000000`.
-- **role-overrides-optional**: The roles `personaBubbleBorder`, `userBubbleBorder`, `sendButton`, `sendButtonHover`, `sendButtonText` and `thinkingDoneText` MUST be present only in the themes whose CSS declares them and MUST be absent elsewhere, where they derive. The per-theme sets are in the requirements below and the role table in the catalogue section.
+- **role-overrides-optional**: The roles `personaBubbleBorder`, `userBubbleBorder`, `sendButton`, `sendButtonHover`, `sendButtonText` and `thinkingDoneText` MUST be present only in the themes whose CSS declares them and MUST be absent elsewhere, where they derive. The per-theme sets are in the role table in the Catalogue section, which is the normative source; the requirements below restate it for convenience, and the table wins if they ever disagree.
 - **flat-terminal-themes**: Terminal, Terminal Split, Green Matrix, Green Matrix (Glass), Old School Terminal, CRT Monitor and Handheld Communicator MUST override both `personaBubble` and `userBubble` to `#00000000`. Their CSS declares no `--pc-persona-bg` or `--pc-user-bg`, and `.pc-bubble` styles only its width, so web draws no box. The transparent override is explicit rather than left to derive; the chat bubble view reads it as a flat transcript line with no padding and no corner radius.
 - **flat-terminal-no-send-button**: The seven flat themes MUST NOT override `sendButton`, `sendButtonHover` or `sendButtonText`.
 - **thinking-done-declared**: CRT Monitor and Handheld Communicator MUST override `thinkingDoneText` to `#00ff41ff`.
-- **thinking-done-not-elsewhere**: No other theme MUST override `thinkingDoneText`; in particular Old School Terminal MUST NOT, so its settled status line takes the library default grey even though it shares a phosphor palette with the two CRT themes.
+- **thinking-done-not-elsewhere**: Themes other than CRT Monitor and Handheld Communicator MUST NOT override `thinkingDoneText`; in particular Old School Terminal MUST NOT, so its settled status line takes the library default grey even though it shares a phosphor palette with the two CRT themes.
 - **whimsical-gradient-first-stop**: Whimsical's web CSS defines `--pc-persona-bg`, `--pc-user-bg` and `--pc-send-bg` as `linear-gradient(...)`. `ColorTheme` holds solid colours only, so Whimsical MUST use each gradient's first colour stop: `personaBubble` `#c8506aff`, `userBubble` `#5a4a98ff`, `sendButton` `#c8506aff`.
 - **transparent-send-button**: Dev Team, Mike Fullerton and Projects Overview MUST override `sendButton` to `#00000000` and `sendButtonText` to the accent `#c4a35aff`, a text-only send button.
 - **send-button-hover-absent**: Techy, Whimsical, Dev Team, Mike Fullerton and Projects Overview MUST NOT override `sendButtonHover`.
@@ -74,11 +80,13 @@ The catalogue is 21 of the web manifest's 39 keys. The eight `adh*` font-variant
 - **typography-size-scale**: `ThemeTypography.sizeScale` MUST carry each theme's web body size as a ratio against a catalogue baseline of 15px, not as transcribed point sizes: Terminal, Terminal Split, Green Matrix, Green Matrix (Glass), Techy, Dev Team and My Projects 0.9333 (14px); Old School Terminal and Whimsical 1.0667 (16px); CRT Monitor and Handheld Communicator 1.2667 (19px); Mike Fullerton 0.9 (13.5px); Projects Overview 0.8667 (13px).
 - **typography-size-scale-default**: A theme whose CSS states no body size MUST leave `sizeScale` at its default of 1.0: Charcoal, Signal, Synthwave '84, Cobalt2, Vesper, Professional, Fishlamp and Agentic Development Studio.
 - **typography-scale-reaches-size**: The scale MUST affect the resolved size: `typography.size(.body)` is the body style's `size` times `sizeScale`, so Old School Terminal resolves larger than its base 13.
-- **generated-source**: `BuiltInThemes+Web.swift` MUST be produced by the generator and MUST NOT be hand-edited. Native-only changes to a generated theme (selection fill, cards, the project plane) MUST live in `BuiltInThemes+Native.swift`, applied over the generated values, so a re-run cannot drop them. Today that file adjusts only Fishlamp.
+- **generated-source**: `BuiltInThemes+Web.swift` MUST be produced by the generator and MUST NOT be hand-edited. Native-only changes to a generated theme (selection fill, cards, the project plane) MUST live in `BuiltInThemes+Native.swift`, applied over the generated values, so a re-run cannot drop them. 
 - **hex-literals-valid**: The generator MUST emit only valid 8-digit hex literals, because every colour is built with `RGBAColor(hexString:)` and force-unwrapped; a malformed literal traps when the static theme is first read and is not a recoverable condition.
 - **no-side-effects**: Reading `webPorted` MUST NOT touch files, the network, processes or notifications. Every theme is a `static let` on `BuiltInThemes`, an `enum` with no stored state, and `ColorTheme` is a value type.
 
 ### Catalogue
+
+The Catalogue table and the role table below are the single normative source for per-theme values. Requirements above that list themes (the send-button, bubble-border and flat-terminal requirements) restate them for convenience; if a list and a table disagree, the table is correct.
 
 Base colours, type scale and font families per theme. Every theme also has the six-role type sizes above, `appearance: .dark`, and `selection` equal to `cursor` at alpha `4d`.
 
@@ -134,7 +142,7 @@ Not applicable — this is theme data, not a visual component. Contrast between 
 
 ## Conformance Test Vectors
 
-Derived from `PortedThemeTests` (Swift Testing suite "Ported web themes") and from the literals in `BuiltInThemes+Web.swift`.
+Vectors theme-web-001 to theme-web-013 are backed by tests in `PortedThemeTests` (Swift Testing suite "Ported web themes"), named in each row. Vectors theme-web-014 to theme-web-026 are literal-only: they are derived from the literals in `BuiltInThemes+Web.swift` and no test asserts them.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -163,7 +171,7 @@ Derived from `PortedThemeTests` (Swift Testing suite "Ported web themes") and fr
 | theme-web-023 | send-button-hover-present | Presence of `sendButtonHover` in Signal `roleOverrides` | Present, `#ffc85aff` |
 | theme-web-024 | theme-appearance, theme-attribution | Any ported theme's `appearance` and `attribution` | `.dark` and "Agentic Developer Hub SDK" |
 | theme-web-025 | hex-literals-valid | `RGBAColor(hexString: "#12345")` (five digits) | `nil`, which a force-unwrap in the generated file would turn into a trap |
-
+| theme-web-026 | hex-literals-valid | Read every theme in `webPorted` (instantiating each static constant forces every colour literal to parse) | All 21 themes are read without a trap, and every colour in them is non-nil (literal-only; no test) |
 ## Edge Cases
 
 - **Theme with no CSS-declared body size** (MUST): `sizeScale` stays 1.0 rather than a guessed ratio; eight themes are in this state (test `bodyFontSizeIsPortedAsAScale`, Charcoal).
@@ -174,6 +182,7 @@ Derived from `PortedThemeTests` (Swift Testing suite "Ported web themes") and fr
 - **Optional chat roles absent** (MUST): a missing `sendButton` role, bubble border or `thinkingDoneText` key means "derive", not "transparent" or "none". Where web means transparent the source says so with `#00000000`.
 - **Font family not installed** (SHOULD): the source names only the first family of each web stack and records no fallback chain; its doc comments state the face falls back to the system face at the same metrics when the family is not installed. Only `VT323` is bundled and registered (by `ToolkitFonts`); every other family relies on the host's installed fonts. That fallback is applied where `FontStyle` is resolved to a platform font, outside this file.
 - **Malformed colour literal** (MUST): `RGBAColor(hexString:)` returns nil for anything but 8 hex digits after an optional leading `#`, and this file force-unwraps, so a bad literal traps on first read. The generator is responsible for emitting valid literals.
+- **Native-only changes to a generated theme** (MUST): native-only changes live in `BuiltInThemes+Native.swift` and are applied over the generated values, so a generator re-run cannot drop them.
 - **Native adjustment over a generated theme** (MUST): `webPortedNative` replaces Fishlamp's `selection` with `#232831ff`, sets `card` and `selectionEdge` overrides and a `project` backdrop, so the shipped Fishlamp differs from the generated one in `webPorted`.
 - **Concurrent access**: not applicable — every theme is an immutable `static let` value built once from literals, with no mutation path in this source.
 - **Offline or disconnected state**: not applicable — the file performs no network or file access.
@@ -196,7 +205,7 @@ Not applicable: the file defines static theme constants and routes to no screen 
 
 ## Localization
 
-Not applicable: theme `name` strings such as "Charcoal" and "Terminal Split" are proper-noun labels copied verbatim from the web manifest and are not routed through a string catalogue; the file contains no other user-facing text.
+Theme `name` strings such as "Charcoal" and "Terminal Split" are proper-noun labels copied verbatim from the web manifest and are held as English literals, not routed through a string catalogue; the file contains no other user-facing text. That is why `no-hardcoded-strings` is `partial` in Compliance: the names are proper nouns that are not translated, but a host that wants translated names has no catalogue to supply them from.
 
 ## Accessibility Options
 
@@ -230,7 +239,7 @@ Not applicable: the file contains no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Web.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Web.swift` | confirmed (1.0.1) |
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
@@ -262,7 +271,7 @@ Not applicable: the file contains no log calls.
 **Approved**: pending
 
 **Decision**: Keep `thinkingDoneText` out of Old School Terminal although it shares a phosphor palette with the two CRT themes.
-**Rationale**: Its CSS does not declare `--pc-thinking-done-color`, and a green settled line on that theme, the one the test comments say olylo's chat wears (the app's first-launch default theme is Old School Terminal), read as a turn still running. Sharing a palette is not the same as sharing the answer to this question.
+**Rationale**: Its CSS does not declare `--pc-thinking-done-color`, and a green settled line on that theme read as a turn still running. Sharing a palette is not the same as sharing the answer to this question.
 **Approved**: pending
 
 ## Compliance
@@ -282,9 +291,10 @@ Not applicable: the file contains no log calls.
 | [adc.check.artifact-formatting.ingredient-formatting.if-compliance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1888cb38-9583-5657-a76f-c9685d296d6c) | passed | artifact-formatting |
 | [adc.check.artifact-formatting.ingredient-formatting.if-change-history](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/14bf2d1d-875b-5e58-b43d-be492c9f941a) | passed | artifact-formatting |
 
-`separation-of-concerns` passes: the file is pure data, with native-only changes kept in `BuiltInThemes+Native.swift` and role resolution in `SemanticPalette`. `unit-test-coverage` is `partial`: `PortedThemeTests` asserts the catalogue, palette validity, chat-role presence, flatness, typography, size scales and the settled-colour rule, but no test asserts the individual hex values, the ids or the ANSI slot rules. `explicit-error-handling` is `partial`: every colour is built with a force-unwrapped `RGBAColor(hexString:)`, so a malformed generated literal traps rather than returning an error. `no-hardcoded-strings` is `partial`: theme names are English proper nouns held as literals, with no string catalogue. `graceful-degradation` passes: absent optional roles derive, and the doc comments state that a missing font family falls back to the system face. The formatting checks pass for this recipe.
+`separation-of-concerns` passes: the file is pure data, with native-only changes kept in `BuiltInThemes+Native.swift` and role resolution in `SemanticPalette`. `unit-test-coverage` is `partial`: `PortedThemeTests` asserts the catalogue, palette validity, chat-role presence, flatness, typography, size scales and the settled-colour rule, but no test asserts the individual hex values, the ids or the ANSI slot rules. `explicit-error-handling` is `partial`: every colour is built with a force-unwrapped `RGBAColor(hexString:)`, so a malformed generated literal traps rather than returning an error. `no-hardcoded-strings` is `partial`: theme names are English proper nouns held as literals, with no string catalogue. `graceful-degradation` passes: absent optional roles derive, and the doc comments state that a missing font family falls back to the system face. The formatting checks pass for this ingredient.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Made the catalogue and role tables the normative source, stated that BuiltInThemes.all holds webPortedNative, marked ANSI slots without stated values as unspecified, fixed the thinkingDoneText MUST NOT wording, split test-backed and literal-only vectors and added theme-web-026, normalised author and copyright, added depends-on and related UUIDs, removed the olylo reference and the stale Today wording, and aligned Localization with Compliance. |

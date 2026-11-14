@@ -6,14 +6,13 @@
 - **participants-roster-tracks-live-changes**: The top-level `participants` property MUST initialize to `config.initialParticipants` and MUST be the property that reflects subsequent joins and departures (see Participants below) — it is distinct from, and diverges from, `conversation.participants` the moment the roster changes.
 - **construction-copies-config-fields-verbatim**: `displayConfig`, `permissionStore`, `commands`, and `localParticipantID` MUST be taken verbatim from the matching `ChatConfig` fields at construction and MUST NOT be recomputed, validated, or defaulted.
 - **start-begins-consumption**: The first call to `start()` MUST begin consuming `backend.inboundEvents` via an internal, un-awaited event-loop task.
-- **start-is-idempotent**: Every call to `start()` after the first MUST be a no-op — an internal `started` flag is set `true` on the first call and is never reset, so a second concurrent event-loop task MUST NOT be created.
-- **stop-cancels-iterator**: `stop()` MUST set an internal `stopped` flag to `true` and MUST call `return()` on the active async iterator, if one exists, to signal early termination of the inbound stream.
-- **stop-before-start-locks-the-loop**: If `stop()` is called before `start()` has ever been called, a later `start()` call MUST still never consume any event — `runEventLoop`'s `while (!this.stopped)` guard is checked before the first `iterator.next()`, and nothing in this source ever resets `stopped` back to `false`.
-- **event-loop-recovery**: When `this.iterator.next()` rejects inside the internal event loop, the loop's `catch` block notifies an `error` `ChatUpdate` and the loop function then returns — `started` is never reset to `false`, so a later `start()` call is still a no-op (per start-is-idempotent) and consumption never resumes on that instance. `DefaultOrchestrator.ts` implements no retry, backoff, or reconnect policy, and provides no way to restart event consumption on an already-started instance.
+- **start-is-idempotent**: Every call to `start()` after the first MUST be a no-op: at most one inbound event-consumption task ever runs per instance, and a later call MUST NOT create a second one.
+- **stop-cancels-iterator**: `stop()` MUST end inbound consumption: it MUST call `return()` on the active async iterator, if one exists, to signal early termination of the inbound stream, and the event loop MUST NOT begin another iteration afterward.
+- **stop-before-start-locks-the-loop**: If `stop()` is called before `start()` has ever been called, a later `start()` call MUST still never consume any event; nothing in this source ever re-enables consumption once `stop()` has been called.
 
 ### Display Configuration
 
-- **display-config-mutation**: NEEDS REVIEW: Not implemented in source. `ChatUpdate` defines a `displayConfigChanged` kind, implying `displayConfig` can change after construction and observers can be told about it, but `DefaultOrchestrator` assigns `this.displayConfig = config.display` exactly once, in the constructor, and no method in `DefaultOrchestrator.ts` ever reassigns `displayConfig` or calls `this.notify({ kind: 'displayConfigChanged' })`. Missing: a public method (an `updateDisplayConfig`-shaped API or similar) and the trigger(s) that would call it. Whoever adds a runtime way to change `DisplayConfig` — not present in these three files — would resolve this.
+- **display-config-mutation**: NEEDS REVIEW: Not implemented in source. `ChatUpdate` defines a `displayConfigChanged` kind, but `DefaultOrchestrator` assigns `displayConfig` only in its constructor and never emits that update; no public method changes it.
 
 ### Sending Messages & Delivery Status
 
@@ -37,10 +36,10 @@
 
 ### Read Cursors
 
-- **mark-read-sets-local-cursor**: `markRead(messageID)` MUST upsert a `ReadReceipt` for `localParticipantID` with `upToMessageID` set to `messageID` and `at` set to the call's wall-clock time.
+- **mark-read-sets-local-cursor**: `markRead(messageID)` MUST upsert a `ReadReceipt` for `localParticipantID` with `upToMessageID` set to `messageID` and `at` set to the call's wall-clock time, subject to the same regression guards as `readMarkerAdvanced` (see read-marker-regression-guard-by-position and read-marker-regression-guard-by-time).
 - **read-marker-advanced-is-one-per-participant**: A `readMarkerAdvanced` event MUST upsert exactly one `ReadReceipt` per `participantID` — a later event for the same participant MUST replace, not add to, that participant's existing entry.
-- **read-marker-regression-guard-by-position**: When both the existing and incoming `upToMessageID` are found in `messages`, the upsert MUST be rejected (the existing cursor kept unchanged, no notification) if the incoming id's index in `messages` is earlier than the existing cursor's index.
-- **read-marker-regression-guard-by-time**: When either `upToMessageID` cannot be found in `messages`, the upsert MUST instead be rejected only if the incoming event's `at` is earlier than the existing cursor's `at`.
+- **read-marker-regression-guard-by-position**: When both the existing and incoming `upToMessageID` are found in `messages`, an upsert from `readMarkerAdvanced` or `markRead` MUST be rejected (the existing cursor kept unchanged, no notification) if the incoming id's index in `messages` is earlier than the existing cursor's index.
+- **read-marker-regression-guard-by-time**: When either `upToMessageID` cannot be found in `messages`, an upsert from `readMarkerAdvanced` or `markRead` MUST instead be rejected only if the incoming `at` is earlier than the existing cursor's `at`.
 - **read-marker-absence-means-unread**: The absence of a `ReadReceipt` for a participant MUST be interpreted as that participant having read nothing yet; `DefaultOrchestrator` MUST NOT synthesize a default entry for a participant with none.
 
 ### Typing Indicators
@@ -51,18 +50,18 @@
 
 ### Interactive Widgets
 
-- **widget-presented-appends-and-maps**: A `widgetPresented` event MUST append `event.widget` to `pendingWidgets`, MUST record the mapping from `event.widget.id` to `event.messageID` in the internal widget-to-message map, and MUST notify `pendingWidgetsChanged`.
-- **respond-to-widget-removes-optimistically**: `respondToWidget(response)` MUST, before calling the backend, remove any pending widget matching `response.widgetID` from `pendingWidgets` and its entry from the widget-to-message map, notifying `pendingWidgetsChanged` if a removal occurred.
+- **widget-presented-appends-and-maps**: A `widgetPresented` event MUST append `event.widget` to `pendingWidgets`, MUST retain the association between `event.widget.id` and `event.messageID`, and MUST notify `pendingWidgetsChanged`.
+- **respond-to-widget-removes-optimistically**: `respondToWidget(response)` MUST, before calling the backend, remove any pending widget matching `response.widgetID` from `pendingWidgets` and drop its retained message association, notifying `pendingWidgetsChanged` if a removal occurred.
 - **respond-to-widget-unconditional-forward**: `respondToWidget` MUST call `backend.submitWidgetResponse(response)` regardless of whether a matching pending widget was found — an unrecognized or already-resolved `widgetID` is still forwarded, unlike `respondToPermission`'s unknown-id handling (see permission-response-ignores-unknown-prompt).
-- **respond-to-widget-rollback-on-rejection**: If `backend.submitWidgetResponse` rejects and a widget was removed by this call, `respondToWidget` MUST restore `pendingWidgets` and the widget-to-message map to the values they held before this call, notify `pendingWidgetsChanged` again, notify an `error` update carrying the rejection's message, and re-throw the rejection.
-- **widget-response-rollback-ordering**: NEEDS REVIEW: Not implemented in source. The rollback in respond-to-widget-rollback-on-rejection restores `pendingWidgets`/the widget-to-message map to their exact pre-call snapshot, with no check for whether either was mutated by another event (a new `widgetPresented`, a concurrent `respondToWidget` call for a different widget) while the rejected call's `backend.submitWidgetResponse` promise was still pending — any such intervening mutation is silently discarded by the rollback. Missing: an ordering or merge rule for concurrent widget-state mutation. This cannot be settled from `DefaultOrchestrator.ts` alone — no concurrency contract for its public methods is stated anywhere in the given sources.
+- **respond-to-widget-rollback-on-rejection**: If `backend.submitWidgetResponse` rejects and a widget was removed by this call, `respondToWidget` MUST restore `pendingWidgets` and the widget's retained message association to the values they held before this call, notify `pendingWidgetsChanged` again, notify an `error` update carrying the rejection's message, and re-throw the rejection.
+- **widget-response-rollback-ordering**: NEEDS REVIEW: Not implemented in source. The rollback in respond-to-widget-rollback-on-rejection restores the pre-call `pendingWidgets` snapshot without checking for changes made while the rejected call was pending, so a concurrent `widgetPresented` or `respondToWidget` is silently discarded; no concurrency contract for these methods is stated in the given sources.
 
 ### Permissions
 
 - **present-permission-prompt-appends**: `presentPermissionPrompt(prompt)` (a non-portable, TS-runtime-only convenience for hooks/policy gates to surface a decision request) MUST append `prompt` to `pendingPermissions` and notify `pendingPermissionsChanged`.
 - **permission-response-ignores-unknown-prompt**: `respondToPermission(promptID, decision)` MUST return with no state change and no notification if no entry of `pendingPermissions` has that `id` — an unrecognized id is a silent no-op, unlike `respondToWidget`'s unconditional forward.
 - **permission-response-removes-and-remembers**: For a recognized `promptID`, `respondToPermission` MUST call `permissionStore.remember(decision, prompt.permission, prompt.requesterID)`, remove that prompt from `pendingPermissions`, and notify `pendingPermissionsChanged`.
-- **hook-and-permission-enforcement**: NEEDS REVIEW: Not implemented in source. `ChatConfig` accepts `gatingHooks: ReadonlyArray<GatingHook>` and `observingHooks: ReadonlyArray<ObservingHook>`, and `GatingPoint`/`ObservingPoint` enumerate specific lifecycle points (`willSubmitMessage`, `willExecuteCommand`, `willEmitUpdate`, `willRequestPermission`, `willAcceptInboundMessage`, `didComposeMessage`, `messageSent`, `messageReceived`, `messageRead`, `didExecuteCommand`, `didEmitUpdate`, `participantJoined`, `participantDeparted`, `permissionResolved`), but no method in `DefaultOrchestrator.ts` calls a hook's `gate()` or `observe()` at any of these points, and `permissionStore.decision()` is never called anywhere in `DefaultOrchestrator.ts` to decide whether a gated action should be allowed to proceed — the only `PermissionStore` operation this source performs is recording a decision via `remember()`. Missing: what MUST happen when a `GatingHook` denies an action, at which of these points each hook fires, and where (if anywhere in this runtime) a remembered `decision()` is consulted before a gated action runs. This cannot be settled from these three files alone; it would be resolved by the code that wires `gatingHooks`/`observingHooks` for a real deployment, which is not present here.
+- **hook-and-permission-enforcement**: NEEDS REVIEW: Not implemented in source. `ChatConfig` accepts `gatingHooks` and `observingHooks`, but no method in `DefaultOrchestrator.ts` calls a hook's `gate()` or `observe()` or `permissionStore.decision()`; the only `PermissionStore` operation performed is `remember()`. Missing: what happens when a gating hook denies an action and where a remembered decision is consulted.
 
 ### Commands
 
@@ -79,20 +78,19 @@
 ### Observer Notifications
 
 - **notify-fans-out-synchronously**: `notify(update)` MUST call `chatDidUpdate(update)` synchronously, in the observer set's iteration order, on every observer registered at the moment `notify` runs, before `notify` returns.
-- **add-remove-observer-mutate-the-same-set**: `addObserver`/`removeObserver` MUST add to, or delete from, the same internal `Set<ChatStateObserver>` that `notify` iterates; an observer removed before an update fires MUST NOT receive that update.
+- **add-remove-observer-mutate-the-same-set**: `addObserver` MUST register an observer so that it receives every subsequent update, and `removeObserver` MUST unregister it; an observer removed before an update fires MUST NOT receive that update.
 - **transport-error-relayed-verbatim**: A `transportError` event MUST notify an `error` update whose `message` is `event.message`, unmodified — `DefaultOrchestrator` MUST NOT reinterpret, translate, or suppress it.
 
 ### Non-Portable Runtime Extensions
 
 - **deliver-bypasses-backend**: `deliver(event)` MAY be used to apply any `InboundEvent` exactly as if it had arrived from `backend.inboundEvents`, by routing it through the same internal event handler — a TS-runtime convenience for injecting lines (e.g. a scripted persona welcome) that no backend produced; it is not part of the portable `Orchestrator` contract.
-- **caller-should-start-before-relying-on-inbound-state**: A caller SHOULD call `start()` before depending on any inbound-event-driven state (`messages` gained via `messageReceived`, `typingParticipants`, `activeDrafts`, etc.), since none of it updates from the backend until the event loop is running. This is a SHOULD, not a MUST, because `submitMessage`, `markRead`, `setLocalTyping`, `respondToWidget`, and `respondToPermission` all function correctly whether or not `start()` was ever called — the only consequence of deferring `start()` is a delay in observing inbound state, not an error (see Design Decisions).
+- **caller-should-start-before-relying-on-inbound-state**: A caller SHOULD call `start()` before depending on any inbound-event-driven state (`messages` gained via `messageReceived`, `typingParticipants`, `activeDrafts`, etc.), since none of it updates from the backend until the event loop is running. In particular, a message passed to `submitMessage` never receives its `messageAccepted`, `messageDelivered` or `messageFailed` update without a running loop, so it stays `sending` indefinitely. `markRead`, `setLocalTyping`, `respondToWidget`, and `respondToPermission` run without `start()`; the consequence for them is only that inbound state is not observed (see Design Decisions).
 
 ### InMemoryPermissionStore
 
 - **decision-lookup-order**: `decision(permission, requesterID)` MUST return the remembered decision for that exact `(permission.id, requesterID)` pair if one exists, else `permission.defaultDecision` if set, else `undefined`.
 - **remember-persists-always-decisions-only**: `remember(decision, permission, requesterID)` MUST persist the decision only when it is `'allowAlways'` or `'denyAlways'`; `'allowOnce'` and `'denyOnce'` MUST NOT be stored.
 - **store-is-process-local**: The store MUST hold all state in an in-memory `Map` for the lifetime of the instance and MUST NOT read from or write to any external persistence.
-- **store-has-no-revoke-operation**: The store's interface (`decision`/`remember`) provides no method to remove or revoke an already-remembered decision short of discarding the instance — consistent with its documented process-local, non-persistent design (see Design Decisions), not a gap in this source.
 
 ### ScriptedBackend
 

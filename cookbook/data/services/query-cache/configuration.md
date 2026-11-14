@@ -8,7 +8,7 @@
 | The mounted subtree | required prop of the cache provider component | none (required) | Subtree the provider mounts its underlying cache-provider wrapper around |
 
 None of these values is exposed through a caller-facing setter (no
-configuration function exists in this component, unlike the resource-data
-recipe's own configuration entry point); changing any of them requires
+configuration function exists in this component, unlike the [adhsdk.ingredient.data.services.resource-data](cookbook:ec6e6ca5-8780-4ce2-8b3a-087adc50ed35)
+ingredient's own configuration entry point); changing any of them requires
 editing the source module itself.
 

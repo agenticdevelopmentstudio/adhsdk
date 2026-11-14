@@ -1,0 +1,11 @@
+
+- **React/Web** (source): Screen is a functional component that conditionally renders a semantic element (`<section>` or `<div>`) based on the `as` prop. It applies BEM-style classes (`lp-screen`, `lp-screen--center`) for styling and optionally renders the Glow component as the first child. Layout and visual appearance are entirely CSS-driven, defined in a separate stylesheet (`css/base.css` per the source comment).
+
+- **SwiftUI**: Inside a `ScrollView` with `.scrollTargetBehavior(.paging)`, size each screen with `.containerRelativeFrame(.vertical)` so it occupies exactly one viewport height and acts as a paging/snap point. Conditionally overlay a background glow view (via `.background()` or a custom shape) when the glow property is true. Apply conditional padding or alignment modifiers to implement the center vs. top alignment behavior.
+
+- **Compose**: Inside a `LazyColumn`, size each screen item with `Modifier.fillParentMaxHeight()` — `fillMaxHeight()` has no bounded height to fill inside a scrolling container — so each screen is exactly one viewport tall, or use a `VerticalPager` page directly. Conditionally render a canvas-based glow in the background using `drawBehind { }`. Use `contentAlignment` to position children at the top or center of the box.
+
+- **AppKit / UIKit**: Use a container view (or view controller) that holds the glow layer and the content as subviews, rather than subclassing `NSView`/`UIView`. Configure it with `translatesAutoresizingMaskIntoConstraints = false`, constrained to fill the parent view's bounds, with an optional background glow `CALayer` or subview placed behind the content. Use Auto Layout constraints or a `UIStackView`/`NSStackView` to position child views according to the alignment property.
+
+- **WinUI 3**: Size each screen to the height of the enclosing `ScrollViewer`'s viewport (e.g. bind `Height` to `ScrollViewer.ViewportHeight` or a converted `ActualHeight`) rather than `Height="*"` on a bare `Grid`, since star sizing only applies inside `RowDefinition`/`ColumnDefinition`. Build the glow with a Composition radial gradient brush (`CompositionRadialGradientBrush`) or a XAML `RadialGradientBrush`, not `BlurEffect`, which is a WPF-only API with no WinUI 3 equivalent. Use `VerticalAlignment` to position child elements at the top (`Top`) or center (`Center`).
+

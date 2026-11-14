@@ -13,18 +13,13 @@
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 
-Statuses rest on `inline-commit-control.tsx`: Button-only composition and
-`apt-*`/token-only classNames (native-controls-preference, platform-theming);
-the documented `aria-label`/`role="group"`/focus-management logic
-(keyboard-navigable, focus-management); the unconditional
-`transition-opacity` reveal with no `motion-reduce:` variant
-(reduced-motion); the hardcoded English button/group labels with no
-resource-file indirection and no `dir`-aware positioning (no-hardcoded-strings,
-string-externalization, rtl-layout-support); `InlineEditableText`'s passthrough
-of the raw input value with no validation of its own (input-sanitization); and
-the vector-to-test mapping across the three `__tests__` files cited above
-(unit-test-coverage, vectors T1–T13); and the source's own note that "the
-consumer owns all state — draft values, dirty computation, the armed set … —
-the control just renders it," with no data access or business rule of its own
-beyond the focus-management effect (separation-of-concerns).
+Statuses rest on `packages/web/packages/ui/src/components/inline-commit-control.tsx`:
 
+- native-controls-preference, platform-theming: Button-only composition and token-only classNames.
+- keyboard-navigable, focus-management: the documented `aria-label`, `role="group"` and focus-management logic.
+- reduced-motion: the unconditional `transition-opacity` reveal has no `motion-reduce:` variant.
+- no-hardcoded-strings, string-externalization: the English button and group labels are hardcoded, with no resource-file indirection.
+- rtl-layout-support: no test renders the control under `dir="rtl"`.
+- input-sanitization: `InlineEditableText` passes the raw input value through with no validation of its own.
+- unit-test-coverage: the vectors T1–T13 map onto the three `__tests__` files cited in Conformance Test Vectors.
+- separation-of-concerns: the source's own note says "the consumer owns all state — draft values, dirty computation, the armed set … — the control just renders it", with no data access or business rule beyond the focus-management effect.

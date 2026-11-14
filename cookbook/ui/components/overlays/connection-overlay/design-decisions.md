@@ -11,7 +11,7 @@
 
 3. **Retry countdown (15 seconds)**
    **Decision**: Use a fixed 15-second auto-retry cadence, independent of the consuming application's own poll clock.
-   **Rationale**: A fixed local countdown always counts cleanly down to a real retry without drift or desynchronization from an external clock; 15 seconds balances frequent attempts (low user wait time) against backend load (not hammering a recovering service).
+   **Rationale**: A fixed local countdown always counts cleanly down to a real retry without drift or desynchronization from an external clock; the claim that 15 seconds balances frequent attempts against backend load is unverified: 15 is a source constant with no documented derivation.
    **Approved**: pending
 
 4. **Countdown persists across heading changes**
@@ -31,7 +31,7 @@
 
 7. **aria-hidden on countdown and spinner**
    **Decision**: Mark both the countdown and the spinner `aria-hidden="true"`.
-   **Rationale**: The countdown updates every second and would spam a screen reader if announced; the spinner is purely decorative. The heading and subheading, inside the `aria-live="polite"` region, already convey all necessary state.
+   **Rationale**: See [hide-countdown-from-screen-readers](#requirements/hide-countdown-from-screen-readers) and [use-aria-live-region](#requirements/use-aria-live-region) for the rules; the spinner is purely decorative.
    **Approved**: pending
 
 8. **Absolute positioning with inset: 0**
@@ -40,12 +40,12 @@
    **Approved**: pending
 
 9. **App-agnostic color tokens, except button text and shadow**
-   **Decision**: Colors reference ADH theme tokens (`var(--color-apt-*)`) for every surface, border, and text color, so the component adapts to the consuming application's theme without modification — except the button's text color (hard-coded `white`) and the card's drop shadow (hard-coded `rgba(0,0,0,0.35)`), which are fixed values rather than tokens.
+   **Decision**: Colors reference ADH theme tokens (`var(--color-apt-*)`, where `apt` is the published token namespace) for every surface, border, and text color, so the component adapts to the consuming application's theme without modification — except the button's text color (hard-coded `white`) and the card's drop shadow (hard-coded `rgba(0,0,0,0.35)`), which are fixed values rather than tokens.
    **Rationale**: Token-based colors let the overlay track the app's light/dark theme; the button text and shadow are left as fixed values in source rather than tokenized, narrowing this decision's scope to "all colors except those two."
    **Approved**: pending
 
 10. **Obscuring background (90% opacity + blur)**
     **Decision**: Make the overlay's background 90% opaque with a 3px blur.
-    **Rationale**: A transparent overlay would blur the distinction between "overlay present" and "content behind it"; a fully opaque one would hide context entirely. 90% opacity with blur keeps the overlay the clear visual focus while still hinting at the content underneath.
+    **Rationale**: The source comment says the overlay should obscure the panels rather than layer over readable content. The reasoning that a transparent overlay would blur the distinction between overlay and content, and that a fully opaque one would hide context entirely, is unverified: 90% and 3px are source constants with no documented derivation.
     **Approved**: pending
 

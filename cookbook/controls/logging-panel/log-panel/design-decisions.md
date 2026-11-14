@@ -23,7 +23,7 @@
   **Rationale**: Lets CSS Grid handle layout while preserving accessibility roles for assistive technology.
   **Approved**: pending
 
-- **Decision**: Click and double-click events are stopped at the cell (`stopPropagation()`) when a cell handler runs, rather than left to bubble.
+- **Decision**: Click and double-click events are stopped at the cell (`stopPropagation()`) only when that cell has the handler for the interaction (`onCellClick` for a click, `onCellDoubleClick` for a double-click), rather than left to bubble; with no handler for that interaction, the event bubbles normally.
   **Rationale**: Ensures the cell's own callback is the only handler invoked for that interaction.
   **Approved**: pending
 

@@ -4,11 +4,11 @@
     "id": "7f84a93a-013e-452f-a963-7ffb4808dd5c",
     "title": "TextBubble",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-07-03",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -25,7 +25,9 @@
       "ui"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "441dd61d-3e76-499b-b45c-92869015eced"
+    ],
     "references": [
       "https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix",
       "https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver",
@@ -35,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8163e64631474a4a",
+  "synced": "274d7427f4d12d0e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

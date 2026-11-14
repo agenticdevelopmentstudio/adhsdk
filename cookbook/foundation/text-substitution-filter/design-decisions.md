@@ -1,6 +1,6 @@
 
 **Decision**: Substitute in a single left-to-right pass rather than one replacement per pair.
-**Rationale**: A replacement must never be rewritten by a later pair: with `a = b; b = c`, "a" is sent as "b", not as "c" (`principle-of-least-astonishment`).
+**Rationale**: A replacement must never be rewritten by a later pair: with `a = b; b = c`, "a" is sent as "b", not as "c", which is the least surprising result (principle of least astonishment).
 **Approved**: pending
 
 **Decision**: The longest pattern wins at each position, by sorting patterns longest first in one alternation.
@@ -28,6 +28,6 @@
 **Approved**: pending
 
 **Decision**: When the combined expression cannot be compiled, `substitute` falls back to returning the input.
-**Rationale**: The source gives no reason; patterns are escaped so the case is not expected. The consequence for `concealing` is recorded under the open question on `regex-failure-passthrough`.
+**Rationale**: Every pattern is escaped, so a compile failure is not expected. The risk is accepted knowingly: if it did happen, `concealing` would pass real text through unchanged, so a port that needs to fail closed should redact or return an error instead. See Edge Cases.
 **Approved**: pending
 

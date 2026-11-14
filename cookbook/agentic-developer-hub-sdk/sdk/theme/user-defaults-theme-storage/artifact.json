@@ -4,7 +4,7 @@
     "id": "edd40452-1ef7-42ba-b3e9-066a5a2ca1f6",
     "title": "UserDefaultsThemeStorage",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -26,13 +26,15 @@
     ],
     "depends-on": [],
     "related": [
-      "932449c9-b57f-4e2c-992a-1e27584742b6"
+      "932449c9-b57f-4e2c-992a-1e27584742b6",
+      "62abe97d-75f7-48c0-83cd-6df02a48515e",
+      "d15bba09-4574-4fd1-93a0-f7d2cccd04f2"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4fbf239ec58605e4",
+  "synced": "a02cacdb763cbe37",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

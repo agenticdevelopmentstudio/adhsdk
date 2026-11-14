@@ -9,8 +9,10 @@
 | T6 | cap-growth-at-natural-width | `auto` | both buttons carry `flex-1 max-w-max`; the row carries `justify-end` |
 | T7 | settle-before-interactive (Playwright) | sample the cancel button's bounding box every frame from before the dialog opens | exactly one distinct box — the final one — for the dialog's whole life |
 | T8 | follow-the-container (Playwright) | render narrow (even split), widen the container past the combined natural width of both buttons | layout becomes natural, right-justified |
+| T8c | follow-the-container (Playwright) | wide viewport, `auto` layout in a narrow container | even split of the container, as in a narrow viewport; the viewport width has no effect |
 | T8b | honor-forced-layout | `layout="equal"` in a wide container | equal-width, uncapped; no natural flip when resized |
 | T9 | focus-initial-on-mount + default-focus-to-safe-button | mount non-destructive | confirm button is `document.activeElement` |
+| T9b | focus-initial-on-mount | mount non-destructive with `initialFocus="cancel"` | cancel button is `document.activeElement` |
 | T10 | default-focus-to-safe-button | mount with `destructive` | cancel button is `document.activeElement` |
 | T11 | suppress-focus-on-mount | mount with `focusOnMount={false}` | neither button receives focus |
 | T12 | show-busy-indicator | `busy`, attempt to click | `role="status"` spinner present; no buttons; `onConfirm`/`onCancel` not called |
@@ -19,5 +21,6 @@
 | T15 | apply-confirm-disabled | `confirmDisabled=true`, click confirm | confirm button disabled; `onConfirm` not called |
 | T16 | show-busy-indicator | `confirmDisabled=true` and `busy=true` | spinner renders; buttons not visible; `confirmDisabled` ignored |
 | T17 | focus-fallback-to-other-button | mount with `initialFocus="confirm"` where the confirm button is disabled at mount | cancel button is `document.activeElement` |
+| T17b | focus-fallback-to-other-button | mount with `confirmDisabled` and no `cancelLabel` (nothing focusable) | `document.activeElement` is unchanged from before mount |
 | T18 | quiet-ring-for-destructive-cancel | mount with `destructive`, inspect the cancel button's focus-visible classes | cancel carries `focus-visible:border-apt-text focus-visible:ring-apt-text/40`, not the default ring token |
-
+| T19 | honor-forced-layout | `layout="equal"`, no `cancelLabel` | the confirm button carries no `flex-1`; the row carries `w-full` and no `justify-end` |

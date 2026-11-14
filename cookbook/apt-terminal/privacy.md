@@ -13,12 +13,13 @@
   .get_httpx_client`); the refresh token is sent as a raw `Cookie:
   refresh_token=...` header by `login`/`refresh`/`logout` directly. Whether
   this transits in the clear or over TLS depends entirely on the configured
-  `base_url`'s scheme — the source enforces no `https://` requirement (see
-  `no-request-timeout`: the same client construction also performs no scheme
+  `base_url`'s scheme — the source enforces no `https://` requirement (see the
+  `secure-transport` compliance check: client construction performs no scheme
   check).
 - **Retention**: tokens persist indefinitely in the config file until
   `logout()` clears them, a subsequent `login()` overwrites them, or the
   file is edited or deleted by hand. The client performs no time-based
   expiry check of its own; expiry is discovered only reactively, via a `401`
-  triggering `refresh-retry` logic.
+  triggering the retry-once logic of `execute-retries-once-on-401` and
+  `whoami-retries-once-then-fixed-error`.
 

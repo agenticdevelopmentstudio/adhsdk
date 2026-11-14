@@ -1,0 +1,11 @@
+
+- **React/Web**: Component wraps `@base-ui/react/tabs` (`TabsPrimitive`) — see **aria-tab-roles**, **keyboard-tab-navigation**, and **controlled-value**, which this component satisfies by delegating to Base UI's `Tabs.Root` / `Tabs.List` / `Tabs.Tab` / `Tabs.Panel`. Files: `packages/web/packages/ui/src/components/tabs.tsx`. Uses Tailwind CSS utilities for styling. Active state is indicated via the `data-[active]` attribute selector Base UI applies to the selected `Tab`; styling keys off this attribute. The `cn()` utility merges additional `className` props on every subcomponent.
+
+- **SwiftUI**: For in-content tabs (not app-level navigation), use a segmented `Picker(selection:)` bound to a `@State` value, paired with a manual content switch (`if`/`switch` over the selection) to show the associated panel. `TabView` is reserved for app-level/root navigation (tab bar), not in-content component tabs, and `.tabViewStyle(.segmented)` does not exist as an API. No gold color by default; map `apt-gold` to a custom accent `Color`.
+
+- **Compose**: Material 3's `PrimaryTabRow` (or `SecondaryTabRow`) composable — or the plain `TabRow` on older Material versions — containing `Tab` composables. Active tab is managed via `selectedTabIndex: Int` state. Disabled tabs via the `enabled` parameter on `Tab`. Customize the underline indicator via the `indicator` parameter (not `indicatorContent`). No monospace font by default; apply `FontFamily.Monospace`.
+
+- **AppKit / UIKit**: Native `NSTabView` (macOS) or custom `UIView` composition (iOS) provides tabbed interface. iOS typically uses `UISegmentedControl` or custom button stack. Underline indicator requires custom implementation via `CALayer` or view positioning. Disabled state via `isEnabled` property. Focus management via `becomeFirstResponder()`.
+
+- **WinUI 3**: For in-content section tabs, prefer `SelectorBar` (with `SelectorBarItem` entries) or `Pivot`; native `TabView` is designed for closable, document-style tabs (browser-tab UX) and shows close buttons by default — if used for section tabs anyway, set `IsClosable="False"` on each `TabViewItem`. Active item via `SelectedIndex`/`SelectedItem`. Disabled tab via `IsEnabled="False"`. Underline/indicator customization via `SelectorBarItem` styling or `TabViewItemHeaderBackground`; map `apt-gold` to `AccentFillColorDefaultBrush` or a custom brush.
+

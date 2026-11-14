@@ -17,13 +17,23 @@
 | popover-014 | alignment | `align="start"` (full-featured) | Popover's start edge aligns with trigger's start edge |
 | popover-015 | alignment | `align="center"` (full-featured, default) | Popover center aligns with trigger center along the perpendicular axis |
 | popover-016 | alignment | `align="end"` (full-featured) | Popover's end edge aligns with trigger's end edge |
-| popover-017 | custom-styling | `className="custom-popover-class"` (full-featured or lightweight) | Custom class is applied to the panel element alongside default classes |
+| popover-017 | custom-styling | `className="custom-popover-class"` (full-featured) | Custom class is applied to the panel element alongside default classes |
 | popover-018 | arrow | `arrow={true}` (full-featured) | Diamond pointer (8px square, rotated per `side`) appears at the edge of the panel facing the trigger |
 | popover-019 | arrow | `arrow={false}` (full-featured, default) | No pointer element is rendered |
 | popover-020 | dialog-role | Popover rendered via `PopoverContent` (full-featured) | Inspect DOM; the `Popover.Popup` element has `role="dialog"` |
-| popover-021 | return-focus-on-close | Popover open (full-featured, non-modal), Tab from the first focusable element inside the panel through the last | Focus moves forward through the panel's focusable elements in DOM order; it does not cycle back to the first panel element (no focus trap) |
+| popover-021 | non-modal | Popover open (full-featured, non-modal), Tab from the first focusable element inside the panel through the last | Focus moves forward through the panel's focusable elements in DOM order; it does not cycle back to the first panel element (no focus trap) |
 | popover-022 | return-focus-on-close | Popover open (full-featured), focus on the last focusable element inside the panel, press Tab | Focus leaves the panel and moves to the next tabbable element after the trigger in document tab order; the popover closes (Base UI's `focus-out` dismissal); return-focus is suppressed, so focus does NOT go back to the trigger element (contrast Escape, which does return focus to the trigger) |
 | popover-023 | escape-closes | Popover open (full-featured, controlled via `open`/`onOpenChange`), press Escape | `onOpenChange(false, ...)` is called; the consumer setting `open` to `false` in response causes `PopoverContent` to unmount |
 | popover-024 | aria-expanded | Popover open (full-featured) | Trigger element has `aria-expanded="true"` |
 | popover-025 | aria-expanded | Popover closed (full-featured) | Trigger element has `aria-expanded="false"` |
-
+| popover-026 | outside-press-closes | Popover open (full-featured, controlled), press on an element outside the panel and trigger | `onOpenChange(false, ...)` is called |
+| popover-027 | trigger-toggles | Popover open (full-featured, controlled), press `PopoverTrigger`; then, once closed, press it again | First press calls `onOpenChange(false, ...)`; second calls `onOpenChange(true, ...)` |
+| popover-028 | label-association | `aria-label="Help"` passed to `PopoverContent` (full-featured) | The `role="dialog"` element has `aria-label="Help"` |
+| popover-029 | side-offset | `PopoverContent` with no `sideOffset` (full-featured) | Gap between panel edge and trigger element is 8px |
+| popover-030 | custom-styling | `className="custom-popover-class"` (lightweight) | The panel's class list contains `hover-popover`, its placement class, and `custom-popover-class`, in that order |
+| popover-031 | arrow-orientation | `arrow={true}`, `side="top"` (full-featured) | Arrow is rotated 45deg |
+| popover-032 | arrow-orientation | `arrow={true}`, `side="bottom"` (full-featured) | Arrow is rotated 225deg |
+| popover-033 | arrow-orientation | `arrow={true}`, `side="left"` (full-featured) | Arrow is rotated 315deg |
+| popover-034 | arrow-orientation | `arrow={true}`, `side="right"` (full-featured) | Arrow is rotated 135deg |
+| popover-035 | supplementary-content | Inspect a consumer of the lightweight `Popover` | Every fact shown in the panel is also reachable without hovering |
+| popover-036 | hide-on-close-visibility | Toggle `open` true/false ten times in a row (lightweight) | The panel element is never unmounted or remounted; only the `hover-popover--open` class changes |

@@ -4,7 +4,7 @@
     "id": "28c73b3b-5614-4ec7-bf99-60a64aa77350",
     "title": "Document Load Script",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,12 +23,14 @@
       "hydration"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "0f721fc3-0e8f-4a1b-b895-1b1bad370bd0"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "01d4c704a5f86015",
+  "synced": "10fa6b126e24e551",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

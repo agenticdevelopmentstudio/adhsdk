@@ -4,7 +4,7 @@
     "id": "3bff70de-bfca-4bfd-b112-2a6044416ddc",
     "title": "Color Mode",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,12 +23,16 @@
       "appearance"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "112f2150-3fcd-416c-bd25-b40f729b8ef2",
+      "0f721fc3-0e8f-4a1b-b895-1b1bad370bd0",
+      "46e077a8-1171-4564-9781-7997ff76813a"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a2dc54615e5f914a",
+  "synced": "dfe37229637d240a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

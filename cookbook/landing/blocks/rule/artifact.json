@@ -4,11 +4,11 @@
     "id": "4cd07922-a00d-4029-8cb5-2307463129cc",
     "title": "Rule",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "24bb8f4ed68de4a3",
+  "synced": "6f6a3507277e6200",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

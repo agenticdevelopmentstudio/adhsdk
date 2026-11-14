@@ -21,3 +21,14 @@
 
 Column fields: `key: string`, `header: React.ReactNode`, `render?: (row: T, ctx: DataTableRowContext) => React.ReactNode` (default `String(row[key])`), `sortable?: boolean`, `width?: string` (e.g. `"12rem"` / `"1fr"`), `align?: "start" | "end"`, `resizable?: boolean`.
 
+`DataTableReorder` fields:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `onDrop` | `(drop: SortableDrop) => void` | yes | Called with where the row landed, as neighbours rather than an index. |
+| `describeRow` | `(id: string) => string` | no | The row's name for the drag announcements. |
+| `canDrag` | `(id: string) => boolean` | no | False for a row that must not move right now. |
+
+`SortableDrop` is `{ itemId: string; fromZoneId: string; toZoneId: string; afterId: string | null; beforeId: string | null }`: the dragged id, its source and destination zones (the same single zone here), the id it landed below (null at the top) and the id it landed above (null at the bottom). The table is one zone, so `fromZoneId` equals `toZoneId`.
+
+`DataTableRowContext` is `{ dragHandleProps: React.HTMLAttributes<HTMLElement>; dragging: boolean }`: the props to spread on the element that picks the row up (empty when `reorder` is off) and whether this row is the one being dragged.

@@ -4,7 +4,7 @@
     "id": "55ffb81c-6a7d-4837-9180-0b5d3fe952ec",
     "title": "Vercel Traffic Section",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,18 +23,19 @@
       "dashboard",
       "vercel"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "af0bacb9-bc1f-4773-85f5-35e33ae590ab",
+      "f06a7f7a-1b36-4dfc-a17d-71d20d576155",
+      "60ff967b-b041-4723-913e-016fba7bae6d"
+    ],
     "related": [],
     "references": [
-      "packages/web/packages/status-server/src/telemetry/dashboard/vercel-section.ts (adhsdk)",
-      "packages/web/packages/status-server/test/telemetry-dashboard-sections.test.ts (adhsdk)",
-      "packages/web/packages/status-server/src/telemetry/vercel-api.ts (adhsdk)",
-      "packages/web/packages/deploy-platform/src/providers/vercel.ts (adhsdk)"
+      "https://vercel.com/docs/analytics/web-analytics-api"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a4562cf4502f5041",
+  "synced": "d9ecc9605aab8aad",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

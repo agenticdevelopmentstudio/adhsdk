@@ -2,11 +2,11 @@
 id: 56828ee6-f522-45da-a9d8-6e1a99adf4e2
 title: "Help Popover"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -30,16 +30,16 @@ approved-date: ""
 
 ## Overview
 
-Help Popover is the content panel portion of a help popover UI pattern. It displays contextual help, informational guidance, or feature announcements next to a trigger control. The component combines a flavor-specific icon (help, information, or what's new), an optional title, and body text inside a positioned popover with an arrow. It is intended for brief, contextual guidance that does not block user interaction with the underlying content.
+Help Popover is the content panel portion of a help popover UI pattern. It displays contextual help, informational guidance, or feature announcements next to a trigger control. The component combines a flavor-specific icon (help, information, or what's new), an optional title, and body text inside a positioned popover with an arrow. It builds on the popover content panel ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)), which supplies positioning, the arrow and dismissal. It is intended for brief, contextual guidance that does not block user interaction with the underlying content.
 
 ## Behavioral Requirements
 
-- **entry-prop**: The component MUST accept a `HelpEntry` prop containing the popover content.
-- **side-prop**: The component MUST accept an optional `side` prop controlling popover vertical/horizontal positioning (`"top"`, `"bottom"`, `"left"`, or `"right"`), with `"bottom"` as the default.
-- **align-prop**: The component MUST accept an optional `align` prop controlling popover alignment along the positioning axis (`"start"`, `"center"`, or `"end"`), with `"start"` as the default.
+- **entry-prop**: The component MUST accept a help entry (a body, with an optional title and flavor) as the popover content.
+- **side-prop**: The component MUST accept an optional `side` option controlling popover vertical/horizontal positioning (`"top"`, `"bottom"`, `"left"`, or `"right"`), with `"bottom"` as the default.
+- **align-prop**: The component MUST accept an optional `align` option controlling popover alignment along the positioning axis (`"start"`, `"center"`, or `"end"`), with `"start"` as the default.
 - **flavor-icon**: The component MUST render an icon corresponding to the flavor value in `entry.flavor`, defaulting to `"info"` if not specified. The three supported flavors are `"help"` (a help/question icon), `"info"` (an information icon), and `"new"` (a sparkle/announcement icon).
 - **body-text**: The component MUST render the text from `entry.body` in the popover panel.
-- **arrow**: The component MUST render an arrow pointing from the popover to its anchor control.
+- **arrow**: The component MUST render an arrow pointing from the popover to its anchor control, except on a platform whose popover primitive draws no arrow, where the exception is recorded in that platform's note.
 - **optional-title**: If `entry.title` is provided, the component MUST render it as a distinct, visually emphasized element. If `entry.title` is not provided or is empty, the component MUST NOT render a title section.
 - **fixed-width**: The component MUST constrain the popover panel width to 320px.
 - **accessible-name**: The component MUST set an accessible name on the popover panel combining the flavor label (Help, Information, or What's new) with the title if present. The pattern MUST be `"{flavor}: {title}"` when title exists, or `"{flavor}"` when title is absent.
@@ -65,17 +65,16 @@ Help Popover is the content panel portion of a help popover UI pattern. It displ
 
 | State | Appearance change |
 |-------|------------------|
-| Default (closed) | Popover is not rendered; trigger control is visible |
-| Open | Popover panel is visible with all content rendered; arrow points to anchor |
 | With title | Title paragraph rendered above body text; title is font-medium |
 | Without title | Only body text is rendered; no empty space for title |
 
+Open and closed state belong to the popover ingredient ([adhsdk.ingredient.popover](cookbook:c61a220c-b63e-4dcd-a12b-715de20f7b5d)); this panel exists only while the popover is open, with the arrow pointing to the anchor.
 ## Accessibility
 
 - **Role**: Dialog (provided by PopoverContent wrapper; popover panel announces as `role="dialog"`)
 - **Accessible name**: Set via `aria-label` on PopoverContent; combines flavor label with title if present (e.g., "Help: Getting Started" or "Information")
 - **Icon trait**: Decorative image (via `aria-hidden="true"`); the icon's semantic meaning is captured in the panel's accessible name
-- **Keyboard navigation**: Keyboard access to the popover is the responsibility of the trigger control and PopoverContent's dismiss mechanism. On open, PopoverContent (the composed wrapper) focuses and announces the dialog; Help Popover Content itself renders no interactive controls and adds no keyboard behavior beyond the accessible name and content it supplies
+- **Keyboard navigation**: Keyboard access to the popover is the responsibility of the trigger control and PopoverContent's dismiss mechanism. On open, PopoverContent (the composed wrapper) focuses and announces the dialog; Help Popover itself renders no interactive controls and adds no keyboard behavior beyond the accessible name and content it supplies
 - **Screen reader announcement**: On open, screen readers announce the dialog role and accessible name; the title and body text are then available for exploration
 - **Minimum tap target**: Not applicable; the component contains no interactive controls. Tap target size is determined by the trigger control that opens the popover.
 - **Color contrast**: Text colors (`apt-text`, `apt-text-muted`) are design system tokens; their contrast ratios SHOULD meet WCAG AA standards (requires verification of token definitions)
@@ -107,7 +106,7 @@ Help Popover is the content panel portion of a help popover UI pattern. It displ
 | help-021 | optional-title | `entry={ flavor: "info", body: "Body only" }` (title omitted entirely) | No title element is rendered; only body text appears — same outcome as an empty-string title |
 | help-022 | flavor-icon | `entry={ flavor: null, title: "", body: "Text" }` | The "info" flavor icon renders (default flavor) |
 | help-023 | body-text | `entry={ flavor: "info", title: "", body: "" }` | An empty paragraph is rendered for the body; no error occurs |
-| help-024 | flavor-icon | `entry={ flavor: "urgent", title: "", body: "Text" }` (a value outside the `HelpFlavor` union) | Component throws while looking up the icon and label; callers MUST NOT pass a flavor outside `"help" \| "info" \| "new"` |
+| help-024 | flavor-icon | `entry={ flavor: "urgent", title: "", body: "Text" }` (a value outside the `HelpFlavor` union) | Component throws a `TypeError` from the `FLAVORS` lookup (it neither renders nor falls back to `"info"`); callers MUST NOT pass a flavor outside `"help" \| "info" \| "new"` |
 
 ## Edge Cases
 
@@ -115,8 +114,8 @@ Help Popover is the content panel portion of a help popover UI pattern. It displ
 - **Empty body text**: If `entry.body` is an empty string, the component renders an empty paragraph rather than erroring. Callers are responsible for supplying meaningful body text.
 - **Empty title**: If `entry.title` is an empty string or omitted, the component MUST NOT render the title section; only the body text is rendered.
 - **Null or undefined flavor**: If `entry.flavor` is `undefined` or `null`, the flavor defaults to `"info"` and the Info icon is rendered.
-- **Invalid flavor value**: `entry.flavor` is typed as a closed union (`"help" | "info" | "new"`) at compile time. A value outside that union bypasses the type system (e.g., from untyped JavaScript) — the component will error attempting to look up the icon and label in the `FLAVORS` table. Callers MUST ensure flavor is one of the three valid values.
-- **Long title text**: Title text longer than approximately 30 characters may wrap to multiple lines; no specific line-clamp or truncation is applied by this component.
+- **Invalid flavor value**: `entry.flavor` is typed as a closed union (`"help" | "info" | "new"`) at compile time. A value outside that union bypasses the type system (e.g., from untyped JavaScript). The component then throws a `TypeError` when it destructures the missing `FLAVORS` row; the error does not name the bad flavor. It does not fall back to `"info"`, so a wrong value fails loudly rather than showing the wrong icon. Callers MUST ensure flavor is one of the three valid values.
+- **Long title text**: A long title wraps to multiple lines within the fixed panel width; no specific line-clamp or truncation is applied by this component.
 - **Long body text**: Body text is not constrained in height or line count; if `entry.body` is very long (e.g., multiple paragraphs), the popover panel will grow vertically. No maximum height or scrolling behavior is defined in this component.
 - **Whitespace in entry strings**: Leading or trailing whitespace in `entry.title` or `entry.body` is preserved and rendered as-is; no trimming is performed by this component.
 - **Special characters or markup in entry strings**: The component renders entry text as plain text; if `entry.body` or `entry.title` contains HTML markup or special characters (e.g., `<`, `>`), they are not interpreted. The caller is responsible for providing plain-text content.
@@ -136,7 +135,7 @@ Not applicable; Help Popover is a content panel with no independent URL or navig
 
 ## Localization
 
-The component owns three hardcoded English strings — the flavor labels `"Help"`, `"Information"`, and `"What's new"` defined in the `FLAVORS` table. These are not rendered as visible on-screen text, but they do reach assistive technology through the popover panel's accessible name, so they are user-facing in that sense. They are not currently externalized to a localization system. `entry.title` and `entry.body` are caller-supplied content; localizing that content is the caller's responsibility.
+The component owns three hardcoded English strings — the flavor labels `"Help"`, `"Information"`, and `"What's new"` defined in the `FLAVORS` table. These are not rendered as visible on-screen text, but they do reach assistive technology through the popover panel's accessible name, so they are user-facing in that sense. They are not currently externalized to a localization system; the English-only labels are an accepted debt recorded in Design Decisions. `entry.title` and `entry.body` are caller-supplied content; localizing that content is the caller's responsibility.
 
 ## Accessibility Options
 
@@ -160,17 +159,17 @@ Not applicable; the component does not emit logs.
 
 ## Platform Notes
 
-- **React/Web**: Help Popover Content is implemented as a functional React component using Tailwind CSS for styling and Lucide React for icons (`CircleHelp`, `Info`, `Sparkles`). The component composes `PopoverContent` (a Base UI Popover wrapper) with its `arrow` prop enabled, and must be used together with a `Popover.Trigger` element to be functional. It sets `aria-label` on `PopoverContent` to the flavor label combined with `entry.title` when present, and marks the icon `aria-hidden="true"`. The panel width is constrained via the Tailwind class `w-80`; title/body spacing uses `mb-1` (title bottom margin) and `gap-2.5` (icon/text gap). Import `HelpPopoverContent` from `@adh-sdk/ui/components/help-popover`.
-- **SwiftUI**: Implement using SwiftUI's `.popover()` modifier or `Menu` with `Label`. Render an `Image(systemName:)` for the flavor icon (`questionmark.circle`, `info.circle`, or `sparkles` for the three flavors — `help.circle` does not exist as an SF Symbol), a `Text` view for the optional title (`.font(.headline)` or similar emphasis), and a `Text` view for the body. Set `.accessibilityElement(children: .combine)` on the popover container and apply a custom `accessibilityLabel` combining flavor and title as described in Accessibility. Use `.frame(width: 320)` to constrain width to 320pt (`preferredContentSize` is a UIKit API, not available in SwiftUI).
-- **Kotlin (Compose)**: Implement using `Popup` or `DropdownMenu` with a `Card` or `Surface` for the panel. Use Material Design 3 icon resources (`HelpOutline`, `Info`, or `AutoAwesome`) for the three flavors. Apply `.width(320.dp)` and use `Row` for the icon+text layout. Set the popover container's `semantics { contentDescription = ... }` combining flavor and title per the Accessibility section. Apply color tokens from the design system (`MaterialTheme.colorScheme.onSurface` for `apt-text`, `MaterialTheme.colorScheme.onSurfaceVariant` for `apt-text-muted`).
+- **React/Web**: Help Popover (the `HelpPopoverContent` export) is implemented as a functional React component using Tailwind CSS for styling and Lucide React for icons (`CircleHelp`, `Info`, `Sparkles`). The component composes `PopoverContent` (a Base UI Popover wrapper) with its `arrow` prop enabled, takes the help entry as its `entry` prop, and must be used together with a `Popover.Trigger` element to be functional. It sets `aria-label` on `PopoverContent` to the flavor label combined with `entry.title` when present, and marks the icon `aria-hidden="true"`. The panel width is constrained via the Tailwind class `w-80`; title/body spacing uses `mb-1` (title bottom margin) and `gap-2.5` (icon/text gap). Import `HelpPopoverContent` from `@adh-sdk/ui/components/help-popover`.
+- **SwiftUI**: Implement using SwiftUI's `.popover()` modifier or `Menu` with `Label`. Render an `Image(systemName:)` for the flavor icon (`questionmark.circle`, `info.circle`, or `sparkles` for the three flavors — `help.circle` does not exist as an SF Symbol), a `Text` view for the optional title (`.fontWeight(.medium)`, keeping the body's size as in Appearance), and a `Text` view for the body. Put the flavor-and-title label on the popover container with `.accessibilityElement(children: .contain)` and `.accessibilityLabel(...)`, and leave the title and body `Text` views as separate readable children, so VoiceOver can still explore both (`.combine` with a custom label would replace the child text). The system popover draws its own arrow on iPad and Mac, which meets the arrow requirement; on iPhone, compact-width presentation may adapt to a sheet with no arrow. Use `.frame(width: 320)` to constrain width to 320pt (`preferredContentSize` is a UIKit API, not available in SwiftUI).
+- **Kotlin (Compose)**: Implement using `Popup` with a `Card` or `Surface` for the panel; do not use `DropdownMenu`, which is a menu rather than a non-modal help panel. Compose's `Popup` draws no arrow, so either draw one with a small custom shape or record the arrow requirement as a platform exception. Use Material Design 3 icon resources (`Icons.AutoMirrored.Outlined.HelpOutline`, `Icons.Outlined.Info`, or `Icons.Outlined.AutoAwesome`) for the three flavors. Apply `.width(320.dp)` and use `Row` for the icon+text layout. Set the panel's `semantics { paneTitle = ... }` combining flavor and title per the Accessibility section, to give it the dialog-like pane semantics. Apply color tokens from the design system (`MaterialTheme.colorScheme.onSurface` for `apt-text`, `MaterialTheme.colorScheme.onSurfaceVariant` for `apt-text-muted`).
 - **AppKit / UIKit**: On AppKit, implement as an `NSPopover` presenting an `NSViewController` whose view lays out the icon and text (e.g., with `NSStackView`); use `NSImage(systemSymbolName:)` for SF Symbols. On UIKit, implement as a `UIViewController` (popover presentation controller) or a SwiftUI view bridged via `UIHostingController`. On both, use SF Symbols (`questionmark.circle`, `info.circle`, `sparkles`) for the three flavors — `help.circle` does not exist. Constrain width to 320pt (`preferredContentSize = CGSize(width: 320, height: ...)` on UIKit; the AppKit popover's `contentSize`). Set the accessible label (`accessibilityLabel` on UIKit, `setAccessibilityLabel` on AppKit) combining flavor and title. Apply semantic colors for text (`UIColor.label` / `NSColor.labelColor` for `apt-text`, `UIColor.secondaryLabel` / `NSColor.secondaryLabelColor` for `apt-text-muted`).
-- **WinUI 3**: Implement as a `Flyout` with a `FlyoutPresenter` for positioning control (Top, Bottom, Left, Right). Use `FontIcon` with Segoe Fluent Icons glyphs for the three flavors: Help (``), Info (``), and, in place of the nonexistent "Sparkles" glyph, Megaphone (``) for the "new"/announcement flavor. Render a `StackPanel` (Horizontal) containing the icon and a `StackPanel` (Vertical) for title and body text. Set `Width="320"` on the Flyout content (`Flyout` has no `Title` property). Set `AutomationProperties.Name` on the Flyout content, combining flavor and title per Accessibility. Apply Fluent 2 brushes (`TextFillColorPrimaryBrush` for `apt-text`, `TextFillColorSecondaryBrush` for `apt-text-muted`).
+- **WinUI 3**: Implement as a `Flyout`, positioned with `Flyout.Placement` (`FlyoutPlacementMode`). Map `side` and `align` to it: bottom with start, center or end is `BottomEdgeAlignedLeft`, `Bottom` or `BottomEdgeAlignedRight`; top uses `TopEdgeAlignedLeft`, `Top` or `TopEdgeAlignedRight`; left and right use `Left` and `Right`, where `align` has no equivalent. `Flyout` draws no arrow, so record the arrow requirement as a platform exception, or use a `TeachingTip`, which has one. Use `FontIcon` with Segoe Fluent Icons glyphs for the three flavors: Help (`&#xE897;`), Info (`&#xE946;`), and, in place of the nonexistent "Sparkles" glyph, Megaphone (`&#xE789;`) for the "new"/announcement flavor. Render a `StackPanel` (Horizontal) containing the icon and a `StackPanel` (Vertical) for title and body text. Set `Width="320"` on the Flyout content (`Flyout` has no `Title` property). Set `AutomationProperties.Name` on the Flyout content, combining flavor and title per Accessibility. Apply Fluent 2 brushes (`TextFillColorPrimaryBrush` for `apt-text`, `TextFillColorSecondaryBrush` for `apt-text-muted`).
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/help-popover.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/help-popover.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -198,6 +197,14 @@ Not applicable; the component does not emit logs.
 **Rationale**: This ensures consistency with the application's color scheme and supports light/dark mode switching via token overrides.
 **Approved**: pending
 
+
+**Decision**: The three flavor labels ("Help", "Information", "What's new") stay hardcoded English in the `FLAVORS` table, with no localization option.
+**Rationale**: The labels reach users only through the panel's accessible name, and the consuming sites are English-only today, so a localization hook would have no caller yet. The `no-hardcoded-strings` Compliance check records the debt as failed; the fix is to accept the three labels as a caller-supplied option when a second locale is needed.
+**Approved**: pending
+
+**Decision**: An out-of-union flavor throws rather than falling back to `"info"`.
+**Rationale**: The type system already forbids the value, so reaching it means a caller bug, and a thrown error is easier to notice than a quietly wrong icon. The error is a plain `TypeError` from the table lookup and does not name the flavor.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -216,6 +223,7 @@ Screen-reader-support and semantic-markup rest on the `aria-label`/`aria-hidden=
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Documented the invalid-flavor TypeError and recorded it and the English-only labels as Design Decisions, removed the unsupported 30-character wrap figure, unified the component name, linked the popover ingredient, neutralized the React prop wording, dropped the closed state row, and corrected the WinUI, SwiftUI and Compose notes. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: de-webified requirements/test vectors and moved mechanics into Platform Notes, fixed Appearance unit math, resolved title-truncation and focus-attribution contradictions, added test vectors for omitted title/null flavor/empty body/invalid flavor, corrected SwiftUI/AppKit/UIKit/Compose/WinUI platform notes and the React import specifier, filled in Configuration and Compliance tables, corrected the Localization claim, reformatted Design Decisions, renamed requirements to subject-only kebab-case, and added the popover ingredient to depends-on |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation (AI-assisted) |

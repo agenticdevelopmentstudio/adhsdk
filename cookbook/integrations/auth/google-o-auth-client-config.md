@@ -2,11 +2,11 @@
 id: 238f4d91-4a22-4a0d-ae4b-b4070d02b357
 title: "GoogleOAuthClientConfig"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,12 +36,12 @@ approved-date: ""
 
 `GoogleOAuthClientConfig` is the in-memory form of the Google "Desktop app" OAuth client that the user imports: the pair of `clientId` and `clientSecret` found in the client JSON that Google's console lets the user download. It is a `public struct` conforming to `Sendable` and `Equatable`, with two `public let` fields and no mutation after construction.
 
-It has two operations. `parse(json:)` turns the downloaded file into a config, or throws `IntegrationError.invalidSettings` (cookbook:351e3bf8-b137-4f59-94de-c769aa8b0666) with a reason. `installedJSON()` turns a config back into the downloaded file's shape, so values typed into a form travel through the same import and the same `parse` checks as an uploaded file, giving one validated entry point for the OAuth client.
+It has two operations. `parse(json:)` turns the downloaded file into a config, or throws `IntegrationError.invalidSettings` (the `IntegrationError` type, [adhsdk.ingredient.integrations.model.integration-error](cookbook:351e3bf8-b137-4f59-94de-c769aa8b0666)) with a reason. `installedJSON()` turns a config back into the downloaded file's shape, so values typed into a form travel through the same import and the same `parse` checks as an uploaded file, giving one validated entry point for the OAuth client.
 
 The type does no network, file, Keychain or logging work. Its callers use it as follows:
 
-- `MailIntegrationService` (cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) parses an imported file, stores the secret under `GoogleTokenProvider.clientSecretKey` in the secret store, saves the id in the provider config, and rebuilds a config from the two stored halves when a sign-in or refresh needs one.
-- `GmailSettingsModel` (cookbook:2fa64944-9744-4d71-8fed-f785e7ce1e51) builds a config from the two form fields (trimmed) and sends `installedJSON()` as the import payload.
+- `MailIntegrationService` ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) parses an imported file, stores the secret under `GoogleTokenProvider.clientSecretKey` in the secret store, saves the id in the provider config, and rebuilds a config from the two stored halves when a sign-in or refresh needs one.
+- `GmailSettingsModel` ([adhsdk.ingredient.integrations.gmail-settings-model](cookbook:2fa64944-9744-4d71-8fed-f785e7ce1e51)) builds a config from the two form fields (trimmed) and sends `installedJSON()` as the import payload.
 - `GoogleSignInFlow` (implemented by `AppAuthGoogleSignIn`), `GoogleTokenEndpoint` (implemented by `URLSessionGoogleTokenEndpoint`) and `GoogleTokenProvider` take a config as a parameter to sign in, refresh and fetch access tokens.
 
 ## Behavioral Requirements
@@ -62,17 +62,17 @@ Parsing (`parse(json:)`)
 - **parse-success**: `parse(json:)` MUST return a config whose `clientId` is `installed.client_id` and whose `clientSecret` is `installed.client_secret`, exactly as written in the file.
 - **parse-extra-keys-ignored**: `parse(json:)` MUST ignore every other key in the file, in the root object and inside `installed` (for example `auth_uri`).
 - **parse-installed-wins**: `parse(json:)` MUST read `installed` and ignore `web` when both keys are present, because the Web-client rejection applies only when `installed` is absent.
-- **parse-no-trimming**: `parse(json:)` MUST NOT trim or otherwise alter the id or secret; a value of only whitespace is accepted because it is non-empty.
+- **parse-no-trimming**: `parse(json:)` MUST NOT trim or otherwise alter the id or secret; a value of only whitespace is accepted because it is non-empty (see Design Decisions for why that late failure is accepted).
 - **parse-error-type**: Every failure of `parse(json:)` MUST be an `IntegrationError.invalidSettings` whose associated string is the reason.
 - **parse-is-pure**: `parse(json:)` MUST have no side effect and MUST NOT perform I/O.
 
 Serialising (`installedJSON()`)
 
 - **installed-json-shape**: `installedJSON()` MUST return JSON of exactly the form `{"installed":{"client_id":<id>,"client_secret":<secret>}}`, with no other keys.
-- **installed-json-key-order**: `installedJSON()` MUST emit keys in sorted order, so equal configs produce identical output on one platform. Escaping of characters such as `/` is platform-specific, so byte equality across platforms is not required; every output MUST still decode to the same values. The Swift source uses `.sortedKeys`.
+- **installed-json-key-order**: `installedJSON()` MUST emit keys in sorted order, so equal configs produce identical output on one platform. Escaping of characters such as `/` is platform-specific, so byte equality across platforms is not required; every output MUST still decode to the same values.
 - **installed-json-round-trip**: The output of `installedJSON()` MUST be accepted by `parse(json:)` and MUST yield an equal config whenever both fields are non-empty.
 - **installed-json-no-validation**: `installedJSON()` MUST NOT validate the fields. A config with an empty field serialises, and its output is then rejected by `parse(json:)`.
-- **installed-json-throws**: `installedJSON()` MUST surface any serialisation failure to the caller as a typed error rather than swallowing it. With two string values the Swift source has no path that raises one (it is declared `throws` and propagates any `JSONSerialization` error).
+- **installed-json-throws**: `installedJSON()` MUST be able to report a serialisation failure to the caller as a typed error rather than swallowing it. With two string values no input raises one, so no test vector applies to this requirement.
 
 Ordering and concurrency
 
@@ -82,7 +82,7 @@ Security of the secret
 
 - **secret-sensitivity**: `clientSecret` is sensitive credential material. The type itself MUST NOT persist, log or transmit it; it exists only as a field value held by its owner.
 - **secret-not-in-errors**: The error strings thrown by `parse(json:)` MUST NOT contain the file's contents, the client id or the client secret.
-- **secret-no-redaction-gap**: The Swift source has no redaction: the synthesized `description` and `dump` of the struct print `clientSecret`. This is a known gap, stated here as fact; no requirement or test covers it (see Design Decisions and Compliance).
+- **secret-masked-in-descriptions**: The textual descriptions of a config (`description`, `debugDescription` and a `dump`-style mirror dump) SHOULD mask `clientSecret`. The source does not yet conform; see #edge-cases/secret-printed-by-description.
 
 ## Appearance
 
@@ -113,8 +113,9 @@ Not applicable — this is a data type and parser, not a visual component.
 | gocc-011 | installed-json-no-validation | `GoogleOAuthClientConfig(clientId: "", clientSecret: "s").installedJSON()` then `parse(json:)` | `installedJSON()` returns data; `parse(json:)` throws the missing-keys message |
 | gocc-012 | memberwise-init, value-semantics | Two configs built with the same two strings, one with a different secret | The first two compare equal; the third does not |
 | gocc-013 | secret-not-in-errors | Two inputs: the non-JSON body `not json GOCSPX-abc`, and `{"installed":{"client_id":"","client_secret":"GOCSPX-abc"}}` | For each, the thrown reason is the fixed message for that failure and does not contain "GOCSPX-abc" |
+| gocc-014 | secret-masked-in-descriptions | `"\(GoogleOAuthClientConfig(clientId: "id", clientSecret: "GOCSPX-abc"))"` (no test asserts this yet) | The text does not contain "GOCSPX-abc" (the source does not yet conform) |
 
-Test traceability: gocc-001 to gocc-003 are the assertions of `GoogleOAuthTests` (target `AgenticDeveloperHubSDKIntegrationsTests`). gocc-010 is derived from `GmailSettingsModelTests` and the use of `installedJSON()` in `MailIntegrationServiceTests`. gocc-004 to gocc-009 and gocc-011 to gocc-013 follow from the source and have no test beside it.
+Test traceability: gocc-001 to gocc-003 are the assertions of `GoogleOAuthTests` (target `AgenticDeveloperHubSDKIntegrationsTests`). gocc-010 is derived from `GmailSettingsModelTests` and the use of `installedJSON()` in `MailIntegrationServiceTests`. gocc-004 to gocc-009, gocc-011 to gocc-014 follow from the source and have no test beside it. Tests to add in `GoogleOAuthTests`: gocc-002 and gocc-003 (assert the reason, not only the type) `rejectsWebClientWithReason` and `rejectsMissingKeysWithReason`; gocc-004 `rejectsNonJSONAndNonObjectRoots`; gocc-005 `rejectsEmptyValues`; gocc-006 `rejectsWrongTypes`; gocc-007 `installedWinsOverWeb`; gocc-008 `doesNotTrimValues`; gocc-009 `installedJSONIsSortedAndShaped`; gocc-011 `installedJSONDoesNotValidate`; gocc-012 `equalityOverBothFields`; gocc-013 `errorsDoNotLeakSecret`; gocc-014 `descriptionMasksSecret`.
 
 ## Edge Cases
 
@@ -129,7 +130,7 @@ Test traceability: gocc-001 to gocc-003 are the assertions of `GoogleOAuthTests`
 - **unicode-and-special-characters**: A value with quotes, backslashes or non-ASCII characters MUST survive the `installedJSON()` then `parse(json:)` round trip, because the JSON layer escapes and decodes them.
 - **large-input**: The source sets no size limit on the data; the whole input is decoded in memory. A caller SHOULD impose a limit before calling if the file comes from an untrusted source.
 - **missing-keys-message**: The single missing-keys reason names both `installed.client_id` and `installed.client_secret` even when only one is absent, empty or mistyped, because the code does not distinguish which check failed (see Design Decisions).
-- **secret-printed-by-description**: The struct's synthesized `description` and `dump` output includes `clientSecret`, and the source adds no masking.
+- **secret-printed-by-description**: Gap against #behavioral-requirements/secret-masked-in-descriptions: the struct's synthesized `description` and `dump` output includes `clientSecret`, and the source adds no masking. This is the one statement of the gap; Design Decisions and Compliance point here.
 - **concurrent-calls**: Not applicable beyond `no-shared-state`: both functions are pure and the type is immutable, so there is nothing to serialise.
 - **network-and-offline**: Not applicable: the type performs no network, file-system or Keychain access, so there is no unreachable dependency or offline state.
 - **cancellation-and-timeout**: Not applicable: both operations are synchronous and complete without suspension, so there is nothing to cancel and no timeout exists.
@@ -174,8 +175,8 @@ Not applicable: the source emits no event, metric or counter.
 ## Privacy
 
 - **Data collected**: The user's own Google OAuth client ID and client secret, supplied by the user.
-- **Storage**: None by this type. Persisting the secret is the caller's job: `MailIntegrationService` (cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a) (`importOAuthClient`) stores the secret in the secret store (Keychain) and the id in the provider config; neither is done here. Token lifetime and revocation belong to `GoogleTokenProvider` and `AppAuthGoogleSignIn`, not to this type.
-- **Transmission**: None by this type. The values are later sent to Google's token endpoint by `URLSessionGoogleTokenEndpoint`, outside this source. `GmailSettingsModel` (cookbook:2fa64944-9744-4d71-8fed-f785e7ce1e51) sends `installedJSON()` to the service as an import request.
+- **Storage**: None by this type. Persisting the secret is the caller's job: `MailIntegrationService` ([adhsdk.ingredient.integrations.service.mail-integration-service](cookbook:aed9acc9-6340-487b-acfb-b7b13f14e59a)) (`importOAuthClient`) stores the secret in the secret store (Keychain) and the id in the provider config; neither is done here. Token lifetime and revocation belong to `GoogleTokenProvider` and `AppAuthGoogleSignIn`, not to this type.
+- **Transmission**: None by this type. The values are later sent to Google's token endpoint by `URLSessionGoogleTokenEndpoint`, outside this source. `GmailSettingsModel` ([adhsdk.ingredient.integrations.gmail-settings-model](cookbook:2fa64944-9744-4d71-8fed-f785e7ce1e51)) sends `installedJSON()` to the service as an import request.
 - **Retention**: A config lives as long as its owner holds it. Deleting the stored client is the caller's responsibility (`removeProvider` in `MailIntegrationService`).
 
 ## Logging
@@ -184,7 +185,7 @@ Not applicable: the source makes no log call, and the reasons it throws carry no
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform: Swift. The code is `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleOAuthClientConfig.swift` and uses only Foundation (`JSONSerialization`, `Data`). `installedJSON()` is declared `throws` and passes `.sortedKeys` to `JSONSerialization`; `parse(json:)` decodes with `try?`, discarding the decoder error. It is a `Sendable`, `Equatable` struct, so SwiftUI form models can hold it directly. The form that feeds it, `GmailSettingsModel` (cookbook:2fa64944-9744-4d71-8fed-f785e7ce1e51) in the macOS target, trims the two fields before building the config.
+- **SwiftUI**: Source platform: Swift. The code is `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleOAuthClientConfig.swift` and uses only Foundation (`JSONSerialization`, `Data`). `installedJSON()` is declared `throws` and passes `.sortedKeys` to `JSONSerialization`; `parse(json:)` decodes with `try?`, discarding the decoder error. It is a `Sendable`, `Equatable` struct, so SwiftUI form models can hold it directly. The form that feeds it, `GmailSettingsModel` ([adhsdk.ingredient.integrations.gmail-settings-model](cookbook:2fa64944-9744-4d71-8fed-f785e7ce1e51)) in the macOS target, trims the two fields before building the config.
 - **Compose**: Use a Kotlin `data class` with two `val` strings for equality, and parse with `org.json.JSONObject` or `kotlinx.serialization` with `JsonObject` access. Android has no Foundation `Equatable` or `Sendable`; immutability of the `data class` gives the same thread-safety. Throw a sealed-class error carrying the reason in place of `IntegrationError.invalidSettings`. Android's `JSONObject.optString` returns an empty string for a missing key, so check key presence and type explicitly to keep the missing-key and empty-value errors distinct from success.
 - **React/Web**: Use a frozen object or `readonly` interface for the two fields, and `JSON.parse` inside a try block for the not-valid-JSON case. `JSON.parse` accepts arrays and primitives, so check for a plain object before reading `installed`. Match the key presence rule: Web rejection only when `installed` is undefined and `web` is defined. Serialise with an explicit object literal built in sorted key order, since `JSON.stringify` follows insertion order; it does not escape forward slashes, which differs from the Swift output but still round-trips.
 - **AppKit / UIKit**: The type is identical on both Apple UI stacks because it uses Foundation only. A UIKit or AppKit settings form should trim the entered id and secret before building the config, as `GmailSettingsModel` does, and import through `installedJSON()` so the same checks apply as for a dropped file.
@@ -194,10 +195,11 @@ Not applicable: the source makes no log call, and the reasons it throws carry no
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleOAuthClientConfig.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleOAuthClientConfig.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleOAuthClientConfig.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -218,7 +220,7 @@ Not applicable: the source makes no log call, and the reasons it throws carry no
 **Approved**: pending
 
 **Decision**: The memberwise initializer does not validate, and `parse(json:)` does not trim.
-**Rationale**: Validation lives in one place, the import path, and trimming lives in the form model that owns user typing. A config built by the service from stored values is rebuilt as is. A consequence is that a whitespace-only value passes `parse(json:)`.
+**Rationale**: Validation lives in one place, the import path, and trimming lives in the form model that owns user typing. The initializer is for rebuilding a config from stored values, which `MailIntegrationService` does as is; callers building a config from a form MUST go through `installedJSON()` and `parse(json:)` so the same checks apply. A consequence is that a whitespace-only value passes `parse(json:)` and fails later at Google's token endpoint, which is accepted because the form model trims before building a config and the type does not guess what a credential looks like.
 **Approved**: pending
 
 **Decision**: `parse(json:)` collapses every decoding failure into one fixed message.
@@ -226,7 +228,7 @@ Not applicable: the source makes no log call, and the reasons it throws carry no
 **Approved**: pending
 
 **Decision**: The type holds the secret as a plain `String` and leaves storage to the caller.
-**Rationale**: The type is a transient carrier between import and the token calls. `MailIntegrationService` keeps the secret in the Keychain through its secret store and only the id in the database. The type itself offers no redaction (no `CustomStringConvertible` mask), so the synthesized `description` and `dump`, and any caller printing a config, would print the secret. This is a known gap, not a requirement.
+**Rationale**: The type is a transient carrier between import and the token calls. `MailIntegrationService` keeps the secret in the Keychain through its secret store and only the id in the database. The redaction gap is described once, at #edge-cases/secret-printed-by-description.
 **Approved**: pending
 
 ## Compliance
@@ -240,11 +242,10 @@ Not applicable: the source makes no log call, and the reasons it throws carry no
 | [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | partial | security |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 
-The type passes separation-of-concerns: it only parses and serialises one file shape, while storage, network and form handling sit in `MailIntegrationService`, the token types and `GmailSettingsModel`. Unit-test coverage is partial: `GoogleOAuthTests` covers a valid file, a Web client and a missing key (the last two asserting only the error type), and the form model's test covers the `installedJSON()` round trip, but no test beside the source covers invalid JSON, empty values, wrong types, both keys present or key sorting. Explicit error handling passes because every failure is a typed `invalidSettings` with a reason. Secure storage is partial because the type stores nothing itself and leaves the secret in an ordinary `String`, with the Keychain write done by its caller. No-hardcoded-strings fails because the three error reasons are English literals with no string table.
-
-Secure log output is partial: the type logs nothing and its errors carry no file content, but the synthesized `description` and `dump` print `clientSecret` because the struct has no redaction.
+The type passes separation-of-concerns: it only parses and serialises one file shape, while storage, network and form handling sit in `MailIntegrationService`, the token types and `GmailSettingsModel`. Unit-test coverage is partial: `GoogleOAuthTests` covers a valid file, a Web client and a missing key (the last two asserting only the error type), and the form model's test covers the `installedJSON()` round trip, but no test beside the source covers invalid JSON, empty values, wrong types, both keys present or key sorting. Explicit error handling passes because every failure is a typed `invalidSettings` with a reason. Secure storage is partial because the type stores nothing itself and leaves the secret in an ordinary `String`, with the Keychain write done by its caller. No-hardcoded-strings fails because the three error reasons are English literals with no string table. Secure log output is partial: the type logs nothing and its errors carry no file content, but it fails #behavioral-requirements/secret-masked-in-descriptions (see #edge-cases/secret-printed-by-description).
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Rewrote links to rdid form, made secret masking a SHOULD, removed Swift specifics, clarified the init decision, and added a secret-masking vector. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

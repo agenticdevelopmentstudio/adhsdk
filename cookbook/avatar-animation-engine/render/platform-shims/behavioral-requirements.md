@@ -85,8 +85,9 @@
   `a→a`, `b→b`, `c→c`, `d→d`, `e→tx`, `f→ty` — converting each `Double` to
   `CGFloat`, with no other transformation.
 - **ink-color-from-hex**: `CGColor.avatarInk(_:)` MUST parse a `#rrggbb` (or
-  `#rgb`) hex string into an sRGB `CGColor` with alpha fixed at `1`, and MUST
-  return `nil` when the string does not parse as a hex color.
+  `#rgb`) hex string into an sRGB `CGColor` with alpha fixed at `1`. The
+  leading `#` is optional and hex digits are case-insensitive (both follow
+  `Color.parseHex`). It MUST return `nil` when the string does not parse as a hex color.
 - **ink-color-excludes-item-alpha**: `CGColor.avatarInk(_:)` MUST NOT
   incorporate a display item's `paint.alpha` into the returned color; alpha
   MUST be applied separately, through the target's own opacity.
@@ -175,12 +176,3 @@
 - **cap-join-source-shared**: On both platforms, the line cap and line join
   used to stroke an item MUST come from the character's `strokeStyle`, never
   from a per-item value.
-- **cap-join-vocabulary-diverges**: The two platforms MUST diverge in how an
-  unrecognized cap/join value is handled: the Apple bridge maps it to a
-  Core Graphics default (`stroke-cap-mapping`, `stroke-join-mapping`), while
-  the web path writes `strokeStyle.linecap`/`.linejoin` straight through with
-  no mapping and no fallback (`svg-linecap-linejoin-verbatim`) — a
-  consequence of `StrokeStyle.linecap`/`.linejoin` being an unconstrained
-  `String` in the Apple config type versus a `"round" | "butt"` /
-  `"round" | "miter"` union in the web config type.
-

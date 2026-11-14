@@ -2,7 +2,7 @@
 id: 866770e9-cc76-452f-8216-ee98a8fa1390
 title: "Detached Process"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,8 @@ tags:
   - foundation
   - process
 depends-on: []
-related: []
+related:
+  - 517adfce-44e7-404e-8a7b-b1e304da32e7
 references: []
 approved-by: ""
 approved-date: ""
@@ -29,9 +30,9 @@ approved-date: ""
 
 ## Overview
 
-`DetachedProcess` starts a command that outlives the process that started it and is no one's child but launchd's. A `/bin/sh` trampoline starts the command in the background and exits at once, so by the time `spawn` returns the command has been reparented. The status-line dispatcher kills a timed-out renderer by walking its descendants; a process reparented this way is out of that walk's reach, and it leaves the caller's session too, so a signal to the terminal's process group misses it as well.
+`DetachedProcess` starts a command that outlives the process that started it and is no one's child but launchd's. A `/bin/sh` trampoline starts the command in the background and exits at once, so by the time `spawn` returns the command has been reparented. The motivating caller is the status-line dispatcher (see [adhsdk.ingredient.foundation.claude-hooks.claude-status-line](cookbook:517adfce-44e7-404e-8a7b-b1e304da32e7)), though nothing in the type ties it to that caller. The dispatcher kills a timed-out renderer by walking its descendants; a process reparented this way is out of that walk's reach, and it leaves the caller's session too, so a signal to the terminal's process group misses it as well.
 
-`FeedLock` is its companion. Claude Code re-renders the status line often, and a feed can take seconds, so each session gets one non-blocking `flock` lock: a render that finds the previous feed still running skips its own, and the next render carries the newer snapshot.
+`FeedLock` is its companion. Claude Code re-renders the status line often, and a feed can take seconds, so each session gets one non-blocking `flock` lock (the file name carries the fixed infix `-statusline-feed-`, a status-line-specific choice): a render that finds the previous feed still running skips its own, and the next render carries the newer snapshot.
 
 ## Behavioral Requirements
 
@@ -80,10 +81,11 @@ Not applicable — this is a process-launch helper, not a visual component.
 | detached-process-001 | spawn-payload-fd3, spawn-environment, spawn-reparent | A script recording its stdin, environment and parent pid; `testTheCommandGetsThePayloadAndEnvironmentAndHangsOffLaunchd` | The command read the payload, saw only the given environment, and its parent pid was 1 |
 | detached-process-002 | spawn-nonexistent-command | An executable path that does not exist; `testANonexistentCommandStillReturnsAtOnce` | `spawn` returns at once without hanging |
 | detached-process-003 | lock-contended, lock-release | Acquire twice for one session, release, acquire again; `testASecondFeedForTheSameSessionIsRefusedUntilTheFirstEnds` | Second acquire is nil until the first is released, then succeeds |
-| detached-process-004 | lock-session-sanitised, lock-file-name | A session id with path separators and non-ASCII scalars; `testASessionIDNeverEscapesTheLockDirectory` | The directory holds one file, `stenographer-statusline-feed-______x__.lock`, for session id `../../x/é` |
+| detached-process-004 | lock-session-sanitised, lock-file-name | A session id with path separators and non-ASCII scalars; `testASessionIDNeverEscapesTheLockDirectory` | The directory holds one file, `<name>-statusline-feed-______x__.lock`, for session id `../../x/é`; the test passes `name: "stenographer"`, so the file is `stenographer-statusline-feed-______x__.lock` |
 | detached-process-005 | lock-unguarded-fallback | A lock directory that does not exist or is not writable; `testAnUnwritableLockDirectoryDoesNotStopTheFeed` | `acquire` returns a lock, not nil |
 | detached-process-006 | spawn-trampoline | A command run with the single argument `a b'c$d` (derived from the positional-parameter script; no test covers it) | The command receives that argument as one unchanged word |
-
+| detached-process-007 | lock-session-sanitised | Session ids of 128 and of 129 ASCII letters `a`, derived from the source (no test covers it) | The 128-scalar id appears whole in the file name; the 129-scalar id is cut to its first 128, so both name the same lock file when the first 128 scalars match |
+| detached-process-008 | spawn-payload-fd3, spawn-environment | `stdin` empty `Data` and an empty `environment`, derived from the source (no test covers it) | The command sees immediate end of input and has no environment variables |
 ## Edge Cases
 
 - Null and empty input: an empty payload is written as zero bytes and the command sees immediate end of input (MUST); an empty environment gives the command no variables (MUST); an executable path that is empty fails inside the shell and `spawn` still returns true (MUST).
@@ -93,6 +95,7 @@ Not applicable — this is a process-launch helper, not a visual component.
 - Error states: a failed `pipe` or `posix_spawn` returns false and closes its descriptors (MUST); a failed payload write is swallowed and `spawn` returns true, the gap marked in Behavioral Requirements.
 - Interrupted wait: the wait for the trampoline retries on `EINTR` (MUST).
 - Offline or disconnected state: not applicable; nothing here uses the network, though the command may.
+- Lock file accumulation: `release()` only closes the descriptor and never unlinks the file, so one lock file per session stays in the lock directory; the source does no cleanup, so removal is left to the operating system's temporary-directory cleanup.
 - Stale lock file: a lock file left on disk by a dead process is harmless because the lock is the `flock`, not the file's existence (MUST).
 
 ## Configuration
@@ -106,9 +109,8 @@ Not applicable — this is a process-launch helper, not a visual component.
 | `sessionID` | `String` | required | Identifies the feed lock |
 | `name` | `String` | required | The daemon's name, part of the lock file name |
 | `directory` | `URL` | the temporary directory | Where lock files live |
-| session id limit | `Int` | `128` | Scalars of the session id kept in the lock file name |
-| lock file mode | `mode_t` | `0600` | Mode of a new lock file |
 
+The session id limit (`128` scalars) and the lock file mode (`0600`) are fixed constants, not options; they are specified by **lock-session-sanitised** and **lock-acquire**.
 ## Deep Linking
 
 Not applicable: this code defines no URL or deep link.
@@ -152,7 +154,7 @@ Not applicable: this code uses no OSLog and reports failure only through its ret
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/DetachedProcess.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/DetachedProcess.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -200,4 +202,5 @@ separation-of-concerns passes: spawning and the per-session lock are each one sm
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Linked the status-line recipe as related, framed the dispatcher as the motivating caller, moved fixed constants out of Configuration, tied vector 004 to the test's name, added two test vectors, and recorded that lock files are never removed. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

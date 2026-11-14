@@ -4,11 +4,11 @@
     "id": "d9b07d1e-b53c-4efa-86f1-82a31ad9f02f",
     "title": "Progress Modal",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a16a4d01b9521868",
+  "synced": "671b4285bc408001",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

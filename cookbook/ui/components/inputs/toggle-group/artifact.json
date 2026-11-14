@@ -4,11 +4,11 @@
     "id": "dffc1431-7386-4acf-94bc-6043c5c7eebc",
     "title": "ToggleGroup",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-07-03",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -25,12 +25,16 @@
       "ui"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "0f5b7167-b375-4f44-977b-566f720a453d",
+      "3b509297-83b2-4a5b-a331-56d0d4be548d",
+      "951b86ac-cf75-46ec-9746-d15fcb4618b4"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "16de8589d3cffc46",
+  "synced": "8497cc8fde72b6ad",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

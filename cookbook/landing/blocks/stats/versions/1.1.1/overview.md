@@ -1,0 +1,3 @@
+
+Stats renders a three-column grid of statistics pairs—each a number or metric (`term`) paired with its explanation or label (`detail`). At viewport widths of 34rem (≈544px) and above, entries lay out three per row and a fourth entry wraps onto a new row; below 34rem — for example at 375px — the grid collapses to a single column and entries stack one per row. The component is designed for quick visual scanning across multiple statistics without interaction. It uses semantic HTML (`dl`, `dt`, `dd`) to encode the relationship between statistic and caption, making it accessible and SEO-friendly. Use it to display side-by-side key metrics, counts, or comparable measurements.
+

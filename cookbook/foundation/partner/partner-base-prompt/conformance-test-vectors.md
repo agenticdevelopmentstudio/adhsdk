@@ -1,4 +1,6 @@
 
+Vectors 001 to 008 are asserted by the named tests. Vectors 009 onward are derived from the source and have no test yet.
+
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | partner-base-prompt-001 | system-prompt-prefix, system-prompt-enabled-only, system-prompt-job-section | Test `systemPromptHasHeadingForEnabledJobOnly`: jobs `General coding partner` (enabled, guidelines `Be useful.`) and `Sleeper` (disabled) | Prompt starts with `text`, contains `## Job: General coding partner\n\nBe useful.` and does not contain `## Job: Sleeper` |
@@ -18,4 +20,7 @@
 | partner-base-prompt-015 | skill-enabled-ignored | `skillMarkdown(for:)` of the same job with `isEnabled` true and false | Identical strings |
 | partner-base-prompt-016 | base-sections | Read `text` | The headings `The window`, `What reaches you`, `Tools`, `Attention items`, `Sessions`, `Running a job's steps` and `Git` appear in that order |
 | partner-base-prompt-017 | system-prompt-pure | Call `systemPrompt(jobs:)` twice with the same jobs | Equal strings |
+| partner-base-prompt-018 | base-text-constant, base-paragraph-lines | Read `text` | Equals the exact base text, and no paragraph contains an internal line break |
+| partner-base-prompt-019 | steps-heading, steps-code-review-note, steps-line-format, steps-condition, steps-no-trailing-newline | The job under "Exact steps section" | `systemPrompt(jobs:)` equals `text` followed by the exact section given there |
+| partner-base-prompt-020 | skill-name-id-unchecked | `skillMarkdown(for:)` for a job with id `a b` | The frontmatter contains `name: adkitchen-partner-a b` unchanged |
 

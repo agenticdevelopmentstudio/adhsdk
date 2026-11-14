@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.3 | 2026-11-14 | Mike Fullerton | Added aria-valuetext, accessible-name and dev-warning requirements with Known gaps and vectors, typed value and onChange as T, raised render-hint and custom-id to MUST, restated edge cases as rules, made Appearance and States platform-neutral, added clamp and inert rules to every platform note, and split the compliance prose into bullets. |
 | 1.3.2 | 2026-09-25 | Mike Fullerton | Wrapped Choice<T>[] in code span; added best-practices compliance rows. |
 | 1.3.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: behavioral requirements restated platform-neutral and renamed to subject-only kebab-case, with render-label promoted to MUST; value-match contract contradiction between Configuration and requirements resolved to the documented fallback; Design Decisions reformatted to Decision/Rationale/Approved; Compliance table added; Edge Cases narration replaced with observable behavior and new test vectors added for empty/single choice, keyboard input, type mismatch, and prop-only updates; Platform Notes API errors fixed for SwiftUI, Compose, AppKit, UIKit, and WinUI 3; status set to draft pending the two open accessibility gaps |

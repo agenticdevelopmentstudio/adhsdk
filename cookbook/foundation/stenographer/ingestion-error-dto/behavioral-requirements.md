@@ -1,4 +1,5 @@
 
+- **timestamp-format**: `quarantinedAt`, `lastRetriedAt`, `updatedAt` and `resolvedAt` are Strings that the daemon writes as ISO-8601 times (`ISO8601DateFormatter`).
 - **error-fields**: An `IngestionErrorDTO` MUST carry `filename`, `eventType`, `sessionId`, `quarantinedAt`, `reason` (String), `retryCount` (Int), `lastRetriedAt` (optional String) and `exhausted` (Bool).
 - **error-live-file**: An `IngestionErrorDTO` MUST describe a file still quarantined on disk; the daemon's `QuarantineService.list()` builds one per event file in the errors directory, not counting `.meta.json` sidecars.
 - **error-reason**: `reason` MUST be read from the file's `.meta.json` sidecar, or be the placeholder `unknown (quarantined before reason capture)` for a file quarantined before reason capture.
@@ -21,6 +22,7 @@
 - **progress-still-failing**: `stillFailing` MUST count the files whose retry failed, which stay quarantined.
 - **progress-polling**: A client MUST poll `RetryProgressDTO` until `running` is false after starting a batch.
 - **progress-async**: The Retry All batch MUST run off the XPC and HTTP reply thread, so a large backlog cannot time the caller out; starting it while a batch is running changes nothing and returns the live progress. The periodic self-healing batch runs on its scheduler's task and fills the same counters.
-- **conformance-protocols**: `IngestionErrorDTO`, `IngestionErrorLogDTO` and `RetryProgressDTO` MUST be `Codable` and `Sendable` and MUST NOT be declared `Equatable`.
+- **conformance-protocols**: `IngestionErrorDTO`, `IngestionErrorLogDTO` and `RetryProgressDTO` MUST be `Codable` and `Sendable`; they are not declared `Equatable`.
+- **unknown-status**: A client MUST handle a `status` outside the five values, since the type is a String and decodes any value.
 - **no-validation**: The initializers MUST NOT validate: `status` is an unconstrained String here, and counts that do not add up are accepted.
 

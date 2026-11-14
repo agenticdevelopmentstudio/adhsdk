@@ -1,5 +1,5 @@
 
-Vectors AC-001 to AC-003 and AC-006 are derived from `AccountUserTests` and `AccountPresentationAnchorTests` in `AccountsTests.swift`. The others are derived from the declarations in `Account.swift`.
+Vectors AC-001 to AC-003 and AC-006 are derived from `AccountUserTests` and `AccountPresentationAnchorTests` in `AccountsTests.swift`. The others are derived from the declarations in `Account.swift` and have no test yet (AC-004, AC-005 and AC-007 to AC-013).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -15,4 +15,5 @@ Vectors AC-001 to AC-003 and AC-006 are derived from `AccountUserTests` and `Acc
 | AC-010 | account-restore-idempotent | Call `restore()` twice on a conformer whose stored login is good | One check runs; `state` leaves `.restoring` once |
 | AC-011 | account-signup-url | A conformer with `signupURL == nil` | The accounts UI hides Signup |
 | AC-012 | no-validation | `AccountUser(id: "", name: "", email: "", avatarURL: nil)` | Construction succeeds with all fields stored as given |
+| AC-013 | account-user-initials-words | name `"ßa"`, email `"x@y.z"` | `"SS"` (uppercasing one `Character` yields two characters) |
 

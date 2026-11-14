@@ -2,7 +2,7 @@
 id: 704d4ae9-e344-44d4-b19c-eadfec082077
 title: "Status Line Capture"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,13 +19,14 @@ tags:
   - status-line
   - capture
   - detached-feed
-depends-on: []
+depends-on:
+  - 866770e9-cc76-452f-8216-ee98a8fa1390
+  - e75d7d1e-2a25-452d-9c26-ea5f7cd7fa6d
+  - 826153e3-cae8-4917-a1d3-c298a54ab558
+  - f3326f3a-cccd-4ac5-8dc1-84d660ed4581
+  - 9eb46f78-0ceb-455f-9584-b6b43ddf0871
 related: []
-references:
-  - packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/StatusLineCapture.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/DetachedProcess.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookCaptureTests.swift (adhsdk)
-  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/DetachedProcessTests.swift (adhsdk)
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -38,7 +39,7 @@ approved-date: ""
 
 The render returns as soon as its line is printed; the feed is handed to a detached copy of the helper run with `--capture-only`. The source comment gives the reason: the claudehelpers dispatcher kills a renderer still running after 3 seconds, a feed can take up to 17 (three `git` watchdogs and the post), and waiting for it threw the line away and killed the post with it. A detached feed is out of the dispatcher's reach and bounded by its own 20 second deadline.
 
-The toolkit core links no daemon client, so the transport is injected: `post` sends one hook event and says whether the daemon accepted it. The type is a caseless enum with six public static members: `captureOnlyFlag`, `parentPIDVariable`, `feedDeadline`, `run`, `parentPID` and `injected`, plus internal `detachFeed`, `feedOnce` and `feed`. It collaborates with `DetachedProcess`, `FeedLock`, `GitContextFingerprint`, `ProcessEnv`, `HookCaptureCommand`, `HookDropWriter` and `ClaudeHookConfiguration`.
+The toolkit core links no daemon client, so the transport is injected: `post` sends one hook event and says whether the daemon accepted it. It collaborates with [DetachedProcess](cookbook:866770e9-cc76-452f-8216-ee98a8fa1390) (and its `FeedLock`), [GitContextFingerprint](cookbook:e75d7d1e-2a25-452d-9c26-ea5f7cd7fa6d), `ProcessEnv`, [HookCaptureCommand](cookbook:826153e3-cae8-4917-a1d3-c298a54ab558), [HookDropWriter](cookbook:f3326f3a-cccd-4ac5-8dc1-84d660ed4581) and [ClaudeHookConfiguration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871).
 
 ## Behavioral Requirements
 
@@ -57,7 +58,7 @@ The toolkit core links no daemon client, so the transport is injected: `post` se
 
 ### Token recovery
 
-- **token-walk**: `run` MUST recover the OAuth token once per invocation by walking up the process tree from the parent pid (at most 16 hops, stopping at pid 1 or below, with a result cached per start pid for 30 seconds), because Claude Code scrubs `CLAUDE_CODE_OAUTH_TOKEN` from the environment it hands the command.
+- **token-walk**: `run` MUST recover the OAuth token once per invocation by walking up the process tree from the parent pid (at most 16 hops, the `maxHops` default of `ProcessEnv.oauthTokenWalkingUp`; stopping at pid 1 or below; with a result cached per start pid for 30 seconds, the `ttl` of `ProcessEnv`), because Claude Code scrubs `CLAUDE_CODE_OAUTH_TOKEN` from the environment it hands the command.
 - **token-carried**: When `captureOnly` is true and the walk finds no token, `run` MUST use `CLAUDE_CODE_OAUTH_TOKEN` from its own environment when that is non-empty, because a detached feed carries the token its renderer recovered for the time `claude` is gone.
 - **token-walk-first**: A token found by the walk MUST take precedence over the carried one.
 - **token-carried-only-capture**: When `captureOnly` is false, `run` MUST NOT use `CLAUDE_CODE_OAUTH_TOKEN` from its own environment as the recovered token.
@@ -82,11 +83,11 @@ The toolkit core links no daemon client, so the transport is injected: `post` se
 
 - **feed-parse**: `feedOnce` MUST read `session_id` from the payload when the payload is a JSON object with a string `session_id`.
 - **feed-lock**: When the payload has a string `session_id`, `feedOnce` MUST acquire a `FeedLock` for that session and the configuration's `name`, and MUST return without feeding when another feed holds it, because the next render brings a newer snapshot.
-- **feed-lock-release**: `feedOnce` MUST release the lock when the feed ends or its deadline passes.
+- **lock-name-sanitised**: A feed lock's file name MUST keep at most the first 128 Unicode scalars of the session id and MUST replace every scalar that is not an ASCII letter, an ASCII digit or `-` with `_`, so a session id never escapes the lock directory.
+- **feed-lock-release**: `feedOnce` MUST release the lock when the feed ends or its deadline passes, even when the queued work is still running, so a second feed for the session may overlap work the first has not finished; the overlap is accepted.
 - **feed-unlocked**: When the payload is not a JSON object, or has no string `session_id`, `feedOnce` MUST feed without a lock.
 - **feed-deadline**: `feedOnce` MUST wait for the feed no longer than `feedDeadline`, which MUST be 20 seconds, and MUST then return and release the lock even when the feed has not finished.
 - **feed-own-thread**: `feedOnce` MUST run the feed on a global background queue, not on the calling thread.
-- **feed-deadline-purpose**: `feedDeadline` MUST bound the whole feed, because each step has its own timeout (5 seconds per `git` call, 2 seconds for the post) and feeds must not pile up.
 
 ### Feed
 
@@ -119,7 +120,7 @@ Not applicable — this is a process-level routine with no user interface, not a
 
 ## Conformance Test Vectors
 
-Vectors `capture-001` to `capture-006`, `capture-008`, `capture-009` and `capture-016` are named for tests in `HookCaptureTests` and `DetachedProcessTests`; the rest are derived from the source, because no test calls `feedOnce`, `detachFeed` or `injected`.
+Vectors `capture-001` to `capture-006`, `capture-008`, `capture-009` and `capture-016` are named for tests in `HookCaptureTests` and `DetachedProcessTests`; the rest, including `capture-022` to `capture-031`, are derived from the source, because no test calls `feedOnce`, `detachFeed` or `injected`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -139,20 +140,30 @@ Vectors `capture-001` to `capture-006`, `capture-008`, `capture-009` and `captur
 | capture-014 | detach-helper-only | `detachFeed` with executable nil | False |
 | capture-015 | detach-command, detach-payload, detach-environment, detach-result | `detachFeed` with `hookBinaryPath` `/x/helper`, executable `/y/helper`, `statusLineArguments` `["statusline"]`, token `t`, parent 99 | `DetachedProcess.spawn` called with arguments `statusline --capture-only`, stdin the payload, an environment holding `CLAUDE_CODE_OAUTH_TOKEN` `t` and `CLAUDEHELPERS_STATUSLINE_PARENT_PID` `99`; the call returns the spawn result |
 | capture-016 | detach-result (test `testANonexistentCommandStillReturnsAtOnce`, in `DetachedProcessTests`) | `DetachedProcess.spawn` of a nonexistent executable | Returns at once |
-| capture-017 | token-carried, token-walk-first, token-carried-only-capture | `run` with `captureOnly` true, environment `CLAUDE_CODE_OAUTH_TOKEN` `carried`, and a parent whose tree holds no token | The feed's injected environment carries `carried`; with a token found by the walk, that token is used; with `captureOnly` false the variable is ignored |
+| capture-017 | token-carried | `run` with `captureOnly` true, environment `CLAUDE_CODE_OAUTH_TOKEN` `carried`, and a parent whose tree holds no token | The feed's injected environment carries `carried` |
 | capture-018 | feed-deadline | `feedOnce` with a `post` that sleeps beyond 20 seconds | `feedOnce` returns after about 20 seconds and the lock file can be acquired again |
 | capture-019 | feed-fingerprint | `feed` with a payload whose `cwd` is a git work tree and `post` capturing the payload | The posted payload is the output of `GitContextFingerprint.enriched` for the original payload |
 | capture-020 | feed-drop-silent | `feed` with `post` false and a drop directory that cannot be created | Returns normally; no error; no file |
+| capture-022 | token-walk-first | `run` with `captureOnly` true, environment `CLAUDE_CODE_OAUTH_TOKEN` `carried`, and a parent whose tree holds token `walked` | The token used is `walked` |
+| capture-023 | token-carried-only-capture | `run` with `captureOnly` false, environment `CLAUDE_CODE_OAUTH_TOKEN` `carried`, and a parent whose tree holds no token | `render` receives a nil token; the variable is ignored |
+| capture-024 | capture-only-no-print, capture-only-feeds-inline, capture-only-exit | `run` with `captureOnly` true and `post` recording | Nothing is written to standard output; the feed ran in-process through `feedOnce`; no second feed was detached; returns 0 |
+| capture-025 | detach-first | `run` with `captureOnly` false where `detachFeed` reports true, then where it reports false | The first leaves `post` uncalled in this process; the second runs the feed in-process through `feedOnce` |
+| capture-026 | feed-headless-skip | `feed` with environment `ADH_SDK_HEADLESS` set and `post` returning false | No drop file is written |
+| capture-027 | feed-token-source | `feed` with a token `t` given and `post` returning false | The drop envelope's environment holds `CLAUDE_CODE_OAUTH_TOKEN` `t`; no process-tree walk is made by `feed` |
+| capture-028 | feed-lock-release | `feedOnce` with a `post` that sleeps beyond the deadline, then a second `feedOnce` for the same session | The lock is free after the deadline and the second feed starts |
+| capture-029 | token-walk | A process chain 17 hops deep with the token only on the 17th; and two walks from one start pid within 30 seconds | The first finds no token; the second reads the process table once |
+| capture-030 | feed-own-thread | `feedOnce` with a `post` that records whether it ran on the calling thread | `post` ran on a global-queue thread, not the calling thread |
+| capture-031 | sigpipe-ignored | `run` with a detached child that exits before draining its stdin | The process survives and the line was already rendered |
 | capture-021 | render-before-feed, render-args | `run` with `captureOnly` false and a `render` that records its arguments and the time | `render` was given the payload and the recovered token (nil if none), and returned before `post` or `detachFeed` was called |
 
-SHOULD requirements: the document contains none. `sigpipe-ignored`, `post-injected`, `account-injected`, `no-daemon-client`, `detach-default-executable`, `feed-own-thread`, `feed-deadline-purpose`, `feed-parse` and `parent-pid-variable` are verified by reading the signatures or by the vectors above rather than by a dedicated one; `feed-parse` by `capture-007` and `capture-001`, `parent-pid-variable` by `capture-008`, and `feed-own-thread` by `capture-018`.
+`post-injected`, `account-injected`, `no-daemon-client`, `detach-default-executable`, `feed-parse` and `parent-pid-variable` are verified by reading the signatures or by the vectors above rather than by a dedicated one; `feed-parse` by `capture-007` and `capture-001`, and `parent-pid-variable` by `capture-008`.
 
 ## Edge Cases
 
 - **Null and empty input**: a payload that is empty, not JSON, or not an object makes `feedOnce` feed without a lock (MUST). A payload with a `session_id` that is not a string is treated as having none (MUST). An empty carried token is ignored (MUST), because the carried value is used only when non-empty.
 - **Boundary values**: a parent pid of 1 or less is ignored (MUST). A lock file name keeps at most the first 128 scalars of the session id, with every other character replaced by `_`, so a session id never escapes the lock directory (MUST, tested by `testASessionIDNeverEscapesTheLockDirectory`).
 - **Concurrent access**: two renders of one session can overlap. A feed that finds its session's previous one running skips (MUST), so feeds cannot pile up. The lock is a non-blocking exclusive file lock; it is released when the feed ends and also dies with the process, so a killed feed never leaves its session locked (the `FeedLock` comment). A second render for another session is unaffected.
-- **Error states**: a refused post becomes a drop file. A drop file that cannot be written is lost without a signal: `try?` discards the write error. An environment holding `ADH_SDK_HEADLESS` yields no envelope and so no drop file, by design (MUST). The marker belongs on the open question on `feed-drop-silent`; the source makes the loss deliberate, since the line never breaks Claude Code, but the daemon is not told. A lock file that cannot be created makes `FeedLock` a no-op and the feed runs unguarded rather than not at all. A broken pipe on the payload write is ignored. A spawn failure makes `detachFeed` return false and the feed runs in-process after the line is printed.
+- **Error states**: a refused post becomes a drop file. A drop file that cannot be written is lost without a signal: `try?` discards the write error. An environment holding `ADH_SDK_HEADLESS` yields no envelope and so no drop file, by design (MUST). The source makes the loss deliberate, since the line never breaks Claude Code, but the daemon is not told (see the open question on `feed-drop-silent`). A lock file that cannot be created makes `FeedLock` a no-op and the feed runs unguarded rather than not at all. A broken pipe on the payload write is ignored. A spawn failure makes `detachFeed` return false and the feed runs in-process after the line is printed.
 - **Offline or disconnected state**: when the daemon is unreachable, `post` returns false and the feed drops an envelope for the daemon to scan in later (MUST); there is no retry and no backoff in this component, so a dropped file is the only record.
 - **Timeouts**: the feed has a 20 second deadline (MUST). When it passes, `feedOnce` returns and releases the lock while the global-queue work may still be running; in a detached process the process exits on return, and in the in-process fallback the render has already returned.
 - **Renderer killed by the dispatcher**: a renderer running over 3 seconds is killed by the dispatcher. Because the feed is detached, the post survives; an in-process fallback feed does not (the source documents the first and states nothing about whether the second can be reached).
@@ -173,6 +184,9 @@ SHOULD requirements: the document contains none. `sigpipe-ignored`, `post-inject
 | `executable` | optional string | main bundle's executable path | The program `detachFeed` starts |
 | `feedDeadline` | seconds | 20 | The longest a feed may run |
 | `captureOnlyFlag` | string | `--capture-only` | The argument that selects the feed-only run |
+| token walk hop limit | integer | 16 | `maxHops` of `ProcessEnv.oauthTokenWalkingUp` |
+| token walk cache | seconds | 30 | `ttl` in `ProcessEnv`, per start pid |
+| session id cut | scalars | 128 | Scalars of the session id kept in the lock file name; see `lock-name-sanitised` |
 | `CLAUDEHELPERS_STATUSLINE_PARENT_PID` | environment variable | absent | The pid that ran the status line, set by the dispatcher and by this command for the feed it detaches |
 | `CLAUDE_CODE_OAUTH_TOKEN` | environment variable | scrubbed by Claude Code | Carried to a detached feed |
 | `<NAME>_DROP_DIR` | environment variable | the configuration's `dropDirectory` | Overrides the drop directory for the configuration when set and non-empty (`HookDropWriter`) |
@@ -215,18 +229,31 @@ Not applicable: the routine makes no log call; its failure paths are silent by d
 - **Compose**: not used. A JVM port feeds from a `ProcessBuilder`-started detached process (`nohup`-style through `/bin/sh -c`), reads the payload with `System.in.readAllBytes()`, uses a `java.nio.channels.FileChannel.tryLock()` for the one-feed-per-session lock, `Future.get(20, SECONDS)` for the deadline, and `ProcessHandle.current().parent()` for the parent pid.
 - **React/Web**: a Node.js status-line command reads stdin, prints the line, then starts the feed with `child_process.spawn(helper, args, { detached: true, stdio: ['pipe', 'ignore', 'ignore'] })`, writes the payload and calls `child.unref()`. A per-session lock uses an exclusive-create lock file with `fs.openSync(path, 'wx')`, because Node has no `flock`; a stale file after a crash must be cleared by age or by checking the owning pid.
 - **AppKit / UIKit**: this is the source platform. Files: `Core/ClaudeHooks/StatusLineCapture.swift`, with `DetachedProcess` and `FeedLock` in `Core/ClaudeHooks/DetachedProcess.swift`. It uses `posix_spawn` with `POSIX_SPAWN_SETSID` through a `/bin/sh` trampoline so the child is reparented to launchd, `flock` for the lock, `DispatchSemaphore` with a timeout for the deadline, `JSONSerialization` for the session id and `getppid()` for the fallback pid. Swift 6 concurrency requires `@Sendable` on the injected closures. It is macOS only; nothing touches AppKit or UIKit.
-- **WinUI 3**: implement `StatusLineCapture` as a static class in a .NET console helper that Claude Code runs as the status-line command. Read the payload from `Console.OpenStandardInput()`, call the caller's render delegate, then `Console.Out.Flush()`. Detach the feed with `Process.Start` of the same executable with `--capture-only`, using `ProcessStartInfo { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true }` and the flag `CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS` through `CreateProcess` (there is no `setsid` or launchd; a detached process is outside the console and survives its parent, but a Job Object that the dispatcher assigns with kill-on-close would still end it, so start the feed outside that job with `CREATE_BREAKAWAY_FROM_JOB` where the job allows it). Write the payload to the child's `StandardInput` and close it. Find the parent pid through `NtQueryInformationProcess` (`ProcessBasicInformation`) or `Process.GetCurrentProcess()` with a toolhelp snapshot, because .NET has no parent-pid property, and walk it up for the token; reading another process's environment needs `OpenProcess` with `PROCESS_QUERY_INFORMATION | PROCESS_VM_READ`, the process's PEB and `ReadProcessMemory`. For the one-feed-per-session lock use a named `Mutex` (`Global\<name>-statusline-feed-<session>`) with `WaitOne(0)`, or a `FileStream` opened with `FileShare.None` on `Path.GetTempPath()`; a named mutex dies with the process, as the source's `flock` does. Sanitise the session id to ASCII letters, digits and `-` and cut it to 128 characters, as the source does. Bound the feed with `Task.Run` plus `Task.WaitAsync(TimeSpan.FromSeconds(20))` and a `CancellationToken`. `post` is a `Func<string, byte[], bool>` over `HttpClient` or a `NamedPipeClientStream` with a 2 second timeout; the drop file is `File.WriteAllBytes` to a temporary name then `File.Move` to the final name. Where the source ignores the broken-pipe signal, catch `IOException` on the child's stdin write.
+- **WinUI 3**: implement `StatusLineCapture` as a static class in a .NET console helper that Claude Code runs as the status-line command. Read the payload from `Console.OpenStandardInput()`, call the caller's render delegate, then `Console.Out.Flush()`. Detach the feed by P/Invoke of `CreateProcess` on the same executable with `--capture-only`, with the flags `CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS` and an inherited stdin pipe (`Process.Start` cannot set those flags; there is no `setsid` or launchd; a detached process is outside the console and survives its parent, but a Job Object that the dispatcher assigns with kill-on-close would still end it, so start the feed outside that job with `CREATE_BREAKAWAY_FROM_JOB` where the job allows it). Write the payload to the child's stdin pipe and close it. Find the parent pid through `NtQueryInformationProcess` (`ProcessBasicInformation`) or `Process.GetCurrentProcess()` with a toolhelp snapshot, because .NET has no parent-pid property, and walk it up for the token; reading another process's environment needs `OpenProcess` with `PROCESS_QUERY_INFORMATION | PROCESS_VM_READ`, the process's PEB and `ReadProcessMemory`. For the one-feed-per-session lock use a named `Mutex` (`Global\<name>-statusline-feed-<session>`) with `WaitOne(0)`, or a `FileStream` opened with `FileShare.None` on `Path.GetTempPath()`; a named mutex dies with the process, as the source's `flock` does. Sanitise the session id to ASCII letters, digits and `-` and cut it to 128 characters, as the source does. Bound the feed with `Task.Run` plus `Task.WaitAsync(TimeSpan.FromSeconds(20))` and a `CancellationToken`. `post` is a `Func<string, byte[], bool>` over `HttpClient` or a `NamedPipeClientStream` with a 2 second timeout; the drop file is `File.WriteAllBytes` to a temporary name then `File.Move` to the final name. Where the source ignores the broken-pipe signal, catch `IOException` on the child's stdin write.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/StatusLineCapture.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/StatusLineCapture.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/DetachedProcessTests.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
+
+**Decision**: `feedDeadline` bounds the whole feed at 20 seconds.
+**Rationale**: Each step has its own timeout (5 seconds per `git` call, 2 seconds for the post), so the deadline is the outer bound that keeps feeds from piling up; it is a rationale, and the testable requirement is `feed-deadline`.
+**Approved**: pending
+
+**Decision**: Make `feedDeadline` injectable with 20 seconds as the default.
+**Rationale**: `feedDeadline` is a fixed constant today, so the deadline vector needs a test that waits more than 20 seconds; an injected value would let it run in milliseconds.
+**Approved**: pending
+
+**Decision**: Carry the OAuth token to the detached feed on standard input instead of its environment, or accept the environment.
+**Rationale**: A process listing by the same user (`ps -E`) can read the environment for the life of the feed; the source uses the environment today, which is why Token lifecycle is partial.
+**Approved**: pending
 
 **Decision**: The feed is run by a detached copy of the helper, and the render returns as soon as its line is printed.
 **Rationale**: The source comment explains that the dispatcher kills a renderer still running after 3 seconds while a feed can take up to 17 seconds (three `git` watchdogs and the post); waiting for it threw the line away and killed the post. A detached process is out of the dispatcher's reach and bounded by its own deadline.
@@ -275,10 +302,11 @@ Not applicable: the routine makes no log call; its failure paths are silent by d
 | [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | performance |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | partial | security |
 
-Separation of concerns is passed: transport, account lookups and rendering are injected, and the process spawning and locking sit in their own types. Unit-test coverage is partial: tests cover `feed`, `run` in both modes, `parentPID`, `FeedLock` and `DetachedProcess`, but none calls `feedOnce`, `detachFeed` or `injected`. Graceful degradation is passed because a refused post becomes a drop file, a missing lock file becomes a no-op, a failed detach becomes an in-process feed and `--capture-only` always exits 0. Timeout handling is passed because the whole feed is bounded by a 20 second deadline and each step has its own. Main-thread freedom is passed because the feed runs on a global queue and the render returns before a detached feed starts. Token lifecycle is partial: the token is recovered per invocation and never written to a file, but it travels through the detached feed's environment, and the source states no limit on how long that process lives beyond the 20 second deadline.
+Separation of concerns is passed: transport, account lookups and rendering are injected, and the process spawning and locking sit in their own types. Unit-test coverage is partial: tests cover `feed`, `run` in both modes, `parentPID`, `FeedLock` and `DetachedProcess`, but none calls `feedOnce`, `detachFeed` or `injected`, so vectors `capture-022` to `capture-031` have no test yet. Graceful degradation is passed because a refused post becomes a drop file, a missing lock file becomes a no-op, a failed detach becomes an in-process feed and `--capture-only` always exits 0. Timeout handling is passed because the whole feed is bounded by a 20 second deadline and each step has its own. Main-thread freedom is passed because the feed runs on a global queue and the render returns before a detached feed starts. Token lifecycle is partial: the token is recovered per invocation and never written to a file, but it travels through the detached feed's environment, and the source states no limit on how long that process lives beyond the 20 second deadline.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Moved source paths out of references, linked dependencies, moved the deadline rationale to Design Decisions, stated the accepted lock overlap, added ten vectors and split capture-017, tabled the tunables, and removed drafting residue and the WinUI mixed mechanism. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

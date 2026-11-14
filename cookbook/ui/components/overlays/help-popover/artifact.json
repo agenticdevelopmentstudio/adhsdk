@@ -4,11 +4,11 @@
     "id": "56828ee6-f522-45da-a9d8-6e1a99adf4e2",
     "title": "Help Popover",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e0059a5ddc83a911",
+  "synced": "0e80853d5affaf86",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

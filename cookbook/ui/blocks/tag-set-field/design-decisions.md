@@ -23,3 +23,6 @@
   **Rationale**: Lets the parent control tag order (e.g. by insertion time, custom ranking, or an external system) (see **maintain-value-order**).
   **Approved**: pending
 
+- **Decision**: Accept, for now, that adding and removing a label is not announced through an ARIA live region; implementations on other platforms SHOULD use their platform's native announcement mechanism where one is cheap to add.
+  **Rationale**: The source emits no announcement and relies on the sub-controls' own roles and labels (see **Item addition is not announced**). Recording the gap as accepted tells implementers it is a known limitation rather than a requirement they missed, while leaving room to close it later.
+  **Approved**: pending

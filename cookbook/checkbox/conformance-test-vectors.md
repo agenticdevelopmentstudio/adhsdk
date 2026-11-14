@@ -1,8 +1,8 @@
 
 | ID | Requirements | Layer | Input | Expected |
 |----|-------------|-------|-------|----------|
-| checkbox-001 | controlled-value | Wrapper | `value={true}`, no change | Checkbox renders checked (checkmark visible) |
-| checkbox-002 | controlled-value | Wrapper | `value={false}`, no change | Checkbox renders unchecked (checkmark hidden) |
+| checkbox-001 | controlled-value | Wrapper | `value={true}`, no change | The input's `checked` property is `true` |
+| checkbox-002 | controlled-value | Wrapper | `value={false}`, no change | The input's `checked` property is `false` |
 | checkbox-003 | change-callback | Wrapper | User clicks checkbox, `value={false}` | `onChange(true)` is called with new value |
 | checkbox-004 | change-callback | Wrapper | User clicks checkbox, `value={true}` | `onChange(false)` is called with new value |
 | checkbox-005 | switch-appearance | Wrapper | `appearance='switch'`, `value={false}` | Input has `role="switch"`; visual look follows the `aws-field--checkbox-switch` stylesheet rule |
@@ -23,5 +23,5 @@
 | checkbox-020 | custom-classname | Primitive | `className="my-custom-class"` passed to the primitive | Custom class is merged into `CheckboxPrimitive.Root`'s class list via `cn()` |
 | checkbox-021 | hint-description-association | Wrapper | `hint="Required to proceed"`, input receives focus | Input's `aria-describedby` (or platform equivalent) references the hint element, so assistive technology announces the hint text |
 | checkbox-022 | controlled-and-uncontrolled | Primitive | `defaultChecked={true}` passed, no `checked`/`onCheckedChange` | Primitive renders checked initially and manages its own state internally (uncontrolled mode) |
-| checkbox-023 | disabled-state | Primitive | `disabled={true}` passed to `CheckboxPrimitive.Root` | Root renders as a `<span role="checkbox">` with `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"`; no opacity/cursor/pointer-events change occurs, since `disabled:opacity-50`/`disabled:pointer-events-none`/`disabled:cursor-not-allowed` never match a `<span>`; toggling is still blocked internally |
+| checkbox-023 | disabled-state | Primitive | `disabled={true}` passed to `CheckboxPrimitive.Root` | Root renders as a `<span role="checkbox">` with `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"`; the `data-[disabled]:opacity-50` and `data-[disabled]:pointer-events-none` utilities apply, so the box renders at 50% opacity and ignores pointer events; toggling is blocked |
 

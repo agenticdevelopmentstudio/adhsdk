@@ -28,3 +28,14 @@ filter text and calls `onChange` on every keystroke. This keeps the header
 stateless and composable.
 **Approved**: pending
 
+**Decision**: Ship with four known gaps recorded as accepted debt rather than fixing them in
+this version: the `Input` focus `transition-colors` is not gated behind
+`prefers-reduced-motion` (`reduced-motion` failed); the `"Filter"` and `"Filter…"`
+defaults are hard-coded English (`string-externalization` and `no-hardcoded-strings`
+failed); and the Search icon's `left-2.5` and the input's `pl-8` are physical, not
+logical, properties (`rtl-layout-support` partial).
+**Rationale**: Each is small and contained. Consumers localize the two strings through
+`search.label` and `search.placeholder`; the motion gate belongs to the shared `Input`
+ingredient; the RTL fix is `start-2.5` and `ps-8`. Compliance keeps the failed and
+partial statuses until they are fixed.
+**Approved**: pending

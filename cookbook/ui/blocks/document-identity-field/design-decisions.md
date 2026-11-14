@@ -15,3 +15,6 @@
 **Rationale**: This reinforces that the slug is a technical identifier (e.g., a URL path component) and may not match the title exactly.
 **Approved**: pending
 
+**Decision**: The status strings "Checking…", "Available" and "Unavailable" stay hardcoded in the component for now; they are accepted debt against the no-hardcoded-strings check.
+**Rationale**: The three words are the whole status vocabulary and `verdict.reason` already lets a host supply localized text for the unavailable case; the debt is paid down by a `statusText` prop, which is deliberately not added until a host needs a localized "Checking…" or "Available".
+**Approved**: pending

@@ -6,6 +6,5 @@
 | `argv` | `[String]` or nil | none | The inspected process's arguments, passed to `isHeadless(argv:sessionFile:)`. |
 | `sessionFile` | `Data` or nil | none | The raw session file, passed to `isHeadless(argv:sessionFile:)`. |
 | `directory`, `isClaude`, `canonical` | functions | the kernel path read, the launch-path test, `canonicalPath` | Probes of `uniqueClaude`. |
-| pid headroom | integer constant | 256 | Spare pid entries beyond the kernel's count. |
-| accepted launch-path forms | rule | last component `claude`, or contains `/claude/` | The test for a Claude Code CLI. |
 
+Constants, not options (no override exists): the pid headroom of 256 spare entries beyond the kernel's count, and the launch-path test for a Claude Code CLI (last component `claude`, or contains `/claude/`).

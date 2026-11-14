@@ -2,11 +2,11 @@
 id: 688cd8dc-2927-4a8a-9931-807fe283ed01
 title: "Closer"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -47,6 +47,10 @@ Usage note: Closer is typically composed as the concluding element after hero or
 - **Padding**: `.lp-closer` sets `padding-top: var(--lp-gap, clamp(3.75rem, 8vw, 6.5rem))`; no other padding is applied.
 - **Border**: `.lp-closer` sets `border-top: 1px solid var(--lp-hairline, rgba(216, 216, 216, 0.18))`; there is no border on any other edge.
 - **Text alignment**: `.lp-closer` sets `text-align: center`. The title's `h2` additionally sets `text-wrap: balance` and a responsive `font-size: clamp(1.5rem, 4vw, 2.4rem)` with `font-weight: 200`.
+- **Positioning**: `.lp-closer` sets `position: relative`.
+- **Title line height**: `.lp-closer h2` sets `line-height: 1.25`.
+- **Title emphasis**: A `<b>` inside the title (`.lp-closer h2 b`) renders at `font-weight: 400` in the accent colour `var(--lp-accent-bright, #d8d8d8)`.
+- **Child paragraphs**: `.lp-closer p` sets `margin: 1.1rem auto 2rem`, `max-width: 48ch` (centred), `color: var(--lp-ink-dim, #a0a0a0)` and `font-weight: 300`.
 - **Width**: 100% of container — default block-level `<div>` behavior; `.lp-closer` sets no explicit width.
 
 ## States
@@ -57,7 +61,7 @@ The Closer component is a static presentational component with no interactive st
 
 - **Semantic structure**: The component uses an h2 heading element for the title, providing proper document outline hierarchy.
 - **Title labeling**: The title prop establishes context for the section. Screen readers announce the h2 and its content as a heading.
-- **Content containment**: Child content is contained within the same block, creating a single logical section for screen readers.
+- **Content containment**: Child content is rendered in the same `<div>` as the title. The root is a plain `<div>` with no role, landmark or accessible name, so assistive technology does not expose it as a section; the h2 is the only structural cue.
 - **Keyboard navigation**: Not applicable — the component is non-interactive. Keyboard focus may enter child elements if they are interactive.
 
 ## Conformance Test Vectors
@@ -67,23 +71,29 @@ The Closer component is a static presentational component with no interactive st
 | closer-001 | render-title | `title="Get Started"`, `children=<div>form</div>` | Render component | h2 element contains text "Get Started" |
 | closer-002 | render-children | `title="Call"`, `children=<button>Sign Up</button>` | Render component | Button element is rendered after the h2 |
 | closer-003 | apply-lp-closer-class | `title="X"`, `children=null` | Render component | Root div has className containing "lp-closer" |
-| closer-004 | merge-optional-classname | `title="X"`, `className="custom-styling"` | Render component | Root div className equals "lp-closer custom-styling" |
-| closer-005 | merge-optional-classname | `title="X"`, `className=""` | Render component | Root div className equals "lp-closer" (no trailing space) |
-| closer-006 | merge-optional-classname | `title="X"`, `className=undefined` | Render component | Root div className equals "lp-closer" |
+| closer-004 | merge-optional-classname | `title="X"`, `children=<p>body</p>`, `className="custom-styling"` | Render component | Root div className equals "lp-closer custom-styling" |
+| closer-005 | merge-optional-classname | `title="X"`, `children=<p>body</p>`, `className=""` | Render component | Root div className equals "lp-closer" (no trailing space) |
+| closer-006 | merge-optional-classname | `title="X"`, `children=<p>body</p>`, `className=undefined` | Render component | Root div className equals "lp-closer" |
 | closer-007 | render-children | `title="X"`, `children=null` | Render component | Component renders without error; no content follows the h2 |
 | closer-008 | render-title | `title=<span>Ready?</span>`, `children=null` | Render component | h2 element contains the rendered `<span>Ready?</span>` element |
-
+| closer-009 | render-title | `title="Get Started"`, `children=<p>body</p>` | Render component | `root.firstElementChild` is the h2 element and the `<p>` is its next sibling |
 ## Edge Cases
 
 - **Empty title**: When `title=""` is passed, the component still renders an h2 element (satisfying **render-title**), but it contains no text. Callers SHOULD NOT pass an empty title — an empty heading is confusing for screen reader users navigating by heading — but the component itself does not guard against it.
 - **Null or undefined children**: When `children` is null or undefined, the component MUST render the div and h2 without error (**render-children**). No child content renders below the title. See vector closer-007.
-- **Empty className**: When `className=""` is provided, `.filter(Boolean)` removes it, leaving only "lp-closer" in the final className (**merge-optional-classname**).
+- **Empty className**: When `className=""` is provided, the root element's className is exactly "lp-closer", with no trailing space (**merge-optional-classname**).
 - **Undefined className**: When `className` is not provided, only "lp-closer" is applied to the root element (**merge-optional-classname**).
 - **ReactNode composition**: The `title` and `children` props accept any valid ReactNode (strings, elements, fragments, arrays). The component renders them without modification. Expected: Component MUST accept and render ReactNode values without error. See vector closer-008.
 
 ## Configuration
 
 Not applicable: the component accepts no configuration beyond its three props (title, children, className). Configuration is handled via CSS class definitions and parent layout composition.
+
+| Prop | Type | Required |
+|------|------|----------|
+| `title` | `ReactNode` | yes |
+| `children` | `ReactNode` | yes |
+| `className` | `string` | no |
 
 ## Deep Linking
 
@@ -121,7 +131,7 @@ Not applicable: the component performs no operations that require event logging.
 
 - **Compose**: Use a `Column` with `Modifier.fillMaxWidth()` and `horizontalAlignment = Alignment.CenterHorizontally`. Render the title as `Text` with `style = MaterialTheme.typography.headlineSmall` and `Modifier.semantics { heading() }` so accessibility services expose it as a heading. Define the content parameter as `content: @Composable ColumnScope.() -> Unit`. Accept styling as a `Modifier` parameter rather than a CSS class name string.
 
-- **AppKit / UIKit**: Use a vertical `UIStackView` / `NSStackView` (axis `.vertical`), centered horizontally within its superview. Render the title as `UILabel` / `NSTextField` with `UIFont.preferredFont(forTextStyle: .headline)` and `accessibilityTraits = .header` so VoiceOver exposes it as a heading. Accept a content view (or view array) for children, and expose styling as a reusable style/appearance function rather than a CSS class name string.
+- **AppKit / UIKit**: Use a vertical `UIStackView` / `NSStackView` (axis `.vertical`), centered horizontally within its superview. Render the title as `UILabel` / `NSTextField` with the `.title2` text style (`UIFont.preferredFont(forTextStyle: .title2)` on UIKit, `NSFont.preferredFont(forTextStyle: .title2)` on AppKit), matching the SwiftUI note. On UIKit set `accessibilityTraits = .header` so VoiceOver exposes it as a heading; `accessibilityTraits` does not exist on AppKit, where you call `setAccessibilityRole(.staticText)` and `setAccessibilityRoleDescription("heading")` instead. Accept a content view (or view array) for children, and expose styling as a reusable style/appearance function rather than a CSS class name string.
 
 - **WinUI 3**: Use a `StackPanel` with `Orientation="Vertical"`, stretched to its container (`HorizontalAlignment="Stretch"`) — a `StackPanel`'s own `HorizontalAlignment` centers the panel, not the text inside it — with `TextAlignment="Center"` set on the title and child text elements. Render the title as a `TextBlock` using `SubtitleTextBlockStyle` with `AutomationProperties.HeadingLevel="Level2"` for heading semantics, rather than a hardcoded font size. Define a content property for child elements, and expose styling as a `Style` resource rather than a CSS class name string.
 
@@ -129,7 +139,7 @@ Not applicable: the component performs no operations that require event logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Closer.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Closer.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -176,6 +186,7 @@ Statuses rest on the source: `<h2>{title}</h2>` is correct semantic markup; `.lp
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Lint pass: removed the unsupported single-section accessibility claim, added the props table and the missing CSS rules to Appearance, added a first-child ordering vector and children to every vector, described the empty-className result by behaviour, and separated AppKit and UIKit heading guidance with .title2. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: cite the real `lp-closer`/`lp-closer h2` CSS in Appearance instead of an unsupported source-comment claim, correct the Border description (a border-top is applied) and drop the false CSS-specificity claim from the className design decision, reformat Design Decisions into Decision/Rationale/Approved form, add a Compliance table (accessibility + internationalization), replace the web-only "CSS class name string" platform-note pattern with each native platform's own styling hook and add heading-semantics guidance, fix the WinUI StackPanel/TextAlignment mismatch and the Compose ColumnScope type, rename requirements to subject-only kebab-case and fold filter-empty-strings into merge-optional-classname, add test vectors for null children and ReactNode title, soften the empty-title edge case to a caller SHOULD NOT, and move "positioned after hero content" out of Overview into a usage note. |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation (drafted by Claude Haiku 4.5) |

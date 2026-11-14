@@ -1,6 +1,6 @@
 
 **Decision**: The command swallows every failure and always returns 0 with no output.
-**Rationale**: The source comment says stderr from a hook can confuse Claude Code and the next event brings the same information; the type comment states the contract as "never fail, never produce stdout". The cost is that a failed write leaves no trace.
+**Rationale**: The source contains no print, log or stderr call, and the comment on the write says stderr from a hook can confuse Claude Code and that the next event brings the same information; the type comment states the contract as "never fail, never produce stdout". The cost is that a failed write leaves no trace.
 **Approved**: pending
 
 **Decision**: The headless check lives in this command as well as in the shell hook and the socket path.
@@ -31,3 +31,6 @@
 **Rationale**: The two builders are described in their own comments as producing the same context shape, and the differences follow from where each runs (a short-lived hook process versus a daemon). A port MUST pick one behavior per side deliberately.
 **Approved**: pending
 
+**Decision**: The drop file is written with the file system's default permissions, not owner-only.
+**Rationale**: The envelope holds the OAuth login email, `PATH`, `HOME`, `argv` and user ids, so owner-only permissions (0600 on the file, 0700 on the directory) may be warranted; the source sets none today and this is recorded as an open choice.
+**Approved**: pending

@@ -13,7 +13,7 @@
 | `DisplayConfig.showAvatars` | `Bool` | none (caller-supplied) | Whether a UI should render participant avatars |
 | `DisplayConfig.showReadReceipts` | `Bool` | none (caller-supplied) | Whether a UI should render read receipts |
 | `DisplayConfig.showTypingIndicators` | `Bool` | none (caller-supplied) | Whether a UI should render typing indicators |
-| `DisplayConfig.maxParticipants` | `Int?` | `nil` | An optional roster cap; enforcement point is not given (see Edge Cases) |
+| `DisplayConfig.maxParticipants` | `Int?` | `nil` | An optional roster cap; no enforcement point exists in source (see Edge Cases) |
 | `DisplayConfig.allowJoining` | `Bool` | none (caller-supplied) | Whether new participants may join |
 | `DisplayConfig.allowDeparting` | `Bool` | none (caller-supplied) | Whether participants may leave |
 | `DisplayConfig.themeIdentifier` | `String?` | `nil` | An opaque theme selector, uninterpreted by this contract |

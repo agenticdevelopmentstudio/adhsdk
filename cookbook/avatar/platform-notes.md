@@ -52,8 +52,7 @@
   (`body`, `tiltLayer`, `leanLayer`, `idleLayer`) map to distinct
   `CALayer`s so their transforms compose the same way `svgOrigin`-scoped
   GSAP tweens do here.
-- **WinUI 3**: This is the reason this recipe exists — there is no existing
-  Windows port. Model `AvatarEngineConfig`/`AvatarEngine` as a class
+- **WinUI 3**: Model `AvatarEngineConfig`/`AvatarEngine` as a class
   implementing `INotifyPropertyChanged` (or a `CommunityToolkit.Mvvm`
   `ObservableObject`) exposing `Effective`, `Resting`, `Speech` properties
   and a `Poke()` method, in place of the hook's return value. Use
@@ -66,14 +65,15 @@
   `quickTo` equivalent for scale, rotation, and translate tweens on
   `Visual`/`CompositionVisual` layers standing in for `AvatarRig`'s
   `body`/`tiltLayer`/`leanLayer`/`idleLayer`. There is no MorphSVGPlugin
-  equivalent in WinUI 3: animate between two `CanvasGeometry` path strings
-  (Win2D) with a custom point-interpolating `ICompositionAnimationBase`, or
-  swap discrete `PathIcon`/`Path` `Data` values if true point-for-point
-  morphing is not required. Handle `PointerMoved`/`PointerExited` on the
-  root `Grid`/`Canvas` for cursor-follow gaze — a plain `PointerMoved` on
-  `Window.Content` fires far more often than GSAP's rAF throttle, so debounce
-  it to one recomputation per `CompositionTarget.Rendering` tick to match
-  **gaze-cursor-follow**'s cadence. Model `Record<E, Pose>` as
+  equivalent in WinUI 3. Unverified port guidance, not drawn from this
+  source: animate between two `CanvasGeometry` path strings (Win2D) with a
+  custom point-interpolating animation, or swap discrete `PathIcon`/`Path`
+  `Data` values if true point-for-point morphing is not required. Handle `PointerMoved`/`PointerExited` on the
+  root `Grid`/`Canvas` for cursor-follow gaze — to match
+  **gaze-cursor-follow**'s one-recomputation-per-frame cadence, throttle it
+  to one recomputation per `CompositionTarget.Rendering` tick (unverified
+  port guidance; the source only shows the `requestAnimationFrame` throttle
+  on the web side). Model `Record<E, Pose>` as
   `IReadOnlyDictionary<TExpression, Pose>` and `Tuning` as a plain record
   type with the same 15 fields.
 

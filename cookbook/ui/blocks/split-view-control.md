@@ -2,11 +2,11 @@
 id: 6e0e27bf-5f7d-46bf-85d0-fb5bdf5dab8a
 title: "Split View Control"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -30,38 +30,38 @@ approved-date: ""
 
 ## Overview
 
-The Split View Control is a pair of toggle groups that manages layout preference (tabbed vs. split) and pane selection (edit vs. preview) in responsive interfaces. On wide viewports (64rem minimum), users can choose between a split layout (two panes side by side) or a tabbed layout (one pane at a time). On narrow viewports, only the tabbed layout is available, though the user's split preference is remembered and restored when the viewport widens. The control is rendered left-aligned below the surface's header rather than within it, as it belongs to the body content it controls.
+The Split View Control is a pair of toggle groups that manages layout preference (tabbed vs. split) and pane selection (edit vs. preview) in responsive interfaces. On wide viewports (64rem minimum), users can choose between a split layout (two panes side by side) or a tabbed layout (one pane at a time). On narrow viewports, only the tabbed layout is available, though the user's split preference is remembered and restored when the viewport widens. Host guidance, not a component rule: place the control left-aligned directly below the surface's header rather than within it, as it belongs to the body content it controls.
 
 ## Behavioral Requirements
 
 - **layout-toggle-visible-on-wide-viewport**: On viewports ≥ 64rem, the control MUST render a layout toggle group with two options: tabbed (single pane) and split (side by side).
 - **layout-toggle-hidden-on-narrow-viewport**: On viewports < 64rem, the control MUST NOT render the layout toggle group.
-- **separator-between-toggles-in-tabbed-mode**: When the layout toggle is rendered AND the effective layout is tabbed, the control MUST render a vertical separator (1px, `bg-apt-border` color) between the layout toggle and the pane toggle; it MUST NOT render the separator when the effective layout is split.
+- **separator-between-toggles-in-tabbed-mode**: When the layout toggle is rendered AND the effective layout is tabbed, the control MUST render a vertical separator (1px, border-token color) between the layout toggle and the pane toggle; it MUST NOT render the separator when the effective layout is split.
 - **pane-toggle-visible-only-in-tabbed-layout**: The pane toggle group (edit/preview) MUST render when the effective layout is tabbed and MUST NOT render when the effective layout is split (both panes are already visible).
 - **layout-preference-persists-across-viewport-changes**: The user's layout preference MUST be retained when the viewport narrows below 64rem and restored when widening above 64rem.
 - **effective-layout-demoted-on-narrow-viewport**: On narrow viewports, the effective layout MUST be "tabbed" regardless of the stored layout preference.
 - **edit-label-customizable**: The edit toggle label MUST be customizable via the `editLabel` prop, defaulting to "Edit".
 - **preview-label-customizable**: The preview toggle label MUST be customizable via the `previewLabel` prop, defaulting to "Preview".
-- **flex-row-layout**: The control MUST render as a flex row with items center-aligned and 0.75rem (gap-3) spacing between children.
+- **flex-row-layout**: The control MUST render as a row with children center-aligned and 0.75rem spacing between them.
 - **empty-toggle-selection-ignored**: When a user clicks a toggle group item that is already selected, the toggle group hands back an empty array; the control MUST ignore this event and retain the current selection.
 - **layout-toggle-group-aria-label**: The layout toggle group MUST have an `aria-label` that reads `"${subject} layout"` where `subject` is the component-provided context string.
 - **pane-toggle-group-aria-label**: The pane toggle group MUST have an `aria-label` that reads `"${subject} pane"`.
 - **pane-toggle-aria-controls-container**: Each pane toggle item MUST have an `aria-controls` attribute pointing to the ID (`panesId`) of the pane container element (placed on the container, not on individual hidden panes).
 - **layout-toggle-item-accessible-names**: The layout toggle items MUST have matching `title` and `aria-label` values: "Single tabbed view" for the tabbed item, "Side by side view" for the split item.
-- **tabbed-icon-is-square**: The tabbed layout toggle MUST display a Square icon.
-- **split-icon-is-columns2**: The split layout toggle MUST display a Columns2 icon.
-- **edit-icon-is-pencil**: The edit pane toggle MUST display a Pencil icon before its label.
-- **preview-icon-is-eye**: The preview pane toggle MUST display an Eye icon before its label.
-
+- **tabbed-icon-is-square**: The tabbed layout toggle MUST display a single-pane icon (React/Web: Lucide `Square`).
+- **split-icon-is-columns2**: The split layout toggle MUST display a two-column icon (React/Web: Lucide `Columns2`).
+- **edit-icon-is-pencil**: The edit pane toggle MUST display a pencil icon (React/Web: Lucide `Pencil`) before its label.
+- **preview-icon-is-eye**: The preview pane toggle MUST display an eye icon (React/Web: Lucide `Eye`) before its label.
+- **classname-merged**: The control MUST accept an optional `className` prop and merge it with the base row layout, with the passed classes applied after the base ones (React/Web: via the `cn()` utility).
+- **initial-layout-and-pane**: Before the user acts, `useSplitView()` MUST start with layout `tabbed` and pane `edit`; the host MAY override these through the `defaultLayout` and `defaultPane` options. A narrow viewport always shows `tabbed` regardless of `defaultLayout`.
+- **toggle-groups-expose-pressed-state**: Each toggle group MUST render as `role="group"` and each item as a button whose pressed state is exposed with `aria-pressed`; exactly one item per group is pressed at a time.
 ## Appearance
 
-- **Layout**: Flex row, `items-center` (vertical center alignment), `gap-3` (0.75rem spacing)
+- **Layout**: A row with children centered vertically and a 0.75rem gap (React/Web: `flex items-center gap-3`)
 - **Toggle groups**: Uses shared ToggleGroup component for both layout and pane toggles
-- **Separator**: 1px width, `bg-apt-border` color, height 1.25rem (h-5), only rendered in tabbed mode when layout toggle is visible
-- **Icons**: Lucide React icons (Square, Columns2, Pencil, Eye)
+- **Separator**: 1px wide, border-token color, 1.25rem tall, only rendered in tabbed mode when layout toggle is visible (React/Web: `h-5 w-px bg-apt-border`)
+- **Icons**: A single-pane icon, a two-column icon, a pencil and an eye (React/Web: Lucide `Square`, `Columns2`, `Pencil`, `Eye`)
 - **Responsive**: Layout toggle visibility changes with viewport width (hidden below 64rem); within a wide viewport, the pane toggle and the separator between it and the layout toggle appear only in tabbed mode and disappear in split mode
-- **Custom className**: The component MUST accept an optional `className` prop and merge it with the base flex layout using `cn()` utility
-
 ## States
 
 | State | Appearance change |
@@ -74,13 +74,13 @@ The Split View Control is a pair of toggle groups that manages layout preference
 
 ## Accessibility
 
-- **Roles**: Each toggle group is a segmented control / buttonset; individual items are toggle buttons
+- **Roles**: Each toggle group is a `role="group"` containing toggle buttons that expose their state with `aria-pressed`; exactly one item per group is pressed, and re-pressing it does not clear it
 - **Label requirements**: Layout toggle has `aria-label="${subject} layout"`; pane toggle has `aria-label="${subject} pane"`; individual toggle items have `aria-label` and `title` attributes
 - **Pane control association**: Pane toggle items have `aria-controls="${panesId}"` pointing to the container element wrapping the two panes (not placed on individual hidden panes)
 - **Announce visibility**: The layout toggle is not rendered on narrow viewports, so the control renders a smaller footprint — no aria-hidden needed for the unrendered toggle
 - **Title attributes**: Both layout toggle items have `title` attributes for mouse hover: "Single tabbed view" and "Side by side view"
 - **Hidden separator**: When the separator is not rendered, it is not in the DOM; no `aria-hidden` needed
-- **Minimum touch/click target**: Handled by the ToggleGroup and ToggleGroupItem components; SplitViewControl assumes the underlying component meets the WCAG minimum target size (44×44px) — this is a web component, so iOS and Android platform minimums do not apply
+- **Minimum touch/click target**: Handled by the ToggleGroup and ToggleGroupItem components; the toggle items are 32px tall with a 32px minimum width, which meets WCAG 2.2 AA target size (2.5.8, 24×24 CSS px) but not the AAA target size (2.5.5, 44×44 CSS px); the control targets AA — this is a web component, so iOS and Android platform minimums do not apply
 
 ## Conformance Test Vectors
 
@@ -88,7 +88,7 @@ The Split View Control is a pair of toggle groups that manages layout preference
 |----|-------------|-------|----------|
 | split-view-001 | layout-toggle-visible-on-wide-viewport | Wide viewport (≥64rem) | Layout toggle group renders with tabbed and split options |
 | split-view-002 | layout-toggle-hidden-on-narrow-viewport | Narrow viewport (<64rem) | Layout toggle group does not render |
-| split-view-003 | separator-between-toggles-in-tabbed-mode | Wide viewport, effective layout tabbed | Vertical separator (1px, bg-apt-border) renders between layout and pane toggles |
+| split-view-003 | separator-between-toggles-in-tabbed-mode | Wide viewport, effective layout tabbed | Vertical separator (1px, border-token color) renders between layout and pane toggles |
 | split-view-004 | separator-between-toggles-in-tabbed-mode | Wide viewport, effective layout split | Separator does not render |
 | split-view-005 | pane-toggle-visible-only-in-tabbed-layout | Effective layout tabbed | Pane toggle group renders with edit and preview options |
 | split-view-006 | pane-toggle-visible-only-in-tabbed-layout | Effective layout split | Pane toggle group does not render |
@@ -96,7 +96,7 @@ The Split View Control is a pair of toggle groups that manages layout preference
 | split-view-008 | effective-layout-demoted-on-narrow-viewport | Viewport narrower than 64rem, layout preference is "split" | Effective layout is "tabbed" |
 | split-view-009 | edit-label-customizable | Render with `editLabel="Author"` | Edit toggle label reads "Author" instead of default "Edit" |
 | split-view-010 | preview-label-customizable | Render with `previewLabel="Published"` | Preview toggle label reads "Published" instead of default "Preview" |
-| split-view-011 | flex-row-layout | Render control in any state | Control renders as a flex row (`flex items-center gap-3`) with center vertical alignment and exactly 0.75rem (`gap-3`) horizontal spacing between children |
+| split-view-011 | flex-row-layout | Render control in any state | Control renders as a row (React/Web: `flex items-center gap-3`) with center vertical alignment and exactly 0.75rem horizontal spacing between children |
 | split-view-012 | empty-toggle-selection-ignored | Layout toggle shows "split" selected; user clicks the "split" button again | Selection remains "split", no state change triggered |
 | split-view-013 | layout-toggle-group-aria-label | Render with `subject="Editor"` | Layout toggle group has `aria-label="Editor layout"` |
 | split-view-014 | pane-toggle-group-aria-label | Render with `subject="Document"` | Pane toggle group has `aria-label="Document pane"` |
@@ -107,7 +107,11 @@ The Split View Control is a pair of toggle groups that manages layout preference
 | split-view-019 | edit-icon-is-pencil | Render pane toggle in tabbed mode | Edit toggle item renders with Pencil icon before label |
 | split-view-020 | preview-icon-is-eye | Render pane toggle in tabbed mode | Preview toggle item renders with Eye icon before label |
 | split-view-021 | layout-toggle-visible-on-wide-viewport | Viewport exactly 64rem (the `min-width: 64rem` boundary) | Layout toggle group renders (the ≥ threshold includes the boundary) |
-
+| split-view-022 | empty-toggle-selection-ignored | Tabbed layout, pane toggle shows "edit" selected; user clicks the "edit" button again | Selection remains "edit", `setPane` is not called |
+| split-view-023 | classname-merged | Render with `className="mt-2"` | The root element has the base row classes and `mt-2` |
+| split-view-024 | initial-layout-and-pane | Call `useSplitView()` with no options on a wide viewport | `layout` is "tabbed" and `pane` is "edit" |
+| split-view-025 | initial-layout-and-pane | Call `useSplitView({ defaultLayout: "split", defaultPane: "preview" })` on a wide viewport | `layout` is "split" and `pane` is "preview" |
+| split-view-026 | toggle-groups-expose-pressed-state | Render on a wide viewport with layout "split" | Layout group has `role="group"`; the split item has `aria-pressed="true"` and the tabbed item `aria-pressed="false"` |
 ## Edge Cases
 
 - **Empty `subject` string**: `subject` is a required `string` prop; the component does not validate it at runtime. If a caller passes an empty string, `aria-label` values become malformed (e.g., `" layout"`) — a broken accessibility output, not a supported input. The host MUST provide a non-empty `subject`.
@@ -163,17 +167,17 @@ Not applicable: This component does not emit log messages or diagnostic output. 
 
 ## Platform Notes
 
-- **React/Web**: `SplitViewControl` itself is a presentational component: it takes `view` (the `SplitView` object) and `subject` as props and calls no hooks of its own beyond destructuring. Viewport detection, layout/pane state, and the wide→tabbed demotion all live in the `useSplitView()` hook (in the same file), which calls `useMediaQuery('(min-width: 64rem)')`, `useState`, and `useId`. Both ToggleGroup components expect a `value` array and call `onValueChange` with an array; the component filters empty arrays to implement sticky selection. The separator is a styled div with `h-5 w-px bg-apt-border`. Lucide React supplies the icons.
+- **React/Web**: `SplitViewControl` itself is a presentational component: it takes `view` (the `SplitView` object) and `subject` as props and calls no hooks of its own beyond destructuring. Viewport detection, layout/pane state, and the wide→tabbed demotion all live in the `useSplitView()` hook (in the same file), which calls `useMediaQuery('(min-width: 64rem)')`, `useState`, and `useId`. Both ToggleGroup components expect a `value` array and call `onValueChange` with an array; the component filters empty arrays to implement sticky selection. The root is `flex items-center gap-3` merged with `className` through `cn()`. The separator is a styled div with `h-5 w-px bg-apt-border`. Lucide React supplies the icons (`Square`, `Columns2`, `Pencil`, `Eye`).
 - **SwiftUI**: Detect the wide breakpoint with a `GeometryReader` measuring the container width against 1024pt (the point equivalent of 64rem) rather than `@Environment(\.horizontalSizeClass)` alone, since a size class does not correspond to a fixed width. State would be held in a view model or parent view using `@State` for layout and pane selection. The control would conditionally render the layout `Picker` and separator based on the measured width. Icons would come from SF Symbols.
-- **Compose**: An Android equivalent would use `BoxWithConstraints` or `currentWindowAdaptiveInfo()` to detect viewport width (64rem ≈ 1024dp for baseline density). State would be in a ViewModel using `mutableStateOf`. Both toggle groups would be rendered as Compose segmented controls or custom radio button rows. Lucide icons would need Android equivalents from Material icons or a custom icon library.
-- **AppKit / UIKit**: Detect the wide breakpoint with a `GeometryReader` (SwiftUI) or a `ViewThatFits`/size-aware layout that measures the actual view width against 1024pt (the point equivalent of 64rem), rather than `NSApplication.shared.keyWindow?.frame.width` (a fragile global lookup that breaks when the control is not in the key window) or `horizontalSizeClass` alone (an iPad in Split View or a large iPhone in landscape can report a size class that does not match the 1024pt threshold). State would be managed via a coordinator or reactive binding (Combine, SwiftUI, or property observers). The control would render segmented controls or button groups. On iOS, a narrow viewport would hide the layout toggle. The design language follows Apple's segmented picker conventions.
-- **WinUI 3**: `Window.Current.Bounds` is unsupported (null) in WinUI 3 desktop apps; detect the wide breakpoint with an `AdaptiveTrigger` in the page's `VisualStateManager`, comparing `XamlRoot.Size.Width` against ~1024px, rather than reading window bounds directly. State would be in a ViewModel using `INotifyPropertyChanged`. Render each toggle group as a WinUI 3 `SegmentedControl` — or as `RadioButtons` arranged horizontally if targeting a WinUI 3 version without `SegmentedControl`. The layout toggle would be hidden on narrow viewports via the same `AdaptiveTrigger`, setting `Visibility.Collapsed`. Icons would come from the Segoe MDL2 Assets font or a custom icon resource. The vertical separator would be a `Border` or `Line` control with `BorderThickness="1,0,0,0"` and `BorderBrush` set to a border token.
+- **Compose**: An Android equivalent would use `BoxWithConstraints` or `currentWindowAdaptiveInfo()` to detect viewport width (use 1024dp). State would be in a ViewModel using `mutableStateOf`. Both toggle groups would be rendered as Compose segmented controls or custom radio button rows. Lucide icons would need Android equivalents from Material icons or a custom icon library.
+- **AppKit / UIKit**: Detect the wide breakpoint by measuring the actual view width against 1024pt (the point equivalent of 64rem) in `viewDidLayout` (AppKit) or `viewWillLayoutSubviews` (UIKit), or by observing the view's bounds, rather than `NSApplication.shared.keyWindow?.frame.width` (a fragile global lookup that breaks when the control is not in the key window) or `horizontalSizeClass` alone (an iPad in Split View or a large iPhone in landscape can report a size class that does not match the 1024pt threshold). State would be managed via a coordinator or reactive binding (Combine or property observers). Render each toggle group as an `NSSegmentedControl` (AppKit) or `UISegmentedControl` (UIKit). On iOS, a narrow viewport would hide the layout toggle. The design language follows Apple's segmented control conventions.
+- **WinUI 3**: `Window.Current.Bounds` is unsupported (null) in WinUI 3 desktop apps; detect the wide breakpoint with an `AdaptiveTrigger` in the page's `VisualStateManager` with `MinWindowWidth` set to ~1024 (it compares the window width, not `XamlRoot.Size`), rather than reading window bounds directly. State would be in a ViewModel using `INotifyPropertyChanged`. WinUI 3 has no built-in segmented control: render each toggle group as the Windows Community Toolkit `Segmented` control, or as `RadioButtons` arranged horizontally. The layout toggle would be hidden on narrow viewports via the same `AdaptiveTrigger`, setting `Visibility.Collapsed`. Icons would come from the Segoe Fluent Icons font or a custom icon resource. The vertical separator would be a `Border` or `Line` control with `BorderThickness="1,0,0,0"` and `BorderBrush` set to a border token.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/split-view-control.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/split-view-control.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -225,3 +229,4 @@ Statuses rest on `split-view-control.tsx`: `aria-label`, `aria-controls`, and th
 | 1.0.0 | 2026-09-22 | (generated) | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and merged the redundant separator and pane-toggle render/hide pairs; reformatted Design Decisions into Decision/Rationale/Approved triples; rebuilt the Compliance table against real accessibility and internationalization checks instead of unlinked recipe-quality checks; fixed the wide/narrow breakpoint wording to ≥/< 64rem and added an exactly-64rem test vector; corrected Platform Notes for React/Web (hooks live in `useSplitView`, not the control), WinUI 3 (`Window.Current.Bounds` replaced with `AdaptiveTrigger`/`XamlRoot.Size` and named `SegmentedControl`/`RadioButtons`), SwiftUI and AppKit/UIKit (measured-width threshold instead of `horizontalSizeClass`/`keyWindow` lookups); corrected the Appearance section's "no visual changes" claim; dropped the "defined behavior" framing from the empty/undefined `subject` and missing `panesId` edge cases; trimmed the Accessibility touch-target note to the WCAG web minimum; deleted the speculative "if somehow" ToggleGroup edge case; added `depends-on` for ToggleGroup |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Moved Lucide/Tailwind specifics into platform notes, named the className merge, initial state and aria-pressed group semantics with new test vectors, corrected the WCAG target-size citation, and fixed the AppKit/UIKit, WinUI 3 and Compose platform notes. |

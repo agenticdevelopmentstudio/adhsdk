@@ -2,11 +2,11 @@
 id: ee901ea5-cf3e-4276-8367-0693911bc02e
 title: "Markdown Reading Palette"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,7 +18,8 @@ tags:
   - markdown
   - theming
   - styling
-depends-on: []
+depends-on:
+  - 9f938c20-ea6e-42d7-9ddf-9531a96e3ad0
 related:
   - 316aed50-a6cb-4ece-977c-8d6dacb2186b
 references: []
@@ -38,9 +39,10 @@ A server-safe React wrapper component that applies a reading theme palette to ma
 - **theme-data-attributes**: Component MUST set `data-mdv-theme` attribute to the theme's ID and `data-mdv-shiki-variant` attribute to the theme's syntax highlighting variant.
 - **theme-palette-style**: Component MUST apply the theme's color palette as inline CSS custom properties via the `style` prop.
 - **content-class**: Component MUST apply the `adh-mv-content` class to the wrapper element. This class provides load-bearing styles for background color, text color, padding, and overflow behavior that enable markdown content to be readable within its host context.
-- **classname-merge**: Component MUST merge the `className` prop with `adh-mv-content` using the `cn` utility function, preserving both the theme-driven layout classes and any caller-supplied layout classes (e.g., sizing, borders, rounding).
-- **theme-id-prop**: Component SHOULD accept an optional `themeId` prop. When provided, the component MUST use that theme ID; when omitted, the component MUST default to `DEFAULT_THEME_ID`.
-- **data-slot-forwarding**: Component SHOULD accept an optional `data-slot` prop to enable callers to set a DOM identity marker for testing, styling, or selection purposes. When provided, this prop MUST be forwarded directly to the wrapper element's `data-slot` attribute.
+- **classname-merge**: Component MUST merge the `className` prop with `adh-mv-content` using the `cn` utility function, preserving the static `adh-mv-content` class and any caller-supplied classes (e.g., sizing, borders, rounding). The merged class string MUST be whitespace-normalised (no leading, trailing or repeated spaces), which `cn` (`clsx` followed by `tailwind-merge`) provides.
+- **theme-id-prop**: Component MUST accept an optional `themeId` prop. When provided, the component MUST use that theme ID; when omitted, the component MUST default to `DEFAULT_THEME_ID`.
+- **data-slot-forwarding**: Component MUST accept an optional `data-slot` prop to enable callers to set a DOM identity marker for testing, styling, or selection purposes. When provided, this prop MUST be forwarded directly to the wrapper element's `data-slot` attribute.
+- **wrapper-element**: Component MUST render exactly one `div` element wrapping `children`; the `data-*` attributes, `style`, `class` and `data-slot` all land on that `div`.
 - **server-safe**: Component MUST be server-safe, with no React hooks, no client-only APIs (e.g., browser globals, event handlers), and no "use client" directive. The component MUST be compatible with async React Server Components.
 
 ## Appearance
@@ -53,7 +55,7 @@ Not applicable: MarkdownReadingPalette is a static, non-interactive wrapper comp
 
 ## Accessibility
 
-MarkdownReadingPalette renders no interactive elements of its own, but it does set the foreground (`--mdv-text`) and background (`--mdv-bg`) colors that decide the contrast of everything rendered inside it (see **content-class**, **theme-palette-style**). Every theme applied through this component MUST meet WCAG AA contrast (4.5:1 for normal text) between `--mdv-text` and `--mdv-bg`. All four built-in themes clear this by a wide margin: dark ≈15.7:1, light ≈15.9:1, sepia ≈13.6:1, github ≈15.8:1. See [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) under Compliance. Accessibility of the markdown content itself (semantic HTML, ARIA) remains the responsibility of the markdown renderer (e.g., MarkdownRenderer), not this wrapper.
+MarkdownReadingPalette renders no interactive elements of its own, but it does set the foreground (`--mdv-text`) and background (`--mdv-bg`) colors that decide the contrast of everything rendered inside it (see **content-class**, **theme-palette-style**). The component renders whatever palette the themes registry supplies; the WCAG AA contrast obligation (4.5:1 for normal text between `--mdv-text` and `--mdv-bg`) belongs to the registry's palettes, specified in the markdown core ingredient ([adhsdk.ingredient.markdown.core](cookbook:9f938c20-ea6e-42d7-9ddf-9531a96e3ad0)). All four built-in themes clear it by a wide margin: dark ≈15.7:1, light ≈15.9:1, sepia ≈13.6:1, github ≈15.8:1. See [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) under Compliance. Accessibility of the markdown content itself (semantic HTML, ARIA) remains the responsibility of the markdown renderer (e.g., MarkdownRenderer), not this wrapper.
 
 ## Conformance Test Vectors
 
@@ -75,7 +77,7 @@ MarkdownReadingPalette renders no interactive elements of its own, but it does s
 
 - **Null or empty children**: When children is `null`, `undefined`, or an empty array, the component MUST render the wrapper div with the theme applied. The wrapper div renders but contains no child content. See palette-009.
 - **No themeId provided**: When no `themeId` prop is supplied, the component MUST use the `DEFAULT_THEME_ID` constant from the themes registry. See palette-007.
-- **Invalid themeId**: When a `themeId` is provided but does not match any entry in the themes registry, `getThemeById` MUST NOT throw — it returns the theme identified by `DEFAULT_THEME_ID` instead, and the component renders using that fallback theme's data attributes and palette (**theme-data-attributes**, **theme-palette-style**). See palette-010.
+- **Invalid themeId**: When a `themeId` is provided but does not match any entry in the themes registry, the component renders whatever theme `getThemeById` returns, using that theme's data attributes and palette (**theme-data-attributes**, **theme-palette-style**). The fallback to the `DEFAULT_THEME_ID` theme is the registry's behavior, specified in the markdown core ingredient ([adhsdk.ingredient.markdown.core](cookbook:9f938c20-ea6e-42d7-9ddf-9531a96e3ad0)). See palette-010.
 - **Empty or whitespace-only className**: When `className` is an empty string or contains only whitespace, the rendered wrapper element's `class` attribute MUST be exactly `adh-mv-content`. See palette-011.
 - **Multiple class names in className prop**: When `className` contains multiple classes (e.g., `"border rounded-lg shadow"`), all classes MUST be preserved in the merged output. See palette-005.
 
@@ -123,7 +125,7 @@ Not applicable: MarkdownReadingPalette has no operational logging. Error handlin
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/markdown/src/components/MarkdownReadingPalette.tsx` | unverified |
+| web | `packages/web/packages/markdown/src/components/MarkdownReadingPalette.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -139,12 +141,8 @@ Not applicable: MarkdownReadingPalette has no operational logging. Error handlin
 **Rationale**: The component is a generic reading surface reused under different names by different hosts (e.g., `MarkdownDocumentEditor`'s preview pane uses `"markdown-preview"`, while a future caller might use something else). Taking the slot as a prop lets each host name it according to its context.
 **Approved**: pending
 
-**Decision**: The component calls `getThemeById(themeId)` at render time rather than caching or memoizing the lookup.
-**Rationale**: This keeps the component simple and ensures it reflects the current `themeId` prop on each render, without introducing component state.
-**Approved**: pending
-
 **Decision**: The component does not validate `themeId` or wrap `getThemeById` in a try/catch of its own.
-**Rationale**: `getThemeById` already handles an unrecognized id by falling back to the `DEFAULT_THEME_ID` theme instead of throwing, so a markdown reading surface never fails to render over a stale or unrecognized theme id. Because the fallback lives in `getThemeById`, the component needs no error-handling logic of its own.
+**Rationale**: `getThemeById` already handles an unrecognized id by falling back to the `DEFAULT_THEME_ID` theme instead of throwing, so a markdown reading surface never fails to render over a stale or unrecognized theme id. Because the fallback lives in `getThemeById`, the component needs no error-handling logic of its own. It also calls `getThemeById(themeId)` at render time without memoizing, which keeps it free of state and always in step with the current `themeId` prop.
 **Approved**: pending
 
 ## Compliance
@@ -155,12 +153,13 @@ Not applicable: MarkdownReadingPalette has no operational logging. Error handlin
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-This rests on the four built-in themes' `--mdv-text`/`--mdv-bg` pairs in `themes/palettes.ts`, each of which computes to at least a 13.5:1 WCAG contrast ratio; contrast for any theme added later is the themes registry's responsibility, not this wrapper's runtime behavior. `separation-of-concerns` passes because the component is a pure presentation wrapper that delegates theme lookup to `getThemeById` from `../themes/registry`, with no business logic of its own; `unit-test-coverage` fails because no test file references `MarkdownReadingPalette`.
+`contrast-ratio` passes because it rests on the four built-in themes' `--mdv-text`/`--mdv-bg` pairs in `themes/palettes.ts`, each of which computes to at least a 13.5:1 WCAG contrast ratio; contrast for any theme added later is the themes registry's responsibility, not this wrapper's runtime behavior. `separation-of-concerns` passes because the component is a pure presentation wrapper that delegates theme lookup to `getThemeById` from `../themes/registry`, with no business logic of its own; `unit-test-coverage` fails because no test file references `MarkdownReadingPalette`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Corrected depends-on, MUST levels, class merge wording and the fallback and contrast ownership; folded a decision. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; corrected the invalid-theme-id edge case and design decision 5 to match `getThemeById`'s actual no-throw fallback; removed the unsupported dynamic-theme-switching claim from design decision 4; generalized design decision 1's app reference; reformatted Design Decisions to Decision/Rationale/Approved; rewrote Compliance with a real linked check; rewrote Appearance and Accessibility to describe the static class and the theme's contrast requirement; made the server-safe test vector concrete; rephrased the whitespace-className edge case around the component's own output; relabeled Platform Notes to React/Web and fixed the WinUI 3 equivalent of `data-mdv-theme`; added markdown-renderer to related; unquoted the modified date; added test vectors for null children, invalid theme id, and whitespace className |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from source |

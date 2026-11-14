@@ -1,7 +1,7 @@
 
 - A hung call blocks the queue for every port; there is no per-call timeout and no cancellation. The only signal is the slow-call warning, which is logged after the call finishes.
 - A `path` that names no method, or a missing nested store, throws a `TypeError` on the server; it is flattened and rejects that call, and the queue continues.
-- A `cause` chain longer than four causes below the error (more than five errors in all) is cut after the fourth cause; the deeper causes are dropped.
+- A `cause` chain deeper than the cause cap in `error-flatten` is cut at the cap; the deeper causes are dropped.
 - A thrown non-`Error` loses its type, `code` and `cause`; only its string form survives.
 - `code` is converted to a string on the wire, so a numeric code arrives as text.
 - Class instances in arguments or results lose their prototype through structured clone, and `Date`, `Map`, `Set` and typed arrays survive.
@@ -9,4 +9,4 @@
 - A call made through a stub after the client port closes rejects immediately and sends nothing.
 - A second `serve` on a new port while others are active joins the same queue; there is one queue per server, not one per port.
 - A message that arrives before the shape (not produced by this server) is read as a reply and ignored, since no entry is pending.
-
+- The fallback error reply for an unclonable result is posted without a guard: if that post also throws, the exception is not caught inside the call runner.

@@ -1,3 +1,4 @@
+These are the defaults the record initializers apply. The records have no other configuration surface.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|

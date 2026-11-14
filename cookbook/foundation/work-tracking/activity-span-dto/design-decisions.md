@@ -19,3 +19,10 @@
 **Rationale**: The source has no checks; callers such as the recorder own correctness, which keeps the DTO a pure carrier.
 **Approved**: pending
 
+**Decision**: The type declares no `CodingKeys`, so the wire key format belongs to the caller's encoder and decoder strategy.
+**Rationale**: The source relies on `convertToSnakeCase` and `convertFromSnakeCase`, as the models test does, which keeps the type free of key names; the cost is that a caller using the default strategy silently produces camelCase keys.
+**Approved**: pending
+
+**Decision**: Decoding is strict: a missing key fails, so adding a field to the type breaks decoding of data written before the field existed.
+**Rationale**: Synthesized `Codable` has no default for an absent key, and the source adds no `decodeIfPresent` defaults. A change that adds a field has to decide how older stored or sent data is handled.
+**Approved**: pending

@@ -1,6 +1,4 @@
 
-Document which accessibility display options (Rule 15) this component responds to:
-
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable — the component has no animations or motion effects to reduce. |

@@ -2,11 +2,11 @@
 id: 888b7ba2-61f6-4251-88df-3586c5c86b1f
 title: "IntegrationRecords"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -27,7 +27,7 @@ related:
   - 1157bca1-0d27-49e9-a989-d637505ba5f1
   - 39a27113-5478-468c-8417-a291d587aab6
 references:
-  - "https://swiftpackageindex.com/groue/GRDB.swift/documentation/grdb (GRDB: FetchableRecord, PersistableRecord and column strategies)"
+  - https://swiftpackageindex.com/groue/GRDB.swift/documentation/grdb
 approved-by: ""
 approved-date: ""
 ---
@@ -79,22 +79,21 @@ IntegrationRecords is the data model of the integrations store: five row types (
 - **message-fields**: It MUST carry `id`, `connectionId`, `provider`, `externalId`, `threadId`, `fromAddress`, `toAddresses`, `ccAddresses`, `subject`, `snippet`, optional `bodyText`, optional `bodyHtml`, `labelIds`, `internalDate`, optional `historyId`, `attachments`, `mailClass`, `isDeleted`, `createdAt`, `updatedAt` and optional `deletedAt`.
 - **message-defaults**: Its initializer MUST default `provider` to `"gmail"`, `toAddresses`, `ccAddresses`, `labelIds` and `attachments` to empty arrays, and `isDeleted` to false.
 - **message-class-derived**: When the initializer is given no `mailClass`, it MUST set it to `MailClassifier.classify(labelIds:)` of the given `labelIds`.
-- **message-class-explicit**: When the initializer is given a `mailClass`, it MUST keep that value and not re-derive it.
-- **message-class-cached**: The record MUST NOT recompute `mailClass` after construction; it is stored on the row (see Design Decisions).
+- **message-class-explicit**: When the initializer is given a `mailClass`, it MUST keep that value and not re-derive it. The record never recomputes `mailClass` after construction; it is stored on the row (see Design Decisions).
 
 ### EmailLabel
 
 - **label-table**: `EmailLabel` MUST map to the table `integration_email_labels`.
 - **label-fields**: It MUST carry `id`, `connectionId`, `externalId`, `sourceProvider`, `name`, optional `parentName`, `type`, optional `color` (a `LabelColor`), optional `messagesTotal`, optional `messagesUnread`, `isDeleted`, `createdAt`, `updatedAt` and optional `deletedAt`.
 - **label-defaults**: Its initializer MUST default `sourceProvider` to `"gmail"`, `type` to `"user"` and `isDeleted` to false.
-- **label-type-values**: The record MUST NOT validate `EmailLabel.type`; it accepts any string, though the source documents `"system"` or `"user"`.
+- **label-type-values**: The record accepts any string for `EmailLabel.type` and does not validate it, though the source documents `"system"` or `"user"`. A port MAY validate it once the value set is closed (see Design Decisions).
 
 ### ActionLog
 
 - **action-log-table**: `ActionLog` MUST map to the table `integration_action_logs`.
 - **action-log-fields**: It MUST carry `id`, `connectionId`, `provider`, `actionType`, optional `idempotencyKey`, `requestPayload` (JSON text), `status`, optional `result`, optional `error`, `createdAt` and `updatedAt`. It has no `deletedAt`.
 - **action-log-defaults**: Its initializer MUST default `provider` to `"gmail"` and `status` to `"pending"`.
-- **action-log-status-values**: The record MUST NOT validate `ActionLog.status`; it accepts any string, though the source documents `"pending"`, `"ok"` or `"error"`.
+- **action-log-status-values**: The record accepts any string for `ActionLog.status` and does not validate it, though the source documents `"pending"`, `"ok"` or `"error"`. A port MAY validate it once the value set is closed (see Design Decisions).
 
 ### Field types
 
@@ -111,7 +110,7 @@ Column names are the snake_case form of the property name. Storage is plain (a n
 ### Concurrency and side effects
 
 - **no-side-effects**: Constructing a record MUST NOT touch the database, files or network; the only environmental read is the clock for default timestamps.
-- **value-semantics**: Records are structs with `var` properties so a caller can change a field on a copy (a status, an `updatedAt`) and write the copy back; they are `Sendable`, and the source declares no locking, so a caller mutating a copy MUST NOT affect other copies.
+- **value-semantics**: Records are structs with `var` properties so a caller can change a field on a copy (a status, an `updatedAt`) and write the copy back. Mutating a copy MUST NOT affect other copies.
 
 ## Appearance
 
@@ -129,7 +128,7 @@ Not applicable — this is a data model, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| integration-records-001 | clock-format, clock-now | `IntegrationClock.now()` (test `clock`) | The string matches `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$` (the test asserts only that it ends with `Z` and contains `.`) |
+| integration-records-001 | clock-format, clock-now | `IntegrationClock.now()` (test `clock`) | The string matches `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$` |
 | integration-records-002 | column-encoding, json-text-columns, connection-table | Insert `IntegrationConnection(id: "c1", externalAccountId: "a@b.c", displayName: "A", status: .active, syncSettings: includeSpam true, scopes: "gmail.modify")` (test `connectionRoundTrip`) | Column `sync_settings` is text containing `includeSpam` |
 | integration-records-003 | enum-text-columns, connection-status-cases | Same insert | Column `status` reads `active` and `typeof(status)` is `text` |
 | integration-records-004 | column-decoding | Fetch the row by key `c1` (test `connectionRoundTrip`) | `externalAccountId == "a@b.c"`, `status == .active`, `syncSettings.includeSpam == true` |
@@ -144,6 +143,7 @@ Not applicable — this is a data model, not a visual component.
 | integration-records-013 | label-table | `EmailLabel.databaseTableName` | `"integration_email_labels"` (untested) |
 | integration-records-014 | provider-config-table | `ProviderConfig.databaseTableName` | `"integration_provider_configs"` (untested) |
 | integration-records-015 | action-log-table | `ActionLog.databaseTableName` | `"integration_action_logs"` (untested) |
+| integration-records-016 | clock-format, clock-now | `IntegrationClock.string(from:)` of the dates 1700000000.123 and 1700000000.5 seconds since 1970-01-01T00:00:00Z (untested) | `2023-11-14T22:13:20.123Z` and `2023-11-14T22:13:20.500Z`; the first sorts before the second as text, and a port's `Date.toISOString()` or C# format string yields the same two strings |
 ## Edge Cases
 
 - **Optional columns null**: a nil optional property (`deletedAt`, `lastError`, `bodyText`, `color`) is stored as SQL NULL and read back as nil.
@@ -159,6 +159,7 @@ Not applicable — this is a data model, not a visual component.
 - **Clock sampling**: default timestamps are read at each initializer call, so two records built in quick succession can differ in the fractional digits.
 
 ## Configuration
+These are the defaults the record initializers apply. The records have no other configuration surface.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -216,7 +217,7 @@ Not applicable: the source contains no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationRecords.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationRecords.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -232,7 +233,7 @@ Not applicable: the source contains no log calls.
 **Approved**: pending
 
 **Decision**: Keep `EmailLabel.type`, `ActionLog.status` and `ActionLog.requestPayload` as plain strings rather than enums or typed payloads.
-**Rationale**: The value sets are documented only in comments, and this version keeps them as strings. Enum text that is not a known raw value fails to decode the whole row, so a new provider-side label type or action state would make existing rows unreadable. A port may promote them to enums stored as raw-value TEXT, as `ConnectionStatus` is, once the sets are closed.
+**Rationale**: The value sets are documented only in comments, and this version keeps them as strings. Enum text that is not a known raw value fails to decode the whole row, so a new provider-side label type or action state would make existing rows unreadable. A port may promote them to enums stored as raw-value TEXT, as `ConnectionStatus` is, once the sets are closed. `ConnectionStatus` and `MailClass` are enums because this SDK owns both sets and treats them as closed: adding a case is a coordinated change across the store and every port, so an unknown stored value signals a version mismatch instead of a new provider-side value.
 **Approved**: pending
 
 **Decision**: Store every timestamp as an ISO-8601 UTC string with fractional seconds.
@@ -248,10 +249,11 @@ Not applicable: the source contains no log calls.
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | partial | privacy-and-data |
 
-The records hold only shape and mapping, with persistence, classification and sync in other files, so separation of concerns passes. `IntegrationRecordsTests` covers the connection and message round trips and the clock, but not `ProviderConfig`, `EmailLabel`, `ActionLog` or the defaults, so unit test coverage is partial. Data integrity is partial because free-string fields (`EmailLabel.type`, `ActionLog.status`) are not validated here and constraints live in the store schema. Secure data storage is partial because the records carry message bodies and addresses in plain columns while protection of the database file is outside this file.
+The records hold only shape and mapping, with persistence, classification and sync in other files, so separation of concerns passes. `IntegrationRecordsTests` covers the connection and message round trips and the clock, but not `ProviderConfig`, `EmailLabel`, `ActionLog` or the defaults, so unit test coverage is partial. The untested vectors are 007 through 016. Data integrity is partial because free-string fields (`EmailLabel.type`, `ActionLog.status`) are not validated here and constraints live in the store schema. Secure data storage is partial because the records carry message bodies and addresses in plain columns while protection of the database file is outside this file.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Merged redundant requirements, made label type and action status validation a MAY for ports, justified the two enums as closed sets, added a clock ordering vector, listed untested vectors in Compliance, and moved the GRDB description out of references. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

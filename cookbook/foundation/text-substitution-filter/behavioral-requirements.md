@@ -15,16 +15,15 @@
 - **replacement-as-given**: Without `matchingCase`, the replacement MUST be written exactly as stored in the pair, whatever the case of the matched text.
 - **single-pass**: Text MUST be scanned once from left to right, so a replacement is never rewritten by a later pair: with pairs `a = b; b = c`, revealing `a b` yields `b c`.
 - **longest-wins**: At each position the longest pattern, measured in `Character`s, MUST win, so `mike fullerton` is replaced whole before a shorter `mike` pair can split it.
-- **tie-order**: Among patterns of equal length that match the same text (duplicate or case-variant aliases), the first one in the order the sort leaves them, which is declaration order in practice, MUST be used.
-- **literal-patterns**: Each alias or real text MUST be matched literally: regular-expression metacharacters in a pattern carry no meaning, because each is passed through `NSRegularExpression.escapedPattern(for:)`.
+- **tie-order**: Among patterns of equal length that match the same text (duplicate or case-variant aliases), the first one in declaration order MUST be used (the ordering by length MUST be stable).
+- **literal-patterns**: Each alias or real text MUST be matched literally: regular-expression metacharacters in a pattern carry no meaning.
 - **whole-words**: With `wholeWords: true`, `revealing` MUST replace an alias only where no Unicode letter or number (`\p{L}`, `\p{N}`) touches either end of the match, so "robin" is left alone in `robinhood.com` and `robin2`, and replaced in `/Robin/` and `robin` after `?`.
 - **whole-words-underscore**: The whole-word test counts only letters and numbers, so an underscore or punctuation next to an alias does not block replacement.
-- **early-exit**: `substitute` MUST return the text unchanged when there are no pairs or the text is empty.
+- **early-exit**: `revealing` and `concealing` MUST return the text unchanged when there are no pairs or the text is empty.
 - **casing-rule**: `casing(_:like:)` MUST return the replacement in all capitals when the match has letters and is all upper case; in all lower case when the match has letters and is all lower case; with a capital first letter and the rest lower case when the match is a capital followed by lower case; and otherwise (mixed case, or no letters) the replacement as given.
 - **casing-single-letter**: `casing` MUST treat a one-letter upper-case match as all capitals, and a one-letter lower-case match as all lower case.
 - **matching-case**: With `matchingCase: true`, each replacement MUST be passed through `casing(_:like:)` with the text it replaces, whatever case the pair was written in.
-- **regex-failure-passthrough**: NEEDS REVIEW: Not implemented in source. When the combined regular expression fails to compile, `substitute` returns the input text unchanged with no error or log, so a `concealing` call would pass real text through; the source never shows the case, since every pattern is escaped, and a test with a pattern set large enough to exceed the engine's limits would settle whether it can happen.
-- **utf16-ranges**: Match ranges MUST be taken in UTF-16 units over an `NSString` copy, and unmatched stretches MUST be copied through unchanged.
-- **no-state**: Substitution MUST NOT mutate the filter; each call builds its own regular expression and holds no cache between calls.
+- **unmatched-text-kept**: Every stretch of text that no pattern matches MUST be copied through unchanged, including text with accents, emoji or other multi-unit characters.
+- **no-state**: Substitution MUST NOT mutate the filter that callers can observe: the same filter and the same input MUST give the same output on every call. An implementation MAY cache compiled patterns internally.
 - **foundation-only**: The component MUST depend only on Foundation.
 

@@ -8,7 +8,7 @@
 - **render-options**: The component MUST render each option as a checkbox with an associated label, derived from the options array.
 - **label-transform**: The component MAY accept a `labelOf` function to transform option values into display labels; if not provided, the option value MUST be displayed as-is.
 - **toggle-on-checkbox-click**: The component MUST add or remove an option from the selection when its checkbox is toggled (by click or by keyboard activation), invoking the `onChange` callback with the updated selection.
-- **synchronous-selection-update**: Each `onChange` call MUST be computed from the current `selected` prop at the moment of the toggle. The component holds no selection state of its own, so the host MUST apply each `onChange` to `selected` before the next toggle is processed, or rapid toggles will each compute from the same stale `selected` value and overwrite one another instead of accumulating.
+- **compute-from-current-prop**: Each `onChange` call MUST be computed from the current `selected` prop at the moment of the toggle. The component holds no selection state of its own and does not accumulate toggles between prop updates.
 - **render-all-button**: The component MUST render an "All" quick-select button that selects every option and invokes `onChange`.
 - **disable-all-button**: The component MUST disable the "All" button when all options are already selected.
 - **render-none-button**: The component MUST render a "None" quick-select button that clears all selections and invokes `onChange`.

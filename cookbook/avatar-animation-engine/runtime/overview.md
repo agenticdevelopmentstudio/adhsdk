@@ -26,6 +26,6 @@ one clock, in one order, per frame: `scheduler.tick(clock)`, then
 events), then `tweens.tick(clock)`, then reads the channels to render. That
 ordering is load-bearing — each swap is documented in source as "its own
 frame-late bug" — but it lives in `Engine`, not in these three files; this
-recipe specifies the contract each of the three offers to whatever drives it,
+ingredient specifies the contract each of the three offers to whatever drives it,
 not the driving order itself.
 

@@ -1,0 +1,8 @@
+
+| Version | Date | Author | Summary |
+|---------|------|--------|---------|
+| 1.2.2 | 2026-09-25 | Mike Fullerton | Renamed discard-closes-dialog to discard-invokes-onclose; T026 now reflects that the alert stays open unless the host unmounts; wrapped Promise<TResult> in a code span. |
+| 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
+| 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirement names to subject-only kebab-case and added three requirements (plus vectors) for the alert's Discard/Stay outcomes and Escape-during-save; corrected the unmount-while-saving, callback-identity, draft-mutation, and portal-target Edge Cases to match actual React/DOM behavior; corrected touch-target size, keyboard tab order, and error-display ownership (delegated to renderForm) across Accessibility, States, and Appearance; removed the async claim from the saveEnabled design decision and explained the host re-render mechanism instead; reformatted every Design Decision to the Decision/Rationale/Approved form; added a real Compliance table; added the missing fallback-error localization entry and noted the strings are hardcoded; corrected two test vectors and added five more |
+| 1.1.0 | 2026-09-22 | Mike Fullerton | Answer the blank-state, validate-throw, and Reduce Motion questions from the source; keep modal focus management as the one open gap; rewrite Platform Notes to the template's five bullets with concrete per-platform guidance |
+| 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

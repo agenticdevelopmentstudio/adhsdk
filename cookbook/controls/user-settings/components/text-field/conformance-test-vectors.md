@@ -21,4 +21,10 @@
 | text-field-018 | prevent-autofill-default | `<TextField value="" onChange={...} autoComplete="off" />` | Component treats `"off"` the same as an omitted `autoComplete`: the same six autofill-prevention attributes as text-field-010 are applied. |
 | text-field-019 | mask-password-input | `<SecureTextField value="" onChange={...} />` | Component renders `<input type="password" />`. |
 | text-field-020 | render-label, render-hint | `<TextField label="Name" value="" onChange={...} hint="Helper text" />` | DOM order is `<label>`, then `<input>`, then the hint `<p>` — the label precedes the input and the hint follows it. |
-
+| text-field-021 | apply-semantic-css-classes, handle-multiline | `<TextField value="" onChange={...} multiline={true} />` | The `<textarea>` element has class list `aws-field__input aws-field__textarea`. |
+| text-field-022 | apply-autofill-token, handle-multiline | `<TextField value="" onChange={...} multiline={true} autoComplete="email" />` | The `<textarea>` has `autoComplete="email"` and none of the five `data-*` ignore attributes. |
+| text-field-023 | prevent-autofill-default, handle-multiline | `<TextField value="" onChange={...} multiline={true} />` | The `<textarea>` has `autoComplete="off"` and the same six autofill-prevention attributes as text-field-010. |
+| text-field-024 | prevent-autofill-default | `<TextField value="" onChange={...} autoComplete=" OFF " />` | After trimming and lowercasing the value equals `'off'`, so the input has the same six autofill-prevention attributes as text-field-010, with `autoComplete="off"`. |
+| text-field-025 | render-label, render-hint | `<TextField label="" hint={false} value="" onChange={...} />` | No `<label>` and no hint `<p>` element is rendered. |
+| text-field-026 | render-label | `<TextField label={0} value="" onChange={...} />` | No `<label>` element is rendered, and the text "0" appears in the root (the falsy `0` is rendered by React rather than suppressed). |
+| text-field-027 | always-prevent-password-manager, mask-password-input | `<SecureTextField value="" onChange={...} multiline={true} />` | A single-line `<input type="password" />` is rendered; `multiline` is ignored and no `<textarea>` appears. |

@@ -4,11 +4,11 @@
     "id": "da56ecc7-18f6-412e-9368-3beb29309d8d",
     "title": "Separator",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6671362ef0f78244",
+  "synced": "a9b62dba8f26f852",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

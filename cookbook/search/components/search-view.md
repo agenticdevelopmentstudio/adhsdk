@@ -2,11 +2,11 @@
 id: fed0a111-253c-427b-89c0-14f729657a7d
 title: "SearchView"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -53,7 +53,7 @@ SearchView is a configurable, composable document-search interface for web appli
 - **support-roving-focus**: Result list MUST implement roving tabindex: only one row is a Tab stop at any time; ArrowUp/ArrowDown move focus; Home/End jump to first/last; Enter/Space activate the focused row (left to the ResultRow's native handler).
 - **track-active-index**: Component MUST track an internal active index (cursor position) distinct from `selectedId`; the cursor moves with arrow keys. Opening the cursor's row into the preview on Enter/Space is the ResultRow's own responsibility — see **support-roving-focus**.
 - **clamp-cursor-on-resize**: When results are requeried and the result set shrinks, component MUST clamp the active index to the new item count to prevent out-of-bounds access.
-- **render-loading-skeleton**: During the initial fetch (while no results have settled), component MUST render 3 placeholder skeleton bars with `aria-busy="true"` and `aria-label="Loading results"`.
+- **render-loading-skeleton**: During the initial fetch (while no results have settled), component MUST render 3 placeholder skeleton bars in a list element that itself carries `aria-busy="true"` and `aria-label="Loading results"`. This is a different element from the outer container in **announce-loading-container**.
 - **render-zero-results**: When results settle with an empty list and no error, component MUST render a "No matching documents" message; if facets are active, include a hint to remove filters.
 - **render-hard-error**: When a fetch error occurs and no results are cached, component MUST render a full error block with the error message and a Retry button.
 - **render-stale-error**: When a fetch error occurs while results are cached (re-query failure), component MUST render a compact error strip above the list with the error message and a Retry button.
@@ -63,19 +63,19 @@ SearchView is a configurable, composable document-search interface for web appli
 - **reselect-focuses-without-reopening**: When the already-selected hit is selected again while the preview is already disclosed, the component MUST move focus into the preview content region without changing selection or disclosure state (no re-render of either).
 - **handle-escape-in-list**: While focus is in the result list, Escape MUST collapse the preview dock and clear the selection (if a result is selected), without moving focus.
 - **escape-noop-without-selection**: While focus is in the result list, if no result is currently selected, Escape MUST have no effect — no dock-state change and no focus move.
-- **handle-escape-in-preview**: While focus is anywhere in the preview dock — the header controls (the collapse toggle and any links rendered by the type's `PreviewHeader`) or the body — Escape MUST collapse the dock, clear the selection, and move focus to the row at the roving-focus cursor (`activeIndex`). `activeIndex` coincides with the row that opened the preview only when that row was reached by keyboard (Arrow/Home/End) and then activated there; a preview opened by clicking a different row (a click never updates `activeIndex`) leaves the cursor on whatever row it was on before, so focus returns to that cursor row instead, not the row that opened the preview. The handler sits on the outer preview section so it fires uniformly from either area.
+- **handle-escape-in-preview**: While focus is anywhere in the preview dock — the header controls (the collapse toggle and any links rendered by the type's `PreviewHeader`) or the body — Escape MUST collapse the dock, clear the selection, and move focus to the row at the roving-focus cursor (`activeIndex`). `activeIndex` coincides with the row that opened the preview only when that row was reached by keyboard (Arrow/Home/End) and then activated there; a preview opened by clicking a different row (a click never updates `activeIndex`) leaves the cursor on whatever row it was on before, so focus returns to that cursor row instead, not the row that opened the preview. Escape MUST behave the same from the header controls and from the body.
 - **support-url-sync**: Component MUST synchronize `q`, `tag`, and `category` filters to the URL query string (if `urlSync` prop is true, the default); the synchronization MUST be SSR-safe and framework-agnostic, allowing results to be shared and back/forward to re-sync state.
 - **label-search-region**: The search and filter bar MUST sit inside a `role="search"` landmark with an accessible label (`searchLandmarkLabel` prop, default "Document search"); the label MUST be distinct when multiple search regions render on a page.
 - **label-search-input**: The search input MUST have an accessible label (`searchLabel` prop, default "Search documents").
 - **label-result-list**: The result list `<ul>` MUST have `aria-label="Search results"`.
 - **label-preview-region**: The preview dock section MUST have `aria-label="Document preview"` and the preview content region MUST have `aria-label="Document preview content"`.
 - **announce-result-count**: The result count MUST have `role="status"` and `aria-live="polite"` to announce count changes to screen readers.
-- **announce-loading-container**: The outer container holding the list MUST have `aria-busy` set to true while in the loading phase.
+- **announce-loading-container**: The outer container that holds the result list (not the skeleton list in **render-loading-skeleton**) MUST have `aria-busy` set to true while the search phase is loading, including a re-query that keeps earlier results on screen.
 - **focus-preview-on-select**: When a result is selected, component MUST programmatically focus the preview content region (a `<div tabIndex={-1}>`) so keyboard users land on the opened preview.
-- **no-unrelated-refocus**: Focus movement into the preview MUST only occur on user selection, not on unrelated re-renders or header-toggle disclosure changes; this is gated by an internal flag.
+- **no-unrelated-refocus**: Focus movement into the preview MUST only occur on user selection, not on unrelated re-renders or header-toggle disclosure changes. A header-toggle disclosure change or an unrelated re-render never moves focus.
 - **category-filter-label**: The category dropdown label MUST be the static text "Filter by category" (it never varies).
 - **tag-filter-label**: The tag dropdown label MUST be the static text "Filter by tag" (it never varies).
-- **accept-optional-props**: Component MUST accept optional props: `searchPlaceholder` (default "Search…"), `debounceMs` (default 250), `timeoutMs` (optional, passed to data-fetching hooks), `urlSync` (default true), `className` (extra classes on root).
+- **accept-optional-props**: Component MUST accept optional props: `searchLabel` (default "Search documents"), `searchPlaceholder` (default "Search…"), `searchLandmarkLabel` (default "Document search"), `debounceMs` (default 250), `timeoutMs` (optional per-request timeout for the search, facet, and preview fetches), `urlSync` (default true), `className` (extra classes on root).
 - **clear-facets-only**: The "Clear filters" button MUST clear only active facets (category and tag), NOT the query string.
 - **accept-hit-id-extraction**: Component MUST use the supplied `getId` function from documentType to extract the hit identifier.
 - **accept-hit-title-extraction**: Component MUST use the supplied `getTitle` function from documentType to extract the hit title for display in the preview dock header.
@@ -160,10 +160,25 @@ SearchView is a configurable, composable document-search interface for web appli
 | search-view-040 | reselect-focuses-without-reopening | The preview is already disclosed for a hit; the same hit is selected again | Focus moves into the preview content region; disclosure and selection state do not change |
 | search-view-041 | escape-noop-without-selection | Focus is in the result list; no result is selected; Escape is pressed | Nothing changes; focus remains in the list |
 | search-view-042 | handle-escape-in-preview | The roving-focus cursor is on row 0 (active index = 0, reached via keyboard earlier); the user then clicks row 3, selecting it and opening its preview (a click does not update active index); focus is in the preview content region; Escape is pressed | The dock collapses and the selection clears, but focus returns to row 0 (the active index), not row 3 that opened the preview |
-
+| search-view-043 | accept-search-source | Component mounted with a `source` whose base URL and endpoint are known; a query becomes active | The search request is issued against that source's base URL and results endpoint |
+| search-view-044 | accept-document-type | Component mounted with a `documentType` supplying `ResultRow`, `Preview`, `PreviewHeader`, `getId` and `getTitle`; a query settles with one hit and the hit is selected | The hit renders through the supplied `ResultRow`, and the supplied `Preview` and `PreviewHeader` render in the dock |
+| search-view-045 | accept-document-href | `documentHref` returns `/docs/<id>` for each hit; results settle | Each `ResultRow` receives `href` equal to `documentHref(hit)` |
+| search-view-046 | render-search-filter-bar | Component mounted with no query and no facets | The text query input, the category dropdown and the tag dropdown are all mounted |
+| search-view-047 | render-result-list | Results settle with 3 hits | One `<ul>` holds 3 `<li>` elements; each `ResultRow` receives `hit`, `href`, `query`, `selected`, `active`, `controlRef` and `onSelect` |
+| search-view-048 | track-active-index | Focus is on row 0; ArrowDown is pressed twice; no row is selected | The active index is 2, `selectedId` is unchanged, and no preview opens |
+| search-view-049 | support-preview-dock | A query settles and no row is selected | A preview dock `<section>` renders below the list as a header bar with the title ("Preview") and the collapse toggle, and no body |
+| search-view-050 | announce-loading-container | A re-query is in flight while earlier results are shown | The outer list container has `aria-busy="true"`; after the re-query settles it has no `aria-busy` |
+| search-view-051 | category-filter-label | Component mounts with category options available | The category dropdown label is "Filter by category" |
+| search-view-052 | tag-filter-label | Component mounts with tag options available | The tag dropdown label is "Filter by tag" |
+| search-view-053 | accept-hit-id-extraction | Two hits whose `getId` values differ; the second is selected | The second row has `selected` true and the first has `selected` false, matched by the `getId` value |
+| search-view-054 | accept-hit-title-extraction | A hit is selected, then the dock is collapsed | The collapsed header bar shows the string `getTitle` returns for that hit |
+| search-view-055 | render-loading-skeleton | A query becomes active and the first fetch has not settled | The skeleton list has `aria-label="Loading results"` |
+| search-view-056 | support-url-sync | `urlSync={false}`; the query and a tag filter change | The URL query string is not written, and filters still work from local state |
+| search-view-057 | accept-optional-props | Component mounted with `searchLabel="Find"` and `searchLandmarkLabel="Site search"` | The search input's accessible label is "Find" and the landmark's accessible name is "Site search" |
+| search-view-058 | render-hard-error | The initial fetch fails while the skeleton is showing | The skeleton is replaced by the full error block with the message and Retry; nothing carries `aria-busy` |
 ## Edge Cases
 
-- **Empty query, no facets**: No fetch occurs; a prompt ("Search research documents…") is shown. This remains until the user enters a query or selects a facet.
+- **Empty query, no facets**: No fetch occurs; a prompt is shown (the `emptyStateInactiveTitle` and `emptyStateInactiveDescription` strings in Localization). This remains until the user enters a query or selects a facet.
 - **Query with no results and no error**: A "No matching documents" message is displayed. If facets are active, a hint "Try a different search or remove filters" appears; if no facets, only "Try a different search."
 - **Fetch error with no cached results**: A full error block (centered, min-height 160px) displays the error message and a Retry button. The view is blocked; no partial results are shown.
 - **Fetch error while results are cached**: A compact error strip appears above the cached result list. The list remains visible and scrollable. The user can browse cached results or click Retry to re-fetch.
@@ -173,7 +188,7 @@ SearchView is a configurable, composable document-search interface for web appli
 - **Chip removal**: Clicking a chip's remove button clears only that facet (category or tag), not others. The query persists; only the facet is cleared.
 - **Multiple facet filters active**: Both category and tag can be active simultaneously. Each has its own removable chip. "Clear filters" clears both.
 - **Filtering with no results**: The chips remain visible (as feedback that filters are active), and the "No matching documents" message is shown. The user can remove filters via the chips or the "Clear filters" button.
-
+- **Initial fetch fails while the skeleton is showing**: The fetch error settles the search, so the skeleton is replaced by the full error block with the message and a Retry button (see **render-hard-error**). The loading phase ends, so neither the skeleton list nor the outer container carries `aria-busy`. Retry restarts the fetch and shows the skeleton again only if nothing has settled.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -230,6 +245,7 @@ Not applicable: SearchView does not define deep-link paths. The documentHref pro
 
 Only `searchLabel`, `searchPlaceholder`, and `searchLandmarkLabel` are exposed as overridable props; every other string above is hardcoded in the component with no override seam, and the "String Key" column for those rows is a descriptive identifier assigned for this table, not a key that exists in source.
 
+The two inactive-prompt strings (`emptyStateInactiveTitle`, `emptyStateInactiveDescription`) carry app-specific wording ("research documents", "every researcher") that a generic component should not hardcode. This is a known defect in the source: a port SHOULD use neutral copy, and the strings are not yet overridable.
 ## Accessibility Options
 
 - **Reduce Motion**: The loading skeleton uses `animate-pulse` (a CSS animation). On `prefers-reduced-motion: reduce`, this animation SHOULD be removed or replaced with a static appearance. This is a style concern, not specific to SearchView's behavior, so it defers to the host's style implementation.
@@ -257,7 +273,7 @@ Not applicable: SearchView does not define logging events in the source.
 
 ## Platform Notes
 
-- **React/Web**: Source files: `packages/web/packages/search/src/components/SearchView.tsx` and related modules. Uses React hooks (useState, useEffect, useCallback, useRef, useId), event handlers (KeyboardEvent), and Tailwind CSS for styling. Data fetching is delegated to custom hooks (useDocumentSearch, useUrlFilters, useFacets). The component is SSR-safe; filter state is synced bidirectionally with the URL.
+- **React/Web**: Source files: `packages/web/packages/search/src/components/SearchView.tsx` (which also holds `PreviewDock`, `ActiveFilterChips`, the `renderList` helper and the `resultCountLabel` formatter), `packages/web/packages/search/src/data/useDocumentSearch.ts` (`useDocumentSearch`, `useFacets`, `isActiveSearch`), `packages/web/packages/search/src/data/useUrlFilters.ts`, and the shared `SearchFilterBar`, `Badge`, `Button`, `CollapseToggle`, `EmptyState` and `SplitDivider` components from `@adh-sdk/ui`. The Escape handler for the preview dock sits on the outer preview section, so one handler covers the header controls and the body; the focus-into-preview effect is gated by a one-shot ref armed only on an explicit selection. Uses React hooks (useState, useEffect, useCallback, useRef, useId), event handlers (KeyboardEvent), and Tailwind CSS for styling. Data fetching is delegated to custom hooks (useDocumentSearch, useUrlFilters, useFacets). The component is SSR-safe; filter state is synced bidirectionally with the URL.
 - **SwiftUI**: A SearchView equivalent on iOS/macOS would use SwiftUI's `@State` and an `@Observable` model for state management. Use a `VStack` for the layout (filter bar, chips, list, divider, preview dock). Implement keyboard navigation via `.onKeyPress()` modifiers. Use `List` with roving focus via `.focusable()` and programmatic focus management with `FocusState`. Manage the collapsible preview with a disclosure indicator (chevron) and animated height/opacity changes. Synchronize state with URLComponents or AppStorage. Touch targets meet Apple HIG minimums (44×44pt).
 - **Compose**: A Compose version would use `MutableState` for filter and selection state. Layout as a `Column` with the SearchFilterBar, chips, a scrollable `LazyColumn` for results, and a collapsible `Surface` below for the preview. Implement roving keyboard focus via `Modifier.onPreviewKeyEvent()` and `FocusRequester`. Use `animateContentSize()` for the collapsible preview. Render the divider as a draggable `Box` with `pointerInput()`. Material Design 3 defines touch targets at 48×48dp; implement via padding and `minimumInteractiveComponentSize`.
 - **AppKit / UIKit**: On macOS, use an `NSStackView` (vertical) composing `NSSearchField` (query), `NSPopUpButton` (category/tag filters), an `NSTableView` for the result list (roving/keyboard navigation via `NSTableViewDelegate` and the responder chain's key-view loop), and a collapsible bottom pane for the preview dock — a resizable `NSView` (or an `NSSplitView` with a collapsible pane), with a custom `NSView`-based divider for the resize handle. On iOS, use a `UITableView` for the result list (`UITableViewDelegate` drives selection; a hardware keyboard's `UIKeyCommand` drives arrow/Home/End navigation), `UITextField` for the search input, and `UIControl` subclasses for filters and buttons; implement the collapsible preview dock with a custom container view — not `UISplitViewController`, which targets side-by-side master/detail panes rather than a stacked collapsible dock — animating its height/constraint changes with `UIView.animate`. Touch targets on iOS meet Apple HIG (44×44pt); macOS supports keyboard-only navigation natively.
@@ -267,7 +283,7 @@ Not applicable: SearchView does not define logging events in the source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/search/src/components/SearchView.tsx` | unverified |
+| web | `packages/web/packages/search/src/components/SearchView.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -276,7 +292,7 @@ Not applicable: SearchView does not define logging events in the source.
   **Approved**: pending
 
 - **Decision**: Escape collapses the preview dock AND deselects the hit — both list Escape (**handle-escape-in-list**) and preview Escape (**handle-escape-in-preview**) call the same `clearSelection`, which sets `selectedId` to `null` as well as collapsing the dock.
-  **Rationale**: Escape is a single "back out of what I opened" action; there is no code path that collapses the dock while leaving a hit selected, so re-expanding via the collapse toggle afterward shows the no-selection empty state, not the hit. A consumer that wants the selection preserved across Escape needs to layer that behavior on top — it is not what the shipped component does.
+  **Rationale**: Escape is a single "back out of what I opened" action; Escape never leaves a hit selected, so re-expanding via the collapse toggle afterward shows the no-selection empty state, not the hit. The collapse toggle is different: it collapses the dock and keeps the selection (see the disclosure-independence decision below). A consumer that wants the selection preserved across Escape needs to layer that behavior on top — it is not what the shipped component does.
   **Approved**: pending
 
 - **Decision**: "Clear filters" clears the active facets (category, tag) only, never the query.
@@ -315,6 +331,9 @@ Not applicable: SearchView does not define logging events in the source.
   **Rationale**: When collapsed there is nothing to resize (the dock is its natural header height); omitting the divider when it would be non-functional reduces visual clutter.
   **Approved**: pending
 
+- **Decision**: A click on a result row selects it and opens its preview without moving the roving-focus cursor (`activeIndex`).
+  **Rationale**: Only keyboard navigation (Arrow/Home/End) moves the cursor, so the cursor stays where the keyboard user left it. The cost is that Escape from the preview returns focus to the cursor row, which after a click is not the row that was opened (see **handle-escape-in-preview**, vector search-view-042). Requiring a click to move the cursor would remove that surprise; it is not what the shipped component does.
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -349,3 +368,4 @@ Statuses rest on the component's own source: explicit `aria-*` attributes, rovin
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: merged duplicate requirements (loading aria, URL back/forward, escape-from-header), resolved the Enter-ownership conflict between roving focus and active-index tracking, corrected the Privacy transmission/retention claims, rewrote Appearance in tokens/measurements instead of raw Tailwind classes and fixed its accuracy errors (gap size, corner-radius conflict, a typo), populated Configuration and Compliance as real tables, reformatted Design Decisions to the Decision/Rationale/Approved form and retitled a misleading one, corrected Platform Notes APIs (SwiftUI, WinUI, AppKit/UIKit) and replaced the commercial WinUI splitter suggestion, rebuilt the Localization table's misused columns, generalized app-specific wording in a merged requirement, added two new requirements for previously-orphaned edge cases plus test vectors for all previously-uncovered requirements, retagged two mistagged vectors, and renamed every requirement to subject-only kebab-case with no `must-` prefix. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Escape deselects (both list/preview); preview Escape refocuses activeIndex, not opened row. |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Recorded the click-does-not-move-cursor behavior as a pending Design Decision, narrowed the Escape rationale, clarified which element carries aria-busy, moved implementation mechanics to Platform Notes, filled the optional-props list and Platform Notes module list, added an initial-fetch-failure edge case and vectors 043 to 058, and flagged the app-specific prompt copy. |

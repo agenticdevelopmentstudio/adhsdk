@@ -2,11 +2,11 @@
 id: 6579e030-0455-453c-81cf-177dae3dd82e
 title: "Field Value"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -18,7 +18,8 @@ tags:
   - display
   - field-rendering
   - data-presentation
-depends-on: []
+depends-on:
+  - 3828874a-ce76-4e8d-a106-97a867ed583d
 related:
   - 6c034a7a-3a43-4da6-bc1a-0cbc39f32cc4
   - fe09968a-6575-40d0-b0b8-af6ce52d8efd
@@ -36,13 +37,15 @@ FieldValue is a presentational component that renders a field's value in the app
 ## Behavioral Requirements
 
 - **render-by-type**: Component MUST render different markup for each supported field type: text, date, select, email, phone, url, boolean, multi_select, image, address, markdown, textarea.
+- **unknown-type-as-text**: Component MUST render a value whose type is none of the listed types the same way as type text: as a `rp-field__text` span, after the **delivery-label-lookup** mapping, or nothing when the value is empty.
 - **empty-text-renders-nothing**: Component MUST render nothing when type is text, date, select, or the default case and the value is empty (after converting to a display string).
 - **empty-multi-select-renders-nothing**: Component MUST render nothing when type is multi_select and the value is not a non-empty list.
 - **empty-address-renders-nothing**: Component MUST render nothing when type is address and all address parts (line1, line2, city, region, postalCode, country) are empty or absent.
 - **url-as-link**: Component MUST render type url as an `<a>` element with href set to the value, with class rp-field__link.
-- **url-protocol-stripped**: Component MUST display the URL text with the leading protocol (http:// or https://) removed.
+- **url-protocol-stripped**: Component MUST display the URL text with the leading protocol (http:// or https://) removed. The match is case-sensitive: `HTTPS://Example.com` is displayed unchanged.
+- **empty-url-renders-nothing**: Component MUST render nothing when type is url and the value is empty.
 - **url-security-attributes**: Component MUST set rel="noopener noreferrer nofollow" and target="_blank" on URL links.
-- **email-as-text**: Component MUST render type email as plain text in a span with class rp-field__text, never as a mailto link, regardless of value visibility settings.
+- **email-as-text**: Component MUST render type email as plain text in a span with class rp-field__text, never as a mailto link.
 - **phone-as-text**: Component MUST render type phone as plain text in a span with class rp-field__text, never as a tel link.
 - **empty-email-or-phone-renders-empty-span**: Component MUST render an empty span with class rp-field__text (not nothing) when type is email or phone and the value is empty — unlike text/date/select/default, which render nothing for an empty value.
 - **boolean-as-yes-no**: Component MUST render type boolean as "Yes" when the value is truthy and "No" when it is falsy (including an absent value), in a span with class rp-field__text. This is a truthiness test, not a strict boolean check: a truthy non-boolean value such as the string "false" still renders "Yes".
@@ -58,7 +61,8 @@ FieldValue is a presentational component that renders a field's value in the app
 - **textarea-as-text**: Component MUST render type textarea as pre-wrapped text in a paragraph with class rp-field__prose, never as HTML.
 - **delivery-label-lookup**: Component MUST apply the DELIVERY_LABEL mapping (in_person → "In person", virtual → "Virtual", hybrid → "In person or virtual") to text, date, select, and default types before rendering.
 - **unmapped-values-as-is**: Component MUST render the original value as display text if it is not found in the DELIVERY_LABEL mapping.
-- **rp-field-text-class**: Component MUST use class rp-field__text for text, email, phone, boolean, and address field types.
+- **rp-field-text-class**: Component MUST use class rp-field__text for text, date, select, email, phone, boolean, and address field types, and for the default (unknown type) case.
+- **empty-prose-renders-empty-paragraph**: Component MUST render an empty `<p class="rp-field__prose"></p>` (not nothing) when type is markdown or textarea and the value is empty.
 - **value-stringified**: Component MUST convert all non-address values to a display string before rendering.
 - **nullish-values-as-empty-string**: Component MUST treat an absent (null or undefined) value as an empty string wherever a display string is produced (text, date, select, default, email, phone, url, image, markdown, textarea); boolean and multi_select have their own absent-value handling (see **boolean-as-yes-no** and **empty-multi-select-renders-nothing**).
 
@@ -102,8 +106,8 @@ FieldValue is a presentational component that renders a field's value in the app
 | field-value-010 | unresolvable-image-renders-nothing | `{ type: 'image', value: 'missing-id', label: 'Photo' }`, resolveImageUrl returns null | `null` |
 | field-value-011 | address-comma-separated, address-value-as-object | `{ type: 'address', value: { line1: '123 Main St', city: 'Springfield', country: 'USA' }, label: 'Address' }` | `<span class="rp-field__text">123 Main St, Springfield, USA</span>` |
 | field-value-012 | empty-address-renders-nothing | `{ type: 'address', value: { line1: '', line2: '', city: '', region: '', postalCode: '', country: '' }, label: 'Address' }` | `null` |
-| field-value-013 | markdown-as-text | `{ type: 'markdown', value: '# Hello\nWorld', label: 'Bio' }` | `<p class="rp-field__prose"># Hello\nWorld</p>` |
-| field-value-014 | textarea-as-text | `{ type: 'textarea', value: 'Line 1\nLine 2', label: 'Notes' }` | `<p class="rp-field__prose">Line 1\nLine 2</p>` |
+| field-value-013 | markdown-as-text | `{ type: 'markdown', value: '# Hello\nWorld', label: 'Bio' }` (the `\n` is a real newline character) | `<p class="rp-field__prose"># Hello<newline>World</p>`, where `<newline>` is a real newline character; the line break shows because `.rp-field__prose` sets `white-space: pre-wrap` |
+| field-value-014 | textarea-as-text | `{ type: 'textarea', value: 'Line 1\nLine 2', label: 'Notes' }` (the `\n` is a real newline character) | `<p class="rp-field__prose">Line 1<newline>Line 2</p>`, where `<newline>` is a real newline character |
 | field-value-015 | delivery-label-lookup | `{ type: 'text', value: 'in_person', label: 'Delivery' }` | `<span class="rp-field__text">In person</span>` |
 | field-value-016 | delivery-label-lookup, unmapped-values-as-is | `{ type: 'text', value: 'custom-value', label: 'Delivery' }` | `<span class="rp-field__text">custom-value</span>` |
 | field-value-017 | nullish-values-as-empty-string | `{ type: 'text', value: null, label: 'Optional' }` | `null` |
@@ -119,25 +123,36 @@ FieldValue is a presentational component that renders a field's value in the app
 | field-value-027 | markdown-as-text | `{ type: 'markdown', value: '<script>alert(1)</script>', label: 'Bio' }` | `<p class="rp-field__prose">&lt;script&gt;alert(1)&lt;/script&gt;</p>` |
 | field-value-028 | boolean-as-yes-no | `{ type: 'boolean', value: 'false', label: 'Active' }` | `<span class="rp-field__text">Yes</span>` |
 | field-value-029 | boolean-as-yes-no | `{ type: 'boolean', value: null, label: 'Active' }` | `<span class="rp-field__text">No</span>` |
-| field-value-030 | url-as-link | `{ type: 'url', value: 'javascript:alert(1)', label: 'Website' }` | `<a class="rp-field__link" href="javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')" rel="noopener noreferrer nofollow" target="_blank">javascript:alert(1)</a>` |
-
+| field-value-030 | url-as-link | `{ type: 'url', value: 'javascript:alert(1)', label: 'Website' }` | An `<a class="rp-field__link" rel="noopener noreferrer nofollow" target="_blank">` whose displayed text is `javascript:alert(1)` and whose rendered `href` MUST NOT run script when followed (on React, a blocking stub; see Platform Notes) |
+| field-value-031 | empty-url-renders-nothing | `{ type: 'url', value: '', label: 'Website' }` | `null` |
+| field-value-032 | empty-prose-renders-empty-paragraph | `{ type: 'markdown', value: '', label: 'Bio' }` | `<p class="rp-field__prose"></p>` |
+| field-value-033 | empty-prose-renders-empty-paragraph | `{ type: 'textarea', value: null, label: 'Notes' }` | `<p class="rp-field__prose"></p>` |
+| field-value-034 | unknown-type-as-text | `{ type: 'unrecognized', value: 'abc', label: 'Other' }` | `<span class="rp-field__text">abc</span>` |
+| field-value-035 | url-protocol-stripped | `{ type: 'url', value: 'HTTPS://Example.com', label: 'Website' }` | `<a class="rp-field__link" href="HTTPS://Example.com" rel="noopener noreferrer nofollow" target="_blank">HTTPS://Example.com</a>` (not stripped) |
 ## Edge Cases
 
-- **Empty value for any type**: When value is empty string, null, or undefined, the component returns nothing for text, date, select, multi_select, address, and the default case; email and phone are the exception, rendering an empty `<span class="rp-field__text"></span>` instead (see **empty-email-or-phone-renders-empty-span**).
+- **Empty value for any type**: When value is empty string, null, or undefined, the component returns nothing for text, date, select, multi_select, address, url, image, and the default case (see **empty-url-renders-nothing**); email and phone render an empty `<span class="rp-field__text"></span>` instead (see **empty-email-or-phone-renders-empty-span**), and markdown and textarea render an empty `<p class="rp-field__prose"></p>` (see **empty-prose-renders-empty-paragraph**).
 - **Non-array value for multi_select**: If value is not an array, it is coerced to an empty array, resulting in null render.
 - **Invalid image resolver result**: When resolveImageUrl is provided but returns null, the component renders nothing rather than a broken image.
 - **Address as non-object**: If address value is not an object or is null, it defaults to an empty object, resulting in null render.
-- **Null resolveImageUrl prop**: When resolveImageUrl prop is not provided, unresolvable IDs are handled using optional chaining (`resolveImageUrl?.(id) ?? null`), resulting in null render.
+- **Absent resolveImageUrl**: When the resolveImageUrl prop is not provided, an image ID cannot be resolved and nothing is rendered (see **unresolvable-image-renders-nothing**).
 - **URL with no protocol**: When URL value has no http:// or https:// prefix, the full URL is displayed as-is.
 - **Whitespace in multi_select items**: Array items are converted to strings but not trimmed; leading/trailing whitespace is preserved.
 - **Non-boolean truthy value for boolean type**: A truthy non-boolean value (for example, the string "false") renders "Yes" because the component performs a truthiness check, not a strict boolean comparison; see **boolean-as-yes-no**.
 - **Null or undefined boolean value**: Renders "No" because null and undefined are falsy in the truthiness check.
 - **Markdown or textarea containing HTML or script markup**: Rendered as literal, escaped text and never executed, because the component places the string as JSX text content rather than parsing or injecting it as HTML; see **markdown-as-text** and **textarea-as-text**.
-- **URL value with a non-http(s) scheme**: The `href` prop is set directly from the value with no scheme check in the component's own code; the component does not validate or restrict the URL scheme, and its protocol prefix is untouched by the http(s) stripping in **url-protocol-stripped**. For most non-http(s) schemes this renders a clickable link with that value verbatim. A `javascript:` value is the one case that renders differently: React 19's `sanitizeURL` intercepts every `javascript:`-scheme `href`/`src`/`action`/`formAction` prop at render time and replaces it with a throwing stub (`javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')`), regardless of what FieldValue itself does — see `field-value-030`. A non-React port has no equivalent sanitizer and would need one to avoid emitting a live `javascript:` link built from untrusted registry data.
+- **URL value with a non-http(s) scheme**: The `href` prop is set directly from the value with no scheme check in the component's own code; the component does not validate or restrict the URL scheme, and its protocol prefix is untouched by the http(s) stripping in **url-protocol-stripped**. For most non-http(s) schemes this renders a clickable link with that value verbatim. A `javascript:` value is the one case that renders differently: the rendered `href` must not run script, and on React the framework guarantees that (see **React/Web** under Platform Notes and `field-value-030`). A non-React port has no equivalent sanitizer and would need one to avoid emitting a live `javascript:` link built from untrusted registry data.
 
 ## Configuration
 
-Not applicable: FieldValue is a presentational component with no configuration options.
+FieldValue has no configuration options beyond its props.
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `field` | `PublicField` | yes | The field to render: `key: string`, `label: string`, `type: FieldType`, `value: unknown`, `visibility: FieldVisibility`. |
+| `resolveImageUrl` | `(attachmentId: string) => string \| null` | no | Turns an image attachment ID into a URL, or `null` for no image. Without it, image fields render nothing. |
+
+The test inputs below write `value` and `label` beside `type`, as properties of the `field` object.
 
 ## Deep Linking
 
@@ -155,7 +170,7 @@ Not applicable: FieldValue is a display component with no deep linking behavior.
 
 ## Accessibility Options
 
-Not applicable: FieldValue responds to no platform accessibility display options as it is a static display component with no interactive states or dynamic rendering modes.
+FieldValue is a static display component with no animation or interactive states, so Reduce Motion does not apply. Text size and contrast come from the host's CSS classes (`rp-field__*`), which this component does not define, so text scales and recolors with the host's styles.
 
 ## Feature Flags
 
@@ -178,7 +193,7 @@ Not applicable: FieldValue performs no logging.
 
 ## Platform Notes
 
-- **React/Web**: Source file is `packages/web/packages/registry-profile/src/FieldValue.tsx`. Uses React with className binding for CSS styling; CSS classes (rp-field__link, rp-field__text, rp-field__tags, rp-field__tag, rp-field__image, rp-field__prose) are applied based on field type. Implements the "empty" and "unresolvable" checks in **empty-text-renders-nothing**, **empty-email-or-phone-renders-empty-span**, and **unresolvable-image-renders-nothing** with JavaScript's nullish coalescing (`??`) and optional chaining (`?.`) operators, and produces display strings with `String()`. The `resolveImageUrl` prop accepts an optional resolver; URL security is enforced with the `rel`/`target` attributes named in **url-security-attributes**.
+- **React/Web**: Uses React with className binding for CSS styling; CSS classes (rp-field__link, rp-field__text, rp-field__tags, rp-field__tag, rp-field__image, rp-field__prose) are applied based on field type. Implements the "empty" and "unresolvable" checks in **empty-text-renders-nothing**, **empty-email-or-phone-renders-empty-span**, and **unresolvable-image-renders-nothing** with JavaScript's nullish coalescing (`??`) and optional chaining (`?.`) operators, and produces display strings with `String()`. The `resolveImageUrl` prop accepts an optional resolver; URL security is enforced with the `rel`/`target` attributes named in **url-security-attributes**. React 19's `sanitizeURL` intercepts every `javascript:`-scheme `href` at render time and replaces it with a throwing stub (`javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')`), regardless of what FieldValue itself does; that stub text is specific to this React version.
 
 - **SwiftUI**: Implement as a container view that accepts a `PublicField` and optional image URL resolver. Use a switch statement on `field.type` to render the corresponding SwiftUI view (Text, Link, List, AsyncImage, etc.). For URLs, use `Link(destination:)`; SwiftUI has no direct equivalent to the `rel`/`target` attributes in **url-security-attributes**, since the system's default URL handler owns new-window/tab behavior. For images, load asynchronously via the resolver and render nothing when it returns nil, matching **unresolvable-image-renders-nothing**. Use SwiftUI's native text styling for text types, and layout containers such as `VStack`/`HStack` for address and multi_select lists.
 
@@ -192,7 +207,7 @@ Not applicable: FieldValue performs no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/registry-profile/src/FieldValue.tsx` | unverified |
+| web | `packages/web/packages/registry-profile/src/FieldValue.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -235,6 +250,7 @@ These statuses rest on `FieldValue.tsx`: it sets `href` directly from the value 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added a props table, unknown-type-as-text, empty-url and empty-prose requirements, completed rp-field-text-class, stated case-sensitive protocol stripping, restated field-value-030 as a property with the React stub moved to the platform note, clarified newline vectors, and added registry-types to depends-on. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed field-value-030 and non-http(s)-scheme edge case: React 19 sanitizes javascript: hrefs. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, added a new empty-email-or-phone requirement and boolean-truthiness clarification, linked related registry-profile and service-list recipes, reformatted Design Decisions to the three-line form and resolved the DELIVERY_LABEL/localization contradiction, filled in the Compliance table, corrected Platform Notes APIs (SwiftUI, Compose, AppKit/UIKit, WinUI 3) and renamed the Web bullet to React/Web, moved JavaScript-specific mechanics out of Behavioral Requirements and into the React/Web note, fixed the field-value-007 test vector's rendered `key` attribute, and added test vectors and edge cases for date/select, protocol stripping and scheme handling, an unset image resolver, additional address parts, empty email/phone, markdown script content, and boolean truthiness |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

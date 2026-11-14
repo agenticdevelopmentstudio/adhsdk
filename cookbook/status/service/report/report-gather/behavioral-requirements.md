@@ -30,7 +30,7 @@ The public surface is `ReportServices`, `ReportSources`, `LOG_DEPLOY_CAP`, `LOG_
 
 ### Gathering
 
-- **gather-parallel**: `gatherReport` MUST start the monitor, deploys, integrations, errors-dashboard, runtime-errors, analytics-dashboard and uptime reads together and wait for all of them.
+- **gather-parallel**: `gatherReport` MUST start the monitor, deploys, integrations, errors-dashboard, runtime-errors, analytics-dashboard and uptime reads together and wait for all of them. The deploys read is a compound read: the deploy feed first, then (when `logs` is true) the log reads in parallel, so its time is the feed time plus the log time, and the time of the whole answer follows from the slowest of the seven.
 - **gather-fail-soft**: `gatherReport` MUST turn a source that throws into `{ ok: false, error: <message> }` and MUST still read and report every other source.
 - **gather-source-deadline**: `gatherReport` MUST fail a non-dashboard source that has not settled within `SOURCE_TIMEOUT_MS` (20 seconds) with the error `<what> timed out after 20s`, where `<what>` is `monitor read`, `deploy feed`, `integrations check`, `runtime errors read` or `uptime read`.
 - **gather-dashboard-deadline**: `gatherReport` MUST give each dashboard read `params.wait` seconds plus `SOURCE_TIMEOUT_MS` before failing it with `errors dashboard timed out after <n>s` or `analytics dashboard timed out after <n>s`.

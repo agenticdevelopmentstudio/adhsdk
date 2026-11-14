@@ -87,7 +87,7 @@
   `EcosystemServerBagUpdate.value` are typed `unknown` in `server-bags.ts`. The UI
   panes and dialog-state modules that call these clients (`FeatureFlagsPane.tsx`,
   `bag-dialog-state.ts`, `flag-dialog-state.ts`, `ApplicationClientAuthSection.tsx`) are not
-  among this recipe's given sources, but see Design Decisions for the
+  among this ingredient's given sources, but see Design Decisions for the
   validation-layering split observed there.
   The login allow-list (**auth-login-allow-list-edit**,
   **auth-login-allow-list-bounds**) is the exception: its editor lives in
@@ -114,7 +114,10 @@
   observes the reveal-once transition; model the wrapped JSON value type with
   `kotlinx.serialization.json.JsonElement`, noting the same integral-`Double`-vs-`Long`
   equality pitfall **bags-json-equality-int-number** documents applies to
-  `JsonPrimitive` unless normalized the same way.
+  `JsonPrimitive` unless normalized the same way. Model the sync-tables client as a
+  Kotlin `interface` with `suspend fun`s that return the refreshed catalog, and the
+  login allow-list as a `List<String>?` where `null` means every customer and an
+  empty list means nobody.
 - **WinUI 3**: model each data-source interface as a C# interface returning
   `Task<T>` (e.g. `Task<IReadOnlyList<FeatureFlag>> ListAsync(string
   ecosystemId)`) backed by `HttpClient` and `System.Text.Json` for
@@ -125,5 +128,8 @@
   secret, keep the equivalent of `revealedSecrets` as a plain in-memory field on the
   view-model — deliberately never written to `Windows.Storage.ApplicationData` or
   any DPAPI-backed store — so the "shown once" contract this component enforces is
-  preserved rather than accidentally persisted.
+  preserved rather than accidentally persisted. Model the sync-tables client as a
+  C# interface with one `Task`-returning method per operation, and the login
+  allow-list editor as a view-model holding a nullable `List<string>`, where `null`
+  means every customer and an empty list means nobody.
 

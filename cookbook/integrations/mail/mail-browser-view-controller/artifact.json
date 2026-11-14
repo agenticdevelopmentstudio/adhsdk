@@ -4,11 +4,11 @@
     "id": "018e4a69-cbeb-4105-8f39-dae3e6f7d8ec",
     "title": "MailBrowserViewController",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -41,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "298be734adc6d4c3",
+  "synced": "7eb133317d8f4082",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

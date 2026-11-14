@@ -4,11 +4,11 @@
     "id": "a7e2f9d1-4c8a-4b9e-8f3d-2c5b7e1a9d4f",
     "title": "Inline Disclosure",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "13ca548a9f8bb3e9",
+  "synced": "d7ff3445a276abf9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

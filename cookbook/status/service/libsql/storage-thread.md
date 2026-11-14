@@ -2,7 +2,7 @@
 id: dccad63a-f56e-4c97-b182-8cdeb7c1a983
 title: "Status Server Storage Thread"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -13,8 +13,11 @@ license: MIT
 summary: "Main-thread handle that spawns the database thread, waits for it to be ready, and hands out Storage ports to this thread and to any other thread."
 platforms:
   - typescript
-  - web
-tags: []
+tags:
+  - storage
+  - worker-threads
+  - libsql
+  - concurrency
 depends-on:
   - 020cc0f0-04e9-4d03-8796-76027fb1131f
   - e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d
@@ -29,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-The storage thread module is the host's handle to the status server's database thread. The host calls `startStorageThread` once at boot, in place of opening a database connection itself. The call spawns a worker thread that runs the storage worker entry (see the Storage Worker recipe), waits until that thread has opened, tuned and migrated the database, and then connects the calling thread to it. From then on no thread but the database thread touches the database file; every other thread, the API thread and the monitor worker alike, uses the `Storage` port as a client over a `MessagePort`.
+The storage thread module is the host's handle to the status server's database thread. The host calls `startStorageThread` once at boot, in place of opening a database connection itself. The call spawns a worker thread that runs the storage worker entry (see Storage Worker, [adhsdk.ingredient.status.service.libsql.storage-worker](cookbook:020cc0f0-04e9-4d03-8796-76027fb1131f)), waits until that thread has opened, tuned and migrated the database, and then connects the calling thread to it. From then on no thread but the database thread touches the database file; every other thread, the API thread and the monitor worker alike, uses the `Storage` port as a client over a `MessagePort`.
 
 It exports:
 
@@ -37,13 +40,13 @@ It exports:
 - **the storage thread handle** (`StorageThread`) — a `storage` port for this thread and a `connect()` function that makes a new port for another thread.
 - **three wire types** shared with the worker: `StorageWorkerData` (`{ db }`, the worker's start data), `StorageWorkerRequest` (`{ attach }`, a port to serve) and `StorageWorkerReply` (`{ ready: true }` or `{ ready: false, error }`).
 
-The reason for the design is in the Storage Remote recipe: an embedded database connection runs statements on the calling thread and a lock wait blocks that thread, so a shared connection once froze the API event loop and caused an outage. Here the module's job is only spawn and attach policy; the queue and wire protocol live in the Storage Remote module, and the database work lives in the worker.
+The reason for the design is in Storage Remote ([adhsdk.ingredient.status.service.storage.remote](cookbook:e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d)), in its `single-queue` requirement and its outage rationale: an embedded database connection runs statements on the calling thread and a lock wait blocks that thread, so a shared connection once froze the API event loop and caused an outage. Here the module's job is only spawn and attach policy; the queue and wire protocol live in Storage Remote, and the database work lives in the worker.
 
 ## Behavioral Requirements
 
 ### Spawning
 
-- **entry-resolved-from-package**: The module MUST resolve the worker entry through the package's own `exports` (the specifier `@adh-sdk/status-server/storage-worker`) using `createRequire(import.meta.url).resolve`, never a relative path, so the entry is always the built output; the source gives the same reason as the monitor worker client.
+- **entry-resolved-from-package**: The module MUST resolve the worker entry through the package's own `exports` (the specifier `@adh-sdk/status-server/storage-worker`) using `createRequire(import.meta.url).resolve`, never a relative path, so the entry is always the built output; the source gives the same reason as the monitor worker client ([adhsdk.ingredient.status.service.monitor.worker-client](cookbook:bd58dfa4-13f8-4e92-adbe-45f8a020168d), its spawn).
 - **worker-data**: The module MUST start the worker with `workerData` of `{ db: conn }`, the connection description it was given, unchanged.
 - **single-worker**: Each call MUST spawn exactly one worker thread.
 - **no-connection-opened**: The module MUST NOT open a database connection on the calling thread.
@@ -53,8 +56,8 @@ The reason for the design is in the Storage Remote recipe: an embedded database 
 - **ready-resolves**: The start function MUST wait for the worker's first message and, when it is `{ ready: true }`, continue to connect this thread.
 - **ready-false-rejects**: The start function MUST reject with `Error("storage thread failed to start: <error>")` when the first message is `{ ready: false, error }`, where `<error>` is the text the worker sent.
 - **early-error-rejects**: The start function MUST reject with the worker's own error when the worker emits `error` before its first message (for example the worker's precondition throws, which post no reply).
-- **no-timeout**: The start function has no timeout of its own; it waits until the worker sends a message or emits `error`.
-- **failed-start-leaves-worker**: When the start function rejects, it MUST NOT terminate the worker; the source has no cleanup on that path, and ending the process is the host's decision.
+- **no-timeout**: The start function MUST NOT impose a timeout of its own; it waits until the worker sends a message or emits `error`.
+- **failed-start-leaves-worker**: When the start function rejects, it MUST NOT terminate the worker; see the Design Decision on a rejected start.
 - **exit-before-ready-unhandled**: NEEDS REVIEW: Not implemented in source. Behavior undefined.
 
 ### After startup
@@ -78,10 +81,7 @@ The reason for the design is in the Storage Remote recipe: an embedded database 
 
 ### Calls through the port
 
-- **calls-reject-after-death**: A call made through a port after the database thread has gone MUST reject with `Error("storage connection closed")`, and calls pending when the port closes MUST reject with the same error; this is `connectStorage` behavior the module relies on.
-- **unserialisable-args-reject**: A call whose arguments cannot be cloned MUST reject with the clone error before anything is sent.
-- **errors-keep-detail**: An error thrown by a store method MUST reach the caller as an `Error` carrying its `name`, `message`, `stack`, `code` (sent as a string) and `cause` chain (flattened to at most five levels), so callers that match on those still work.
-
+- **port-behavior-is-remote**: A call through any port from this module MUST behave as Storage Remote ([adhsdk.ingredient.status.service.storage.remote](cookbook:e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d)) specifies for `connectStorage`: `unclonable-args` for arguments that cannot be cloned, `error-flatten` and `error-rebuild` for errors that keep their detail, and `closed-port-client` (rejection with `storage connection closed`) once the database thread has gone. This module adds none of that behavior.
 ## Appearance
 
 Not applicable — this is a thread-management module, not a visual component.
@@ -103,7 +103,7 @@ The module has no unit test of its own. `storage-thread.int.test.ts` › "migrat
 | sthread-001 | worker-data, single-worker, ready-resolves, handle-shape | start with `{ url: "file:status.db" }` and the worker answers `{ ready: true }` | one worker spawned with `workerData` of `{ db: { url: "file:status.db" } }`; resolves to `{ storage, connect }` (the integration test's start resolves and `exits` stays empty) |
 | sthread-002 | ready-false-rejects | the worker answers `{ ready: false, error: "no such table" }` | rejects with `storage thread failed to start: no such table` |
 | sthread-003 | early-error-rejects | the worker emits `error` with message `boom` before any message | rejects with that error |
-| sthread-004 | failed-start-leaves-worker | after sthread-002 | the worker has not been terminated by the module |
+| sthread-004 | failed-start-leaves-worker | after sthread-002 | the module made no `terminate` call, so the worker (`worker.threadId`) is still alive |
 | sthread-005 | on-exit-error, listeners-after-ready | after a successful start, the worker emits `error` with message `oom` | `onExit` called once with `storage thread crashed: oom` |
 | sthread-006 | on-exit-exit | after a successful start, the worker exits with code 1 | `onExit` called with `storage thread exited (1)` |
 | sthread-007 | on-exit-may-repeat | a crash that emits `error` then `exit` | `onExit` called twice, once per event |
@@ -111,20 +111,20 @@ The module has no unit test of its own. `storage-thread.int.test.ts` › "migrat
 | sthread-009 | connect-new-channel, connect-sync | `connect()` twice | two distinct ports returned at once; two `{ attach }` requests posted, each transferring one port (the test makes two ports with `connect()` and a client on the second reads what the first wrote) |
 | sthread-010 | connect-same-queue | two ports each send a call at the same time | the calls run one after the other on the database thread, in arrival order |
 | sthread-011 | this-thread-port, storage-ready-on-hello | start resolves | `storage` exposes the store methods the worker listed, as functions |
-| sthread-012 | calls-reject-after-death | the worker exits, then a call is made through `storage` | rejects with `storage connection closed` |
-| sthread-013 | errors-keep-detail | a store method throws an error with `code` `SQLITE_CONSTRAINT` and a cause | the caller's error has the same `message`, `code` and `cause` (the test's duplicate insert reaches the caller with a message chain that `isUniqueViolation` recognises) |
+| sthread-012 | port-behavior-is-remote | the worker exits, then a call is made through `storage` | rejects with `storage connection closed` |
+| sthread-013 | port-behavior-is-remote | a store method throws an error with `code` `SQLITE_CONSTRAINT` and a cause | the caller's error has the same `message`, `code` and `cause` (the test's duplicate insert reaches the caller with a message chain that `isUniqueViolation` recognises) |
 | sthread-014 | entry-resolved-from-package | the module is loaded from source or from the built package | the worker entry is the built `storage-worker` file, not a path beside the source file |
 
 ## Edge Cases
 
 - **Null and empty input — connection**: the module passes the connection to the worker as given; a connection with no `url` makes the worker throw at load, which the host sees as the worker's `error` event before any reply.
 - **Boundary — repeated connects**: any number of ports may be attached; each adds a listener on the database thread but no new connection.
-- **Boundary — double start**: calling the start function twice spawns two worker threads that each open the file; the module does not prevent it, and the host calls it once at boot.
+- **Boundary — double start**: calling the start function twice spawns two worker threads that each open the file; the module does not prevent it, and the host calls it once at boot (see the Design Decision on not guarding against a second start).
 - **Malformed input — failed start**: a `{ ready: false }` reply rejects the start, and the module does not terminate the worker or attach an `onExit` listener afterwards.
-- **Concurrent access**: calls from every attached port, and from this thread's own port, are serialised by one queue on the database thread, so a slow call holds up the rest; the server logs a call of 2000 ms or longer.
+- **Concurrent access**: calls from every attached port, and from this thread's own port, are serialised by one queue on the database thread, so a slow call holds up the rest; the slow-call log belongs to the worker (see Storage Worker, [adhsdk.ingredient.status.service.libsql.storage-worker](cookbook:020cc0f0-04e9-4d03-8796-76027fb1131f), `slow-call-warning`).
 - **Cancellation and timeouts**: the start function takes no abort signal and has no timeout; a call through a port has none either, and an unanswered call stays pending until the port closes.
 - **Error states — database thread death**: `onExit` fires; pending and later calls through every port reject with `storage connection closed`.
-- **Error states — exit before ready**: see the exit-before-ready-unhandled requirement; no `exit` listener is attached during the ready wait.
+- **Error states — exit before ready**: see `#requirements/exit-before-ready-unhandled`; no `exit` listener is attached during the ready wait.
 - **Offline**: not applicable — the database is a local file or a connection the worker owns; the module itself performs no network I/O.
 
 ## Configuration
@@ -159,11 +159,11 @@ Not applicable: the module emits no events.
 
 ## Privacy
 
-Not applicable: the module passes a connection description, which may include an authentication token, to the worker thread in the same process, and stores or sends nothing else. Reasons surfaced to `onExit` carry thread error text, which the host decides how to log.
+The module passes a connection description, which may include an authentication token (`authToken`), to the worker thread in the same process, and stores or sends nothing else. It never logs `workerData`, and the host MUST NOT log it either. Reasons surfaced to `onExit` carry thread error text, which may include driver text, so the host decides how to log them.
 
 ## Logging
 
-The module does not log. Failures reach the host as a rejection (a failed start) or through `opts.onExit` (a later crash or exit). The database thread's server writes `[storage] slow call <path> <ms>ms` with `console.warn` for a call of 2000 ms or more; that is logged from the worker, not from this module.
+The module does not log. Failures reach the host as a rejection (a failed start) or through `opts.onExit` (a later crash or exit). The slow-call warning is logged from the worker and belongs to Storage Worker ([adhsdk.ingredient.status.service.libsql.storage-worker](cookbook:020cc0f0-04e9-4d03-8796-76027fb1131f), `slow-call-warning`), not to this module.
 
 ## Platform Notes
 
@@ -177,7 +177,7 @@ The module does not log. Failures reach the host as a rejection (a failed start)
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/libsql/storage-thread.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/libsql/storage-thread.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -185,15 +185,15 @@ The module does not log. Failures reach the host as a rejection (a failed start)
 ## Design Decisions
 
 **Decision**: One thread owns the database file and every other thread is a client of it.
-**Rationale**: The Storage Remote recipe records the outage this prevents: an embedded connection runs statements on the calling thread and a lock wait spins there for up to the busy timeout, so a read that met a write or checkpoint froze the API event loop, `/health` timed out and the supervisor restarted the container. Behind the thread, callers only await a reply.
+**Rationale**: Storage Remote ([adhsdk.ingredient.status.service.storage.remote](cookbook:e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d)) records the outage this prevents: an embedded connection runs statements on the calling thread and a lock wait spins there for up to the busy timeout, so a read that met a write or checkpoint froze the API event loop, `/health` timed out and the supervisor restarted the container. Behind the thread, callers only await a reply.
 **Approved**: pending
 
 **Decision**: The host starts the thread once at boot and does not open a connection itself.
-**Rationale**: Source comment: from then on "no thread but that one touches the database file", which removes lock contention between threads.
+**Rationale**: The header comment of `storage-thread.ts`: from then on "no thread but that one touches the database file", which removes lock contention between threads.
 **Approved**: pending
 
 **Decision**: The worker entry is resolved through the package's `exports`, never a relative path.
-**Rationale**: Source comment: the entry is always the built output, the same reason as the monitor worker client's spawn. A relative path would load TypeScript source in a worker.
+**Rationale**: The comment in `startStorageThread`: the entry is always the built output, the same reason as `MonitorWorkerClient.spawn` ([adhsdk.ingredient.status.service.monitor.worker-client](cookbook:bd58dfa4-13f8-4e92-adbe-45f8a020168d)). A relative path would load TypeScript source in a worker.
 **Approved**: pending
 
 **Decision**: `connect()` is synchronous and returns a transferable port.
@@ -201,13 +201,21 @@ The module does not log. Failures reach the host as a rejection (a failed start)
 **Approved**: pending
 
 **Decision**: The module reports a later death through `onExit` and treats it as fatal.
-**Rationale**: Doc comment: once the thread dies, "every pending and later call then rejects, so the host should treat it as fatal." A server with no database cannot answer correctly, so it is left to the supervisor to restart it.
+**Rationale**: The doc comment on `startStorageThread`: once the thread dies, "every pending and later call then rejects, so the host should treat it as fatal." A server with no database cannot answer correctly, so it is left to the supervisor to restart it.
 **Approved**: pending
 
 **Decision**: A failed start is reported by the rejection, and `onExit` listeners are attached only after the ready wait.
 **Rationale**: The two reporting paths do not overlap: a start failure reaches the caller through the returned promise, and a later failure reaches the host through the callback.
 **Approved**: pending
 
+
+**Decision**: A rejected start does not terminate the worker.
+**Rationale**: The source has no cleanup on that path, and ending the process is left to the host; the source gives no further reason. A worker left alive after a failed start can keep the process running, so a host that survives a failed start should end the process itself. Recorded here for review, not as a settled choice.
+**Approved**: pending
+
+**Decision**: The module does not guard against a second start.
+**Rationale**: The host calls `startStorageThread` once at boot, and the source adds no check. A second call would spawn a second worker that opens the same file, which breaks the one-owner design; the source gives no reason for omitting a guard. Recorded here for review.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -226,4 +234,5 @@ The module does not log. Failures reach the host as a rejection (a failed start)
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Replaced the three restated port requirements with one dependency on Storage Remote, linked Storage Remote, Storage Worker and the monitor worker client, moved the slow-call log to Storage Worker, recorded two Design Decisions (rejected start, second start), stated the privacy rule, and set tags and platforms. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial recipe extracted from `storage-thread.ts` |

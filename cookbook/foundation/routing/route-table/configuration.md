@@ -1,9 +1,1 @@
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `handlers` (init) | `[RouteTable.Handler]` | `[]` | The handlers to try, in order; earlier handlers take precedence. |
-| `other` (`merging`) | `RouteTable` | none | The table whose handlers are tried after this table's. |
-| `method`, `components`, `respond` (`exact`) | `String`, `[String]`, async closure | none | The exact request method, the exact path components, and the closure that produces the response. |
-
-`RouteTable` reads no environment variable or settings key.
-
+None; `RouteTable` has no configuration and reads no environment variable or settings key. Its parameters (`handlers` on `init`, `other` on `merging`, and `method`, `components` and `respond` on `exact`) are defined in the Behavioral Requirements.

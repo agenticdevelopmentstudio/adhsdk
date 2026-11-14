@@ -7,8 +7,8 @@
 **Rationale**: The source comment says "block, blinking" is how the user thinks about it and SwiftTerm's six-case `CursorStyle` is an encoding detail.
 **Approved**: pending
 
-**Decision**: `TerminalCursorShape` and both option structs live in Core, with the SwiftTerm mapping in the macOS framework.
-**Rationale**: A `ColorTheme` carries one of each and Core is Foundation-only; the macOS framework is the only place that knows SwiftTerm exists.
+**Decision**: `TerminalCursorShape` and both option structs live in the `AgenticDeveloperHubSDK` module, re-exported through `AgenticDeveloperHubSDKCore`, with the SwiftTerm mapping in the macOS framework.
+**Rationale**: A `ColorTheme` carries one of each and the module is Foundation-only; the macOS framework is the only place that knows SwiftTerm exists.
 **Approved**: pending
 
 **Decision**: `fontName` is a PostScript name.
@@ -24,6 +24,10 @@
 **Approved**: pending
 
 **Decision**: No value is validated and no decode fallback exists.
-**Rationale**: The source is a plain data holder using synthesized coding; range checks and missing-font handling belong to the consumers. This is technical debt only in that a bad number from a hand-edited theme reaches rendering unchanged.
+**Rationale**: The source is a plain data holder using synthesized coding; range checks and missing-font handling belong to the consumers. This is technical debt only in that a bad number from a hand-edited theme reaches rendering unchanged. A single bad optional override, such as an unknown cursor shape or a malformed color string, also fails the decode of the whole enclosing `ColorTheme`, so the user's entire theme is lost over one field; this is accepted because a lenient fallback would hide a corrupt file and the cost is confined to hand-edited or newer-version theme files.
 **Approved**: pending
 
+
+**Decision**: Keys the decoder does not know are dropped on the next save, and this forward-compatibility loss is accepted.
+**Rationale**: The synthesized decoder ignores unknown keys, so a decode-then-save cycle is not idempotent for a theme file written by a newer version; keeping unknown keys would need custom coding that the source does not have.
+**Approved**: pending

@@ -2,11 +2,11 @@
 id: b341dd02-fbcb-4da8-b2b6-897807b4ebbc
 title: "Glow"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,8 +19,8 @@ tags:
   - decorative
 depends-on:
   - fae23662-e69b-4472-9c7d-049feadf1211
+  - 07c437af-a291-4356-bd83-c896bd4facde
 related:
-  - fae23662-e69b-4472-9c7d-049feadf1211
   - 05930e64-fa82-49ef-b50d-22d87fa7d182
 references: []
 approved-by: ""
@@ -31,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-The Glow component is a purely decorative visual element that renders a styled `<div>` with a glow effect. It is excluded from accessibility trees (`aria-hidden="true"`) and serves only as visual enhancement. Visual appearance is entirely managed through CSS classes (base class `lp-glow` plus optional additional classes). When nested inside a centered screen (the hero), the glow's vertical offset is derived from the hero's own `--lp-hero-pad-top` and `--lp-hero-pad-bottom` custom properties (see the hero ingredient) rather than a hardcoded constant.
+The Glow component is a purely decorative visual element that renders a styled `<div>` with a glow effect. It is excluded from accessibility trees (`aria-hidden="true"`) and serves only as visual enhancement. Visual appearance is entirely managed through CSS classes (base class `lp-glow` plus optional additional classes). When nested inside a centered screen (the hero), the glow's vertical offset is derived from the hero's own `--lp-hero-pad-top` and `--lp-hero-pad-bottom` custom properties (see the hero ingredient) rather than a hardcoded constant. Outside a hero, its default `top` offset reads `--lp-screen-pad-top`, a custom property owned by the Screen ingredient ([adhsdk.ingredient.landing.deck.screen](cookbook:07c437af-a291-4356-bd83-c896bd4facde)), so a host that overrides that property moves the glow with it.
 
 ## Behavioral Requirements
 
@@ -115,21 +115,21 @@ Not applicable: The component does not emit diagnostic logs.
 
 ## Platform Notes
 
-- **React/Web**: Implemented in `packages/web/packages/landing/src/deck/Glow.tsx` as a functional component. Exports a `Glow` function accepting `{ className?: string }`. Combines 'lp-glow' base class with the optional className prop using `[...].filter(Boolean).join(' ')`. The rendered `<div>` is always `aria-hidden`. Visual styling is delegated entirely to CSS classes in the application's stylesheet (`css/base.css`'s `.lp-glow` rule), with the hero variant's positioning offset derived from the hero's padding custom properties.
+- **React/Web**: Implemented in `packages/web/packages/landing/src/deck/Glow.tsx` as a functional component. Exports a `Glow` function accepting `{ className?: string }`. Combines 'lp-glow' base class with the optional className prop using `[...].filter(Boolean).join(' ')`. The rendered `<div>` is always `aria-hidden`. Visual styling is delegated entirely to the `.lp-glow` rule in `packages/web/packages/landing/src/css/base.css`, with the hero variant's positioning offset derived from the hero's padding custom properties.
 
-- **SwiftUI**: Implement using a transparent `View` with a `RadialGradient` or layered `Canvas` to create the glow effect. Apply `.accessibilityHidden(true)` to exclude from VoiceOver and `.allowsHitTesting(false)` to keep it non-interactive. Use environment or view properties to apply styling derived from design tokens that match the web CSS definitions.
+- **SwiftUI**: Implement using a transparent `View` with a `RadialGradient` or layered `Canvas` to create the glow effect. Apply `.accessibilityHidden(true)` to exclude from VoiceOver and `.allowsHitTesting(false)` to keep it non-interactive. Match the web values: a circle 62rem across (992pt at a 16px root), filled with a radial gradient from `Color(red: 216/255, green: 216/255, blue: 216/255).opacity(0.1)` at the centre to clear at 65% of the radius (`endRadius` of half the diameter). Centre it horizontally, place it behind the content (`.zIndex(-1)` or `.background`), and offset it from the top by the screen's top padding plus 9rem, or, inside a hero, by half the difference between the hero's top and bottom padding added to the screen's vertical centre.
 
-- **Compose**: Use a `Box` or `Canvas` composable with `Brush.radialGradient` or a `blur` modifier to produce the glow. Apply `Modifier.clearAndSetSemantics {}` to hide the purely decorative node from accessibility services. Layer multiple elements with alpha blending if needed to achieve the visual effect.
+- **Compose**: Use a `Box` or `Canvas` composable with `Brush.radialGradient` to produce the glow: colour `Color(0xFFD8D8D8)` at 10% alpha at the centre, fading to transparent at 65% of the radius, with no blur. Size it as a fixed 62rem circle (992.dp at a 16px root), centre it horizontally, draw it behind the content (a lower `zIndex`), and offset it from the top by the screen's top padding plus 9rem (inside a hero, centre it on the content as the web rule does). Apply `Modifier.clearAndSetSemantics {}` to hide the purely decorative node from accessibility services.
 
-- **AppKit / UIKit**: On macOS, create an `NSView` subclass with `CAGradientLayer` (radial) or custom drawing for the glow, call `setAccessibilityElement(false)`, and override `hitTest(_:)` to return `nil` so the view never intercepts clicks. On iOS, use a `UIView` with `CAGradientLayer` or similar, set `isAccessibilityElement = false`, `accessibilityElementsHidden = true`, and `isUserInteractionEnabled = false`.
+- **AppKit / UIKit**: On macOS, create an `NSView` subclass with `CAGradientLayer` (radial) or custom drawing for the glow (a 62rem circle, 992pt at a 16px root, with a radial gradient from `NSColor`/`UIColor` white-gray `#D8D8D8` at 10% alpha to clear at 65% of the radius, centred horizontally, placed behind sibling views, and offset from the top by the screen's top padding plus 9rem), call `setAccessibilityElement(false)`, and override `hitTest(_:)` to return `nil` so the view never intercepts clicks. On iOS, use a `UIView` with `CAGradientLayer` or similar, set `isAccessibilityElement = false`, `accessibilityElementsHidden = true`, and `isUserInteractionEnabled = false`.
 
-- **WinUI 3**: Render a `Border` or `Grid` with a `RadialGradientBrush` to create the glow effect. Set `IsHitTestVisible="False"` to prevent interaction. Apply `AutomationProperties.AccessibilityView="Raw"` to remove it from the automation tree (`IsOffscreenBehavior` does not remove an element from the tree, and `UIElement` has no `Effect`/`BlurEffect` property — those are WPF-only). Achieve the blur, if wanted, with a Composition `GaussianBlurEffect` via Win2D, or approximate it with a feathered `RadialGradientBrush`.
+- **WinUI 3**: Render a `Border` or `Grid` with a `RadialGradientBrush` to create the glow effect: `#D8D8D8` at 10% opacity at the centre, transparent at 65% of the radius, in a fixed circle 62rem across (992 effective pixels at a 16px root), centred horizontally, placed behind the content (a lower `Canvas.ZIndex`), and offset from the top by the screen's top padding plus 9rem. Set `IsHitTestVisible="False"` to prevent interaction. Apply `AutomationProperties.AccessibilityView="Raw"` to remove it from the automation tree (`IsOffscreenBehavior` does not remove an element from the tree).
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/deck/Glow.tsx` | unverified |
+| web | `packages/web/packages/landing/src/deck/Glow.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -138,7 +138,7 @@ Not applicable: The component does not emit diagnostic logs.
 **Approved**: pending
 
 **Decision**: Visual appearance is delegated entirely to CSS (base class `lp-glow` plus an optional caller-supplied `className`) rather than exposed through component props.
-**Rationale**: Decouples visual design from component logic, allowing design changes without code modification.
+**Rationale**: Decouples visual design from component logic: visual changes stay in the stylesheet, not in the component's props or logic.
 **Approved**: pending
 
 **Decision**: Inside a hero, the glow's vertical offset is computed from the hero's own `--lp-hero-pad-top` / `--lp-hero-pad-bottom` custom properties rather than a hardcoded constant.
@@ -153,12 +153,13 @@ Not applicable: The component does not emit diagnostic logs.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Passed because the source (`Glow.tsx`) sets `aria-hidden` directly on the rendered `<div>`, correctly using ARIA to hide this purely decorative element from the accessibility tree. `separation-of-concerns` is `passed` because the component is pure presentation with no children and no logic beyond a class-name join; `unit-test-coverage` is `partial` because no test renders `Glow` directly — `deck.test.tsx` and `blocks-close.test.tsx` only assert its `.lp-glow`/`aria-hidden` output through the `Screen` and `Hero` parents that compose it.
+`semantic-markup` is `passed` because the source (`Glow.tsx`) sets `aria-hidden` directly on the rendered `<div>`, correctly using ARIA to hide this purely decorative element from the accessibility tree. `separation-of-concerns` is `passed` because the component is pure presentation with no children and no logic beyond a class-name join; `unit-test-coverage` is `partial` because no test renders `Glow` directly — `deck.test.tsx` and `blocks-close.test.tsx` only assert its `.lp-glow`/`aria-hidden` output through the `Screen` and `Hero` parents that compose it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Named --lp-screen-pad-top and Screen as a dependency, removed blur guidance and the hero/related duplicate, gave concrete native geometry and colour values, and fixed the path, Decision wording and Compliance prose. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, named the exact hero padding custom properties and added the hero ingredient as a dependency, linked hero and deck as related, filled in concrete CSS values in Appearance, split Design Decisions into decision/rationale/approved triples, added a Compliance table, corrected the whitespace-only edge case and added multi-token/whitespace-only test vectors, rephrased combine-classnames as an observable outcome, and fixed unsupported/nonexistent APIs in the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

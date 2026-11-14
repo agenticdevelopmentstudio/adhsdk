@@ -25,42 +25,17 @@
       "ecosystems",
       "products",
       "rdid",
-      "slug",
-      "forms",
-      "features"
+      "slug"
     ],
     "depends-on": [],
     "related": [
       "3ea9329e-5acc-4c43-b5ce-bb8c50570104"
     ],
-    "references": [
-      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsDataSource.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModels.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemsModule.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemTopic.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Ecosystems/EcosystemSettingsTopic.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Hub/HubError.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/HubError+Wrap.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/RailPath.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/Slug.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Support/FormDetails.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKHubTests/EcosystemsModuleTests.swift (adhsdk)",
-      "packages/web/packages/data/src/ecosystems/ecosystems.ts (adhsdk)",
-      "packages/web/packages/data/src/ecosystems/identifiers.ts (adhsdk)",
-      "packages/web/packages/data/src/ecosystems/use-workspace-default-ecosystem.ts (adhsdk)",
-      "packages/web/packages/data/src/ecosystems/ecosystem-invitations.ts (adhsdk)",
-      "packages/web/packages/data/src/ecosystems/ecosystem-features.ts (adhsdk)",
-      "packages/web/packages/data/src/ecosystems/wire.ts (adhsdk)",
-      "packages/web/packages/data/src/http.ts (adhsdk)",
-      "packages/web/packages/data/src/client-helpers.ts (adhsdk)",
-      "packages/web/packages/data/src/ecosystems/__tests__/ecosystems.test.ts (adhsdk)",
-      "packages/web/packages/data/src/ecosystems/__tests__/use-workspace-default-ecosystem.test.tsx (adhsdk)",
-      "packages/web/packages/data/src/ecosystems/__tests__/ecosystem-features.test.tsx (adhsdk)"
-    ],
+    "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7c2a25df8b921eeb",
+  "synced": "56103844ecd14f92",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -5,3 +5,4 @@ The summaries switch and the summaries configuration are not part of this contra
 
 Both types are `Codable`, `Sendable` and `Equatable` structs with `var` properties. They live in Core so an HTTP client can send them without importing the plugin layer; `AIPluginKit` re-exports them as type aliases so existing `import AIPluginKit` call sites compile unchanged.
 
+The Swift source, `Core/Stenographer/AIProviderConfigSync.swift`, imports only `Foundation` and declares two public structs with explicit initializers. `AIPluginKit/AIProviderConfigSyncAliases.swift` re-exports both as type aliases.

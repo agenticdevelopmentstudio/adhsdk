@@ -8,14 +8,14 @@
 | `onRepair` | `(values: TRecord) => void \| Promise<void>` | `onSave` | Persists a repaired record; use when `onSave` has side effects (closing a pane, navigating) that a system-initiated repair write should not trigger. |
 | `onCancel` | `() => void` | `undefined` | Extra work Cancel should do after the draft is discarded. |
 | `context` | `TContext` | `undefined` | Whatever the record's field `validate`/`repair` functions need. |
-| `readOnly` | `boolean` | `false` | Renders the values without controls, Save bar, repair pass, or (own) contribution to the navigation guard. |
+| `readOnly` | `boolean` | `false` | Renders every control locked, and omits the Save bar, the repair pass and the container's own contribution to the navigation guard. |
 | `validate` | `(values: TRecord) => string \| null` | `undefined` | A cross-field rule no single field descriptor can express; a non-null return blocks Save. |
 | `children` | `React.ReactNode` | `undefined` | Rendered after the sections — the usual place for a nested container (a table of rows). |
 | `className` | `string` | `undefined` | Extra class names on the outer container `div`. |
 | Field option: `label` | `string` | required | Caption above the control (or beside it, for `checkbox`). |
 | Field option: `hint` | `React.ReactNode` | `undefined` | Dim helper text below the control; replaced by the error when the field is invalid. |
 | Field option: `disabled` | `boolean` | `false` | Locks this control independent of the container's own `readOnly`/`saving` state. |
-| Field option: `required` | `boolean` | `false` | Blocks Save while empty and shows `"Required."`; not applicable to `checkbox`. |
+| Field option: `required` | `boolean` | `false` | Blocks Save while empty and shows `"Required."`; not available on `checkbox`, where it does not compile, because an unticked box is a valid answer. |
 | Field option: `placeholder` | `string` | `undefined` | Greyed sample text; `text`, `rdid`, `textarea` only. |
 | Field option: `rows` | `number` | `undefined` | `textarea` only. |
 | Field option: `options` | `readonly { value, label }[]` | required for `select` | The closed choice list. |

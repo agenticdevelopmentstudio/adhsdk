@@ -1,0 +1,3 @@
+
+Paper Search View owns the default accessible name (`Search research papers`) and landmark label (`Research paper search`) for the search control, expressed as the `searchLabel` and `searchLandmarkLabel` prop defaults (see **default-search-label**, **default-landmark-label**). Together with `searchPlaceholder` (see **default-search-placeholder**), these are forwarded to the wrapped SearchView on every render (see **search-view-props**). SearchView implements the actual ARIA roles, keyboard interaction, and focus management, as described in its own recipe ([adhsdk.ingredient.search.components.search-view](cookbook:fed0a111-253c-427b-89c0-14f729657a7d)); this component's responsibility ends at supplying correct, overridable label text.
+

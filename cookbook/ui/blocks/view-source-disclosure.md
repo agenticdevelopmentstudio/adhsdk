@@ -2,11 +2,11 @@
 id: 16e99364-8af3-40cb-beaf-d5a66a2fa2c0
 title: "View Source Disclosure"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,8 @@ tags:
   - chrome
   - accessibility
 depends-on: []
-related: []
+related:
+  - c99e2822-f5a9-4e84-8740-9341880bb82a
 references: []
 approved-by: ""
 approved-date: ""
@@ -75,8 +76,8 @@ A footer disclosure component that permits readers to view and copy the raw sour
 ## Accessibility
 
 - **Role**: The trigger is a native button element; the `<pre>` element holding the source has no special ARIA role (it exposes as a generic element, not a code role), so assistive technology reads its content as plain text.
-- **Expanded state**: The button MUST announce expanded/collapsed state via `aria-expanded`.
-- **Panel association**: The button MUST associate the panel via `aria-controls` (only when open, per source implementation).
+- **Expanded state**: See **set-aria-expanded** in Behavioral Requirements.
+- **Panel association**: See **conditionally-set-aria-controls** in Behavioral Requirements (`aria-controls` is set only while the panel is open).
 - **Label**: The trigger text serves as the button's accessible label via its text content.
 - **Keyboard navigation**: As a native button, the trigger is keyboard accessible; Enter or Space activates it. No custom keyboard handling is required.
 - **Assistive technology**: Screen readers will announce "View source, button, expanded" (or "collapsed") and read the panel content when opened.
@@ -88,7 +89,7 @@ A footer disclosure component that permits readers to view and copy the raw sour
 | disclosure-001 | render-trigger-button, render-label | No props (defaults) | Trigger button renders with text "View source" |
 | disclosure-002 | render-chevron-icon | No props | Chevron-right icon renders inside trigger |
 | disclosure-003 | start-closed-by-default | No props | Disclosure starts closed; source panel is not in DOM |
-| disclosure-004 | start-closed-by-default, render-source-in-pre-tag | `defaultOpen={true}` | Disclosure starts open; source panel is in DOM and visible |
+| disclosure-004 | start-closed-by-default, render-source-in-pre-tag | `defaultOpen={true}` | Disclosure starts open; the source panel is a `<pre>` element in the DOM and visible |
 | disclosure-005 | toggle-on-click, render-source-verbatim, not-parse-markdown | Click trigger when closed; `source="# Heading\n\n- List item"` | Panel appears showing raw text exactly as `"# Heading"` and `"- List item"`, not parsed as markdown |
 | disclosure-006 | toggle-on-click | Click trigger when open | Panel closes and is removed from DOM |
 | disclosure-007 | rotate-chevron-on-open | Click trigger to open | Chevron rotates to 90° with 150ms transition |
@@ -103,7 +104,11 @@ A footer disclosure component that permits readers to view and copy the raw sour
 | disclosure-016 | conditionally-set-aria-controls | Trigger open, inspect button and panel | `aria-controls` matches the panel's `id` |
 | disclosure-017 | render-source-verbatim, not-parse-markdown | Click trigger to open; `source="<script>alert(1)</script>"` | Panel shows the literal text `<script>alert(1)</script>`; no `<script>` element is created and no code executes |
 | disclosure-018 | source-selectable | Trigger open; select text within the source panel | Source text can be selected and copied via native text selection |
-
+| disclosure-019 | toggle-on-click | Focus the trigger and press Enter, then press Space | Each key press toggles the disclosure between open and closed (native button activation) |
+| disclosure-020 | render-source-in-pre-tag | `source=""`, trigger clicked | An empty `<pre>` is rendered; clicking again closes it |
+| disclosure-021 | render-source-verbatim, render-source-in-pre-tag | `source="  \n\t\n "` (whitespace only), trigger clicked | The `<pre>` contains exactly the whitespace provided |
+| disclosure-022 | render-label | `label={<em>Raw</em>}` | The trigger contains the rendered `<em>Raw</em>` element |
+| disclosure-023 | render-label | `label="<test>"` | The trigger shows the literal text `<test>`; no element is created |
 ## Edge Cases
 
 - **Empty source string**: If `source=""`, the component MUST render an empty `<pre>` element; the button remains functional and toggles the empty panel open/close.
@@ -111,7 +116,7 @@ A footer disclosure component that permits readers to view and copy the raw sour
 - **Whitespace-only source**: If `source` contains only whitespace (spaces, tabs, newlines), it MUST be rendered exactly as provided within the `<pre>`.
 - **Special characters in label**: If `label` is a string containing HTML special characters (e.g., `"<test>"`), it MUST be rendered as text, not parsed as HTML.
 - **ReactNode label**: If `label` is a ReactNode (e.g., a component), it MUST be rendered as such within the button.
-- **Multiple instances**: Multiple ViewSourceDisclosure components on the same page MUST each maintain independent open/close state via their own `useState` hook and `useId` hook for unique panel IDs.
+- **Multiple instances**: Multiple ViewSourceDisclosure components on the same page MUST each maintain independent open/close state and generate unique panel IDs, so `aria-controls` on one instance never points at another instance's panel. (The React/Web implementation uses `useState` and `useId`.)
 - **State after unmount/remount**: The component is uncontrolled; if unmounted and remounted, it resets to `defaultOpen` state.
 
 ## Configuration
@@ -122,6 +127,7 @@ A footer disclosure component that permits readers to view and copy the raw sour
 | `label` | `ReactNode` | `"View source"` | Text or component rendered as the trigger's label |
 | `defaultOpen` | `boolean` | `false` | Whether the disclosure starts open |
 | `className` | `string` | `""` | Additional CSS classes to apply to the outer `<div>` |
+| `...rest` | `HTMLAttributes<HTMLDivElement>` (minus `children`) | none | Any other standard `div` attributes, spread onto the outer `<div>` |
 
 ## Deep Linking
 
@@ -135,7 +141,7 @@ Not applicable: this component is a disclosure toggle for static source content 
 
 ## Accessibility Options
 
-- **Reduce Motion**: The chevron rotation transition (150ms) SHOULD respect `prefers-reduced-motion`. When this preference is active, the chevron SHOULD change angle instantly without transition.
+- **Reduce Motion**: The chevron rotation transition (150ms) is owned by this component. The source does not yet respect `prefers-reduced-motion`, and the transition always runs; a port SHOULD respect `prefers-reduced-motion`. When this preference is active, the chevron SHOULD change angle instantly without transition.
 - **Increase Contrast**: The component uses `var(--color-text-dim)` and `var(--color-text-secondary)` on hover. These CSS variables SHOULD be defined to meet WCAG AA contrast requirements (4.5:1 for text) even when Increase Contrast is active.
 - **Differentiate Without Color**: The component does not rely on color alone to convey state; the chevron's rotation provides a visual indicator independent of color.
 
@@ -159,22 +165,20 @@ Not applicable: this component does not emit analytics events. Host applications
 Not applicable: this component does not emit logs.
 
 ## Platform Notes
-
-- **React/Web**: Implemented using React hooks (`useState`, `useId`). Uses Lucide icon (`ChevronRight`) for the arrow. Styling via Tailwind utility classes with CSS variable references (`var(--color-*)`) for theme integration — see the `VIEW_SOURCE_DISCLOSURE_CLASS`, `VIEW_SOURCE_TRIGGER_CLASS`, and `VIEW_SOURCE_PRE_CLASS` exports for the exact classes (`mt-8`/`pt-4` for container spacing, `gap-1.5`/`text-xs` for the trigger, `h-3 w-3` for the chevron, `mt-3`/`p-4`/`rounded-md` for the panel, `duration-150` for the chevron transition). The component is a function component with uncontrolled state; the source text renders as a JSX text-node child of `<pre>`, which React escapes automatically.
-- **Compose**: On Android, prefer a lightweight `Row(Modifier.clickable { ... })` or `TextButton` for the trigger rather than a filled `Button`, since the design calls for quiet inline chrome, not a prominent control; retain open/close state with `rememberSaveable { mutableStateOf(defaultOpen) }` so it survives configuration changes. Use an `Icon` for the chevron, animated with `animateFloatAsState()` and `Modifier.rotate()`. Wrap the revealed source `Text` in a `SelectionContainer` so it can be copied, and apply `Modifier.horizontalScroll(rememberScrollState())` so an unbreakable token scrolls instead of wrapping. Use `Modifier.border()`, `Modifier.padding()`, and `Modifier.clip()` to match the appearance.
-- **SwiftUI**: On iOS/macOS, prefer `DisclosureGroup` as the native disclosure control, restyling its label and content to match the quiet chrome (no card frame); fall back to a custom `VStack` with a `Button` trigger only if `DisclosureGroup`'s built-in chrome cannot be suppressed for a given target. Use `@State` for the open/closed binding. Animate the chevron with `.rotationEffect(.degrees(isOpen ? 90 : 0))` inside `withAnimation(.easeInOut(duration: 0.15))`. Render the source in `Text(source).font(.system(.caption, design: .monospaced))` with `.textSelection(.enabled)` inside a horizontal `ScrollView` so long tokens scroll instead of wrapping.
-- **AppKit / UIKit**: On older macOS or iOS targets, implement using `NSButton` (AppKit) or `UIButton` (UIKit) for the trigger, and `NSTextView` (AppKit) or `UITextView` (UIKit) with a monospace font for the source display. The text view MUST be non-editable and selectable, and MUST sit inside a scroll view that scrolls horizontally so a long unbreakable token can be reached without wrapping. Manage state with a boolean property and toggle it on the button's action. Use `CABasicAnimation` or `UIView.animate()` to rotate the chevron icon by 90°. Use `NSStackView` (AppKit) or `UIStackView` (UIKit) to manage layout.
-- **WinUI 3**: On Windows, prefer the native `Expander` control (`Microsoft.UI.Xaml.Controls.Expander`) as the disclosure, restyling its header and content presenter to remove its default framed chrome; fall back to a hand-built trigger only if `Expander`'s chrome cannot be suppressed. If hand-building, use a `Button` with a `FontIcon` for the chevron (Segoe Fluent Icons glyph U+E76C, chevron-right) rotated via a `RotateTransform`, and a `TextBlock` with a monospace `FontFamily` (e.g. `Cascadia Code`) sized from a theme font-size resource rather than a hard-coded value, wrapped in a horizontally-scrolling `ScrollViewer` so long tokens scroll instead of wrapping. Place the trigger and content in a `StackPanel` with `Orientation="Vertical"`. Animate the chevron's `Angle` (0° to 90°) over 150ms with a `Storyboard`/`DoubleAnimation`. Bind the trigger's `Click` event to toggle `IsOpen`, and set `TextBlock.IsTextSelectionEnabled="True"` so the source can be copied.
-
+- **SwiftUI**: On iOS/macOS, prefer `DisclosureGroup` as the native disclosure control, restyling its label and content to match the quiet chrome (no card frame); fall back to a custom `VStack` with a `Button` trigger only if `DisclosureGroup`'s built-in chrome cannot be suppressed for a given target. Use `@State` for the open/closed binding. Animate the chevron with `.rotationEffect(.degrees(isOpen ? 90 : 0))` inside `withAnimation(.easeInOut(duration: 0.15))`. Render the source in `Text(source).font(.system(.caption, design: .monospaced))` with `.textSelection(.enabled)` so normal text wraps to the available width; only a single token wider than the column should scroll horizontally (for example, wrap the `Text` in a horizontal `ScrollView` only when its content is wider than the container).
+- **Compose**: On Android, prefer a lightweight `Row(Modifier.clickable { ... })` or `TextButton` for the trigger rather than a filled `Button`, since the design calls for quiet inline chrome, not a prominent control; retain open/close state with `rememberSaveable { mutableStateOf(defaultOpen) }` so it survives configuration changes. Use an `Icon` for the chevron, animated with `animateFloatAsState()` and `Modifier.rotate()`. Wrap the revealed source `Text` in a `SelectionContainer` so it can be copied, and let normal text wrap to the available width; apply `Modifier.horizontalScroll(rememberScrollState())` only to the case of a single unbreakable token wider than the column, so it scrolls instead of being cut off. Use `Modifier.border()`, `Modifier.padding()`, and `Modifier.clip()` to match the appearance.
+- **React/Web**: Implemented using React hooks (`useState`, `useId`). Uses Lucide icon (`ChevronRight`) for the arrow. Styling via Tailwind utility classes with CSS variable references (`var(--color-*)`) for theme integration — see the `VIEW_SOURCE_DISCLOSURE_CLASS`, `VIEW_SOURCE_TRIGGER_CLASS`, and `VIEW_SOURCE_PRE_CLASS` exports for the exact classes (`mt-8`/`pt-4` for container spacing, `gap-1.5`/`text-xs` for the trigger, `h-3 w-3` for the chevron, `mt-3`/`p-4`/`rounded-md` for the panel, `duration-150` for the chevron transition). The component is a function component with uncontrolled state; the source text renders as a JSX text-node child of `<pre>`, which React escapes automatically. Multiple instances get independent state from `useState` and unique panel IDs from `useId`.
+- **AppKit / UIKit**: On older macOS or iOS targets, implement using `NSButton` (AppKit) or `UIButton` (UIKit) for the trigger, and `NSTextView` (AppKit) or `UITextView` (UIKit) with a monospace font for the source display. The text view MUST be non-editable and selectable, and MUST wrap normal text to the container width while letting a single unbreakable token that is wider than the column be reached by horizontal scrolling. Manage state with a boolean property and toggle it on the button's action. Use `CABasicAnimation` or `UIView.animate()` to rotate the chevron icon by 90°. Use `NSStackView` (AppKit) or `UIStackView` (UIKit) to manage layout.
+- **WinUI 3**: On Windows, prefer the native `Expander` control (`Microsoft.UI.Xaml.Controls.Expander`) as the disclosure, restyling its header and content presenter to remove its default framed chrome; fall back to a hand-built trigger only if `Expander`'s chrome cannot be suppressed. If hand-building, use a `Button` with a `FontIcon` for the chevron (Segoe Fluent Icons glyph U+E76C, chevron-right) rotated via a `RotateTransform`, and a `TextBlock` with a monospace `FontFamily` (e.g. `Cascadia Code`) sized from a theme font-size resource rather than a hard-coded value, with `TextWrapping="Wrap"` so normal text wraps, inside a horizontally-scrolling `ScrollViewer` so a single token wider than the column scrolls instead of being cut off. Place the trigger and content in a `StackPanel` with `Orientation="Vertical"`. Animate the chevron's `Angle` (0° to 90°) over 150ms with a `Storyboard`/`DoubleAnimation`. Bind the trigger's `Click` event to toggle `IsOpen`, and set `TextBlock.IsTextSelectionEnabled="True"` so the source can be copied.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/view-source-disclosure.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/view-source-disclosure.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
-**Decision**: Do not compose the toolkit's shared `Disclosure` component; keep this as a separate, self-contained disclosure.
+**Decision**: Do not compose the toolkit's shared `Disclosure` component ([adhsdk.ingredient.ui.components.layout.disclosure](cookbook:c99e2822-f5a9-4e84-8740-9341880bb82a)); keep this as a separate, self-contained disclosure.
 **Rationale**: `Disclosure` renders a framed card — a rounded border, a raised surface, a `text-sm font-medium` title, and a ruled content box — for a host that wants that shape. Reaching this component's quiet inline look through `Disclosure` would mean cancelling nine of its visual decisions: the card chrome, the header padding, the chevron's size and colour, the title's family/size/weight/colour, and the content frame — to keep roughly 20 lines of open/close state. That is a standing coupling that would let a future `Disclosure` restyle silently break this component. The two disclosures encode different knowledge (a framed section vs. an inline text toggle), so duplicating the open/close mechanics is not a DRY violation.
 **Approved**: pending
 
@@ -208,12 +212,13 @@ Not applicable: this component does not emit logs.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-The source grounds the passed rows: a native `button` with `aria-expanded` and conditional `aria-controls`, and a source panel rendered as a JSX text-node child of `<pre>` (never `innerHTML`). The `partial` rows rest on things the source does not itself control — the `--color-*` token values, whether `prefers-reduced-motion` is honored, and whether text sizing scales with system font settings are all defined outside this component. `separation-of-concerns` passes because the component holds only its own open/closed UI state with no business logic; `unit-test-coverage` passes on `viewSourceDisclosure.test.tsx`'s exercise of its open/close toggle, verbatim source rendering, ARIA state, and class contracts.
+The source grounds the passed rows: a native `button` with `aria-expanded` and conditional `aria-controls`, and a source panel rendered as a JSX text-node child of `<pre>` (never `innerHTML`). The `partial` rows rest on things the source does not itself control — the `--color-*` token values and whether text sizing scales with system font settings are defined outside this component. The `reduced-motion` row is partial for a different reason: the component owns the 150ms chevron transition (`transition-transform duration-150`), and the source applies no `motion-reduce` variant or other reduced-motion handling, so the transition always runs. `separation-of-concerns` passes because the component holds only its own open/closed UI state with no business logic; `unit-test-coverage` passes on `viewSourceDisclosure.test.tsx`'s exercise of its open/close toggle, verbatim source rendering, ARIA state, and class contracts.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Lint fixes: linked the Disclosure ingredient, corrected the reduced-motion compliance claim to say the component owns an unconditional 150ms transition, rewrote platform notes so text wraps and only unbreakable tokens scroll, reordered platform notes, pointed Accessibility at the named requirements, added a rest-attributes row, and added vectors for keyboard, empty, whitespace and ReactNode label cases. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they're cited; reworded verbatim-rendering to rule out HTML injection and added a script-payload test vector; added a `source-selectable` requirement and vector; fixed the disclosure-005 test-vector text and the disclosure-012 requirement mapping; corrected the `<pre>` role claim; converted Design Decisions to the Decision/Rationale/Approved format and removed source-referential phrasing; expressed Appearance in generic units and moved Tailwind classes to the React/Web platform note; added a keyboard-focus state; corrected the SwiftUI, Compose, WinUI 3, and AppKit/UIKit platform notes and led each with its native disclosure control; added tags and a Compliance table; fixed the lowercase "must" in the very-long-source edge case |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

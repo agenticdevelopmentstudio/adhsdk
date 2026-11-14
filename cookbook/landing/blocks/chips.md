@@ -2,11 +2,11 @@
 id: 12cc7564-cb08-4b62-9785-c3b1cc0c46f0
 title: "Chips"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -139,7 +139,7 @@ Not applicable: component has no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/blocks/Chips.tsx` | unverified |
+| web | `packages/web/packages/landing/src/blocks/Chips.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -174,3 +174,4 @@ The `passed` statuses rest on the source using plain `<ul>`/`<li>` markup and re
 | 1.0.0 | 2026-09-22 | Claude Haiku | Initial creation from web source (drafted by Claude Haiku) |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, genericized provider/roadmap language into reusable active-item and upcoming-list-variant concepts, reformatted Design Decisions into Decision/Rationale/Approved form, replaced the Compliance prose with a checked table, corrected the WinUI 3, Compose, SwiftUI, and AppKit platform notes, clarified the null-label edge case, and added test vectors for mixed active states, non-string labels, and soon-plus-open combinations |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Applied chips lint findings: class names stated in requirements, generic summary, ChipEntry shape, full stylesheet and test paths, Compose active-chip marking, trimmed React note, semantic-markup partial. |

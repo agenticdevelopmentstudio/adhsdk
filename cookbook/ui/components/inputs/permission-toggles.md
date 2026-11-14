@@ -2,11 +2,11 @@
 id: 00f63479-58b8-47e3-9ac7-7f1b944a5007
 title: "Permission Toggles"
 type: ingredient
-version: 1.1.2
+version: 1.1.3
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,7 +20,9 @@ tags:
   - toggle-group
 depends-on: []
 related: []
-references: []
+references:
+  - https://developer.apple.com/design/human-interface-guidelines/accessibility
+  - https://m3.material.io/foundations/accessible-design/accessibility-basics
 approved-by: ""
 approved-date: ""
 ---
@@ -29,13 +31,15 @@ approved-date: ""
 
 ## Overview
 
-A toggle button group for managing CRUD (Create, Read, Update, Delete) permissions. The component renders four independent toggle buttons, one for each permission type. When a parent permission context is provided, capabilities forbidden by the parent are rendered disabled and visually suppressed, preventing child permissions from exceeding parent permissions. The component emits permission changes via callback; the capability being toggled is always clamped to what the parent allows, but any other capability already present in `value` passes through the emitted object unchanged, even if it already violates `parent` (see **clamp-emitted-values**).
+A toggle button group for managing CRUD (Create, Read, Update, Delete) permissions. The component renders four independent toggle buttons, one for each permission type. When a parent permission context is provided, capabilities forbidden by the parent are rendered disabled and visually suppressed, preventing child permissions from exceeding parent permissions. The component emits permission changes via callback; a parent-blocked capability cannot be toggled (see **blocked-toggle-no-op**), but any other capability already present in `value` passes through the emitted object unchanged, even if it already violates `parent` (see **pass-through-other-keys**). The `Crud` type is an object with four boolean keys in the canonical order `create`, `read`, `update`, `delete`, which fixes the button order C, R, U, D.
 
 ## Behavioral Requirements
 
 - **render-four-buttons**: The component MUST render exactly four toggle buttons, one for each CRUD capability (Create, Read, Update, Delete).
 - **enforce-parent-ceiling**: When a `parent` Crud value is provided, the component MUST prevent toggling any capability the parent disallows: the corresponding button MUST be rendered in a disabled state and MUST be visually suppressed (reduced opacity, `not-allowed` cursor), regardless of what `value` holds for that capability.
-- **clamp-emitted-values**: The `onChange` callback MUST NOT invert a capability the parent disallows — clicking a parent-blocked button is a no-op and `onChange` is not called for it. This clamp applies only to the capability being toggled: if `value` already contains a capability that violates `parent` (set before mount, or never corrected), toggling a *different*, unblocked capability emits that pre-existing violation unchanged. The component does not retroactively clamp the rest of the object on every emit (see edge case "Value violates parent constraint before mount").
+- **blocked-toggle-no-op**: Clicking a parent-blocked button MUST be a no-op: `onChange` MUST NOT be called for it and the capability MUST NOT be inverted.
+- **pass-through-other-keys**: When a toggle emits, every capability other than the one toggled MUST pass through from `value` unchanged, even if it already violates `parent` (set before mount, or never corrected). The component does not retroactively clamp the rest of the object on every emit (see edge case "Value violates parent constraint before mount").
+- **parent-optional**: When `parent` is omitted, every capability MUST be treated as unrestricted.
 - **disabled-blocks-toggle**: When the `disabled` prop is true, toggling any button MUST have no effect and `onChange` MUST NOT be called.
 - **toggle-on-click**: Clicking an enabled, unblocked button MUST invert the corresponding capability in the Crud value.
 - **aria-pressed-reflects-on**: Each button MUST have an `aria-pressed` attribute that reflects the button's displayed `on` state (`value[key] && !blockedByParent`), not the raw `value[key]`. A capability blocked by the parent therefore reports `aria-pressed="false"` even when `value[key]` is `true`.
@@ -86,9 +90,11 @@ A toggle button group for managing CRUD (Create, Read, Update, Delete) permissio
 - **Labels**: Each button has a visible single-letter label (C, R, U, D) and a `title` attribute providing context (see **title-describes-action**).
 - **Keyboard navigation**: Buttons are focusable and activate on Space or Enter (native button behavior). A button that is disabled — globally or because the parent blocks it — uses the native `disabled` attribute, so it is also removed from the tab order; this is native `<button>` semantics, not a separate behavior of this component.
 - **Group label**: The container's `aria-label="CRUD permissions"` announces the purpose of the group.
-- **Disabled state announcement**: When a button is disabled (either globally or by parent), the native `disabled` attribute is what communicates unavailability to assistive technology — it removes the button from the accessibility tree and the tab order. The reduced opacity and `not-allowed` cursor are visual-only cues for sighted users; they do not themselves communicate anything to assistive technology.
+- **Disabled state announcement**: When a button is disabled (either globally or by parent), the native `disabled` attribute is what communicates unavailability to assistive technology — it marks the button as unavailable (it stays in the accessibility tree and is announced as unavailable) and removes it from the tab order. The reduced opacity and `not-allowed` cursor are visual-only cues for sighted users; they do not themselves communicate anything to assistive technology.
 - **minimum-tap-target**: NEEDS REVIEW: Not implemented in source. Buttons are fixed at 28×28px with no mechanism to grow them; Apple HIG and Material Design 3 recommend touch targets of at least 44×44pt / 48×48dp respectively, and whether 28×28px is acceptable for this component or must grow to the platform minimum is undecided (see Design Decision "28×28px button size" for the tradeoff).
-- **Color dependency**: Enabled and disabled states are distinguished by color change and opacity. Differentiation also includes cursor style and text content, reducing reliance on color alone.
+- **Color dependency**: On and off are distinguished by color alone (border, background and text color); the letter is the same in both states. Disabled or blocked buttons additionally differ in opacity and cursor, but an enabled on button and an enabled off button differ only by color.
+- **Accessible name**: The accessible name of each button is its single letter (C, R, U, D); the `title` supplies only a description. Screen readers therefore announce, for example, "C, toggle button".
+- **Focus indicator**: The source sets no custom focus style, so the browser's native focus ring applies to a focused button.
 
 ## Conformance Test Vectors
 
@@ -100,8 +106,8 @@ A toggle button group for managing CRUD (Create, Read, Update, Delete) permissio
 | perm-004 | aria-pressed-reflects-on | C button with `value.create === false`, no `parent` | Button has `aria-pressed="false"`. |
 | perm-005 | title-describes-action | C button enabled, `value.create === false` | Title reads "Enable create". |
 | perm-006 | title-describes-action | C button enabled, `value.create === true` | Title reads "Disable create". |
-| perm-007 | enforce-parent-ceiling | `parent={create: false, read: true, update: true, delete: true}`, user clicks C button | Button is disabled. `onChange` not called. |
-| perm-008 | clamp-emitted-values | `parent={create: false, read: true, update: true, delete: true}`, `value={create: true, read: true, update: true, delete: true}`, user clicks R button | `onChange` called with `{create: true, read: false, update: true, delete: true}` — the pre-existing `create: true` violation of `parent` passes through unchanged; only the clicked capability (`read`) is inverted. |
+| perm-007 | enforce-parent-ceiling, blocked-toggle-no-op | `parent={create: false, read: true, update: true, delete: true}`, user clicks C button | Button is disabled. `onChange` not called. |
+| perm-008 | pass-through-other-keys | `parent={create: false, read: true, update: true, delete: true}`, `value={create: true, read: true, update: true, delete: true}`, user clicks R button | `onChange` called with `{create: true, read: false, update: true, delete: true}` — the pre-existing `create: true` violation of `parent` passes through unchanged; only the clicked capability (`read`) is inverted. |
 | perm-009 | enforce-parent-ceiling | `parent={create: false, read: true, update: true, delete: true}` | C button has the `disabled` attribute set (not focusable, not clickable) and renders in the blocked visual state. |
 | perm-010 | title-describes-action | C button blocked by parent | Title reads "create is not permitted by the parent". |
 | perm-011 | disabled-blocks-toggle | `disabled={true}`, user clicks any button | No button responds. `onChange` not called. |
@@ -109,28 +115,27 @@ A toggle button group for managing CRUD (Create, Read, Update, Delete) permissio
 | perm-013 | single-letter-labels | Component rendered | Buttons display text content C, R, U, D. |
 | perm-014 | aria-pressed-reflects-on | `parent={create: false, read: true, update: true, delete: true}`, `value.create === true` | C button has `aria-pressed="false"` — it reflects the displayed `on` state, not the raw `value.create`. |
 | perm-015 | enforce-parent-ceiling | `parent={create: false, read: false, update: false, delete: false}` | All four buttons render disabled. No click produces an `onChange` call. |
-| perm-016 | clamp-emitted-values | `parent` omitted (`undefined`), user clicks any button | Button is enabled; the capability toggles normally; `onChange` called with only that capability inverted. |
+| perm-016 | parent-optional | `parent` omitted (`undefined`), user clicks any button | Button is enabled; the capability toggles normally; `onChange` called with only that capability inverted. |
 | perm-017 | disabled-blocks-toggle, enforce-parent-ceiling | `disabled={true}` and the C button is also blocked by parent | Button is disabled by both conditions; behavior is identical to either condition alone. `onChange` not called. |
 | perm-018 | toggle-on-click | `value={create: false, read: false, update: false, delete: false}`, user clicks C three times in rapid succession | `onChange` called three times, once per click, each call reflecting the click-time value of `create`; no debouncing. |
-| perm-019 | toggle-on-click | Component unmounted while the border/background/text color transition is in progress | No error is thrown; the interrupted CSS transition has no observable effect on application state. |
 
 ## Edge Cases
 
 - **Parent disallows all capabilities**: `parent={create: false, read: false, update: false, delete: false}`. All four buttons render disabled. User cannot enable any capability. `onChange` is never called. (perm-015)
-- **Value violates parent constraint before mount**: `value={create: true, read: true, update: true, delete: true}` but `parent={create: false, read: true, update: true, delete: true}`. The component does not correct the value prop; it only prevents further violations via user interaction. The C button appears off due to the condition `on = value[key] && !blockedByParent`. The parent ceiling is enforced on toggle, not retroactively on render — see **clamp-emitted-values**. (perm-008)
+- **Value violates parent constraint before mount**: `value={create: true, read: true, update: true, delete: true}` but `parent={create: false, read: true, update: true, delete: true}`. The component does not correct the value prop; it only prevents further violations via user interaction. The C button appears off due to the condition `on = value[key] && !blockedByParent`. The parent ceiling is enforced on toggle, not retroactively on render — see **pass-through-other-keys**. (perm-008)
 - **Parent is undefined**: When `parent` is not provided, all capabilities are treated as unrestricted. `blockedByParent` is false for all buttons. (perm-016)
 - **Disabled and blocked simultaneously**: When `disabled={true}` and a capability is also `blockedByParent`, both conditions suppress the button. The behavior is identical to either condition alone. (perm-017)
 - **Rapid clicks**: Clicking a button invokes `toggle()` synchronously, calling `onChange` immediately. Multiple rapid clicks generate multiple `onChange` calls without debouncing. (perm-018)
-- **Unmount during transition**: The transition-colors CSS class applies to color changes. If the component unmounts, the transition is interrupted but causes no error. (perm-019)
+- **Unmount during transition**: The transition-colors CSS class applies to color changes. If the component unmounts, the transition is interrupted but causes no error.
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `value` | `Crud` (object with `create`, `read`, `update`, `delete` boolean keys) | Required | Current CRUD permission state. |
+| `value` | `Crud` (object with `create`, `read`, `update`, `delete` boolean keys, in that canonical order, which fixes the button order C, R, U, D) | Required | Current CRUD permission state. |
 | `parent` | `Crud` (optional) | `undefined` | Parent/ceiling permissions. Capabilities forbidden by parent cannot be toggled on. |
 | `disabled` | `boolean` | `false` | When true, all buttons are non-interactive. |
-| `onChange` | `(next: Crud) => void` | Required | Callback invoked when user toggles a button. The toggled capability's emitted value is clamped to the parent constraint; other capabilities in `value` are passed through unchanged, even if they already violate `parent` (see **clamp-emitted-values**). |
+| `onChange` | `(next: Crud) => void` | Required | Callback invoked when user toggles a button. A parent-blocked capability cannot be toggled (see **blocked-toggle-no-op**); other capabilities in `value` are passed through unchanged, even if they already violate `parent` (see **pass-through-other-keys**). |
 
 ## Deep Linking
 
@@ -141,7 +146,11 @@ Not applicable: This component is a form control, not a navigable page or standa
 | String Key | Default (en) | Context |
 |-----------|---------------|---------|
 | `permissionToggles.group.label` | CRUD permissions | `aria-label` on the container `role="group"` that announces the whole control. |
-| `permissionToggles.title.enable` | Enable {capability} | Button `title` when the capability is off and not blocked; `{capability}` is the raw key (create/read/update/delete). |
+| `permissionToggles.capability.create` | create | Localized capability name inserted into `{capability}` in the title strings. |
+| `permissionToggles.capability.read` | read | Localized capability name inserted into `{capability}`. |
+| `permissionToggles.capability.update` | update | Localized capability name inserted into `{capability}`. |
+| `permissionToggles.capability.delete` | delete | Localized capability name inserted into `{capability}`. |
+| `permissionToggles.title.enable` | Enable {capability} | Button `title` when the capability is off and not blocked; `{capability}` is the raw key (create/read/update/delete) in the source; a localized build SHOULD insert the capability name from the per-capability keys below. |
 | `permissionToggles.title.disable` | Disable {capability} | Button `title` when the capability is on and not blocked. |
 | `permissionToggles.title.blockedByParent` | {capability} is not permitted by the parent | Button `title` when the capability is blocked by `parent`. |
 
@@ -151,7 +160,7 @@ The single-letter labels (C, R, U, D) are standard CRUD abbreviations and are no
 
 - **Reduce Motion**: The component applies a `transition-colors` animation when border, background, and text colors change. See Design Decision "Unconditional color transition". No `prefers-reduced-motion` handling exists in source; the transition runs unconditionally and is never suppressed for this preference.
 - **Increase Contrast**: The default and enabled state colors (`apt-text-muted`, `apt-text`, `apt-gold`, `apt-gold-bright`) are defined by the design system's color tokens. If the design system provides high-contrast variants, the component inherits them via token substitution. The component itself does not implement contrast overrides.
-- **Differentiate Without Color**: Enabled vs. disabled state is distinguished by color, opacity, cursor, and text content. Reliance on color alone is mitigated by opacity change and cursor style, but not fully eliminated. An audit of the `apt-gold` vs. neutral color difference is recommended to confirm sufficient contrast and differentiation for users with color blindness.
+- **Differentiate Without Color**: On vs. off is distinguished by color alone; the letter does not change. Only disabled or blocked buttons also differ by opacity and cursor. There is no non-color on-state cue (such as weight, fill or a check mark). An audit of the `apt-gold` vs. neutral color difference is recommended to confirm sufficient contrast and differentiation for users with color blindness.
 
 ## Feature Flags
 
@@ -173,26 +182,24 @@ Not implemented in source. The component does not emit analytics events. Applica
 Not implemented in source. The component does not emit console logs or structured logging.
 
 ## Platform Notes
+- **SwiftUI**: Start with an `HStack` containing four `Toggle` elements with `.toggleStyle(.button)`, arranged horizontally with 4pt spacing, so pressed-state semantics come from the control itself. Bind each `Toggle` to a `Binding<Bool>` for its capability (for example `Binding(get:set:)` over the `Crud` value), since `.toggleStyle(.button)` needs a binding rather than a tap gesture. Parent constraint enforcement requires conditional logic to disable and visually suppress buttons. Use the `.disabled()` modifier and opacity control to suppress blocked capabilities.
+
+- **Compose (Android/Kotlin)**: Start with a `Row` containing four `FilterChip` (or `IconToggleButton`) elements, both of which carry pressed/selected semantics natively. Use `Modifier.size(28.dp)` for button dimensions; note that Compose enforces a 48.dp minimum interactive size by default, so a 28.dp `FilterChip` or `IconToggleButton` either keeps that minimum (larger touch target, extra layout space) or opts out with `LocalMinimumInteractiveComponentSize`. Each button displays a single letter. Parent constraint enforcement requires state management and conditional `enabled` parameter. Use `alpha()` or `GraphicsLayer` to reduce opacity of blocked buttons. Accessibility via `semantics { contentDescription = ... }` and the chip's built-in `ToggleableRole`.
 
 - **React/Web**: Source is a functional React component using TypeScript. Uses `cn()` utility for conditional Tailwind class application. Renders a `<div>` container with a `<button>` element for each CRUD capability. Event handling via `onClick` and native button `disabled` attribute. Styling via Tailwind CSS classes with design system color tokens (`apt-gold`, `apt-border`, `apt-bg`, `apt-text-muted`, `apt-text`, `apt-gold-bright`). No external component dependencies beyond the `cn()` utility and the `crud.ts` module that exports `CRUD_KEYS`, `CRUD_LETTER`, and types.
 
-- **SwiftUI**: Start with an `HStack` containing four `Toggle` elements with `.toggleStyle(.button)`, arranged horizontally with 4pt spacing, so pressed-state semantics come from the control itself. Each button displays a text label and responds to a tap gesture. Use a state variable to track which capabilities are enabled. Parent constraint enforcement requires conditional logic to disable and visually suppress buttons. Use the `.disabled()` modifier and opacity control to suppress blocked capabilities.
-
-- **Compose (Android/Kotlin)**: Start with a `Row` containing four `FilterChip` (or `IconToggleButton`) elements, both of which carry pressed/selected semantics natively. Use `Modifier.size(28.dp)` for button dimensions. Each button displays a single letter. Parent constraint enforcement requires state management and conditional `enabled` parameter. Use `alpha()` or `GraphicsLayer` to reduce opacity of blocked buttons. Accessibility via `semantics { contentDescription = ... }` and the chip's built-in `ToggleableRole`.
-
-- **AppKit / UIKit**: Use `NSStackView` (macOS) or `UIStackView` (iOS) with `distribution = .fillEqually` and `spacing = 4`. Add four `NSButton` or `UIButton` subviews. Size each button to 28×28pt. Parent constraint enforcement requires delegate or closure callbacks to validate state changes and disable buttons conditionally. Use `isEnabled` and `alphaValue` / `alpha` to reflect disabled/blocked state.
+- **AppKit / UIKit**: Use `NSStackView` (macOS) or `UIStackView` (iOS) with `distribution = .fillEqually` and `spacing = 4`. Add four buttons that toggle: `NSButton` with `setButtonType(.pushOnPushOff)` on macOS, and `UIButton` with `changesSelectionAsPrimaryAction = true` on iOS (a plain `NSButton` or `UIButton` does not keep a toggled state). Size each button to 28×28pt. Parent constraint enforcement requires delegate or closure callbacks to validate state changes and disable buttons conditionally. Use `isEnabled` and `alphaValue` / `alpha` to reflect disabled/blocked state.
 
 - **WinUI 3**: Start with a `StackPanel` with `Orientation="Horizontal"` and `Spacing="4"`. Add four `ToggleButton` elements, which carry `IsChecked`/pressed-state semantics natively. Set each button's `Width="28"` and `Height="28"`. Define a `ControlTemplate` or use `VisualStateManager` to apply styling for Off, On, Disabled, and BlockedByParent states. Parent constraint enforcement requires a `Command` or `Click` event handler to validate changes and set `IsEnabled="False"` for blocked buttons. Use `Foreground` and `BorderBrush` bindings to swap color tokens for on/off states.
-
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/permission-toggles.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/ui/src/components/permission-toggles.tsx` | confirmed (1.1.3) |
 
 ## Design Decisions
 
-**Decision**: The component does not validate or correct the `value` prop against `parent` on mount. Enforcement occurs only during user interaction via the `toggle()` function, and only for the capability being toggled (see **clamp-emitted-values**).
+**Decision**: The component does not validate or correct the `value` prop against `parent` on mount. Enforcement occurs only during user interaction via the `toggle()` function, and only for the capability being toggled (see **pass-through-other-keys**).
 **Rationale**: If `value` violates `parent` on initial render, the button will appear off (due to the `on = value[key] && !blockedByParent` calculation) but the component does not emit a corrected value. This design assumes the caller is responsible for providing a valid initial state; a stricter design would validate on mount and call `onChange` with a corrected value, but this design trusts the caller.
 **Approved**: pending
 
@@ -201,7 +208,7 @@ Not implemented in source. The component does not emit console logs or structure
 **Approved**: pending
 
 **Decision**: Blocked capabilities are rendered disabled and visually suppressed (opacity: 0.4) rather than hidden.
-**Rationale**: This allows users to understand what permissions exist and why they cannot be enabled. Hiding blocked buttons would require less space but would sacrifice discoverability of the permission structure.
+**Rationale**: This lets sighted mouse users see what permissions exist and, through the `title` tooltip, why one cannot be enabled. The reason is not reachable by keyboard or touch users: a native `disabled` button leaves the tab order and `title` tooltips do not show on touch. Hiding blocked buttons would require less space but would sacrifice discoverability of the permission structure.
 **Approved**: pending
 
 **Decision**: The `onChange` callback is invoked synchronously during the click handler, with no debouncing, throttling, or asynchronous state updates.
@@ -221,7 +228,7 @@ Not implemented in source. The component does not emit console logs or structure
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | failed | Accessibility |
 | [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | failed | Accessibility |
@@ -231,12 +238,22 @@ Not implemented in source. The component does not emit console logs or structure
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on the source's DOM output: native `<button>` elements, `role="group"`, and `aria-pressed` give correct roles/states with no custom ARIA needed (semantic-markup, keyboard-navigable passed); accessible names are single letters and color-token contrast values are set by the design system, neither of which this recipe can fully verify (screen-reader-support, contrast-ratio partial); the fixed 28×28px button size is below the 44×44pt minimum (touch-target-size failed); `transition-colors` is applied unconditionally with no `prefers-reduced-motion` check (reduced-motion failed); and the `title` and `aria-label` strings are hardcoded English literals in the source with no localization mechanism (string-externalization, no-hardcoded-strings failed); the parent-clamp rule (`if (parent && !parent[key]) return`) is computed inline inside the `toggle()` handler rather than an extracted helper (separation-of-concerns: partial), while `permissionToggles.test.tsx` asserts on value reflection, toggle emission, parent-forbidden clamping, and `disabled` behavior (unit-test-coverage: passed).
+Statuses rest on the source's DOM output:
 
+- semantic-markup: passed. Native `<button>` elements, `role="group"` and `aria-pressed` give correct roles and states with no custom ARIA.
+- keyboard-navigable: partial. Buttons are focusable and activate on Space or Enter, but the source sets no custom focus style (the native focus ring applies) and no requirement guarantees a visible focus indicator.
+- screen-reader-support: partial. Accessible names are single letters.
+- contrast-ratio: partial. Color-token contrast values are set by the design system, which this recipe cannot fully verify.
+- touch-target-size: failed. The fixed 28×28px button size is below the 44×44pt minimum.
+- reduced-motion: failed. `transition-colors` is applied unconditionally with no `prefers-reduced-motion` check.
+- string-externalization, no-hardcoded-strings: failed. The `title` and `aria-label` strings are hardcoded English literals with no localization mechanism.
+- separation-of-concerns: partial. The parent check (`if (parent && !parent[key]) return`) is computed inline inside the `toggle()` handler rather than in an extracted helper.
+- unit-test-coverage: passed. `permissionToggles.test.tsx` asserts on value reflection, toggle emission, parent-forbidden blocking and `disabled` behavior.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.3 | 2026-11-14 | Mike Fullerton | Renamed clamp-emitted-values to blocked-toggle-no-op with separate pass-through-other-keys and parent-optional requirements, corrected the disabled-state and color-dependency claims, added the Crud definition, capability name keys, HIG and M3 references, native toggle controls, platform note order and a line-per-check compliance note. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; corrected the title-text token to the raw capability key instead of the letter; made aria-pressed's relationship to the displayed `on` state explicit with a new test vector; corrected clamp-emitted-values to describe the actual (per-key, not whole-object) clamp scope and rewrote its test vector to check the onChange payload; merged the redundant blocked-capability-visual requirement into enforce-parent-ceiling and changed its test vector to assert observable state instead of a CSS opacity value; converted Compliance and Localization to the required table formats; reformatted Design Decisions into Decision/Rationale/Approved form and resolved the tap-target-size and reduced-motion gaps into it, keeping one review marker per gap in Accessibility Options; rewrote Appearance in px values and moved Tailwind class names into the React/Web platform note; named a single native toggle control per platform in Platform Notes; corrected the claim that opacity/cursor communicate unavailability to assistive technology; and added conformance test vectors for the previously untested edge cases. |

@@ -2,11 +2,11 @@
 id: afb50b48-af7a-4bc1-a13c-ae36759268c8
 title: "Markdown Preview Header"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,20 +36,20 @@ The markdown preview header is a metadata surface that displays the selected sea
 ## Behavioral Requirements
 
 - **title-fallback**: Component MUST render the hit's title text, falling back to the localized "Untitled" string whenever `hit.title` is falsy (empty string, `null`, or `undefined`). This is a falsy check only, not a trim — an all-whitespace title is truthy and renders as literal whitespace. See **title-attribute** for the separate rule governing the heading's `title` attribute in the fallback case.
-- **title-attribute**: The h3 heading MUST have a `title` attribute for tooltip display on hover. The attribute always carries the raw `hit.title` value — it is never replaced by the "Untitled" fallback, so a missing title produces an empty tooltip attribute alongside the "Untitled" visible text.
+- **title-attribute**: The h3 heading MUST have a `title` attribute for tooltip display on hover. The attribute always carries the raw `hit.title` value — it is never replaced by the "Untitled" fallback. An empty-string title therefore produces an empty `title` attribute alongside the "Untitled" visible text, and a `null` or `undefined` title produces no `title` attribute at all (the source passes `title={hit.title}` and React omits the attribute for `null` and `undefined`).
 - **kind-badge**: Component MUST render a Badge component with variant and label from the per-kind renderer.
 - **author-attribution**: Component MUST render author attribution in the format "by @slug" if displayName is empty, whitespace-only, `null`, or `undefined`, or "by displayName" if displayName is present and non-empty after trimming.
-- **optional-date**: Component MUST render "Updated [formatted-date]" only if `hit.updatedAt` is present (non-empty); MUST omit the date entirely if updatedAt is `null`, `undefined`, or an empty string. The date is formatted via the shared `formatDate` helper, which is NOT locale-aware — it always formats using the `en-US` locale (e.g. "Sep 20, 2026") regardless of the active UI locale. `formatDate` also passes no `timeZone` option: a date-only ISO string (e.g. `"2026-09-20"`) is parsed as UTC midnight by `new Date(iso)` and then formatted in the viewer's local time zone, so in any zone west of UTC the displayed calendar day is one day earlier than the ISO date (e.g. "Sep 19, 2026" under `America/Los_Angeles`).
+- **optional-date**: Component MUST render "· Updated [formatted-date]" (a middle dot, a space, then "Updated"; the middle dot is the separator from the author attribution) only if `hit.updatedAt` is present (non-empty); MUST omit the date entirely if updatedAt is `null`, `undefined`, an empty string, or a string `formatDate` cannot parse (it returns `''`). The date is formatted via the shared `formatDate` helper, which is NOT locale-aware — it always formats using the `en-US` locale (e.g. "Sep 20, 2026") regardless of the active UI locale. `formatDate` also passes no `timeZone` option: a date-only ISO string (e.g. `"2026-09-20"`) is parsed as UTC midnight by `new Date(iso)` and then formatted in the viewer's local time zone, so in any zone west of UTC the displayed calendar day is one day earlier than the ISO date (e.g. "Sep 19, 2026" under `America/Los_Angeles`). This day shift is a known quirk recorded as deliberate debt under Design Decisions, not an endorsed behavior.
 - **optional-summary**: Component MUST render the summary paragraph only if the summary is non-empty after trimming; MUST render nothing if summary is null, empty string, or whitespace-only.
 - **summary-label**: When the summary paragraph renders, it MUST be prefixed with a "Summary:" label in a distinct (medium-weight, dimmed) style, immediately followed by the summary text in a muted style.
-- **metadata-row-order**: The kind badge, author attribution, and optional update date MUST render together in a single wrapping row, in that fixed order: badge, then author, then date.
-- **per-kind-extra**: Component MUST render the per-kind extra section from `renderer.previewExtra(hit)` only if it is truthy (non-null, non-undefined); implementations SHOULD null-guard this value.
-- **public-link**: Component MUST render a "View full paper" link only if `hit.publicRoute` (a string) is non-empty (truthy); the component MUST NOT render the link when `publicRoute` is an empty string. The link's `href` is always the separately supplied `href` prop — its value is independent of `publicRoute` and does not affect whether the link renders.
+- **metadata-row-order**: The kind badge, author attribution, and optional update date (with its leading middle dot) MUST render together in a single wrapping row, in that fixed order: badge, then author, then date.
+- **per-kind-extra**: Component MUST render the per-kind extra section returned by `renderer.previewExtra(hit)`, and MUST render nothing when it is `null` or `undefined`.
+- **public-link**: Component MUST render a "View full paper" link, at the trailing end of the title row (see Appearance), only if `hit.publicRoute` (a string) is non-empty (truthy); the component MUST NOT render the link when `publicRoute` is an empty string. The link's `href` is always the separately supplied `href` prop — its value is independent of `publicRoute` and does not affect whether the link renders. The host builds `href` with its own `documentHref` and passes the finished string, so this package never assembles a URL from route pieces (see Design Decisions). The link sets no `target` and no `rel`, so it opens in the same tab.
 
 ## Appearance
 
 - **Layout**: Vertical stack with 8pt gap between sections (title row, metadata row, summary, per-kind extra).
-- **Title row**: Horizontal stack, space-between alignment, 12pt gap; the title is allowed to shrink below its content width (`min-w-0`), but nothing on the heading or its ancestors sets `truncate`, `overflow-hidden`, `text-overflow`, `white-space: nowrap`, or a line-clamp, so a title that exceeds the available width wraps onto additional lines instead of eliding with an ellipsis.
+- **Title row**: Horizontal stack, space-between alignment, 12pt gap; the public link (when present) sits at the trailing end of this row, beside the title, not in a row of its own; the title is allowed to shrink below its content width (`min-w-0`), but nothing on the heading or its ancestors sets `truncate`, `overflow-hidden`, `text-overflow`, `white-space: nowrap`, or a line-clamp, so a title that exceeds the available width wraps onto additional lines instead of eliding with an ellipsis.
 - **Title text**: Small text size, semibold weight, primary text color.
 - **Metadata row**: Horizontal stack that wraps, 8pt horizontal / 4pt vertical gap, small text size, dimmed secondary text color. Contains the kind badge, author attribution, then the optional update date, in that fixed order (see **metadata-row-order**).
 - **Author text**: Regular weight; the author value itself uses a muted text color.
@@ -83,8 +83,8 @@ Concrete Tailwind classes and `apt-*` design tokens for this layout are given in
 |----|-------------|-------|----------|
 | header-001 | title-fallback | hit.title = "Example Paper" | h3 displays "Example Paper" |
 | header-002 | title-fallback, title-attribute | hit.title = "" | h3 text displays "Untitled"; h3 title attribute = "" |
-| header-003 | title-fallback, title-attribute | hit.title = null | h3 text displays "Untitled"; h3 title attribute = "" |
-| header-004 | title-fallback | hit.title = undefined | h3 text displays "Untitled" |
+| header-003 | title-fallback, title-attribute | hit.title = null | h3 text displays "Untitled"; h3 has no title attribute |
+| header-004 | title-fallback, title-attribute | hit.title = undefined | h3 text displays "Untitled"; h3 has no title attribute |
 | header-005 | title-fallback | hit.title = "   " (whitespace only) | h3 text displays "   " literally — not "Untitled", since the fallback is a falsy check, not a trim |
 | header-006 | title-attribute | hit.title = "Long Paper Title Here" | h3 title attribute = "Long Paper Title Here" |
 | header-007 | kind-badge | hit.kind = "research", kindRendererFor returns {badge: {variant: "research", label: "Research"}} | Badge renders with variant "research" and label text "Research" |
@@ -92,7 +92,7 @@ Concrete Tailwind classes and `apt-*` design tokens for this layout are given in
 | header-009 | author-attribution | hit.author = {displayName: "  ", slug: "bob"} | Text shows "by @bob" |
 | header-010 | author-attribution | hit.author = {displayName: null, slug: "charlie"} | Text shows "by @charlie" |
 | header-011 | author-attribution | hit.author = {displayName: undefined, slug: "dave"} | Text shows "by @dave" |
-| header-012 | optional-date | hit.updatedAt = "2026-09-20", viewer time zone UTC (or any zone at or east of UTC) | Text displays "Updated Sep 20, 2026" (formatDate's en-US short-month format); under a time zone west of UTC (e.g. `America/Los_Angeles`) the same input instead displays "Updated Sep 19, 2026", because `formatDate` parses the date-only string as UTC midnight and formats with no `timeZone` option |
+| header-012 | optional-date, metadata-row-order | hit.updatedAt = "2026-09-20", viewer time zone UTC (or any zone at or east of UTC) | Date item displays "· Updated Sep 20, 2026" (formatDate's en-US short-month format) |
 | header-013 | optional-date | hit.updatedAt = null | Date text does not render |
 | header-014 | optional-date | hit.updatedAt = undefined | Date text does not render |
 | header-015 | optional-date | hit.updatedAt = "" | Date text does not render |
@@ -108,18 +108,20 @@ Concrete Tailwind classes and `apt-*` design tokens for this layout are given in
 | header-025 | public-link | hit.publicRoute = "" | Link does not render |
 | header-026 | public-link | hit.publicRoute = "", href = "https://example.com/paper" (well-formed) | Link does not render, regardless of href's value |
 | header-027 | metadata-row-order | hit with kind badge, author, and updatedAt all present | Badge, author text, and date text appear in that order within one wrapping row |
-
+| header-028 | optional-date | hit.updatedAt = "2026-09-20", viewer time zone `America/Los_Angeles` | Date item displays "· Updated Sep 19, 2026", because `formatDate` parses the date-only string as UTC midnight and formats with no `timeZone` option (known quirk, see Design Decisions) |
+| header-029 | optional-date | hit.updatedAt = "not-a-date" | Date text does not render |
 ## Edge Cases
 
-- **Empty or missing title**: Falls back to "Untitled" for a falsy `hit.title` (empty string, `null`, or `undefined`); this is a falsy check, not a trim, so an all-whitespace title is truthy and renders as literal whitespace instead of falling back.
-- **Title attribute vs. displayed text**: The h3 `title` attribute always mirrors the raw `hit.title` value, even when the visible text has fallen back to "Untitled" — a missing title therefore produces an empty tooltip attribute alongside the fallback text.
+- **Empty or missing title**: Falls back to "Untitled" — see **title-fallback**, including the whitespace-only case.
+- **Title attribute vs. displayed text**: The `title` attribute is independent of the visible fallback text — see **title-attribute** (empty string gives an empty attribute; `null` or `undefined` gives none).
 - **Null or undefined author fields**: Author slug is always available as fallback; if displayName is null, undefined, or empty/whitespace after trim, fallback to slug with @ prefix.
 - **Null, undefined, or empty updatedAt**: Date section is entirely omitted; no placeholder or default date is shown.
-- **Long title wraps, does not truncate**: The h3 is allowed to shrink below its content width within the flex container (`min-w-0`), but the source applies no ellipsis, `overflow-hidden`, or line-clamp to it — a title exceeding available space wraps onto multiple lines instead. The full (raw) title is nonetheless available via the `title` attribute for hover-tooltip display, independent of how the visible text wraps.
+- **Long title wraps, does not truncate**: The h3 is allowed to shrink below its content width within the flex container (`min-w-0`), but the source applies no ellipsis, `overflow-hidden`, or line-clamp to it — a title exceeding available space wraps onto multiple lines instead. The raw title stays available through the `title` attribute (see **title-attribute**).
 - **Per-kind renderer fallback**: kindRendererFor returns a neutral default renderer for unknown kinds; previewExtra may return null or undefined for kinds without extra content — both render nothing.
 - **Missing public route**: Link is not rendered when `hit.publicRoute` (a string) is empty; href and route values are independent — href may be a well-formed string even when route is empty.
+- **Unparseable updatedAt**: `formatDate` returns `''` for a string `new Date` cannot parse, so no date text renders — not "Invalid Date" (see **optional-date**).
 - **Non-locale-aware date formatting**: `formatDate` always renders dates using `en-US` formatting regardless of the active UI locale (see Compliance: locale-aware-formatting).
-- **Time-zone-dependent day for date-only input**: Because `formatDate` parses a date-only ISO string as UTC midnight and formats it with no `timeZone` option, the rendered calendar day depends on the viewer's local time zone — any zone west of UTC displays the day before the ISO date. See header-012.
+- **Time-zone-dependent day for date-only input**: Because `formatDate` parses a date-only ISO string as UTC midnight and formats it with no `timeZone` option, the rendered calendar day depends on the viewer's local time zone — any zone west of UTC displays the day before the ISO date. See header-012 and header-028.
 
 ## Configuration
 
@@ -133,11 +135,11 @@ Not applicable: This component is a nested metadata surface within a preview doc
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| `paper.view-full` | "View full paper" | Label for public page link |
-| `paper.by` | "by" | Preposition for author attribution |
-| `paper.updated` | "Updated" | Prefix for update date |
-| `paper.summary` | "Summary:" | Label for summary section |
-| `paper.untitled` | "Untitled" | Fallback title for missing title |
+| `preview.view-full` | "View full paper" | Label for public page link |
+| `preview.by` | "by" | Preposition for author attribution |
+| `preview.updated` | "Updated" | Prefix for update date (the "· " separator before it is part of the layout, not of this string) |
+| `preview.summary` | "Summary:" | Label for summary section |
+| `preview.untitled` | "Untitled" | Fallback title for missing title |
 
 The source currently hardcodes each of these strings directly in the JSX rather than resolving them through a localization system — the table above describes the target localization contract, not the source's current implementation (see Compliance: string-externalization, no-hardcoded-strings). Date formatting is also not currently locale-aware: `formatDate` always uses the `en-US` locale (see Compliance: locale-aware-formatting).
 
@@ -175,19 +177,19 @@ Not applicable: This component performs no async operations, external calls, or 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/search/src/components/markdown/MarkdownPreviewHeader.tsx` | unverified |
+| web | `packages/web/packages/search/src/components/markdown/MarkdownPreviewHeader.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
 **Decision**: The public link renders only when `hit.publicRoute` is a non-empty string; the `href` prop is always passed through, independent of `publicRoute`.
-**Rationale**: A hit with no public route has no public page to link to, and `href` may still be a well-formed string even when there is no route — checking `publicRoute` rather than `href` avoids rendering a link to nowhere.
+**Rationale**: A hit with no public route has no public page to link to, and `href` may still be a well-formed string even when there is no route — checking `publicRoute` rather than `href` avoids rendering a link to nowhere. The two are separate because the URL space belongs to the host: the host builds the finished `href` with its own `documentHref` (the link seam in the search package's `types.ts`), and this component only decides whether a public page exists. The two props must therefore agree, and the host is the one that keeps them in step.
 **Approved**: pending
 
 **Decision**: The kind badge and optional extra section are sourced from the `kindRendererFor` per-kind renderer map rather than branched inline in this component.
 **Rationale**: A new kind can be added with a single map entry, without editing this component; unknown kinds fall back to a neutral default renderer so an unexpected value degrades gracefully.
 **Approved**: pending
 
-**Decision**: "Untitled" is rendered whenever `hit.title` is falsy (empty, null, or undefined), via a falsy check rather than a trim.
+**Decision**: "Untitled" is rendered via a falsy check rather than a trim (see **title-fallback**).
 **Rationale**: Ensures the header always displays a title, improving the experience when metadata is incomplete.
 **Approved**: pending
 
@@ -203,6 +205,9 @@ Not applicable: This component performs no async operations, external calls, or 
 **Rationale**: Shows the focus ring only on keyboard navigation, not on mouse click, following web accessibility best practice.
 **Approved**: pending
 
+**Decision**: Date-only `updatedAt` strings are formatted with `formatDate`, which passes no `timeZone`, so the day shifts back by one in zones west of UTC (see **optional-date**). This is deliberate debt, not a goal; a port MAY format with `timeZone: 'UTC'` and show the ISO calendar day.
+**Rationale**: `formatDate` is a shared helper used by the result row as well, and the source has not changed it; the spec records what the source does rather than silently specifying new behavior.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -227,6 +232,7 @@ Passed/failed statuses rest on the source's native semantic elements (`h3`, `<a>
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Corrected the null-title attribute and the middle-dot date separator, covered unparseable dates, stated the link placement and same-tab behavior, explained the href/publicRoute split, recorded the date day-shift as deliberate debt, deduplicated edge cases, renamed the localization keys, and split the time-zone vector. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed title-row/Truncated-title/platform notes: source h3 has no ellipsis/truncate, long titles wrap instead; optional-date/header-012 now note formatDate's missing timeZone shifts the displayed day west of UTC. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; corrected public-link/title-fallback/date-locale behavior against the source; added summary-label and metadata-row-order requirements plus missing test vectors; replaced the compliance section with a checked table; reformatted design decisions to Decision/Rationale/Approved; rewrote appearance in semantic tokens and moved Tailwind specifics to the platform note; fixed the SwiftUI (computed properties, not @State) and AppKit/UIKit (attributed-string link, Foundation type) platform notes; added badge to depends-on and markdown-preview to related; unified frontmatter date formatting |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

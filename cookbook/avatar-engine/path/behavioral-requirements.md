@@ -37,10 +37,7 @@
   for `Z`) before it accepts the next command letter.
 - **truncated-command-rejected**: `parsePath` MUST fail with a "truncated"
   error when a new command letter appears, or the input ends, while a
-  pending command still needs arguments. Web's message names the pending
-  command letter (`` `truncated ${pending} in path: ${d}` ``); Apple's
-  message uses the literal word `command` and does not name which one
-  (`"truncated command in path: \(s)"`) — the message text differs between
+  pending command still needs arguments. The message text differs between
   platforms (see Design Decisions).
 - **stray-number-rejected**: `parsePath` MUST fail with a "stray number" error
   when a numeric token appears with no command pending to receive it.
@@ -82,7 +79,9 @@
   higher-precision value.
 - **cubic-o-shape**: `cubicO(cx, cy, rx, ry)` MUST return a single closed path
   of kind `"MCCCCZ"` starting at `(cx, cy − ry)`, with each control point
-  offset from its anchor by `rx * 0.5523` or `ry * 0.5523`.
+  offset from its anchor by `rx * 0.5523` or `ry * 0.5523`. The anchors run
+  top `(cx, cy − ry)`, right `(cx + rx, cy)`, bottom `(cx, cy + ry)`, left
+  `(cx − rx, cy)`, and back to top.
 - **disc-is-cubic-o**: `disc(cx, cy, r)` MUST return the same path as
   `cubicO(cx, cy, r, r)`.
 - **ring-is-outer-then-reversed-inner**: `ring(cx, cy, r, band)` MUST return
@@ -98,7 +97,9 @@
   `A` command.
 - **arc-segment-count**: `arc` MUST use
   `max(1, ceil(|to − from in radians| / (π/2)))` cubic segments, so that no
-  single segment spans more than a quarter circle.
+  single segment spans more than a quarter circle. The span is divided into
+  equal steps, and each cubic's control offset is
+  `(4/3) * tan(step / 4) * r`, perpendicular to the radius at its anchor.
 - **polyline-minimum-points**: `polyline` MUST throw an error when given
   fewer than 2 points, and otherwise MUST emit `M` to the first point followed
   by one `L` per remaining point.

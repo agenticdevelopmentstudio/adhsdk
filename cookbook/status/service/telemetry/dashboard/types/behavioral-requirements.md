@@ -5,7 +5,7 @@
 - **export-view-constants**: The module MUST re-export `DIMENSIONS` (`country`, `device`, `browser`, `referrer`), `VERCEL_BREAKDOWNS` (`countries`, `referrers`, `paths`, `devices`) and `VITALS` (`lcp`, `inp`, `cls`, `fcp`) from `views.ts`.
 - **export-view-types**: The module MUST re-export these types from `views.ts`: `AnalyticsViews`, `BreakdownTopic`, `ChartSeries`, `Dimension`, `ErrorsSiteChart`, `ErrorsSiteReport`, `ErrorsViews`, `JoinedSite`, `RatedHealth`, `RatedVitalsRow`, `SectionFailure`, `SiteBreakdown`, `SiteErrorView`, `SiteFailedRequestView`, `SiteReport`, `VercelBreakdown`, `VercelProjectBar`, `Vital` and `VitalRating`.
 - **export-runtime-types**: The module MUST re-export `RuntimeErrorGroup` and `RuntimeErrorsReport` from `../types`.
-- **no-behavior**: The module MUST NOT contain runtime logic beyond the three constant re-exports; every other export is a type.
+- **no-behavior**: The module MUST NOT contain runtime logic beyond the four constant re-exports (`ANALYTICS_RANGES`, `DIMENSIONS`, `VERCEL_BREAKDOWNS`, `VITALS`); every other export is a type.
 
 **Analytics response**
 
@@ -20,14 +20,15 @@
 
 - **errors-response-fields**: `ErrorsDashboardResponse` MUST carry `generatedAt`, `refreshing`, `refreshingSources` (`{ glitchtip: boolean; posthog: boolean }`), `configured` (`{ glitchtip: boolean; posthog: boolean; vercel: boolean }`), `sections` and `views`.
 - **errors-sections-shape**: `sections` MUST be `DashboardSections<ErrorsSectionData>`, with `issues` (`ErrorsIssuesSection`), `sites` (array of `SiteHealthRow`), `detail` (`SiteErrorDetailSection`) and `runtime` (`RuntimeErrorsReport`).
-- **errors-refreshing**: `refreshing` MUST be true when either `refreshingSources.glitchtip` or `refreshingSources.posthog` is true.
+- **errors-refreshing**: `refreshing` MUST be true when either `refreshingSources.glitchtip` or `refreshingSources.posthog` is true, and false when neither is.
 - **errors-runtime-source**: The `runtime` section MUST be the Vercel runtime errors of the last 24 hours, read from the store; its body is the same as `GET /errors/runtime`. It is read fresh on each request, and without Vercel configured it holds the empty section state.
 - **errors-views**: `views` MUST hold what the per-site pages draw, derived on the server.
 - **generated-at**: `generatedAt` MUST be an ISO 8601 string of when the response was built (the server clock for analytics, the passed-in `nowMs` for errors).
 
 **PostHog sections**
 
-- **traffic-buckets**: `TrafficSection.buckets` MUST be the ISO bucket starts of the range window; `pageviews` and `sessions` MUST each hold one value per bucket.
+- **traffic-buckets**: `TrafficSection.buckets` MUST be the ISO bucket starts of the range window: 25 hourly buckets for `"24h"` (the partial hour it starts in and the current one), and one UTC-day bucket per day for `"7d"` (7) and `"30d"` (30), including today; `pageviews` and `sessions` MUST each hold one value per bucket.
+- **series-length**: Every per-bucket array (`pageviews`, `sessions`, `series`, `errors`, `failures`, `visitors`) MUST have the same length as its section's `buckets`; a bucket with no data is a zero.
 - **traffic-totals**: `TrafficSection.totals` MUST carry `pageviews` and `sessions`. `sessions` sums per-bucket uniques, so a session spanning two buckets counts twice.
 - **traffic-sites**: `TrafficSection.sites` MUST be a list of `{ host, pageviews, sessions, series }`, with `series` one value per bucket.
 - **dimensions-row**: `DimensionRow` MUST carry `host`, `device`, `browser`, `country`, `referrer` (strings) and `pageviews` (number).
@@ -44,14 +45,14 @@
 - **vercel-roster-entry**: `VercelRosterEntry` MUST describe one production project whether or not it has analytics on or any traffic: `project`, `domain`, `analyticsOn`, `pageviews`, `visitors`.
 - **vercel-roster-null**: `VercelRosterEntry.pageviews` and `visitors` MUST be null when analytics is off or the count could not be read; null is not a zero.
 - **vercel-section-fields**: `VercelTrafficSection` MUST carry `buckets`, `projectsTotal`, `projectsEnabled`, `failed`, `incomplete`, `roster`, `totals` (`{ pageviews, visitors }`), `pageviews`, `visitors` and `projects`.
-- **vercel-production-only**: `projectsTotal` counts production projects only; staging and testing are never counted.
+- **vercel-production-only**: `projectsTotal` MUST count only production projects; staging and testing MUST NOT be counted.
 - **vercel-failed-count**: `failed` MUST count projects whose count could not be read, which makes `totals` and the roster short.
 - **vercel-incomplete-count**: `incomplete` MUST count projects included in `totals` whose breakdowns could not all be read, which makes the series and lists short.
 
 **Errors sections**
 
 - **error-issue-fields**: `ErrorIssue` MUST carry `id`, `shortId` (or null), `title`, `type` (the exception class, or null), `source` (the raising file when GlitchTip knows, or null), `level` (or null), `count`, `userCount`, `firstSeen` and `lastSeen` (or null), `release` (or null), `project`, `permalink` (or null) and `active`.
-- **error-issue-active**: `active` MUST use the same test that puts an error on the board, `errorCountsAsProblem` in `board/derive-problems.ts`: the issue's project is on the board's project allowlist (when one is set), its level is a judged level (the source comment says error or fatal), and it was seen within the activity window (24 hours). While the error feed is frozen the recency test is suspended, so a judged-level issue stays active.
+- **error-issue-active**: `active` MUST use the same test that puts an error on the board, `errorCountsAsProblem` in `board/derive-problems.ts`: the issue's project is on the board's project allowlist (when one is set), its level is a judged level (`error` or `fatal`, compared case-insensitively), and it was seen within the activity window (24 hours). While the error feed is frozen the recency test is suspended, so a judged-level issue stays active.
 - **issues-section**: `ErrorsIssuesSection` MUST carry `buckets`, `issues` and `summary`.
 - **issues-summary**: `summary` MUST carry `active`, `backlog`, `events`, `resolved`, `complete`, `byType` and `newPerDay`.
 - **issues-resolved-null**: `summary.resolved` MUST be null when the resolved count could not be read.

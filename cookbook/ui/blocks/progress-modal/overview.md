@@ -18,3 +18,21 @@ A modal dialog that displays the real-time progress of a batch operation. It sho
 | `okLabel` | `React.ReactNode` | optional | `"done"` |
 | `failedLabel` | `React.ReactNode` | optional | `"failed"` |
 
+### Types
+
+`ProgressError` (the `error` prop):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `message` | `string` | required | The failure message shown in the error block. |
+| `itemLabel` | `React.ReactNode` | optional | The item that failed, shown above the message. |
+
+`ProgressResult` (each entry of `results`):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | `string` | required | Stable key for the log row. |
+| `label` | `React.ReactNode` | required | How the operator refers to the item (an email, a name), not a uuid. |
+| `status` | `"ok" \| "failed"` | required | Selects the muted or `apt-red` rendering. |
+| `message` | `string` | optional | Replaces `okLabel` or `failedLabel` for this row. |
+

@@ -25,8 +25,7 @@ seeding/layout-fault paths, nesting/rollup, every control kind, the guard
 integration and the full repair UX flow in detail, plus a dedicated
 compile-time suite for the generic contract — but `useDirtyDraft`'s own
 equality semantics are tested in the `ui` package rather than duplicated
-here, and nothing in this package's tests exercises two containers editing
-the *same* record concurrently. `graceful-degradation` passes: a layout
+here. The recipe specifies no behaviour for two containers editing the same record, so that case is not a reason for the partial. `graceful-degradation` passes: a layout
 fault renders as a visible alert and the pane continues rendering rather
 than throwing; an unlisted `select` value is shown rather than crashing or
 silently substituting the first option. `fault-tolerance` passes: a
@@ -39,5 +38,5 @@ above. `string-externalization` fails: every user-facing string this
 package produces — `"Required."`, the unlisted-choice and layout-fault
 messages, the three repair-flow alert titles and their description — is a
 hardcoded English literal with no localization key or i18n library
-involved, as detailed under Localization above.
+involved, as detailed under Localization above; the accepted exception is recorded under Design Decisions.
 

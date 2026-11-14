@@ -2,11 +2,11 @@
 id: f09feb7c-6778-445a-8a68-863c5d60b5cc
 title: "CollapseToggle"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -19,7 +19,9 @@ tags:
   - button
   - disclosure
 depends-on: []
-related: []
+related:
+  - c99e2822-f5a9-4e84-8740-9341880bb82a
+  - 8fa7aaae-df62-44ea-b10c-182f3094ed9f
 references: []
 approved-by: ""
 approved-date: ""
@@ -72,7 +74,7 @@ A minimal toggle control that switches between expanded and collapsed states of 
 - **State announcement**: The `aria-expanded` attribute indicates the expanded/collapsed state to assistive technologies.
 - **Region association**: When `controls` is provided, `aria-controls` links the button to the region it controls, allowing assistive technology users to navigate directly to that region.
 - **Keyboard navigation**: The button is keyboard-accessible via the standard HTML button element; keyboard focus is visible via the `focus-visible:ring` style.
-- **minimum-tap-target**: NEEDS REVIEW: Not implemented in source. The source applies `px-1` (0.25rem horizontal padding) and no width, height, or minimum-size rule, so the hit area is exactly the inherited `font-mono` glyph box plus that padding — at a typical 14px rail font this lands well under the 44×44pt target the ingredient template names; measuring the rendered button at its two call sites (the TopicDetail rail and the theme-editor column list) against the 44×44pt floor, plus a decision on whether to pad the button itself or enlarge the surrounding row's hit area, would settle it.
+- **minimum-tap-target**: NEEDS REVIEW: Not implemented in source. The source applies `px-1` (0.25rem horizontal padding) and no width, height, or minimum-size rule, so the hit area is exactly the inherited `font-mono` glyph box plus that padding — at a typical 14px rail font this lands well under the 44×44pt target the ingredient template names; measuring the rendered button in each placement (a narrow rail, a column header) against the 44×44pt floor settles it. See the pending "Minimum hit area" Design Decision.
 
 ## Conformance Test Vectors
 
@@ -93,10 +95,12 @@ A minimal toggle control that switches between expanded and collapsed states of 
 | collapse-toggle-013 | classname-merge | `className="custom-class"` | Custom class appears in rendered button className |
 | collapse-toggle-014 | click-invokes-on-toggle | User focuses the button and presses Enter or Space | `onToggle` callback invoked with the resulting click event (native `<button>` key-activation behavior) |
 | collapse-toggle-015 | forwarded-click-event | User ⌘-clicks the button | `onToggle` callback receives the event with `metaKey=true` |
-
+| collapse-toggle-016 | classname-merge | `className="px-3"` | `px-3` is present in the button className and the default `px-1` is absent |
+| collapse-toggle-017 | title-attribute-text | `collapsed={false}, label="Items"` | `title="Collapse Items"` |
+| collapse-toggle-018 | aria-label-text (observed, non-normative) | `collapsed={true}, label=""` | `aria-label="Expand "` and `title="Expand "`; the glyph still renders and `onToggle` still fires |
 ## Edge Cases
 
-- **Empty, null, or missing label**: `label` is typed as a required `string`, so omitting it is a compile-time error. At runtime the source interpolates `label` straight into `${collapsed ? "Expand" : "Collapse"} ${label}` with no guard, trim, or fallback: an empty string produces the verb followed by a trailing space — `aria-label="Expand "` and the same value in `title` — and the button still renders its glyph and still fires `onToggle`. If `null`/`undefined` reaches the component at runtime anyway (bypassing the type system), it is interpolated as the literal text `"null"` or `"undefined"` (e.g. `aria-label="Expand undefined"`). Implementations MUST reproduce this pass-through behavior and MUST NOT substitute a default region name.
+- **Empty, null, or missing label**: `label` is typed as a required `string`, so omitting it is a compile-time error. At runtime the source interpolates `label` straight into `${collapsed ? "Expand" : "Collapse"} ${label}` with no guard, trim, or fallback: an empty string produces the verb followed by a trailing space — `aria-label="Expand "` and the same value in `title` — and the button still renders its glyph and still fires `onToggle`. If `null`/`undefined` reaches the component at runtime anyway (bypassing the type system), it is interpolated as the literal text `"null"` or `"undefined"` (e.g. `aria-label="Expand undefined"`). This pass-through is observed behavior, not a requirement: it is a defect to avoid, not a contract to copy. A caller should always pass a non-empty region name, since the Accessibility rule that the label include the region name only holds then.
 - **Label contains special characters**: The label is interpolated verbatim into the template literal that builds `aria-label` and `title`, with no escaping, trimming, or HTML-interpretation step. Behavior: whatever string is passed (quotes, symbols, markup-looking text) is rendered as-is into the accessible name and tooltip, and is never HTML-interpreted.
 - **Multiple rapid clicks**: Each click triggers `onToggle`. The caller is responsible for debouncing or state management; the component renders only the current `collapsed` state.
 - **`controls` prop targets non-existent element**: If `aria-controls` points to an element that does not exist, no runtime error occurs; the attribute is still set. Assistive technology behavior is undefined.
@@ -121,7 +125,7 @@ Not applicable: CollapseToggle is a stateless UI primitive without its own route
 
 The verbs "Expand" and "Collapse" are hard-coded English string literals inside the component. The source contains no string table, no message catalogue, no locale parameter, and no lookup call — the two words are written directly into the template literal that builds `aria-label` and `title`.
 
-Everything else in the accessible name comes from the caller: `label` is interpolated verbatim, so the caller is the party that supplies a localized region name. A caller passing a localized `label` into this component gets a mixed-language accessible name (for example "Expand Themenliste") until the consuming application localizes the two verbs as well. Implementations that need a fully localized name MUST source the verbs from their own catalogue rather than from this component.
+Everything else in the accessible name comes from the caller: `label` is interpolated verbatim, so the caller is the party that supplies a localized region name. A caller passing a localized `label` into this component gets a mixed-language accessible name (for example "Expand Themenliste") until the consuming application localizes the two verbs as well. This is a known limitation: the component has no prop to inject the verbs (such as a `formatLabel` prop), so a fully localized name is not possible without changing the component. Whether to add one is not yet decided.
 
 The glyphs `»` and `«` are literal characters in the JSX and are not mirrored, re-selected, or swapped for right-to-left locales.
 
@@ -130,7 +134,7 @@ The glyphs `»` and `«` are literal characters in the JSX and are not mirrored,
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | The source declares no `transition-*`, `animate-*`, or duration class; the swap between `»` and `«` and the hover color change are instant re-renders. No transition is applied; nothing to disable under Reduce Motion. |
-| Increase Contrast | The source pins the foreground to the `apt-text-muted` token, raises it to `apt-text` on hover, and draws the focus ring as `apt-gold/40`. It declares no high-contrast variant and no `prefers-contrast` query, so the contrast delivered is whatever those tokens resolve to in the active theme. Implementations MUST use the same tokens rather than substituting fixed color values, so a theme that raises contrast raises this control's contrast with it. |
+| Increase Contrast | The source pins the foreground to the `apt-text-muted` token, raises it to `apt-text` on hover, and draws the focus ring as `apt-gold/40`. It declares no high-contrast variant and no `prefers-contrast` query, so the contrast delivered is whatever those tokens resolve to in the active theme. Using the same tokens rather than fixed color values lets a theme that raises contrast raise this control's contrast with it. |
 | Differentiate Without Color | Color is never the sole carrier of state. Collapsed versus expanded is carried by the glyph shape (`»` versus `«`), by `aria-expanded`, and by the `aria-label`/`title` text, none of which depend on color. The one color-only change in the source is the `hover:text-apt-text` shift, which signals pointer position rather than component state. |
 
 The component also inherits the platform's focus-visible behavior: the `focus-visible:ring-2` style paints only when the browser judges focus to be keyboard-driven.
@@ -163,13 +167,13 @@ Not applicable: The component has no built-in logging or diagnostic output.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/collapse-toggle.tsx` | confirmed (1.2.2) |
+| web | `packages/web/packages/ui/src/components/collapse-toggle.tsx` | confirmed (1.2.3) |
 
 ## Design Decisions
 
 1. **Unicode glyphs for state indication**
    **Decision**: The component uses `»` (RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK, U+00BB) for collapsed and `«` (LEFT-POINTING DOUBLE ANGLE QUOTATION MARK, U+00AB) for expanded — not chevron icons or an image asset — and the glyph is fixed on purpose; the component does not expose a way to swap in different glyphs (arrows, +/-, etc.).
-   **Rationale**: A single character needs no icon asset and follows the direction convention of "closed" (pointing away) versus "open" (pointing inward).
+   **Rationale**: A single character needs no icon asset and follows the convention that the glyph points the direction the region's edge will move when activated: for a rail anchored at the left, `»` (collapsed) points right to expand and `«` (expanded) points left to collapse. Implementations on RTL or native platforms should derive the glyph from that direction of motion, not copy the web glyphs.
    **Approved**: pending
 
 2. **Platform glyph substitution**
@@ -182,27 +186,17 @@ Not applicable: The component has no built-in logging or diagnostic output.
    **Rationale**: This enables callers to detect Ctrl/⌘-click for hierarchical toggle behavior (noted in the source comment: "apply this toggle to every list"). This trades callback simplicity for power; callers uninterested in modifiers ignore the event parameter.
    **Approved**: pending
 
-4. **aria-expanded always inverted from collapsed**
-   **Decision**: The `aria-expanded` attribute is set to `!collapsed` (the opposite of the `collapsed` prop).
-   **Rationale**: This ensures the accessible state always reflects the logical expanded state of the controlled region: when `collapsed=true` (user sees the "expand" label and `»` glyph), `aria-expanded=false` signals the region is not yet expanded. This is the correct ARIA mapping.
-   **Approved**: pending
-
-5. **No size constraints**
-   **Decision**: The button's size is determined entirely by the inherited font size plus the `px-1` padding; the source sets no width, height, or minimum.
-   **Rationale**: This is a deliberate trade for placement flexibility — the same control sits in a narrow rail beside TopicDetail and in the theme-editor's column headers — and it moves responsibility for the hit area onto the caller's layout. The Accessibility section records the open question of what minimum that layout has to guarantee.
-   **Approved**: pending
-
-6. **Title attribute mirrors aria-label**
+4. **Title attribute mirrors aria-label**
    **Decision**: The `title` attribute is set to the same text as `aria-label`.
-   **Rationale**: This provides a tooltip for mouse users without duplicating logic; however, it means the tooltip also says "Expand {label}" or "Collapse {label}", which is self-evident to sighted users and potentially redundant.
+   **Rationale**: This gives mouse users a tooltip without a second string to maintain. The redundancy is accepted: the tooltip repeats the accessible name, which sighted users find self-evident, but one source for both keeps them from drifting apart.
    **Approved**: pending
 
-7. **Minimum hit area is undecided**
-   **Decision**: Whether the toggle button itself must guarantee a minimum 44×44pt/48×48dp hit area, or whether that responsibility stays with the caller's surrounding row layout, is undecided.
-   **Rationale**: The source sets no width, height, or minimum size — only `px-1` padding — so at typical rail font sizes the rendered hit area falls under the platform minimum tap-target guidelines (see `#accessibility`). Settling this requires measuring the rendered button at its two call sites (TopicDetail rail, theme-editor column list) against the 44×44pt floor.
+6. **Minimum hit area is undecided**
+   **Decision**: The button sets no width, height or minimum size, only inherited font size plus `px-1` padding. Whether the toggle must guarantee a minimum 44×44pt/48×48dp hit area itself, or leave that to the caller's surrounding layout, is undecided.
+   **Rationale**: Leaving the size open gives placement flexibility: the same control sits in a narrow rail and in column headers, and the layout then owns the hit area. The cost is that at typical rail font sizes the rendered hit area falls under platform tap-target guidelines (see `#accessibility`). Settling this requires measuring the rendered button in each placement against the 44×44pt floor.
    **Approved**: pending
 
-8. **RTL glyph mirroring is undecided**
+7. **RTL glyph mirroring is undecided**
    **Decision**: Whether the `»`/`«` glyphs should mirror (swap) for right-to-left locales is undecided.
    **Rationale**: The source hardcodes the glyphs as literal, unmirrored characters (see `#localization`); a caller in an RTL locale sees the same visual direction as in LTR, which may read backwards for languages where "closed" and "open" reverse convention.
    **Approved**: pending
@@ -232,6 +226,7 @@ The `passed` rows rest on the source's literal ARIA attributes and native `<butt
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.3 | 2026-11-14 | Mike Fullerton | Made the empty-label pass-through, verb localization and token reuse non-normative, merged the two tap-target decisions into one, dropped the redundant aria-expanded decision, reworded the glyph and title rationales, removed named consumers, linked disclosure and topic-detail as related, and added vectors for className conflict, expanded title and empty label. |
 | 1.2.2 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.2.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case with citations updated throughout; corrected glyph terminology (guillemets, not chevrons) and platform API names (Compose semantics, WinUI keyboard-state API, WinUI ExpandCollapse pattern, AppKit/UIKit state exposure); reformatted Design Decisions and Compliance to the standard form and corrected appearance values (corner radius, font, focus-ring color); added keyboard-activation and ⌘-click test vectors, tightened the aria-controls-absent vector, and merged the duplicate empty/missing-label edge cases; recorded platform-glyph-substitution, minimum-hit-area, and RTL-glyph-mirroring as pending Design Decisions |

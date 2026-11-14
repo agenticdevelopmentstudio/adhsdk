@@ -2,11 +2,11 @@
 id: 6c034a7a-3a43-4da6-bc1a-0cbc39f32cc4
 title: "Registry Profile"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -20,9 +20,7 @@ tags:
 depends-on:
   - 6579e030-0455-453c-81cf-177dae3dd82e
   - fe09968a-6575-40d0-b0b8-af6ce52d8efd
-related:
-  - 6579e030-0455-453c-81cf-177dae3dd82e
-  - fe09968a-6575-40d0-b0b8-af6ce52d8efd
+related: []
 references: []
 approved-by: ""
 approved-date: ""
@@ -153,12 +151,15 @@ Registry Profile displays a comprehensive view of a single registry entry, inclu
 | profile-032 | omit-fields-section-when-empty | `entry.fields = []` | Output does not contain `rp__fields` element; contrast with profile-016, where one field is present |
 | profile-033 | render-full-display-name-untruncated | `entry.displayName = "A".repeat(300)` | Output contains the full 300-character string inside `<h1 class="rp__name">`, with no truncation or ellipsis |
 | profile-034 | render-metadata-list-unconditionally | `entry.category = ""`, `entry.locationText = ""`, `entry.languages = []` | Output still contains `<dl class="rp__meta">`, with no `rp__meta-row` children inside it |
-
+| profile-035 | render-photo-when-available | `entry.photoAttachmentId = null` | No photo element rendered; `resolveImageUrl` is not called |
+| profile-036 | render-field-visibility-marker | `field.visibility = "authenticated"` | The marker span has `data-audience="authenticated"` |
+| profile-037 | render-all-fields | `entry.fields = [{key: "email", label: "Email", value: "alice@example.com", visibility: "public", type: "email"}]` | The field's `<dt>` text is "Email" and its `<dd>` text is "alice@example.com" |
+| profile-038 | render-languages-list | `entry.category = ""`, `entry.locationText = ""`, `entry.languages = ["English"]` | `<dl class="rp__meta">` contains exactly one row, with `<dt>` "Languages" and `<dd>` "English" |
 ## Edge Cases
 
 - **Null or undefined entry**: Not applicable. The component requires a `PublicEntry` and will error if `entry` is null. The host is responsible for ensuring a valid entry is provided.
 - **Empty entry.fields array**: See **omit-fields-section-when-empty**.
-- **photoAttachmentId without URL resolution**: If `photoAttachmentId` is present but `resolveImageUrl` returns `null`, Component MUST render the profile without a photo (see **accept-null-from-resolver**).
+- **photoAttachmentId without URL resolution**: See **accept-null-from-resolver**.
 - **All metadata fields falsy**: See **render-metadata-list-unconditionally**. The `<dl class="rp__meta">` container is still rendered; only the category, location, and languages rows inside it are omitted.
 - **Link URL scheme is not restricted**: `entry.links[*].url` is rendered directly as the link's `href` with no scheme allow-list in this component; a `javascript:` or `data:` URL would render as a live, clickable link. `rel="noopener noreferrer nofollow"` and `target="_blank"` are the only safety attributes this component applies. Restricting or validating the URL scheme is the responsibility of the server that populates `entry.links`, not this presentation component.
 - **Field with empty label**: Not applicable. The source assumes field labels are provided by the server; empty labels are a server data quality issue.
@@ -166,11 +167,20 @@ Registry Profile displays a comprehensive view of a single registry entry, inclu
 - **Very long display name**: See **render-full-display-name-untruncated**.
 - **Very long field values**: Component delegates to `FieldValue` component. Edge case handling is FieldValue's responsibility.
 - **Concurrent updates to entry prop**: Not applicable. The component is a functional React component and does not maintain mutable state. Behavior when `entry` prop changes is React's re-render lifecycle, not a component-defined edge case.
-- **contact prop changes between render cycles**: Component MUST render the new contact prop value on the next render.
 
 ## Configuration
 
-Not applicable: RegistryProfile is a presentation component with no configuration options. All behavior is determined by the `entry` data and the optional `resolveImageUrl` and `contact` props.
+RegistryProfile has no configuration options beyond its props. All behavior is determined by the `entry` data and the optional `resolveImageUrl` and `contact` props.
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `entry` | `PublicEntry` | yes | The entry to display, already filtered by the server for the viewer. |
+| `resolveImageUrl` | `(attachmentId: string) => string \| null` | no | Turns an attachment ID into a URL, or `null` for no image. Defaults to a lookup in `entry.imageUrls` that returns `null` for an unmapped ID. |
+| `contact` | `ReactNode` | no | Contact affordance slot, rendered only when `entry.contactMode === 'dm'`. |
+
+`PublicEntry` fields: `slug: string`, `displayName: string`, `summary: string`, `photoAttachmentId: string | null`, `providerType: string`, `category: string`, `keywords: string[]`, `locationText: string`, `countryCode: string`, `regionCode: string`, `geo: { lat: number; lon: number } | null`, `areaServed: Record<string, unknown>`, `deliveryMode: string`, `links: Array<{ label: string; url: string }>`, `contactMode: string` (`'dm'` or `'none'`), `languages: string[]`, `fields: PublicField[]`, `services: PublicService[]`, `imageUrls: Record<string, string>`.
+
+`PublicField` fields: `key: string`, `label: string`, `type: FieldType`, `value: unknown`, `visibility: FieldVisibility`. `FieldVisibility` is the union `'public' | 'authenticated' | 'private'`.
 
 ## Deep Linking
 
@@ -195,7 +205,7 @@ These keys describe intent, not an implemented lookup: the TypeScript source har
 |--------|----------|
 | Reduce Motion | Not applicable: RegistryProfile does not animate. All content is static. |
 | Increase Contrast | Deferred to CSS styling and the host application's theme. Component does not define color values. |
-| Differentiate Without Color | Deferred to the FieldValue and ServiceList child components and CSS styling. |
+| Differentiate Without Color | Satisfied for the visibility marker: it is text ("Signed-in members only", "Private"), so it does not depend on color. Deferred to the FieldValue and ServiceList child components and CSS styling for their own styling. |
 
 ## Feature Flags
 
@@ -220,16 +230,16 @@ Not applicable: RegistryProfile does not emit logging. The host application is r
 ## Platform Notes
 
 - **TypeScript/React Web**: Source is a React functional component in TypeScript at `packages/web/packages/registry-profile/src/RegistryProfile.tsx`. Key implementation details: the component uses conditional rendering (`? :`) for optional sections, a resolver pattern for image URLs with a nullish coalescing fallback to `entry.imageUrls`, and an exhaustive `Record<FieldVisibility, string | null>` to ensure visibility markers are defined for every audience type. The component does not fetch data; all content is provided via props.
-- **SwiftUI**: Translate the component as a View that renders a scrollable VStack. The header is an HStack with the photo (Image, if available) and a VStack for identity details. The component has no internal state — every section is driven entirely by its inputs — so gate each optional section with a plain `if` on the input values (`entry.summary`, `entry.category`, and so on), not `@State`. Map `FieldVisibility` to a conditional `Text` rendered inline with the field's label. Delegate field value rendering to a FieldValue View and service rendering to a ServiceList View (see [adhsdk.ingredient.registry-profile.field-value](cookbook:6579e030-0455-453c-81cf-177dae3dd82e) and [adhsdk.ingredient.registry-profile.service-list](cookbook:fe09968a-6575-40d0-b0b8-af6ce52d8efd)). Links (the "Elsewhere" list and any `url`-typed field) are external destinations, not in-app routes, so open them with `Link` or the `@Environment(\.openURL)` action; `navigationLink(destination:)` pushes an in-app SwiftUI view and does not open an external URL.
-- **Compose**: Implement as a Composable function that renders a Column (scrollable) with a Row header containing the photo (Image) and identity content. Use conditional composition (`if`) for optional sections, driven entirely by the incoming parameters. Render metadata rows and field items as plain rows inside that same scrollable Column rather than nesting a `LazyColumn` inside it — a scrollable `LazyColumn` inside a scrollable `Column` throws at runtime; use a single `LazyColumn` for the whole screen instead if the field list needs lazy loading. Delegate to FieldValue and ServiceList Composables. Open external links (the "Elsewhere" list, `url`-typed fields) with `LocalUriHandler.current.openUri(url)`; there is no `navController.openUrl()` API.
-- **AppKit / UIKit**: On UIKit, implement as a `UIViewController` with a scroll view containing a stack view (horizontal or vertical) for the header (image view, vertical stack for identity), followed by nested stack views for metadata, keywords, contact, fields, and links; use `UILabel` for display name and summary, and `UIStackView` for fields and metadata rows. On AppKit, use an `NSScrollView` with an `NSStackView` hierarchy of the same shape, `NSTextField` (non-editable, bezel-less) in place of `UILabel`, and `NSImageView` for the photo. Delegate field rendering to a FieldValue view (see [adhsdk.ingredient.registry-profile.field-value](cookbook:6579e030-0455-453c-81cf-177dae3dd82e)). This component defines no deep linking (see Deep Linking above); do not add custom URL scheme or universal link handling here. Render the visibility marker inline within the field label's text/stack item, not as an overlay on the field row, matching the inline-in-label design decision.
-- **WinUI 3**: Implement as a XAML UserControl or Page. Use Grid and StackPanel for layout: a StackPanel header contains an Image for the photo and a StackPanel for identity (TextBlock for name, TextBlock for summary). Use `ItemsControl`/`ItemsRepeater` for the metadata definition list, rendering each row as a Grid with two TextBlocks, and the same for fields, with a custom `DataTemplate` that includes a TextBlock for the label, a conditional TextBlock for the visibility marker, and a custom FieldValue control for the value — WinUI 3 has no `DataGrid` control. Use `ItemsControl` for keywords, styling each as a Border with a TextBlock. Conditionally include a ContentPresenter for the contact affordance. Render links as a ListView or ItemsControl with HyperlinkButton controls, opening each with `Launcher.LaunchUriAsync(uri)`; WinUI 3 opens external URIs out-of-process, so there is no `rel="noopener"` equivalent to set.
+- **SwiftUI**: Put the six Localization keys in a string catalog rather than hardcoding them, and before calling `openURL` allow only `http:`, `https:` and `mailto:` schemes (the web source applies no such check). Translate the component as a View that renders a scrollable VStack. The header is an HStack with the photo (Image, if available) and a VStack for identity details. The component has no internal state — every section is driven entirely by its inputs — so gate each optional section with a plain `if` on the input values (`entry.summary`, `entry.category`, and so on), not `@State`. Map `FieldVisibility` to a conditional `Text` rendered inline with the field's label. Delegate field value rendering to a FieldValue View and service rendering to a ServiceList View (see [adhsdk.ingredient.registry-profile.field-value](cookbook:6579e030-0455-453c-81cf-177dae3dd82e) and [adhsdk.ingredient.registry-profile.service-list](cookbook:fe09968a-6575-40d0-b0b8-af6ce52d8efd)). Links (the "Elsewhere" list and any `url`-typed field) are external destinations, not in-app routes, so open them with `Link` or the `@Environment(\.openURL)` action; `navigationLink(destination:)` pushes an in-app SwiftUI view and does not open an external URL.
+- **Compose**: Put the six Localization keys in `strings.xml` rather than hardcoding them, and before calling `openUri` allow only `http:`, `https:` and `mailto:` schemes (the web source applies no such check). Implement as a Composable function that renders a Column (scrollable) with a Row header containing the photo (Image) and identity content. Use conditional composition (`if`) for optional sections, driven entirely by the incoming parameters. Render metadata rows and field items as plain rows inside that same scrollable Column rather than nesting a `LazyColumn` inside it — a scrollable `LazyColumn` inside a scrollable `Column` throws at runtime; use a single `LazyColumn` for the whole screen instead if the field list needs lazy loading. Delegate to FieldValue and ServiceList Composables. Open external links (the "Elsewhere" list, `url`-typed fields) with `LocalUriHandler.current.openUri(url)`; there is no `navController.openUrl()` API.
+- **AppKit / UIKit**: On UIKit, implement as a `UIViewController` with a scroll view containing a stack view (horizontal or vertical) for the header (image view, vertical stack for identity), followed by nested stack views for metadata, keywords, contact, fields, and links; use `UILabel` for display name and summary, and `UIStackView` for fields and metadata rows. On AppKit, use an `NSScrollView` with an `NSStackView` hierarchy of the same shape, `NSTextField` (non-editable, bezel-less) in place of `UILabel`, and `NSImageView` for the photo. Delegate field rendering to a FieldValue view (see [adhsdk.ingredient.registry-profile.field-value](cookbook:6579e030-0455-453c-81cf-177dae3dd82e)). This component defines no deep linking (see Deep Linking above); do not add custom URL scheme or universal link handling here. Render the visibility marker inline within the field label's text/stack item, not as an overlay on the field row, matching the inline-in-label design decision. Put the six Localization keys in the platform's string resources (`Localizable.strings` or `.xcstrings`) rather than hardcoding them. Before opening a link, allow only `http:`, `https:` and `mailto:` schemes; the web source applies no such check (see **Link URL scheme is not restricted**).
+- **WinUI 3**: Put the six Localization keys in `.resw` resources rather than hardcoding them, and before calling `LaunchUriAsync` allow only `http:`, `https:` and `mailto:` schemes (the web source applies no such check). Implement as a XAML UserControl or Page. Use Grid and StackPanel for layout: a StackPanel header contains an Image for the photo and a StackPanel for identity (TextBlock for name, TextBlock for summary). Use `ItemsControl`/`ItemsRepeater` for the metadata definition list, rendering each row as a Grid with two TextBlocks, and the same for fields, with a custom `DataTemplate` that includes a TextBlock for the label, a conditional TextBlock for the visibility marker, and a custom FieldValue control for the value — WinUI 3 has no `DataGrid` control. Use `ItemsControl` for keywords, styling each as a Border with a TextBlock. Conditionally include a ContentPresenter for the contact affordance. Render links as a ListView or ItemsControl with HyperlinkButton controls, opening each with `Launcher.LaunchUriAsync(uri)`; WinUI 3 opens external URIs out-of-process, so there is no `rel="noopener"` equivalent to set.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/registry-profile/src/RegistryProfile.tsx` | unverified |
+| web | `packages/web/packages/registry-profile/src/RegistryProfile.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -238,7 +248,7 @@ Not applicable: RegistryProfile does not emit logging. The host application is r
   **Approved**: pending
 
 - **Decision**: Visibility markers are rendered inside the `<dt>` field label, not floated beside the field value.
-  **Rationale**: This ensures a reader who encounters the marker has not already read a value they believed was public. The marker placement is a compromise between making the visibility constraint immediately visible and avoiding layout reflow.
+  **Rationale**: This ensures a reader who encounters the marker has not already read a value they believed was public. The alternative, a marker after the value, would let a reader meet the restriction only after reading the value.
   **Approved**: pending
 
 - **Decision**: The `AUDIENCE_NOTE` Record is exhaustive on `FieldVisibility`, so adding a new visibility type to the enum without defining its marker text is a TypeScript compile error rather than a silently unmarked field.
@@ -258,9 +268,12 @@ Not applicable: RegistryProfile does not emit logging. The host application is r
   **Approved**: pending
 
 - **Decision**: The display name always renders as an `<h1>`, with no prop to change the heading level.
-  **Rationale**: The component assumes it is rendered as the top-level content of the page or view presenting the entry, matching how it is used today. A host that embeds it inside a page with its own `<h1>` accepts a duplicate top-level heading; the component does not currently offer a way to renumber it.
+  **Rationale**: The component assumes it is rendered as the top-level content of the page or view presenting the entry, matching how it is used today. A host that embeds it inside a page with its own `<h1>` accepts a duplicate top-level heading; the component does not currently offer a way to renumber it. A `headingLevel` prop was considered and deferred: it could be added later as an optional prop without breaking existing callers.
   **Approved**: pending
 
+- **Decision**: The visibility marker texts and the "Category", "Location", "Languages" and "Elsewhere" labels are English literals in the component, and no `labels` prop is offered.
+  **Rationale**: A `labels` prop was considered and deferred: it could be added later as an optional prop without breaking existing callers. Until then a host needing another language must fork or wrap the component (see Localization).
+  **Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -286,3 +299,4 @@ These statuses rest on `RegistryProfile.tsx`: it sets `href` on every link from 
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed every requirement to subject-only kebab-case (dropped `must-`/`must-not-` prefixes) and fixed the backwards `omit-marker-for-public-fields` wording; restated the default-resolver requirement to describe the `entry.imageUrls` fallback rather than a resolver return contract; clarified that empty `services` rendering is delegated to `ServiceList`; corrected the false "metadata list omitted when empty" claim (the `<dl>` container always renders) and promoted it, plus the fields-empty and no-truncation edge cases, to named requirements; removed the incorrect claim that a missing photo and an unresolvable photo render distinguishably; documented the unrestricted link URL scheme as an edge case; added a Design Decision for the fixed `<h1>` heading level; added `depends-on`/`related` links to the field-value and service-list recipes and linked them inline; unquoted `modified` to match `created`; replaced the "Not applicable" Compliance section with a real Check/Status/Category table; reformatted Design Decisions into Decision/Rationale/Approved triplets; added missing test vectors (service-list, default-resolver, accept-null-from-resolver, links-empty, location-absent, fields-empty, no-truncation, metadata-list-unconditional) and sharpened profile-020 into a concrete assertion; fixed the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes to reference real APIs and added AppKit-specific guidance; and corrected Localization to state the strings are hardcoded literals, not read from a resource system. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added a props and data-model table, four test vectors, deferred headingLevel and labels decisions, native-port localization and URL-scheme guidance, a satisfied Differentiate Without Color row, and removed the duplicated related list and the unnamed edge-case MUSTs. |

@@ -3,7 +3,7 @@ The public surface is the constants `UPTIME_FLOOR`, `ERROR_ISSUE_CAP`, `RUNTIME_
 
 ### Constants
 
-- **constants-values**: The module MUST use `UPTIME_FLOOR` 99.5, `ERROR_ISSUE_CAP` 15, `RUNTIME_GROUP_CAP` 15, `SITE_ROW_CAP` 10 and `RUNTIME_5XX_MAJOR_COUNT` 5.
+- **constants-values**: The module MUST use `UPTIME_FLOOR` 99.5, `ERROR_ISSUE_CAP` 15, `RUNTIME_GROUP_CAP` 15, `SITE_ROW_CAP` 10 and `RUNTIME_5XX_MAJOR_COUNT` 5. It MUST take the failure-rate line used by `siteTroubled` from the dashboard views module (`telemetry/dashboard/views.ts`, specified by [adhsdk.ingredient.status.service.telemetry.dashboard.views](cookbook:967202ce-c607-4115-9f63-466a4004e7f3)): `FAILURE_RATE_HIGH` is 0.05, and `isFailureRateHigh(failures, requests)` is true when `requests` is above 0 and `failures / requests` is at least 0.05.
 
 ### Text helpers
 
@@ -26,7 +26,7 @@ The public surface is the constants `UPTIME_FLOOR`, `ERROR_ISSUE_CAP`, `RUNTIME_
 
 ### Monitor
 
-- **monitor-problems**: `digestMonitor` MUST make one finding per board problem, with severity the problem's own severity, source `monitor:<problem source>`, title `<name environment>: <source state>` (empty parts dropped), detail from the problem's detail, `since`, `link` as `sourceUrl` else `liveUrl`, and `issueKey` from `issueKeys`.
+- **monitor-problems**: `digestMonitor` MUST make one finding per board problem, with severity the problem's own severity, source `monitor:<problem source>`, title `<name> <environment>: <source> <state>` (the parts of each half joined by single spaces, empty parts omitted), detail from the problem's detail, `since`, `link` as `sourceUrl` else `liveUrl`, and `issueKey` from `issueKeys`.
 - **monitor-no-regrade**: `digestMonitor` MUST NOT raise a finding for a service that has no board problem, and MUST still count it in `byStatus`.
 - **monitor-glitchtip-dedupe**: `digestMonitor` MUST skip a board problem whose target is a GlitchTip errors target when the GlitchTip list is current, and MUST keep it otherwise.
 - **monitor-provider-dedupe**: `digestMonitor` MUST skip a board problem whose target is a platform-health target for a provider present in the deploys read, and MUST keep it when the deploys read is absent or lacks that provider.

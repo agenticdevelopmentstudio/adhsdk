@@ -3,7 +3,7 @@
 **Rationale**: Keeps presentation separate from markup and lets styling be managed independently of the component.
 **Approved**: pending
 
-**Decision**: The React key for each list item is `service.title`; the component requires titles to be unique within a given `services` array rather than accepting a separate identifier prop (see **unique-titles**).
+**Decision**: The React key for each list item is `service.title`; the component relies on the caller supplying titles that are unique within a given `services` array rather than accepting a separate identifier prop (see **unique-titles**).
 **Rationale**: The source has no `id` field on `PublicService` to key on instead; adding one would be new behavior beyond what the source implements today.
 **Approved**: pending
 
@@ -19,3 +19,6 @@
 **Rationale**: The source hardcodes both levels; hosts embedding this component MUST place it at a point in the page outline where `<h2>` is the correct next heading level.
 **Approved**: pending
 
+**Decision**: The `<section>` has no `aria-labelledby` tying it to its `<h2>`, so it is not exposed as a named region landmark.
+**Rationale**: The source omits it; the heading still gives the section a place in the document outline. Adding the association would be new behavior beyond what the source implements today.
+**Approved**: pending

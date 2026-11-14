@@ -2,11 +2,11 @@
 id: 059093ee-8776-4e6a-b2a2-3fe1e20c2ee9
 title: "Command Palette"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -73,12 +73,12 @@ The Command Palette is a transient overlay dialog that presents a keyboard-navig
 ## Behavioral Requirements
 
 - **accept-open-prop**: Component MUST render the dialog when the `open` prop is `true`, and hide it when `open` is `false`.
-- **open-change-on-dismiss**: Component MUST call `onOpenChange(false)` when the user dismisses the dialog — via Escape (delegated to the Dialog primitive, since the component adds no Escape handler of its own) or by selecting an item. When dismissal is triggered by selecting an item, `onOpenChange(false)` is called before the item's `onSelect()` callback runs.
+- **open-change-on-dismiss**: Component MUST call `onOpenChange(false)` when the user dismisses the dialog — via Escape (delegated to the Dialog primitive, since the component adds no Escape handler of its own) or by selecting an item. When dismissal is triggered by selecting an item, `onOpenChange(false)` is called before the item's `onSelect()` callback runs. Clicking outside the dialog does NOT dismiss it, because the shared Dialog primitive disables pointer dismissal by default and the palette does not override that.
 - **display-query**: Component MUST display the value of the `query` prop in the search input field.
 - **query-change-callback**: Component MUST call `onQueryChange(value)` when the user types in the search input field.
 - **render-groups-in-order**: Component MUST render groups in the order provided; a group with zero items is dropped entirely, including its heading, while a group with one or more items renders both its heading and its items.
 - **render-items-in-group-order**: Component MUST render items within each group in the order provided.
-- **reset-highlight-to-first-item**: Component MUST highlight the first item in the flattened list (across all groups) when the dialog opens, and MUST reset the highlight to the first item whenever the set of displayed items changes (measured by comparing item IDs across all groups) or whenever the dialog transitions from `open: false` to `open: true`.
+- **reset-highlight-to-first-item**: Component MUST highlight the first item in the flattened list (across all groups) whenever the dialog transitions from `open: false` to `open: true`, and MUST reset the highlight to the first item whenever the set of displayed items changes (measured by comparing item IDs across all groups).
 - **arrow-navigation**: Component MUST move the highlight up (ArrowUp) and down (ArrowDown) through the flattened list of items, wrapping around at the ends.
 - **home-end-navigation**: Component MUST move the highlight to the first item on Home and to the last item on End.
 - **run-on-enter**: Component MUST run the highlighted item's `onSelect` callback and close the dialog when Enter is pressed.
@@ -94,13 +94,17 @@ The Command Palette is a transient overlay dialog that presents a keyboard-navig
 - **no-reserved-space-for-missing-icon-badge**: Component MUST NOT reserve layout space for an item's `icon` or `badge` when it is not provided.
 - **focus-input-on-open**: Component MUST focus the search input when the dialog opens.
 - **use-placeholder**: Component SHOULD display the `placeholder` prop (default "Search…") as the input field's placeholder text.
-
+- **no-op-on-empty-list**: When the flattened list has no items, ArrowUp, ArrowDown, Home, End and Enter MUST do nothing: no highlight appears, `onSelect` is not called, and the dialog stays open.
+- **unique-item-ids**: Item `id` values MUST be unique across all groups, because the highlight reset, the highlighted-row match and `aria-activedescendant` all key on the id; duplicate ids make two rows highlight together and the active-descendant ambiguous.
+- **filter-empty-query-passthrough**: `filterCommandItems(items, query)` MUST return `items` unchanged when `query`, after trimming, is empty (including a whitespace-only query).
+- **filter-case-insensitive-substring**: `filterCommandItems` MUST trim and lowercase `query` and keep an item only when its text contains that substring, ignoring case.
+- **filter-matched-fields**: `filterCommandItems` MUST match against an item's `label`, `keywords`, `badge` and `description` (joined with spaces; an absent field counts as empty) and MUST NOT match on `hint`, `icon` or `id`.
 ## Appearance
 
 - **Corner radius**: 6px (from Tailwind's `rounded-md` on item buttons)
 - **Padding**: Dialog content has no padding; internal sections own their own (input section: 12px vertical, 10px right, 12px left; item list: 8px; footer: 8px vertical, 12px horizontal)
 - **Font**: Item text is 14px (text-sm), section labels are text-sm, footer is 12px (text-xs)
-- **Background**: Dialog uses default modal overlay; item list background inherits from container; highlighted items show `apt-highlight/15` overlay; hover shows `apt-highlight/10`
+- **Background**: Dialog uses default modal overlay; item list background inherits from container; highlighted items show `apt-highlight/15` overlay; hovering an item moves the highlight to it (see **update-highlight-on-hover**), so a hovered item shows `apt-highlight/15`
 - **Foreground/Text**: Primary text `apt-text`, muted text `apt-text-muted`, dimmed text `apt-text-dim`, section labels use muted color
 - **Border**: Top border on input section (1px `apt-border`), top border on footer section (1px `apt-border`)
 - **Shadow**: Delegated to Dialog primitive
@@ -134,11 +138,9 @@ The Command Palette is a transient overlay dialog that presents a keyboard-navig
 | cp-003 | open-change-on-dismiss | User presses Escape | `onOpenChange(false)` is called |
 | cp-004 | open-change-on-dismiss, run-on-enter | User selects an item via Enter | `onOpenChange(false)` is called, then item's `onSelect()` is called |
 | cp-005 | display-query | `query: "test"` | Input field shows "test" |
-| cp-006 | query-change-callback | User types "foo" in input | `onQueryChange("foo")` is called for each keystroke |
+| cp-006 | query-change-callback | User types "foo" in input | With the host updating `query` after each change, `onQueryChange` is called three times, in order, with "f", "fo", "foo" |
 | cp-007 | render-groups-in-order | `groups: [{id: "g1", …}, {id: "g2", …}]` | Group headings appear in order g1, then g2 |
 | cp-008 | render-groups-in-order | `groups: [{id: "g1", items: []}, {id: "g2", items: [{…}]}]` | Only g2 heading is rendered; g1 is dropped entirely |
-| cp-009 | render-groups-in-order | Group with 0 items | Group heading is not rendered |
-| cp-010 | render-groups-in-order | Group with 1+ items | Group heading is rendered |
 | cp-011 | reset-highlight-to-first-item | Dialog opens with 3 items | First item is highlighted |
 | cp-012 | reset-highlight-to-first-item | Item list changes from [A, B, C] to [X, Y] | Highlight moves to X (first of new list) |
 | cp-013 | arrow-navigation | Highlight on item 1 of 3, press ArrowDown | Highlight moves to item 2 |
@@ -160,7 +162,14 @@ The Command Palette is a transient overlay dialog that presents a keyboard-navig
 | cp-029 | no-reserved-space-for-missing-icon-badge | Item with `icon: undefined`, `badge: undefined` | No empty space is rendered where the icon/badge would be |
 | cp-030 | arrow-navigation | Exactly one item, press ArrowDown then ArrowUp | Highlight stays on the single item both times (wraps to itself) |
 | cp-031 | display-error-message, display-loading-state | `loading: true` and `error: "Network error"` together | Both the error text and the loading indicator are visible |
-
+| cp-032 | open-change-on-dismiss | User clicks outside the dialog | `onOpenChange` is not called; the dialog stays open |
+| cp-033 | no-op-on-empty-list | `groups: []`, press ArrowDown, ArrowUp, Home, End, Enter | No highlight, no `onSelect`, no `onOpenChange` call |
+| cp-034 | unique-item-ids | Two groups each containing an item with `id: "a"` | Not a supported input: both rows read as highlighted together and `aria-activedescendant` is ambiguous |
+| cp-035 | filter-empty-query-passthrough | `filterCommandItems(items, "   ")` | Returns `items` unchanged |
+| cp-036 | filter-case-insensitive-substring | `filterCommandItems([{label: "Open File"}], "  oPEN ")` | The item is returned |
+| cp-037 | filter-matched-fields | One item per field: query matches only its `label`, `keywords`, `badge` or `description`; and one matching only `hint` | The first four items are returned; the `hint`-only item is not |
+| cp-038 | use-placeholder | `placeholder` omitted, then `placeholder: "Find…"`, with an empty query | Input placeholder is "Search…", then "Find…" |
+| cp-039 | accept-open-prop | Palette open, item at index 1 highlighted | The input has `role="combobox"`, `aria-controls` equal to the listbox id, `aria-expanded="true"` and `aria-activedescendant` equal to the highlighted option's id |
 ## Edge Cases
 
 - **Empty groups list**: When `groups: []`, the list displays the empty state — see **display-empty-state**.
@@ -189,15 +198,14 @@ Not applicable: CommandPalette is an overlay component without its own route or 
 |-----------|-------------|---------|
 | placeholder | "Search…" | Input field placeholder when query is empty |
 | emptyLabel | "No matches" | Empty state message when no items are shown |
-| loadingLabel | "Searching…" | Loading indicator label; hardcoded in source |
 
-These strings are passed as props or have hardcoded defaults in the source. Localization is the host's responsibility.
+`placeholder` and `emptyLabel` are props with English defaults. The "Searching…" loading text is hardcoded in the source and is not localizable. Localization of the props is the host's responsibility.
 
 ## Accessibility Options
 
 - **Reduce Motion**: Not applicable; CommandPalette does not use transitions or animations that respond to prefers-reduced-motion.
 - **Increase Contrast**: Not applicable; CommandPalette does not have a built-in contrast mode; host may apply custom CSS to meet contrast requirements.
-- **Differentiate Without Color**: Highlight state is shown by a background-color change (`apt-highlight/15` on the current item, `apt-highlight/10` on hover) and by the `aria-selected` attribute. `aria-selected` is exposed to assistive technology only — it provides no visual cue, so a sighted user who cannot distinguish the highlight color currently has no other way to tell which item is active.
+- **Differentiate Without Color**: Highlight state is shown by a background-color change (`apt-highlight/15` on the current item, which includes a hovered item) and by the `aria-selected` attribute. `aria-selected` is exposed to assistive technology only — it provides no visual cue, so a sighted user who cannot distinguish the highlight color currently has no other way to tell which item is active.
 
 ## Feature Flags
 
@@ -217,9 +225,9 @@ Not applicable: CommandPalette does not emit logs. Debugging is delegated to hos
 
 ## Platform Notes
 
-- **SwiftUI**: Use a ZStack with a semi-transparent overlay (`.background(.black.opacity(0.2))`) behind a VStack for the input and list. Implement keyboard navigation using `.onKeyPress()` or `.keyboardShortcut()`. Use `List` with `@State var activeIndex` tracking the highlighted row. Horizontal list groups require explicit `Section` headers; only render when the section has items. Implement scrolling with `.scrollPosition(id:anchor:)` and `ScrollViewReader`. No native combobox role; approximate the accessible structure with `.accessibilityLabel()` / `.accessibilityValue()` and appropriate `.accessibilityAddTraits()` on the input and highlighted row.
+- **SwiftUI**: Present the palette with `.sheet` (or `.popover` on iPad and macOS) rather than a hand-built overlay, the way the AppKit note uses `NSPanel`, with a VStack for the input and list. Implement keyboard navigation using `.onKeyPress()` or `.keyboardShortcut()`. Use `List` with `@State var activeIndex` tracking the highlighted row. Groups map to `Section`s, rendered only when non-empty. Implement scrolling with `.scrollPosition(id:anchor:)` and `ScrollViewReader`. No native combobox role; approximate the accessible structure with `.accessibilityLabel()` / `.accessibilityValue()` and appropriate `.accessibilityAddTraits()` on the input and highlighted row.
 - **Compose**: Use a `Dialog` with a `TextField` for input and a `LazyColumn` for the list. Implement highlight tracking with `var activeIndex by remember { mutableStateOf(0) }`. Use `focusRequester` and `FocusManager` to manage keyboard focus and ArrowUp/Down navigation. Render group headers as `item()` entries with conditional visibility. Implement scroll-into-view with `LazyListState.scrollToItem()`.
-- **React/Web**: This is the source platform; the other platform notes describe how to reproduce its behavior. Behavior is a contract with the reference implementation (`packages/web/packages/ui/src/blocks/command-palette.tsx`): a controlled input drives all state, the Dialog primitive supplies the overlay and Escape handling, keyboard handling lives in the input's `onKeyDown`, and ARIA `listbox` / `option` / `group` roles provide the accessible structure.
+- **React/Web**: This is the source platform; the other platform notes describe how to reproduce its behavior. Behavior is a contract with the reference implementation (its location is recorded in the cookbook index): a controlled input drives all state, the Dialog primitive supplies the overlay and Escape handling, keyboard handling lives in the input's `onKeyDown`, and ARIA `listbox` / `option` / `group` roles provide the accessible structure.
 - **AppKit / UIKit**: For macOS (AppKit), use `NSPanel` with a search field (`NSSearchField`) and a table view (`NSTableView`) or outline view. Implement keyboard navigation with `keyDown(_:)`. Use `NSAccessibility` attributes to mark the search field as a combobox and table rows as options. For iOS (UIKit), the overlay would be a `UIViewController` presented modally with a `UISearchBar` and a `UITableViewController`, though command palettes are less common on mobile.
 - **WinUI 3**: Use a `ContentDialog` with a `TextBox` for the search input and an `ItemsRepeater` or `ListView` for the command list. Implement keyboard navigation in `KeyDown` event handlers on the TextBox, moving selection through the list using `SelectedIndex`. Render group headers as template items with conditional visibility (binding to `group.Items.Count > 0`). Use `ListView.ScrollIntoView(item)` to scroll the selected item into view. Bind `TextBox.Text` to query state; bind list selection to highlight state.
 
@@ -227,7 +235,7 @@ Not applicable: CommandPalette does not emit logs. Debugging is delegated to hos
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/command-palette.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/command-palette.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -263,6 +271,21 @@ Not applicable: CommandPalette does not emit logs. Debugging is delegated to hos
 **Rationale**: Wrapping is more useful than "nothing happens," letting users cycle through short lists without reaching for the mouse.
 **Approved**: pending
 
+**Decision**: `onOpenChange(false)` runs before the selected item's `onSelect()`.
+**Rationale**: Any state the command sets itself, such as opening another dialog, is applied after the palette's close and so is not overridden by it.
+**Approved**: pending
+
+**Decision**: Accepted debt: item rows are about 24px tall, below the 44×44pt and 48×48dp touch-target minimums (WCAG 2.5.8's 24×24 CSS px floor is met).
+**Rationale**: The palette is a dense, keyboard-first overlay; enlarging rows is not planned, and the Compliance table records touch-target-size as failed.
+**Approved**: pending
+
+**Decision**: Accepted debt: the layout uses physical-direction classes (`pl-9`, `left-6`, `pr-10`) and truncates long text, so it does not mirror under right-to-left layouts or tolerate text expansion.
+**Rationale**: No logical-property variants (such as `ps-` and `start-`) have been applied; the Compliance table records rtl-layout-support and text-expansion-tolerance as failed.
+**Approved**: pending
+
+**Decision**: Accepted debt: the "Searching…" text is hardcoded and not a prop, and the highlight has no non-color cue.
+**Rationale**: Neither has a prop or visual treatment yet; the Compliance table records no-hardcoded-strings as failed, and a sighted user who cannot distinguish the highlight color has no other way to see the active item.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -288,6 +311,7 @@ These statuses rest on: the source's ARIA roles and attributes plus `autoFocus` 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Promoted the filterCommandItems contract to named requirements, added no-op-on-empty-list and unique-item-ids requirements, recorded accepted debts and the callback-order rationale as Design Decisions, fixed the hover and loadingLabel contradictions, stated that outside clicks do not dismiss, dropped duplicate vectors cp-009 and cp-010, and added vectors cp-032 to cp-039. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: merged the first-item/reopen preselection requirements and the group-order/heading requirements and the escape/onOpenChange requirements into single named requirements; renamed every requirement to subject-only kebab-case; added a Props and Types section covering `CommandPaletteProps`, `CommandGroup`, and `CommandItem`; specified the `filterCommandItems` contract in Design Decision 1; reformatted Design Decisions to the Decision/Rationale/Approved form; added a Compliance table; fixed the `max-w-xl` pixel value and the 44pt tap-target claim; corrected the ARIA structure and the Differentiate Without Color description; fixed the States table's hover contradiction; corrected Design Decision 2's keystroke count; fixed the SwiftUI/Compose/WinUI 3 platform-note APIs; promoted four untraced edge-case MUSTs to named requirements with test vectors; added vectors for input focus and dismiss/onSelect callback order; rewrote cp-026 to assert concretely; reframed the React/Web platform note as a reference-implementation contract instead of a hardcoded path and hook list |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

@@ -4,7 +4,7 @@
     "id": "6a37e531-b5ae-4eea-b4f0-d28866776ddc",
     "title": "Session Event Sink",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,16 +23,18 @@
       "claude-hooks",
       "event-publishing"
     ],
-    "depends-on": [],
-    "related": [],
-    "references": [
-      "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionEventSink.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Support/RecordingSink.swift (adhsdk)"
+    "depends-on": [
+      "787b5da6-2f20-4f3e-8104-1763959a735f"
     ],
+    "related": [
+      "81735174-d7d7-4103-87df-7be5944c78cc",
+      "706313bb-1a26-4477-9250-62ad50aff110"
+    ],
+    "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "022a90389e901e30",
+  "synced": "6c8ccb7d2e7848ce",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

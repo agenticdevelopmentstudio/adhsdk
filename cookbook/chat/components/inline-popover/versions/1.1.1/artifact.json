@@ -1,0 +1,59 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "a7e2f9d1-4c8a-4b9e-8f3d-2c5b7e1a9d4f",
+    "title": "Inline Disclosure",
+    "type": "ingredient",
+    "version": "1.1.1",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-22",
+    "modified": "2026-09-25",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Inline, non-floating disclosure component that toggles visibility of supplemental content (title, description, and optional links) in place.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "disclosure",
+      "popover",
+      "collapsible"
+    ],
+    "depends-on": [],
+    "related": [
+      "c61a220c-b63e-4dcd-a12b-715de20f7b5d"
+    ],
+    "references": [
+      "https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/",
+      "https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/noopener"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "13ca548a9f8bb3e9",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

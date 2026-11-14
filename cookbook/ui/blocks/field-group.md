@@ -2,11 +2,11 @@
 id: 781740e8-c83f-40a1-8215-43abfb8d8f56
 title: "FieldGroup"
 type: recipe
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -23,8 +23,7 @@ tags:
 ingredients:
   - 0c199036-81c3-47c3-9e79-e4b8187ca69a
 depends-on: []
-related:
-  - 0c199036-81c3-47c3-9e79-e4b8187ca69a
+related: []
 references: []
 approved-by: ""
 approved-date: ""
@@ -50,7 +49,7 @@ field caption, so the group title and the field captions share one visual langua
 
 ## Ingredients
 
-| Name | Domain | Role | Required | Configuration |
+| Name | rdid | Role | Required | Configuration |
 |---|---|---|---|---|
 | Field | [adhsdk.ingredient.ui.blocks.field](cookbook:0c199036-81c3-47c3-9e79-e4b8187ca69a) | The grouped rows — each caption+control+hint/error that the group stacks | yes | Passed as `children`; the group applies `gap-3` between them |
 
@@ -61,17 +60,19 @@ captions stay visually identical. `trailing` is an arbitrary caller node
 
 ## Integration Requirements
 
-- **render-title**: The group MUST render the `title` node as an uppercase-mono
-  heading (the shared `fieldCaptionClass`) in the top row.
+- **render-title**: The group MUST render the `title` node as an uppercase
+  monospace, muted-color caption heading in the top row (Layout and Platform Notes
+  name the web class that implements it).
 - **render-title-as-heading**: The group MUST render the `title` inside an
   `<h3>` so the section is a real heading in the document outline.
 - **render-trailing-when-set**: When `trailing` is provided, the group MUST
   render it in the title row, right-aligned opposite the title; when unset, the
   title row MUST show the title alone.
 - **stack-children**: The group MUST render its `children` (the Fields) as a
-  vertical stack below the title row, with consistent spacing between rows.
+  vertical stack below the title row, with a fixed 12px gap between rows (`gap-3` on web).
 - **bordered-card**: The group MUST present as a bordered, rounded surface
-  (`apt-border` / `apt-surface` tokens) that visually contains its title and fields.
+  using the theme's border and recessed-surface tokens (no color literals) that
+  visually contains its title and fields.
 - **merge-classname**: The group MUST merge a caller-supplied `className` onto
   its root `section` without dropping its own layout classes.
 
@@ -121,29 +122,29 @@ group.
 | T4 | stack-children | two `Field` children | Both Fields render stacked below the title row with the group's `gap-3` |
 | T5 | bordered-card | any props | The root `section` has the bordered rounded recessed-surface treatment |
 | T6 | merge-classname | `className="mt-6"` | Root keeps `flex flex-col … border …` and adds `mt-6` |
-
+| T7 | render-title, render-trailing-when-set | Viewport 375px wide, a long `title` and a `trailing` Button | The title wraps within the title row, the trailing Button stays in the row beside it, and nothing overflows the card horizontally |
 ## Edge Cases
 
-- No `trailing` → the title row still lays out with `justify-between`, so the title
+- **no-trailing**: No `trailing` → the title row still lays out with `justify-between`, so the title
   sits at the left edge exactly as with an accessory present.
-- Zero `children` → an empty titled card renders (title row only); the group does
+- **zero-children**: Zero `children` → an empty titled card renders (title row only); the group does
   not error on an empty body.
-- A `trailing` node wider than its slot shares the row via `gap-2`; the title
+- **wide-trailing**: A `trailing` node wider than its slot shares the row via `gap-2`; the title
   (`h3`) does not truncate here — long titles wrap unless the caller constrains them.
-- `children` need not be `Field`s specifically — any nodes stack — but the group is
+- **non-field-children**: `children` need not be `Field`s specifically — any nodes stack — but the group is
   designed and spaced for `Field` rows.
-- `title` is a `ReactNode`, so an inline glyph/badge in the title still renders with
+- **node-title**: `title` is a `ReactNode`, so an inline glyph/badge in the title still renders with
   the caption treatment.
 
 ## Platform Notes
 
 - **SwiftUI**: Use `Form` with a `Section(header:)` as the native grouping container — `Section`'s header holds the uppercase-mono title `Text`, with an optional trailing view alongside it in an `HStack` (`.frame(maxWidth: .infinity, alignment: .trailing)` on the trailing side), and the section's content closure holds the grouped field rows in place of `children`. Outside a `Form` context, use a `GroupBox` with the same header/content split.
 - **Compose**: Use an `OutlinedCard` as the bordered container, with a `Row` header inside — an uppercase-mono `Text` title and an optional trailing composable, laid out via `Arrangement.SpaceBetween` — followed by a `Column` holding the grouped field rows in place of `children`.
-- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/field-group.tsx`, exported via `@adh-sdk/ui/blocks/field-group`. The component carries `"use client"` at the top of the file; nothing in its own render path (no hooks, no state, no event handlers) needs it, and the `Field` ingredient it composes ships without the directive at all. It composes `Field` ([adhsdk.ingredient.ui.blocks.field](cookbook:0c199036-81c3-47c3-9e79-e4b8187ca69a)) as its children plus the shared `fieldCaptionClass` for the title. Used platform-wide as the sectioning wrapper in settings/editor panes; commonly the last group in such a pane is a destructive "danger zone" section. Verify responsive behavior via Playwright (ui-showcase) at 375 / 768 / 1440 — the title/trailing row and the stacked Fields stay usable on mobile.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/field-group.tsx`, exported via `@adh-sdk/ui/blocks/field-group`. The component carries `"use client"` at the top of the file; nothing in its own render path (no hooks, no state, no event handlers) needs it, and the `Field` ingredient it composes ships without the directive at all. It composes `Field` ([adhsdk.ingredient.ui.blocks.field](cookbook:0c199036-81c3-47c3-9e79-e4b8187ca69a)) as its children plus the shared `fieldCaptionClass` for the title. Used platform-wide as the sectioning wrapper in settings/editor panes; commonly the last group in such a pane is a destructive "danger zone" section. Verify responsive behavior via Playwright (ui-showcase) at 375 / 768 / 1440 — the title/trailing row and the stacked Fields stay usable on mobile (see T7).
 - **AppKit / UIKit**: AppKit — use an `NSBox` (`.boxType = .custom`, `.borderType = .lineBorder`) as the bordered container, with its title view holding an uppercase-mono `NSTextField` and an optional trailing `NSView` laid out in a horizontal stack. UIKit — use a grouped `UITableView`/`UICollectionView` section: the section's header view carries the uppercase-mono title label and an optional trailing accessory view, and the section's rows hold the grouped fields.
 - **WinUI 3**: Use a vertical `StackPanel` with `Spacing="12"` as the root container (the web `gap-3` is 12px). Apply `Padding="12"`, `BorderBrush` bound to the border token with `BorderThickness="1"` as a literal, `CornerRadius="8"`, and `Background` bound to the surface token for the recessed card effect. Make the title row a `Grid` with `ColumnDefinitions="*,Auto"` and `ColumnSpacing="8"` (the web `gap-2`) — a `TextBlock` header (uppercase letter-spacing to match the web `fieldCaptionClass`) in column 0, and an optional trailing `UIElement` in column 1 — since a `Grid`'s columns give the trailing element real right-alignment where a horizontal `StackPanel` ignores `HorizontalAlignment` on its children. Below the title row, add a vertical `StackPanel` with its own `Spacing="12"` for the grouped field rows — `StackPanel` does not propagate `Spacing` to a nested panel, so each stack sets it explicitly. No interactive states required — the component is a stateless layout wrapper.
 
-API (`@adh-sdk/ui/blocks/field-group`):
+The public props of `FieldGroup`, imported from `@adh-sdk/ui/blocks/field-group`:
 
 ```ts
 interface FieldGroupProps {
@@ -159,7 +160,7 @@ export function FieldGroup(props: FieldGroupProps): React.ReactElement
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/field-group.tsx` | confirmed (1.3.1) |
+| web | `packages/web/packages/ui/src/blocks/field-group.tsx` | confirmed (1.3.2) |
 
 ## Design Decisions
 
@@ -222,6 +223,7 @@ is pure layout over `title`/`trailing`/`children` props with no business logic;
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.2 | 2026-11-14 | Mike Fullerton | Made render-title, stack-children and bordered-card platform-neutral with the 12px gap stated, named the Edge Cases bullets, renamed the ingredients column to rdid, dropped the duplicate related entry, and added a 375px responsive test vector (T7). |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; give SwiftUI/Compose/AppKit-UIKit real native grouping-container guidance in place of "Not applicable"; correct WinUI 3 spacing, title-row layout, and border-brush binding; reformat Design Decisions into Decision/Rationale/Approved blocks and add a decision documenting the fixed h3/assumed-h2-parent heading level; rebuild Compliance as linked, canonically-categorized catalog checks; sharpen the T1 and T3 test vector assertions; correct the React/Web note's "use client" rationale. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Revise WinUI 3 Platform Notes with concrete translation guidance — control names, properties, layout pattern, and XAML structure. Remove "Not applicable" wording. |

@@ -10,7 +10,9 @@
 - **load-is-pure**: `CharacterConfig.load(_:)` / `loadConfig(input)` MUST be a
   synchronous, side-effect-free function of its input: no network calls, no
   disk writes, no global mutable state. Given the same six inputs, both
-  implementations MUST return an equal result or throw for the same reason.
+  implementations MUST return an equal result or throw for the same reason,
+  meaning the same violated requirement (as named in this document); the
+  message text MAY differ.
 - **load-does-not-mutate-caller-input**: `loadConfig` (web) MUST NOT mutate
   the `RawFiles` object it receives — it clones the input defensively before
   colourizing or canonicalizing any value in place. This guard exists
@@ -123,6 +125,7 @@
   associated `Bend` definition (a `"<id>.bend"` channel) MUST apply the
   configured inward damping when the value's sign matches the bend's
   `inwardSign`, and MUST pass the value through unchanged otherwise.
+- **points-count**: NEEDS REVIEW: Not implemented in source. Neither loader validates that a shape's `points` array has a count consistent with what its path-builder kind requires (for example, a cubic-bezier family's point count is expected to satisfy `3n + 1` by the renderer's `Build` functions, which are not part of this recipe's source set); `requireShapeFields` confirms `points` is present but not that its count is valid for the declared kind, so a geometrically-malformed but structurally-present `points` array is accepted at load with undefined downstream behavior.
 
 ### Reference integrity, pairs, and value typing (shared mechanism)
 
@@ -195,10 +198,11 @@ independently testable at any of its listed call sites.
   (whether or not it is also treated as a promotion) MUST have `duration`
   `0`; a non-zero-duration family change MUST reject.
 - **promotion-source-target-kind**: a promotion's source family path kind
-  MUST be an open polyline of the form `M` followed by one or more `L`
-  commands; its target family path kind MUST be `M` followed by that many
-  `C` commands (a whole multiple of the source's line-segment count) — any
-  other source/target kind pairing MUST reject.
+  MUST be an open polyline of the form `M` followed by n ≥ 1 `L`
+  commands; its target family path kind MUST be `M` followed by exactly
+  `promote` `C` commands, where `promote` is the step's own segment count and
+  MUST be k·n for an integer k ≥ 1 — any other source/target kind pairing
+  MUST reject.
 - **timeline-duration-floor**: a timeline's declared `duration` MUST be
   greater than or equal to `max(step.at + step.duration)` across all its
   steps; a declared duration that is shorter than its own last step MUST
@@ -212,10 +216,13 @@ independently testable at any of its listed call sites.
 
 ### Behavior: predicates, loops, and gates
 
-- **predicate-resolution**: every predicate reference (`enabledWhen`,
-  `disabledWhen`, `activeWhen`, `shownWhen`, and similar boolean gates —
-  but not `suppressedIn`, which names moods rather than a predicate; see
-  blink-suppression-moods-real) MUST resolve to one of the two builtin
+- **predicate-resolution**: every predicate reference MUST resolve; the
+  complete list of predicate gates is a loop's `enabledWhen` and
+  `disabledWhen` (in `behavior.loops` and in each `moodEffects.*.loop`),
+  `behavior.gaze.disabledWhen`, `behavior.idleFidget.activeWhen`,
+  `behavior.pinpricks.shownWhen`, and the subject of a `select` param
+  (but not `suppressedIn`, which names moods rather than a predicate; see
+  blink-suppression-moods-real). A gate MUST resolve to one of the two builtin
   predicates (`"eyesShut"`, `"curious"`) or to a `behavior.params` entry of
   boolean (`gt`) form; any other name, including a `select` param's name
   (which resolves to a number, not a boolean; see
@@ -329,6 +336,5 @@ independently testable at any of its listed call sites.
   `Sendable`). Under Swift 6 strict concurrency the value
   `CharacterConfig.load(_:)` returns MUST stay in the isolation domain that
   loaded it; the compiler rejects sending it across an actor boundary. A port
-  that shares one loaded config between threads adds that guarantee itself.
-- **points-count**: NEEDS REVIEW: Not implemented in source. Neither loader validates that a shape's `points` array has a count consistent with what its path-builder kind requires (for example, a cubic-bezier family's point count is expected to satisfy `3n + 1` by the renderer's `Build` functions, which are not part of this recipe's source set); `requireShapeFields` confirms `points` is present but not that its count is valid for the declared kind, so a geometrically-malformed but structurally-present `points` array is accepted at load with undefined downstream behavior.
-
+  that shares one loaded config between threads MUST make it immutable (or
+  otherwise safe to share) itself.

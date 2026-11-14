@@ -2,7 +2,7 @@
 id: 1abdd016-954c-4058-8db3-224c52712365
 title: "Partner Base Prompt"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -18,8 +18,14 @@ tags:
   - foundation
   - partner
   - prompt
-depends-on: []
-related: []
+depends-on:
+  - 79810488-c613-4f9b-af2a-4ba9d8ee1c26
+  - 294285ac-403a-44fe-9840-8ad9f3cf1eba
+related:
+  - d6ff4cf9-05b9-43f0-96d2-b4c8454dd6d1
+  - 2a298bb0-d8af-40aa-8fec-42dd3b1d8f43
+  - 211ef664-01fc-45d5-996b-1a0a4167a748
+  - a14bb137-868e-4e8b-827b-4ea0f5e45b81
 references: []
 approved-by: ""
 approved-date: ""
@@ -29,7 +35,7 @@ approved-date: ""
 
 ## Overview
 
-`PartnerBasePrompt` produces the text the Coding Partner runs on: one long-lived Claude Code session that does several jobs for the owner. It has three outputs. `text` is the fixed base prompt (who the partner is, the window the owner sees, the kinds of message that reach it, the tool table, and the rules for attention items, sessions, job steps and git). `systemPrompt(jobs:)` is that base followed by one `## Job:` section for each enabled `PartnerJob`, carrying its guidelines and a numbered list of its steps. `skillMarkdown(for:)` is the Claude Code skill file that carries one job's guidelines to the sessions the partner opens. It is a caseless `enum` of static members with no state, and its input types (`PartnerJob`, `PartnerJobStep`) are separate value types.
+`PartnerBasePrompt` produces the text the Coding Partner runs on: one long-lived Claude Code session that does several jobs for the owner. It has three outputs. `text` is the fixed base prompt (who the partner is, the window the owner sees, the kinds of message that reach it, the tool table, and the rules for attention items, sessions, job steps and git). `systemPrompt(jobs:)` is that base followed by one `## Job:` section for each enabled `PartnerJob`, carrying its guidelines and a numbered list of its steps. `skillMarkdown(for:)` is the Claude Code skill file that carries one job's guidelines to the sessions the partner opens. It is a caseless `enum` of static members with no state, and its input types (`PartnerJob`, `PartnerJobStep`) are separate value types described by [Partner Job](cookbook:79810488-c613-4f9b-af2a-4ba9d8ee1c26).
 
 ## Behavioral Requirements
 
@@ -40,7 +46,7 @@ approved-date: ""
 
 **Base text**
 
-- **base-text-constant**: `PartnerBasePrompt.text` MUST be a fixed string constant, identical on every read and independent of any job.
+- **base-text-constant**: `PartnerBasePrompt.text` MUST be a fixed string constant, identical on every read and independent of any job, and MUST equal the text under "Exact base text" below character for character.
 - **base-title**: The base text MUST open with the heading `# Coding Partner` and describe the partner as one long-lived Claude Code session that does several jobs with one memory.
 - **base-sections**: The base text MUST contain, in order, the second-level headings `The window`, `What reaches you`, `Tools`, `Attention items`, `Sessions`, `Running a job's steps` and `Git`.
 - **base-message-kinds**: The base text MUST list the message kinds that reach the partner: an owner message, a button message, an owner reply that carries an item id, a tick, a session went idle, a session exited and a lifecycle notice.
@@ -52,7 +58,7 @@ approved-date: ""
 - **base-sessions-rules**: The base text MUST tell the partner not to block on `partner_session_wait` for long work, to read a session's screen before deciding after an idle or exit message, and to close sessions it no longer needs.
 - **base-steps-rules**: The base text MUST tell the partner to run a job's steps in order, never to skip or reorder them, and to judge each step's condition from the session's screen before typing its command.
 - **base-git-rules**: The base text MUST limit git to reading (log, show, diff and status), MUST forbid passing `--output` to a git command, and MUST forbid changing the owner's branches, commits or working trees.
-- **base-line-continuations**: Each paragraph of the base text MUST be a single logical line: the source wraps paragraphs with trailing backslash continuations, so the wrapping is not part of the text.
+- **base-paragraph-lines**: No paragraph of the base text MUST contain an internal line break: a paragraph is one line, and the only line breaks are between paragraphs, list items and table rows.
 
 **System prompt**
 
@@ -67,7 +73,7 @@ approved-date: ""
 
 - **steps-empty**: The steps section MUST be the empty string when the job has no steps.
 - **steps-heading**: A job with steps MUST have its steps section begin with a blank line and the heading `### Steps` followed by a blank line.
-- **steps-code-review-note**: A job whose `id` equals `PartnerJobDefaults.codeReviewsID` (`"code-reviews"`) MUST have the sentence "These steps arrive filled in from `partner_review_start`; run the filled copy it returns." placed after the heading, and no other job MUST have it.
+- **steps-code-review-note**: A job whose `id` equals `PartnerJobDefaults.codeReviewsID` (`"code-reviews"`, owned by [Partner Job Defaults](cookbook:294285ac-403a-44fe-9840-8ad9f3cf1eba)) MUST have the sentence "These steps arrive filled in from `partner_review_start`; run the filled copy it returns." placed after the heading as its own paragraph, followed by a blank line, and every other job MUST NOT have it.
 - **steps-line-format**: Each step MUST be one numbered line, counted from 1, in the form `<n>. <name> (<place>): <command in backticks>`.
 - **steps-place-label**: The `<place>` MUST be `Claude Code prompt` when the step's environment is `claude` and `terminal shell` otherwise.
 - **steps-condition**: When a step's condition, trimmed of leading and trailing whitespace and newlines, is not empty, the step line MUST end with `, when <trimmed condition>`; otherwise the line MUST end after the command.
@@ -79,10 +85,88 @@ approved-date: ""
 
 - **skill-frontmatter**: `skillMarkdown(for:)` MUST return a YAML frontmatter block opened and closed by `---` lines, a blank line, the job's `guidelines` verbatim and a final newline.
 - **skill-name**: The frontmatter `name` MUST be `adkitchen-partner-<job.id>`, with the id inserted as written.
+- **skill-name-id-unchecked**: `skillMarkdown(for:)` MUST NOT validate or escape the id, so a caller MUST pass an id with no whitespace, colon or line break; an id that has one produces invalid or altered frontmatter.
 - **skill-description**: The frontmatter `description` MUST be a double-quoted string reading "The Agentic Developer Kitchen Coding Partner's guidelines for its <name> job. Only for the Coding Partner, which has the partner_* tools; not for ordinary requests."
 - **skill-name-quoting**: The job name inside the description MUST have each backslash written as two backslashes, each double quote written as a backslash and a quote, and each newline written as a backslash followed by `n`, in that order, so the name cannot break the quoted YAML string.
 - **skill-enabled-ignored**: `skillMarkdown(for:)` MUST produce the same output whether or not the job is enabled.
 
+
+**Exact base text**
+
+The base text is the following, with no leading or trailing line break. The block quote below only quotes it; its first character is the `#` of the title.
+
+> # Coding Partner
+>
+> You are the Agentic Developer Kitchen's Coding Partner: one long-lived Claude Code session that stays running for the owner and does several jobs. Each job below has its own guidelines. You are one session with one memory, so use it: carry what you learn from one job into the next.
+>
+> ## The window
+>
+> The owner sees you in the Coding Partner window. A shelf along the side holds the terminal tabs you open. The transcript shows this conversation. The Needs-you pane lists your attention items. Everything you want the owner to notice goes into an attention item; the transcript is not where the owner looks for work waiting on them.
+>
+> ## What reaches you
+>
+> You run only when a message arrives. Messages come in these kinds:
+>
+> - An owner message: the owner typed to you. Answer it, and do what it asks.
+> - A button message: the owner clicked a button on an attention item, and the app sent it in the owner's voice. "Resolved: <text>" means the owner handled a blocked item or a question; close that item with `partner_attention_update`. "Confirmed: <text>" means the owner acknowledged a notification; close that item the same way.
+> - An owner reply that carries an item id: the owner answered an item you raised (after Discuss). Act on the answer, then close the item with `partner_attention_update`.
+> - A tick: a job's timer fired. Do that job's work now, using its guidelines.
+> - A session went idle: a terminal session you opened has produced no output for a while. Read its screen and decide what it needs.
+> - A session exited: a session you opened ended. Check how it ended and follow up.
+> - A lifecycle notice: you started (possibly resumed, with sessions that are gone), guidelines changed, the app is about to quit, or a turn timed out.
+>
+> Between messages you do nothing. Never loop, sleep or poll to wait for something; a later message will wake you.
+>
+> ## Tools
+>
+> | Tool | Does |
+> |---|---|
+> | `partner_projects_list` | Lists the Projects registry: id, name, path, remote, current branch. |
+> | `partner_session_open` | Opens a terminal tab with a working directory, optional title and optional first command; returns its session id. |
+> | `partner_session_list` | Lists the sessions you opened: id, title, directory, state, last activity. |
+> | `partner_session_screen` | Reads the last N lines of a session's screen. |
+> | `partner_session_run` | Types a command into a session and returns the output once it settles. |
+> | `partner_session_wait` | Waits for a session's output to settle, for a bounded time. |
+> | `partner_session_interrupt` | Sends Control-C and returns what printed. |
+> | `partner_session_close` | Closes a session's tab and ends its shell. |
+> | `partner_attention_create` | Creates an attention item: kind, text, optional reference. |
+> | `partner_attention_update` | Changes an item's text or marks it done. |
+> | `partner_attention_list` | Lists open items, and done items still in the window. |
+> | `partner_notify` | Posts a macOS notification and records it as an attention item of kind notification. |
+> | `partner_review_next` | Lists the queued code reviews, oldest first, and the running ones with their sessions. |
+> | `partner_review_start` | Starts one queued review and returns the job's steps with placeholders filled. |
+> | `partner_review_finish` | Marks a review done, failed or skipped with a summary. |
+>
+> ## Attention items
+>
+> When you need the owner, create an attention item with `partner_attention_create` and move on. Never wait for an answer: the owner will reply when they see it, and that reply arrives as an owner message. Use the kind that fits: a question you need answered, work that is blocked, or a notification. When the thing an item asks for is resolved, mark it done with `partner_attention_update`. Do not create duplicates of an attention item that is still open; update it.
+>
+> ## Sessions
+>
+> Open a tab with `partner_session_open`. Type into it with `partner_session_run`. Read it with `partner_session_screen`. Do not block on `partner_session_wait` for long work: start the work, end your turn, and expect a message when the session went idle or exited. When one arrives, read the screen before you decide anything. Close sessions you no longer need.
+>
+> ## Running a job's steps
+>
+> A job lists steps. Run them in order. Each step has an environment (a terminal shell or a Claude Code prompt), a command, and a condition. Judge whether the condition holds from the session's screen before you type the command; if it does not hold, wait for the next idle message or raise an attention item. Never skip a step and never reorder them. Each job's steps are listed under its heading below; a `{placeholder}` in a command is a value you fill in from the job's work.
+>
+> ## Git
+>
+> Use git only to read: log, show, diff and status. Never pass `--output` to a git command, because it writes a file. Never change the owner's branches, commits or working trees yourself; the code-review sessions you open do their work in their own worktrees.
+
+**Exact steps section**
+
+For a job named `Code reviews`, with id `code-reviews`, guidelines `G` and two steps, the first of environment `claude` with command `claude {dir}` and condition `the shell is ready`, the second of environment `terminal` with command `git status` and an empty condition, `systemPrompt(jobs:)` MUST return `text`, then a blank line, then exactly this (nothing follows its last line):
+
+> ## Job: Code reviews
+>
+> G
+>
+> ### Steps
+>
+> These steps arrive filled in from `partner_review_start`; run the filled copy it returns.
+>
+> 1. open (Claude Code prompt): `claude {dir}`, when the shell is ready
+> 2. review (terminal shell): `git status`
 ## Appearance
 
 Not applicable — this is a text builder, not a visual component.
@@ -96,6 +180,8 @@ Not applicable — this is a text builder, not a visual component. The enum is s
 Not applicable — this is a text builder, not a visual component.
 
 ## Conformance Test Vectors
+
+Vectors 001 to 008 are asserted by the named tests. Vectors 009 onward are derived from the source and have no test yet.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -116,6 +202,9 @@ Not applicable — this is a text builder, not a visual component.
 | partner-base-prompt-015 | skill-enabled-ignored | `skillMarkdown(for:)` of the same job with `isEnabled` true and false | Identical strings |
 | partner-base-prompt-016 | base-sections | Read `text` | The headings `The window`, `What reaches you`, `Tools`, `Attention items`, `Sessions`, `Running a job's steps` and `Git` appear in that order |
 | partner-base-prompt-017 | system-prompt-pure | Call `systemPrompt(jobs:)` twice with the same jobs | Equal strings |
+| partner-base-prompt-018 | base-text-constant, base-paragraph-lines | Read `text` | Equals the exact base text, and no paragraph contains an internal line break |
+| partner-base-prompt-019 | steps-heading, steps-code-review-note, steps-line-format, steps-condition, steps-no-trailing-newline | The job under "Exact steps section" | `systemPrompt(jobs:)` equals `text` followed by the exact section given there |
+| partner-base-prompt-020 | skill-name-id-unchecked | `skillMarkdown(for:)` for a job with id `a b` | The frontmatter contains `name: adkitchen-partner-a b` unchanged |
 
 ## Edge Cases
 
@@ -136,7 +225,6 @@ Not applicable — this is a text builder, not a visual component.
 |--------|------|---------|-------------|
 | `jobs` | `[PartnerJob]` | none (required) | The jobs to consider for `systemPrompt(jobs:)`; only enabled ones appear. |
 | `job` | `PartnerJob` | none (required) | The job `skillMarkdown(for:)` renders. |
-| `PartnerJobDefaults.codeReviewsID` | String | `"code-reviews"` | The job id that gets the filled-from-`partner_review_start` note on its steps. |
 
 ## Deep Linking
 
@@ -171,17 +259,17 @@ Not applicable: The source calls no logging API.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `Core/Partner/PartnerBasePrompt.swift` and imports only `Foundation`; a caseless `public enum` with a `static let text` built from a multi-line string literal whose trailing backslashes join wrapped lines, and static functions. A SwiftUI settings view that edits jobs simply calls `systemPrompt(jobs:)` to preview the result. The file disables SwiftLint's `line_length` rule around the literal.
+- **SwiftUI**: The source is `Core/Partner/PartnerBasePrompt.swift` and imports only `Foundation`; a caseless `public enum` with a `static let text` built from a multi-line string literal whose trailing backslashes join wrapped lines, and static functions. The file disables SwiftLint's `line_length` rule around the literal.
 - **Compose**: A Kotlin `object` with a `const val` raw string built with `trimIndent()` (join wrapped paragraphs yourself, because raw strings keep newlines), and `fun systemPrompt(jobs: List<PartnerJob>): String` using `StringBuilder`. Reproduce the skill escaping with chained `replace` calls in the same order (backslash, quote, newline).
 - **React/Web**: A TypeScript module exporting a `const` string (template literal; keep each paragraph on one line) and two pure functions. Use `String.prototype.replaceAll` for the escaping in the same order, and `trim()` for the condition (it trims all whitespace and newlines, as the source does).
-- **AppKit / UIKit**: Identical to the SwiftUI note: the contract is UI-framework-agnostic; a macOS settings pane shows the prompt in a text view.
+- **AppKit / UIKit**: Identical to the SwiftUI note: the contract is UI-framework-agnostic and carries no UI.
 - **WinUI 3**: A `static class PartnerBasePrompt` with a `public const string Text` (C# 11 raw string literal `"""` with the paragraph lines joined, since raw literals keep line breaks), `string SystemPrompt(IEnumerable<PartnerJob> jobs)` built with `StringBuilder`, and `string SkillMarkdown(PartnerJob job)`. Use `string.Replace` for the three escapes in the source order, `Trim()` for conditions, and a `record PartnerJob` / `record PartnerJobStep` with `JsonStringEnumConverter` for the environment enum. Show a preview in a `TextBox` with `IsReadOnly="True"`.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerBasePrompt.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerBasePrompt.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -205,9 +293,13 @@ Not applicable: The source calls no logging API.
 **Approved**: pending
 
 **Decision**: The base text lists the tools in a table inside the prompt text, and a test checks each name is present.
-**Rationale**: The partner can call only the tools it is told about; tying the table to a test keeps the prompt and the tool surface from drifting apart.
+**Rationale**: The partner can call only the tools it is told about. The test checks that each listed name appears in the text, which catches a tool dropped from the table but not a new tool that was never added to it.
 **Approved**: pending
 
+
+**Decision**: A step's name, command and condition are inserted without escaping, and a command that contains a backtick can end its code span early.
+**Rationale**: Step commands are written by the owner for the partner to read, not rendered as markdown for anyone else, and the partner reads the line as text; guarding against a backtick would need a longer code fence that the source does not use. The risk is accepted.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -216,10 +308,11 @@ Not applicable: The source calls no logging API.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 
-`separation-of-concerns` passes because the file only assembles text from job data; running jobs, timers and the tools themselves live elsewhere in the partner feature. `unit-test-coverage` is partial: `AgenticDeveloperHubSDKCoreTests/Partner/PartnerBasePromptTests.swift` covers the enabled-only job sections, step lines and conditions, the code-review note, the git rule, the tool names and key phrases, the button-message phrases, YAML quoting of the job name and the skill frontmatter, but not an empty job list, whitespace-only conditions, job order or the base section order. `input-sanitization` is partial because the job name is escaped for the skill description while the job id, step fields and guidelines are inserted unescaped.
+`separation-of-concerns` passes because the file only assembles text from job data; running jobs, timers and the tools themselves live elsewhere in the partner feature. `unit-test-coverage` is partial: `AgenticDeveloperHubSDKCoreTests/Partner/PartnerBasePromptTests.swift` covers the enabled-only job sections, step lines and conditions, the code-review note, the git rule, the tool names and key phrases, the button-message phrases, YAML quoting of the job name and the skill frontmatter, but not an empty job list, whitespace-only conditions, job order or the base section order, which are vectors 009 to 017 and are marked untested in the vector table. `input-sanitization` is partial because the job name is escaped for the skill description while the job id, step fields and guidelines are inserted unescaped.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Linked partner-job and partner-job-defaults in depends-on and related, quoted the exact base text and a full code-review steps section, stated the unchecked skill id, accepted the backtick risk, marked vectors 009 onward untested and removed unsupported consumer claims. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

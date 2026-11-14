@@ -4,7 +4,7 @@
     "id": "770a6a4c-6527-4e4d-a9d9-14e5b1cf25fd",
     "title": "Known Terminals",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -23,12 +23,15 @@
       "catalog"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "54413e61-d82d-4526-b496-5daf917ce877",
+      "e74bbbe4-cc41-40dc-a063-e262522c2301"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e5afc1bc35a770f7",
+  "synced": "b41b1d3f805cabb0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

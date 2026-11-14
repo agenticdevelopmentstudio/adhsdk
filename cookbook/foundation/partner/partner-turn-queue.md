@@ -2,7 +2,7 @@
 id: ae6b1991-6aed-4d8b-83e1-5d5e02470150
 title: "Partner Turn Queue"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -10,15 +10,17 @@ modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A first-in-first-out queue of inbound partner events that collapses repeats by coalescing key and lets one urgent notice jump the line."
+summary: "A first-in-first-out queue of inbound partner events that collapses repeats by coalescing key and lets urgent notices jump the line (newest first)."
 platforms:
   - swift
   - macos
+  - ios
 tags:
   - foundation
   - partner
   - queue
-depends-on: []
+depends-on:
+  - a14bb137-868e-4e8b-827b-4ea0f5e45b81
 related: []
 references: []
 approved-by: ""
@@ -29,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-`PartnerTurnQueue` holds the inbound events waiting for the partner's next turn, oldest first. An event whose `PartnerInbound.coalescingKey` matches one already queued replaces it in place, so a burst of identical timer ticks or idle notices becomes one entry holding the newest payload at the original position. A second entry point puts a notice ahead of everything queued without coalescing. It is a plain value type with no storage, no I/O and no timers; its owner, the partner controller, decides when to take the next event and starts a turn with it.
+`PartnerTurnQueue` holds the inbound events waiting for the partner's next turn, oldest first. An event whose `PartnerInbound.coalescingKey` matches one already queued replaces it in place, so a burst of identical timer ticks or idle notices becomes one entry holding the newest payload at the original position. Which events carry a key, and how it is built, is `PartnerInbound`'s rule: owner messages and lifecycle notices have none, so they never coalesce. A second entry point puts a notice ahead of everything queued without coalescing. It is a plain value type with no storage, no I/O and no timers; its owner, the partner controller, decides when to take the next event and starts a turn with it. The controller is `@MainActor` and holds the queue as a stored property; it re-queues a turn that went to a dead process, puts `started`, `willQuit` and `turnTimedOut` notices ahead of the queue with `enqueueFirst`, and keeps the notion of an in-flight turn itself. The source is `Core/Partner/PartnerTurnQueue.swift`, a `public struct` that is `Sendable`, imports only `Foundation` and holds a private `[PartnerInbound]` array; `PartnerInbound` is a sibling type in `Core/Partner/PartnerInbound.swift`.
 
 ## Behavioral Requirements
 
@@ -37,22 +39,19 @@ approved-date: ""
 - **count**: `count` MUST report the number of entries currently queued.
 - **fifo-order**: `enqueue` MUST append an inbound event at the back, and `next()` MUST remove and return the front entry, so events leave oldest first.
 - **next-on-empty**: `next()` MUST return `nil` and leave the queue empty when nothing is queued.
-- **coalesce-replaces-in-place**: `enqueue` MUST, when the inbound event has a non-nil `coalescingKey` equal to the key of an entry already queued, replace that entry with the new event at the same position and leave `count` unchanged.
+- **coalesce-replaces-in-place**: `enqueue` MUST, when the inbound event has a non-nil `coalescingKey` equal to the key of an entry already queued, replace that entry with the new event at the same position, so a coalesced event does not move to the back, and leave `count` unchanged.
 - **coalesce-first-match**: When more than one queued entry carries the inbound event's key, `enqueue` MUST replace only the first one (nearest the front).
-- **coalesce-keeps-position**: A replaced entry MUST keep its position, so a coalesced event does not move to the back.
 - **no-key-appends**: `enqueue` MUST append an event whose `coalescingKey` is nil, even when an equal event is already queued.
-- **key-scopes-coalescing**: Keys MUST be compared as whole strings, so events of different kinds or different identifiers never coalesce: a tick key is built from the job identifier, an idle key and an exit key from the session identifier, each under its own prefix.
-- **owner-and-lifecycle-never-coalesce**: Owner messages and lifecycle notices MUST NOT coalesce, because `PartnerInbound.coalescingKey` is nil for `.owner` and `.lifecycle`.
+- **key-compared-whole**: Keys MUST be compared as whole strings, and a nil key MUST never match; how a key is built is defined by `PartnerInbound`, not by the queue.
 - **enqueue-first**: `enqueueFirst` MUST insert the event at the front of the queue, ahead of every queued entry, and increase `count` by one.
 - **enqueue-first-no-coalesce**: `enqueueFirst` MUST NOT coalesce, even when its event carries a key equal to a queued entry's key; both entries remain.
 - **enqueue-first-order**: When `enqueueFirst` is called repeatedly, the most recent call MUST be returned first by `next()`.
 - **coalesce-targets-front-inserted**: An `enqueue` that follows an `enqueueFirst` MUST be able to coalesce into the front-inserted entry, because coalescing scans every queued entry.
 - **no-capacity-limit**: The queue MUST NOT drop entries to enforce a size limit; only coalescing and `next()` reduce `count`.
 - **no-persistence**: The queue MUST NOT persist its entries; they exist only as long as the value does.
-- **no-side-effects**: The queue MUST NOT perform file, network, process or notification side effects and MUST NOT fail; no operation throws or returns an error.
-- **ownership-and-concurrency**: The queue is a struct with a mutating API and no internal locking, so a caller MUST serialise access to one instance. Its sole production owner, `PartnerController`, is `@MainActor` and holds the queue as a stored property, mutating it only from that actor.
-- **caller-resend-pattern**: The owner uses `enqueueFirst` to re-queue a turn that went to a dead process, to put a `started` notice ahead of any waiting event, to put a `willQuit` notice ahead of the queue in `prepareForQuit`, and to put a `turnTimedOut` notice ahead of the queue when it abandons a timed-out turn; the queue itself carries no notion of an in-flight turn.
-
+- **no-side-effects**: The queue MUST NOT perform file, network, process or notification side effects.
+- **infallible**: Every queue operation MUST NOT throw or return an error.
+- **ownership-and-concurrency**: The queue is a struct with a mutating API and no internal locking, so a caller MUST serialise access to one instance.
 ## Appearance
 
 Not applicable — this is a queue data structure, not a visual component.
@@ -69,17 +68,17 @@ Not applicable — this is a queue data structure, not a visual component.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| partner-turn-queue-001 | coalesce-replaces-in-place, no-key-appends, count | Enqueue tick for job `a` with no summary, tick for job `a` with summary `2 queued`, then two identical owner messages `hi`. | `count` is 3 and the first `next()` is the tick whose text contains `2 queued` (test: ticksForSameJobCoalesceAndOwnerMessagesDoNot). |
-| partner-turn-queue-002 | key-scopes-coalescing, coalesce-replaces-in-place | Enqueue `sessionIdle` for `s1` twice, then `sessionExited` for `s1`. | `count` is 2: the idle events collapse, the exit event stays separate (test: sessionIdleCoalescesPerSessionAndKind). |
+| partner-turn-queue-001 | coalesce-replaces-in-place, no-key-appends, count, fifo-order | Enqueue tick for job `a` with no summary, tick for job `a` with summary `2 queued`, then two identical owner messages `hi`. | `count` is 3 and the first `next()` is the tick whose text contains `2 queued` (test: ticksForSameJobCoalesceAndOwnerMessagesDoNot). |
+| partner-turn-queue-002 | key-compared-whole, coalesce-replaces-in-place | Enqueue `sessionIdle` for `s1` twice, then `sessionExited` for `s1`. | `count` is 2: the idle events collapse, the exit event stays separate (test: sessionIdleCoalescesPerSessionAndKind). |
 | partner-turn-queue-003 | enqueue-first, fifo-order | Enqueue owner message `waiting`, then `enqueueFirst(.lifecycle(.turnTimedOut))`. | `count` is 2, the first `next()` equals `.lifecycle(.turnTimedOut)` and the second has text `waiting` (test: enqueueFirstGoesAheadOfEverything). |
-| partner-turn-queue-004 | next-on-empty | A new queue; call `next()`. | `nil`, `count` stays 0. |
-| partner-turn-queue-005 | coalesce-keeps-position | Enqueue tick job `a`, owner `hi`, then tick job `a` with summary `later`. | `count` is 2; `next()` returns the tick carrying `later` first, then the owner message. |
+| partner-turn-queue-004 | next-on-empty, infallible | A new queue; call `next()`. | `nil`, `count` stays 0. |
+| partner-turn-queue-005 | coalesce-replaces-in-place | Enqueue tick job `a`, owner `hi`, then tick job `a` with summary `later`. | `count` is 2; `next()` returns the tick carrying `later` first, then the owner message. |
 | partner-turn-queue-006 | coalesce-targets-front-inserted | `enqueueFirst` a tick for job `a`, then `enqueue` a tick for job `a` with summary `new`. | The front-inserted tick is replaced by the `new` tick: `count` is 1 and `next()` returns the `new` tick. |
 | partner-turn-queue-007 | enqueue-first-no-coalesce | Enqueue tick job `a`, then `enqueueFirst` a tick job `a`. | `count` is 2; both ticks are returned, the front-inserted one first. |
 | partner-turn-queue-008 | enqueue-first-order | `enqueueFirst` owner `one`, then `enqueueFirst` owner `two`. | `next()` returns `two` then `one`. |
-| partner-turn-queue-009 | owner-and-lifecycle-never-coalesce | Enqueue `.lifecycle(.guidelinesChanged)` twice. | `count` is 2. |
-| partner-turn-queue-010 | key-scopes-coalescing | Enqueue tick job `a` and tick job `b`. | `count` is 2. |
-| partner-turn-queue-011 | coalesce-first-match | Enqueue tick job `a`, then `enqueueFirst` a tick job `a` (two equal keys), then `enqueue` a tick job `a` with summary `new`. | `count` is 2; the front-inserted tick was replaced by the `new` tick and the originally queued tick is unchanged behind it. |
+| partner-turn-queue-009 | no-key-appends | Enqueue `.lifecycle(.guidelinesChanged)` twice. | `count` is 2. |
+| partner-turn-queue-010 | key-compared-whole | Enqueue tick job `a` and tick job `b`. | `count` is 2. |
+| partner-turn-queue-011 | coalesce-first-match, enqueue-first-no-coalesce | Enqueue tick job `a`, then `enqueueFirst` a tick job `a` (two equal keys), then `enqueue` a tick job `a` with summary `new`. | `count` is 2; the front-inserted tick was replaced by the `new` tick and the originally queued tick is unchanged behind it. |
 
 Vectors 004 to 011 are derived from the source rather than from a named test; the three named tests cover vectors 001 to 003.
 
@@ -131,7 +130,7 @@ Not applicable: the queue calls no logging API.
 
 ## Platform Notes
 
-- **SwiftUI**: Source is `Core/Partner/PartnerTurnQueue.swift`, importing only `Foundation`; it is a `public struct` conforming to `Sendable` with a private `[PartnerInbound]` array. A SwiftUI host reads `count` from an observable owner rather than observing the struct. The `PartnerInbound` enum it holds is a sibling type in `Core/Partner/PartnerInbound.swift`.
+- **SwiftUI**: A SwiftUI host reads `count` from an observable owner, copying it into published state after each change, rather than observing the struct, which is not observable.
 - **Compose**: A small class around an `ArrayDeque`; replacement is `indexOfFirst` plus assignment, front insertion is `addFirst`, `next()` is `removeFirstOrNull`. Hold it in a `ViewModel` and mutate on a single dispatcher (for example `Dispatchers.Main`); expose `count` through `StateFlow` if the UI needs it.
 - **React/Web**: A class over an array with `findIndex`, direct assignment, `unshift` and `shift`; JavaScript is single-threaded so ordering needs no lock. Keep `coalescingKey` as `string or null` on the event type.
 - **AppKit / UIKit**: The same file serves both unchanged; the macOS controller owns it as a stored property of a `@MainActor` class and copies `count` into its own queued count after each change.
@@ -141,7 +140,7 @@ Not applicable: the queue calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerTurnQueue.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerTurnQueue.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -178,3 +177,4 @@ Separation of concerns passes: the queue holds ordering and coalescing only, whi
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Moved key-building and controller notes out of the requirements into the Overview, merged coalesce-keeps-position, split infallible from no-side-effects, added ios and partner-inbound, and fixed the summary and vector coverage maps. |

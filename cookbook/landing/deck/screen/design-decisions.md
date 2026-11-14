@@ -7,6 +7,10 @@
 **Rationale**: Placing a `<Glow />` before or after Screen's other children is order-sensitive; making `glow` a prop lets Screen guarantee the correct order automatically. The default is `false` because lighting every screen in a deck is a host-level design decision, not a component default.
 **Approved**: pending
 
+**Decision**: Screen forwards only `id` to its root element and takes no `aria-label` or `aria-labelledby` prop; a host that needs a labelled landmark renders Screen with `as: 'div'` inside its own labelled landmark.
+**Rationale**: Keeping the prop surface small avoids a second route to the same result, and the `as` prop already gives the host the choice between a landmark and a plain container.
+**Approved**: pending
+
 **Decision**: The `as` prop lets Screen render as either a landmark (`<section>`) or a generic container (`<div>`).
 **Rationale**: Gives the host control over information architecture without requiring an extra wrapper element around Screen.
 **Approved**: pending

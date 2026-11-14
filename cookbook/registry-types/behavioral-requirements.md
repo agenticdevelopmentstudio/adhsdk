@@ -27,7 +27,7 @@
 
 ### Validation (`validate.ts`)
 
-- **validate-before-coerce**: Every caller MUST invoke `validateFieldValue` on a submitted value and confirm it returns `null` before invoking `coerceFieldValue` on that same value; `coerceFieldValue` MUST NOT be used as a second validation pass.
+- **validate-before-coerce**: Integration requirement on consumers (this package cannot enforce it): every caller MUST invoke `validateFieldValue` on a submitted value and confirm it returns `null` before invoking `coerceFieldValue` on that same value; `coerceFieldValue` MUST NOT be used as a second validation pass.
 - **unrecognized-type-rejected**: `validateFieldValue` MUST return the string `'Unrecognized field type'` when `def.type` is not one of `FIELD_TYPES`, before any other check runs.
 - **empty-value-required-gate**: Before any type-specific check, `validateFieldValue` MUST classify `null`, `undefined`, an empty or whitespace-only string, an empty array, and an empty plain object as empty, and for an empty value MUST return `'Required'` when `def.required` is `true` and MUST return `null` otherwise; the literal values `false` and `0` MUST NOT be classified as empty.
 - **string-like-type-check**: For the eight string-shaped types (`text`, `textarea`, `markdown`, `url`, `email`, `phone`, `date`, `select`), `validateFieldValue` MUST return `'Must be text'` when a non-empty value is not a string.
@@ -63,8 +63,8 @@
 - **publish-blocker-hidden-exclusion**: `publishBlockers` MUST exclude a field definition for which `evaluateShowIf` returns `false` against the supplied `values`.
 - **publish-blocker-empty-or-invalid**: For a required, non-deleted, currently-shown field definition, `publishBlockers` MUST report it as a blocker when its value is empty (per **empty-value-required-gate**) OR when `validateFieldValue` returns a non-`null` result for it.
 - **publish-blocker-label-fallback**: Each reported `PublishBlocker` MUST use `def.label` as its `label` when present, and MUST fall back to `def.key` otherwise; its `key` MUST equal `def.key`.
-- **required-gates-publish-not-save**: The model's `required` enforcement (`publishBlockers`) MUST be applied only at publish time, and MUST NOT be applied to reject an independent per-section save, because the owner-defined form's sections are saved independently.
-- **vendored-build-ordering**: In the backend's single-file vendored build, the concatenation MUST place `show-if.ts` after `validate.ts` so that `validate.ts`'s reference to `evaluateShowIf` resolves against `show-if.ts`'s hoisted function declaration regardless of file order.
+- **required-gates-publish-not-save**: Integration requirement on consumers (this package cannot enforce it): the model's `required` enforcement (`publishBlockers`) MUST be applied only at publish time, and MUST NOT be applied to reject an independent per-section save, because the owner-defined form's sections are saved independently.
+- **vendored-build-ordering**: `evaluateShowIf` MUST remain a hoisted function declaration (`export function`), never a `const` or arrow-function binding, so that `validate.ts`'s call to it from `publishBlockers` resolves at call time regardless of file order, including in the backend's single-file vendored build.
 
 ### Visibility tiering (`visibility.ts`)
 
@@ -81,5 +81,5 @@
 ### Cross-cutting
 
 - **no-io-side-effects**: Every exported function in `types.ts`, `show-if.ts`, `validate.ts`, and `visibility.ts` MUST be a pure computation over its arguments: none of the four files imports or calls a network, filesystem, timer, random-number, or logging API.
-- **no-shared-mutable-state**: None of the four modules MUST hold mutable module-level state; their module-level values (`FIELD_TYPES`, `SHOW_IF_OPS`, the validation regexes, `DEFAULT_MAX_LENGTH`, `RANK`, `CONTACT_FIELD_TYPES`, etc.) MUST be read-only for the lifetime of the process, so concurrent, parallel, or re-entrant calls into any of these functions from multiple callers require no coordination.
+- **no-shared-mutable-state**: Each of the four modules MUST NOT hold mutable module-level state; no function in them may modify their module-level values (`FIELD_TYPES`, `SHOW_IF_OPS`, the validation regexes, `DEFAULT_MAX_LENGTH`, `RANK`, `CONTACT_FIELD_TYPES`, etc.), which are declared read-only by `const` and, for the arrays and set, by `as const` and `ReadonlySet` typing (none is `Object.freeze`d), so concurrent, parallel, or re-entrant calls into any of these functions from multiple callers require no coordination.
 

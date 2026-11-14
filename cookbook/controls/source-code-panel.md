@@ -2,11 +2,11 @@
 id: f86178c6-4255-4d66-86e7-0b3b5a2e00c0
 title: "Source Code Panel"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -43,7 +43,7 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 - **theme-fallback**: Component MUST use `'github-dark'` as the fallback theme when `theme` prop is not provided and `--scp-shiki-theme` is not set or empty.
 - **watch-theme-changes**: Component MUST observe mutations to the `adh-sdk-theme` style element and re-read the theme CSS property when it changes, provided `theme` prop is not set.
 - **header-when-content**: Component MUST display a header when filename is provided OR showCopy is true.
-- **display-filename**: Component MUST display the filename in the header if provided; if filename is not provided, display the language code instead.
+- **display-filename**: Component MUST display the filename in the header if provided; if filename is not provided (`undefined`), display the language code instead. An empty-string filename is not replaced by the language code (see the edge case **Empty filename**).
 - **show-copy-button**: Component MUST display a "Copy" button when `showCopy` is true.
 - **copy-on-click**: Component MUST copy the code string to clipboard when the copy button is clicked, using `navigator.clipboard.writeText`.
 - **show-copied-state**: Component MUST display "Copied" text in the button for 1200ms after a successful copy operation.
@@ -56,7 +56,11 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 - **discard-stale-highlight-results**: Component MUST discard the result of an in-progress highlight operation if `code`, `lang`, or `theme` changes before it resolves, or if the component unmounts; no state update is applied for a stale result.
 - **support-maxheight**: Component MUST accept a `maxHeight` prop and apply it as inline CSS `max-height` style on the body container if provided; a numeric value is interpreted as pixels.
 - **support-classname**: Component MUST accept a `className` prop and apply it to the root div; root element always has `scp-root` class, and provided className is appended.
-
+- **announce-copy-result**: Component SHOULD announce a successful copy to assistive technology through a polite live region. The source does not do this yet.
+- **expose-use-source-code**: The package MUST export a `useSourceCode({ code, lang = 'tsx', theme })` hook that returns `{ html, loading, error }`: `html` is the highlighted HTML or `null` while loading, `loading` is `true` until the highlighter and grammar resolve, and `error` is a non-null `Error` when highlighting fails. The hook re-runs when `code`, `lang` or `theme` changes.
+- **shared-highlighter**: The package MUST use one lazily created Shiki highlighter per page, shared by every panel. It also exports `getHighlighter`, `ensureLanguage` and `ensureTheme` for callers that need to preload.
+- **default-languages-and-themes**: The shared highlighter MUST load these languages eagerly: `ts`, `tsx`, `js`, `jsx`, `css`, `json`, `bash`, `sh`, `md`, `html`, `swift`, `objective-c`, `sql`; and these themes: `github-light`, `github-dark`.
+- **load-on-demand**: Any other language or theme MUST be loaded on first use, and concurrent requests for the same language or theme MUST share one in-flight load rather than starting several.
 ## Appearance
 
 - **Container**: Root div with class `scp-root`
@@ -70,7 +74,7 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 - **Max height**: Applied as inline `max-height` CSS on body container if maxHeight prop is provided
 - **Font**: Shiki theme controls font rendering in highlighted code; fallback uses browser default monospace
 - **Colors**: Shiki theme controls syntax highlighting colors; fallback text color follows default foreground
-
+- **Body scrolling**: `.scp-body` has `overflow: auto`, so content taller or wider than the body (including taller than `maxHeight`) scrolls inside the body rather than growing the panel.
 ## States
 
 | State | Appearance change |
@@ -89,7 +93,40 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 - **Loading indicator**: When loading, fallback `<pre>` element has `aria-busy="true"` to announce in-progress state
 - **Code representation**: Fallback uses plain `<pre><code>` structure; Shiki HTML is injected as-is without additional ARIA labels
 - **Minimum touch target**: Copy button SHOULD be at least 44×44pt; source CSS (`.scp-copy { padding: 0.15rem 0.5rem; font-size: 0.7rem; }` in `source-code-panel.css`) renders it well under that size
+- **Copy announcement**: The Copy to Copied label swap SHOULD be announced politely (see **announce-copy-result**). The source has no `aria-live` region, so the swap is not announced today.## Conformance Test Vectors
 
+| ID | Requirements | Input | Expected |
+|----|-------------|-------|----------|
+| scp-001 | render-code | code="const x = 1" | Code string appears in rendered output |
+| scp-002 | accept-language | lang="python" | Shiki receives "python" as language identifier |
+| scp-003 | theme-from-prop | theme="nord" | Component uses "nord" theme, ignoring CSS property |
+| scp-004 | theme-from-css | theme not provided, --scp-shiki-theme set to 'github-light' | Component uses "github-light" theme (quotes stripped) |
+| scp-005 | theme-fallback | theme not provided, --scp-shiki-theme not set | Component uses "github-dark" as fallback |
+| scp-006 | watch-theme-changes | theme not provided, the `#adh-sdk-theme` `<style>` element's content mutates (e.g. toolkit switches theme), changing the computed `--scp-shiki-theme` value | Component re-reads `--scp-shiki-theme` and updates highlighted output |
+| scp-007 | header-when-content | filename provided | Header renders with filename |
+| scp-008 | header-when-content | filename not provided, showCopy=true | Header renders with copy button |
+| scp-009 | display-filename | filename="App.tsx" | Header displays "App.tsx" |
+| scp-010 | display-filename | filename not provided, lang="jsx" | Header displays "jsx" |
+| scp-011 | show-copy-button | showCopy=true | "Copy" button is visible and clickable |
+| scp-012 | copy-on-click | showCopy=true, code="test" | Clicking "Copy" button copies "test" to clipboard |
+| scp-013 | show-copied-state | Copy succeeds | Button text changes to "Copied" |
+| scp-014 | reset-copied-state | "Copied" state active for 1200ms | Button text returns to "Copy" after 1200ms |
+| scp-015 | handle-copy-failure | clipboard access denied | No error state or message; component continues functioning |
+| scp-016 | render-highlighted-html | Shiki highlight succeeds | Shiki HTML renders in `.scp-shiki` div; fallback `<pre>` is not rendered |
+| scp-017 | fallback-to-preformatted | Shiki highlight fails | Code renders in `<pre><code>` with class `scp-fallback` |
+| scp-018 | show-loading-state | Highlighting in progress | Fallback `<pre>` renders with `aria-busy="true"` |
+| scp-019 | clear-busy-on-error | Shiki highlighting fails | Fallback `<pre>` renders with class `scp-fallback` and no `aria-busy` attribute; `.scp-shiki` is not rendered |
+| scp-020 | support-maxheight | maxHeight="400px" | Body container has inline style `max-height: 400px` |
+| scp-021 | support-classname | className="custom-theme" | Root div has class `scp-root custom-theme` |
+| scp-022 | fallback-to-preformatted | lang=null (explicit null, not omitted) | Shiki rejects the invalid language identifier and throws; component falls back to `<pre><code>` with no `aria-busy` |
+| scp-023 | fallback-to-preformatted | lang="not-a-real-language" | Shiki rejects the unknown identifier and throws; component falls back to `<pre><code>` with no `aria-busy`, same as any other highlight failure |
+| scp-024 | render-highlighted-html | code contains `<script>alert(1)</script>` | Shiki escapes the code before generating HTML; the rendered `.scp-shiki` markup contains no executable `<script>` element |
+| scp-025 | discard-stale-highlight-results | `lang` (or `code`/`theme`) changes while a previous highlight call for the old value is still pending | The stale result is discarded when it resolves; only the highlight for the latest `code`/`lang`/`theme` updates `html`/`error` |
+| scp-026 | show-copied-state | Copy succeeds twice, the second click 600ms after the first | In the reference implementation the label returns to "Copy" 1200ms after the first click (600ms after the second), because the first timer is not cleared; a port that restarts the timer shows "Copied" until 1800ms |
+| scp-027 | display-filename | filename="", showCopy=true | Header renders with an empty filename label and the copy button; the language code is not shown |
+| scp-028 | expose-use-source-code | `useSourceCode({ code, theme: 'github-dark' })` before highlighting resolves | Returns `{ html: null, loading: true, error: null }`, then `html` set and `loading: false` |
+| scp-029 | default-languages-and-themes | lang="swift", theme="github-light" | Highlighting starts without loading an extra language or theme |
+| scp-030 | load-on-demand | Two panels request the same non-default language at the same time | The language is loaded once and both panels highlight |
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
@@ -119,7 +156,15 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 | scp-023 | fallback-to-preformatted | lang="not-a-real-language" | Shiki rejects the unknown identifier and throws; component falls back to `<pre><code>` with no `aria-busy`, same as any other highlight failure |
 | scp-024 | render-highlighted-html | code contains `<script>alert(1)</script>` | Shiki escapes the code before generating HTML; the rendered `.scp-shiki` markup contains no executable `<script>` element |
 | scp-025 | discard-stale-highlight-results | `lang` (or `code`/`theme`) changes while a previous highlight call for the old value is still pending | The stale result is discarded when it resolves; only the highlight for the latest `code`/`lang`/`theme` updates `html`/`error` |
-
+| scp-026 | reset-copied-state | showCopy=true; Copy clicked successfully, then clicked again 800ms later | The label returns to "Copy" 1200ms after the second click (timer restarted); the first click's timer does not reset it early. Ports SHOULD restart the timer on each click |
+| scp-027 | reset-copied-state | Copy clicked successfully, then the component unmounts before 1200ms elapse | The pending timer is cancelled; no state update occurs after unmount. Ports SHOULD cancel the timer on unmount |
+| scp-028 | display-filename | filename="" (empty string), showCopy=true, lang="jsx" | Header renders; the filename label is empty because `filename ?? lang` does not fall back for an empty string (the reference does not substitute "jsx") |
+| scp-029 | render-code | code="" (empty string) | Component renders without error; the output is empty or blank |
+| scp-030 | handle-copy-failure | `navigator.clipboard` unavailable, Copy clicked | Click is a silent no-op; no error state, no console message, label stays "Copy" |
+| scp-031 | watch-theme-changes | theme not provided, no `#adh-sdk-theme` element in the document | No observer is created; the theme is read once from `--scp-shiki-theme` (or falls back to "github-dark") and is not re-read |
+| scp-032 | support-maxheight | maxHeight="200px", code longer than 200px when rendered | The full code string is rendered; the body container is limited to 200px and scrolls |
+| scp-033 | discard-stale-highlight-results | theme not provided; `#adh-sdk-theme` content mutates several times in quick succession | Each mutation re-reads the theme and starts a new highlight; results from earlier pending calls are discarded and the output reflects the latest theme |
+| scp-034 | header-when-content | showCopy=false, filename not provided | Header element does not render; only the code body is displayed |
 ## Edge Cases
 
 - **Empty code string**: Component accepts empty string and renders empty or blank output; Shiki may return empty HTML.
@@ -127,11 +172,12 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 - **Invalid language identifier**: An identifier Shiki doesn't recognize causes `ensureLanguage`/`codeToHtml` to throw. The component catches it the same as any other highlight failure and falls back to `<pre><code>` (see **fallback-to-preformatted**, scp-023).
 - **Clipboard API unavailable**: Copy button click is silently no-op; no error state, no console message.
 - **Missing adh-sdk-theme element**: Theme observer skips setup; component uses fallback or prop theme without mutation watching.
-- **Very long code string**: Component renders full string; maxHeight prop constrains visual container with overflow scroll if needed.
+- **Very long code string**: Component renders full string; maxHeight prop constrains visual container, and the body scrolls (see **Body scrolling** under Appearance).
 - **Rapid theme changes**: MutationObserver triggers on each mutation; rapid CSS updates result in rapid re-reads and re-renders. Each theme update starts a new highlight call, and any call still pending from a previous theme is discarded per **discard-stale-highlight-results**.
 - **showCopy=false and no filename**: Header element does not render; code is displayed without header.
 - **Unmount or rapid prop changes during highlighting**: `useSourceCode` tracks each highlight call with a local cancellation flag; a result that resolves after `code`/`lang`/`theme` changed, or after the component unmounted, is discarded and never updates state (see **discard-stale-highlight-results**, scp-025).
-
+- **Repeated copy clicks**: `handleCopy` starts a new 1200ms `setTimeout` on every successful copy and never clears the previous one, or any pending one on unmount. A second click within 1200ms therefore sees the label return to "Copy" when the first timer fires, earlier than 1200ms after the second click. Ports SHOULD restart the timer on each click and cancel it on unmount (see scp-026).
+- **Empty filename**: `filename ?? lang` only falls back when `filename` is `undefined` or `null`. With `filename=""` and `showCopy=true` the header renders with an empty label (see scp-027).
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -144,9 +190,17 @@ The Source Code Panel displays syntax-highlighted source code with optional head
 | className | string | undefined | Additional CSS class to append to root element |
 | maxHeight | string or number | undefined | Max height for code body container; applied as inline style. A numeric value is interpreted as pixels (React appends `px` to unitless numeric style values). |
 
+`useSourceCode` arguments and result:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| code | string | required | Source code to highlight |
+| lang | string | 'tsx' | Shiki language id; loaded on demand if not a default language |
+| theme | string | required | Shiki theme name, resolved by the caller; loaded on demand if not a default theme |
+| result | `{ html: string or null, loading: boolean, error: Error or null }` | n/a | `html` is `null` while loading; `error` is set when highlighting fails |
 ## Deep Linking
 
-Not applicable: Source Code Panel is a stateless display component with no internal navigation or deep-linkable state.
+Not applicable: Source Code Panel holds no navigable or deep-linkable state.
 
 ## Localization
 
@@ -187,13 +241,13 @@ Not applicable: Component performs no logging; errors in Shiki highlighting or c
 - **Compose**: Use `AndroidView` wrapping a WebView (Chromium-based) hosting the same Shiki-based implementation as the source, consistent with the other native platforms — see **Design Decisions**. Theme detection maps to system theme or explicit theme param. Button copy uses Compose's `Clipboard` or system clipboard API.
 - **React/Web**: Source implementation. Use `SourceCodePanel` component directly; props match source signature. Theme resolution reads `--scp-shiki-theme` from DOM and respects explicit `theme` prop. Shiki version and available themes are fixed by the toolkit build.
 - **AppKit / UIKit**: Use `WKWebView` or equivalent; serve the React component as a web page or embed pre-rendered HTML. Detect app theme via `NSAppearance` (macOS) or `UITraitCollection` (iOS) and inject theme as prop. Implement copy via `NSPasteboard` (macOS) or `UIPasteboard` (iOS).
-- **WinUI 3**: Implement using `WebView2` control to host Shiki rendering. Resolve theme from `Application.Current.RequestedTheme` (Light/Dark) and map to Shiki theme names (e.g., Dark → "github-dark", Light → "github-light"). Implement copy button using `Windows.ApplicationModel.DataTransfer.Clipboard`. Handle missing clipboard gracefully with fallback or disabled state.
+- **WinUI 3**: Implement using `WebView2` control to host Shiki rendering. Resolve theme from `Application.Current.RequestedTheme` (Light/Dark) and map to Shiki theme names (e.g., Dark → "github-dark", Light → "github-light"). Implement copy button using `Windows.ApplicationModel.DataTransfer.Clipboard`. If the clipboard is unavailable, silently no-op with no state change, matching **handle-copy-failure**.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/source-code-panel/SourceCodePanel.tsx` | unverified |
+| web | `packages/web/packages/controls/src/source-code-panel/SourceCodePanel.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -221,11 +275,18 @@ Not applicable: Component performs no logging; errors in Shiki highlighting or c
 **Rationale**: The toolkit already changes themes by mutating this style element; observing it directly avoids adding a separate theme-change event system. Other platforms should use their own theme-change callback/observer equivalent (system theme callbacks, CSS-in-JS observer, etc.).
 **Approved**: pending
 
+**Decision**: Accept, for now, a Copy button smaller than the 44×44pt touch target (`padding: 0.15rem 0.5rem; font-size: 0.7rem`).
+**Rationale**: The button sits in a compact code header, and the source styles it for density. The target behavior is at least 44×44pt, so this is accepted debt until the stylesheet changes.
+**Approved**: pending
+
+**Decision**: Accept, for now, hardcoded "Copy" and "Copied" labels with no localization hook.
+**Rationale**: The component has no strings prop yet. The target behavior is for callers to supply localized labels, so this is accepted debt.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | passed | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
@@ -238,12 +299,13 @@ Not applicable: Component performs no logging; errors in Shiki highlighting or c
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on `SourceCodePanel.tsx` and `source-code-panel.css`: semantic `<button>`/`<pre>`/`<code>` markup and rem-based text sizing satisfy screen-reader, keyboard, dynamic-type and semantic-markup checks; `.scp-copy`'s `padding: 0.15rem 0.5rem` / `font-size: 0.7rem` plainly fails the 44×44pt touch target; contrast can't be confirmed without the consuming app's resolved `--color-*` token values; Shiki failures reach an explicit `error` state and rendered fallback while clipboard failures are fully swallowed with no state change, so error handling is only partial; the loading fallback shows `aria-busy` for the highlighter's async work; Shiki escapes `code` before its HTML is injected via `dangerouslySetInnerHTML`; and `"Copy"`/`"Copied"` are hardcoded string literals with no localization hook. `separation-of-concerns` passes because theme resolution and highlighting are delegated to `readShikiTheme` and the `useSourceCode` hook, separate from the rendering, and `unit-test-coverage` passes because `SourceCodePanel.test.tsx` renders it directly and asserts on the fallback code, filename header, and copy-button chrome.
+Statuses rest on `SourceCodePanel.tsx` and `source-code-panel.css`: semantic `<button>`/`<pre>`/`<code>` markup and rem-based text sizing satisfy keyboard, dynamic-type and semantic-markup checks; screen-reader-support is partial because the Copy to Copied label swap has no `aria-live` region, so a screen reader does not announce that the copy worked (see **announce-copy-result**); `.scp-copy`'s `padding: 0.15rem 0.5rem` / `font-size: 0.7rem` plainly fails the 44×44pt touch target; contrast can't be confirmed without the consuming app's resolved `--color-*` token values; Shiki failures reach an explicit `error` state and rendered fallback while clipboard failures are fully swallowed with no state change, so error handling is only partial; the loading fallback shows `aria-busy` for the highlighter's async work; Shiki escapes `code` before its HTML is injected via `dangerouslySetInnerHTML`; and `"Copy"`/`"Copied"` are hardcoded string literals with no localization hook. `separation-of-concerns` passes because theme resolution and highlighting are delegated to `readShikiTheme` and the `useSourceCode` hook, separate from the rendering, and `unit-test-coverage` passes because `SourceCodePanel.test.tsx` renders it directly and asserts on the fallback code, filename header, and copy-button chrome.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Marked screen-reader-support partial and added announce-copy-result, added accepted-debt decisions for the touch target and hardcoded labels, aligned the WinUI 3 note with the silent no-op, specified useSourceCode and the highlighter's default and on-demand loading, documented body scrolling, and added repeated-click and empty-filename edge cases with vectors. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename must-* requirements to subject-only names; split the highlight-complete fallback into success (no `<pre>`) and failure (`<pre>` without `aria-busy`) cases; document stale-async-result discarding and Shiki HTML-escaping with new test vectors; correct the theme-mutation trigger and touch-target/error-handling compliance statuses using source and CSS; reformat Design Decisions and Compliance into their canonical forms; resolve the WebView-vs-native-highlighter contradiction between Design Decisions and Platform Notes; document the hardcoded copy-button strings under Localization; add tags and the Shiki reference |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |

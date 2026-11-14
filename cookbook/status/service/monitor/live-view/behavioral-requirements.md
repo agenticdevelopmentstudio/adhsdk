@@ -37,6 +37,7 @@
 - **stale-monitor-shape**: Each selected entry MUST be a `StaleMonitor` with `slug`, `name`, `url`, `environment` (`s.environment || null`, so an empty string becomes `null`), `detail`, `dnsOk`, `downSince` (the input ISO string unchanged) and `ageMs` (the computed age).
 - **stale-monitor-detail**: `detail` MUST be the service's `error` when `error` is not null or undefined (an empty string is kept), else `"HTTP <statusCode>"` when `statusCode` is not null or undefined, else `"down"`.
 - **stale-monitor-order**: The result MUST be sorted by `ageMs` descending (longest-down first).
+- **stale-monitor-ties**: Entries with equal `ageMs` MUST keep their input order, so the sort MUST be stable.
 - **stale-monitors-view**: `staleMonitorsView(services, nowMs)` MUST return `{ thresholdDays, monitors }` where `thresholdDays` is `Math.round(STALE_MONITOR_MS / 86400000)` (currently `7`) and `monitors` is `selectStaleMonitors(services, nowMs)` with the default threshold, so a banner can state the number without owning it.
 
 ### Purity

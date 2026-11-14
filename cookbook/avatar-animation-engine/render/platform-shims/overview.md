@@ -1,15 +1,15 @@
 
-This is a non-UI component: a logic seam with no visual surface of its own.
-It converts values the avatar engine already computed (a `Mat`, a hex ink
+This is a non-UI component: a logic seam with no visual surface of its own,
+and the boundary between the avatar engine's per-frame `DisplayList` (composed
+elsewhere, by `Scene.compose`) and each platform's native drawing surface. It
+converts values the avatar engine already computed (a `Mat`, a hex ink
 string, a path-data string, a `DisplayList`) into the vocabulary a
 platform's own drawing API understands (`CGAffineTransform`, `CGColor`,
 `CGPath`, `CGLineCap`/`CGLineJoin` on Apple; `<path>` attributes on the web).
 It never decides what to draw — only how to say it in each platform's own
 primitives.
 
-`avatar-engine-render` is the boundary between the avatar engine's per-frame
-`DisplayList` (composed elsewhere, by `Scene.compose`) and each platform's
-native drawing surface. On Apple it is one file, `PlatformShims.swift`, built
+On Apple it is one file, `PlatformShims.swift`, built
 around a single `#if canImport(AppKit)` block: everything AppKit and UIKit
 disagree about — view-visibility lifecycle hooks, reduce-motion/focus/
 occlusion queries, gesture-recognizer and pointer-location primitives — is

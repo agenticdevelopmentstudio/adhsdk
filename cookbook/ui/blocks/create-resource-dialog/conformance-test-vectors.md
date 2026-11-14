@@ -18,11 +18,11 @@
 | create-resource-015 | display-create-error | Create callback throws non-Error object | `renderForm`'s error argument becomes "Failed to create." |
 | create-resource-016 | invoke-onsaveerror-on-create-failure | Create callback throws; onSaveError is provided | onSaveError callback is invoked with the exception |
 | create-resource-017 | guard-close-on-dirty | User clicks Cancel; draft is dirty | UnsavedChangesAlert is shown; dialog is not closed |
-| create-resource-018 | guard-close-on-dirty | User clicks ×; draft is pristine | Dialog closes immediately without showing alert |
+| create-resource-018 | close-immediately-when-pristine | User clicks ×; draft is pristine | Dialog closes immediately without showing alert |
 | create-resource-019 | ignore-backdrop-click | User clicks overlay background | Dialog remains open |
 | create-resource-020 | route-escape-through-guard | User presses Escape; draft is dirty | UnsavedChangesAlert is shown |
 | create-resource-021 | route-escape-through-guard, stay-dismisses-alert | User presses Escape while alert is open | Alert is dismissed (mapped to Stay); dialog remains open |
-| create-resource-022 | route-escape-through-guard | User presses Escape; draft is pristine | Dialog closes without showing alert |
+| create-resource-022 | route-escape-through-guard, close-immediately-when-pristine | User presses Escape; draft is pristine | Dialog closes without showing alert |
 | create-resource-023 | support-optional-save-gate | saveEnabled returns false | Save button is disabled even if draft is dirty |
 | create-resource-024 | support-optional-save-gate | saveEnabled returns true and draft is dirty | Save button is enabled |
 | create-resource-025 | render-only-on-client | Component is rendered on server (document is undefined) | Component returns null |
@@ -31,4 +31,7 @@
 | create-resource-028 | escape-active-during-save | User presses Escape while `saving` is true and draft is dirty | UnsavedChangesAlert is shown even though Cancel and Save are currently disabled |
 | create-resource-029 | render-form-content | Component is mounted with draft state, an onChange handler, and error=null | `renderForm` is invoked with `(draft, onChange, error)` in that order; its returned content renders between the header and footer |
 | create-resource-030 | use-aria-label | ariaLabel="Create Product" | Dialog container element has aria-label="Create Product" |
-
+| create-resource-031 | prevent-save-when-invalid | User clicks Save; validate returns "" | `create` is invoked (an empty string counts as valid) and `renderForm` receives error=null |
+| create-resource-032 | prevent-save-when-invalid | User clicks Save; validate throws | The exception propagates out of the click handler; no inline error is set, `create` and `onSaveError` are not called, and the dialog stays open with the draft intact |
+| create-resource-033 | support-optional-save-gate, disable-save-when-pristine | `saveEnabled` returns true and the draft is pristine | Save button is disabled (the pristine check still applies) |
+| create-resource-034 | display-create-error, invoke-onsaveerror-on-create-failure | Create callback throws Error("Network timeout"); `onSaveError` is not provided | `renderForm`'s error argument becomes "Network timeout" and no exception escapes |

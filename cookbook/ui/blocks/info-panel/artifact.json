@@ -4,15 +4,15 @@
     "id": "2ad7c681-6a9e-43ae-a9d9-b448939d3455",
     "title": "InfoPanel",
     "type": "ingredient",
-    "version": "1.3.1",
+    "version": "1.3.2",
     "status": "review",
     "language": "en",
     "created": "2026-07-03",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "A themable dashboard panel: bordered card with a standard header ([icon] title count · center · actions) over a content-sized or fill+scroll body.",
+    "summary": "Themable dashboard card: standard header (icon, title, count, center, actions) over a content-sized or scrolling body.",
     "platforms": [
       "typescript",
       "web"
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0b05dec0b3c50c27",
+  "synced": "73ca34f5848c462d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

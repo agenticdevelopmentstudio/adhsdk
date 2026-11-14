@@ -16,11 +16,14 @@ Derived from `HookCaptureTests` where a test is named, and from the source other
 | capture-011 | hook-data-from-stdin | `buildEnvelope` with stdin empty, then stdin `not json`, then stdin `[1,2]` | In each case `hook_data` holds only the lifted keys `term_program` and `term_session_id` |
 | capture-012 | flag-parsing | arguments `--event=Stop` | No `--event` value is found; `run` writes nothing and returns 0 |
 | capture-013 | flag-parsing, event-flag-required | arguments `--event --ppid 5` | `--event` has no value because the next argument starts with `--`; nothing is written |
-| capture-014 | context-claude-booleans | live environment `CLAUDECODE=TRUE`, `CLAUDE_YOLO=0` | `context.claude.running` is true and `context.claude.yolo` is false |
-| capture-015 | context-omits-unset, context-groups | live environment with no `LC_TERMINAL` and an empty `TMPDIR` | `context.terminal` has no `lc_terminal` key and `context.session` has no `tmpdir` key |
+| capture-014 | context-claude-booleans | integration-only (reads the live process environment, which `buildEnvelope` does not take as an argument); live environment `CLAUDECODE=TRUE`, `CLAUDE_YOLO=0` | `context.claude.running` is true and `context.claude.yolo` is false |
+| capture-015 | context-omits-unset, context-groups | integration-only (reads the live process environment); live environment with no `LC_TERMINAL` and an empty `TMPDIR` | `context.terminal` has no `lc_terminal` key and `context.session` has no `tmpdir` key |
 | capture-016 | write-failure-swallowed, exit-status-zero | `run` with a drop-directory variable naming a path under a regular file | Returns 0, writes nothing, prints nothing |
 | capture-017 | timestamp-format | any built envelope | `timestamp` matches `YYYY-MM-DDTHH:MM:SSZ` |
 | capture-018 | context-process | `buildEnvelope` with ppid string `99` | `context.process.ppid` is 99; with ppid nil and `claudePid` nil it is this process's parent pid |
+| capture-019 | token-recovery | `buildEnvelope` with an environment holding `CLAUDE_CODE_OAUTH_TOKEN=tok` and a process tree that yields no token | `accountName` is called with `tok` |
+| capture-020 | token-recovery, account-email | `buildEnvelope` with no token in the tree and none in the environment | `accountName` is called with nil |
+| capture-021 | context-system | any built envelope | `context.system` has string keys `hostname`, `os` (two words separated by one space) and `arch` |
+| capture-022 | duplicate-flag-last-wins | arguments `--event Stop --event Start` | The event is `Start` |
 
 SHOULD requirements: the document contains none, so no omission needs a rationale.
-

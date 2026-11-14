@@ -2,11 +2,11 @@
 id: 17398d3a-df67-44c6-89c5-0edfc09bff7c
 title: "Dismissible Hint"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,9 +39,9 @@ A dismissible hint displays contextual information to the user with a close butt
 - **render-close-button**: Component MUST render a close button that, when clicked, dismisses the hint and persists the dismissal state.
 - **render-close-glyph**: Component MUST render the close button with the literal text content "×".
 - **persist-dismissal-state**: Component MUST persist dismissal state to browser localStorage with the key `{{app_prefix}}-hint-dismissed:<id>` set to the value `1`.
-- **load-dismissal-state-on-mount**: Component MUST load dismissal state from localStorage on mount using the hint's `id` and set initial visibility accordingly.
-- **not-render-when-dismissed**: Component MUST render as `null` if the dismissal state in localStorage indicates the hint has been previously dismissed.
-- **handle-missing-localstorage**: Component MUST silently treat any localStorage read or write error as a failure and continue without throwing. On read error, the component MUST treat the hint as not dismissed (render normally). On write error, the component MUST still update its in-memory dismissed state to hidden for the current render, even though the value did not persist.
+- **load-dismissal-state-on-mount**: Component MUST load dismissal state from localStorage on mount using the hint's `id`. Any stored value other than the string `1`, including a missing key, MUST be treated as not dismissed. The first paint MAY show the hint before the mount-time read completes (see Edge Cases).
+- **not-render-when-dismissed**: Component MUST render `null` once the mount-time read completes if the dismissal state in localStorage indicates the hint has been previously dismissed.
+- **tolerate-storage-errors**: Component MUST silently treat any localStorage read or write error as a failure and continue without throwing. On read error, the component MUST treat the hint as not dismissed (render normally). On write error, the component MUST still update its in-memory dismissed state to hidden for the current render, even though the value did not persist.
 - **accept-classname-prop**: Component MUST accept an optional `className` prop and apply it to the container element, merged with the base class `{{app_prefix}}-hint`.
 - **apply-note-role**: Component MUST render the container with `role="note"` for semantic accessibility.
 - **label-close-button**: Component MUST render the close button with `aria-label="Dismiss"`.
@@ -72,16 +72,16 @@ Not applicable: Component styling is entirely CSS-driven; the source code provid
 | dismissible-hint-002 | render-close-button, label-close-button, render-close-glyph | Render with close button visible | Button with `aria-label="Dismiss"` and text content "×" is present |
 | dismissible-hint-003 | persist-dismissal-state | Click close button; inspect localStorage | Entry `{{app_prefix}}-hint-dismissed:test-hint=1` exists in localStorage |
 | dismissible-hint-004 | load-dismissal-state-on-mount | localStorage already contains `{{app_prefix}}-hint-dismissed:test-hint=1`; mount component | Component renders as null; nothing displayed |
-| dismissible-hint-005 | not-render-when-dismissed | Click close button; inspect the DOM immediately, in the same session, without remounting | Container is removed from the DOM immediately after the click |
+| dismissible-hint-005 | render-close-button | Click close button; inspect the DOM immediately, in the same session, without remounting | Container is removed from the DOM immediately after the click |
 | dismissible-hint-006 | accept-classname-prop | `<DismissibleHint id="test" className="custom-class">text</DismissibleHint>` | Container has class list containing both `{{app_prefix}}-hint` and `custom-class` |
-| dismissible-hint-007 | handle-missing-localstorage | localStorage.getItem raises exception during read | Component treats hint as not dismissed; renders normally |
-| dismissible-hint-008 | handle-missing-localstorage | localStorage.setItem raises exception on close button click | Component's in-memory state updates (local state shows as dismissed) but localStorage write silently fails |
+| dismissible-hint-007 | tolerate-storage-errors | localStorage.getItem raises exception during read | Component treats hint as not dismissed; renders normally |
+| dismissible-hint-008 | tolerate-storage-errors | localStorage.setItem raises exception on close button click | The container is removed from the DOM, no exception propagates, and the localStorage write silently fails |
 | dismissible-hint-009 | apply-note-role | Render component | Container div has `role="note"` |
 | dismissible-hint-010 | render-close-button, label-close-button | Tab to close button (keyboard focus); press Enter or Space | Hint dismisses, same as a pointer click — the native `<button>` element responds to Enter/Space activation |
 
 ## Edge Cases
 
-- **localStorage unavailable (private browsing, quota exceeded, or access denied)**: Reading throws exception → component treats as not dismissed and renders (see **handle-missing-localstorage**). Writing throws exception → in-memory state still updates so the hint appears dismissed in the current session, but state is not persisted. User will see the hint again on page reload or next session.
+- **localStorage unavailable (private browsing, quota exceeded, or access denied)**: Reading throws exception → component treats as not dismissed and renders (see **tolerate-storage-errors**). Writing throws exception → in-memory state still updates so the hint appears dismissed in the current session, but state is not persisted. User will see the hint again on page reload or next session.
 - **Initial render before dismissal state loads**: `dismissed` state starts as `false` on every mount (client and server); the `useEffect` that reads localStorage runs after the first paint. A hint that was previously dismissed is therefore visible for one paint before the next render hides it. The source does not use a synchronous read or a lazy initializer to avoid this — the brief flash is the actual, expected behavior of the mount-effect approach.
 - **SSR context (window undefined)**: `readDismissed` returns false and `writeDismissed` returns early. Component renders on server as not dismissed; on client hydration, reads dismissal state and may re-render as dismissed (same flash described above).
 - **Empty or missing children**: Component renders container and close button with no text content (children is optional). Display depends on CSS.
@@ -140,37 +140,37 @@ Not applicable: Component logs no diagnostic messages.
 
 - **SwiftUI**: Use `@AppStorage("{{app_prefix}}-hint-dismissed:<id>")` bound to a `Bool` for the dismissed flag (default `false`). Use a plain `Button` — not `Environment(\.dismiss)`, which dismisses presentations rather than an inline view, and not `deprecatedAction`, which is not a real API — whose action sets the `@AppStorage` value to `true`. Render `EmptyView()` when dismissed.
 - **Compose**: Use `remember { mutableStateOf(false) }` for the dismissed flag. Persist via Jetpack `DataStore` (preferred) or `context.getSharedPreferences(name, Context.MODE_PRIVATE)` — `PreferenceManager.getDefaultSharedPreferences` is deprecated — keyed by `{{app_prefix}}-hint-dismissed:<id>`. Use `LaunchedEffect(id)` to load state on composition. Emit nothing when dismissed.
-- **React/Web**: This is the source implementation. See source code in packages/web/packages/controls/src/user-settings/components/DismissibleHint.tsx. Uses React hooks (useState, useEffect) and browser localStorage.
-- **AppKit / UIKit**: Use a plain view or view controller (not SwiftUI's `@State`/`@Published`) that reads `UserDefaults.standard` for key `{{app_prefix}}-hint-dismissed:<id>` in `viewDidLoad`/`viewWillAppear`; if already dismissed, remove the hint view from its superview or set `isHidden = true` before it is shown, rather than returning `nil` from a view. On the close control's action, write `true` to `UserDefaults.standard` for that key, then remove the view or set `isHidden = true`. Use `NSButton` (AppKit) or `UIButton` (UIKit) with an accessibility label of "Dismiss".
+- **React/Web**: This is the source implementation. Uses React hooks (useState, useEffect) and browser localStorage.
+- **AppKit / UIKit**: Use a plain view or view controller (not SwiftUI's `@State` or Combine's `@Published`) that reads `UserDefaults.standard` for key `{{app_prefix}}-hint-dismissed:<id>` in `viewDidLoad`/`viewWillAppear`; if already dismissed, remove the hint view from its superview or set `isHidden = true` before it is shown, rather than returning `nil` from a view. On the close control's action, write `true` to `UserDefaults.standard` for that key, then remove the view or set `isHidden = true`. Use `NSButton` (AppKit) or `UIButton` (UIKit) with an accessibility label of "Dismiss".
 - **WinUI 3**: Implement `INotifyPropertyChanged` (or use CommunityToolkit.Mvvm's `ObservableObject` base class — `ObservableObject` alone is not a WinUI primitive) with a backing `Dismissed` property. Persist to `ApplicationData.Current.LocalSettings.Values` keyed `{{app_prefix}}-hint-dismissed:<id>`. Use a `Button` with `Content="×"` and `AutomationProperties.Name="Dismiss"`. Bind visibility with `x:Bind` through an inverted bool-to-`Visibility` converter (`true` → `Collapsed`).
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/DismissibleHint.tsx` | unverified |
+| web | `packages/web/packages/controls/src/user-settings/components/DismissibleHint.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
-- **Decision**: Silently ignore localStorage read/write failures instead of surfacing an error.
-  **Rationale**: This prioritizes resilience over error reporting. In an inaccessible environment (private browsing, quota exceeded), the hint simply reappears on every visit rather than breaking the page. The source chose silent degradation over logging to a telemetry service or falling back to an in-memory store.
-  **Approved**: pending
+**Decision**: Silently ignore localStorage read/write failures instead of surfacing an error.
+**Rationale**: This prioritizes resilience over error reporting. In an inaccessible environment (private browsing, quota exceeded), the hint simply reappears on every visit rather than breaking the page. The source chose silent degradation over logging to a telemetry service or falling back to an in-memory store.
+**Approved**: pending
 
-- **Decision**: Render a literal "×" character as the close affordance rather than an icon or a "Close" text label.
-  **Rationale**: "×" is a widely understood visual convention for dismissible UI. Implementations on other platforms MAY substitute a platform-idiomatic close affordance (e.g., the iOS system close symbol, Material Design's close icon) while preserving the semantic `aria-label="Dismiss"`.
-  **Approved**: pending
+**Decision**: Render a literal "×" character as the close affordance rather than an icon or a "Close" text label.
+**Rationale**: "×" is a widely understood visual convention for dismissible UI. Implementations on other platforms MAY substitute a platform-idiomatic close affordance (e.g., the iOS system close symbol, Material Design's close icon) while preserving the semantic `aria-label="Dismiss"`.
+**Approved**: pending
 
-- **Decision**: Hardcode the close button's `aria-label` to the English string "Dismiss" rather than exposing it as a configurable/localizable prop.
-  **Rationale**: The source has no localization plumbing, so adding a `dismissLabel` prop would be behavior this recipe does not describe. Implementations that need localization SHOULD add an optional label prop that defaults to a localized "Dismiss" string — see **Localization** above.
-  **Approved**: pending
+**Decision**: Hardcode the close button's `aria-label` to the English string "Dismiss" rather than exposing it as a configurable/localizable prop.
+**Rationale**: The source has no localization plumbing, so adding a `dismissLabel` prop would be behavior this ingredient does not describe. Implementations that need localization SHOULD add an optional label prop that defaults to a localized "Dismiss" string — see **Localization** above.
+**Approved**: pending
 
-- **Decision**: Store dismissal as the single-character string `"1"` rather than a boolean or JSON value.
-  **Rationale**: This is a minimal storage choice. The comparison `getItem(...) === '1'` treats any missing or mismatched value as "not dismissed," so no separate presence check is needed.
-  **Approved**: pending
+**Decision**: Store dismissal as the single-character string `"1"` rather than a boolean or JSON value.
+**Rationale**: This is a minimal storage choice. The comparison `getItem(...) === '1'` treats any missing or mismatched value as "not dismissed," so no separate presence check is needed.
+**Approved**: pending
 
-- **Decision**: Document the localStorage key and CSS class prefix as the template variable `{{app_prefix}}` (e.g. `{{app_prefix}}-hint-dismissed:<id>`, `{{app_prefix}}-hint`) rather than the literal `aws-` string found in the source file.
-  **Rationale**: Per this cookbook's Template Variables convention, consumer-specific literals must not be hardcoded into a shared recipe; `aws-` is specific to the source application. Every platform port MUST use the same `<prefix>-hint-dismissed:<id>` key scheme so dismissal state stays consistent across ports.
-  **Approved**: pending
+**Decision**: Document the localStorage key and CSS class prefix as the template variable `{{app_prefix}}` (e.g. `{{app_prefix}}-hint-dismissed:<id>`, `{{app_prefix}}-hint`) rather than the literal `aws-` string found in the source file.
+**Rationale**: Per this cookbook's Template Variables convention, consumer-specific literals must not be hardcoded into a shared ingredient; `aws-` is specific to the source application. Every platform port MUST use the same `<prefix>-hint-dismissed:<id>` key name; the store and the value encoding are platform-specific (see Platform Notes), so no state is shared across ports.
+**Approved**: pending
 
 ## Compliance
 
@@ -188,14 +188,15 @@ Not applicable: Component logs no diagnostic messages.
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Accessibility statuses rest on the container's `role="note"`, the button's `aria-label="Dismiss"`, and native `<button>` keyboard operability, versus type scaling/contrast/tap-target sizing which the source leaves entirely to external CSS it does not define. Privacy and Data statuses rest on the single boolean flag persisted per id, with retention documented above. Internationalization statuses rest on the hardcoded English `aria-label` (not externalized) versus React's native Unicode-safe rendering of caller-supplied `children`. `separation-of-concerns` passes because dismissal persistence lives in the standalone `readDismissed`/`writeDismissed` helpers rather than inline in the component; `unit-test-coverage` passes because `components.test.tsx` imports `DismissibleHint` directly and exercises dismissal and persistence-across-remount with meaningful assertions.
+Accessibility statuses rest on the container's `role="note"`, the button's `aria-label="Dismiss"`, and native `<button>` keyboard operability, versus type scaling/contrast/tap-target sizing which the source leaves entirely to external CSS it does not define. Privacy and Data statuses rest on the single boolean flag persisted per id, with retention documented above. Internationalization statuses rest on the hardcoded English `aria-label` (not externalized) versus React's native Unicode-safe rendering of caller-supplied `children`. `separation-of-concerns` passes because dismissal persistence lives in the standalone `readDismissed`/`writeDismissed` helpers rather than inline in the component; `unit-test-coverage` is `partial` because `components.test.tsx` exercises only dismissal and persistence across a remount; the storage read and write error paths, id changes and same-id instances (vectors 007 and 008 and the edge cases) have no test.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Required that only the stored value 1 counts as dismissed, reworded the mount-time requirements for the first-paint flash, renamed handle-missing-localstorage to tolerate-storage-errors, fixed vector mappings and outcomes, marked unit-test-coverage partial, corrected the Combine and cross-port notes, used ingredient terminology and plain Decision lines. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; fix write-failure state contradiction; template the aws- prefix as {{app_prefix}}; add render-close-glyph requirement and a keyboard test vector; rewrite the duplicate remount vector as an immediate-hide vector; correct the tap-target citation to WCAG 2.5.8; correct SwiftUI/Compose/AppKit-UIKit/WinUI 3 API references; clarify flash-on-mount, multi-instance, and id-change edge cases; reformat Design Decisions; mark Localization applicable; expand and link the Compliance table |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Fix marker on id prop: state type safety behavior from source |

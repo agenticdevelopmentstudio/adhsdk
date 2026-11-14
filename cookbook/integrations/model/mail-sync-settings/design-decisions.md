@@ -12,6 +12,6 @@
 **Approved**: pending
 
 **Decision**: Window of 1 to 3650 days and poll interval of 1 to 1440 minutes.
-**Rationale**: The bounds are fixed in `windowDaysRange` and `pollIntervalRange`; 3650 days is ten years and 1440 minutes is one day. The source gives no further reason for the numbers.
+**Rationale**: The bounds are fixed in `windowDaysRange` and `pollIntervalRange`; 3650 days is ten years and 1440 minutes is one day. No further reason is recorded for the numbers, so treat them as arbitrary limits that may change.
 **Approved**: pending
 

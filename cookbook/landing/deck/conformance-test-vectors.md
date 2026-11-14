@@ -11,5 +11,5 @@
 | deck-008 | merges-style-hook | `<Deck className=""/>` | The root carries only its base style hook; the empty-string value contributes nothing |
 | deck-009 | merges-style-hook | `<Deck className="a b c"/>` | All three space-separated tokens are preserved alongside the base style hook |
 | deck-010 | no-own-scroll | `<Deck/>` | The root container has no height or overflow style constraining its own scroll |
-| deck-011 | focusable-not-tabbable | Click inside `<Deck>`, then press ArrowDown or Page Down | Focus lands on the clicked content inside Deck; the subsequent key scrolls the document, not Deck |
-
+| deck-011 | focusable-not-tabbable | Click inside `<Deck>`, then press ArrowDown or Page Down | Deck (or the clicked focusable descendant) receives focus; the subsequent key scrolls the document, not Deck |
+| deck-012 | document-gate | `<Deck/>` mounted in a document | The root carries its base style hook (`lp-deck` on React/Web), so the document-level rules keyed on it (root type size, horizontal clip) apply |

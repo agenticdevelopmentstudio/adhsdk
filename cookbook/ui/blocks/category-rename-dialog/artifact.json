@@ -4,11 +4,11 @@
     "id": "526da033-2f0d-4bd7-b2c2-99faba4783a3",
     "title": "Category Rename Dialog",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -23,13 +23,18 @@
       "form",
       "validation"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1",
+      "0f5b7167-b375-4f44-977b-566f720a453d",
+      "c9e70ad4-89c9-4c44-a2d6-a64da32a64af",
+      "f679a77e-04f7-4e43-b898-6d78a637a760"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3aa5ee6baabaae11",
+  "synced": "b6847c85f8d1b6b9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

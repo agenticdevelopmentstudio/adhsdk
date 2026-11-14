@@ -2,11 +2,11 @@
 id: 6ea605aa-9248-46d4-9532-82185388749b
 title: "Markdown Preview"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -35,7 +35,7 @@ approved-date: ""
 
 ## Overview
 
-Markdown Preview is a presentational component that fetches full markdown content for a document via HTTP, renders it using GitHub-flavored markdown with Shiki syntax highlighting, applies a reading theme palette, and manages loading, empty, and error states. It is designed for integration into a search or discovery interface where users select a document and its content appears in a preview panel.
+Markdown Preview is a presentational component that fetches full markdown content for a document via HTTP, renders it using GitHub-flavored markdown with Shiki syntax highlighting, applies a reading theme palette, and manages loading, empty, and error states. The copy, the hit type (`PaperSearchHit`) and the content endpoint are specific to papers, although the component's name is generic. It is designed for integration into a search or discovery interface where users select a document and its content appears in a preview panel.
 
 ## Behavioral Requirements
 
@@ -47,7 +47,7 @@ Markdown Preview is a presentational component that fetches full markdown conten
 - **show-error-state**: Component MUST display an error state (title: "Failed to load paper") with the error message and MUST mark the container with `role="alert"` when the fetch fails.
 - **handle-timeout**: Component MUST time out a request that exceeds the `timeoutMs` prop (default 15s), transitioning to the error state with a message indicating the timeout duration in seconds.
 - **provide-retry-capability**: Component MUST include a clickable Retry button in the error state that re-runs the fetch without requiring component remount or prop change.
-- **abort-on-change**: Component MUST abort any in-flight fetch request when the component unmounts or when a different document is selected (change in `hit.author.slug`, `hit.publicRoute`, or `source.baseUrl`).
+- **abort-on-change**: Component MUST abort any in-flight fetch request when the component unmounts or when a different document is selected (change in `hit.author.slug`, `hit.publicRoute`, `source.baseUrl`, `source.endpoints.content`, or `timeoutMs`, the same five values listed in **stable-refetch-dependencies**).
 - **distinguish-timeout-from-other-errors**: Component MUST show a distinct message for a request that timed out versus one that failed for another reason (HTTP, network, or JSON-parse error).
 - **handle-non-ok-http-status**: Component MUST reject the fetch and transition to the error state when the HTTP response status is not 2xx, with an error message that includes the status code (e.g., "Failed to load paper (HTTP 404).").
 - **stable-refetch-dependencies**: Component MUST NOT re-run the content fetch when the injected `SearchSource` is recreated with equivalent values; a new fetch MUST occur only when `slug`, `route`, `baseUrl`, `endpoints.content`, or `timeoutMs` changes to a new value. A `fetchInit` value change (e.g., updated auth headers) does NOT by itself trigger a refetch — the next fetch triggered by one of the dependencies above picks up the current `fetchInit`.
@@ -76,7 +76,7 @@ Markdown Preview is a presentational component that fetches full markdown conten
 - **Role**: The root container carries no explicit ARIA role; the error state container is marked with `role="alert"` to announce failures to screen readers.
 - **Live region**: The loading state container is marked with `aria-live="polite"` and `aria-busy="true"` to announce the loading phase. The empty state has no live-region marking — its arrival is not announced.
 - **Label**: The error detail text serves as the accessible error message; the Retry button's accessible name comes from its visible text content, "Retry".
-- **Markdown rendering**: Content is rendered by `MarkdownRenderer` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.shared.markdown.markdown-renderer](cookbook:316aed50-a6cb-4ece-977c-8d6dacb2186b)), which applies semantic HTML (headings, lists, code blocks) and ensures proper color contrast via the theme palette.
+- **Markdown rendering**: Content is rendered by `MarkdownRenderer` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.shared.markdown.markdown-renderer](cookbook:316aed50-a6cb-4ece-977c-8d6dacb2186b)), which applies semantic HTML (headings, lists, code blocks). This component makes no contrast claim of its own; see the `contrast-ratio` check under Compliance.
 - **Keyboard interaction**: The Retry button is keyboard-accessible (Tab, Enter/Space to activate), per `Button`'s own recipe ([adhsdk.ingredient.ui.components.actions.button](cookbook:f3c25236-d72f-4a7b-839a-b7f335b3acd0)).
 - **Minimum tap target**: The Retry button is a `Button` with `size="sm"` (28px tall) and no ancestor `--adh-button-min-height` override. Per Button's own recipe, `sm` clears the WCAG 2.2 SC 2.5.8 (Target Size Minimum, AA) 24×24 CSS px floor but falls below the Apple HIG 44×44pt / Material 48×48dp guidance unless a surface sets that override; this component sets none.
 
@@ -84,7 +84,7 @@ Markdown Preview is a presentational component that fetches full markdown conten
 
 | ID | Requirements | Input | Expected |
 |----|----|----|----|
-| mp-001 | content-url, stable-refetch-dependencies | hit with slug="alice-wonder", publicRoute="paper-001", source with endpoints.content="/:slug/:route" and baseUrl="https://api.example.com" | Fetch request to `https://api.example.com/alice-wonder/paper-001` (URL-encoded); slug and route are percent-encoded if they contain special characters |
+| mp-001 | content-url | hit with slug="alice-wonder", publicRoute="paper-001", source with endpoints.content="/:slug/:route" and baseUrl="https://api.example.com" | Fetch request to `https://api.example.com/alice-wonder/paper-001` |
 | mp-002 | render-markdown-content | Fetched JSON response `{ "content": "# Title\n\nBody text." }` | MarkdownRenderer is called with content "# Title\n\nBody text."; rendered output appears in DOM |
 | mp-003 | apply-reading-theme | Component mounted with MarkdownRenderer output | Root div has data-mdv-theme, data-mdv-shiki-variant attributes; CSS custom properties from READING_THEME.palette are applied as inline style |
 | mp-004 | show-loading-state | Initial render before fetch completes | Div with class "adh-mv-state" is visible, contains p with text "Loading paper…", aria-live="polite" and aria-busy="true" are set |
@@ -93,19 +93,25 @@ Markdown Preview is a presentational component that fetches full markdown conten
 | mp-007 | handle-timeout | timeoutMs=5000, fetch stalls > 5000ms | Request is aborted at the timeout; component shows error state with message "Timed out loading paper after 5s." |
 | mp-008 | distinguish-timeout-from-other-errors | timeoutMs=5000, fetch rejects immediately with a network error (not a timeout) | Error state shows the network error's own message, never the "Timed out loading paper after …" wording |
 | mp-009 | provide-retry-capability | Component in error state, user clicks Retry button | The same request is re-issued for the same hit and source, without remounting; component returns to loading state |
-| mp-010 | abort-on-change | hit.author.slug changes from "alice" to "bob" during error state | In-flight fetch is aborted (if any); new fetch is initiated for the new slug; component transitions through loading state for the new document |
+| mp-010 | abort-on-change | hit.author.slug changes from "alice" to "bob" while the first request is still pending (loading state) | The first request's signal is aborted; a new fetch is initiated for the new slug; the component stays in or returns to the loading state for the new document and never shows the first request's result |
 | mp-011 | handle-non-ok-http-status | Fetch returns HTTP 500 | Error state is shown with message "Failed to load paper (HTTP 500)." |
 | mp-012 | stable-refetch-dependencies | source prop is recreated each render (new object, same values); hit stays the same | Fetch does not re-run — no new request is issued while slug, route, baseUrl, endpoints.content, and timeoutMs stay the same |
-
+| mp-013 | content-url | hit with slug="a b/c", publicRoute="p-1", source with endpoints.content="/:slug/:route" and baseUrl="https://api.example.com" | Fetch request to `https://api.example.com/a%20b%2Fc/p-1` |
+| mp-014 | stable-refetch-dependencies | Same hit; source recreated with a different `fetchInit` (e.g. new auth header) and identical other values | No new request is issued |
+| mp-015 | stable-refetch-dependencies | Same hit and source; `timeoutMs` changes from 15000 to 20000 | A new request is issued |
+| mp-016 | stable-refetch-dependencies | Same hit; `source.endpoints.content` changes from "/:slug/:route" to "/v2/:slug/:route" | A new request is issued to the new URL |
+| mp-017 | abort-on-change | Component unmounts while the request is pending | The request's signal is aborted and no state update occurs afterward |
+| mp-018 | show-empty-state | Fetch returns `{}` (no `content` key) | Empty state is shown ("Empty paper"), not the error state |
+| mp-019 | handle-timeout | `timeoutMs` prop omitted; fetch stalls longer than 15s | Request is aborted at 15s; error state shows "Timed out loading paper after 15s." |
 ## Edge Cases
 
-- **Empty content after trim**: If fetched content is all whitespace, `content.trim()` evaluates to falsy; component shows empty state (not error).
-- **Fetch succeeds but JSON missing content key**: Response is `{}` or has no `content` field; code defaults to empty string (`body.content ?? ''`); empty state is shown.
-- **Network error during fetch**: `.catch()` catches the error; if `!active` is true (unmount race), error is dropped silently; otherwise error state is shown with original error message.
-- **Unmount during fetch**: `active` flag is set to false in the cleanup function; `.then()` and `.catch()` check `!active` and drop results silently; no state update occurs after unmount.
-- **Re-select same document during error state**: User clicks Retry; `reloadToken` increments, triggering re-fetch; same URL is fetched again.
-- **Controller abort vs. timeout abort**: `AbortSignal.any([controller.signal, AbortSignal.timeout(timeoutMs)])` combines both; timeout produces a `DOMException` with `name === 'TimeoutError'`, which is distinct from controller.abort() (checked via `controller.signal.aborted`).
-- **Non-JSON response body**: If `res.json()` throws, the promise is rejected with an `Error`; `.catch()` catches it and shows that error's own `message` (e.g., a `SyntaxError` from a malformed body). The generic "Failed to load paper." fallback is unreachable from this path — it only applies to a thrown non-`Error` value, which `res.json()` never produces.
+- **Empty content after trim**: Whitespace-only content shows the empty state, not the error state.
+- **Fetch succeeds but JSON missing content key**: Response is `{}` or has no `content` field; it is treated as empty content and the empty state is shown (not the error state).
+- **Network error during fetch**: The error state is shown with the original error message. A failure of a request that was abandoned by unmount or by a document change shows nothing.
+- **Unmount during fetch**: The in-flight request is aborted and no state update occurs after unmount.
+- **Retry after an error**: Clicking Retry re-fetches the same URL for the same document and returns to the loading state.
+- **Abandoned request vs. timeout**: A timeout shows the timeout error state. An abort caused by unmount or a document change never shows an error (see the React/Web note for how the two are told apart).
+- **Non-JSON response body**: The error state shows the parser's own message (e.g., a `SyntaxError` message for a malformed body). The generic "Failed to load paper." fallback is unreachable from this path; it only applies to a thrown non-`Error` value, which JSON parsing never produces.
 - **Very short timeout renders "0s"**: The timeout message rounds `timeoutMs / 1000` with no minimum clamp, so a `timeoutMs` under 500 renders "Timed out loading paper after 0s." — an accurate but rough message the component does not correct.
 - **Null or missing hit properties**: Component assumes `hit.author.slug` and `hit.publicRoute` exist and are strings; no null checks are present in source; passing undefined/null will result in invalid URLs or fetch failure.
 - **Very large content**: MarkdownRenderer and rehype-sanitize process the full content; no streaming or chunking is performed.
@@ -134,14 +140,14 @@ Not applicable: This component is a preview body within a search/discovery inter
 | `markdownPreview.error.detail` | (dynamic) | Error state detail: either the timeout message or the underlying error's message |
 | `markdownPreview.retry.label` | "Retry" | Retry button label |
 
-Note: Strings are hardcoded in the component; no i18n framework is integrated. Localization would require extracting strings to a message catalog and applying a translation layer.
+Note: The string keys above are proposed names for a future message catalog; none of them exists in source. Strings are hardcoded in the component; no i18n framework is integrated. Localization would require extracting strings to a message catalog and applying a translation layer.
 
 ## Accessibility Options
 
 | Option | Behavior |
 |--------|----------|
 | Reduce Motion | Not applicable: This component does not animate. The state transitions (loading → ready/empty/error) are instantaneous DOM swaps, not CSS animations or transitions. |
-| Increase Contrast | Applied by the reading theme palette (READING_THEME.palette includes contrast-optimized colors); no component-specific handling is needed. |
+| Increase Contrast | Not handled by this component. The reading theme is fixed at module scope and does not respond to a contrast preference; no contrast ratio is claimed (see the `contrast-ratio` check under Compliance). |
 | Differentiate Without Color | Applied by the reading theme palette and MarkdownRenderer output (semantic HTML markup does not rely on color alone). |
 
 ## Feature Flags
@@ -161,11 +167,11 @@ Not applicable: No analytics events are emitted or tracked by this component. Ev
 
 ## Logging
 
-Not applicable: No logging or console output is performed by this component. Debug logging (if needed) would be added by wrapping the fetch logic or inspecting browser DevTools.
+Not applicable: the component emits no logs.
 
 ## Platform Notes
 
-- **TypeScript/Web (source)**: Implemented in `MarkdownPreview.tsx` using React hooks (`useState`, `useEffect`, `useCallback`, `useRef`). Fetch is performed via the native `fetch` API, combining an owned `AbortController` with `AbortSignal.timeout()` via `AbortSignal.any()` (requires modern browsers) so `handle-timeout` and `abort-on-change` share one signal; the caught `DOMException`'s `name === 'TimeoutError'` distinguishes a timeout from the controller's own abort. `stable-refetch-dependencies` is implemented by reading `source` through a ref (`sourceRef`), updated every render, while the fetch effect's dependency list holds only `slug`, `route`, `baseUrl`, `endpoints.content`, and `timeoutMs` — so `fetchInit` changes are visible to the next fetch without forcing one. An `active` flag set to `false` in the effect cleanup silently drops a `.then()`/`.catch()` result that resolves after unmount or after a new fetch has started. `READING_THEME` (`apply-reading-theme`) is computed once at module scope from `getThemeById(DEFAULT_THEME_ID)`, since the reading theme does not vary per instance or per render. Content rendering is delegated to `MarkdownRenderer` from `@adh-sdk/markdown` (rehype-sanitized GitHub-flavored markdown with Shiki syntax highlighting). State machine (loading → ready/empty/error) is managed via `useState`. Retry is implemented by incrementing a `reloadToken` state value to force the fetch effect to re-run for the same document.
+- **React/Web (source)**: Implemented in `MarkdownPreview.tsx` using React hooks (`useState`, `useEffect`, `useCallback`, `useRef`). Fetch is performed via the native `fetch` API, combining an owned `AbortController` with `AbortSignal.timeout()` via `AbortSignal.any()` (requires modern browsers) so `handle-timeout` and `abort-on-change` share one signal; the caught `DOMException`'s `name === 'TimeoutError'` distinguishes a timeout from the controller's own abort. `stable-refetch-dependencies` is implemented by reading `source` through a ref (`sourceRef`), updated every render, while the fetch effect's dependency list holds only `slug`, `route`, `baseUrl`, `endpoints.content`, and `timeoutMs` — so `fetchInit` changes are visible to the next fetch without forcing one. An `active` flag set to `false` in the effect cleanup silently drops a `.then()`/`.catch()` result that resolves after unmount or after a new fetch has started. `READING_THEME` (`apply-reading-theme`) is computed once at module scope from `getThemeById(DEFAULT_THEME_ID)`, since the reading theme does not vary per instance or per render. Content rendering is delegated to `MarkdownRenderer` from `@adh-sdk/markdown` (rehype-sanitized GitHub-flavored markdown with Shiki syntax highlighting). State machine (loading → ready/empty/error) is managed via `useState`. Retry is implemented by incrementing a `reloadToken` state value to force the fetch effect to re-run for the same document.
 - **SwiftUI**: Implement as an async view that fetches content via `URLSession`, catching `URLError` and checking `.code == .timedOut` to distinguish a timeout from other failures (mirrors `distinguish-timeout-from-other-errors`). Use `@State` to manage the four-phase state machine (loading, ready, empty, error). Render markdown via the Apple-platform `MarkdownRenderer` ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.shared.markdown.markdown-renderer](cookbook:316aed50-a6cb-4ece-977c-8d6dacb2186b)), which produces `NSAttributedString` with semantic palette styling and injected syntax highlighting. Apply theme colors via SwiftUI environment values (`.preferredColorScheme`, custom `EnvironmentKey`). Implement retry via a button that re-triggers the async fetch task.
 - **Compose**: Implement as a Composable that manages state via `remember` and collects content via `LaunchedEffect` with `URLConnection` or OkHttp client. Define a timeout via `withTimeoutOrNull()` or HTTP client configuration. Render markdown via a custom Composable using an Android markdown rendering library (e.g., Markwon). Apply Material 3 theme colors via `MaterialTheme.colorScheme`. State transitions (loading ↔ ready/empty/error) via `when` expression.
 - **AppKit / UIKit**: Implement as a `UIViewController` (iOS) or `NSViewController` (macOS) that fetches via `URLSession` with `URLSessionConfiguration.default.timeoutIntervalForRequest`. Manage state via `@Published` properties (if using Combine) or properties with KVO. Render markdown via `WKWebView` loaded with an HTML wrapper or a native markdown library. Apply theme colors by assigning the palette's `UIColor`/`NSColor` values directly to view properties (`backgroundColor`, `textColor`) — not `UIAppearance`, which sets type-wide proxy defaults rather than a single instance's colors. Implement retry via a UIButton/NSButton target-action or Combine button publisher.
@@ -175,7 +181,7 @@ Not applicable: No logging or console output is performed by this component. Deb
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/search/src/components/markdown/MarkdownPreview.tsx` | unverified |
+| web | `packages/web/packages/search/src/components/markdown/MarkdownPreview.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -184,11 +190,11 @@ Not applicable: No logging or console output is performed by this component. Deb
 **Approved**: pending
 
 **Decision**: Read `source` through a ref (`sourceRef`) inside the fetch effect instead of listing `source` itself as a dependency.
-**Rationale**: If `source` is a new object each render (same values, different reference), a naive effect dependency on `source` would re-fetch on every render. `sourceRef` reads the latest `source` value inside the effect while the effect's own dependency list holds only the stable primitive values (slug, route, baseUrl, contentTemplate, timeoutMs) — a common React pattern for a "read-only" dependency that should not by itself trigger a re-run.
+**Rationale**: If `source` is a new object each render (same values, different reference), a naive effect dependency on `source` would re-fetch on every render. `sourceRef` reads the latest `source` value inside the effect while the effect's own dependency list holds only the stable primitive values (slug, route, baseUrl, `endpoints.content`, timeoutMs) — a common React pattern for a "read-only" dependency that should not by itself trigger a re-run.
 **Approved**: pending
 
 **Decision**: Share one abort path between unmount and document re-selection.
-**Rationale**: Both cases benefit from aborting in-flight requests via the same `AbortController`. An `active` flag distinguishes them: unmount sets `active = false` and drops the result silently; a re-select (different slug/route/baseUrl) triggers a new effect and starts a new fetch. Shared cleanup logic keeps the implementation simple.
+**Rationale**: Both cases abort the in-flight request through the same per-run `AbortController`. The effect cleanup always aborts the controller and sets `active = false`, whether it runs on unmount or because a dependency changed (a different document, a new `timeoutMs`, or Retry) and a new fetch is about to start; the next effect run then starts with a fresh controller and `active = true`. Shared cleanup logic keeps the implementation simple.
 **Approved**: pending
 
 **Decision**: Keep the empty state separate from the error state.
@@ -199,6 +205,9 @@ Not applicable: No logging or console output is performed by this component. Deb
 **Rationale**: The 15s default mirrors [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.shared.markdown.markdown-viewer-controller](cookbook:8f2e1c9d-7a4b-4c2e-9d8e-5f6c7d8e9f0a)'s own default timeout. Allowing `timeoutMs` as a prop enables callers to adjust based on network conditions or use-case SLAs without modifying the component.
 **Approved**: pending
 
+**Decision**: The reading theme is fixed to `DEFAULT_THEME_ID` at module scope; hosts cannot inject a theme, and the component does not follow light/dark or contrast preferences.
+**Rationale**: The source has no theme prop, and the default matches the research surface's reading palette. This is a deliberate limitation, not a goal; a host that needs another theme would need an injected-theme prop that the source does not have today.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -219,6 +228,7 @@ Statuses rest on the source as documented above: the theme palette is applied as
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Aligned abort-on-change with the five refetch triggers, restated the edge cases as observable outcomes, corrected the abort rationale, dropped the unsupported contrast claims, marked the string keys as proposed, recorded the fixed reading theme as a limitation, renamed the React/Web note, and added concrete encoding, refetch, unmount, missing-content and default-timeout vectors. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed content-url default: endpoints.content defaults to DEFAULT_CONTENT_ENDPOINT (/public/users/:slug/papers/:route), not /:slug/:route; updated Configuration and edge case. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case, restated React-internal mechanics as observable behavior and moved them into the TypeScript Platform Note, corrected wrong SwiftUI/AppKit-UIKit/WinUI 3 API names, fixed the States/Accessibility role and tap-target claims, deduplicated the timeout test vectors, made the non-JSON edge case deterministic, cited markdown-renderer and markdown-viewer for the previously unsourced claims, reformatted Design Decisions to the three-line form, rebuilt Compliance as a linked table with partial/failed statuses backed by evidence, added tags/depends-on/related, and assigned Localization string keys |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

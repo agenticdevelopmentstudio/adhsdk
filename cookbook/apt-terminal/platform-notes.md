@@ -1,30 +1,35 @@
+The source platform is Python (`apt_terminal.cli:_run`, the `pyproject.toml`
+`[project.scripts]` entry point), built on `typer` (command parsing), `httpx`
+(the transport, both directly in `auth.py` and via the generated client),
+`attrs` (body models and `coerce_enums`'s field introspection), `rich`
+(terminal rendering) and `tomli`/`tomli_w` (config I/O); a from-scratch port
+needs an equivalent for all five roles, not just the HTTP client. This is a
+headless CLI, so the UI platforms below describe the port of the engine, and
+none of them draws a view.
 
-- **Python** (source platform): `apt_terminal.cli:_run` is the process entry
-  point (`pyproject.toml`'s `[project.scripts]`). The package depends on
-  `typer` (command parsing), `httpx` (the transport, both directly in
-  `auth.py` and via the generated client), `attrs` (body models and
-  `coerce_enums`'s field introspection), `rich` (terminal rendering), and
-  `tomli`/`tomli_w` (config I/O) — a from-scratch port on another platform
-  needs equivalents for all five roles, not just the HTTP client.
-- **TypeScript/Node (CLI)**: model the same layering as three modules —
-  a config store (`conf` or a hand-rolled TOML/JSON file with `0o600`
-  permissions), a session/auth client wrapping `fetch`/`undici` with the
-  same login/refresh/logout/whoami contract, and a command layer (`commander`
-  or `oclif`) that mirrors `build_resource_app`'s declarative
-  list/get/create/update/delete/actions dispatch over a generated OpenAPI
-  client (e.g. `openapi-typescript-fetch` or `openapi-fetch`).
-- **Swift (Apple, CLI or app)**: `ArgumentParser` for the command layer,
+- **SwiftUI**: Not a UI port. Use `ArgumentParser` for the command layer,
   `URLSession` for the transport (mirroring the raw-request, not
   generated-parser, execution path), `Codable` types generated from the same
-  OpenAPI document, and the Keychain — not a plaintext file — for
+  OpenAPI document, and the Keychain, not a plaintext file, for
   `access_token`/`refresh_token` storage, which is a deliberately *stronger*
-  choice than the source's `0o600` TOML file, not a straight port of it.
-- **Kotlin (Android or JVM CLI)**: `clikt` for the command layer, `OkHttp`
-  or `ktor-client` for the transport, `kotlinx.serialization` for the
-  generated models, and Android's `EncryptedSharedPreferences` (or the JVM
-  equivalent for a desktop tool) in place of a plaintext config file for the
-  same reason as the Swift note.
-- **WinUI 3**: this is the platform this recipe exists to prepare a port
+  choice than the source's `0o600` TOML file, not a straight port of it. A
+  SwiftUI app would wrap the profile and session state in an `@Observable`
+  type.
+- **Compose**: Not a UI port. Use `clikt` for the command layer, `OkHttp` or
+  `ktor-client` for the transport, `kotlinx.serialization` for the generated
+  models, and Android's `EncryptedSharedPreferences` (or the JVM equivalent
+  for a desktop tool) in place of a plaintext config file, for the same
+  reason as the Swift note.
+- **React/Web**: Not a browser port. For a Node CLI, model the same layering
+  as three modules: a config store (`conf` or a hand-rolled TOML/JSON file
+  with `0o600` permissions), a session/auth client wrapping `fetch`/`undici`
+  with the same login/refresh/logout/whoami contract, and a command layer
+  (`commander` or `oclif`) that mirrors `build_resource_app`'s declarative
+  list/get/create/update/delete/actions dispatch over a generated OpenAPI
+  client (for example `openapi-typescript-fetch` or `openapi-fetch`).
+- **AppKit / UIKit**: Not applicable: a CLI has no view layer. A macOS
+  command-line port follows the SwiftUI note above.
+- **WinUI 3**: this is the platform this ingredient exists to prepare a port
   for, and — as a CLI rather than a windowed app — the natural target is a
   .NET **console** project (`System.CommandLine` for the command layer, not
   WinUI controls), using `HttpClient` for the transport (explicitly setting

@@ -2,7 +2,7 @@
 `InboundEvent.messageFailed(reason:)`
 and `.transportError(message:)` carry only the hardcoded English strings
 produced by `PersonaChatError.description` and the `fallback` arguments to
-`describe(error:fallback:)`: `"PersonaChatCoordinator has been destroyed."`,
+`describe(_:fallback:)`: `"PersonaChatCoordinator has been destroyed."`,
 `"PersonaChatCoordinator does not support attachments."`,
 `"PersonaChatCoordinator does not support widgets."`,
 `"Couldn't start the conversation (\(status))."`,

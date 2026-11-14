@@ -2,11 +2,11 @@
 id: 2d18fdbd-b2c5-46c0-8e6f-ceb7467fafa6
 title: "Markdown Content"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -37,13 +37,13 @@ A React Server Component that processes raw markdown content into sanitized, syn
 
 ## Behavioral Requirements
 
-- **render-markdown**: The component MUST process raw markdown input through the same unified pipeline used by the client `MarkdownRenderer` component (parse → GFM → remark-to-rehype with raw HTML disabled → heading slugs/autolinks → syntax highlighting → sanitize → stringify), so a document renders identically whichever path a host uses. (Web implementation: `processMarkdown`; see Platform Notes.)
+- **render-markdown**: The component MUST process raw markdown input through the same unified pipeline used by the client `MarkdownRenderer` component (parse → GFM → ADH alert transform → remark-to-rehype with raw HTML disabled → heading slugs/autolinks → syntax highlighting → sanitize → stringify), so a document renders identically whichever path a host uses. (Web implementation: `processMarkdown`; see Platform Notes.)
 - **sanitize-output**: The component MUST sanitize the generated HTML with an explicit tag/attribute/protocol allowlist — not a denylist — before it reaches the DOM, so markdown input cannot execute script, run event handlers, or navigate via a `javascript:` URL. Sanitization MUST run *after* syntax highlighting, since highlighting produces real element nodes (not raw HTML) for the sanitizer to filter; running it first would strip the highlighter's token markup. (See Compliance.)
-- **highlight-code**: The component MUST syntax-highlight fenced code blocks before sanitization runs, using a highlighter instance that is created once and cached at module scope, so repeated calls in the same process reuse it (see Design Decisions).
+- **highlight-code**: The component MUST syntax-highlight fenced code blocks before sanitization runs, using a highlighter instance that is created once and cached at module scope, so repeated calls in the same process reuse it. The frozen unified processor built on top of that highlighter SHOULD be cached the same way (see Design Decisions).
 - **apply-prose-class**: The component MUST always apply the `adh-mv-prose` CSS class to the root container.
 - **accept-optional-class**: The component MUST accept an optional `className` prop and append it to the root class list when provided.
 - **server-component-only**: The component MUST be an async React Server Component (RSC) — no `"use client"` directive.
-- **strip-frontmatter**: The component MUST strip a leading YAML frontmatter block — one starting with `---` at position 0 of the raw content, through its matching closing `---` — before processing. A `---` occurring anywhere else in the document, on its own line preceded by a blank line, is ordinary markdown and MUST render as a thematic break (`<hr>`), not be treated as frontmatter; a `---` line directly under a preceding text line with no blank line between them is a setext heading marker instead and renders as `<h2>` (standard markdown block parsing, not a frontmatter rule). When a leading `---` at position 0 has no matching closing `---`, the frontmatter parser treats the rest of the document as the frontmatter block: the component renders an empty `<div class="adh-mv-prose"></div>` if that remainder happens to parse as YAML, and otherwise the parse failure MUST propagate per **propagate-render-errors**.
+- **strip-frontmatter**: The component MUST strip a leading YAML frontmatter block — one starting with `---` at position 0 of the raw content, through its matching closing `---` — before processing. A `---` occurring anywhere else in the document, on its own line preceded by a blank line, is ordinary markdown and MUST render as a thematic break (`<hr>`), not be treated as frontmatter; a `---` line directly under a preceding text line with no blank line between them is a setext heading marker instead and renders as `<h2>` (standard markdown block parsing, not a frontmatter rule). A leading `---` at position 0 with no matching closing `---` line is not frontmatter: nothing is stripped, and the document renders as ordinary markdown (see Edge Cases). A closed block whose contents are not valid YAML, or not a mapping, is still stripped and contributes no data; it does not throw.
 - **output-root-div**: The component MUST render output in a root `<div>` element with the combined classes.
 - **propagate-render-errors**: If the markdown pipeline throws (malformed input the parser cannot recover from, or a highlighter/grammar failure), the component MUST let the error propagate to the nearest error boundary. It MUST NOT catch the error itself, render partial output, or fall back to unsanitized HTML.
 
@@ -60,7 +60,7 @@ Not applicable: the component is a static presentation element with no interacti
 
 ## Accessibility
 
-The component delegates accessibility to the semantic HTML the pipeline produces: real heading elements (`h1`–`h6`), list structures, table markup, and code block markers, plus rehype-slug/rehype-autolink-headings anchor ids for in-page navigation. Heading levels are exactly whatever the source markdown authored — the pipeline does not renumber, offset, or demote them, so a `# ` in the markdown always becomes an `<h1>`. A host page that already renders its own `<h1>` MUST start the markdown source at `##` or lower to avoid a duplicate or mis-nested top-level heading; this component has no `headingOffset` option to do that automatically. Content authors are responsible for the rest of accessible markdown authoring — alt text in image syntax, descriptive link text, and correct heading order within the document. See **highlight-code**: shiki's output is inert `<span>` token markup with no ARIA role, so it carries no additional accessibility burden.
+The component delegates accessibility to the semantic HTML the pipeline produces: real heading elements (`h1`–`h6`), list structures, table markup, and code block markers, plus rehype-slug/rehype-autolink-headings anchor ids for in-page navigation. Heading levels are exactly whatever the source markdown authored — the pipeline does not renumber, offset, or demote them, so a `# ` in the markdown always becomes an `<h1>`. A host page that already renders its own `<h1>` SHOULD start the markdown source at `##` or lower to avoid a duplicate or mis-nested top-level heading; this component has no `headingOffset` option to do that automatically. Content authors are responsible for the rest of accessible markdown authoring — alt text in image syntax, descriptive link text, and correct heading order within the document. See **highlight-code**: shiki's output is inert `<span>` token markup with no ARIA role, so it carries no additional accessibility burden.
 
 ## Conformance Test Vectors
 
@@ -71,19 +71,32 @@ The component delegates accessibility to the semantic HTML the pipeline produces
 | markdown-003 | strip-frontmatter | `{ content: "---\nfrontmatter: value\n---\n# Title" }` | `<div class="adh-mv-prose"><h1>Title</h1></div>` — the leading `---…---` block and its contents do not appear anywhere in the output |
 | markdown-004 | sanitize-output | `{ content: "<script>alert('xss')</script>" }` | Output contains no `<script` substring and no `on`-prefixed event-handler attribute |
 | markdown-005 | highlight-code | `` { content: "```ts\nconst x = 1\n```" } `` | Output contains a `<pre class="shiki …">` element (class list includes `shiki`) whose descendant `<code>`/`<span>` elements carry the highlighted tokens. Comparison ignores the exact token boundaries and the `--shiki-light`/`--shiki-dark` CSS variable values, which are theme data. |
-| markdown-006 | strip-frontmatter | `{ content: "# Title\n\n---\n\nMore text" }` | The `---` MUST render as an `<hr>` element between the two paragraphs — it is a thematic break, not frontmatter, because it does not start at position 0 of the content |
+| markdown-006 | strip-frontmatter | `{ content: "# Title\n\n---\n\nMore text" }` | The `---` MUST render as an `<hr>` element between the `<h1>` and the `<p>` — it is a thematic break, not frontmatter, because it does not start at position 0 of the content |
 | markdown-007 | output-root-div, apply-prose-class | `{ content: "   \n\n  " }` | `<div class="adh-mv-prose"></div>` — an empty root, no error thrown |
 | markdown-008 | output-root-div, apply-prose-class | `{ content: "" }` | `<div class="adh-mv-prose"></div>` — an empty root, no error thrown |
 | markdown-009 | accept-optional-class | `{ content: "text" }` (no `className`) | Root `<div>` class attribute is exactly `"adh-mv-prose"` — no trailing space, no literal `undefined`/`null` |
-| markdown-010 | render-markdown, highlight-code | `{ content: "- a\n  - b\n\n\| A \| B \|\n\|---\|---\|\n\| 1 \| 2 \|\n\n` `` ```js\nconst y = 2\n``` `` `\n\n[link]` `(https://example.com)" }` | Renders without throwing: a nested `<ul>`, a `<table>`, a shiki-highlighted `<pre class="shiki …">`, and an `<a href="https://example.com">` |
+| markdown-010 | render-markdown, highlight-code | The `content` string given below the table | Renders without throwing: a nested `<ul>`, a `<table>`, a shiki-highlighted `<pre class="shiki …">`, and an `<a href="https://example.com">` |
+| markdown-011 | render-markdown | `{ content: "> [!NOTE]\n> Body text" }` | Contains `<div class="adh-mv-alert adh-mv-alert--note">` holding a `<p class="adh-mv-alert-title">` whose text is `Note`, followed by a `<p>` whose text is `Body text`; the literal `[!NOTE]` marker does not appear |
+| markdown-012 | strip-frontmatter | `{ content: "---\n\nIntro paragraph.\n\nMore text" }` | An `<hr>` followed by two `<p>` elements (`Intro paragraph.`, `More text`); nothing is dropped |
+| markdown-013 | strip-frontmatter | `{ content: "---\ntitle: [unclosed\n---\n# Body" }` | `<div class="adh-mv-prose"><h1>Body</h1></div>` — the malformed block is stripped and no error is thrown |
+| markdown-014 | sanitize-output | `{ content: "[x](javascript:alert(1)) and <img src=x onerror=alert(1)>" }` | Output contains no `javascript:` substring, no `onerror` substring and no `<img`; the link text `x` renders without an `href` |
+| markdown-015 | propagate-render-errors | `{ content: "text" }` with the highlighter initialization mocked to reject with `Error("boom")` | The component's promise rejects with that error; no partial HTML is returned |
 
+The `content` for markdown-010, as one JS string literal:
+
+```js
+"- a\n  - b\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n```js\nconst y = 2\n```\n\n[link](https://example.com)"
+```
 ## Edge Cases
 
 - **Empty content**: When `content` is an empty string, the component MUST render an empty `<div class="adh-mv-prose"></div>` (markdown-008).
 - **Whitespace-only content**: When `content` contains only whitespace, the component MUST render the same empty `<div class="adh-mv-prose"></div>`, with no error thrown (markdown-007).
 - **Complex markdown**: Nested lists, tables, code blocks, inline code, and links MUST all be processed and rendered without error (markdown-010).
 - **Missing className prop**: When `className` is not provided or undefined, the component MUST render with only the `adh-mv-prose` class (no undefined or null appended) (markdown-009).
-- **Unclosed leading `---`**: A document that opens with `---` at position 0 but has no later line starting with `---` (for example `"---\n\nIntro paragraph.\n\nMore text"`) is NOT a thematic break followed by paragraphs — the frontmatter parser consumes the whole remainder as the frontmatter block. If that remainder parses as YAML, the component renders an empty `<div class="adh-mv-prose"></div>` and the document body is silently dropped; if it does not parse as YAML (for example the remainder starts with `*emphasis*`, or uses Pandoc-style metadata closed by `...`), the parse failure MUST propagate per **propagate-render-errors** instead of rendering partial output.
+- **Unclosed leading `---`**: A document that opens with `---` at position 0 but has no later line starting with `---` (for example `"---\n\nIntro paragraph.\n\nMore text"`) has no frontmatter block, because the frontmatter pattern needs both fences. Nothing is stripped, and the whole document renders as ordinary markdown: a thematic break (`<hr>`) followed by the two paragraphs (markdown-012).
+- **Malformed frontmatter YAML**: A closed leading `---` block whose contents do not parse as YAML (for example `"---\ntitle: [unclosed\n---\n# Body"`) is still stripped from the body, yields no frontmatter data, and does not throw. The body renders normally (markdown-013).
+- **Raw HTML dropped**: Raw HTML in the markdown source, inline or block (`<details>`, `<kbd>`, `<br>`, `<script>`), is removed rather than rendered, because remark-rehype runs with `allowDangerousHtml: false`. Only the text of the surrounding markdown is rendered (markdown-004, markdown-014).
+- **Pipeline failure**: When the pipeline rejects (for example the highlighter fails to initialize), the component MUST let the rejection propagate unchanged (markdown-015).
 
 ## Configuration
 
@@ -128,7 +141,7 @@ Not applicable: the component does not emit diagnostic logs.
 
 - **SwiftUI**: Render the fetched HTML in a `WebView` (SwiftUI, iOS/macOS 26+) with the `adh-mv-prose` CSS injected — the option with full parity (tables, task-list checkboxes, shiki-highlighted code). For markdown simple enough to skip code blocks/tables/images, `Text(AttributedString(markdown:))` is a lighter-weight native alternative, but it does not reproduce this pipeline's syntax highlighting or table rendering.
 
-- **Compose**: Render the fetched HTML in an `AndroidView` wrapping a `WebView`, with the `adh-mv-prose` CSS (or its Android-equivalent spacing and typography) injected. There is no Compose-native markdown-to-Composable library that reproduces GFM tables, task-list checkboxes, and shiki-highlighted code with parity to the web output; treat native-Composable rendering as a separate, lower-fidelity capability outside this recipe's scope.
+- **Compose**: Render the fetched HTML in an `AndroidView` wrapping a `WebView`, with the `adh-mv-prose` CSS (or its Android-equivalent spacing and typography) injected. There is no Compose-native markdown-to-Composable library that reproduces GFM tables, task-list checkboxes, and shiki-highlighted code with parity to the web output; treat native-Composable rendering as a separate, lower-fidelity capability outside this ingredient's scope.
 
 - **AppKit / UIKit**: On macOS, use `WKWebView` with the injected CSS. On iOS, use `WKWebView` as well — there is no first-party native markdown/attributed-text API that reproduces GFM tables, task lists, and syntax-highlighted code. Reserve a native-text fallback (translating `adh-mv-prose` typography — font size, line height, paragraph spacing) for content simple enough not to need `WKWebView`.
 
@@ -138,7 +151,7 @@ Not applicable: the component does not emit diagnostic logs.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/markdown/src/components/MarkdownContent.tsx` | unverified |
+| web | `packages/web/packages/markdown/src/components/MarkdownContent.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -165,14 +178,15 @@ Not applicable: the component does not emit diagnostic logs.
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best-practices |
 
-`input-sanitization`, `semantic-markup`, `dynamic-type-support`, and `unicode-support` rest on `process-markdown.ts` (a custom rehype-sanitize allowlist run after shiki, remark-rehype's semantic element output, `rem`-based prose CSS, and native JS string handling throughout); `screen-reader-support` and `contrast-ratio` are `partial` because accessible names for links/images and the full prose color palette depend on the markdown author and on `themes/palettes.ts`, neither of which this component controls. `separation-of-concerns` passes: `MarkdownContent.tsx` is a thin async wrapper that only marshals `content`/`className` into a root `<div>`; parsing, sanitizing, and highlighting all live in the independently testable `process-markdown.ts` pipeline it calls. `unit-test-coverage` passes: `process-markdown.test.ts` exercises the shared pipeline this component delegates to (frontmatter stripping, GFM, alerts, sanitization, highlighting) directly.
+`input-sanitization`, `semantic-markup`, `dynamic-type-support`, and `unicode-support` rest on `process-markdown.ts` (a custom rehype-sanitize allowlist run after shiki, remark-rehype's semantic element output, `rem`-based prose CSS, and native JS string handling throughout); `screen-reader-support` and `contrast-ratio` are `partial` because accessible names for links/images and the full prose color palette depend on the markdown author and on `themes/palettes.ts`, neither of which this component controls. `separation-of-concerns` passes: `MarkdownContent.tsx` is a thin async wrapper that only marshals `content`/`className` into a root `<div>`; parsing, sanitizing, and highlighting all live in the independently testable `process-markdown.ts` pipeline it calls. `unit-test-coverage` is `partial`: `process-markdown.test.ts` exercises the shared pipeline this component delegates to (frontmatter stripping, GFM, alerts, sanitization, highlighting) directly, but no component-level test covers **apply-prose-class**, **accept-optional-class**, **output-root-div** or **server-component-only**, which live in `MarkdownContent.tsx`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Aligned requirements, edge cases and vectors with the source: alert transform, caching, unclosed and malformed frontmatter, sanitization, five new vectors. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed strip-frontmatter/Configuration: unclosed leading --- consumes to EOF (empty div or error), not hr+paragraphs; setext --- distinguished. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case; correct the SwiftUI/Compose/WinUI platform APIs; add highlight-code and propagate-render-errors requirements; add exact/deterministic test vectors for frontmatter-vs-thematic-break, whitespace-only, and code highlighting; reformat Design Decisions into Decision/Rationale/Approved entries; add the Compliance table; populate related and references |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation |

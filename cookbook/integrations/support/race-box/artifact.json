@@ -4,11 +4,11 @@
     "id": "667825e5-d557-4410-b54e-29dcf98ca930",
     "title": "RaceBox",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0edade7d7c79f945",
+  "synced": "7e65788557dee6b1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

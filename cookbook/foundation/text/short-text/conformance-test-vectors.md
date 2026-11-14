@@ -8,6 +8,6 @@
 | short-text-005 | default-limit, cut-length | A 61-character string of `a`, then `.shortened()` (derived from the source; no test). | 57 `a` characters and `…`, 58 characters in all. |
 | short-text-006 | limit-three | `"abcd".shortened(to: 3)` (derived from the source; no test). | `…`. |
 | short-text-007 | fits-unchanged | `"".shortened(to: 0)` and `"ab".shortened(to: 2)` (derived from the source; no test). | The empty string and `ab`; no cut, so the minimum-limit precondition is never reached. |
-| short-text-008 | count-in-characters | Six family emoji (each one Character) with `.shortened(to: 5)` (derived from the source; no test). | Two whole family emoji then `…`: no emoji is split. |
+| short-text-008 | count-in-characters | Six repetitions of the family emoji `👨‍👩‍👧` (scalars U+1F468 U+200D U+1F469 U+200D U+1F467, one Character each) with `.shortened(to: 5)` (derived from the source; no test). | Two whole family emoji then `…` (`👨‍👩‍👧👨‍👩‍👧…`): no emoji is split. |
 | short-text-009 | no-word-boundary | `"hello world and more".shortened(to: 9)` (derived from the source; no test). | `hello …`: six characters (`hello ` with its trailing space) then the ellipsis. |
 

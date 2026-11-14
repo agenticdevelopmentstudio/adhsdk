@@ -1,5 +1,5 @@
 
-Vectors 1 to 13 are assertions of `runtime-errors.test.ts` (test names in brackets); 14 to 16 are read from the source. Constant NOW is 2026-11-06T12:00:00Z; PROJECTS maps `prj_site` to name `site-production`, domain `site.example.com`.
+Vectors 1 to 13 are assertions of `runtime-errors.test.ts` (test names in brackets); 14 to 26 are read from the source and have no test yet. Constant NOW is 2026-11-06T12:00:00Z; PROJECTS maps `prj_site` to name `site-production`, domain `site.example.com`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -19,4 +19,13 @@ Vectors 1 to 13 are assertions of `runtime-errors.test.ts` (test names in bracke
 | runtime-errors-014 | level-rank-unknown, level-rank | `levelRank("fatal")`, `levelRank("trace")`, `levelRank("mystery")`, `levelRank(null)` | 5, 0, -1, -1 |
 | runtime-errors-015 | group-newest-event | two entries with equal timestamps, deployments d1 then d2 | `deploymentId` d2 |
 | runtime-errors-016 | report-load-errors | store whose `load()` rejects | `loadRuntimeErrorsReport` rejects with that error |
-
+| runtime-errors-017 | level-order | `RUNTIME_LEVELS` | `["fatal", "error", "warning", "info", "debug", "trace"]` |
+| runtime-errors-018 | log-entry-fields | Log event, level `error`, valid project and timestamp, no `source`, `message` the number 42 | Entry with `source` `unknown`, `status` null, `message` `""` |
+| runtime-errors-019 | common-fields | Log event, level `error`, valid project and timestamp, no `deploymentId` | Entry with `deploymentId` `""` |
+| runtime-errors-020 | group-fallbacks, group-newest-event | Two same-key entries: at 1000 with domain `d.example.com`, requestId `r1`, deployment `d1`; at 3000 with domain null, requestId null, deployment `""` | One group: `domain` `d.example.com`, `sampleRequestId` `r1`, `deploymentId` `""` |
+| runtime-errors-021 | group-first-entry-sample | Two same-key entries, the first path `/o/1` message `Order 1 not found`, the second path `/o/2` message `Order 2 not found` | Group `path` `/o/:id`, `message` `Order 1 not found` |
+| runtime-errors-022 | report-input-untouched | Groups array `[few, many]`, then `runtimeErrorsReport` over it | The report lists `many` then `few`; the original array is still `[few, many]` |
+| runtime-errors-023 | report-load | A store whose `load()` and `lastRead()` both record that they were called; `loadRuntimeErrorsReport(store)` with no `nowMs` | Both calls started before either result is awaited; the report holds the loaded groups and the read's `readAt`; `generatedAt` is the current time |
+| runtime-errors-024 | group-level | Two same-key entries with levels `mystery` and `other` | Group `level` `mystery` |
+| runtime-errors-025 | message-head | `a\r\nb`; `a\nb`; `a\rb` | `a`; `a`; `a\rb` |
+| runtime-errors-026 | id-segment | `/u/3F2504E0-4F89-11D3-9A0C-0305E82C3301`; `/b/DEADBEEF1234` | `/u/:id`; `/b/:id` |

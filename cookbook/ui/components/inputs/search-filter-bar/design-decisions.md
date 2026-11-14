@@ -37,7 +37,7 @@
   **Rationale**: dry / consistency — the bar inherits the standard
   focus-ring and token treatment, so it matches every other field on the platform.
   **Approved**: pending
-- **Decision**: The filter row is omitted entirely when `filters` is empty.
+- **Decision**: The filter row is omitted entirely when there are no `filters` and no renderable `children`.
   **Rationale**: principle-of-least-astonishment — a search-only bar shows no empty
   control row.
   **Approved**: pending

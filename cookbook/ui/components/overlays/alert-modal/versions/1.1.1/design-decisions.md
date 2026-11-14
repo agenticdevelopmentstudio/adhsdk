@@ -1,0 +1,11 @@
+
+- **Decision**: Treat the explicit-keyboard-map double-fire on `Escape` as an unintended discrepancy, not a contract. The component's own doc comment states "The window keydown listener handles Enter only, so there is no double-fire path," but that is only true for `keyboard="default"` — when `keyboard` is an explicit object, the keydown listener dispatches on *any* key present in it, including a caller-supplied `"Escape"` entry, which then ALSO reaches Base UI's `onOpenChange` (reason `"escape-key"`), invoking the mapped callback twice for one keypress. The intended contract is that the window keydown listener ignores `"Escape"` entirely, leaving `onOpenChange` as the single Escape path.
+  **Rationale**: The source's own comment already asserts single-path Escape handling; the explicit-map branch that bypasses this is a gap between stated intent and implementation, not a deliberate design choice, so it is recorded as a defect to close rather than ratified as behavior. See `honor-explicit-keyboard-map` and the matching Edge Cases entry.
+  **Approved**: pending
+- **Decision**: `destructive={true}` bundles two independent effects — forcing the error tone (icon + color) and forcing the keyboard policy to behave as `"none"` — from a single boolean, rather than exposing separate `tone`/`keyboard`-disable overrides.
+  **Rationale**: A destructive action is exactly the case where an accidental Enter/Escape keypress is most costly, so pairing the visual warning with suppressed keyboard shortcuts is safer than letting a caller opt into one effect without the other; the coupling is accepted as a safety default rather than split into finer-grained props.
+  **Approved**: pending
+- **Decision**: The busy-state spinner (`role="status"` / `aria-label="Working…"`) is implemented twice — inline via `Loader2` in alert mode, and delegated to `DialogActions` in confirm mode — instead of both modes delegating to one shared busy-indicator ingredient.
+  **Rationale**: The two code paths currently produce identical visual/accessible output, but the duplication is unresolved technical debt rather than an intentional choice; noted here so a future pass can extract a shared busy-indicator ingredient both modes call.
+  **Approved**: pending
+

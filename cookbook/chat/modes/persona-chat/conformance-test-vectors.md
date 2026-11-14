@@ -19,7 +19,8 @@
 | persona-chat-016 | handle-mobile-close | `mode='mobile'`, onClose prop omitted | Default no-op callback forwarded to MobileChat |
 | persona-chat-017 | accept-class-name | `mode='mobile'`, className prop provided | className not forwarded to MobileChat |
 | persona-chat-018 | accept-sizing-inline | `mode='mobile'`, sizing prop provided | sizing prop ignored; not forwarded to MobileChat |
-| persona-chat-019 | handle-mobile-close | `mode='inline'`, onClose callback provided | onClose not forwarded to InlineChat |
-| persona-chat-020 | handle-mobile-open | `mode='inline'`, open prop provided | open not forwarded to InlineChat |
+| persona-chat-019 | drop-mobile-only-props | `mode='inline'`, onClose callback provided | onClose not forwarded to InlineChat |
+| persona-chat-020 | drop-mobile-only-props | `mode='inline'`, open prop provided | open not forwarded to InlineChat |
 | persona-chat-021 | route-by-mode | `mode` set to a value outside `ChatMode` (untyped caller) | No switch case matches; component renders nothing (`undefined`) |
-
+| persona-chat-022 | no-prop-validation | `mode='inline'`, `backend` and `persona` omitted (untyped caller) | No error is thrown by PersonaChat; `undefined` is forwarded to `InlineChat` |
+| persona-chat-023 | mode-change-remounts | Render with `mode='inline'`, then re-render with `mode='three-pane'` | The `InlineChat` instance is unmounted and a new `ThreePaneChat` is mounted; no state carries over |

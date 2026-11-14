@@ -2,7 +2,7 @@
 id: 112f2150-3fcd-416c-bd25-b40f729b8ef2
 title: "Appearance Store"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -10,7 +10,7 @@ modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "A client-side external store for appearance preferences: cache, repaint of the document, route scopes, OS colour-scheme following, sign-in adopt and sign-out reset."
+summary: "Client-side store for appearance preferences: cache, repaint, route scopes, OS colour-scheme following, adopt and reset."
 platforms:
   - typescript
   - web
@@ -19,7 +19,8 @@ tags:
   - appearance
   - preferences
   - store
-depends-on: []
+depends-on:
+  - 0f721fc3-0e8f-4a1b-b895-1b1bad370bd0
 related: []
 references: []
 approved-by: ""
@@ -36,7 +37,7 @@ The appearance store is the one in-memory holder of the user's `AppearancePrefs`
 
 A site that wears the prefs on only some routes mounts a scope (`mountAppearanceScope`, or the `AppearanceScope` component) on those routes. Once any scope has mounted, the store paints `<html>` only while at least one scope is mounted.
 
-The pure logic it builds on (the defaults, normalisation, the storage reads and writes, `applyAppearance`, `clearAppearance`) lives in `appearance.ts` and is shared with the pre-paint script; this recipe specifies only the store layered over it.
+The pure logic it builds on (the defaults, normalisation, the storage reads and writes, `applyAppearance`, `clearAppearance`) lives in `appearance.ts` ([adhsdk.ingredient.themes.appearance](cookbook:0f721fc3-0e8f-4a1b-b895-1b1bad370bd0)) and is shared with the pre-paint script; this ingredient specifies only the store layered over it.
 
 ## Behavioral Requirements
 
@@ -66,6 +67,7 @@ The pure logic it builds on (the defaults, normalisation, the storage reads and 
 - **reset-clears-cache**: `resetAppearance()` MUST remove the `localStorage` entry rather than overwrite it, so the next visitor on a shared browser does not inherit the previous user's theme through the pre-paint script.
 - **commit-order**: Every commit MUST, in this order: replace the held prefs, write or clear the cache, paint the document if allowed, then notify every listener.
 - **notify-sync**: Listeners MUST be called synchronously inside the commit, in set insertion order.
+- **listener-throw-propagates**: When a listener throws during a commit, the error MUST propagate out of the commit and the listeners after it MUST NOT be called; the held prefs, the cache write and the paint have already happened. The store wraps no listener in `try`/`catch`.
 - **cache-failure-silent**: A failed `localStorage` write or removal (private mode, quota) MUST NOT stop the commit: the held prefs, the paint and the notification still happen. `writeStoredAppearance` and `clearStoredAppearance` swallow the error with an explanatory comment, so the failure is not signalled.
 
 ### Painting the document
@@ -110,40 +112,43 @@ Not applicable — this is a preference store, not a visual component. It carrie
 
 ## Conformance Test Vectors
 
-Vectors AS-001 to AS-008 are asserted by `appearanceScope.test.ts`, `AppearanceScope.test.tsx` or `clearAppearance.test.ts`; AS-009 to AS-016 are derived from the source and have no test beside them.
+Vectors AS-001 to AS-008 are asserted by `appearanceScope.test.ts`, `AppearanceScope.test.tsx` or `clearAppearance.test.ts`; AS-009 to AS-020 are derived from the source and have no test beside them; each of their Input cells starts with "Derived, no test:" so an implementer knows they are unverified.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | AS-001 | scope-mount-arms, scope-first-paint, scope-last-release-clears, os-change-repaint | `appearanceScope.test.ts` "an OS scheme change after the scope unmounts leaves html alone": OS light; mount a scope; `adoptAppearance` with colour mode `auto`, contrast `high`; release; flip the OS to dark | After adopt `data-contrast` is `high`; after release `<html>` carries no `data-color-mode`, no `dark` class and no `data-contrast`; after the flip it is still unpainted |
-| AS-002 | scope-unmounted-no-paint, adopt-wholesale, set-caches | `appearanceScope.test.ts` "a commit that resolves after the scope unmounts is cached but not painted": mount and release a scope; `adoptAppearance` with colour mode `dark`; then `resetAppearance()` | After adopt `<html>` is unpainted and `localStorage["adh:appearance"]` parses to colour mode `dark`; after reset `<html>` is still unpainted |
+| AS-002 | scope-unmounted-no-paint, adopt-wholesale (cache clause) | `appearanceScope.test.ts` "a commit that resolves after the scope unmounts is cached but not painted": mount and release a scope; `adoptAppearance` with colour mode `dark`; then `resetAppearance()` | After adopt `<html>` is unpainted and `localStorage["adh:appearance"]` parses to colour mode `dark`; after reset `<html>` is still unpainted |
 | AS-003 | scope-first-paint | `appearanceScope.test.ts` "mounting the scope again paints what the store holds now": mount and release; `adoptAppearance` with colour mode `dark`; mount again | `<html>` has the `dark` class and `data-color-mode="dark"` |
 | AS-004 | scope-nested, scope-release-once, scope-last-release-clears | `appearanceScope.test.ts` "keeps painting until the last of two scopes unmounts, and a release runs once": mount twice; adopt dark; call the first release twice | `dark` class still present; after the second release `<html>` is unpainted |
 | AS-005 | scope-first-paint, os-change-repaint | `appearanceScope.test.ts` "a scope mounted with nothing stored follows the OS when it flips": OS light, nothing stored; mount a scope; flip the OS dark, then light | Initially no `dark` class and `data-color-mode="auto"`; `dark` class after the first flip; gone after the second |
 | AS-006 | scope-unscoped-paints, paints-rule | `appearanceScope.test.ts` "a site that never mounts a scope keeps painting on commit and on an OS change": no scope; adopt colour mode `auto` with contrast `high`; flip the OS dark | `data-contrast="high"` and no `dark` class after adopt; `dark` class after the flip |
 | AS-007 | scope-component, scope-last-release-clears, scope-unmounted-no-paint | `AppearanceScope.test.tsx`: render `<AppearanceScope/>`; adopt dark with contrast `high`; unmount; adopt dark again | While mounted: `dark` class and `data-contrast="high"`; after unmount no `dark`, `data-color-mode` or `data-contrast`; after the second adopt still no `dark` class |
 | AS-008 | scope-last-release-clears | `clearAppearance.test.ts` (the function the last release calls): apply every pref to an element, then clear it | The element's `outerHTML` equals its value before apply; `data-color-mode="auto"` and `dark` set by the pre-paint script are also removed |
-| AS-009 | os-change-explicit-mode | Unscoped site, adopt colour mode `light`, flip the OS dark | No `dark` class; the listener makes no repaint |
-| AS-010 | reset-defaults, reset-clears-cache | Unscoped site, `adoptAppearance` with colour mode `dark`, then `resetAppearance()` | The `localStorage` entry is absent, the snapshot equals `APPEARANCE_DEFAULTS` in value, and `<html>` follows the OS (no `dark` class when the OS is light) |
-| AS-011 | set-merges, set-caches, hook-subscribes | Hook mounted with defaults; call `set({ contrast: "high" })` | `prefs.contrast` is `high`, every other field is unchanged, the stored JSON holds the merged object, and the component re-renders once |
-| AS-012 | server-snapshot | Render on the server (no `window`) | The hook returns `APPEARANCE_DEFAULTS`; no paint, no error |
-| AS-013 | os-listener-guards | Load the module with `window.matchMedia` undefined | The import does not throw; `adoptAppearance` with colour mode `auto` paints no `dark` class |
-| AS-014 | os-listener-guards | Load the module with a query object that has no `addEventListener` | The import does not throw and no OS change is followed |
-| AS-015 | cache-failure-silent | `localStorage.setItem` throws; call `adoptAppearance(prefs)` | No exception; the snapshot equals `prefs`, `<html>` is painted and listeners are notified |
-| AS-016 | os-change-unread | Fresh module, no read, OS flips | No repaint and no error |
-
+| AS-009 | os-change-explicit-mode | Derived, no test: Unscoped site, adopt colour mode `light`, flip the OS dark | No `dark` class; the listener makes no repaint |
+| AS-010 | reset-defaults, reset-clears-cache | Derived, no test: Unscoped site, `adoptAppearance` with colour mode `dark`, then `resetAppearance()` | The `localStorage` entry is absent, the snapshot equals `APPEARANCE_DEFAULTS` in value, and `<html>` follows the OS (no `dark` class when the OS is light) |
+| AS-011 | set-merges, set-caches, hook-subscribes | Derived, no test: Hook mounted with defaults; call `set({ contrast: "high" })` | `prefs.contrast` is `high`, every other field is unchanged, the stored JSON holds the merged object, and the component re-renders once |
+| AS-012 | server-snapshot | Derived, no test: Render on the server (no `window`) | The hook returns `APPEARANCE_DEFAULTS`; no paint, no error |
+| AS-013 | os-listener-guards | Derived, no test: Load the module with `window.matchMedia` undefined | The import does not throw; `adoptAppearance` with colour mode `auto` paints no `dark` class |
+| AS-014 | os-listener-guards | Derived, no test: Load the module with a query object that has no `addEventListener` | The import does not throw and no OS change is followed |
+| AS-015 | cache-failure-silent | Derived, no test: `localStorage.setItem` throws; call `adoptAppearance(prefs)` | No exception; the snapshot equals `prefs`, `<html>` is painted and listeners are notified |
+| AS-016 | os-change-unread | Derived, no test: Fresh module, no read, OS flips | No repaint and no error |
+| AS-017 | set-not-validated | Derived, no test: unscoped site; `set({ colorMode: "bogus" })` called from untyped JavaScript | The value is held, cached under `APPEARANCE_STORAGE_KEY` and painted as given; the store does not normalise it |
+| AS-018 | commit-order, notify-sync | Derived, no test: a listener that, when called, reads the `<html>` `class`, `localStorage` and the snapshot; call `adoptAppearance` with colour mode `dark` | The listener sees the new snapshot, the new cache entry and the `dark` class already in place; it is called before `adoptAppearance` returns |
+| AS-019 | snapshot-stability, lazy-snapshot, hook-shape | Derived, no test: empty cache holding `{ colorMode: "dark" }` before the first read; read the snapshot twice, then render the hook twice with no commit between | The first read loads the stored prefs; both reads and both renders return the identical object (`Object.is`), and the hook's `{ prefs, set }` object and `set` keep their identity |
+| AS-020 | subscribe-unsubscribe, listener-throw-propagates | Derived, no test: subscribe listeners A and B, then unsubscribe A and commit; then subscribe a throwing listener before B and commit | After the first commit only B is called; in the second commit the throw propagates out of the commit and B is not called |
 ## Edge Cases
 
-- **Nothing stored**: With no cache entry, `readStoredAppearance` returns the defaults, so the first snapshot is colour mode `auto`. The store MUST accept this (it is the signed-out state).
+- **Nothing stored**: With no cache entry, `readStoredAppearance` returns the defaults, so the first snapshot is colour mode `auto`. This is the signed-out state; the store accepts it (see `lazy-snapshot`).
 - **Stored JSON is corrupt or has unknown or wrongly typed fields**: `readStoredAppearance` returns the defaults on a parse error and `normalizeAppearance` drops unrecognised values, so the snapshot is always a complete `AppearancePrefs`. This applies to reads only.
 - **A partial or wrongly typed value reaches `set` or `adoptAppearance`**: it is stored and painted as given. The type signature is the only guard, so a caller outside TypeScript is responsible for passing valid values.
 - **Reset when never signed in**: `resetAppearance()` on a browser that never signed in changes nothing visible: the defaults replace the defaults and the (absent) cache is cleared. Listeners are still notified.
-- **Adopt resolves after the reader left a scoped route**: The prefs are cached and held but not painted (AS-002); the next scope mount paints them (AS-003). The store MUST NOT paint a page that never asked for the prefs.
+- **Adopt resolves after the reader left a scoped route**: The prefs are cached and held but not painted (AS-002); the next scope mount paints them (AS-003). This is `scope-unmounted-no-paint`: the page never asked for the prefs.
 - **A scope is mounted before any prefs are read**: The mount's snapshot read loads the cache. This is what arms OS following for a site that only mounts a scope (AS-005).
 - **Release called twice**: counted once, so the mounted count never drops below the number of live scopes.
 - **Boundary, scope count 0 to 1 to 0**: paint on the first mount, clear on the last release. Only the 0 to 1 and 1 to 0 transitions touch `<html>`; a second mount paints nothing new.
 - **Concurrent calls**: Not applicable as parallelism: the module runs on the single browser thread, and every commit is a synchronous run of replace, cache, paint and notify. Two commits from separate calls resolve in call order; the last one wins, and a late-resolving `adoptAppearance` overwrites an earlier `set`.
 - **Another tab changes the prefs**: The store attaches no `storage` event listener, so a change in another tab reaches this tab only through its next read after a reload. This is an absent feature, not a gap in a stated contract.
-- **A listener throws during notification**: The error propagates out of the commit and later listeners are not called; the held prefs, cache and paint have already happened.
+- **A listener throws during notification**: See `listener-throw-propagates`: the error propagates out of the commit and later listeners are not called.
 - **OS signal unavailable**: With no `matchMedia`, `auto` resolves to light and no OS change is ever observed (os-listener-guards).
 - **Offline or server unreachable**: Not applicable: the store makes no network call; the server round-trip belongs to the caller (`AppearanceSync`, which reports a fetch failure and leaves the pre-paint result in place).
 - **Storage unavailable**: Private mode or a full quota loses the cache write silently (cache-failure-silent); the page keeps the in-memory prefs until reload.
@@ -208,7 +213,7 @@ Not applicable: the module makes no log call. The storage helpers swallow storag
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/appearance-store.tsx` | confirmed (1.0.0) |
+| web | `packages/web/packages/themes/src/appearance-store.tsx` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -260,3 +265,4 @@ Not applicable: the module makes no log call. The storage helpers swallow storag
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Linked the appearance module as a dependency, added a listener-throw requirement, named the edge-case MUSTs by pointing at existing requirements, fixed the AS-002 mapping, marked derived vectors, added vectors AS-017 to AS-020, and shortened the summary. |

@@ -1,3 +1,2 @@
-
-Not applicable: Button responds to theme tokens that may reflect platform accessibility settings, but the component itself does not directly implement WCAG Rule 15 display options (Reduce Motion, Increase Contrast, Differentiate Without Color).
-
+- **Reduce Motion**: The pressed dip (`translate-y-px`, a 1px translation animated by `transition-all`) is the only motion. The source has no `motion-reduce:` variant, so Reduce Motion does not turn it off. The dip is a single pixel and appears only while a pointer is held, so no requirement is added for it.
+- **Increase Contrast** and **Differentiate Without Color**: Not applicable to the component itself; it renders theme tokens, which may reflect platform accessibility settings.

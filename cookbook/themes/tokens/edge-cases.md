@@ -6,10 +6,11 @@
 - **Last declaration without a semicolon**: Dropped silently (MUST). Generated theme CSS ends every declaration with `;`; free-form CSS from the editor may not, and its last property is then missing from the map.
 - **Value containing a semicolon**: Cut at the first `;` (MUST). A data URL or other value with an interior semicolon is truncated and the remainder discarded.
 - **Value containing a closing brace**: The block ends at the first `}` anywhere inside it, including inside a quoted string or a function value, so later declarations are lost (MUST).
+- **Name containing `--` after other characters**: The property pattern is not anchored, so `x--y:1;` yields `--y` (MUST).
 - **Duplicate property names**: The last value wins and the first position is kept (MUST).
 - **Whitespace-only value**: Stored as the empty string (MUST).
 - **Multiple `:root` blocks**: Only the first is read (MUST); the comment on the block pattern says the first `:root` block of a generated theme is its token block and what follows is theme-independent.
 - **Concurrent access**: Not a concern; the functions are synchronous and pure, and JavaScript runs them one at a time. The module-level regular expressions carry the global flag but are used only through `replace` and `matchAll`, which do not depend on a prior match position.
 - **Error states, offline and cancellation**: Not applicable; there is no I/O, no dependency that can fail and no long-running work to cancel. Malformed CSS never raises; it yields fewer entries.
-- **Very large input**: The source sets no size limit and no timeout; the patterns are single linear scans.
+- **Very large input**: The source sets no size limit and no timeout; the patterns are not guaranteed linear. An unclosed `:root{` makes the block pattern rescan to the end of the input from each `:root{`, and a `--x:` with no later `;` makes the property pattern do the same, so the worst case on such input is O(n²).
 

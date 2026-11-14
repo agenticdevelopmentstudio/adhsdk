@@ -2,11 +2,11 @@
 id: 46e0a509-8eac-460a-b24a-d39a8b71b02c
 title: "Message Bubble"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,7 +34,7 @@ approved-date: ""
 
 ## Overview
 
-A display component for a single chat message. Renders an avatar slot, the sender's name (accessibility only), message text as markdown, timestamp, delivery status, and optionally rich content, tool-call indicators, and a caller-controlled detail indicator. On Web, the bubble can also be clickable, show a selected state, and expose a connector anchor for three-pane mode. The bubble's appearance (fill, border, text color) is determined by semantic theme roles: user vs. persona. Supports streaming (composing) and failed delivery states. On platforms with theme support, repaints live on theme change.
+A display component for a single chat message. Renders an avatar slot, the sender's name (accessibility only), message text as markdown, timestamp, delivery status, and optionally rich content, tool-call indicators, and a caller-controlled detail indicator. On Web, the bubble can also be clickable, show a selected state, and expose a connector anchor for three-pane mode. The bubble's appearance (fill, border, text color) is determined by semantic theme roles: user vs. persona. Supports streaming (composing) and failed delivery states. On macOS and iOS the view repaints itself through its own theme observer when the theme changes; on Web, styling lives in CSS, so a theme change repaints without any component code.
 
 ## Behavioral Requirements
 
@@ -46,10 +46,10 @@ A display component for a single chat message. Renders an avatar slot, the sende
 - **failure-announced-on-web**: On Web, the component MUST place the failure reason inside a `role="alert"` container so assistive technology announces it automatically when it appears.
 - **theme-by-sender-role**: The component MUST apply the appropriate semantic theme colors based on whether the sender is the local user or a persona.
 - **size-to-content**: The component's bubble width MUST NOT exceed the caller-provided maximum width; text MUST wrap rather than overflow horizontally at that width, and the bubble MUST shrink to fit shorter content.
-- **flat-theme-fill**: When a theme provides no fill (alpha ≤ 0.001), the component MUST render as a flat line (no background, no padding, no corner radius), even when a bubble border role is declared.
+- **flat-theme-fill**: When a theme provides no fill (alpha ≤ 0.001), the component MUST render as a flat line (no background, no padding, no corner radius), and MUST suppress any declared bubble border role, except that the failure border of **failed-state-indicator** still renders.
 - **optional-theme-border**: When a theme declares a bubble border role with visible alpha and the bubble is neither flat nor in a failed state, the component MUST apply a 1pt border in the declared color.
 - **rich-content-rendering**: The component MAY render rich content items (images, etc.) inline after the text.
-- **rich-content-load-gating**: On platforms that preload rich-content images, the component MUST defer rendering the entire bubble, including its text, until every image has finished loading.
+- **rich-content-load-gating**: On Web, the only one of the three implementations that renders rich-content images, the component MUST defer rendering the entire bubble, including its text, until every image has finished loading.
 - **detail-indicator**: The component MAY display an optional detail indicator (e.g., arrow) controlled by the caller, and MUST invoke the caller-provided callback when the indicator is activated.
 - **tool-call-pills**: The component MAY render an inline status pill for each tool call attached to the message (started, completed, or failed).
 - **avatar-slot-rendered**: The component MUST render an avatar slot for every message, even when the sender has no avatar image, so that a transcript's left edge stays aligned.
@@ -118,14 +118,16 @@ A display component for a single chat message. Renders an avatar slot, the sende
 | bubble-026 | composing-caret, failed-state-indicator | Message re-rendered with deliveryStatus changing from .composing to .failed | Caret is no longer present; failure border and reason appear instead |
 | bubble-027 | failure-announced-on-web | Web: message with deliveryStatus .failed("Network error") | Failure reason renders inside `role="alert"`; screen reader announces it when it appears |
 | bubble-028 | failed-state-indicator, optional-theme-border | Theme declares a bubble border role and deliveryStatus is .failed | Border renders in the danger color; the declared border role is not applied while failed |
-
+| bubble-029 | timestamp-display | Message timestamp 2026-09-22T14:30:00 in de_DE locale (macOS, Web) | Displays as "14:30": the locale's 24-hour cycle |
+| bubble-030 | tool-call-pills | Message with one tool call named "search", status "completed" | A pill reading "search ✓" renders inline |
+| bubble-031 | tool-call-pills | Message with one tool call named "search", status "failed" | A pill reading "search ✗" renders inline |
 ## Edge Cases
 
 - **Empty text**: Message with empty or nil text still renders the sender name, timestamp, avatar slot, and any rich content or failure reason (see **text-content-rendered**, vector bubble-022).
 - **Missing timestamp**: Message with nil timestamp omits the timestamp line; bubble still renders text and other content (see **timestamp-display**, vector bubble-023).
 - **Long text**: Text that exceeds maxWidth wraps and the bubble expands vertically; measurement ensures the bubble is never wider than maxWidth (see **size-to-content**).
 - **Very short text**: Single character or emoji text renders at the bubble's own measured size — no separate minimum width is enforced; padding is applied normally when the theme is not flat.
-- **Theme change during rendering**: On platforms with live theme repainting (Apple), the bubble repaints synchronously; caller is responsible for triggering repaints when theme changes.
+- **Theme change during rendering**: On Apple platforms the bubble repaints synchronously from its own theme observer, so the caller does nothing; on Web the browser repaints from CSS.
 - **Flat theme transition**: When a theme's fill alpha transitions from > 0.001 to ≤ 0.001 (or vice versa), padding and corner radius update; no animation.
 - **Multiple delivery statuses**: The component handles one status per render; if a message transitions from composing to failed, it must be re-rendered with the new status (see vector bubble-026).
 - **Rich content load delay**: See **rich-content-load-gating** — the Web implementation renders nothing until every image in the content array has finished loading; callers must handle the interval where the component is not yet mounted.
@@ -142,6 +144,21 @@ A display component for a single chat message. Renders an avatar slot, the sende
 | `onClick` | callback (web only) | none | Invoked when the message container is clicked or tapped (see **container-click-handler**) |
 | `index` | number (web only) | none | Message's position in the transcript; required to render a connector anchor when `message.popover` is set (see **connector-anchor**) |
 
+The message the bubble renders (Web `ChatMessage` in `packages/web/packages/chat/src/types.ts`; Apple `any Message` from the [chat contract](cookbook:1f14e4d7-07ea-4f59-8365-5a15eb162def)):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sender` / `senderID` | `ChatParticipant` (`name`, optional `avatar`) on Web; `String` on Apple | Who sent the message |
+| `isPersona` (Web) / `isLocalUser` (Apple) | boolean | Selects the persona or user theme role (see **theme-by-sender-role**) |
+| `text` | string | Message text, rendered as markdown |
+| `timestamp` | `Date` (required on Web), optional on Apple | See **timestamp-display** |
+| `isStreaming` (Web) / `deliveryStatus == .composing` (Apple) | boolean / enum | Appends the streaming caret |
+| `failure` (Web) / `deliveryStatus == .failed(reason)` (Apple) | optional string / enum | The failure reason; presence means failed |
+| `deliveryStatus` (Apple) | enum | One of `composing`, `sending`, `sent`, `delivered`, `failed(reason:)`, `received` |
+| `content` (Web) | `ContentItem[]`, each a link or an image | Rich content rendered after the text |
+| `toolCalls` (Web) | `ToolCallInfo[]` (`name`, `arguments`, `status` of `started`, `completed` or `failed`) | One pill per call |
+| `popover` (Web) | `PopoverData` | Enables the connector anchor in three-pane mode |
+
 ## Deep Linking
 
 Not applicable: Message bubbles are display elements within a conversation view, not standalone deep-linkable destinations.
@@ -152,7 +169,9 @@ Not applicable: Message bubbles are display elements within a conversation view,
 |-----------|-------------|---------|
 | `message_bubble.detail_button.label` | "Show details" | Aria label for the optional detail-indicator button (Web); currently hardcoded in `MessageBubble.tsx` rather than sourced from a resource file — see **no-hardcoded-strings** in Compliance |
 | `message_bubble.failure.reason` | — (caller-provided) | Failure reason text comes from `deliveryStatus.failed(reason)`; the component renders it verbatim and does not localize it — the caller is responsible for localizing the reason before passing it in |
-
+| `message_bubble.tool_call.started` | "Calling {name}…" | Tool-call pill text while the call runs (Web); hardcoded in `MessageBubble.tsx` |
+| `message_bubble.tool_call.completed` | "{name} ✓" | Tool-call pill text after a successful call (Web); hardcoded in `MessageBubble.tsx` |
+| `message_bubble.tool_call.failed` | "{name} ✗" | Tool-call pill text after a failed call (Web); hardcoded in `MessageBubble.tsx` |
 ## Accessibility Options
 
 | Option | Behavior |
@@ -167,8 +186,7 @@ Not applicable: This component has no feature flags.
 
 ## Analytics
 
-Not applicable: Component is display-only with no user interaction. Optional interactive elements (detail arrow, container click) are left to the caller to track.
-
+No analytics events are emitted by the component itself. It does accept interactions, the container `onClick` and the detail-indicator callback, and tracking them is the caller's job.
 ## Privacy
 
 Not applicable: Component renders data provided by caller; it does not collect, transmit, or store any data.
@@ -179,23 +197,23 @@ Not applicable: This component performs no logging.
 
 ## Platform Notes
 
-- **Web** (React/TypeScript): `MessageBubble.tsx` uses semantic HTML (`div`, `button`, `span`) with CSS classes for styling. Avatar and visually-hidden sender name are wrapped separately (**avatar-slot-rendered**, **sender-name-accessible**). Tool call pills are rendered inline (**tool-call-pills**). Detail arrow is a button with `aria-label` (**detail-indicator**). Timestamp is inline in caption font (**timestamp-display**). Failure reason is in a `div role="alert"` (**failure-announced-on-web**). Rich content rendering is gated on `useAllImagesLoaded` (**rich-content-load-gating**); connector anchors are conditionally rendered when a popover and index are present (**connector-anchor**). The container's `onClick` and `isSelected` props back **container-click-handler** and **selected-state**. All styling deferred to CSS in `base.css` and theme files.
+- **React/Web** (React/TypeScript): `MessageBubble.tsx` uses semantic HTML (`div`, `button`, `span`) with CSS classes for styling. Avatar and visually-hidden sender name are wrapped separately (**avatar-slot-rendered**, **sender-name-accessible**). Tool call pills are rendered inline (**tool-call-pills**). Detail arrow is a button with `aria-label` (**detail-indicator**). Timestamp is inline in caption font (**timestamp-display**). Failure reason is in a `div role="alert"` (**failure-announced-on-web**). Rich content rendering is gated on `useAllImagesLoaded` (**rich-content-load-gating**); connector anchors are conditionally rendered when a popover and index are present (**connector-anchor**). The container's `onClick` and `isSelected` props back **container-click-handler** and **selected-state**. All styling deferred to CSS in `base.css` and theme files.
 
-- **SwiftUI**: Build from a `VStack`/`ZStack` container sized via `.frame(maxWidth:)`. Conform to the `Themeable` protocol and observe palette changes with a `ThemePaletteObserver`, mirroring the AppKit/UIKit sources' `applyTheme(_:)` pattern rather than an `@Themeable` attribute (SwiftUI has no such attribute). Measure text with SwiftUI's own text layout, or size an `NSAttributedString`/`AttributedString` via `boundingRect` the way the Apple sources do. Support `.composing` and `.failed` delivery statuses by appending to the rendered text, matching `MessageBubbleView.applyTheme`. Render the sender name via `.accessibilityLabel` or `.accessibilityElement(children: .combine)` so it reaches the accessibility tree without a visible label. Support flat themes by conditionally zeroing padding and corner radius when the theme's fill alpha is ≤ 0.001, as `MessageBubbleView.isFlat` does.
+- **SwiftUI**: Build from a `VStack`/`ZStack` container sized via `.frame(maxWidth:)`. Conform to the `Themeable` protocol and observe palette changes with a `ThemePaletteObserver`, mirroring the AppKit/UIKit sources' `applyTheme(_:)` pattern rather than an `@Themeable` attribute. Measure text with SwiftUI's own text layout, or size an `NSAttributedString`/`AttributedString` via `boundingRect` the way the Apple sources do. Support `.composing` and `.failed` delivery statuses by appending to the rendered text, matching `MessageBubbleView.applyTheme`. Render the sender name via `.accessibilityLabel` or `.accessibilityElement(children: .combine)` so it reaches the accessibility tree without a visible label. Support flat themes by conditionally zeroing padding and corner radius when the theme's fill alpha is ≤ 0.001, as `MessageBubbleView.isFlat` does.
 
-- **Compose** (Android/Kotlin): Build from a `Surface` or `Card` composable for the bubble container. Map the semantic `userBubble` / `personaBubble` / `userText` / `personaText` theme roles explicitly onto Compose color values via a custom `CompositionLocal` holding the semantic palette, rather than Material Design 3's own color-role slots — bubble theming stays governed by **theme-by-sender-role**, not Material's user/persona-agnostic palette. Support streaming and failed states by appending to the composed text, matching the Apple sources. Measure text with `TextMeasurer`. Render the sender name in a `Modifier.semantics { contentDescription = ... }` block for accessibility. Observe palette changes via that same custom `CompositionLocal` (not `LocalCompositionLocals`, which is not a real Compose API). Support flat themes by conditionally omitting the `Surface` background, padding, and corner radius when the theme's fill alpha is ≤ 0.001.
+- **Compose** (Android/Kotlin): Build from a `Surface` or `Card` composable for the bubble container. Map the semantic `userBubble` / `personaBubble` / `userText` / `personaText` theme roles explicitly onto Compose color values via a custom `CompositionLocal` holding the semantic palette, rather than Material Design 3's own color-role slots — bubble theming stays governed by **theme-by-sender-role**, not Material's user/persona-agnostic palette. Support streaming and failed states by appending to the composed text, matching the Apple sources. Measure text with `TextMeasurer`. Render the sender name in a `Modifier.semantics { contentDescription = ... }` block for accessibility. Observe palette changes via that same custom `CompositionLocal`. Support flat themes by conditionally omitting the `Surface` background, padding, and corner radius when the theme's fill alpha is ≤ 0.001.
 
-- **AppKit / UIKit** (macOS/iOS): Source `MessageBubbleView` (macOS) and `MobileMessageBubbleView` (iOS) use `NSView` / `UIView` with theme observer pattern. Both measure text at `applyTheme` time and apply measurement as layout constraint constants. macOS uses `NSTextView` for selectable text; iOS uses `UILabel`. Timestamp on macOS spans a new line, right-aligned for the local user and left-aligned for a persona, using a locale-derived pattern widened to a two-digit hour (see Design Decisions); iOS inlines it with a two-space separator and a hard-coded `HH:mm` format — a 24-hour clock that ignores the locale, so iOS does not currently conform to **timestamp-display** and should adopt macOS's locale-derived approach. Both use `NSAttributedString` to build themed text with the markdown renderer. Streaming caret and failure reason are appended to the attributed string. Failure border is 1pt on `layer`, applied even on a flat theme (see vector bubble-025). Flat themes are detected by checking the theme's fill alpha; padding and corner radius are zeroed when flat (macOS only — see **flat-theme-fill**).
+- **AppKit / UIKit** (macOS/iOS): Source `MessageBubbleView` (macOS) and `MobileMessageBubbleView` (iOS) use `NSView` / `UIView` with theme observer pattern. Both measure text at `applyTheme` time and apply measurement as layout constraint constants. macOS uses `NSTextView` for selectable text; iOS uses `UILabel`. Timestamp on macOS spans a new line, right-aligned for the local user and left-aligned for a persona, using a locale-derived pattern widened to a two-digit hour (see Design Decisions); iOS inlines it with a two-space separator and a hard-coded `HH:mm` format — a 24-hour clock that ignores the locale, so iOS does not currently conform to **timestamp-display** and should adopt macOS's locale-derived approach. Both use `NSAttributedString` to build themed text with the markdown renderer. Streaming caret and failure reason are appended to the attributed string. Failure border is 1pt on `layer`, applied even on a flat theme (see vector bubble-025). Flat themes are detected by checking the theme's fill alpha; padding and corner radius are zeroed when flat on macOS only. `MobileMessageBubbleView` has no fill-alpha check and never applies the optional theme border, so iOS does not currently conform to **flat-theme-fill** or **optional-theme-border**, the same way it does not conform to **timestamp-display**; it should adopt macOS's approach (see Design Decisions).
 
-- **WinUI 3** (Windows): Start from a `StackPanel` (vertical) or nested grid for layout. Use WinUI's `TextBlock` for the sender name, kept out of the visual layout (e.g., zero size or clipped to 1×1) rather than `Visibility="Collapsed"` — a collapsed element is removed from the UI Automation tree entirely, which would break **sender-name-accessible** — and set `AutomationProperties.Name` on the bubble's root container so the name still reaches assistive technology. Use `RichTextBlock` or `TextBlock` for message text (wrap enabled). Add a `TextBlock` for timestamp below text. For failed state, add a `Border` element around the bubble with `BorderBrush` bound to a danger color theme resource; append a `TextBlock` for the failure reason. For streaming state, append the caret character to the text. Apply `CornerRadius` to the bubble container (StackPanel or Grid wrapped in a Border). Support theme changes by binding `Background`, `Foreground`, and `BorderBrush` to theme resource dictionaries; update bindings when theme changes. Measure text width via `TextBlock.Measure(availableSize)` and read `DesiredSize` after the layout pass, rather than an undefined `TextRenderingCore` API.
+- **WinUI 3** (Windows): Start from a `StackPanel` (vertical) or nested grid for layout. Use WinUI's `TextBlock` for the sender name, kept out of the visual layout (e.g., zero size or clipped to 1×1) rather than `Visibility="Collapsed"` — a collapsed element is removed from the UI Automation tree entirely, which would break **sender-name-accessible** — and set `AutomationProperties.Name` on the bubble's root container so the name still reaches assistive technology. Use `RichTextBlock` or `TextBlock` for message text (wrap enabled). Add a `TextBlock` for timestamp below text. For failed state, add a `Border` element around the bubble with `BorderBrush` bound to a danger color theme resource; append a `TextBlock` for the failure reason. For streaming state, append the caret character to the text. Apply `CornerRadius` to the bubble container (StackPanel or Grid wrapped in a Border). Support theme changes by binding `Background`, `Foreground`, and `BorderBrush` to theme resource dictionaries; update bindings when theme changes. Measure text width via `TextBlock.Measure(availableSize)` and read `DesiredSize` after the layout pass.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Chat/MobileMessageBubbleView.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/MessageBubbleView.swift` | unverified |
-| web | `packages/web/packages/chat/src/components/MessageBubble.tsx` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Chat/MobileMessageBubbleView.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/MessageBubbleView.swift` | confirmed (1.1.2) |
+| web | `packages/web/packages/chat/src/components/MessageBubble.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -227,12 +245,16 @@ Not applicable: This component performs no logging.
 **Rationale**: Every role resolves to *some* color when a theme omits it, so checking the resolved color alone would draw a hairline border around every bubble in every theme; checking declaration instead limits the border to themes (`charcoal`, `techy`, `fishlamp`, `mikefullerton`) that opted in.
 **Approved**: pending
 
+**Decision**: iOS's `MobileMessageBubbleView` has no flat-theme handling and no optional theme border, which makes it a known non-conformance to **flat-theme-fill** and **optional-theme-border**, to be brought in line with `MessageBubbleView` on macOS.
+**Rationale**: `MessageBubbleView` checks `fill.alpha <= 0.001` and `palette.declares(borderRole)`; `MobileMessageBubbleView` checks neither and applies only the failure border, so a flat or bordered theme renders differently on iOS. This is a gap, not a second valid behavior.
+**Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
@@ -245,7 +267,7 @@ Not applicable: This component performs no logging.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on: the Web source's `role="alert"` failure container, `aria-label` detail button, and `aria-hidden` avatar (screen-reader-support, semantic-markup, keyboard-navigable — the only interactive elements, the detail button and container click, are native/keyboard-operable); theme-supplied colors that the source cannot verify for contrast or Dynamic Type scaling, and the component's own lack of a non-color sender cue (contrast-ratio, dynamic-type-support); the detail-arrow button's size being deferred to CSS with no explicit minimum in source (touch-target-size); macOS's locale-derived timestamp pattern versus iOS's hard-coded 24-hour format (locale-aware-formatting); the component rendering arbitrary caller-provided Unicode text (including emoji) without special-casing (unicode-support); the "Show details" aria-label being written directly in `MessageBubble.tsx` rather than sourced from a resource key (string-externalization, no-hardcoded-strings); and macOS's timestamp alignment being hardcoded to `.right`/`.left` rather than a logical leading/trailing direction (rtl-layout-support); web delegates image-load state and content rendering to `useAllImagesLoaded`/`RichContent`, but both native views build the full attributed string — including delivery-status text and locale-aware time formatting — directly inline in `applyTheme` rather than a separate formatter (separation-of-concerns: partial), while `MessageBubble.test.tsx`, `MessageBubbleViewTests.swift`, and `MobileMessageBubbleViewTests.swift` each meaningfully exercise this component's theme, markdown, failure, and timestamp behavior (unit-test-coverage: passed).
+Statuses rest on: the Web source's `role="alert"` failure container, `aria-label` detail button, and `aria-hidden` avatar (semantic-markup passed, screen-reader-support partial because macOS and iOS never announce a failed or streaming state; keyboard-navigable partial because the detail button is a native `button` but the container `div` with `onClick` has no `role` or `tabIndex`, so the container click is not keyboard-operable); theme-supplied colors that the source cannot verify for contrast or Dynamic Type scaling, and the component's own lack of a non-color sender cue (contrast-ratio, dynamic-type-support); the detail-arrow button's size being deferred to CSS with no explicit minimum in source (touch-target-size); macOS's locale-derived timestamp pattern versus iOS's hard-coded 24-hour format (locale-aware-formatting); the component rendering arbitrary caller-provided Unicode text (including emoji) without special-casing (unicode-support); the "Show details" aria-label being written directly in `MessageBubble.tsx` rather than sourced from a resource key (string-externalization, no-hardcoded-strings); and macOS's timestamp alignment being hardcoded to `.right`/`.left` rather than a logical leading/trailing direction (rtl-layout-support); web delegates image-load state and content rendering to `useAllImagesLoaded`/`RichContent`, but both native views build the full attributed string — including delivery-status text and locale-aware time formatting — directly inline in `applyTheme` rather than a separate formatter (separation-of-concerns: partial), while `MessageBubble.test.tsx`, `MessageBubbleViewTests.swift`, and `MobileMessageBubbleViewTests.swift` each meaningfully exercise this component's theme, markdown, failure, and timestamp behavior (unit-test-coverage: passed).
 
 ## Change History
 
@@ -254,3 +276,4 @@ Statuses rest on: the Web source's `role="alert"` failure container, `aria-label
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web, macOS, and iOS sources |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; added requirements and vectors for tool-call pills, avatar slot, connector anchor, selected state, container click, and rich-content load gating; fixed the timestamp zero-padding contradiction and marked iOS non-conforming; corrected unsupported WinUI 3/Compose API citations and the sender-name automation bug; resolved the Web/Apple failure-announcement contradiction; reformatted Design Decisions and localization keys; replaced the Compliance and Configuration placeholders with real tables; added related cross-references |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Corrected the theme, flat-theme and rich-content claims against source, recorded the iOS flat-theme and border non-conformance, added tool-call pill vectors and strings, documented the message fields and made the accessibility compliance rows honest. |

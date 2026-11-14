@@ -2,7 +2,7 @@
 id: 8a51a893-a170-4cfc-a620-37939ae6b27b
 title: "Privacy Word Store"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -10,16 +10,19 @@ modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Keychain storage for the privacy words (alias and real pairs): one device-only item, plus the owner authentication taken before showing or saving them."
+summary: "Device-only keychain store for privacy-word pairs, plus the owner-authentication helper callers use first."
 platforms:
   - swift
   - macos
+  - ios
 tags:
   - foundation
   - privacy
   - keychain
-depends-on: []
-related: []
+depends-on:
+  - 998864ec-d852-4e92-aa2c-3177130ff21d
+related:
+  - d54db476-c847-4ac0-827e-eae336109f38
 references: []
 approved-by: ""
 approved-date: ""
@@ -29,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`PrivacyWordStore` keeps the privacy words, a list of `TextSubstitutionFilter.Pair` values (an `alias` the user writes and reads, a `real` word the program is given), in the keychain and nowhere else: no defaults, no database, no file. The list is one generic-password item whose value is the pairs as JSON. The item is readable without a prompt by the apps in its access group while the Mac is unlocked, because a private terminal needs the words from its first byte; what asks for the owner's proof is the app, through `authenticate(reason:)`, before it shows a private terminal, opens the words or saves them. The item never leaves the Mac it was typed on. The store is a small value type with `load`, `save` and one static authentication helper; the caller supplies the keychain access group.
+`PrivacyWordStore` keeps the privacy words, a list of `TextSubstitutionFilter.Pair` values (an `alias` the user writes and reads, a `real` word the program is given), in the keychain and nowhere else: no defaults, no database, no file. The list is one generic-password item whose value is the pairs as JSON. The item is readable without a prompt by the apps in its access group while the Mac is unlocked, because a private terminal needs the words from its first byte; what asks for the owner's proof is the app, through `authenticate(reason:)`, before it shows a private terminal, opens the words or saves them. The item never leaves the Mac it was typed on. Because the keychain calls are synchronous and run on the calling thread, a caller that cares about latency calls them off its main thread. The store is a small value type with `load`, `save` and one static authentication helper; the caller supplies the keychain access group.
 
 ## Behavioral Requirements
 
@@ -52,15 +55,14 @@ approved-date: ""
 - **save-empty-removes**: `save` with an empty array MUST leave no item stored, and MUST NOT add one.
 - **delete-tolerates-missing**: `save` MUST treat a delete status of success or item-not-found as proceeding, and MUST throw `StoreError.keychain(status)` for any other delete status without adding anything.
 - **add-error**: `save` MUST throw `StoreError.keychain(status)` when adding the new item fails.
-- **save-rewrites-unguarded**: Because `save` deletes and re-adds, an item saved under the older `userPresence` guard MUST come out rewritten without that guard once read with an authenticated context and saved again; the store does this by construction and holds no migration step of its own.
 - **encode-errors-propagate**: An error thrown by `JSONEncoder` while encoding the pairs MUST propagate unchanged from `save`, after the old item has already been deleted.
 - **authenticate**: `authenticate(reason:)` MUST be an async static function that evaluates the `deviceOwnerAuthentication` policy (Touch ID or the account password) with `reason` as the prompt text and return the `LAContext` that proved it.
 - **authenticate-cannot-evaluate**: `authenticate` MUST throw `StoreError.authenticationFailed` carrying the system's localized description, or `This Mac cannot authenticate its owner.` when none is given, when the policy cannot be evaluated.
 - **authenticate-rejected**: `authenticate` MUST throw `StoreError.authenticationFailed` carrying the system's localized description, or `Authentication failed.` when none is given, when the user fails or cancels the evaluation.
 - **error-descriptions**: `StoreError` MUST conform to `Error`, `LocalizedError` and `Equatable`; `errorDescription` MUST return the reason for `authenticationFailed`, the sentence `The privacy words need you to authenticate once before they can be read.` for `needsAuthentication`, the system message for the status (or `Keychain error <status>.`) for `keychain`, and `The privacy words in the keychain could not be read.` for `unreadable`.
 - **no-in-process-gate**: The store itself MUST NOT require authentication for `load` or `save`; showing, opening and saving the words are guarded by the caller taking `authenticate(reason:)` first. `PrivacyWordsVault` is the caller that does this.
-- **blocking-calls**: `load` and `save` are synchronous keychain calls that run on the calling thread and MUST be called off any latency-sensitive thread when the caller cares; the store provides no queue or actor.
-- **no-retry-no-timeout**: The store MUST NOT retry a failed keychain call and has no timeout.
+- **blocking-calls**: `load` and `save` MUST be synchronous and MUST NOT dispatch to another queue or actor; they run on the calling thread.
+- **no-retry**: The store MUST NOT retry a failed keychain call.
 
 ## Appearance
 
@@ -86,15 +88,15 @@ The source has no test beside it that calls the store; the one test that mention
 | privacy-word-store-004 | save-empty-removes | `save` one pair, then `save([])`, then `load()`. | `[]`; no item remains. |
 | privacy-word-store-005 | save-empty-removes, delete-tolerates-missing | On an empty keychain, `save([])`. | Returns without error. |
 | privacy-word-store-006 | unreadable | The item's data is bytes that are not a JSON array of pairs; `load()`. | Throws `StoreError.unreadable`. |
-| privacy-word-store-007 | needs-authentication | The item is guarded by `userPresence`; `load()` with no context. | Throws `StoreError.needsAuthentication`, no prompt shown. |
+| privacy-word-store-007 | needs-authentication | Setup: write the item directly with `SecItemAdd` using an access control from `SecAccessControlCreateWithFlags(.userPresence)`. Then `load()` with no context. | Throws `StoreError.needsAuthentication`, no prompt shown. |
 | privacy-word-store-008 | load-with-context | The same item; `load(context:)` with a context from `authenticate`. | The stored pairs. |
-| privacy-word-store-009 | save-rewrites-unguarded | After vector 008, `save` the pairs, then `load()` with no context. | The pairs, with no error. |
+| privacy-word-store-009 | save-replaces | After vector 008, `save` the pairs, then `load()` with no context. | The pairs, with no error. |
 | privacy-word-store-010 | keychain-error | Run without a `keychain-access-groups` entitlement or with an access group the app is not signed for; `save` one pair. | Throws `StoreError.keychain` carrying the failing status: the delete status when the delete already fails, otherwise the add status. |
 | privacy-word-store-011 | authenticate-cannot-evaluate | A Mac with no usable owner authentication; `authenticate(reason:)`. | Throws `StoreError.authenticationFailed` with a non-empty message. |
 | privacy-word-store-012 | error-descriptions | `StoreError.unreadable.errorDescription`. | `The privacy words in the keychain could not be read.` |
 | privacy-word-store-013 | default-identity | `PrivacyWordStore(accessGroup: nil)`. | `service` is `com.agenticdevelopmentstudio.privacy-words`, `account` is `privacy-words`. |
-| privacy-word-store-014 | access-group-injected | Two stores that differ only in `accessGroup`. | They address different items. |
-
+| privacy-word-store-014 | access-group-injected | Two stores that differ only in `accessGroup`. | `load()` on the store with the second `accessGroup` returns `[]` after `save` on the first store (setup: save via store A, load via store B). |
+| privacy-word-store-015 | authenticate-rejected | A Mac with owner authentication; `authenticate(reason:)` and the user cancels the system sheet. | Throws `StoreError.authenticationFailed` with the system's message, or `Authentication failed.` when none is given. |
 ## Edge Cases
 
 - **Null / empty input**: Nothing saved loads as an empty list (MUST); saving an empty list removes the item (MUST). A nil access group omits the attribute and the keychain uses the app's default group (MUST).
@@ -102,7 +104,7 @@ The source has no test beside it that calls the store; the one test that mention
 - **Concurrent access**: The type is a `Sendable` value with no lock or queue. Two `save` calls interleaving can each delete and then add, in which case the add of the second can find the item already added by the first and surface `StoreError.keychain` with the duplicate-item status; the keychain, not this type, serialises each call, and callers should serialise saves (SHOULD). `PrivacyWordsVault` is the caller that owns that ordering.
 - **Error states**: Every failure is thrown, never swallowed: locked or interaction-denied reads become `needsAuthentication`, other keychain statuses become `keychain`, bad data becomes `unreadable`, authentication refusals become `authenticationFailed` (MUST).
 - **Save is not atomic**: `save` deletes the old item before adding the new one, so when the add or the JSON encoding then fails the old words are already gone and the error is thrown; this is a fact of the implementation (MUST describe), not a rollback.
-- **Locked Mac**: Because the item is `WhenUnlockedThisDeviceOnly`, a read while the Mac is locked fails with a keychain status that is thrown as `keychain` or `needsAuthentication` depending on the status the system returns.
+- **Locked Mac**: Because the item is `WhenUnlockedThisDeviceOnly`, a read while the Mac is locked is a keychain read that `load` maps by status: `errSecInteractionNotAllowed` and `errSecAuthFailed` throw `needsAuthentication`, and any other failing status throws `keychain` with that status.
 - **Authentication cancelled**: A cancel in the system sheet throws `authenticationFailed` with the system's message (MUST); there is no separate cancelled case.
 - **Offline / disconnected state**: Not applicable: the store performs no network access and the item is never synchronizable.
 - **Timeouts**: Not applicable: calls are local keychain operations with no timeout of their own; `authenticate` waits as long as the user takes.
@@ -116,8 +118,6 @@ The source has no test beside it that calls the store; the one test that mention
 | `account` | `String` | `privacy-words` | The keychain account attribute. |
 | `reason` | `String` | none | Parameter of `authenticate`, shown in the system authentication prompt. |
 | `context` | `LAContext?` | nil | Parameter of `load`; an authenticated context from `authenticate` for reading an item saved under the older guard. |
-| Entitlement | `keychain-access-groups` | none | The binary MUST carry it, since the data-protection keychain is always used. |
-
 ## Deep Linking
 
 Not applicable: the store defines no URL scheme, route or navigation destination.
@@ -153,17 +153,17 @@ Not applicable: the store calls no logging API; failures are thrown, and the wor
 
 ## Platform Notes
 
-- **SwiftUI**: Source is `Core/Privacy/PrivacyWordStore.swift`, importing `Foundation`, `LocalAuthentication` and `Security`. It is a public `Sendable` struct with a nested `StoreError`; `authenticate` bridges the callback-based `evaluatePolicy` through `withCheckedThrowingContinuation`, marking the context `nonisolated(unsafe)` for the callback. A SwiftUI host calls `authenticate` from a task before presenting the words.
+- **SwiftUI**: A SwiftUI host calls `authenticate` from a task before presenting the words, and calls `load` and `save` off the main actor. `authenticate` is `async`, so it fits `.task` directly.
 - **Compose**: Use the Android Keystore with `EncryptedSharedPreferences` or an encrypted file for the single JSON value, requiring the unlocked device and excluding it from backup; `BiometricPrompt` with `DEVICE_CREDENTIAL` allowed replaces `authenticate`. Map the four error cases to a sealed class.
 - **React/Web**: No keychain exists; a web port keeps the words on the server behind the account, or in an encrypted store keyed by a user secret, with `WebAuthn` or a password re-entry as the authenticate step. Errors map to a discriminated union.
-- **AppKit / UIKit**: Same file on macOS; on iOS the same Security and LocalAuthentication calls apply. Access control needs the data-protection keychain, which is why the entitlement is required on macOS too.
+- **AppKit / UIKit**: On macOS the binary must carry a `keychain-access-groups` entitlement, because the store always uses the data-protection keychain. On iOS the same Security and LocalAuthentication calls apply; call `authenticate` before presenting the words view controller. Source is `Core/Privacy/PrivacyWordStore.swift`, a public `Sendable` struct importing `Foundation`, `LocalAuthentication` and `Security`; `authenticate` bridges `evaluatePolicy` through `withCheckedThrowingContinuation`.
 - **WinUI 3**: Store the JSON in `Windows.Security.Credentials.PasswordVault` (resource as the service, user name as the account), or encrypt it with `System.Security.Cryptography.ProtectedData` using `DataProtectionScope.CurrentUser` and keep it in `Windows.Storage.ApplicationData.Current.LocalSettings` or `LocalFolder` (never roaming, to match device-only). Use `Windows.Security.Credentials.UI.UserConsentVerifier.RequestVerificationAsync(reason)` for `authenticate` and map its non-verified results to `authenticationFailed`. Serialise with `System.Text.Json`. Model `StoreError` as an exception hierarchy or a result type. PasswordVault has no unlocked-only attribute, so the unlocked-only guarantee falls to the user session; there is no keychain access group, so sharing between apps needs a shared package family or a broker.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -207,3 +207,4 @@ Separation of concerns passes: the store holds persistence and the owner-proof h
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Restated blocking-calls and no-retry as checkable, folded save-rewrites-unguarded into vector 009, fixed vectors 007, 009 and 014 and added 015, named the locked-read status mapping, moved the entitlement row and file details into platform notes, added ios, depends-on and related, and shortened the summary. |

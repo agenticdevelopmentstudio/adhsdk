@@ -4,11 +4,11 @@
     "id": "c10a6fd9-470a-45a1-a025-3c75554c2a41",
     "title": "ViewportComposer",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -26,14 +26,13 @@
       "960a1577-bf48-4d56-a93f-aa690853f64f"
     ],
     "related": [
-      "960a1577-bf48-4d56-a93f-aa690853f64f",
       "556f7dbf-2a14-4e97-aaa2-0954c7488e6f"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3bbbcb990bbdf1c7",
+  "synced": "9010eb676f74c999",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

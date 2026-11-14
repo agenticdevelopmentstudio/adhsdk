@@ -2,11 +2,11 @@
 id: d7a1229c-cf03-436f-8287-d99b52747510
 title: "ConnectorSVG"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -44,15 +44,17 @@ ConnectorSVG renders decorative SVG connector lines between pairs of DOM element
 - **unresolved-pair-omission**: If either element in a pair cannot be resolved from the registry, that connection MUST be omitted from the rendered output.
 - **endpoint-circles**: Component MUST render a circle at each line endpoint (source and target).
 - **source-color**: The stroke color of each connector line, and the fill color of its endpoint circles, MUST be derived from the source element's computed CSS `color` property.
+- **circle-radius**: Each endpoint circle MUST render with a radius of 3 pixels.
 - **stroke-width**: Each connector line MUST render with a 1 pixel stroke width.
 - **connector-opacity**: Each connector line's stroke and each endpoint circle's fill MUST render at 0.4 opacity.
 - **resize-observer-updates**: Component MUST recompute connector positions whenever any tracked element is resized, detected via ResizeObserver.
 - **window-resize-updates**: Component MUST recompute connector positions whenever the window resizes.
-- **scroll-updates**: Component MUST recompute connector positions when the window or any ancestor element scrolls, including scroll during the capture phase.
-- **recompute-on-input-change**: Whenever the `pairs` input or the registry snapshot changes, the component MUST recompute connector geometry and re-establish position tracking for the current tracked set. The tracked set is the container element plus every element currently resolvable via the registry snapshot's identifiers.
+- **scroll-updates**: Component MUST recompute connector positions when any element scrolls. The component MUST listen for `scroll` on the window in the capture phase, so that scrolling of any element, not only an ancestor of the container, triggers recomputation.
+- **recompute-on-input-change**: Whenever the `pairs` input or the registry snapshot changes, the component MUST recompute connector geometry and re-establish position tracking for the current tracked set. The tracked set is the container element plus every element currently resolvable via the registry snapshot's identifiers, whether or not the current `pairs` name it.
 - **raf-batching**: Component MUST batch position recomputation requests using `requestAnimationFrame` to avoid redundant calculations during rapid layout changes.
 - **raf-cancellation**: If a scheduled animation frame is still pending when the component unmounts, the component MUST cancel it.
 - **teardown**: Component MUST disconnect the ResizeObserver and remove its resize and scroll event listeners when unmounting.
+- **duplicate-and-degenerate-pairs**: Each entry in `pairs` MUST be drawn independently: duplicate pairs produce duplicate lines, and a pair whose `from` and `to` are the same identifier produces a zero-length line with both circles at the same point. The component MUST use the source element's computed `color` value as given, even when it is transparent or empty.
 - **empty-pairs**: When `pairs` is an empty array, the component MUST render an empty SVG (no lines or circles).
 - **null-container-ref**: When the container reference is not available (`null`), the component MUST abort computation and render an empty SVG.
 
@@ -60,7 +62,7 @@ ConnectorSVG renders decorative SVG connector lines between pairs of DOM element
 
 - **SVG stroke**: 1 pixel width (see **stroke-width**), opacity 0.4 (see **connector-opacity**), color inherited from source element's computed `color` property
 - **SVG line**: Straight line connecting element centers
-- **Endpoint circles**: Radius 3 pixels, fill color inherited from source element's computed `color` property, opacity 0.4 (see **connector-opacity**)
+- **Endpoint circles**: Radius 3 pixels (see **circle-radius**), fill color inherited from source element's computed `color` property, opacity 0.4 (see **connector-opacity**)
 - **SVG class**: `pc-connector-svg` — this prefix is a fixed, canonical value for this component, not templated via `{{app_prefix}}`
 
 ## States
@@ -75,24 +77,24 @@ Not applicable: This component renders purely decorative connector lines with `a
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| connector-001 | svg-root, aria-hidden | frameRef pointing to valid container, pairs = [] | SVG with class "pc-connector-svg" and aria-hidden="true" |
-| connector-002 | connector-pairs, element-resolution, line-endpoints | frameRef, pairs = [{from: "el1", to: "el2"}], both elements registered | One line drawn from center of el1 to center of el2 |
-| connector-003 | unresolved-pair-omission | frameRef, pairs = [{from: "el1", to: "missing"}] | No line rendered for that pair |
-| connector-004 | endpoint-circles | frameRef, pairs = [{from: "el1", to: "el2"}] | Two circles (r=3) rendered, one at each line endpoint |
-| connector-005 | source-color | frameRef, source element has computed color = "#ff0000", pairs = [{from: "el1", to: "el2"}] | Line rendered with stroke "#ff0000"; both endpoint circles rendered with fill "#ff0000" |
-| connector-006 | center-coordinates, container-reference | frameRef at (100, 200), element at (150, 250) with width=100 height=50 | Line endpoint for that element computed at (100, 75) relative to frameRef origin |
-| connector-007 | resize-observer-updates | frameRef, one element resizes from 100×50 to 200×100 | Line endpoints redrawn to new center positions |
+| connector-001 | svg-root, aria-hidden | container reference to a valid container, pairs = [{from: "el1", to: "el2"}], both elements registered | SVG with class "pc-connector-svg" and aria-hidden="true", containing one connector |
+| connector-002 | connector-pairs, element-resolution, line-endpoints | container reference, pairs = [{from: "el1", to: "el2"}], both elements registered | One line drawn from center of el1 to center of el2 |
+| connector-003 | unresolved-pair-omission | container reference, pairs = [{from: "el1", to: "missing"}] | Zero lines and zero circles rendered for that pair |
+| connector-004 | endpoint-circles, circle-radius | container reference, pairs = [{from: "el1", to: "el2"}] | Two circles (r=3) rendered, one at each line endpoint |
+| connector-005 | source-color | container reference, source element has computed color = "#ff0000", pairs = [{from: "el1", to: "el2"}] | Line rendered with stroke "#ff0000"; both endpoint circles rendered with fill "#ff0000" |
+| connector-006 | center-coordinates, container-reference | container reference at (100, 200), element at (150, 250) with width=100 height=50 | Line endpoint for that element computed at (100, 75) relative to container reference origin |
+| connector-007 | resize-observer-updates | container reference, one element resizes from 100×50 to 200×100 | Line endpoints redrawn to new center positions |
 | connector-008 | raf-batching | Rapid resize events fire in succession | Only one recomputation occurs via single requestAnimationFrame call |
-| connector-009 | raf-cancellation | requestAnimationFrame scheduled, component unmounts before frame executes | No render occurs after unmount |
-| connector-010 | window-resize-updates | frameRef, window resize event fires | Connector positions are recomputed |
-| connector-011 | scroll-updates | frameRef, scroll event fires on an ancestor element during the capture phase | Connector positions are recomputed |
+| connector-009 | raf-cancellation | requestAnimationFrame scheduled, component unmounts before frame executes | `cancelAnimationFrame` is called with the pending frame handle |
+| connector-010 | window-resize-updates | container reference, window resize event fires | Connector positions are recomputed |
+| connector-011 | scroll-updates | container reference, scroll event fires on any element (an ancestor or not), observed by the capture-phase window listener | Connector positions are recomputed |
 | connector-012 | teardown | Component unmounts | ResizeObserver is disconnected; window resize and scroll listeners are removed |
 | connector-013 | null-container-ref | Container reference resolves to `null` | No computation occurs; SVG renders with no lines or circles |
 | connector-014 | empty-pairs | pairs = [] | SVG renders with no lines or circles |
-| connector-015 | recompute-on-input-change | pairs prop changes from [{from: "el1", to: "el2"}] to [{from: "el1", to: "el3"}], or the registry snapshot adds "el3" | ResizeObserver is re-established for the new tracked set (frame + el1 + el3) and geometry is recomputed for the new pairs |
-| connector-016 | stroke-width, connector-opacity | frameRef, pairs = [{from: "el1", to: "el2"}] | Line rendered with strokeWidth=1 and strokeOpacity=0.4; both endpoint circles rendered with fillOpacity=0.4 |
+| connector-015 | recompute-on-input-change | pairs prop changes from [{from: "el1", to: "el2"}] to [{from: "el1", to: "el3"}], or the registry snapshot adds "el3" | ResizeObserver is re-established for the new tracked set (the container plus every registered element, including el1 and el3) and geometry is recomputed for the new pairs |
+| connector-016 | stroke-width, connector-opacity | container reference, pairs = [{from: "el1", to: "el2"}] | Line rendered with strokeWidth=1 and strokeOpacity=0.4; both endpoint circles rendered with fillOpacity=0.4 |
 | connector-017 | center-coordinates | frame at (0, 0), element with width=0 height=0 at (50, 50) | Center computed as (50, 50); connector line still renders using that point as an endpoint |
-
+| connector-018 | duplicate-and-degenerate-pairs | container reference, pairs = [{from: "el1", to: "el1"}, {from: "el1", to: "el2"}, {from: "el1", to: "el2"}], all registered | Three lines render: one zero-length line with both circles at el1's center, and two identical lines for el1 to el2 |
 ## Edge Cases
 
 - **Empty pairs array**: See **empty-pairs**.
@@ -100,11 +102,12 @@ Not applicable: This component renders purely decorative connector lines with `a
 - **Null container ref**: See **null-container-ref**.
 - **Rapid layout changes**: See **raf-batching** — multiple resize or scroll events firing in quick succession are deduplicated so only one recomputation happens per frame.
 - **Unmount during scheduled animation frame**: See **raf-cancellation** — a pending frame callback is cancelled to prevent operations on unmounted DOM.
+- **Same element on both ends, duplicate pairs, transparent color**: See **duplicate-and-degenerate-pairs** and **connector-018**.
 - **Element with zero dimensions**: An element with zero width or height still yields a valid center — for a 0×0 rect at (x, y), the center is (x, y) — and its connector line still renders using that point (see **connector-017**).
 
 ## Configuration
 
-Not applicable: The component exposes no configuration options. Behavior is entirely determined by the `frameRef` and `pairs` props, and the registry snapshot provided by the context.
+Not applicable: The component exposes no configuration options. Behavior is entirely determined by the container reference and the pairs input, and the registry snapshot provided by the context.
 
 ## Deep Linking
 
@@ -146,9 +149,13 @@ Not applicable: The component has no significant logging needs. Internal RAF sch
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/modes/three-pane/ConnectorSVG.tsx` | unverified |
+| web | `packages/web/packages/chat/src/modes/three-pane/ConnectorSVG.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
+
+**Decision**: The connector registry is supplied to the component through an implicit context dependency, not a prop.
+**Rationale**: Anchors register themselves from anywhere in the tree, so passing the registry down by prop would force every intermediate component to forward it (see **element-resolution**). Tests supply a stub registry by wrapping the component in the registry provider, or in a context provider whose handle returns a hand-built snapshot.
+**Approved**: pending
 
 **Decision**: Position updates are batched via `requestAnimationFrame` rather than continuous polling or timers.
 **Rationale**: Ensures computations occur at most once per display refresh cycle, minimizing layout thrashing and aligning with browser rendering constraints (see **raf-batching**).
@@ -166,12 +173,13 @@ Not applicable: The component has no significant logging needs. Internal RAF sch
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
 
-The source renders standard `<svg>`, `<line>`, `<circle>`, and `<g>` elements with `aria-hidden="true"` and no custom or invalid ARIA attributes, so its markup passes semantic-markup. separation-of-concerns is partial because the geometry computation, `requestAnimationFrame` batching, and `ResizeObserver`/scroll tracking are all implemented inline inside `ConnectorSVG.tsx` rather than extracted into standalone functions or hooks, while unit-test-coverage is failed because no test file exercises this component at all.
+Evidence is in `packages/web/packages/chat/src/modes/three-pane/ConnectorSVG.tsx`. The source renders standard `<svg>`, `<line>`, `<circle>`, and `<g>` elements with `aria-hidden="true"` and no custom or invalid ARIA attributes, so its markup passes semantic-markup. separation-of-concerns is partial because the geometry computation, `requestAnimationFrame` batching, and `ResizeObserver`/scroll tracking are all implemented inline inside `ConnectorSVG.tsx` (the `compute` and `schedule` functions and the single `useEffect` that wires them) rather than extracted into standalone functions or hooks, while unit-test-coverage is failed because no test file exercises this component: a search of `packages/web/packages/chat/src` for `ConnectorSVG` matches only `ConnectorSVG.tsx` itself.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added circle-radius and duplicate-and-degenerate-pairs requirements, a registry-injection Design Decision, capture-phase scroll wording, platform-neutral input names, evidence-cited Compliance, and corrected vectors 001, 003, 004, 009, 011, 015 and 018. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; promoted edge-case MUSTs (empty-pairs, null-container-ref, unresolved registry entries) to named requirements; added recompute-on-input-change and defined the tracked-element set; declared the connector-registry dependency in depends-on and Overview; reformatted Design Decisions into Decision/Rationale/Approved triplets; replaced the Compliance placeholder with a table listing semantic-markup; split source-color into separate stroke/fill wording and promoted stroke-width and opacity to requirements; fixed the connector-006 coordinate math; added test vectors for window resize, scroll, teardown, null container ref, empty pairs, input-change recompute, stroke/opacity, and zero-dimension elements; made container-reference platform-neutral; reconciled Platform Notes with the no-timer/no-polling design decision and corrected the AppKit/UIKit and WinUI 3 API references; clarified States to describe cached derived geometry instead of "stateless"; documented the pc- class prefix as fixed rather than templated |
 

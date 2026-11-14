@@ -4,15 +4,15 @@
     "id": "f1c3b5e7-9d2a-4f8c-a3c1-7e2f5b9c6d4a",
     "title": "Tree Rows",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Hierarchical row display for nested parent-child relationships in tables and lists, exposing nesting depth and collapse-expand affordance.",
+    "summary": "Flattens parent-child rows into display order with depth, plus an indented expand/collapse row label.",
     "platforms": [
       "typescript",
       "web"
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fb19a9388aca8630",
+  "synced": "d53cd60529ddde4e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

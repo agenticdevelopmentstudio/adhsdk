@@ -5,5 +5,5 @@ The appearance store is the one in-memory holder of the user's `AppearancePrefs`
 
 A site that wears the prefs on only some routes mounts a scope (`mountAppearanceScope`, or the `AppearanceScope` component) on those routes. Once any scope has mounted, the store paints `<html>` only while at least one scope is mounted.
 
-The pure logic it builds on (the defaults, normalisation, the storage reads and writes, `applyAppearance`, `clearAppearance`) lives in `appearance.ts` and is shared with the pre-paint script; this recipe specifies only the store layered over it.
+The pure logic it builds on (the defaults, normalisation, the storage reads and writes, `applyAppearance`, `clearAppearance`) lives in `appearance.ts` ([adhsdk.ingredient.themes.appearance](cookbook:0f721fc3-0e8f-4a1b-b895-1b1bad370bd0)) and is shared with the pre-paint script; this ingredient specifies only the store layered over it.
 

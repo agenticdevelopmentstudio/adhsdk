@@ -4,7 +4,7 @@
     "id": "81fb66c5-e31d-4817-ba36-5ccace191e8f",
     "title": "Digest Hex",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Lowercase two-digit-per-byte hex string of any CryptoKit digest, the one place hash bytes become the hex strings the daemon stores.",
+    "summary": "Lowercase two-digit-per-byte hex string of any CryptoKit digest, one spelling for every hash stored as text.",
     "platforms": [
       "swift",
       "macos"
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dfe4fd0582e8597d",
+  "synced": "1dd9cf24258607d5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -19,3 +19,6 @@
 **Rationale**: The ring adds visual depth and makes the state change visible even where a border-color change alone would be subtle. It does not, by itself, distinguish focus from invalid for a user who cannot perceive the gold/red hue difference — that distinction is currently carried by color (hue) alone, with `aria-invalid` providing the corresponding non-visual signal to assistive technology.
 **Approved**: pending
 
+**Decision**: Accept the `transition-colors` animation without a reduced-motion guard for now.
+**Rationale**: The transition only fades border and ring color over the default duration and moves nothing on screen, so the risk to motion-sensitive users is small. The web reference implementation does not apply `motion-reduce:transition-none`; **motion-reduce-transition** records the SHOULD that closes the gap.
+**Approved**: pending

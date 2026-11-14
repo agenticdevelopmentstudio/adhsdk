@@ -1,5 +1,5 @@
 
-- **Non-string title**: when `title` is a node (not a string) and no `ariaLabel` is
+- **Non-string title**: when `title` is a node (not a string) and neither `ariaLabel` nor a raw `aria-label` is
   given, the region has no accessible name — hosts SHOULD pass `ariaLabel` in that
   case.
 - **Actions without center**: the actions container is given `ml-auto` only when
@@ -11,5 +11,6 @@
 - **Body padding override**: `bodyPadding` fully replaces the mode default; hosts
   needing edge-to-edge content (e.g. a table) pass `bodyPadding="0"`.
 - **maxHeight with card mode**: a content-sized card given a `maxHeight` will clip via
-  the outer `overflow-hidden`; use `scroll` to make the body scroll within that cap.
+  the outer `overflow-hidden`, and the content past the cap cannot be reached; hosts SHOULD
+  pass `scroll` together with `maxHeight` so the body scrolls within that cap.
 

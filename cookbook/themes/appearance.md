@@ -2,7 +2,7 @@
 id: 0f721fc3-0e8f-4a1b-b895-1b1bad370bd0
 title: "Appearance"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -20,8 +20,10 @@ tags:
   - preferences
   - accessibility
 depends-on: []
-related: []
-references: []
+related:
+  - 112f2150-3fcd-416c-bd25-b40f729b8ef2
+references:
+  - https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
 approved-by: ""
 approved-date: ""
 ---
@@ -34,9 +36,9 @@ Appearance is the pure, framework-agnostic logic behind a user's color mode and 
 
 "Default" or "auto" means follow the system (or the theme's own default). It is represented by the absence of an attribute, so an unset preference leaves the document pristine and the matching media query (`prefers-color-scheme`, `prefers-reduced-motion`, `prefers-contrast`) governs.
 
-Two consumers share this code so there is one source of truth for the storage key, the defaults and the DOM mapping: the React store (`appearance-store.tsx`) and the pre-paint inline script (`APPEARANCE_PREPAINT_SCRIPT`). The storage key, the enum-pref defaults, the boolean-pref list and the pre-paint script live in a plain `.mjs` file (`appearance-prepaint.mjs`) so a Vite or Next config, which runs in plain Node, can load them. The same file exports an `appearancePrepaint()` Vite plugin that inlines the script at the end of `<head>`.
+Two consumers share this code so there is one source of truth for the storage key, the defaults and the DOM mapping: the React store (`appearance-store.tsx`, [adhsdk.ingredient.themes.appearance-store](cookbook:112f2150-3fcd-416c-bd25-b40f729b8ef2)) and the pre-paint inline script (`APPEARANCE_PREPAINT_SCRIPT`). The storage key, the enum-pref defaults, the boolean-pref list and the pre-paint script live in a plain `.mjs` file (`appearance-prepaint.mjs`) so a Vite or Next config, which runs in plain Node, can load them. The same file exports an `appearancePrepaint()` Vite plugin that inlines the script at the end of `<head>`.
 
-This recipe describes the logic, not the React store, the settings panel or the server sync that reconcile the cache with the signed-in user's saved preferences; those are separate components.
+This ingredient describes the logic, not the React store, the settings panel or the server sync that reconcile the cache with the signed-in user's saved preferences; those are separate components, and only the store has a spec of its own.
 
 ## Behavioral Requirements
 
@@ -54,7 +56,7 @@ This recipe describes the logic, not the React store, the settings panel or the 
 - **bool-prefs-shared**: `BOOL_PREFS` MUST list `focusOutlines` and `underlineLinks`, and MUST be frozen.
 - **storage-key**: `APPEARANCE_STORAGE_KEY` MUST be `adh:appearance`.
 - **single-definition**: `applyAppearance`, `clearAppearance` and the pre-paint script MUST iterate the same `ENUM_PREF_DEFAULTS` and `BOOL_PREFS` lists, so adding a preference in one place updates all three. Source: the comments on `ENUM_PREF_DEFAULTS` and `PREPAINT_ATTR_LINES`.
-- **colormode-not-in-enum-list**: `colorMode` MUST NOT appear in `ENUM_PREF_DEFAULTS`. It is handled separately because it sets a class as well as an attribute.
+- **colormode-not-in-enum-list**: `colorMode` MUST NOT appear in `ENUM_PREF_DEFAULTS`; `applyAppearance` handles it separately because it sets a class as well as an attribute.
 
 ### normalizeAppearance
 
@@ -66,16 +68,16 @@ This recipe describes the logic, not the React store, the settings panel or the 
 
 ### Storage cache
 
-- **read-ssr-guard**: `readStoredAppearance()` MUST return a copy of the defaults when `window` is undefined.
+- **read-ssr-guard**: `readStoredAppearance()` MUST return a fresh copy of the defaults when `window` is undefined.
 - **read-normalizes**: `readStoredAppearance()` MUST read `localStorage` under `APPEARANCE_STORAGE_KEY`, parse the value as JSON, and return it passed through `normalizeAppearance`.
-- **read-missing**: `readStoredAppearance()` MUST return the defaults when the key is absent or empty.
-- **read-failure**: `readStoredAppearance()` MUST return a copy of the defaults when storage access or JSON parsing throws. The failure is not reported.
+- **read-missing**: `readStoredAppearance()` MUST return a fresh copy of the defaults when the key is absent or empty.
+- **read-failure**: `readStoredAppearance()` MUST return a fresh copy of the defaults when storage access or JSON parsing throws. The failure is not reported.
 - **write-serializes**: `writeStoredAppearance(prefs)` MUST store `JSON.stringify(prefs)` under `APPEARANCE_STORAGE_KEY`.
 - **write-ssr-guard**: `writeStoredAppearance` MUST do nothing when `window` is undefined.
 - **write-failure**: `writeStoredAppearance` MUST NOT throw when storage throws (private mode, quota). The write is dropped and the failure is not reported. Source: the comment `ignore (private mode / quota)`.
 - **write-does-not-normalize**: `writeStoredAppearance` MUST write the object it is given without normalizing it; normalization happens on read.
 - **clear-stored**: `clearStoredAppearance()` MUST remove the `APPEARANCE_STORAGE_KEY` entry. It MUST do nothing when `window` is undefined and MUST NOT throw when storage throws.
-- **cache-not-truth**: The stored value MUST be treated as a per-browser cache of the signed-in user's preferences, which live on the server. Source: the comments on `clearStoredAppearance` and the pre-paint script. The cache is cleared on sign-out so it does not outlive the session on a shared browser; the caller, not this module, triggers that.
+- **cache-not-truth**: Every read of the stored value MUST pass through `normalizeAppearance`, and this module MUST NOT treat the stored value as authoritative over a value the caller passes in. The server holds the signed-in user's preferences; the cache is per browser. Source: the comments on `clearStoredAppearance` and the pre-paint script. The caller, not this module, clears the cache on sign-out.
 
 ### applyAppearance
 
@@ -92,7 +94,7 @@ This recipe describes the logic, not the React store, the settings panel or the 
 - **clear-removes-all**: `clearAppearance(el)` MUST remove the `dark` class, delete `data-color-mode`, and delete every `data-*` attribute for every key in `ENUM_PREF_DEFAULTS` and `BOOL_PREFS`.
 - **clear-undoes-apply**: After `applyAppearance` followed by `clearAppearance`, the element MUST be byte-for-byte what it was before `applyAppearance`, including unrelated classes and attributes. Source: `clearAppearance.test.ts`.
 - **clear-undoes-prepaint**: `clearAppearance` MUST also remove the attributes the pre-paint script writes for default values (`data-color-mode` set to `auto`, and the `dark` class).
-- **clear-purpose**: `clearAppearance` exists for sites that mount the preferences on only some routes; a client navigation keeps the same `<html>`, so without it the preferences would follow the reader onto a page that never asked for them.
+- **clear-purpose**: `clearAppearance` MUST be callable by a site that mounts the preferences on only some routes, and MUST remove what `applyAppearance` wrote, so the preferences do not follow the reader onto a page that never asked for them. A client navigation keeps the same `<html>`.
 
 ### Pre-paint script
 
@@ -107,8 +109,8 @@ This recipe describes the logic, not the React store, the settings panel or the 
 
 ### Concurrency and side effects
 
-- **single-threaded**: All functions are synchronous and run on the browser main thread; they have no async operations and need no locking.
-- **side-effects**: `applyAppearance` and `clearAppearance` mutate only the element passed in. The storage functions touch only `localStorage` under `adh:appearance`. Nothing makes a network call; server sync is outside this module.
+- **single-threaded**: All functions MUST be synchronous, with no async operations; they run on the browser main thread and need no locking.
+- **side-effects**: `applyAppearance` and `clearAppearance` MUST mutate only the element passed in. The storage functions MUST touch only `localStorage` under `adh:appearance`. No function MUST make a network call; server sync is outside this module.
 
 ## Appearance
 
@@ -123,6 +125,7 @@ Not applicable — this is preferences logic, not a visual component; it has no 
 Not applicable — this is preferences logic, not a visual component. It stores and applies the user's accessibility display choices (reduce motion, contrast, text size, spacing, focus outlines, underlined links) but renders no control; the DOM attributes it sets are consumed by the theme CSS.
 
 ## Conformance Test Vectors
+Test coverage for this module is indirect. `clearAppearance.test.ts` exercises `applyAppearance` and `clearAppearance` directly (appearance-016 and appearance-017), and `appearanceScope.test.ts` and `AppearanceScope.test.tsx` exercise them through the store. No test file targets `normalizeAppearance`, the storage functions or the pre-paint script, so the other vectors are derived from the source and unverified by a test.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -141,8 +144,8 @@ Not applicable — this is preferences logic, not a visual component. It stores 
 | appearance-013 | apply-enum-attributes, apply-bool-attributes | `applyAppearance(el, defaults, false)` | `el` has only `data-color-mode="auto"`; no other `data-*` attribute |
 | appearance-014 | apply-enum-attributes, apply-bool-attributes | `applyAppearance(el, { ...defaults, reduceMotion: "on", contrast: "extra-high", spacing: "spacious", underlineLinks: true }, false)` | `data-reduce-motion="on"`, `data-contrast="extra-high"`, `data-spacing="spacious"`, `data-underline-links="always"`; no `data-focus-outlines` |
 | appearance-015 | apply-enum-attributes | Apply a non-default `contrast`, then apply `contrast: default` | `data-contrast` is removed |
-| appearance-016 | clear-undoes-apply | Test `clearAppearance leaves the element as it was before applyAppearance` | Element with classes `font-a font-b` and `lang="en"` has identical `outerHTML` after apply-then-clear of every attribute |
-| appearance-017 | clear-undoes-prepaint, clear-removes-all | Test `clearAppearance removes the attributes the pre-paint script writes for the defaults too` | `data-color-mode` and the `dark` class are gone |
+| appearance-016 | clear-undoes-apply | An `html` element with class `font-a font-b` and `lang="en"`; `applyAppearance(el, { colorMode: "dark", reduceMotion: "on", contrast: "high", textSize: "large", spacing: "spacious", focusOutlines: true, underlineLinks: true }, true)`, then `clearAppearance(el)` | After apply `outerHTML` differs from the original; after clear it equals the original `<html class="font-a font-b" lang="en"></html>` |
+| appearance-017 | clear-undoes-prepaint, clear-removes-all | An `html` element with `data-color-mode="auto"` and class `dark`; `clearAppearance(el)` | `data-color-mode` is absent and the `dark` class is gone |
 | appearance-018 | prepaint-resolve-dark, prepaint-colormode-attribute | Run the script with `{"colorMode":"dark"}` stored | `dark` class on `<html>`, `data-color-mode="dark"` |
 | appearance-019 | prepaint-resolve-dark, prepaint-colormode-attribute | Run the script with nothing stored and `matchMedia` reporting dark | `dark` class on `<html>`, `data-color-mode="auto"` |
 | appearance-020 | prepaint-attributes | Run the script with `{"contrast":"default","textSize":"large","focusOutlines":false}` stored | `data-text-size="large"` only; no `data-contrast`, no `data-focus-outlines` |
@@ -150,23 +153,29 @@ Not applicable — this is preferences logic, not a visual component. It stores 
 | appearance-022 | prepaint-no-validation | Run the script with `{"contrast":"bogus"}` stored | `data-contrast="bogus"` is written |
 | appearance-023 | prepaint-position, prepaint-plugin-name | `appearancePrepaint().transformIndexHtml()` | One tag, `script`, `children` equal to `APPEARANCE_PREPAINT_SCRIPT`, `injectTo: "head"`; plugin `name` is `adh-appearance-prepaint` |
 | appearance-024 | enum-pref-defaults-shared, bool-prefs-shared | `Object.isFrozen` on each of the two exports | `true` for both |
-
+| appearance-025 | read-ssr-guard, write-ssr-guard, clear-stored | No `window`; `readStoredAppearance()`, `writeStoredAppearance(prefs)`, `clearStoredAppearance()` | The read returns a value equal to the defaults but not the same object as `APPEARANCE_DEFAULTS`; the write and clear do nothing and do not throw |
+| appearance-026 | apply-idempotent | `applyAppearance(el, prefs, true)` called twice with the same `el` and `prefs` (`colorMode: "dark"`, `contrast: "high"`) | `outerHTML` after the second call equals `outerHTML` after the first |
+| appearance-027 | apply-system-injected | `matchMedia` replaced with a function that throws; `applyAppearance(el, { ...defaults, colorMode: "auto" }, true)` | No exception; `el` has class `dark` |
+| appearance-028 | colormode-not-in-enum-list | `Object.keys(ENUM_PREF_DEFAULTS)` | `["reduceMotion", "contrast", "textSize", "spacing"]`, with no `colorMode` |
+| appearance-029 | write-does-not-normalize | `writeStoredAppearance({ ...defaults, colorMode: "bogus" })`, then read the raw `localStorage` value and call `readStoredAppearance()` | The raw value contains `"colorMode":"bogus"`; the read returns `colorMode: auto` |
+| appearance-030 | normalize-returns-copy | `const a = normalizeAppearance({ colorMode: "dark" }); a.spacing = "spacious"`, then `normalizeAppearance(null)` | `APPEARANCE_DEFAULTS.spacing` is still `compact`, and the second result's `spacing` is `compact` |
 ## Edge Cases
 
 - **Non-object stored value**: a stored JSON string, number or array is normalized to a copy of the defaults with no field accepted. `readStoredAppearance` MUST NOT throw.
-- **Partial stored object**: a stored object with only some fields keeps the defaults for the missing ones. MUST.
-- **Out-of-range enum value**: an unrecognized string for any enum preference falls back to that field's default in `normalizeAppearance`. MUST. The pre-paint script writes it unchanged until the store re-applies normalized preferences (see `prepaint-no-validation`).
-- **Wrong type for a boolean**: a string, number or `null` for `focusOutlines` or `underlineLinks` leaves it `false`. MUST.
-- **Server-side rendering**: with no `window`, read returns defaults and write and clear do nothing. MUST.
-- **Storage blocked, private mode or quota exceeded**: read returns the defaults; write and clear are silent no-ops. MUST. Nothing is logged and the caller receives no signal, so a preference that failed to cache is lost on reload.
-- **Stored literal `null`**: `readStoredAppearance` returns the defaults. The pre-paint script throws inside its own try/catch and applies nothing. MUST.
-- **Corrupt JSON**: read returns the defaults; the pre-paint script applies nothing. MUST.
+- **Partial stored object**: a stored object with only some fields keeps the defaults for the missing ones, as `normalize-per-field` requires.
+- **Out-of-range enum value**: an unrecognized string for any enum preference falls back to that field's default in `normalizeAppearance`, as `normalize-per-field` requires. The pre-paint script writes it unchanged until the store re-applies normalized preferences (see `prepaint-no-validation`).
+- **Wrong type for a boolean**: a string, number or `null` for `focusOutlines` or `underlineLinks` leaves it `false`, as `normalize-per-field` requires.
+- **Server-side rendering**: with no `window`, read returns a fresh copy of the defaults and write and clear do nothing (`read-ssr-guard`, `write-ssr-guard`, `clear-stored`).
+- **Storage blocked, private mode or quota exceeded**: read returns a fresh copy of the defaults; write and clear are silent no-ops (`read-failure`, `write-failure`, `clear-stored`). Nothing is logged and the caller receives no signal, so a preference that failed to cache is lost on reload.
+- **Stored literal `null`**: `readStoredAppearance` returns the defaults (`read-missing`). The pre-paint script throws inside its own try/catch and applies nothing (`prepaint-swallows-errors`).
+- **Corrupt JSON**: read returns a fresh copy of the defaults (`read-failure`); the pre-paint script applies nothing (`prepaint-swallows-errors`).
 - **Concurrent access**: all calls are synchronous on one thread, so they cannot interleave. Two browser tabs share one `localStorage` key and the last write wins; this module has no cross-tab synchronization. This is a fact about the source, not a requirement.
 - **Offline or disconnected**: not applicable; the module makes no network requests.
-- **Element reuse across routes**: `clearAppearance` MUST restore the element exactly, so a site that wears preferences on only some routes does not leak them onto others.
-- **Unrelated element state**: `applyAppearance` and `clearAppearance` MUST NOT touch classes other than `dark` or attributes other than the ones named above.
+- **Element reuse across routes**: `clearAppearance` restores the element exactly (`clear-undoes-apply`), so a site that wears preferences on only some routes does not leak them onto others.
+- **Unrelated element state**: `applyAppearance` and `clearAppearance` do not touch classes other than `dark` or attributes other than the ones named above (`clear-undoes-apply`).
 
 ## Configuration
+Nothing here is configurable at run time. The rows are fixed exported constants, plus the parameters of `applyAppearance` and `clearAppearance`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -192,7 +201,8 @@ Not applicable: the module defines no user-facing strings; all values are machin
 | Reduce Motion | Stored as `reduceMotion`; `on` and `off` set `data-reduce-motion`, `auto` leaves it off so `prefers-reduced-motion` governs |
 | Increase Contrast | Stored as `contrast`; `high` and `extra-high` set `data-contrast`, `default` leaves it off so `prefers-contrast` governs |
 | Differentiate Without Color | Not applicable: the module has no preference by that name; the nearest are `underlineLinks` (sets `data-underline-links="always"`) and `focusOutlines` (sets `data-focus-outlines="always"`) |
-
+| Text Size | Stored as `textSize`; `small`, `large` and `extra-large` set `data-text-size`, `default` leaves it off. There is no `prefers-*` media query for it, so the theme default governs |
+| Spacing | Stored as `spacing`; `comfortable` and `spacious` set `data-spacing`, `compact` leaves it off. There is no `prefers-*` media query for it, so the theme default governs |
 ## Feature Flags
 
 Not applicable: the module reads no flags; its behavior is fixed by the exported constants.
@@ -218,7 +228,7 @@ Not applicable: the module makes no log calls; storage failures are discarded wi
 - **Compose**: Keep the preferences in a data class persisted with DataStore (Preferences) and exposed as a `StateFlow`. Resolve `auto` with `isSystemInDarkTheme()` and pass the result into the `MaterialTheme` color scheme, scaling typography by `textSize` and spacing by `spacing`. Read reduced motion from the animator duration scale setting. There are no `data-*` attributes; the default-means-absent rule becomes a nullable override.
 - **React/Web**: Source platform. `packages/web/packages/themes/src/appearance.ts` holds the typed API; `appearance-prepaint.mjs` holds the shared constants, the inline script and the Vite plugin so plain-Node configs can import them (`appearance-prepaint.d.mts` declares their types). The hook and store in `appearance-store.tsx` and the CSS in `styles/accessibility.css` and `styles/color-mode-light.css` consume it. The script is a hand-written ES5-style string so it can run inline before any bundle loads.
 - **AppKit / UIKit**: Persist with `UserDefaults`. Resolve `auto` by leaving `NSApp.appearance` (AppKit) or `overrideUserInterfaceStyle` (UIKit) unset, and set `.aqua` or `.darkAqua` (AppKit) or `.light` or `.dark` (UIKit) for the explicit modes. Observe `NSWorkspace.accessibilityDisplayShouldReduceMotion` and `accessibilityDisplayShouldIncreaseContrast` on macOS, and `UIAccessibility` equivalents on iOS. Text size and spacing become scale factors applied by the app's own layout code; there is no document element to annotate.
-- **WinUI 3**: Persist the record with `Windows.Storage.ApplicationData.Current.LocalSettings` (or a JSON file serialized with `System.Text.Json`) and expose it from a class implementing `INotifyPropertyChanged`. Apply color mode by setting `FrameworkElement.RequestedTheme` on the root element (`ElementTheme.Default`, `Light` or `Dark`); `Default` follows the system, which is the `auto` case. Read system values from `Windows.UI.ViewManagement.UISettings` (`AnimationsEnabled`, `TextScaleFactor`) and `AccessibilitySettings.HighContrast`, and listen to `UISettings.ColorValuesChanged` in place of the `matchMedia` change listener. Express contrast, spacing and text size as `ResourceDictionary` entries (`ThemeDictionaries` with `Default`, `Light`, `Dark` and `HighContrast` keys) swapped at runtime, focus outlines as a custom focus visual resource, and link underlines through `Hyperlink.UnderlineStyle`. Attribute absence has no equivalent; use nullable properties or the `Default` enum member. The source's synchronous `localStorage` becomes `LocalSettings` (synchronous) or `StorageFile` (`async`/`await`).
+- **WinUI 3**: Persist the record with `Windows.Storage.ApplicationData.Current.LocalSettings` (or a JSON file serialized with `System.Text.Json`) and expose it from a class implementing `INotifyPropertyChanged`. Apply color mode by setting `FrameworkElement.RequestedTheme` on the root element (`ElementTheme.Default`, `Light` or `Dark`); `Default` follows the system, which is the `auto` case. Read system values from `Windows.UI.ViewManagement.UISettings` (`AnimationsEnabled`, `TextScaleFactor`) and `AccessibilitySettings.HighContrast`, and listen to `UISettings.ColorValuesChanged` in the store or host layer that supplies `systemPrefersDark`, not in the port of this module, which never listens to `matchMedia` itself (see `apply-system-injected`). Express contrast, spacing and text size as `ResourceDictionary` entries (`ThemeDictionaries` with `Default`, `Light`, `Dark` and `HighContrast` keys) swapped at runtime, focus outlines as a custom focus visual resource, and link underlines through `Hyperlink.UnderlineStyle`. Attribute absence has no equivalent; use nullable properties or the `Default` enum member. The source's synchronous `localStorage` becomes `LocalSettings` (synchronous) or `StorageFile` (`async`/`await`).
 
 ## Reference Implementations
 
@@ -227,7 +237,7 @@ Not applicable: the module makes no log calls; storage failures are discarded wi
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/appearance.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/themes/src/appearance.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -258,11 +268,6 @@ Not applicable: the module makes no log calls; storage failures are discarded wi
 **Decision**: The Vite plugin injects the script at the end of `<head>`.
 **Rationale**: Prepended, it and the dev server's preamble push `<meta charset>` past the first 1024 bytes, where browsers stop looking for the encoding; a script anywhere in `<head>` still runs before the body paints.
 **Approved**: pending
-
-**Decision**: Test coverage for this module is indirect: `clearAppearance.test.ts` exercises `applyAppearance` and `clearAppearance` directly, and `appearanceScope.test.ts` and `AppearanceScope.test.tsx` exercise them through the store. No test file targets `normalizeAppearance`, the storage functions or the pre-paint script, so the vectors for those are derived from the source.
-**Rationale**: Records the evidence source for the vectors above, per the source-fidelity guideline.
-**Approved**: pending
-
 ## Compliance
 
 | Check | Status | Category |
@@ -279,5 +284,6 @@ Separation of concerns passes: the pure logic, the plain-Node constants and scri
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the appearance store, added the WHATWG encoding-prescan reference, restated the untestable and descriptive requirements, named the edge-case MUSTs by requirement, wrote concrete inputs for vectors 016-017, added vectors 025-030, said 'a fresh copy' everywhere, and added text size and spacing to Accessibility Options. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

@@ -11,7 +11,7 @@
 
 - **requestAnimationFrame for focus**
   **Decision**: Input focus is deferred to `requestAnimationFrame()` rather than called synchronously on open.
-  **Rationale**: Deferring to the next animation frame ensures the input element has been painted to the DOM before focus is requested, since focusing an element before it has rendered can silently fail.
+  **Rationale**: The source defers focus by one animation frame so it runs after the dialog has mounted and laid out. The source does not record why a synchronous call was avoided, so the exact failure it guards against is unverified.
   **Approved**: pending
 
 - **Form wrapper for autofill suppression**

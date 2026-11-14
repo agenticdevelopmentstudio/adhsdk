@@ -2,7 +2,7 @@
 id: 81fb66c5-e31d-4817-ba36-5ccace191e8f
 title: "Digest Hex"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -10,7 +10,7 @@ modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "Lowercase two-digit-per-byte hex string of any CryptoKit digest, the one place hash bytes become the hex strings the daemon stores."
+summary: "Lowercase two-digit-per-byte hex string of any CryptoKit digest, one spelling for every hash stored as text."
 platforms:
   - swift
   - macos
@@ -30,7 +30,7 @@ approved-date: ""
 
 ## Overview
 
-`Digest.hexString` is a public computed property added to every CryptoKit `Digest` (SHA-256, SHA-1, MD5 and the rest). It renders the digest's bytes as a lowercase hexadecimal string, two digits per byte, and is the one place the daemon turns hash bytes into the hex strings it stores: `transcript_lines.line_hash` and `ConfigChange.file_sha256`. Keeping it in one place means every stored hash is spelled the same way, so two hashes of the same bytes compare equal as strings.
+`Digest.hexString` is a public computed property added to every CryptoKit `Digest` (SHA-256, SHA-1, MD5 and the rest). It renders the digest's bytes as a lowercase hexadecimal string, two digits per byte, and gives every caller that stores a digest as text the same spelling. Keeping the rendering in one place means two hashes of the same bytes compare equal as strings.
 
 ## Behavioral Requirements
 
@@ -38,11 +38,9 @@ approved-date: ""
 - **lowercase**: Every hexadecimal letter in the result MUST be lowercase (`a` to `f`).
 - **two-digits-per-byte**: Each byte MUST render as exactly two hexadecimal digits, with a leading zero for a byte below 0x10, so the result length is twice the digest's byte count.
 - **byte-order**: The digits MUST appear in the digest's iteration order, first byte first, with no separator, prefix or suffix.
-- **empty-digest**: A digest with no bytes MUST render as the empty string; no standard CryptoKit digest has zero bytes, so the source does not reach it.
 - **pure**: The property MUST have no side effect and MUST return the same string each time for the same digest value.
-- **single-rendering**: Daemon code that stores a digest as text MUST obtain it through this property, which the source states is "the one place" that does it.
 - **no-failure**: The property MUST NOT throw or return an optional; it cannot fail.
-- **dependencies**: The component MUST depend only on CryptoKit and Foundation (`String(format:)`).
+- **dependencies**: The component MUST depend only on CryptoKit and Foundation.
 
 ## Appearance
 
@@ -64,18 +62,18 @@ Not applicable — this is a string-rendering extension, not a visual component.
 | digest-hex-002 | two-digits-per-byte | `SHA256.hash(data: Data()).hexString` (derived from the source; no test). | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, 64 characters. |
 | digest-hex-003 | extension-scope, two-digits-per-byte | `Insecure.SHA1.hash(data: Data("abc".utf8)).hexString` (derived from the source; no test). | `a9993e364706816aba3e25717850c26c9cd0d89d`, 40 characters. |
 | digest-hex-004 | extension-scope | `Insecure.MD5.hash(data: Data("abc".utf8)).hexString` (derived from the source; no test). | `900150983cd24fb0d6963f7d28e17f72`, 32 characters. |
-| digest-hex-005 | lowercase | Any digest rendered with `hexString`, tested for the pattern of one or more characters from `0-9a-f` only (derived from the source; no test). | No upper-case letter appears. |
+| digest-hex-005 | lowercase, byte-order, two-digits-per-byte | `SHA512.hash(data: Data("abc".utf8)).hexString` (derived from the source; no test). | `ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f`, 128 characters, no upper-case letter. |
 | digest-hex-006 | two-digits-per-byte | `Insecure.MD5.hash(data: Data("a".utf8)).hexString` (derived from the source; no test). | `0cc175b9c0f1b6a831c399e269772661`, 32 characters: the first byte 0x0c renders as `0c`, keeping its leading zero. |
 | digest-hex-007 | pure | Call `hexString` twice on one digest value (derived from the source; no test). | Both calls return identical strings. |
 
 ## Edge Cases
 
-- **Null / empty input**: Hashing empty data still gives a full-length digest (SHA-256 gives 32 bytes), which renders as 64 characters (MUST). A zero-byte digest would render as the empty string; CryptoKit has no such digest.
+- **Null / empty input**: Hashing empty data still gives a full-length digest (SHA-256 gives 32 bytes), which renders as 64 characters (MUST). A digest with no bytes would render as the empty string; no CryptoKit digest has zero bytes, so this case is not reachable and no vector covers it.
 - **Boundary values**: A byte of 0x00 renders as `00` and 0xFF as `ff` (MUST); a byte below 0x10 keeps its leading zero (MUST).
 - **Concurrent access**: The property reads an immutable value digest and keeps no shared state, so calls from any thread are independent.
 - **Error states**: Not applicable: the property cannot fail and has no error path.
 - **Offline / disconnected state**: Not applicable: the property performs no I/O.
-- **Performance**: Each byte goes through `String(format:)` and the pieces are joined, so the cost is per byte; the source makes no claim about speed and hashes rendered are digest-sized (16 bytes for MD5 to 64 for SHA-512).
+- **Performance**: Each byte goes through `String(format:)` and the pieces are joined, so the cost is per byte; no speed claim is made, and hashes rendered are digest-sized (16 bytes for MD5 to 64 for SHA-512).
 
 ## Configuration
 
@@ -104,7 +102,7 @@ Not applicable: The source contains no analytics call.
 ## Privacy
 
 - **Data handled**: A hash of whatever the caller digested; the hash can identify content, so the caller decides whether storing it is acceptable.
-- **Storage**: None; the caller stores the string (the daemon uses `transcript_lines.line_hash` and `ConfigChange.file_sha256`).
+- **Storage**: None; the caller stores the string.
 - **Transmission**: None; it performs no network access.
 - **Retention**: None beyond the lifetime of the returned string.
 
@@ -114,17 +112,17 @@ Not applicable: The source calls no logging API.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/Text/DigestHex.swift`, imports `CryptoKit` and `Foundation`, and has no SwiftUI dependency. Its single test is `DigestHexTests` in `AgenticDeveloperHubSDKCoreTests/Text`, using Swift Testing.
+- **SwiftUI**: The component imports only `CryptoKit` and `Foundation`, has no UI dependency, and so is the same on AppKit and UIKit; a SwiftUI view calls `hexString` on any digest.
 - **Compose**: Hash with `java.security.MessageDigest` and render with `joinToString("") { "%02x".format(it) }` (a boxed `Byte` already formats as two unsigned hex digits under `%x`, so no mask is needed), or `HexFormat.of().formatHex(bytes)` on JDK 17, which is lowercase by default.
 - **React/Web**: Hash with `crypto.subtle.digest("SHA-256", data)` and render with `Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, "0")).join("")`; `toString(16)` is lowercase and `padStart(2, "0")` keeps the leading zero. In Node, `createHash("sha256").update(data).digest("hex")` is the same string.
-- **AppKit / UIKit**: Identical to the SwiftUI note: CryptoKit is the same on both and nothing in the file touches UI.
+- **AppKit / UIKit**: Same as the SwiftUI note: CryptoKit is the same on both.
 - **WinUI 3**: Use `System.Security.Cryptography` (`SHA256.HashData(bytes)`, which returns `byte[]`) and render with `Convert.ToHexString(hash).ToLowerInvariant()` (.NET 5 and later; `Convert.ToHexString` is upper-case, so the `ToLowerInvariant` call is required) or `string.Concat(hash.Select(b => b.ToString("x2")))`. Put it in a static extension class over `byte[]` rather than over a digest type, since .NET hash APIs return a plain byte array and have no `Digest` protocol.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Text/DigestHex.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Text/DigestHex.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -132,15 +130,15 @@ Not applicable: The source calls no logging API.
 ## Design Decisions
 
 **Decision**: Render lowercase hex, two digits per byte, with no separator or prefix.
-**Rationale**: The strings are stored in the daemon's database columns and compared as text; one spelling means equal hashes are equal strings.
+**Rationale**: Stored hashes are compared as text, so one spelling means equal hashes are equal strings.
 **Approved**: pending
 
 **Decision**: Put the rendering on `Digest` as one shared property.
-**Rationale**: The source calls it "the one place the daemon turns hash bytes into the hex strings it stores", so a second copy cannot drift.
+**Rationale**: With one rendering, callers that store a digest as text should take it from this property, so a second copy of the spelling cannot drift. That constrains callers, so each consuming recipe states it as its own integration requirement.
 **Approved**: pending
 
 **Decision**: Build the string byte by byte with `String(format: "%02x", ...)` and `joined()`.
-**Rationale**: The source gives none; this is recorded as the implementation, and a port need only match the output, not the mechanism.
+**Rationale**: It is the simplest correct rendering, and digests are small (16 to 64 bytes), so the per-byte cost does not matter. A port need only match the output, not the mechanism.
 **Approved**: pending
 
 ## Compliance
@@ -156,4 +154,5 @@ separation-of-concerns passes: the extension only renders bytes as text; hashing
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Described the guarantee generally instead of naming one consumer, gave real rationales, moved empty-digest to Edge Cases, dropped the String(format:) mechanism and the caller-side requirement, replaced vector 005 with SHA-512 of abc and merged the Apple notes. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

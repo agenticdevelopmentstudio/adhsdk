@@ -1,6 +1,6 @@
 
 - **service-protocol**: `WorkTrackingService` MUST be `Sendable` and declare `setPreferences(_:)` and `status()` and `recheckPermissions()` (each `async`, each returning `WorkTrackingStatus?`) and `spans(since:limit:)` (`async`, returning `[ActivitySpanDTO]?`).
-- **transport-protocol**: `WorkTrackingXPCTransport` MUST be `Sendable` and declare `callData(timeout:retries:_:)` returning `Data` and `callDecodingArray(_:timeout:retries:_:)` returning `[T]`, both `async throws`, where `timeout` is a double optional (`TimeInterval??`).
+- **transport-protocol**: `WorkTrackingXPCTransport` MUST be `Sendable` and declare `callData(timeout:retries:_:)` returning `Data` and `callDecodingArray(_:timeout:retries:_:)` returning `[T]`, both `async throws`, where `timeout` is a double optional (`TimeInterval??`). The client passes `.none` (written `nil`) for `status()` and `spans(since:limit:)` and a concrete number of seconds for the other two calls; it never passes `.some(nil)`. The transport contract MUST define what `.none` means (the source leaves it to the transport) and what `.some(nil)` means if it accepts it.
 - **client-generic**: `WorkTrackingXPCClient` MUST be generic over a `WorkTrackingXPCTransport`, MUST hold it as the public `transport`, and MUST depend on no daemon framework.
 - **reply-decoder**: `makeReplyDecoder()` MUST return a `JSONDecoder` with `convertFromSnakeCase` keys and `iso8601` dates, and the client MUST use it for every reply.
 - **status-call**: `status()` MUST invoke `workTrackingStatus` with `timeout: nil` and `retries: 0` and return the decoded `WorkTrackingStatus`.
@@ -8,9 +8,9 @@
 - **status-unreadable-nil**: A status reply that does not decode as `WorkTrackingStatus` MUST yield nil.
 - **status-throw-nil**: A transport that throws MUST yield nil from `status()`, `recheckPermissions()` and `setPreferences(_:)`.
 - **recheck-call**: `recheckPermissions()` MUST invoke `workTrackingRecheckPermissions` with `timeout` of `recheckTimeout` and `retries: 0`.
-- **recheck-timeout**: `recheckTimeout` MUST be 15 seconds, longer than the roughly ten-second stall of a missing Accessibility grant, so the daemon's "denied" is not dropped and shown as "Unknown" (review F24).
+- **recheck-timeout**: `recheckTimeout` MUST be 15 seconds, longer than the roughly ten-second stall of a missing Accessibility grant, so the daemon's "denied" is not dropped and shown as "Unknown".
 - **set-preferences-body**: `setPreferences(_:)` MUST encode the preferences with `convertToSnakeCase` keys and send them through `workTrackingSetPreferences`.
-- **set-preferences-timeout**: `setPreferences(_:)` MUST wait `setPreferencesTimeout`, which MUST equal `recheckTimeout` (15 seconds), because a turn-on is answered only after the daemon's live Accessibility check; a shorter wait would time out on a change the daemon applied (review N4).
+- **set-preferences-timeout**: `setPreferences(_:)` MUST wait `setPreferencesTimeout`, which MUST equal `recheckTimeout` (15 seconds), because a turn-on is answered only after the daemon's live Accessibility check; a shorter wait would time out on a change the daemon applied.
 - **set-preferences-no-retry**: `setPreferences(_:)` MUST pass `retries: 0`.
 - **set-preferences-encode-failure**: If the preferences cannot be encoded, `setPreferences(_:)` MUST return nil without calling the transport.
 - **set-preferences-reply**: `setPreferences(_:)` MUST return the status the daemon replies, decoded as in `status()`, with nil for empty or unreadable data.

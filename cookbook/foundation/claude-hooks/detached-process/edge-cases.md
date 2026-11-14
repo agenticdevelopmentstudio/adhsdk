@@ -6,5 +6,6 @@
 - Error states: a failed `pipe` or `posix_spawn` returns false and closes its descriptors (MUST); a failed payload write is swallowed and `spawn` returns true, the gap marked in Behavioral Requirements.
 - Interrupted wait: the wait for the trampoline retries on `EINTR` (MUST).
 - Offline or disconnected state: not applicable; nothing here uses the network, though the command may.
+- Lock file accumulation: `release()` only closes the descriptor and never unlinks the file, so one lock file per session stays in the lock directory; the source does no cleanup, so removal is left to the operating system's temporary-directory cleanup.
 - Stale lock file: a lock file left on disk by a dead process is harmless because the lock is the `flock`, not the file's existence (MUST).
 

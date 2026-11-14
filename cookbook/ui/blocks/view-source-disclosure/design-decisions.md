@@ -1,5 +1,5 @@
 
-**Decision**: Do not compose the toolkit's shared `Disclosure` component; keep this as a separate, self-contained disclosure.
+**Decision**: Do not compose the toolkit's shared `Disclosure` component ([adhsdk.ingredient.ui.components.layout.disclosure](cookbook:c99e2822-f5a9-4e84-8740-9341880bb82a)); keep this as a separate, self-contained disclosure.
 **Rationale**: `Disclosure` renders a framed card — a rounded border, a raised surface, a `text-sm font-medium` title, and a ruled content box — for a host that wants that shape. Reaching this component's quiet inline look through `Disclosure` would mean cancelling nine of its visual decisions: the card chrome, the header padding, the chevron's size and colour, the title's family/size/weight/colour, and the content frame — to keep roughly 20 lines of open/close state. That is a standing coupling that would let a future `Disclosure` restyle silently break this component. The two disclosures encode different knowledge (a framed section vs. an inline text toggle), so duplicating the open/close mechanics is not a DRY violation.
 **Approved**: pending
 

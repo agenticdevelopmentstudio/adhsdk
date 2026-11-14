@@ -2,7 +2,7 @@
 id: 07fab18a-2390-4899-b4ee-a273abc3a3eb
 title: "Persisted State"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -14,7 +14,11 @@ summary: "A state value that starts at a default, hydrates once from JSON in loc
 platforms:
   - typescript
   - web
-tags: []
+tags:
+  - persistence
+  - local-storage
+  - state
+  - hooks
 depends-on: []
 related:
   - 3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b
@@ -31,7 +35,7 @@ approved-date: ""
 
 Persisted State is a state value that survives a reload. It takes a storage `key`, an `initial` value, a `decode` function and an optional `encode` function, and returns a pair: the current value and a setter shaped like the platform's ordinary state setter (it accepts either a value or an updater function). The value is stored as JSON in the browser's local storage under `key`.
 
-The component starts at `initial` on the first render and reads storage afterwards, in an effect, so the first paint matches what a server render would produce. It reads storage once per key. `decode` turns the parsed JSON back into the value type and returns `undefined` for anything it does not recognise, such as a value written by an older build or edited by hand, which keeps the default instead of producing a shape the view never expected. `encode` turns the value into JSON-safe data before it is written; it defaults to the identity.
+The state starts at `initial` on the first render and reads storage afterwards, in an effect, so the first paint matches what a server render would produce. In this spec "first render" means the first presentation of the value, and "effect" means work that runs after that first presentation; a port maps both onto its own view lifecycle. It reads storage once per key. `decode` turns the parsed JSON back into the value type and returns `undefined` for anything it does not recognise, such as a value written by an older build or edited by hand, which keeps the default instead of producing a shape the view never expected. `encode` turns the value into JSON-safe data before it is written; it defaults to the identity.
 
 The module also exports `decodeBoolean`, a decoder that accepts only a boolean.
 
@@ -67,7 +71,7 @@ Its callers are the dashboard's gear settings. The source-filter state ([adhsdk.
 - **set-functional-update**: When given a function, the setter MUST pass it the latest previous value, so several updates in one batch compose instead of overwriting each other.
 - **set-persists-same-value**: The setter MUST write to storage even when the next value equals the previous one; it does no equality check.
 - **set-write-failure**: When writing storage throws (quota exceeded, storage blocked, or `encode` or `JSON.stringify` throwing), the setter MUST ignore the failure, MUST still apply the in-memory value, and MUST NOT throw; the source comment says "the in-memory choice still applies."
-- **set-updater-throws**: When a caller's updater function throws, the hook MUST NOT catch the exception, because the updater runs outside the guarded block; the host state machinery decides where it surfaces.
+- **set-updater-throws**: When a caller's updater function throws, the state MUST NOT catch the exception, because the updater runs outside the guarded block; the host state machinery decides where it surfaces.
 - **set-write-in-updater**: The storage write MUST happen inside the state update function, so it runs once for each application of that update; the environment MAY apply an update more than once for the same input, and each application writes the same string.
 - **set-key-bound**: The setter MUST write to the `key` of the render that produced it; its identity MUST stay stable across renders while `key` is unchanged, and MUST change when `key` changes.
 - **set-encode-captured**: The setter MUST use the `encode` supplied on the render that created it and MUST NOT pick up a new `encode` from later renders while `key` is unchanged.
@@ -75,15 +79,15 @@ Its callers are the dashboard's gear settings. The source-filter state ([adhsdk.
 ### Key changes
 
 - **key-change-rehydrates**: When `key` changes, the state MUST read storage again under the new key and apply the hydration rules.
-- **key-change-keeps-value**: When `key` changes to a key with no usable stored value, the state MUST keep the value it held under the old key, not reset to `initial`.
+- **key-change-keeps-value**: When `key` changes to a key with no usable stored value, the state MAY keep the value it held under the old key rather than reset to `initial`; the source keeps it, and no current caller changes its key, so a port may choose either.
 
 ### Ordering, concurrency and scope
 
-- **single-threaded**: All state updates run on the single execution thread and apply in the order issued.
+- **single-threaded**: All updates MUST apply in the order issued, on the single execution thread.
 - **per-instance-state**: Each use MUST hold its own in-memory value; two uses of the same `key` do not observe each other's changes until one of them re-reads storage (a remount or a key change).
 - **no-cross-tab-sync**: The state MUST NOT subscribe to storage change events; a write in another tab does not change the value.
 - **no-network**: The state MUST NOT make network requests, log, or start timers.
-- **client-only**: This module MUST run only in a live client execution context; it has no server-only or universal-rendering variant, and it reads storage only in an effect, which never runs during a server render.
+- **client-only**: The state MUST touch storage only on the client; it reads storage only in an effect, which never runs during a server render, so the state can be rendered on the server at `initial`.
 
 ## Appearance
 
@@ -103,7 +107,7 @@ Vectors 001–003 are the assertions in `use-persisted-state.dom.test.tsx` (the 
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| pstate-001 | set-persists, hydrate-decoded, decodeBoolean | test "restores a value set in an earlier mount": mount with key `k`, initial `false`, `decodeBoolean`; set `true`; unmount; mount again with the same arguments | the second mount's value is `true` |
+| pstate-001 | set-persists, hydrate-decoded, boolean-decoder | test "restores a value set in an earlier mount": mount with key `k`, initial `false`, `decodeBoolean`; set `true`; unmount; mount again with the same arguments | the second mount's value is `true` |
 | pstate-002 | hydrate-unrecognised, boolean-decoder | test "keeps the default for a stored value the decoder doesn't recognise": storage holds `"yes"` (JSON string) under `k`; mount with initial `false` and `decodeBoolean` | value stays `false` |
 | pstate-003 | set-key-bound, set-persists, hydrate-decoded | test "persists each pane's source filter under its own key": toggle `glitchtip` off through the source filter under key `src-activity`, remount | `src-activity` no longer has `glitchtip` selected, and `src-problems` still has it |
 | pstate-004 | hydrate-missing-key, initial-first-render | storage empty; mount with initial `7` | value is `7`, and storage is still empty after mount |
@@ -114,10 +118,17 @@ Vectors 001–003 are the assertions in `use-persisted-state.dom.test.tsx` (the 
 | pstate-009 | encode-default, set-persists | mount with initial `false` and no `encode`; set `true` | storage holds the text `true` |
 | pstate-010 | set-persists, hydrate-decoded | mount with `encode` mapping a set to an array and a `decode` mapping an array back to a set; set the set `{a, b}`; remount | storage holds `["a","b"]` and the second mount's value is a set containing `a` and `b` |
 | pstate-011 | boolean-decoder | `decodeBoolean` called with `true`, `false`, `"true"`, `1`, `null` | `true`, `false`, `undefined`, `undefined`, `undefined` |
-| pstate-012 | key-change-rehydrates, key-change-keeps-value | mount with key `a` and value set to `true`; re-render with key `b` that has no stored entry | value is still `true`; with a stored `false` under `b` it becomes `false` |
+| pstate-012 | key-change-rehydrates, key-change-keeps-value | mount with key `a` and value set to `true`; re-render with key `b` that has no stored entry | value is `true` in the source, which keeps the old key's value (a port MAY reset instead); with a stored `false` under `b` it becomes `false` |
 | pstate-013 | decode-read-once | mount with an inline `decode`; re-render several times with a new inline `decode` and the same `key` | storage is read once and the value is unchanged by the re-renders |
 | pstate-014 | hydrate-decode-throws | `decode` throws on the stored value; mount | value stays at `initial`, no exception |
-
+| pstate-015 | set-persists-same-value | mount with initial `false`; storage is cleared; call the setter with `false` | storage holds the text `false` after the call, even though the value did not change |
+| pstate-016 | set-encode-captured | mount with an inline `encode` that wraps the value in an array; re-render with the same `key` and an `encode` that wraps it in an object; call the setter with `1` | storage holds the text `[1]`, from the `encode` of the render that created the setter |
+| pstate-017 | set-key-bound | mount with key `a`; capture the setter; re-render with key `a`, then with key `b`; call the captured setter and the current setter | the setter's identity is the same across the re-render with key `a` and different after the change to `b`; the captured setter writes to `a` |
+| pstate-018 | set-updater-throws | mount with initial `0`; call the setter with an updater that throws | the exception is not caught by the state, no write happens for that call, and the value stays `0` |
+| pstate-019 | hydrate-once-per-key | mount with key `k`, re-render three times with the same key, then change the key to `j` | storage is read once for `k` and once more for `j`, and not on the re-renders |
+| pstate-020 | hydrate-no-write | storage holds `true` under `k`; mount with `decodeBoolean` and initial `false` | the value becomes `true`, and no write call is made to storage during hydration |
+| pstate-021 | per-instance-state | two mounts with the same key; call one setter with `true` | the other mount's value stays `false`; storage holds `true` |
+| pstate-022 | no-cross-tab-sync | mount with key `k`; dispatch a storage change event for `k` with a new value | the value does not change |
 ## Edge Cases
 
 - **Null and empty input**: a stored `null` MUST be passed to `decode`; the default `decodeBoolean` returns `undefined` for it and the value stays at its default. An empty stored string is invalid JSON and MUST keep the value, per hydrate-bad-json.
@@ -127,7 +138,7 @@ Vectors 001–003 are the assertions in `use-persisted-state.dom.test.tsx` (the 
 - **Concurrent access — same key, two uses**: two mounted uses of one key hold separate values and each write overwrites the last; the later write wins in storage and neither use sees the other until it re-reads. Another tab writing the same key is not observed.
 - **Concurrent access — repeated update application**: when the environment applies an update function twice for the same input, the storage write runs twice with the same string; the result is the same.
 - **Error states — storage blocked or full**: reads and writes MUST fail silently; the value still changes in memory and is lost on reload. No error is surfaced to the caller or logged.
-- **Error states — caller's updater throws**: the hook does not catch it, because the updater runs outside the guarded block, and no write happens for that call.
+- **Error states — caller's updater throws**: the state does not catch it, because the updater runs outside the guarded block, and no write happens for that call.
 - **Error states — unserialisable value**: `JSON.stringify` of a value `encode` leaves unserialisable (a circular object, a `BigInt`) throws inside the guarded write and is ignored; the value is kept in memory only. An encoded value of `undefined` makes `JSON.stringify` return `undefined`, which local storage stores as the text `undefined`; that text is not valid JSON, so the next hydration keeps the default.
 - **Offline or disconnected state**: not applicable — the state reads and writes only the browser's local storage and has no network dependency.
 - **Cancellation and timeouts**: not applicable — every operation is synchronous.
@@ -137,7 +148,7 @@ Vectors 001–003 are the assertions in `use-persisted-state.dom.test.tsx` (the 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `key` | string | none — required | The local-storage key; each setting owns its own key (the dashboard's keys include `adh-status-show-canceled`, `adh-status-in-progress-or-failed-only` and `adh-status-stats-span`, and the source filter takes its key from the caller). |
+| `key` | string | none — required | The local-storage key; each setting owns its own key (the dashboard caller's keys are examples only: `adh-status-show-canceled`, `adh-status-in-progress-or-failed-only` and `adh-status-stats-span`; a host chooses its own prefix, and the source filter takes its key from its caller). |
 | `initial` | value of the state's type | none — required | The value before hydration and whenever storage yields nothing usable. |
 | `decode` | function from an unknown value to the value or `undefined` | none — required | Turns parsed JSON into the value; `undefined` means "not recognised, keep the default." |
 | `encode` | function from the value to JSON-serialisable data | identity | Turns the value into what is written; needed when the value has no JSON form of its own (a set, an object holding a derived field). |
@@ -187,7 +198,7 @@ Not applicable: the state never logs; a failed read or write is ignored silently
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-persisted-state.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-web/src/hooks/use-persisted-state.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -242,4 +253,5 @@ Not applicable: the state never logs; a failed read or write is ignored silently
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Added tags, rewrote single-threaded and client-only, fixed the decodeBoolean requirement name, lowered key-change-keeps-value to MAY, marked config keys as examples, defined first render and effect for ports, and added vectors pstate-015 to pstate-022. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial recipe extracted from `use-persisted-state.ts` |

@@ -13,7 +13,7 @@
 - **bool-prefs-shared**: `BOOL_PREFS` MUST list `focusOutlines` and `underlineLinks`, and MUST be frozen.
 - **storage-key**: `APPEARANCE_STORAGE_KEY` MUST be `adh:appearance`.
 - **single-definition**: `applyAppearance`, `clearAppearance` and the pre-paint script MUST iterate the same `ENUM_PREF_DEFAULTS` and `BOOL_PREFS` lists, so adding a preference in one place updates all three. Source: the comments on `ENUM_PREF_DEFAULTS` and `PREPAINT_ATTR_LINES`.
-- **colormode-not-in-enum-list**: `colorMode` MUST NOT appear in `ENUM_PREF_DEFAULTS`. It is handled separately because it sets a class as well as an attribute.
+- **colormode-not-in-enum-list**: `colorMode` MUST NOT appear in `ENUM_PREF_DEFAULTS`; `applyAppearance` handles it separately because it sets a class as well as an attribute.
 
 ### normalizeAppearance
 
@@ -25,16 +25,16 @@
 
 ### Storage cache
 
-- **read-ssr-guard**: `readStoredAppearance()` MUST return a copy of the defaults when `window` is undefined.
+- **read-ssr-guard**: `readStoredAppearance()` MUST return a fresh copy of the defaults when `window` is undefined.
 - **read-normalizes**: `readStoredAppearance()` MUST read `localStorage` under `APPEARANCE_STORAGE_KEY`, parse the value as JSON, and return it passed through `normalizeAppearance`.
-- **read-missing**: `readStoredAppearance()` MUST return the defaults when the key is absent or empty.
-- **read-failure**: `readStoredAppearance()` MUST return a copy of the defaults when storage access or JSON parsing throws. The failure is not reported.
+- **read-missing**: `readStoredAppearance()` MUST return a fresh copy of the defaults when the key is absent or empty.
+- **read-failure**: `readStoredAppearance()` MUST return a fresh copy of the defaults when storage access or JSON parsing throws. The failure is not reported.
 - **write-serializes**: `writeStoredAppearance(prefs)` MUST store `JSON.stringify(prefs)` under `APPEARANCE_STORAGE_KEY`.
 - **write-ssr-guard**: `writeStoredAppearance` MUST do nothing when `window` is undefined.
 - **write-failure**: `writeStoredAppearance` MUST NOT throw when storage throws (private mode, quota). The write is dropped and the failure is not reported. Source: the comment `ignore (private mode / quota)`.
 - **write-does-not-normalize**: `writeStoredAppearance` MUST write the object it is given without normalizing it; normalization happens on read.
 - **clear-stored**: `clearStoredAppearance()` MUST remove the `APPEARANCE_STORAGE_KEY` entry. It MUST do nothing when `window` is undefined and MUST NOT throw when storage throws.
-- **cache-not-truth**: The stored value MUST be treated as a per-browser cache of the signed-in user's preferences, which live on the server. Source: the comments on `clearStoredAppearance` and the pre-paint script. The cache is cleared on sign-out so it does not outlive the session on a shared browser; the caller, not this module, triggers that.
+- **cache-not-truth**: Every read of the stored value MUST pass through `normalizeAppearance`, and this module MUST NOT treat the stored value as authoritative over a value the caller passes in. The server holds the signed-in user's preferences; the cache is per browser. Source: the comments on `clearStoredAppearance` and the pre-paint script. The caller, not this module, clears the cache on sign-out.
 
 ### applyAppearance
 
@@ -51,7 +51,7 @@
 - **clear-removes-all**: `clearAppearance(el)` MUST remove the `dark` class, delete `data-color-mode`, and delete every `data-*` attribute for every key in `ENUM_PREF_DEFAULTS` and `BOOL_PREFS`.
 - **clear-undoes-apply**: After `applyAppearance` followed by `clearAppearance`, the element MUST be byte-for-byte what it was before `applyAppearance`, including unrelated classes and attributes. Source: `clearAppearance.test.ts`.
 - **clear-undoes-prepaint**: `clearAppearance` MUST also remove the attributes the pre-paint script writes for default values (`data-color-mode` set to `auto`, and the `dark` class).
-- **clear-purpose**: `clearAppearance` exists for sites that mount the preferences on only some routes; a client navigation keeps the same `<html>`, so without it the preferences would follow the reader onto a page that never asked for them.
+- **clear-purpose**: `clearAppearance` MUST be callable by a site that mounts the preferences on only some routes, and MUST remove what `applyAppearance` wrote, so the preferences do not follow the reader onto a page that never asked for them. A client navigation keeps the same `<html>`.
 
 ### Pre-paint script
 
@@ -66,6 +66,6 @@
 
 ### Concurrency and side effects
 
-- **single-threaded**: All functions are synchronous and run on the browser main thread; they have no async operations and need no locking.
-- **side-effects**: `applyAppearance` and `clearAppearance` mutate only the element passed in. The storage functions touch only `localStorage` under `adh:appearance`. Nothing makes a network call; server sync is outside this module.
+- **single-threaded**: All functions MUST be synchronous, with no async operations; they run on the browser main thread and need no locking.
+- **side-effects**: `applyAppearance` and `clearAppearance` MUST mutate only the element passed in. The storage functions MUST touch only `localStorage` under `adh:appearance`. No function MUST make a network call; server sync is outside this module.
 

@@ -4,11 +4,11 @@
     "id": "feee183a-6488-489e-8e20-c7150bb3e914",
     "title": "Bleed",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8f8d0e34ae7fbb2a",
+  "synced": "374500131ddc7a01",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

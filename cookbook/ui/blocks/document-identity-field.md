@@ -2,11 +2,11 @@
 id: 054522c7-53c8-45e4-9003-8c317a93b674
 title: "Document Identity Field"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -47,18 +47,22 @@ A compound field that captures the two values that identify a document: its huma
 - **accept-slugify-function**: Component MUST accept a `slugify` function prop that takes a title string and returns a slug string, used to derive the slug from title edits.
 - **accept-verdict**: Component MUST accept an optional `verdict` prop (SlugVerdict type) with properties `status` ("idle" | "checking" | "available" | "unavailable") and `reason` (string or null).
 - **display-status-message**: Component MUST display a status message corresponding to the verdict status: null for "idle", "Checking…" for "checking", "Available" for "available", "Unavailable" for "unavailable".
-- **display-verdict-reason**: Component MUST display `verdict.reason` when present and non-null, replacing the default status message; the reason is displayed for all non-idle statuses.
+- **display-verdict-reason**: Component MUST display `verdict.reason` when present and non-null, replacing the default status message; the reason is displayed for all non-idle statuses. When `status` is "idle", the status text is empty and any `reason` is ignored.
 - **announce-status-changes**: Component MUST announce verdict status changes and reason text to assistive technology using an `aria-live="polite"` region.
 - **accept-disabled-prop**: Component MUST accept an optional `disabled` boolean prop (default false); when true, both inputs MUST be disabled.
 - **container-class-name**: Component MUST accept an optional `className` string prop and apply it to the container element.
 - **position-status-in-slug-row**: Component MUST render the status message as a sibling element to the slug input within the same row, not below or above it.
 - **use-monospace-slug-font**: Component MUST render the slug input's text in a monospace font, at a smaller size than the title input.
-
+- **debounce-availability-check**: The `useSlugAvailability` hook MUST wait for a quiet period (default 350ms, overridable with `debounceMs`) after the last change to the slug before calling the checker, and MUST report `{ status: "checking", reason: null }` from the moment the slug changes until the checker answers.
+- **skip-check-without-slug**: The `useSlugAvailability` hook MUST NOT call the checker, and MUST report idle, when the slug is empty or no checker is supplied.
+- **map-checker-answer-to-verdict**: The `useSlugAvailability` hook MUST report `{ status: "available", reason: null }` when the checker answers `available: true`, and `{ status: "unavailable", reason: <the checker's reason, or null> }` otherwise.
+- **discard-stale-answers**: The `useSlugAvailability` hook MUST stamp each question with the slug and the optional `subject` it was asked about, and MUST discard an answer whose stamp no longer matches the current question.
+- **revert-to-idle-on-failure**: The `useSlugAvailability` hook MUST report idle when the checker throws or rejects for the current question.
 ## Appearance
 
 - **Container**: Vertical stack, full width, rows separated by a 12pt gap; part of the shared field-label-column group.
-- **Row layout**: Each row places a right-aligned caption in the shared label column beside its control (inline field layout), not above it.
-- **Title input**: Text input; inherits the platform's default height, padding, border, and font.
+- **Row layout**: Each row places a right-aligned caption in the shared label column beside its control (the inline layout of the `Field` component ([adhsdk.ingredient.ui.blocks.field](cookbook:0c199036-81c3-47c3-9e79-e4b8187ca69a))), not above it.
+- **Title input**: Text input (the `Input` component ([adhsdk.ingredient.ui.components.inputs.input](cookbook:0f5b7167-b375-4f44-977b-566f720a453d))); inherits the platform's default height, padding, border, and font.
 - **Slug input**: Text input; font is monospace at roughly 0.8× the title input's font size.
 - **Status message**: Text, roughly 0.75× the body font size, colored by tone (muted, success, or error), positioned beside the slug input with an ~8pt gap.
 - **Gap between rows**: 12pt.
@@ -69,7 +73,7 @@ Reference implementation (`document-identity-field.tsx`): the container uses Tai
 
 | State | Appearance change |
 |-------|------------------|
-| Default | Title and slug inputs render with inherited platform styles; status message is null or not rendered |
+| Default | Title and slug inputs render with inherited platform styles; status region is mounted but empty |
 | Verdict: checking | Status message displays "Checking…" in muted tone |
 | Verdict: available | Status message displays "Available" in success tone |
 | Verdict: unavailable | Status message displays the reason (or "Unavailable") in error tone |
@@ -79,11 +83,11 @@ Reference implementation (`document-identity-field.tsx`): the container uses Tai
 ## Accessibility
 
 - **Role**: Compound form control presenting two text inputs
-- **Title input label**: Associated via the shared `<label>` element that implicitly wraps both caption and input; the title's accessible name never changes, so implicit wrapping is safe.
+- **Title input label**: Associated via the shared `<label>` element that the `Field` component ([adhsdk.ingredient.ui.blocks.field](cookbook:0c199036-81c3-47c3-9e79-e4b8187ca69a)) renders in its inline layout, which implicitly wraps both caption and input; the title's accessible name never changes, so implicit wrapping is safe.
 - **Slug input label**: Associated via `aria-labelledby` pointing to a `<span id>` containing only the label text — a different technique than the title's, because the slug row's implicit `<label>` also wraps the status span; without `aria-labelledby` the slug input's accessible name would grow, and mutate, with every verdict. `aria-describedby` then carries the verdict as a description, which is allowed to change.
 - **Status announcement**: Rendered in an `aria-live="polite"` region; region is unconditionally mounted in DOM so changes are announced
 - **Status as description**: Slug input uses `aria-describedby` pointing to status message element when status is present
-- **Minimum tap target**: Both inputs inherit minimum touch target size from Input component (platform default, typically 44×44pt on iOS, 48×48dp on Android)
+- **Minimum tap target**: Both inputs inherit their touch target size from the `Input` component ([adhsdk.ingredient.ui.components.inputs.input](cookbook:0f5b7167-b375-4f44-977b-566f720a453d)) and add none of their own; on the web the minimum is 24×24 CSS px (WCAG 2.5.8)
 - **Keyboard navigation**: Both inputs are keyboard accessible; Tab navigates title → slug in document order. The status message is never focusable and takes no place in the Tab sequence; it is announced through the `aria-live` region instead.
 - **Focus management**: Each input receives focus independently; focus is not trapped or redirected
 - **High contrast**: Status message colors derive from tone tokens (muted, success, error) which meet WCAG AA contrast requirements
@@ -111,7 +115,17 @@ Reference implementation (`document-identity-field.tsx`): the container uses Tai
 | doc-id-016 | render-title-label, render-slug-label | titleLabel="Document Name" slugLabel="URL Slug" | Title caption reads "Document Name"; slug caption reads "URL Slug" |
 | doc-id-017 | display-status-message | verdict left at default ({status:"idle", reason:null}) | Status message renders no text (null) in the slug row |
 | doc-id-018 | announce-status-changes | verdict={{status:"unavailable", reason:"Already taken"}} | Slug input's aria-describedby references the status element's id; the status element's text is "Already taken" |
-
+| doc-id-019 | display-verdict-reason | verdict={{status:"idle", reason:"Already taken"}} | Status region is mounted but empty; the reason is ignored |
+| doc-id-020 | display-status-message | verdict={{status:"unavailable", reason:null}} | Status message displays "Unavailable" |
+| doc-id-021 | display-status-message | verdict={{status:"checking", reason:null}} | Status message displays "Checking…" |
+| doc-id-022 | accept-disabled-prop | `disabled` not passed | Both inputs are enabled |
+| doc-id-023 | stop-auto-slugify-after-manual-edit | User edits the slug, then the component is remounted with a new `key`, then the title changes | Slug follows the title again |
+| doc-id-024 | debounce-availability-check | Hook with `check` and the default debounce; slug changes, then 349ms pass | Verdict is checking and `check` has not been called; after 350ms `check` is called once |
+| doc-id-025 | skip-check-without-slug | Hook with `check` and `slug=""` | `check` is not called; verdict is idle |
+| doc-id-026 | map-checker-answer-to-verdict | `check` resolves `{available:false, reason:"Taken"}` | Verdict is `{status:"unavailable", reason:"Taken"}` |
+| doc-id-027 | discard-stale-answers | Slug changes from "a" to "b" before the answer for "a" arrives, then "a" resolves unavailable | The answer for "a" is dropped; verdict reflects "b" |
+| doc-id-028 | discard-stale-answers | `subject` changes while an answer for the same slug string is pending | The pending answer is dropped |
+| doc-id-029 | revert-to-idle-on-failure | `check` rejects | Verdict is idle |
 ## Edge Cases
 
 - **Empty title, slug not touched**: If title is empty string and slugify returns empty, slug input value is empty; `useSlugAvailability` does not trigger a check when its `slug` argument is empty, so no verdict changes for an empty slug.
@@ -139,6 +153,14 @@ Reference implementation (`document-identity-field.tsx`): the container uses Tai
 | `disabled` | boolean | false | If true, both inputs are disabled |
 | `className` | string | undefined | Additional CSS class applied to container element |
 
+The `useSlugAvailability(slug, check?, opts?)` hook takes these arguments:
+
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `slug` | string | (required) | The slug to ask about |
+| `check` | (slug: string) => Promise<{ available: boolean; reason?: string }> | undefined | The availability checker; without one the verdict stays idle |
+| `opts.debounceMs` | number | 350 | Quiet time before the checker is called |
+| `opts.subject` | string \| null | null | What the answer belongs to (for example a document id); part of the stale-answer stamp |
 ## Deep Linking
 
 Not applicable: This component is a form control, not a routable page or screen. Deep linking is the responsibility of the host application.
@@ -167,7 +189,7 @@ Not applicable: Component is always rendered when mounted; no feature flag contr
 
 ## Analytics
 
-Not applicable: Component does not generate analytics events. Host application SHOULD track user edits (onTitleChange, onSlugChange) and verdict changes (verdict prop updates) as needed for application analytics.
+Not applicable: Component does not generate analytics events.
 
 ## Privacy
 
@@ -179,7 +201,7 @@ Not applicable: No logging is implemented in the source code.
 
 ## Platform Notes
 
-- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/document-identity-field.tsx`. Exports `DocumentIdentityField` component and `useSlugAvailability` hook. Uses Field layout="inline" for label alignment and Input component for text fields. Slug availability hook manages debouncing (default 350ms) and stale verdict dismissal. Component uses Tailwind utilities (cn, toneTextClass) for styling.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/blocks/document-identity-field.tsx`. Exports `DocumentIdentityField` component and `useSlugAvailability` hook. Uses the `Field` component ([adhsdk.ingredient.ui.blocks.field](cookbook:0c199036-81c3-47c3-9e79-e4b8187ca69a)) with `layout="inline"` for label alignment and the `Input` component ([adhsdk.ingredient.ui.components.inputs.input](cookbook:0f5b7167-b375-4f44-977b-566f720a453d)) for text fields. See the `useSlugAvailability` requirements for the hook's behavior. Component uses Tailwind utilities (cn, toneTextClass) for styling.
 
 - **SwiftUI**: Start from a single `Form` (or plain `VStack`) with two `LabeledContent`-style rows (a fixed-width caption beside its control) for title and slug — not two separate `Form` sections. Title field uses the default font; slug field uses `Font.system(.body, design: .monospaced)` at a smaller size. Use `@State` to track `touched` (slug manually edited). On title change, if not touched, call slugify and update slug. Render status text conditionally after the slug field based on verdict status. SwiftUI has no `.accessibilityLiveRegion` modifier; post `AccessibilityNotification.Announcement(statusText).post()` whenever the verdict's status or reason changes so VoiceOver announces it.
 
@@ -187,13 +209,13 @@ Not applicable: No logging is implemented in the source code.
 
 - **AppKit / UIKit**: On iOS (UIKit), use a `UIStackView` (axis: `.vertical`) containing two row `UIStackView`s (axis: `.horizontal`). Use `UILabel` for captions, `UITextField` for inputs. Title field has font `.systemFont(ofSize: UIFont.labelFontSize)`; slug field has font `.monospacedSystemFont(ofSize: 0.8 * UIFont.labelFontSize, weight: .regular)`. Track touched with a target on the slug field's `.editingChanged` control event, not a gesture recognizer (a gesture recognizer does not observe text edits). On title change, if not touched, call slugify. Render status in a `UILabel` positioned after the slug input; there is no `accessibilityLiveRegion` property on iOS, so post `UIAccessibility.post(notification: .announcement, argument: statusText)` whenever the verdict's status or reason changes. On macOS (AppKit), use an `NSStackView` (orientation: `.vertical`) containing two row `NSStackView`s (orientation: `.horizontal`), with an editable `NSTextField` for each input and a non-editable, non-bezeled `NSTextField` for captions and status; give the slug field's font `NSFont.monospacedSystemFont(ofSize: NSFont.labelFontSize * 0.8, weight: .regular)`. Track touched from the field delegate's `controlTextDidChange`, and post status changes with `NSAccessibility.post(element:, notification: .announcementRequested, userInfo: [.announcement: statusText])`.
 
-- **WinUI 3**: Use a StackPanel (Orientation="Vertical", Spacing="12"). Render two rows, each a Grid with three columns (`auto, *, auto`) for caption, input, and status, so the status has its own column and does not collide with the input. Title input: TextBox with FontSize inherited. Slug input: TextBox with FontFamily="Consolas" (or the platform's monospace font), FontSize bound to a fraction (≈0.8×) of the title's rather than a hardcoded value. Track touched in a view-model flag set only by user-initiated edits — `TextChanged` alone is unreliable because it also fires for programmatic updates. For the status TextBlock (in the third column), set `AutomationProperties.LiveSetting="Polite"` (there is no `AccessibilityLive` property), with `Foreground` bound to a `SolidColorBrush` for the success/error/muted tokens.
+- **WinUI 3**: Use a single Grid with two rows (row spacing 12) and a caption column sized `auto` that both rows share, so the captions line up and right-align (WinUI 3 has no `SharedSizeGroup`, so place both captions in one Grid rather than in per-row Grids). Put the status in a third column of the slug row only; the title row has no status. Title input: TextBox with FontSize inherited. Slug input: TextBox with FontFamily="Consolas" (or the platform's monospace font), FontSize bound to a fraction (≈0.8×) of the title's rather than a hardcoded value. Track touched in a view-model flag set only by user-initiated edits — `TextChanged` alone is unreliable because it also fires for programmatic updates. For the status TextBlock (in the slug row's status column), set `AutomationProperties.LiveSetting="Polite"` (there is no `AccessibilityLive` property), with `Foreground` bound to a `SolidColorBrush` for the success/error/muted tokens.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/document-identity-field.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/document-identity-field.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -213,6 +235,9 @@ Not applicable: No logging is implemented in the source code.
 **Rationale**: This reinforces that the slug is a technical identifier (e.g., a URL path component) and may not match the title exactly.
 **Approved**: pending
 
+**Decision**: The status strings "Checking…", "Available" and "Unavailable" stay hardcoded in the component for now; they are accepted debt against the no-hardcoded-strings check.
+**Rationale**: The three words are the whole status vocabulary and `verdict.reason` already lets a host supply localized text for the unavailable case; the debt is paid down by a `statusText` prop, which is deliberately not added until a host needs a localized "Checking…" or "Available".
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -228,7 +253,7 @@ Not applicable: No logging is implemented in the source code.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`passed` rests on the ARIA wiring and relative font units visible in `document-identity-field.tsx` (`aria-live`, `aria-labelledby`, `aria-describedby`, and the relative units `text-[0.8rem]`/`text-xs`); `contrast-ratio` and `touch-target-size` are `partial` because those values are inherited from the tone tokens and the `Input` component rather than verified in this file; the internationalization statuses rest on the `STATUS_TEXT` map in the same source, which externalizes `titleLabel`/`slugLabel` as props but hardcodes the status text itself. `separation-of-concerns` passes because the debounce/stale-verdict logic lives in the exported `useSlugAvailability` hook, not in the `DocumentIdentityField` component itself. `unit-test-coverage` passes because `documentIdentityField.test.tsx` imports and exercises both `DocumentIdentityField` and `useSlugAvailability` directly, including the FOLLOW-rule and stale-verdict behavior.
+`passed` rests on the ARIA wiring and relative font units visible in `document-identity-field.tsx` (`aria-live`, `aria-labelledby`, `aria-describedby`, and the relative units `text-[0.8rem]`/`text-xs`); `contrast-ratio` and `touch-target-size` are `partial` because those values are inherited from the tone tokens and the `Input` component rather than verified in this file; the internationalization statuses rest on the `STATUS_TEXT` map in the same source, which externalizes `titleLabel`/`slugLabel` as props but hardcodes the status text itself. `separation-of-concerns` passes because the debounce/stale-verdict logic lives in the exported `useSlugAvailability` hook, not in the `DocumentIdentityField` component itself. `unit-test-coverage` passes because `documentIdentityField.test.tsx` imports and exercises both `DocumentIdentityField` and `useSlugAvailability` directly, including `#requirements/slug-follows-title` and stale-verdict behavior.
 
 ## Change History
 
@@ -237,3 +262,4 @@ Not applicable: No logging is implemented in the source code.
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case everywhere they are cited; corrected platform-notes API errors in SwiftUI, Compose, UIKit, AppKit, and WinUI 3; fixed test-vector inaccuracies and added vectors for className, custom labels, idle verdict, and aria-describedby; reformatted Design Decisions to the three-line convention form; corrected compliance check names and statuses and added internationalization checks; clarified the differing title/slug labelling techniques and the non-focusable status message; attributed debounce/stale-verdict/throw behavior in Edge Cases to `useSlugAvailability` rather than the component; corrected the localization claim about status-text props; expressed Appearance in platform-neutral terms with the web values as a reference implementation; added `depends-on` entries for `field` and `input`. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Logging section: replaced invented Subsystem/table with Not applicable (no logging in source). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Specified the useSlugAvailability hook with five requirements, configuration rows and vectors, recorded the hardcoded status text as a Design Decision, linked Field and Input, clarified idle/reason and empty-status states, fixed the WinUI layout note and touch-target text, and added eleven test vectors. |

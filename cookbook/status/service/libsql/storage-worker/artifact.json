@@ -4,7 +4,7 @@
     "id": "020cc0f0-04e9-4d03-8796-76027fb1131f",
     "title": "Status Server Storage Worker",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -17,14 +17,23 @@
       "typescript",
       "web"
     ],
-    "tags": [],
-    "depends-on": [],
-    "related": [],
+    "tags": [
+      "storage",
+      "libsql",
+      "worker-threads",
+      "concurrency"
+    ],
+    "depends-on": [
+      "e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d"
+    ],
+    "related": [
+      "dccad63a-f56e-4c97-b182-8cdeb7c1a983"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "381b484f27417035",
+  "synced": "d963106353b040c7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: 4d0e04ff-39eb-472c-93a0-8070f1b64a6a
 title: "OptionMenu"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-06-26
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -56,21 +56,24 @@ filter semantics and is unchanged.
 - **pointer-click-commits**: A pointer click on a row MUST commit that row immediately and close.
 - **escape-closes-without-commit**: Esc MUST close the surface without firing `onChange`.
 - **click-outside-closes-without-commit**: A pointer press outside the surface MUST close it without firing `onChange`, inherited from the `Popover` primitive's default outside-press behavior.
-- **tab-unsupported**: The surface does not trap focus and defines no Tab handling; Tab is left to native browser focus order rather than a menu-style focus trap.
-- **home-end-unsupported**: Home and End are not handled; they have no effect on the selection.
-- **typeahead-unsupported**: Character keys do not perform typeahead selection, per the Overview's rationale for not building on menu roles.
+- **tab-unsupported**: The surface MUST NOT trap focus and defines no Tab handling; Tab is left to native browser focus order rather than a menu-style focus trap.
+- **home-end-unsupported**: Home and End MUST NOT change the selection; they are not handled.
+- **typeahead-unsupported**: Character keys MUST NOT perform typeahead selection, per the Overview's rationale for not building on menu roles.
 - **focus-returns-on-close**: On any close, focus MUST return to the trigger.
 - **selection-not-commit**: Changing the roving selection MUST NOT fire `onChange`; only a commit (Enter, OK, or row click) fires it.
 - **check-marks-committed-value**: While open, the check (✓) MUST mark the committed value.
-- **resolves-committed-value**: The committed value MUST resolve as follows: an item whose `value` matches wins; else, when `allowOther` and `value` is non-null, Other wins and its input prefills with `value`; else nothing is committed.
+- **resolves-committed-value**: The committed value MUST resolve as follows: an item whose `value` matches wins; else, when `allowOther` and `value` is non-null, Other wins and its input prefills with `value`; else nothing is committed. When the committed value is Other, opening MUST highlight Other and mark it active.
 - **other-input-focused-on-open**: When `allowOther`, the Other input MUST receive focus immediately on open (caret ready to type), regardless of which row **open-initializes-selection** highlights — keyboard focus and the roving highlight are independent and need not point at the same row.
 - **typing-moves-check-to-other**: Typing in the Other input MUST set the selection to Other and move the check to Other live, before commit.
 - **ok-enabled-when-nonempty**: The OK button MUST be enabled iff the Other input is non-empty after trim.
+- **keys-act-on-selection**: Enter, ArrowDown and ArrowUp act on the roving selection, not on which element holds keyboard focus. While the Other input is focused but the selection is a list item (for example on open with `allowOther`, or after the pointer moved the highlight), Enter MUST commit that list item with `isOther:false` and ArrowDown MUST move the selection down from it; typing in the input first sets the selection to Other (see **typing-moves-check-to-other**), after which Enter commits the Other text. ArrowUp from the focused Other input always follows **arrowup-from-other-moves-to-list**.
 - **arrowup-from-other-moves-to-list**: ArrowUp from the Other input MUST move the selection to the last list item above Other and blur the input.
 - **arrowdown-from-last-item-to-other**: ArrowDown from the last list item MUST return the selection to Other and re-focus the input.
 - **enter-commits-other-when-nonempty**: When Other is the active selection and its input is non-empty, Enter MUST commit the trimmed text via `onChange` with `isOther:true`, then close.
 - **enter-noop-when-other-empty**: When Other is active but the input is empty, Enter MUST be a no-op (matching the disabled OK).
+- **other-row-label-inert**: A pointer click on the Other row's label text MUST NOT commit or change the selection; only the input and OK button act on Other.
 - **ok-equals-enter-for-other**: Clicking OK MUST be equivalent to Enter while Other is active with non-empty input.
+- **no-items-no-op-navigation**: With an empty `items` list and `allowOther` false, the surface has no rows and arrow keys and Enter MUST be no-ops. With an empty `items` list and `allowOther` true, Other is the only row; ArrowUp from the Other input does nothing, since there is no list item above it.
 - **disabled-blocks-interaction**: When `disabled`, the trigger MUST NOT open the surface; the disabled trigger is skipped by both pointer and keyboard (a disabled `<button>` receives neither).
 
 ## Appearance
@@ -121,10 +124,10 @@ See **React/Web** under Platform Notes for the concrete design tokens this imple
 | State | Appearance change |
 |---|---|
 | Trigger closed | label = committed value or placeholder; chevron down |
-| Trigger focused | `focus-visible` ring `apt-gold/25` |
+| Trigger focused | accent focus ring |
 | Trigger disabled | dimmed; non-interactive |
 | Open, no selection committed | no row checked; first row highlighted (or Other, if there are no items and `allowOther`); when `allowOther`, keyboard focus moves to the Other input regardless of which row is highlighted |
-| Open, row highlighted | `bg-apt-gold/15` on the roving row |
+| Open, row highlighted | accent at low opacity on the roving row |
 | Open, committed row | ✓ on the committed row |
 | Other empty | OK disabled |
 | Other non-empty | OK enabled; ✓ on Other |
@@ -133,7 +136,7 @@ See **React/Web** under Platform Notes for the concrete design tokens this imple
 
 - Trigger: `<button>` with `aria-haspopup="listbox"`, `aria-expanded`, `aria-label={ariaLabel}`.
 - Surface: the `role="listbox"` container itself (not a row) owns `aria-activedescendant`, pointing at the currently highlighted option's `id`; rows are `role="option"` with `aria-selected` on the committed row and `data-highlighted` on the selection.
-- Other row: also `role="option"`, `aria-selected` mirroring whether Other is committed; it additionally contains a labeled `<input>` (`aria-label` from `otherLabel`) and the OK `<button>` (`aria-disabled` mirrors `disabled`) — an option row with focusable descendants, which departs from a plain listbox/option tree (see **screen-reader-support** in Compliance).
+- Other row: also `role="option"`, `aria-selected` mirroring whether Other is committed; it additionally contains a labeled `<input>` (`aria-label` from `otherLabel`) and the OK `<button>` (native `disabled` while the input is empty; a disabled button leaves the tab order, so it is skipped by Tab and not clickable) — an option row with focusable descendants, which departs from a plain listbox/option tree (see **screen-reader-support** in Compliance).
 - Focus returns to the trigger on close.
 
 ## Conformance Test Vectors
@@ -159,29 +162,44 @@ See **React/Web** under Platform Notes for the concrete design tokens this imple
 | T17 | arrow-nav-clamps | open (no `allowOther`), ArrowUp while the first item is highlighted | highlight stays on the first item (no wrap) |
 | T18 | arrow-nav-clamps | open (no `allowOther`), ArrowDown while the last item is highlighted | highlight stays on the last item (no wrap) |
 | T19 | open-initializes-selection | open with a committed item, before any key press | that item is highlighted immediately (independent of T9's check) |
-
+| T20 | click-outside-closes-without-commit | open, press the pointer outside the surface | no `onChange`; surface closes |
+| T21 | disabled-blocks-interaction | `disabled`, click the trigger and press Enter on it | surface stays closed; `aria-expanded` stays `false` |
+| T22 | tab-unsupported | open with `allowOther`, press Tab | focus moves per native order and is not trapped in the surface; selection unchanged |
+| T23 | home-end-unsupported | open, ArrowDown once, press Home then End | highlight stays on the second row; no `onChange` |
+| T24 | typeahead-unsupported | open, type "S" with the surface focused | highlight does not move; no `onChange` |
+| T25 | focus-returns-on-close | open, click a row | `onChange` fires; DOM focus returns to the trigger |
+| T26 | keys-act-on-selection | open with `allowOther` and no committed value (input focused, first item highlighted), Enter | commits the first item with `isOther:false`, not the empty Other input |
+| T27 | keys-act-on-selection | open with `allowOther` (input focused, first item highlighted), ArrowDown | selection moves to the second item |
+| T28 | no-items-no-op-navigation | `items=[]`, `allowOther` false, open, ArrowDown, ArrowUp, Enter | no rows; no `onChange`; surface stays open |
+| T29 | other-row-label-inert | open with `allowOther`, click the "Other" label text | no `onChange`; selection and check unchanged |
+| T30 | resolves-committed-value | `value` is the Other free text and `allowOther`, open | Other is highlighted and checked; input prefilled with `value` |
 ## Edge Cases
 
 - **Value resolution** (see **resolves-committed-value**). If `value` equals some `items[i].value`, that item is the committed/checked row. Else if `allowOther` and `value` is non-null, Other is the committed row and its input prefills with `value`. Else nothing is checked.
-- Free text identical to an item value resolves to the item; callers needing to distinguish should avoid colliding labels.
+- Free text identical to an item value resolves to the item; callers needing to distinguish should avoid colliding labels. The component does not correct the earlier `onChange`: it fires with the typed text and `isOther:true`, but once the caller passes that text back as `value`, the reopened menu checks the item row, not Other, and the Other input stays empty. A caller that stores `isOther` should re-derive it from `items` rather than trust the earlier flag.
+- Empty `items` without `allowOther`: the surface shows no rows, and arrow keys and Enter do nothing (see **no-items-no-op-navigation**).
+- ArrowUp from the Other input with no items: no effect; selection stays on Other and the input keeps focus.
+- ArrowDown while Other is already the selection: stays on Other (clamped) and re-focuses the input.
+- Pointer click on the Other row's label text: no effect (see **other-row-label-inert**).
+- Opening when the committed value is Other free text: Other is highlighted and active, and the input is prefilled and focused.
+- Enter, ArrowUp and ArrowDown while the Other input is focused but a list item is selected: see **keys-act-on-selection**.
 - `value = null` → nothing is checked.
 - `allowOther = false` with no matching item → nothing is checked.
 
 ## Configuration
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `items` | `OptionMenuItem[]` | — | The selectable items (`{ value, label }`). |
-| `value` | `string \| null` | — | Committed value: an item value, free text (when `allowOther`), or null. |
-| `onChange` | `(value: string, meta: { isOther: boolean }) => void` | — | Fired on commit; `isOther` true when from the Other input. |
-| `allowOther` | `boolean` | `false` | Enables the editable Other row. |
-| `otherLabel` | `string` | `"Other"` | Label for the Other row. |
-| `otherPlaceholder` | `string` | — | Placeholder for the Other input. |
-| `placeholder` | `string` | — | Trigger text when `value` is null. |
-| `ariaLabel` | `string` | — | Required; labels the trigger + listbox. |
-| `disabled` | `boolean` | `false` | Disables the control. |
-| `className` | `string` | — | Extra classes. |
-
+| Option | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `items` | `OptionMenuItem[]` | yes | none | The selectable items (`{ value, label }`). |
+| `value` | `string \| null` | yes | none | Committed value: an item value, free text (when `allowOther`), or null. |
+| `onChange` | `(value: string, meta: { isOther: boolean }) => void` | yes | none | Fired on commit; `isOther` true when from the Other input. |
+| `allowOther` | `boolean` | no | `false` | Enables the editable Other row. |
+| `otherLabel` | `string` | no | `"Other"` | Label for the Other row. |
+| `otherPlaceholder` | `string` | no | none | Placeholder for the Other input. |
+| `placeholder` | `string` | no | none | Trigger text when `value` is null. |
+| `ariaLabel` | `string` | yes | none | Required; labels the trigger + listbox. |
+| `disabled` | `boolean` | no | `false` | Disables the control. |
+| `className` | `string` | no | none | Extra classes. |
 ## Deep Linking
 
 Not applicable: This is a UI component, not a full application feature that requires deep linking.
@@ -212,17 +230,17 @@ No logging. OptionMenu is a presentational form control; it emits no structured 
 
 ## Platform Notes
 
-- **React/Web**: Implemented in `packages/web/packages/ui/src/components/option-menu.tsx`. Uses a hand-managed `aria-activedescendant` selection model (tracked in component state) rather than menu roles or roving `tabindex`: DOM keyboard focus stays on the `role="listbox"` container (or the Other `<input>`) while `aria-activedescendant` points at the virtually highlighted option, letting an embedded text input coexist without focus/keyboard conflicts. The component composes `Popover`, `Input`, and `Button` primitives and manages focus via `useRef` and `requestAnimationFrame` to ensure surface focus after arrow navigation. Design tokens: trigger uses `apt-border`/`apt-surface`, `focus-visible` ring `apt-gold/25`, chevron (`ChevronsUpDown`) in `apt-text-muted`; rows highlight with `bg-apt-gold/15`, text `apt-text`, check icon `apt-gold`; OK is `size="sm"`, `variant="default"`; spacing from the `--space-*` scale, corners `--shape-corner-small`, no raw hex, no `!important`. Start from the source and build platform equivalents using the selection model described in Design Decisions.
-- **SwiftUI**: Start with a native `Menu` control for the list, but replace with a custom disclosure pattern (e.g., `.popover` modifier) to support the embedded text input in "Other". Hand-manage keyboard navigation via `onKeyPress` callbacks. Use `@FocusState` to track which element should have focus after each navigation action. The selection pattern is the same as web: track highlighted index in state, separate from what is committed.
-- **Compose**: Start with `DropdownMenu` for the list, but switch to a custom `Box` with a popover surface for the embedded text input. Implement keyboard navigation via `Modifier.onPreviewKeyEvent` or a custom state machine tracking the highlighted selection. Use `FocusRequester` to move focus between the input and the list after arrow keys. Match the web component's separation of selection (transient highlight) from commitment (firing `onChange`).
-- **AppKit / UIKit**: On iOS (UIKit), use `UIMenu` as the menu overlay, but compose a custom `UIViewController` or a SwiftUI overlay to support the "Other" text input; manage keyboard shortcuts via the responder chain and `UIKeyCommand`. On macOS (AppKit), use an `NSPopover` containing the list and input, and manage arrow/Enter/Escape handling via the responder chain's `keyDown(with:)` and `NSEvent`, not `UIKeyCommand` (an AppKit-only surface has no `UIKeyCommand`). The critical invariant is the same across all platforms: selection moves independently of commit, and only commit fires the `onChange` callback.
+- **React/Web**: Implemented in `packages/web/packages/ui/src/components/option-menu.tsx`. Uses a hand-managed `aria-activedescendant` selection model (tracked in component state) rather than menu roles or roving `tabindex`: DOM keyboard focus stays on the `role="listbox"` container (or the Other `<input>`) while `aria-activedescendant` points at the virtually highlighted option, letting an embedded text input coexist without focus/keyboard conflicts. The component composes `Popover`, `Input`, and `Button` primitives and manages focus via `useRef` and `requestAnimationFrame` to ensure surface focus after arrow navigation. Design tokens: trigger uses `apt-border`/`apt-surface`, `focus-visible` ring `apt-gold/25` (the accent focus ring in States), chevron (`ChevronsUpDown`) in `apt-text-muted`; rows highlight with `bg-apt-highlight/15` (the accent at low opacity in States), text `apt-text`, check icon `apt-gold`; OK is `size="sm"`, `variant="default"`; spacing from the `--space-*` scale, corners `--shape-corner-small`, no raw hex, no `!important`. Start from the source and build platform equivalents using the selection model described in Design Decisions.
+- **SwiftUI**: Use a `Button` trigger with the `.popover` modifier, since `Menu` cannot host a text field. Hand-manage keyboard navigation via `onKeyPress` callbacks. Use `@FocusState` to track which element should have focus after each navigation action. The selection pattern is the same as web: track highlighted index in state, separate from what is committed.
+- **Compose**: Use a `Popup` (or a `Box` surface) anchored to the trigger, since `DropdownMenu` cannot host a text field. Implement keyboard navigation via `Modifier.onPreviewKeyEvent` or a custom state machine tracking the highlighted selection. Use `FocusRequester` to move focus between the input and the list after arrow keys. Match the web component's separation of selection (transient highlight) from commitment (firing `onChange`).
+- **AppKit / UIKit**: On iOS (UIKit), present a `UIViewController` as a popover (`UIPopoverPresentationController`), since `UIMenu` cannot host a text field; manage keyboard shortcuts via the responder chain and `UIKeyCommand`. On macOS (AppKit), use an `NSPopover` containing the list and input, and manage arrow/Enter/Escape handling via the responder chain's `keyDown(with:)` and `NSEvent`, not `UIKeyCommand` (an AppKit-only surface has no `UIKeyCommand`). The critical invariant is the same across all platforms: selection moves independently of commit, and only commit fires the `onChange` callback.
 - **WinUI 3**: Use a `Flyout` (not `MenuFlyout`, which cannot host a `TextBox`) for the list surface. For the "Other" input, embed a `TextBox` in the flyout with a `Button` for OK. Implement keyboard navigation via `PreviewKeyDown` events on the flyout, tracking selection in app state. Ensure focus management transitions focus between list items and the input as appropriate. The selection/commitment model must match the source: the highlighted selection never fires `onChange`, only user intent (Enter, click, or OK click) does.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/option-menu.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/option-menu.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -234,6 +252,9 @@ No logging. OptionMenu is a presentational form control; it emits no structured 
 **Rationale**: Lets users browse the list with arrow keys (including into and out of the Other input) without side effects, so only a deliberate action commits a value.
 **Approved**: pending
 
+**Decision**: Hard-code the OK button label ("OK") rather than expose an `okLabel` option.
+**Rationale**: The source has no `okLabel` prop, so the label cannot be localized today; this is recorded as known debt (the failed `no-hardcoded-strings` check) until an `okLabel` option is added.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -252,6 +273,7 @@ No logging. OptionMenu is a presentational form control; it emits no structured 
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added requirements and test vectors for the unsupported keys, outside click, disabled, focus return and the key behavior while Other is focused, filled in edge cases, added a Required column, and replaced concrete tokens in States, the replace-the-menu platform notes, and the wrong aria-disabled claim. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: name Tab/click-outside/Home-End/typeahead behavior, resolve the selection-vs-focus ordering with `allowOther`, correct WinUI 3/Compose/AppKit-UIKit platform APIs, add `depends-on`/`related` links, add a Compliance table, reformat Design Decisions, generify the Overview's app-specific example, fix the internal roving-tabindex/aria-activedescendant contradiction, correct the Localization claim about the OK label, add missing test vectors and remap T9/T10, describe Appearance with semantic roles, and document the disabled-trigger requirement. |
 | 1.0.1 | 2026-09-22 | Mike Fullerton | Add full optional sections (marked Not applicable where appropriate), fix domain URI to use agenticdevelopercookbook, and expand Platform Notes with translation guidance for all platforms. |

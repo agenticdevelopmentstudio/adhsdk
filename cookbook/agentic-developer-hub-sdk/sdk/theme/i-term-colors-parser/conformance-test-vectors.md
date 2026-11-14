@@ -1,5 +1,5 @@
 
-Vectors derive from `ITermColorsParserTests` (Swift Testing suite `ITermColorsParser`) unless marked "source". The fixture builds a plist with all 16 ANSI colors plus `Foreground Color`, `Background Color`, and optional `Cursor Color` (0.9, 0.9, 0.9) and `Selection Color` (0.2, 0.2, 0.2).
+Vectors 001 to 009 derive from `ITermColorsParserTests` (Swift Testing suite `ITermColorsParser`). Vectors 010 to 021 are marked "Source": they are NOT yet implemented in `ITermColorsParserTests`, and each gives an exact fixture so it can be turned into a test directly. In every fixture below, "base" means the fixture described next. The base fixture builds a plist with all 16 ANSI colors plus `Foreground Color`, `Background Color`, and optional `Cursor Color` (0.9, 0.9, 0.9) and `Selection Color` (0.2, 0.2, 0.2).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -10,14 +10,17 @@ Vectors derive from `ITermColorsParserTests` (Swift Testing suite `ITermColorsPa
 | itermcolors-005 | foreground-equals-background-rejected | Test `rejectsForegroundEqualsBackground`: foreground and background both (0,0,0) | throws `ITermColorsParseError.foregroundMatchesBackground` |
 | itermcolors-006 | cursor-fallback, selection-fallback | Test `fallbacks`: white on black, no `Cursor Color`, no `Selection Color` | `cursor == foreground`; `selection == background.blended(withFraction: 0.25, of: foreground)` |
 | itermcolors-007 | top-level-must-be-dictionary | Test `notADictionary`: plist root is the array `[1, 2, 3]` | throws `ITermColorsParseError.notADictionary` |
-| itermcolors-008 | foreground-required, fail-fast | Test `missingColor`: no `Foreground Color` key | throws `ITermColorsParseError.missingColor("Foreground Color")` |
+| itermcolors-008 | foreground-required | Test `missingColor`: no `Foreground Color` key | throws `ITermColorsParseError.missingColor("Foreground Color")` |
 | itermcolors-009 | component-required | Test `missingComponent`: `Foreground Color` has Green and Blue but no `Red Component` | throws `missingComponent(colorKey: "Foreground Color", component: "Red Component")` |
-| itermcolors-010 | alpha-default-opaque | Source: a color dictionary with Red, Green, Blue and no `Alpha Component` | decoded color has `alpha == 1.0` and no error |
-| itermcolors-011 | channel-clamping | Source: `Red Component` 1.2 and `Green Component` -0.1 | decoded channels are 1.0 and 0.0 |
-| itermcolors-012 | ansi-required | Source: all required colors present except `Ansi 7 Color` | throws `missingColor("Ansi 7 Color")` |
-| itermcolors-013 | degenerate-check-before-ansi | Source: foreground equals background and all ANSI keys absent | throws `foregroundMatchesBackground`, not `missingColor` |
-| itermcolors-014 | url-overload-default-name | Source: `parse(contentsOf:)` on `/tmp/Dracula.itermcolors` with no `name` | `name == "Dracula"` |
-| itermcolors-015 | id-default-fresh-uuid | Source: two calls to `parse(data:name:)` with the same data and no `id` | the two themes have different `id` values, each a valid UUID string |
-| itermcolors-016 | foundation-errors-propagate | Source: `parse(data:)` on the bytes `not a plist` | throws a Foundation error from `PropertyListSerialization`, not an `ITermColorsParseError` |
-| itermcolors-017 | cursor-fallback | Source: `Cursor Color` present but missing `Blue Component` | no error; `cursor == foreground` |
-
+| itermcolors-010 | alpha-default-opaque | Source (not yet a test): base fixture where `Foreground Color` is `{Red Component: 1.0, Green Component: 1.0, Blue Component: 1.0}` with no `Alpha Component` | decoded color has `alpha == 1.0` and no error |
+| itermcolors-011 | channel-clamping | Source (not yet a test): base fixture where `Foreground Color` is `{Red Component: 1.2, Green Component: -0.1, Blue Component: 0.5}`, background black | foreground is `RGBAColor(1.0, 0.0, 0.5, 1.0)` |
+| itermcolors-012 | ansi-required | Source (not yet a test): base fixture with white foreground, black background, `Ansi 0` to `Ansi 6` and `Ansi 8` to `Ansi 15` present, `Ansi 7 Color` absent | throws `missingColor("Ansi 7 Color")` |
+| itermcolors-013 | degenerate-check-before-ansi | Source (not yet a test): plist with only `Foreground Color` and `Background Color`, both `{Red Component: 0, Green Component: 0, Blue Component: 0}` | throws `foregroundMatchesBackground`, not `missingColor` |
+| itermcolors-014 | url-overload-default-name | Source (not yet a test): write the base fixture's XML bytes to a temporary file named `Dracula.itermcolors`, then call `parse(contentsOf:)` with no `name` | `name == "Dracula"` |
+| itermcolors-015 | id-default-fresh-uuid | Source (not yet a test): two calls to `parse(data:name:)` with the base fixture's bytes and no `id` | the two themes have different `id` values, each a valid UUID string |
+| itermcolors-016 | foundation-errors-propagate | Source (not yet a test): `parse(data:)` on the UTF-8 bytes of `not a plist` | throws a Foundation error from `PropertyListSerialization`, not an `ITermColorsParseError` |
+| itermcolors-017 | cursor-fallback | Source (not yet a test): base fixture where `Cursor Color` is `{Red Component: 0.5, Green Component: 0.5}` | no error; `cursor == foreground` |
+| itermcolors-018 | parse-data-accepts-xml-and-binary | Source (not yet a test): the base fixture serialized with `PropertyListSerialization` format `.binary` | Parses; the theme equals the one parsed from the `.xml` serialization of the same dictionary |
+| itermcolors-019 | selection-fallback | Source (not yet a test): base fixture where `Selection Color` is `{Red Component: 0.5}` (malformed) | no error; `selection == background.blended(withFraction: 0.25, of: foreground)` |
+| itermcolors-020 | alpha-default-opaque, component-type-strict | Source (not yet a test): base fixture where `Foreground Color` has `Alpha Component` set to the string `"x"`; separately, `Red Component` set to the string `"x"` | alpha string: no error, foreground alpha `1.0`. Red string: throws `missingComponent(colorKey: "Foreground Color", component: "Red Component")` |
+| itermcolors-021 | luminance-boundary-light, appearance-ignores-alpha, foreground-alpha-distinct | Source (not yet a test): three runs with no `appearance`. (a) background grey with relative luminance exactly 0.5 (each channel about 0.7354, adjusted until `isDark` is false), foreground white. (b) background black with `Alpha Component` 0.1, foreground white. (c) foreground and background both black, foreground `Alpha Component` 0.5 | (a) `.light`. (b) `.dark`, same as the opaque black background. (c) no error; foreground not equal to background |

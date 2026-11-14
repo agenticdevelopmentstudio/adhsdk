@@ -2,11 +2,11 @@
 id: a7cbe25c-53d1-4aec-b76e-59b1c0876728
 title: "CRUD Permissions"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -39,10 +39,10 @@ The Crud data model represents four independent permission capabilities: create,
 - **provide-letter-mapping**: An exported `CRUD_LETTER` object MUST map each key to its canonical single-letter representation: `create` → `"C"`, `read` → `"R"`, `update` → `"U"`, `delete` → `"D"`.
 - **provide-no-access-default**: A `noAccess()` function MUST return a Crud instance with all four properties set to `false`.
 - **provide-read-only-default**: A `readOnly()` function MUST return a Crud instance with `read` set to `true` and all other properties set to `false`.
+- **clamp-child-to-parent**: A `clampToParent(child: Crud, parent: Crud)` function MUST return a new Crud instance where each capability is the logical AND of the child and parent values: if either the child or parent denies a capability, the result MUST deny it.
 - **not-mutate-inputs**: `clampToParent()` MUST NOT mutate either of its input objects; the `child` and `parent` arguments MUST retain their original property values after the call.
 - **fresh-instance-per-call**: `noAccess()` and `readOnly()` MUST return a newly created object on each call; two separate calls MUST NOT return the same object reference.
-- **clamp-child-to-parent**: A `clampToParent(child: Crud, parent: Crud)` function MUST return a new Crud instance where each capability is the logical AND of the child and parent values: if either the child or parent denies a capability, the result MUST deny it.
-
+- **independent-capabilities**: The four capabilities MUST be independent booleans on every platform (not an enum or bitflags type), so each can be set on its own and the per-capability AND in `clampToParent()` is unambiguous.
 ## Appearance
 
 Not applicable: Crud is a data model with no visual representation.
@@ -72,34 +72,27 @@ Not applicable: Crud is a data model with no user-facing interface.
 | crud-011 | clamp-child-to-parent | Call clampToParent({ create: true, read: true, update: true, delete: true }, readOnly()) | Returns `{ create: false, read: true, update: false, delete: false }` |
 | crud-012 | not-mutate-inputs | Call clampToParent(child, parent) with fixed `child`/`parent` objects, then re-read both after the call | `child` and `parent` are unchanged from their original values |
 | crud-013 | fresh-instance-per-call | Call noAccess() twice and compare the two results with `===` | Comparison is `false` — the two calls return different object references |
-
+| crud-014 | clamp-child-to-parent | Call `clampToParent(x, x)` and compare the result with `x` using `===` | Comparison is `false` — the result is a new object |
+| crud-015 | fresh-instance-per-call | Call readOnly() twice and compare the two results with `===` | Comparison is `false` — the two calls return different object references |
+| crud-016 | clamp-child-to-parent | Call clampToParent({ create: true, read: true, update: true, delete: true }, { create: true, read: true, update: false, delete: false }) | Returns `{ create: true, read: true, update: false, delete: false }` |
 ## Edge Cases
 
-- **Null or undefined input**: The interface defines the shape but does not validate input at runtime. Callers MUST ensure they pass valid Crud objects; functions do not perform null checking or type validation.
+- **Null or undefined input**: The interface defines the shape but does not validate input at runtime. Callers are expected to pass valid Crud objects; functions do not perform null checking or type validation.
 - **All capabilities true**: When all four properties are `true`, the object represents full access. This state is valid and supported.
 - **All capabilities false**: The `noAccess()` function produces this state intentionally as the most-restrictive default. It is valid.
 - **Clamping identity (child equals parent)**: When the child and parent are identical, `clampToParent()` MUST return an equivalent object (all values AND'd with themselves) equal in value to the input. See crud-010.
-- **Asymmetric parent restrictions**: The parent may restrict any subset of capabilities independently. For example, a parent may allow create and read but deny update and delete, and the clamping function MUST correctly AND each capability. See crud-011.
+- **Asymmetric parent restrictions**: The parent may restrict any subset of capabilities independently. For example, a parent may allow create and read but deny update and delete, and the clamping function MUST correctly AND each capability. See crud-016 (a parent that allows create and read but denies update and delete) and crud-011.
 
 ## Configuration
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| create | boolean | false | Whether the create capability is allowed. Set independently of other capabilities. |
-| read | boolean | false | Whether the read capability is allowed. Set independently of other capabilities. |
-| update | boolean | false | Whether the update capability is allowed. Set independently of other capabilities. |
-| delete | boolean | false | Whether the delete capability is allowed. Set independently of other capabilities. |
-
-`Crud` is a plain interface with no constructor, so these "Default" values are not applied automatically. They describe the object `noAccess()` returns (all `false`) and, for `read`, the object `readOnly()` returns (`read: true`). A caller building a `Crud` object by hand must set every field explicitly.
-
+Not applicable: `Crud` is a plain interface with no constructor and no defaults; see `noAccess()` and `readOnly()` for ready-made values. A caller building a `Crud` by hand sets every field explicitly.
 ## Deep Linking
 
 Not applicable: Crud is a data model with no user-facing navigation.
 
 ## Localization
 
-Not fully inert: `CRUD_LETTER` exports the single-letter labels `"C"`, `"R"`, `"U"`, `"D"` as hardcoded English identifiers with no localization lookup. These values MUST be treated as internal identifiers, not user-facing text — a caller MUST NOT display `CRUD_LETTER`'s values directly to end users without localizing them first, and SHOULD instead expose its own localizable label keyed by `CrudKey`.
-
+`CRUD_LETTER` exports the compact single-letter labels `"C"`, `"R"`, `"U"`, `"D"` as hardcoded English, with no localization lookup. The source uses them as short labels: on the permission toggles and in the joined summary of a grant. They are not translated, so a surface that wants a localized label would supply its own, keyed by `CrudKey`, rather than change these values.
 ## Accessibility Options
 
 Not applicable: Crud is a data model with no user-facing interface.
@@ -122,18 +115,18 @@ Not applicable: Crud is a data model with no runtime behavior to log.
 
 ## Platform Notes
 
-- **Source**: Crud is a TypeScript interface and set of pure functions defined in `packages/web/packages/ui/src/components/crud.tsx` — that is where the code currently lives, not a claim that a data model belongs in a components directory. It is a plain data model with no view-layer dependency. Callers import `Crud`, `CrudKey`, `CRUD_KEYS`, `CRUD_LETTER`, `noAccess()`, `readOnly()`, and `clampToParent()` directly; its current consumers are the schema-grant UI and the bucket-grant UI.
+- **React/Web**: Crud is a TypeScript interface and set of pure functions defined in `packages/web/packages/ui/src/components/crud.tsx` — that is where the code currently lives, not a claim that a data model belongs in a components directory. It is a plain data model with no view-layer dependency. Callers import `Crud`, `CrudKey`, `CRUD_KEYS`, `CRUD_LETTER`, `noAccess()`, `readOnly()`, and `clampToParent()` directly; its current consumers are the schema-grant UI and the bucket-grant UI.
 - **SwiftUI**: Not yet implemented in the native Apple packages. Because Crud has no view-layer behavior, a Swift `struct Crud: Equatable, Sendable { var create, read, update, delete: Bool }` with `static let noAccess`, `static let readOnly`, and `static func clampToParent(_ child: Crud, _ parent: Crud) -> Crud` would provide equivalent semantics for direct use in SwiftUI view models.
 - **Compose**: Not yet implemented for Android. A Kotlin `data class Crud(val create: Boolean, val read: Boolean, val update: Boolean, val delete: Boolean)` with companion object functions `Crud.noAccess()`, `Crud.readOnly()`, and `Crud.clampToParent(child, parent)` would provide equivalent semantics.
 - **AppKit / UIKit**: Same target as SwiftUI above — Crud has no view-layer dependency, so AppKit and UIKit callers use the same Swift `Crud` struct and its `noAccess`, `readOnly`, and `clampToParent` members directly.
 - **WinUI 3**: Not yet implemented for Windows. A C# `readonly struct Crud { public bool Create { get; init; } public bool Read { get; init; } public bool Update { get; init; } public bool Delete { get; init; } }` with static methods `Crud.NoAccess()`, `Crud.ReadOnly()`, and `Crud.ClampToParent(Crud child, Crud parent)` would provide equivalent semantics, following C# naming conventions (PascalCase for types and public members).
-- **Shared pattern**: Across all platforms, the four capabilities MUST be independent booleans (not an enum or bitflags type), to ensure each capability can be toggled independently and the parent-clamping logic (AND per-capability) is unambiguous.
+- **Shared pattern**: Across all platforms, the four capabilities are independent booleans; see **independent-capabilities**.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/crud.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/crud.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -142,7 +135,7 @@ Not applicable: Crud is a data model with no runtime behavior to log.
 **Approved**: pending
 
 **Decision**: Default `noAccess()` to deny-all; provide `readOnly()` as a convenience default for read-only access.
-**Rationale**: This follows the principle of least privilege — a newly constructed or reset permission should assume no access until explicitly granted. `readOnly()` reduces boilerplate for the common read-only pattern.
+**Rationale**: This follows the principle of least privilege — a caller that needs a starting value uses `noAccess()` and so assumes no access until something is explicitly granted. `readOnly()` reduces boilerplate for the common read-only pattern.
 **Approved**: pending
 
 **Decision**: `clampToParent()` combines child and parent capabilities with logical AND, and returns a new object without mutating either input.
@@ -167,6 +160,7 @@ Status rests on `crud.tsx` hardcoding the literal English letters `"C"`, `"R"`, 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Moved clamp-child-to-parent ahead of the purity requirements, added independent-capabilities and vectors crud-014 to crud-016, tied the asymmetric-parent edge case to a matching vector, softened loose normative text, reworded the noAccess rationale, relabeled the React/Web note, and stated what CRUD_LETTER is for. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and added exported-key-type/not-mutate-inputs/fresh-instance-per-call requirements with vectors, made crud-001 a compile-time assertion and added clamping-identity/readOnly-as-input vectors, reformatted Design Decisions into Decision/Rationale/Approved blocks and removed the unsourced memory-footprint and "all web applications" claims, replaced the Compliance row with a sourced Internationalization check, retitled to "CRUD Permissions", clarified the Configuration defaults and Localization framing, gave concrete per-platform types in Platform Notes, and fixed the frontmatter `modified` quoting. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web source `packages/web/packages/ui/src/components/crud.tsx`. |

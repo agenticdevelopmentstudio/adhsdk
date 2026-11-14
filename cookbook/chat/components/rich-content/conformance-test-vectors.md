@@ -20,7 +20,9 @@
 | rich-content-017 | link-protocol-allowlist | items = [{type: 'link', label: 'Click', url: 'vbscript:msgbox(1)'}] | No href is set; link renders as inert text "Click" |
 | rich-content-018 | link-protocol-allowlist | items = [{type: 'link', label: 'Click', url: 'JaVaScRiPt:alert(1)'}] | Scheme normalizes to lowercase `javascript:` before the allowlist check; no href is set; link renders as inert text "Click" |
 | rich-content-019 | link-protocol-allowlist | items = [{type: 'link', label: 'Click', url: '  javascript:alert(1)'}] | Leading whitespace is stripped during URL parsing; scheme resolves to `javascript:`; no href is set; link renders as inert text "Click" |
-| rich-content-020 | render-items-in-order | items = [] | Container renders with no child elements; no error or console warning |
-| rich-content-021 | image-error-handling | items = [{type: 'image', src: 'https://example.com/image.png'}]; the load event then the error event fire in quick succession | Reveal happens once and stays revealed; no duplicate render, no thrown error |
+| rich-content-020 | empty-items | items = [] | Container renders with no child elements; no error or console warning |
+| rich-content-021 | concurrent-image-events | items = [{type: 'image', src: 'https://example.com/image.png'}]; the load event then the error event fire in quick succession | Reveal happens once and stays revealed; no duplicate render, no thrown error |
 | rich-content-022 | link-protocol-allowlist | items = [{type: 'link', label: 'Bad', url: 'ht!tp://invalid'}] | The `!` is not a legal scheme character, so resolving against the internal base restarts in relative mode and yields protocol `https:`; href is set to "ht!tp://invalid" and the link is clickable (see **Malformed-but-parseable URL passes through** in Edge Cases) |
-
+| rich-content-023 | missing-field-handling | items = [{type: 'link', label: 'NoUrl'}] | No href is set; link renders as inert text "NoUrl" |
+| rich-content-024 | missing-field-handling | items = [{type: 'image'}] | `<img>` renders with no `src` attribute; the failed load is revealed like any other error (fail-open) |
+| rich-content-025 | long-url-wrapping | items = [{type: 'link', url: 'https://example.com/' + 'a'.repeat(2000)}] | Link text wraps or overflows within the container; the layout does not break |

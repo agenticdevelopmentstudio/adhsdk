@@ -1,3 +1,3 @@
 
-Not applicable: The component source includes no event tracking, analytics collection, or telemetry instrumentation.
+Not applicable: Bleed MUST NOT emit analytics events or telemetry.
 

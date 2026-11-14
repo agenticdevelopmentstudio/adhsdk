@@ -3,7 +3,7 @@
 **Rationale**: The partner follows guidelines written in prose and types steps verbatim, so the model only needs to carry them; templating, scheduling and prompt assembly sit in separate types that read these fields.
 **Approved**: pending
 
-**Decision**: `scheduleSeconds` is an optional integer, and non-positive values are left to consumers to treat as no timer.
+**Decision**: `scheduleSeconds` is an optional integer, and the type keeps any integer as given; what a non-positive value means is left to the consumer that arms a timer.
 **Rationale**: The type stays a passive value; the controller that arms timers decides what a usable interval is, so the model needs no validation and can round-trip whatever the editor stored.
 **Approved**: pending
 

@@ -21,5 +21,5 @@
 - Footnote: `pt-0.5 font-mono text-[10px] text-apt-text-dim` — matched to the StatRow
   label's micro-caption grammar; rendered only when `footnote != null`.
 - No raw hex, no `!important` — all color/typography via `apt-*` tokens and the
-  composed shared parts.
+  composed shared parts, except the footnote's arbitrary `text-[10px]` size.
 

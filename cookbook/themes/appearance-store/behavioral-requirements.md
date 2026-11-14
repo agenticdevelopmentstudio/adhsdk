@@ -25,6 +25,7 @@
 - **reset-clears-cache**: `resetAppearance()` MUST remove the `localStorage` entry rather than overwrite it, so the next visitor on a shared browser does not inherit the previous user's theme through the pre-paint script.
 - **commit-order**: Every commit MUST, in this order: replace the held prefs, write or clear the cache, paint the document if allowed, then notify every listener.
 - **notify-sync**: Listeners MUST be called synchronously inside the commit, in set insertion order.
+- **listener-throw-propagates**: When a listener throws during a commit, the error MUST propagate out of the commit and the listeners after it MUST NOT be called; the held prefs, the cache write and the paint have already happened. The store wraps no listener in `try`/`catch`.
 - **cache-failure-silent**: A failed `localStorage` write or removal (private mode, quota) MUST NOT stop the commit: the held prefs, the paint and the notification still happen. `writeStoredAppearance` and `clearStoredAppearance` swallow the error with an explanatory comment, so the failure is not signalled.
 
 ### Painting the document

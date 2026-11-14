@@ -2,11 +2,11 @@
 id: f679a77e-04f7-4e43-b898-6d78a637a760
 title: "DialogActions"
 type: ingredient
-version: 1.4.1
+version: 1.4.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,7 +36,7 @@ approved-date: ""
 
 `DialogActions` (`@adh-sdk/ui`) is the standard footer for a dialog or alert:
 a cancel button (optional) and a confirm button, laid out per the rule in
-**alert-and-dialog §Layout**, which resolves to one of two shapes according to how
+the Layout section of [adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500), which resolves to one of two shapes according to how
 much room the container gives them:
 
 - **equal-width** — each button takes half the row and the row fills the container
@@ -59,9 +59,9 @@ Decisions*.
 
 - **render-confirm**: The component MUST always render a confirm button labeled with `confirmLabel` that invokes `onConfirm` when activated.
 - **render-cancel-when-labeled**: The component MUST render a cancel button that invokes `onCancel` when `cancelLabel` is provided, and MUST omit the cancel button entirely when `cancelLabel` is absent.
-- **equal-width-when-narrow**: In `auto` layout with two buttons, when the container is too narrow for both at their natural width, the component MUST give each button up to an equal share of the row, capped at its own natural width, with any share a button doesn't use falling to the other button.
-- **natural-width-when-wide**: In `auto` layout with two buttons, when the container has room for both at their natural width, the component MUST hold each at that width and right-justify the row.
-- **cap-growth-at-natural-width**: In `auto` layout, no button may be stretched past its own natural width; the space a button declines MUST fall to the other button if it needs it, and otherwise to the left of the row.
+- **equal-width-when-narrow**: In `auto` layout with two buttons, when the container is too narrow for both at their natural width, the component MUST split the row between the buttons under the growth cap of [cap-growth-at-natural-width](#requirements/cap-growth-at-natural-width).
+- **natural-width-when-wide**: In `auto` layout with two buttons, when the container has room for both at their natural width, the component MUST hold each at that width and right-justify the row, as [cap-growth-at-natural-width](#requirements/cap-growth-at-natural-width) leaves the spare space to the left.
+- **cap-growth-at-natural-width**: In `auto` layout, a button MUST NOT be stretched past its own natural width; the space a button declines MUST fall to the other button if it needs it, and otherwise to the left of the row.
 - **settle-before-interactive**: The component MUST present its final button geometry on the first frame it paints. It MUST NOT move or resize a button after mount as a result of deciding its own layout — a button that shifts while the dialog is already clickable can swallow the click that was aimed at it.
 - **follow-the-container**: The layout MUST be derived from the container's own width, not the viewport's, and MUST re-resolve when the container's width changes.
 - **honor-forced-layout**: When `layout` is `equal` or `natural`, the component MUST use that layout regardless of the container's width.
@@ -103,7 +103,9 @@ Busy:
 - Row: `flex items-center gap-3`; `w-full justify-end` in `auto`, `w-full` in
   forced-equal, `justify-end` in forced-natural and busy modes.
 - Buttons in `auto` carry `flex-1 max-w-max`; forced-equal carries `flex-1`
-  (uncapped); forced-natural carries neither.
+  (uncapped) only when both buttons render; forced-natural carries neither. A lone
+  confirm button in forced-equal has no grow class and the row has no `justify-end`,
+  so it sits at its natural width at the start edge of the full-width row.
 - Buttons are the shared `Button` at `size="sm"`. Cancel is `variant="outline"`;
   confirm is `destructive` when `destructive`, else `confirmVariant` (default
   `"default"`, the gold primary).
@@ -119,7 +121,7 @@ Busy:
 | Idle, wide container | natural-width, right-justified (`justify-end`) |
 | Forced `equal` | always equal-width regardless of container width |
 | Forced `natural` | always natural-width right-justified |
-| Confirm-only (no `cancelLabel`) | single confirm button, right-justified at its natural width; forced-equal does not stretch it |
+| Confirm-only (no `cancelLabel`) | single confirm button at its natural width, right-justified in `auto` and `natural`; forced-equal does not stretch it and leaves it at the start edge |
 | Destructive | confirm renders destructive variant; default initial focus is Cancel |
 | Busy | buttons replaced by a `role="status"` spinner; no clicks fire |
 | Confirm disabled | confirm button is disabled and does not respond to clicks |
@@ -131,11 +133,11 @@ Busy:
 - Initial focus is placed deliberately: on the confirm button by default, and on
   the cancel button for `destructive` actions so an errant Enter does not confirm
   a dangerous operation, using a quiet `--apt-text` focus ring instead of the
-  accent (see **quiet-ring-for-destructive-cancel**) so the ring never reads as an
+  accent (see [quiet-ring-for-destructive-cancel](#requirements/quiet-ring-for-destructive-cancel)) so the ring never reads as an
   alarm color on the safe button. Hosts that focus a form field instead pass
   `focusOnMount={false}`. When the preferred button is disabled or absent at
   mount, focus falls to the other one instead of nowhere (see
-  **focus-fallback-to-other-button**).
+  [focus-fallback-to-other-button](#requirements/focus-fallback-to-other-button)).
 - The busy spinner is exposed to assistive tech via `role="status"` and
   `aria-label="Working…"`, announcing the in-progress state.
 - Color is carried by `Button` variants (theme tokens), keeping contrast
@@ -145,7 +147,7 @@ Busy:
   `--adh-button-min-height`/`--adh-button-min-width` CSS variables itself, so the
   rendered target is whatever the host's surface provides (a surface can raise
   the floor by setting those variables once on itself — see `Button`). See
-  **touch-target-size** in Compliance.
+  [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) in Compliance.
 
 ## Conformance Test Vectors
 
@@ -159,8 +161,10 @@ Busy:
 | T6 | cap-growth-at-natural-width | `auto` | both buttons carry `flex-1 max-w-max`; the row carries `justify-end` |
 | T7 | settle-before-interactive (Playwright) | sample the cancel button's bounding box every frame from before the dialog opens | exactly one distinct box — the final one — for the dialog's whole life |
 | T8 | follow-the-container (Playwright) | render narrow (even split), widen the container past the combined natural width of both buttons | layout becomes natural, right-justified |
+| T8c | follow-the-container (Playwright) | wide viewport, `auto` layout in a narrow container | even split of the container, as in a narrow viewport; the viewport width has no effect |
 | T8b | honor-forced-layout | `layout="equal"` in a wide container | equal-width, uncapped; no natural flip when resized |
 | T9 | focus-initial-on-mount + default-focus-to-safe-button | mount non-destructive | confirm button is `document.activeElement` |
+| T9b | focus-initial-on-mount | mount non-destructive with `initialFocus="cancel"` | cancel button is `document.activeElement` |
 | T10 | default-focus-to-safe-button | mount with `destructive` | cancel button is `document.activeElement` |
 | T11 | suppress-focus-on-mount | mount with `focusOnMount={false}` | neither button receives focus |
 | T12 | show-busy-indicator | `busy`, attempt to click | `role="status"` spinner present; no buttons; `onConfirm`/`onCancel` not called |
@@ -169,19 +173,20 @@ Busy:
 | T15 | apply-confirm-disabled | `confirmDisabled=true`, click confirm | confirm button disabled; `onConfirm` not called |
 | T16 | show-busy-indicator | `confirmDisabled=true` and `busy=true` | spinner renders; buttons not visible; `confirmDisabled` ignored |
 | T17 | focus-fallback-to-other-button | mount with `initialFocus="confirm"` where the confirm button is disabled at mount | cancel button is `document.activeElement` |
+| T17b | focus-fallback-to-other-button | mount with `confirmDisabled` and no `cancelLabel` (nothing focusable) | `document.activeElement` is unchanged from before mount |
 | T18 | quiet-ring-for-destructive-cancel | mount with `destructive`, inspect the cancel button's focus-visible classes | cancel carries `focus-visible:border-apt-text focus-visible:ring-apt-text/40`, not the default ring token |
-
+| T19 | honor-forced-layout | `layout="equal"`, no `cancelLabel` | the confirm button carries no `flex-1`; the row carries `w-full` and no `justify-end` |
 ## Edge Cases
 
 - **Empty or zero-width labels**: a button with no content collapses to its padding,
   which is its natural width; the cap is simply small and the other button takes the
   slack. There is no "unmeasured" state to guard against, because nothing is measured.
 - **Confirm-only**: with no `cancelLabel`, the lone confirm button sits at its natural
-  width on the right. Forced-equal still does not stretch it.
+  width on the right in `auto` and `natural`. Forced-equal does not stretch it: the
+  row has `w-full` but no `justify-end`, and the button has no grow class, so it sits
+  at its natural width at the start edge.
 - **One button outgrows its half, the other does not**: the small one settles at its
-  natural width and the large one takes the remainder, instead of both snapping to an
-  even split and truncating the large one. This is the one behavioural difference from
-  the previous `2 × Wmax` threshold, and it is strictly the better answer.
+  natural width and the large one takes the remainder, so the large one is not truncated.
 - **Boundary width**: there is no threshold to sit exactly on. The row passes
   continuously between the two shapes as the container narrows, so no flicker band
   exists.
@@ -197,7 +202,7 @@ Busy:
   deliberate choice, not an oversight — see Design Decisions.
 - **Initial focus fallback**: when the preferred button named by `initialFocus` is
   disabled or absent, focus moves to the other button instead of nowhere (see
-  **focus-fallback-to-other-button**). When both are missing or disabled, the component
+  [focus-fallback-to-other-button](#requirements/focus-fallback-to-other-button)). When both are missing or disabled, the component
   leaves focus wherever the host dialog already placed it rather than forcing it anywhere;
   it relies on the host dialog's own focus management (for example base-ui's Popup) to keep
   a trap in place.
@@ -216,7 +221,7 @@ Busy:
 | `confirmDisabled` | `boolean` | `false` | Disables confirm when not busy (has no effect when `busy` is true). Defaults to false for backward compatibility. |
 | `initialFocus` | `"confirm" \| "cancel"` | `destructive ? "cancel" : "confirm"` | Which button gets focus on mount. |
 | `focusOnMount` | `boolean` | `true` | When false, do not auto-focus (host focuses its own field). |
-| `layout` | `"auto" \| "equal" \| "natural"` | `"auto"` | `auto` lets CSS resolve the rule per alert-and-dialog §Layout; `equal`/`natural` force one shape. |
+| `layout` | `"auto" \| "equal" \| "natural"` | `"auto"` | `auto` lets CSS resolve the rule per the Layout section of [adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500); `equal`/`natural` force one shape. |
 
 ## Deep Linking
 
@@ -224,13 +229,13 @@ Not applicable: `DialogActions` is a presentational footer component with no pag
 
 ## Localization
 
-All user-facing text comes from caller-supplied props (`confirmLabel`, `cancelLabel`). The component supplies one hardcoded string: the busy spinner's `aria-label="Working…"` (see **show-busy-indicator**). The aria-label is rendered as English only; a host requiring localization must wrap or fork the component to substitute a localized label.
+All user-facing text comes from caller-supplied props (`confirmLabel`, `cancelLabel`). The component supplies one hardcoded string: the busy spinner's `aria-label="Working…"` (see [show-busy-indicator](#requirements/show-busy-indicator)). The aria-label is rendered as English only; a host requiring localization must wrap or fork the component to substitute a localized label.
 
 ## Accessibility Options
 
 | Option | Behavior |
 |---|---|
-| Reduce Motion | Not respected. The busy spinner's `animate-spin` (see **show-busy-indicator**) and each button's `transition-all` (from the shared `Button` component) play regardless of `prefers-reduced-motion`. Layout itself never triggers `transition-all` — that is the point of resolving it in CSS before paint (see **settle-before-interactive**) — so the gap is limited to the spinner's rotation and `Button`'s hover/press/variant transitions. |
+| Reduce Motion | Not respected. The busy spinner's `animate-spin` (see [show-busy-indicator](#requirements/show-busy-indicator)) and each button's `transition-all` (from the shared `Button` component) play regardless of `prefers-reduced-motion`. Layout itself never triggers `transition-all` — that is the point of resolving it in CSS before paint (see [settle-before-interactive](#requirements/settle-before-interactive)) — so the gap is limited to the spinner's rotation and `Button`'s hover/press/variant transitions. |
 | Increase Contrast | Delegated: color and contrast are carried entirely by `Button` theme tokens; `DialogActions` renders no colors of its own. |
 | Differentiate Without Color | Not applicable: the component carries no color-only affordances — state is also conveyed by the presence/absence of buttons, the `disabled` attribute, and the spinner's `role="status"`. |
 
@@ -258,17 +263,17 @@ belongs to the host's `onConfirm`/`onCancel` handlers, not to the component.
   - `"use client"` — it uses `useEffect` and refs for the initial-focus placement. It holds no layout state and starts no observers.
   - Depends on the shared `Button` (`./button`) and `Loader2` from `lucide-react`.
   - Demo: `ui-showcase` Topic `dialog-actions` (regenerate `sources.generated.ts` via `gen-sources.py` after source changes).
-  - The layout rule is the shared implementation of **alert-and-dialog §Layout**; hosts (e.g. the invitation modal) may force `layout="equal"` per their own spec.
+  - The layout rule is the shared implementation of the Layout section of [adhsdk.recipe.alert-and-dialog](cookbook:550f00f7-bfb2-415e-9b15-bd5dce015500); hosts (e.g. the invitation modal) may force `layout="equal"` per their own spec.
 - **SwiftUI**: Use `@FocusState` to set initial focus — assign it from `.onAppear` (or via `.defaultFocus(_:_:)` where the host is inside a `NavigationStack`/`Group` that supports it); `focusedValue` only *reads* the ambient focus, it does not move it. `HStack` + `Spacer` cannot express "grow to your share but stop at natural width," so implement the capped-growth layout with a custom `Layout` that measures each button's ideal size and caps its allotted width, or switch between an equal-width and a natural-width `HStack` with `ViewThatFits`. For busy state, replace buttons with a spinner showing a status label.
 - **Compose**: Put both buttons in a `Row(horizontalArrangement = Arrangement.End)` and give each `Modifier.weight(1f, fill = false)` — `fill = false` is what caps a button's growth at its own measured width once there is room, matching `max-w-max`; plain `weight(1f)` stretches the button to fill its whole share instead. Manage focus via `FocusRequester`. Replace with a `CircularProgressIndicator` for busy state.
-- **AppKit / UIKit**: Use `NSStackView` (AppKit) or `UIStackView` (UIKit) with `distribution = .fillEqually` for the forced-equal layout, and `.fill` with each button's content-hugging priority raised (so the stack does not stretch it past its intrinsic width) for natural-width — `.fillProportionally` caps nothing and is the wrong mode for either shape. Manage focus via first responder. Replace buttons with a loading spinner for busy state.
-- **WinUI 3**: A horizontal `StackPanel` does not stretch its children, so `HorizontalAlignment="Stretch"` will not produce equal widths. Use a `Grid` with star-sized columns (or a custom panel) for equal-width, and set each button's `MaxWidth` to its desired natural width to cap growth for natural-width. Set focus via `Focus()` on `UIElement`. Replace buttons with `ProgressRing` for busy state; set `AutomationProperties.Name` for the busy label.
+- **AppKit / UIKit**: For the `auto` rule ("grow to your share, capped at your natural width"), give each button a `lessThanOrEqual` width constraint at its intrinsic width plus an equal-width constraint at lower priority, and pin the pair to the trailing edge; or switch between the forced-equal and natural shapes below as the container width changes. Use `NSStackView` (AppKit) or `UIStackView` (UIKit) with `distribution = .fillEqually` for the forced-equal layout, and `.fill` with each button's content-hugging priority raised (so the stack does not stretch it past its intrinsic width) for natural-width — `.fillProportionally` caps nothing and is the wrong mode for either shape. Manage focus via first responder. Replace buttons with a loading spinner for busy state.
+- **WinUI 3**: For the `auto` rule ("grow to your share, capped at your natural width"), use a custom `Panel` whose `MeasureOverride`/`ArrangeOverride` give each button its share of the row capped at its desired width and right-align the pair, or switch between the forced-equal and natural shapes below as the container width changes. A horizontal `StackPanel` does not stretch its children, so `HorizontalAlignment="Stretch"` will not produce equal widths. Use a `Grid` with star-sized columns (or a custom panel) for equal-width, and set each button's `MaxWidth` to its desired natural width to cap growth for natural-width. Set focus via `Focus()` on `UIElement`. Replace buttons with `ProgressRing` for busy state; set `AutomationProperties.Name` for the busy label.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/dialog-actions.tsx` | confirmed (1.4.1) |
+| web | `packages/web/packages/ui/src/components/dialog-actions.tsx` | confirmed (1.4.2) |
 
 ## Design Decisions
 
@@ -369,7 +374,7 @@ belongs to the host's `onConfirm`/`onCancel` handlers, not to the component.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-The passed/failed statuses rest on: native `<button>` elements plus the `role="status"`/`aria-label` spinner and `Button`'s theme-token colors (screen-reader-support, keyboard-navigable, semantic-markup, contrast-ratio — passed); the deliberate, source-verified focus placement and fallback logic (focus-management — passed); the `size="sm"` button's actual `h-7` (28px) height with no `--adh-button-min-height` set by this component (touch-target-size — failed); the unconditional `animate-spin`/`transition-all` with no `prefers-reduced-motion` check (reduced-motion — failed); the hardcoded `aria-label="Working…"` (string-externalization, no-hardcoded-strings — failed); the flex-based natural-width growth and unprocessed prop strings, which impose no truncation and no encoding assumptions (text-expansion-tolerance, unicode-support — passed); and, where the source cannot tell you, Tailwind's rem-based type scale (dynamic-type-support) and the browser's native flexbox handling of `justify-end` under `dir="rtl"` (rtl-layout-support), neither of which this component tests directly (both — partial). `separation-of-concerns` is partial because the initial-focus effect and the button-grow layout derivation are both implemented inline inside `DialogActions` rather than extracted; `unit-test-coverage` passes because `dialogActions.test.tsx` imports `DialogActions` directly and exercises its behavior with meaningful assertions.
+The passed/failed statuses rest on: native `<button>` elements plus the `role="status"`/`aria-label` spinner and `Button`'s theme-token colors (screen-reader-support, keyboard-navigable, semantic-markup, contrast-ratio — passed); the deliberate, source-verified focus placement and fallback logic (focus-management — passed); the `size="sm"` button's actual `h-7` (28px) height with no `--adh-button-min-height` set by this component (touch-target-size — failed); the unconditional `animate-spin`/`transition-all` with no `prefers-reduced-motion` check (reduced-motion — failed); the hardcoded `aria-label="Working…"` (string-externalization, no-hardcoded-strings — failed); the flex-based natural-width growth and unprocessed prop strings, which impose no truncation and no encoding assumptions (text-expansion-tolerance, unicode-support — passed); and, where the source cannot tell you, Tailwind's rem-based type scale (dynamic-type-support) and the browser's native flexbox handling of `justify-end` under `dir="rtl"` (rtl-layout-support), neither of which this component tests directly (both — partial). `separation-of-concerns` is partial because the initial-focus effect is implemented inline inside `DialogActions` rather than extracted (the layout is pure CSS, so no layout code remains); `unit-test-coverage` passes because `dialogActions.test.tsx` imports `DialogActions` directly and exercises its behavior with meaningful assertions.
 
 ## Change History
 
@@ -381,3 +386,4 @@ The passed/failed statuses rest on: native `<button>` elements plus the `role="s
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Remove localization review marker; aria-label is implemented in source as hardcoded English, no decision to be made by reviewer. |
 | 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case and updated every citation; merged the duplicate busy/confirmDisabled requirement into **show-busy-indicator**; reworded **equal-width-when-narrow** and rewrote T4/T5/T8 to match the natural-width-capped behavior instead of the retired `2 × Wmax` threshold; added requirements and test vectors for the initial-focus fallback and the destructive-cancel quiet focus ring; reformatted Design Decisions into Decision/Rationale/Approved and added one covering focus not moving when confirm disables late; corrected the touch-target claim and dropped the unverified "39 themes" figure in favor of the three named themes; replaced stale source-line citations with requirement-name citations; fixed the SwiftUI, Compose, AppKit/UIKit, and WinUI 3 platform notes; documented the spinner/button animations and their lack of Reduce Motion support in Accessibility Options; and rebuilt Compliance as a linked table using passed/failed/partial. |
 | 1.4.1 | 2026-09-25 | Mike Fullerton | Fixed both-disabled focus edge case: leaves focus wherever the host dialog placed it, not forced to <body>/no trap; shortened summary to fit 160 chars. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
+| 1.4.2 | 2026-11-14 | Mike Fullerton | Moved the capped-growth rule into one requirement, linked alert-and-dialog and requirement fragments, fixed the lone-confirm forced-equal description, added focus and container vectors, and filled in AppKit and WinUI capped-growth notes. |

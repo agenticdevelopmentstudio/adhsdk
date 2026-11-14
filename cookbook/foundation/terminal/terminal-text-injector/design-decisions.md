@@ -27,7 +27,10 @@
 **Rationale**: The string assembly and escaping are the risky part and are unit-tested without a real terminal; the app, the CLI and the session click actions share one copy.
 **Approved**: pending
 
-**Decision**: The component has no retry, timeout or cancellation, and reports failures through `Result` without logging them.
-**Rationale**: The source gives no reason; each caller decides what to do with a returned `InjectionError`. This is recorded as a fact about the code, not a gap.
+**Decision**: Address iTerm2 by its bundle id `com.googlecode.iterm2`, not by the application name.
+**Rationale**: The application's name has varied across versions, while the bundle id has not.
 **Approved**: pending
 
+**Decision**: Error descriptions are English literals; callers localise by matching the `InjectionError` case, and a later version may move the texts to string keys.
+**Rationale**: This is a Foundation-tier helper with no localization bundle, and the typed cases give an app everything it needs to show its own text.
+**Approved**: pending

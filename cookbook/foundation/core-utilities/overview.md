@@ -1,8 +1,10 @@
 
-This recipe covers six independent foundation-tier utilities. Each has no
-dependency on anything else in this recipe or on any other part of the
-package; together they form the lowest tier of the toolkit — the tier every
-other logic and UI component is built on top of.
+This ingredient covers six foundation-tier utilities. Five have no
+dependency on anything else in this ingredient or on any other part of the
+package. The secret store has one: it conforms to the logger factory
+contract, so it depends on the logger factory and on nothing else. Together
+they form the foundation tier of the toolkit — the tier every other logic
+and UI component is built on top of.
 
 - **An encoding-skip wrapper** — removes a field from a model's standard
   structured encoding and decoding entirely, so a value can exist on a model

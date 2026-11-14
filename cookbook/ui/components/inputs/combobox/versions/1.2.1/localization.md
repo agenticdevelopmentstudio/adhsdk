@@ -1,0 +1,3 @@
+
+All localizable strings (`ariaLabel`, `placeholder`, `emptyLabel`) are passed as component props by the caller, giving full control over localization; the only source-side default is `emptyLabel = "No matches"`, which callers should override for non-English locales. Substring filtering as the user types is delegated entirely to Base UI's `Autocomplete` primitive, which does a simple case-insensitive comparison; the wrapper does not override this, so locale-specific casing rules (for example, the Turkish dotted/dotless `I`) are not specially handled — Base UI's default comparison is accepted as-is.
+

@@ -17,4 +17,7 @@
 | T14 | collapse-list-header-when-collapsed | `listHeader` set, rail collapsed | `listHeader` hidden while collapsed, shown while expanded |
 | T15 | default-empty-list-label | `items=[]`, `emptyList` omitted | Rail shows "Nothing here yet." (hardcoded default) |
 | T16 | render-warn-badge-per-row | item `{ warn:true, warnCount:5, warnTitle:"5 project sites not yet connected" }` | The rail row's accessible name (its button content) includes `warnTitle`, contributed by the Badge's `aria-label` after the row label |
-
+| T17 | default-can-delete-to-editing | `selectedId=null`, `canDelete={true}`, `onDelete` set | Delete enabled (the explicit value is honored) |
+| T18 | forward-row-select | User selects the row with id "r2" | `onSelect("r2")` called once |
+| T19 | forward-toolbar-intents | Editing, `dirty=true`, `onDelete` set; user activates New, Delete, Cancel, then Save | `onNew`, `onDelete`, `onCancel`, `onSave` each called once, in that order, and no other callback is called |
+| T20 | size-rail | `railWidth={360}`, rail expanded | Rail is 360px wide; with `railWidth` omitted it is 240px |

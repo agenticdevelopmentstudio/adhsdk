@@ -4,7 +4,7 @@
 | disclosure-001 | render-trigger-button, render-label | No props (defaults) | Trigger button renders with text "View source" |
 | disclosure-002 | render-chevron-icon | No props | Chevron-right icon renders inside trigger |
 | disclosure-003 | start-closed-by-default | No props | Disclosure starts closed; source panel is not in DOM |
-| disclosure-004 | start-closed-by-default, render-source-in-pre-tag | `defaultOpen={true}` | Disclosure starts open; source panel is in DOM and visible |
+| disclosure-004 | start-closed-by-default, render-source-in-pre-tag | `defaultOpen={true}` | Disclosure starts open; the source panel is a `<pre>` element in the DOM and visible |
 | disclosure-005 | toggle-on-click, render-source-verbatim, not-parse-markdown | Click trigger when closed; `source="# Heading\n\n- List item"` | Panel appears showing raw text exactly as `"# Heading"` and `"- List item"`, not parsed as markdown |
 | disclosure-006 | toggle-on-click | Click trigger when open | Panel closes and is removed from DOM |
 | disclosure-007 | rotate-chevron-on-open | Click trigger to open | Chevron rotates to 90° with 150ms transition |
@@ -19,4 +19,8 @@
 | disclosure-016 | conditionally-set-aria-controls | Trigger open, inspect button and panel | `aria-controls` matches the panel's `id` |
 | disclosure-017 | render-source-verbatim, not-parse-markdown | Click trigger to open; `source="<script>alert(1)</script>"` | Panel shows the literal text `<script>alert(1)</script>`; no `<script>` element is created and no code executes |
 | disclosure-018 | source-selectable | Trigger open; select text within the source panel | Source text can be selected and copied via native text selection |
-
+| disclosure-019 | toggle-on-click | Focus the trigger and press Enter, then press Space | Each key press toggles the disclosure between open and closed (native button activation) |
+| disclosure-020 | render-source-in-pre-tag | `source=""`, trigger clicked | An empty `<pre>` is rendered; clicking again closes it |
+| disclosure-021 | render-source-verbatim, render-source-in-pre-tag | `source="  \n\t\n "` (whitespace only), trigger clicked | The `<pre>` contains exactly the whitespace provided |
+| disclosure-022 | render-label | `label={<em>Raw</em>}` | The trigger contains the rendered `<em>Raw</em>` element |
+| disclosure-023 | render-label | `label="<test>"` | The trigger shows the literal text `<test>`; no element is created |

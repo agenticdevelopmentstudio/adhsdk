@@ -16,10 +16,8 @@ the rig's shapes and inks once, into a scene-local, variant-folded ink table
 (`inks`) that `compose` reads from exclusively — never from
 `config.character.inks` directly — so a variant can never leak into
 per-frame logic, the tween engine, the golden recorder, or the renderer.
-Apple's flattened record (`Placed`) keeps only a node's immediate parent id;
-the web's flattened record (`{ node, parents }`) keeps the whole ancestor
-chain but reads only its last element — the same information in a
-differently shaped container (see Design Decisions).
+The two platforms flatten the rig into differently shaped records but compose
+the same matrices (see Design Decisions).
 
 `compose` walks the flattened list once per call, composing each node's
 world matrix from its parent's already-computed matrix and its own six

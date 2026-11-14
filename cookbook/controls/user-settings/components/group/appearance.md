@@ -1,10 +1,2 @@
-
-- **Corner radius**: Not specified in component; controlled by CSS
-- **Padding**: Determined by CSS classes `aws-group`, `aws-group__title`, `aws-group__hint`, `aws-group__body`
-- **Font**: Title renders as `<h3>` (semantic heading); hint renders as `<p>` (semantic paragraph); styling determined by CSS
-- **Background**: Not specified in component; controlled by CSS
-- **Foreground/Text**: Not specified in component; controlled by CSS
-- **Border**: Not specified in component; controlled by CSS
-- **Shadow**: Not specified in component; controlled by CSS
+- **Styling contract**: All visual styling comes from CSS rules on the four classes `aws-group`, `aws-group__title`, `aws-group__hint` and `aws-group__body`; the component sets no inline styles. The title renders as `<h3>` and the hint as `<p>`.
 - **Min/Max size**: No constraints defined in component
-

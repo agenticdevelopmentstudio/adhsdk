@@ -8,11 +8,15 @@
 | color-theme-005 | is-editable, is-locked, is-deletable | Test `editability`: a built-in; the same theme with `isImported = true` and `isBuiltIn = false`; the same with both false | Built-in: locked, not editable, not deletable. Imported: locked, not editable, deletable. Custom: editable, not locked, deletable |
 | color-theme-006 | ansi-color-lookup | Test `ansiColor(at:) returns the color in range and nil out of range`: indexes 0, 15, 16, -1 on a built-in | `ansi[0]`, `ansi[15]`, nil, nil |
 | color-theme-007 | has-valid-palette, ansi-color-count, init-no-validation | Test `hasValidPalette requires exactly 16 ANSI colors`: a built-in, and a theme constructed with 3 ANSI colors | Built-in true; the 3-color theme constructs and reports false |
-| color-theme-008 | color-encoding | Test `RGBAColor clamps out-of-range and non-finite components to [0, 1]`: components 1.5, -0.2, 2.0, 9 and NaN, 0.5, +infinity, -infinity | 1, 0, 1, 1 and 0, 0.5, 1, 0 |
-| color-theme-009 | decode-required-keys | JSON with every key except `ansi` | Decoding throws |
-| color-theme-010 | decode-role-overrides-default, decode-typography-default, decode-feature-options-absent | The JSON from color-theme-003 | `roleOverrides` is empty; `typography == .system`; `terminal` and `project` are nil |
-| color-theme-011 | init-defaults, init-required | Initializer with only the required arguments, called twice | Both `id` values are UUID strings and differ; `isBuiltIn`, `isImported` false; `attribution` nil; `roleOverrides` empty |
-| color-theme-012 | appearance-cases, appearance-identifier | `ThemeAppearance.allCases` and `.auto.id` | Three cases `dark`, `light`, `auto`; id "auto" |
-| color-theme-013 | decode-no-palette-validation | JSON with 3 ANSI colors | Decodes; `hasValidPalette` is false |
-| color-theme-014 | color-encoding | JSON whose `foreground` is "not-a-color" | Decoding throws a data-corrupted error |
-
+| color-theme-008 | color-encoding | Test (exercises `RGBAColor`, the owner of clamping) `RGBAColor clamps out-of-range and non-finite components to [0, 1]`: components 1.5, -0.2, 2.0, 9 and NaN, 0.5, +infinity, -infinity | 1, 0, 1, 1 and 0, 0.5, 1, 0 |
+| color-theme-009 | decode-required-keys | JSON with every key except `ansi` (no test yet) | Decoding throws |
+| color-theme-010 | decode-role-overrides-default, decode-typography-default, decode-feature-options-absent | The JSON from color-theme-003 (no test yet) | `roleOverrides` is empty; `typography == .system`; `terminal` and `project` are nil |
+| color-theme-011 | init-defaults, init-required | Initializer with only the required arguments, called twice (no test yet) | Both `id` values are UUID strings and differ; `isBuiltIn`, `isImported` false; `attribution` nil; `roleOverrides` empty |
+| color-theme-012 | appearance-cases, appearance-identifier, appearance-enumerable | `ThemeAppearance.allCases` and `.auto.id` (no test yet) | Three cases `dark`, `light`, `auto`; id "auto" |
+| color-theme-013 | decode-no-palette-validation | JSON with 3 ANSI colors (no test yet) | Decodes; `hasValidPalette` is false |
+| color-theme-014 | color-encoding | JSON whose `foreground` is "not-a-color" (no test yet) | Decoding throws a data-corrupted error |
+| color-theme-015 | is-editable, is-deletable, is-locked | A theme with `isBuiltIn = true` and `isImported = true` (no test yet) | `isEditable` false; `isLocked` true; `isDeletable` false |
+| color-theme-016 | decode-no-palette-validation, ansi-color-lookup | JSON with 17 ANSI colors; then `ansiColor(at: 16)` (no test yet) | Decodes; `hasValidPalette` false; `ansiColor(at: 16)` returns the 17th color |
+| color-theme-017 | decode-required-keys | The JSON from color-theme-003 plus an unknown key `"extra": 1` (no test yet) | Decodes; the theme equals the one decoded without the key |
+| color-theme-018 | appearance-cases | JSON whose `appearance` is "sepia" (no test yet) | Decoding throws |
+| color-theme-019 | encode-omits-nil | Encode a theme with `attribution`, `terminal` and `project` nil (no test yet) | The JSON object has no `attribution`, `terminal` or `project` key |

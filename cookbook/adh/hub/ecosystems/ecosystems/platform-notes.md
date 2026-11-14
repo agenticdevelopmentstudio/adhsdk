@@ -58,7 +58,7 @@
   re-map a specific case — never a raw `Error` reaching a topic or the
   module. Rail navigation position is expressed as an `[HTDVItem]` path
   resolved through `RailPath.id(at:in:)` (`Support/RailPath.swift`);
-  `HTDVItem`/`HTDVLevel`/`HTDVDetail` are this recipe's "rail item"/"list"/
+  `HTDVItem`/`HTDVLevel`/`HTDVDetail` are this ingredient's "rail item"/"list"/
   "detail view" vocabulary. This implementation has no feature-picker data
   source in these sources — a port of the picker starts from the other
   reference implementation's contract.
@@ -103,7 +103,7 @@
 
   Every error this implementation raises is a plain `Error` carrying a
   numeric `.status` (`AuthHttpError`-shaped, from `@adh-sdk/auth`'s
-  Bearer-token client — see `auth-client`); `isNotFound`/`isConflict`/
+  Bearer-token client — see [adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)); `isNotFound`/`isConflict`/
   `rethrowConflict` (`client-helpers.ts`, `http.ts`) are the conflict/
   not-found mapping helpers every requirement above that mentions
   surfacing a conflict or a not-found result relies on.
@@ -132,7 +132,7 @@
   `await` replaces every `Promise`/Swift `async throws` call; a custom
   `HubError`-equivalent exception hierarchy (or a `Result<T, HubError>`)
   should carry the same `notFound`/`conflict`/`validation` distinctions
-  this recipe's error-mapping requirements rely on, since WinUI has no
+  this ingredient's error-mapping requirements rely on, since WinUI has no
   built-in typed-error convention of its own to inherit. For the feature
   picker: a `FeaturesClient` over `HttpClient` exposes `GetCatalogAsync`
   (deserialize `{ features }` with `System.Text.Json`, keep server order),

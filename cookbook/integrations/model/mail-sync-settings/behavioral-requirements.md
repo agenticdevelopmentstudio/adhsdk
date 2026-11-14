@@ -5,7 +5,7 @@
 - **value-semantics**: MailSyncSettings MUST be an `Equatable`, `Codable` and `Sendable` value type, so two instances with equal fields compare equal.
 - **default-values**: The static `default` MUST have all three include flags false, `windowDays` 30 and `pollIntervalMinutes` 15.
 - **memberwise-init-defaults**: The memberwise initializer MUST default each parameter to the same value as `default`, so omitting every argument yields `default`.
-- **range-constants**: MailSyncSettings MUST publish `windowDaysRange` as 1 through 3650 and `pollIntervalRange` as 1 through 1440, both inclusive.
+- **range-constants**: MailSyncSettings MUST publish `windowDaysRange` as 1 through 3650 and `pollIntervalRange` as 1 through 1440, both inclusive. The `validated()` messages below are fixed text with these numbers written into them, so a port that changes a range MUST change the message with it.
 
 ### Decoding
 
@@ -14,7 +14,7 @@
 - **decode-null-key**: Decoding MUST treat a key present with a JSON null the same as an absent key, so a stored row whose field was cleared still loads instead of failing.
 - **decode-partial**: Decoding MUST keep the keys that are present and default only the missing ones.
 - **decode-ignore-unknown**: Decoding MUST ignore keys other than the five, so a stored row carrying extra keys still loads and decodes to the same values.
-- **decode-wrong-type**: Decoding MUST propagate the decoder's error when a present key has the wrong type (for example a string for `windowDays`); the source does not catch it.
+- **decode-wrong-type**: Decoding MUST propagate the decoder's error when a present key has the wrong type (for example a string for `windowDays`), and MUST NOT swallow it or fall back to the default.
 - **decode-no-range-check**: Decoding MUST NOT validate ranges, so an out-of-range number decodes unchanged and is rejected only when `validated()` is called.
 - **init-no-range-check**: The memberwise initializer MUST NOT validate ranges.
 
@@ -33,10 +33,10 @@
 
 ### Ordering and concurrency
 
-- **no-shared-state**: MailSyncSettings MUST hold no shared mutable state; as a `Sendable` value its copies move freely between threads and the type adds no ordering rule.
+- **no-shared-state**: MailSyncSettings MUST hold no shared mutable state: it declares no `static var` and no reference-type stored property, so its `Sendable` conformance compiles under strict concurrency and the type adds no ordering rule.
 
 ### Persistence and side effects
 
-- **no-side-effects**: Every operation MUST be a pure function of the instance fields; none touches files, the network, processes or notifications.
-- **persisted-as-json**: MailSyncSettings MUST be persisted through its `Codable` conformance as JSON text, which the connection record stores in a column (cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f).
+- **no-side-effects**: Every operation MUST be a pure function of the instance fields. The source file imports only Foundation and calls no file, network, process or notification API.
+- **persisted-as-json**: MailSyncSettings MUST be persisted through its `Codable` conformance as JSON text, which the connection record stores in a column ([adhsdk.ingredient.integrations.model.integration-records](cookbook:888b7ba2-61f6-4251-88df-3586c5c86b1f)).
 

@@ -1,0 +1,15 @@
+
+- **Empty options list**: If `options=[]` and `value=[]`, the component renders with both controls enabled. The Combobox shows no suggestions; the EntityChooser's browse list is empty (`allowCreate` remains available if EntityChooser supports it).
+- **Empty value array**: If `value=[]`, no chips-row element exists in the DOM at all (see **empty-chips-row-renders-nothing**). The component is ready to accept new selections.
+- **Value contains items not in options**: If `value=["custom"]` and `"custom"` is not in `options`, the component displays the chip anyway — the label was created outside this component or by another surface (see **options-as-suggestion**). The Combobox continues to filter `options` normally.
+- **Large value array**: No explicit limit is defined in the source; the component maintains all items and renders all chips. Performance depends on the parent's render optimization and on `EntitySelectionChips`'s own implementation.
+- **Duplicate item attempted via Combobox**: If `value=["foo"]` and the user types "foo" again, **show-filtered-suggestions** has already removed "foo" from the suggestion list, so there is nothing left to match — the duplicate is prevented by omission, not by a separate check.
+- **Typing a prefix of a longer option**: If `options=["bar", "barn"]`, typing toward "barn" passes through the exact match "bar" on the way — and that match is accepted immediately (see **accept-exact-match-in-combobox**, **case-sensitive-exact-match**, tag-set-016). The component has no notion of "still typing"; any exact match is taken the instant it occurs.
+- **Rapid add/remove cycles**: The component responds to each `onChange` callback; no debouncing or batching is applied. If the parent re-renders with a new `options` list before a Combobox `onValueChange` event fires, the suggestion list is recalculated immediately.
+- **Very long label text**: The component delegates text truncation and overflow behavior to the Combobox and `EntitySelectionChips` sub-components; no truncation is applied at the TagSetField level.
+- **Chip removal while disabled**: `disabled` propagates to `EntitySelectionChips` as well as to the Combobox and EntityChooser (see **pass-disabled-to-controls**). Whether the remove affordance is actually inert when disabled is `EntitySelectionChips`'s own behavior — see [adhsdk.ingredient.ui.components.inputs.entity-chooser](cookbook:79f7ed30-3193-49bc-856b-d7dd01303baa).
+- **Disabled while EntityChooser dialog open**: If `disabled` changes to true while dialog is open, component propagates the change to EntityChooser, which handles state (likely closes or disables the dialog).
+- **Combobox partial text + blur**: If user enters partial text "fo" in Combobox and blurs the field without selecting a match, text remains; no auto-acceptance occurs.
+- **Concurrency**: Not applicable — this is a single-threaded UI component controlled by React's render loop and event handler serialization.
+- **Offline**: Not applicable — the component manages local state only and makes no network requests.
+

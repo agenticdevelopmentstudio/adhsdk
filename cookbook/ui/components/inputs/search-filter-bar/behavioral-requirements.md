@@ -30,7 +30,9 @@
   under the search field by default (`orientation="stacked"`), and MUST lay the
   field and the row out as one wrapping line when `orientation="inline"`, the
   search field taking the free space with a minimum width of its own.
-- **autofill-form-scope**: The SearchFilterBar MAY root itself on a
-  `<form>` instead of a `<div>` when `asForm` is set, carrying `role="search"`
+- **autofill-form-scope**: The SearchFilterBar MUST root itself on a
+  `<form>` instead of a `<div>` when `asForm` is true, carrying `role="search"`
   onto that element and cancelling its `submit`. It MUST default to the `<div>`.
-
+- **search-field-placeholder**: The SearchFilterBar MUST show `search.placeholder` as the search field's placeholder when the field is empty.
+- **search-field-keydown**: The SearchFilterBar MUST pass key events on the search field to `search.onKeyDown`, when given, in addition to the live `search.onChange`.
+- **landmark-label**: The SearchFilterBar MUST expose its `aria-label` prop as the accessible name of the `role="search"` root, and MUST apply `className` to that root.

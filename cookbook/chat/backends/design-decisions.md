@@ -103,8 +103,9 @@ fully predictable from its `ResponseMap`, at the cost of not recognizing
 
 **Decision**: `ShuffleBag` reshuffles lazily, on the draw that empties the
 pile, rather than precomputing a long shuffled sequence up front.
-**Rationale**: The bag's caller (`MockBackend`-style canned replies driven by
-`streamTokens`) draws indefinitely over an unbounded session; reshuffling
+**Rationale**: The bag's callers (`TypingIndicator`'s rotating labels and the bitbag
+feature's fallback replies, streamed through `streamTokens`) draw
+indefinitely over an unbounded session; reshuffling
 on demand keeps memory bounded to one copy of the item set regardless of how
 many draws have happened.
 **Approved**: pending

@@ -2,11 +2,11 @@
 id: 9191eade-c18a-4899-b802-f000a1905c80
 title: "RemovableChip"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -107,7 +107,7 @@ A single export ships from `@adh-sdk/ui/components/removable-chip`: the
 | T2 | renders-remove-button, remove-button-named | same as T1 | a `<button type="button">` with `aria-label="Remove x"` |
 | T3 | invokes-onremove-on-click | click the remove button | `onRemove` called once |
 | T4 | stateless-removal | after T3 without consumer re-render | the chip is still in the DOM (removal is the consumer's job) |
-| T5 | applies-badge-variant | `variant="success"` | the `Badge` element carries the `border-apt-green` and `text-apt-green` classes |
+| T5 | applies-badge-variant | `variant="success"` | the `Badge` element carries the same classes as `badgeVariants({ variant: "success" })`, so the test follows Badge's styling instead of copying its class names |
 | T6 | disabled-blocks-remove | `disabled` then click the ✕ | button is `disabled`; `onRemove` NOT called |
 | T7 | remove-icon-decorative | inspect the `X` glyph | the icon carries `aria-hidden` |
 | T8 | remove-button-named, keyboard-operable (Playwright) | query by role `button` name "Remove x", then press Enter/Space while it has focus | the ✕ is found by its accessible name and `onRemove` fires on Enter/Space |
@@ -158,7 +158,7 @@ not a fixed English template.
 
 ## Accessibility Options
 
-Not applicable: RemovableChip is a simple presentational element composed of a Badge and a button; it does not respond to platform accessibility display options like Reduce Motion or Increase Contrast.
+RemovableChip has no animation, so Reduce Motion does not apply. For Increase Contrast and forced-colors modes, the ✕ and the Badge tones take whatever the design-token colors resolve to, so the chip inherits the platform's contrast adjustments only as far as those tokens do; this is why `contrast-ratio` is `partial`. For text scaling, the label and the ✕ sit in an inline flex row, and the 11px ✕ icon does not grow with system font size; this is why `dynamic-type-support` is `partial`.
 
 ## Feature Flags
 
@@ -180,16 +180,16 @@ telemetry belong to the consumer's `onRemove` handler, not the chip.
 ## Platform Notes
 
 - **SwiftUI**: Compose a `HStack` containing the badge body (background + rounded corner pill using `.background()` and `.clipShape(Capsule())`) and a `Button` with an `Image(systemName: "xmark")`. Apply `.buttonStyle(.plain)` to strip button styling from the remove button. Set `.disabled(disabled)` on the button. Set `.accessibilityLabel(removeLabel)` directly on the `Button` (this is its accessible name — there is no `.accessibilityRemoveAction()` modifier); optionally add `.accessibilityAction(named: Text(removeLabel)) { onRemove() }` on the chip container if a custom rotor action is also wanted. On hover or focus, brighten the icon color; apply the disabled visual state per the States table.
-- **Compose**: Build a `Row` with `Modifier.border(1.dp, color)` and `Modifier.clip(RoundedCornerShape(50))` for the pill shape (percent-based, so it stays a pill regardless of height — a fixed `RoundedCornerShape(8.dp)` would not). Render content as `Text`, then an `IconButton` (not a `Button`, which clips at small sizes because of its minimum size and content padding) containing an `Icon` (Material Design `Icons.Default.Close`) with `contentDescription = removeLabel` set on the `Icon` itself. Set `enabled = !disabled` on the `IconButton`. Bind `onClick` to the remove callback. Style icon color as muted by default, brightened on hover/pressed.
+- **Compose**: Build a `Row` with `Modifier.border(1.dp, color)` and `Modifier.clip(RoundedCornerShape(50))` for the pill shape (percent-based, so it stays a pill regardless of height — a fixed `RoundedCornerShape(8.dp)` would not). Render content as `Text`, then an `IconButton` (not a `Button`, which clips at small sizes because of its minimum size and content padding) containing an `Icon` (Material Design `Icons.Default.Close`) with `contentDescription = removeLabel` set on the `Icon` itself. Set `enabled = !disabled` on the `IconButton`. Bind `onClick` to the remove callback. Style icon color as muted by default, brightened on hover/pressed. `IconButton` enforces a 48dp minimum interactive size, which makes the chip much taller than its label; either accept the 48dp target and size the pill around it, or put a smaller icon inside a clickable `Box` and exempt it from `minimumInteractiveComponentSize`. Variant tones map to the same semantic colors as the Badge ingredient ([adhsdk.ingredient.ui.components.badge](cookbook:1c49339e-0b46-449d-86de-eb4a4166d6a5)); take the variant-to-color mapping from there on every platform.
 - **React/Web**: File: `packages/web/packages/ui/src/components/removable-chip.tsx`. Composes the shared `Badge` (`./badge`) for the body and a lucide `X` icon for the affordance; carries `"use client"`. The remove `<button>`'s `disabled` attribute is the actual guarantee behind **disabled-blocks-remove**; `disabled:pointer-events-none` is a CSS belt-and-suspenders that also blocks pointer interaction while disabled.
-- **AppKit / UIKit**: On **AppKit**, create an `NSBox` with `boxType = .custom`, `cornerRadius = 12`, and `borderColor` from the variant tone. Nest an `NSStackView` (horizontal, spacing `4`) inside it containing `NSTextField` (read-only, for content) and `NSButton` (image button) using `NSImage(systemSymbolName: "xmark", accessibilityDescription: nil)` for the glyph. Bind the button's `action` to the remove callback and set `button.accessibilityLabel = removeLabel`. On **UIKit**, create a `UIView` container with `layer.cornerRadius = 12` and `layer.borderColor`; nest a `UIStackView` (horizontal, spacing `4`) with `UILabel` and `UIButton`. Configure the button with `UIImage(systemName: "xmark")` via `setImage(_:for:)`, and bind the remove callback with `addAction(_:for: .touchUpInside)`; set `button.accessibilityLabel = removeLabel`. Set `button.isEnabled = !disabled` in both. Apply the hover and disabled visual states per the States table.
+- **AppKit / UIKit**: On **AppKit**, create an `NSBox` with `boxType = .custom`, `cornerRadius` set to half the view's height whenever it lays out (so it stays a pill at any height), and `borderColor` from the variant tone. Nest an `NSStackView` (horizontal, spacing `4`) inside it containing `NSTextField` (read-only, for content) and `NSButton` (image button) using `NSImage(systemSymbolName: "xmark", accessibilityDescription: nil)` for the glyph. Bind the button's `action` to the remove callback and call `button.setAccessibilityLabel(removeLabel)` (AppKit exposes `setAccessibilityLabel(_:)`, not a settable property). On **UIKit**, create a `UIView` container with `layer.cornerRadius` set to half its height in `layoutSubviews` and `layer.borderColor`; nest a `UIStackView` (horizontal, spacing `4`) with `UILabel` and `UIButton`. Configure the button with `UIImage(systemName: "xmark")` via `setImage(_:for:)`, and bind the remove callback with `addAction(_:for: .touchUpInside)`; set `button.accessibilityLabel = removeLabel`. Set `button.isEnabled = !disabled` in both. Apply the hover and disabled visual states per the States table.
 - **WinUI 3**: Create a `Border` with `CornerRadius` set to match the pill styling, wrapping a horizontal `StackPanel` (`Orientation = Horizontal`, `Spacing = 4`). Inside the `StackPanel`, render a `TextBlock` for the content and a `Button` with a `FontIcon` using the glyph `&#xE711;` (WinUI "Cancel" icon) for the remove affordance. Map the button's `Click` event to invoke the source's remove callback. Set `Button.IsEnabled = !disabled`. Use `AutomationProperties.Name` on the button to set the accessible label to `removeLabel`. Apply the hover and disabled visual states per the States table; introduce no additional visual state beyond those it defines.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/removable-chip.tsx` | confirmed (1.3.1) |
+| web | `packages/web/packages/ui/src/components/removable-chip.tsx` | confirmed (1.3.2) |
 
 ## Design Decisions
 
@@ -198,7 +198,7 @@ telemetry belong to the consumer's `onRemove` handler, not the chip.
 **Approved**: pending
 
 **Decision**: Reuse `Badge` for the chip body instead of restyling.
-**Rationale**: The chip body is the shared `Badge`, so it inherits every tone and the established pill styling; the recipe adds only `flex items-center gap-1` and the trailing button, keeping one source of truth for chip appearance.
+**Rationale**: The chip body is the shared `Badge`, so it inherits every tone and the established pill styling; the ingredient adds only `flex items-center gap-1` and the trailing button, keeping one source of truth for chip appearance.
 **Approved**: pending
 
 **Decision**: Make the component stateless.
@@ -233,6 +233,7 @@ determined outside this file. `RemovableChip` is a `Badge` composed with a remov
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.2 | 2026-11-14 | Mike Fullerton | Changed T5 to compare against badgeVariants, said ingredient not recipe, fixed AppKit setAccessibilityLabel and pill corner radius, covered Increase Contrast and text scaling, and added Compose touch-target and Badge variant mapping guidance. |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: reword disabled-blocks-remove around the native disabled button and move the CSS detail to Platform Notes; add keyboard-operable requirement and a focus-after-removal edge case; correct the SwiftUI, Compose, and AppKit/UIKit platform APIs and drop invented pressed/cursor states; reorder and relabel Platform Notes; move Badge to depends-on and drop named consumers from Overview and Design Decisions; reformat Design Decisions as Decision/Rationale/Approved; rewrite Compliance with canonical catalog checks; fix the empty-removeLabel edge case and the Localization contradiction; sharpen T5 and T8 test vectors; note badge-body appearance under Disabled. |
 | 1.2.0 | 2026-09-22 | Claude Haiku 4.5 | Revise Platform Notes: replace "Not applicable" bullets with concrete translation guidance for SwiftUI, Kotlin, AppKit/UIKit, and WinUI 3. |

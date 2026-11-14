@@ -1,13 +1,13 @@
 
 - **Decision**: A popover panel/list, not inline squiggles on the textarea.
   **Rationale**: Per-character overlay positioning over a `<textarea>` is costly
-  and brittle; a list of problems with explicit apply actions is cheaper, more
-  accessible, and matches the "lightweight panel" brief.
+  and brittle; a list of problems with explicit apply actions is cheaper and
+  more accessible.
   **Approved**: pending
 - **Decision**: harper's `WorkerLinter`, lazy-loaded on first enable.
   **Rationale**: The WASM is multi-MB; keeping it off the initial bundle and off
   the UI thread (a Web Worker) is essential. Loading only when the user opts in
-  honors the opt-in principle.
+  means nobody pays that cost unless they want the check.
   **Approved**: pending
 - **Decision**: Markdown source mode (`language: 'markdown'`).
   **Rationale**: The reason to add this over native spellcheck is to skip code

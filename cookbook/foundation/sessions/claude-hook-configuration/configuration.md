@@ -9,8 +9,8 @@
 | `statusLineTapOnly` | `Bool` | `false` | Always register as a capture-only tap |
 | `dropDirectory` | `String` | required | Drop directory in tilde form, for example `~/.claude/stenographer-events` |
 | `settingsURL` | `URL` | `~/.claude/settings.json` | The settings file to edit |
-| `ownLockName` | `String?` | `.<name>-hooks.lock` | Lock beside `settings.json`, taken after `.settings.lock` |
-| `statusLineEntryName` | `String?` | `name` | File name under the dispatcher's `renderers` or `taps` directory |
+| `ownLockName` | `String` (initializer argument `String?`) | `.<name>-hooks.lock` | Lock beside `settings.json`, taken after `.settings.lock` |
+| `statusLineEntryName` | `String` (initializer argument `String?`) | `name` | File name under the dispatcher's `renderers` or `taps` directory |
 | `bundledDispatcher` | `URL?` | nil | Dispatcher a bundle carries; nil derives `Resources/dispatch.sh` from the helper path |
 | `hookedEvents` | `[HookEventType]` | `defaultHookedEvents` | Event types registered for passive observation |
 | `legacy` | `LegacyHookForms` | `.none` | Earlier forms to recognise and replace |

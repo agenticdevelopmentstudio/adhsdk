@@ -4,11 +4,11 @@
     "id": "2fa64944-9744-4d71-8fed-f785e7ce1e51",
     "title": "Gmail Settings Model",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5900af62ac20847f",
+  "synced": "e9c7252a752483b8",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

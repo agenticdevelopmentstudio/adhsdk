@@ -10,11 +10,12 @@
 - **hook-lock-name**: `ADKDIdentifiers.ownHookLockName` MUST be `.adkd-hooks.lock`, the lock file that serialises edits to Claude Code's hook settings.
 - **cli-name**: `ADKDIdentifiers.cliName` MUST be `adk`, the tool at `Contents/Helpers/adk` in the app bundle.
 - **daemon-executable-name**: `ADKDIdentifiers.daemonExecutableName` MUST be `adkd`, the executable at `Contents/MacOS/adkd` in the app bundle.
-- **no-collision-with-stenographer**: Every identifier and path the type defines MUST differ from its Stenographer counterpart: label, HTTP port, keychain service, hook marker, database file name, support directory, logs directory, launch-agent plist, drop directory name, socket file name and hook lock name.
+- **no-collision-with-stenographer**: Each of the following MUST differ from its Stenographer counterpart, and this list is the full contract: label, HTTP port, keychain service, hook marker, database file name, support directory, logs directory, launch-agent plist, drop directory name, socket file name and hook lock name.
 - **storage-token**: `ADKDPaths.storageToken` MUST be `AgenticDeveloperKitchen`, the app's display name with non-alphanumerics dropped.
 - **storage-token-duplicated**: The storage token is spelled in `ADKDPaths` because Core cannot import the database layer that derives it; the two spellings MUST agree.
+- **storage-token-agreement-test**: A port MUST carry a test that asserts its spelled storage token equals the value the database layer derives from the display name.
 - **display-name**: `ADKDPaths.displayName` MUST be `Agentic Developer Kitchen`, the name of the app's folder under Application Support.
-- **file-names**: The database file MUST be named `adkd.db`, the ingest spool `ingest.db`, the launchd output files `stdout.log` and `stderr.log`, and the user-stop marker `daemon-stopped-by-user`.
+- **file-names**: The database file MUST be named `adkd.db`, the ingest spool `ingest.db`, the launchd output files `stdout.log` and `stderr.log`, and the user-stop marker `daemon-stopped-by-user`. The type defines only the two launchd output file names (`launchdStdoutLogName`, `launchdStderrLogName`), not a path for them; callers choose the directory.
 - **home-injection**: `ADKDPaths.init(home:)` MUST take the home directory as a parameter defaulting to the current user's home directory, and every path property MUST be derived from it.
 - **storage-directory**: `storageDirectory` MUST be `.` followed by the lowercased storage token, directly under home (`~/.agenticdeveloperkitchen`).
 - **support-directory**: `supportDirectory` MUST be the `adkd` directory under `storageDirectory`.

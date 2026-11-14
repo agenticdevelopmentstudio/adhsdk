@@ -1,12 +1,13 @@
 
 ```
-default            PostHog ↗          (mono · text-[11px] · apt-blue · trailing arrow)
+default            PostHog ↗          (mono · small · apt-blue · trailing arrow)
 glyph={false}      ⤴ GitHub           (leading lucide icon; no trailing arrow; restyled)
 ```
 
-- Base: `inline-flex items-center gap-1 rounded-sm font-mono text-[11px]
-  whitespace-nowrap text-apt-blue no-underline outline-none
-  focus-visible:ring-2 focus-visible:ring-apt-gold/40`.
+- Base: inline layout with the items centered and a small gap, a small
+  rounded corner, a small monospace size, no wrapping, the info-blue token
+  color, no underline, and a keyboard-only focus ring in the accent token
+  color. The literal web class list is in the React/Web Platform Note.
 - Trailing glyph: a `<span aria-hidden="true">↗</span>` rendered only when
   `glyph` is truthy (default).
 - Restyle path: `className` is `cn()`-merged last, so a consumer can override

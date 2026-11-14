@@ -2,11 +2,11 @@
 id: 74ba9dde-4963-42cb-aa03-bf1ee4dcc794
 title: "Avatar Engine Runtime"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,8 +21,12 @@ tags:
   - avatar
   - engine
   - animation
-depends-on: []
-related: []
+depends-on:
+  - 471eb7b8-6821-4fd3-ab89-022c56757421
+  - 81f8c0bd-ce00-43b3-816e-b63e96baeacc
+related:
+  - bd101720-9fd3-4978-a0aa-7671e301e64b
+  - d3e1f776-8ad1-431f-9485-386ac285a039
 references: []
 approved-by: ""
 approved-date: ""
@@ -59,7 +63,7 @@ one clock, in one order, per frame: `scheduler.tick(clock)`, then
 events), then `tweens.tick(clock)`, then reads the channels to render. That
 ordering is load-bearing — each swap is documented in source as "its own
 frame-late bug" — but it lives in `Engine`, not in these three files; this
-recipe specifies the contract each of the three offers to whatever drives it,
+ingredient specifies the contract each of the three offers to whatever drives it,
 not the driving order itself.
 
 ## Behavioral Requirements
@@ -119,9 +123,10 @@ not the driving order itself.
   they are delivered as one call every interval or as a single catch-up after
   a long gap.
 - **scheduler-catch-up-guard**: Within one `tick(now)` call, a repeating
-  registration's catch-up loop MUST NOT fire more than 1000 times; on
-  exceeding that bound the Scheduler MUST stop firing for that registration
-  in this tick and MUST set its next due time to `now + interval`, so an
+  registration's catch-up loop MUST stop after the 1001st fire (the
+  check runs after each fire, so one `tick` delivers at most 1001 callbacks
+  for one registration); the Scheduler MUST then stop firing for that
+  registration in this tick and MUST set its next due time to `now + interval`, so an
   absurd interval or a clock that jumped hours cannot hang the calling frame.
 - **scheduler-one-shot-fires-once**: `Scheduler.once(at:run:)`'s callback MUST
   run exactly once and the registration MUST be removed immediately upon
@@ -173,11 +178,11 @@ not the driving order itself.
   lerp, because a componentwise lerp between two saturated colors visibly
   dips through grey at the midpoint while the OKLab path does not.
 - **tween-color-fallback-on-unmixable-pair**: If the perceptual color mix
-  operation fails for a pair that passed the hex-shape check (e.g., a
-  malformed value that slips past the ASCII-hex guard), `Tweens` MUST hold
-  `from` until progress reaches `1` and then snap directly to `to`, the same
-  answer given for any unrecognized/uninterpolatable pair — it MUST NOT
-  propagate the failure out of the tween loop.
+  operation throws for a pair that passed the hex-shape check, `Tweens` MUST
+  write `to` for that sample instead of propagating the failure out of the
+  tween loop. A value that fails the shape check (fullwidth digits, a 4- or
+  5-digit body) never reaches the mix: it is an unrecognized pair and holds
+  `from` until progress reaches `1` (**tween-unrecognized-pair-snap**).
 - **tween-path-morph-same-kind**: When both `from` and `to` are recognized
   path strings and their parsed "kind" (the joined command-letter sequence,
   e.g. `"MLL"` or `"MCCCCZ"`) is identical, `Tweens` MUST morph anchor-by-anchor
@@ -185,13 +190,17 @@ not the driving order itself.
 - **tween-path-snap-cross-kind**: When both `from` and `to` are recognized
   path strings but their parsed kinds differ (no anchor-for-anchor mapping is
   possible between different command sequences), `Tweens` MUST NOT attempt a
-  morph and MUST instead treat the pair as uninterpolatable: hold `from` until
-  progress reaches `1`, then snap to `to`.
+  morph and MUST instead snap: `to` is written verbatim at the first sample
+  (the first `tick` at or after the start time, or an earlier `settle`), not
+  held until progress reaches `1`.
 - **tween-unrecognized-pair-snap**: For any `from`/`to` pair that is not
-  both-numbers, both-recognized-colors, or both-same-kind-paths (including a
-  color paired with a path, two differently-shaped strings, or any other
-  mixed pairing), `Tweens` MUST hold `from` for the full duration and MUST
-  write `to` verbatim only once progress reaches `1`.
+  both-numbers, both-recognized-colors, or both-paths (including a color
+  paired with a path, a number paired with a string, two differently-shaped
+  strings, or a hex value that fails the ASCII 3-or-6-digit check), `Tweens`
+  MUST hold `from` for the full duration and MUST write `to` verbatim only
+  once progress reaches `1`. Two path strings are never in this case: they
+  morph (**tween-path-morph-same-kind**) or snap at once
+  (**tween-path-snap-cross-kind**).
 - **tween-snap-channel-forces-zero-duration**: If `TweenSpec.channel` is a
   channel `snaps()` classifies as snapping (see **snap-channel-classification**),
   `Tweens.add` MUST use an effective duration of `0` regardless of
@@ -201,10 +210,10 @@ not the driving order itself.
   AND `TweenSpec.delay` is `0`, `Tweens.add` MUST write the (respond-mapped)
   `to` value to the channel synchronously, at call time — before any `tick`
   call — and MUST NOT create a live tween entry for it (`Tweens.active` does
-  not increase). A same-kind path family snap MUST write `to` verbatim,
-  never routed through the morph/lerp path, because two same-instant
-  crossings (an authored snap immediately superseded by an authored morph)
-  must both resolve without one masking the other.
+  not increase). The snap's `to` MUST be written
+  verbatim, never routed through the morph/lerp path, so a tween added next
+  at the same instant with no explicit `from` reads that written value as its
+  starting value.
 - **tween-delay-defers-visible-start**: When `TweenSpec.delay` is greater than
   `0`, neither a zero-duration snap's target nor an interpolated tween's first
   sample MUST become visible before `tick(now)` is called with `now >=` (the
@@ -259,13 +268,13 @@ not the driving order itself.
   `back.out(s)` overshoot values) MUST cause resolving that tween's easing
   function to fail rather than silently substitute a default curve. On the
   Apple platform this happens at `Tweens.add` time and crashes the process
-  (a forced unwrap on `Ease.resolve`, deliberate: the config loader is
+  (a deliberate trap: the config loader is
   documented as validating every reachable ease name before a `TweenSpec`
   ever reaches `Tweens`, so an unknown name here is a bug, not bad data). On
   the web platform, `resolveEase` is invoked from inside `write`, which is
   called from every `tick`/`settle` that touches the tween — so an unknown
   name throws an uncaught `Error` the first time the tween is sampled, not at
-  `add` time, and (per source comment) nothing in the render loop (`useAvatarEngine`'s
+  `add` time, and nothing in the render loop (`useAvatarEngine`'s
   `requestAnimationFrame` callback) catches it.
 - **tween-default-ease-and-delay**: When `TweenSpec.ease` is omitted, `Tweens`
   MUST use `"power3.out"`; when `TweenSpec.delay` is omitted, `Tweens` MUST
@@ -300,7 +309,7 @@ for an assistive technology to describe.
 | aer-004 | scheduler-catch-up-fires-every-missed-interval | Same `every(0.1, first: 0.1)` registration ticked to `t=2` at a `1/60` step vs. a `1/240` step | Both step sizes produce the identical fire count — `SchedulerTests.testIsFrameRateIndependent` / `scheduler.test.ts "is frame-rate independent"` |
 | aer-005 | scheduler-one-shot-fires-once | `once(at: 0.5)`; `tick(1)` then `tick(2)`; then `cancel(id)` | Callback runs exactly once; the later `cancel` on the already-spent id does not throw — `SchedulerTests.testRunsAOneShotExactlyOnceAndForgetsIt` / `scheduler.test.ts "runs a one-shot exactly once and forgets it"` |
 | aer-006 | scheduler-one-shot-stale-clamp (Apple only) | `once(at: 0.5)`; `tick(1)` (half a second late) | Callback receives `0.5` (its own deadline), not `1` (`now`) — `SchedulerTests.testHandsASlightlyLateOneShotItsOwnDeadline`. No equivalent assertion exists in `scheduler.test.ts`. |
-| aer-007 | scheduler-catch-up-guard, scheduler-one-shot-stale-clamp | A one-shot chain that re-arms itself every `+5`s, armed at `t=5`; `tick(5)` then a single `tick(3600)` (an hour with no frames) | Only 2 fires total (not 719); the second fire lands within `[3599, 3600]`; a subsequent `tick(3600 + 1/60)` produces no further fire — `SchedulerTests.testResumesAOneShotChainAfterAStoppedLoopInsteadOfReplayingItsBacklog`. TypeScript's `createScheduler` has no `staleAfter` clamp in these runtime files, so the same scenario in `scheduler.ts` would hand each re-arm its true (unclamped) deadline and is untested by `scheduler.test.ts`. |
+| aer-007 | scheduler-one-shot-stale-clamp | A one-shot chain that re-arms itself every `+5`s, armed at `t=5`; `tick(5)` then a single `tick(3600)` (an hour with no frames) | Only 2 fires total (not 719); the second fire lands within `[3599, 3600]`; a subsequent `tick(3600 + 1/60)` produces no further fire — `SchedulerTests.testResumesAOneShotChainAfterAStoppedLoopInsteadOfReplayingItsBacklog`. TypeScript's `createScheduler` has no `staleAfter` clamp in these runtime files, so the same scenario in `scheduler.ts` would hand each re-arm its true (unclamped) deadline and is untested by `scheduler.test.ts`. |
 | aer-008 | scheduler-cancel-removes-and-tolerates-unknown-ids | `every(0.1, first: 0.1)`; `tick(0.25)`; `cancel(id)`; `tick(5)` | 2 fires total, none after cancel — `SchedulerTests.testCancelsARepeater` / `scheduler.test.ts "cancels a repeater"` |
 | aer-009 | tween-numeric-interpolation, tween-tick-progress-and-completion | `Channels(["eye.scaleY": 1])`; `add({channel: "eye.scaleY", to: 0.1, duration: 0.4, ease: "none"}, now: 10)`; ticks at `10`, `10.2`, `10.4` | Values `1`, `0.55`, `0.1`; `active == 0` after the last tick — `TweenTests.testInterpolatesANumberOverAbsoluteTime` / `tween.test.ts "interpolates a number over absolute time"` |
 | aer-010 | tween-snap-channel-forces-zero-duration | `Channels(["body.pivotY": 50])`; `add({channel: "body.pivotY", to: 74, duration: 0.9}, now: 0)` | `body.pivotY` reads `74` immediately after `add`, before any `tick`; `active == 0` — `TweenTests.testSnapsAPivotToItsTargetAtAddTimeHoweverLongADurationItIsGiven` (Apple only; no equivalent test in `tween.test.ts`) |
@@ -309,14 +318,23 @@ for an assistive technology to describe.
 | aer-013 | tween-add-cancels-existing-channel-tween, tween-add-settles-outgoing-tween | `add({channel:"x", to:100, duration:1, ease:"none"}, now:0)`; `tick(0.5)`; `add({channel:"x", to:0, duration:1, ease:"none"}, now:0.5)`; `tick(1)` | `active == 1` right after the second `add`; `x` reads `25` at `t=1` (halfway back from the settled `50`, not from `100`) — `TweenTests.testLetsANewerTweenCancelTheOlderOneOnTheSameChannel` / `tween.test.ts "lets a newer tween cancel the older one on the same channel"` |
 | aer-014 | tween-color-interpolation, tween-path-morph-same-kind | Colors `#00ff41` → `#ff2d2d` and paths `M187,233L200,246L213,233` → `M189,235L200,235L211,235`, both `duration: 1, ease: "none"`; `tick(1)` | Both channels read their `to` value exactly at `t=1` — `TweenTests.testInterpolatesColoursAndPaths` / `tween.test.ts "interpolates colours and paths"` |
 | aer-015 | tween-respond-maps-endpoints-once, tween-from-explicit-through-respond | A `respond` that multiplies positive numbers by `0.72`; `add({channel: "antennaLeft.bend", to: -10.64, duration: 0}, now: 0)`, then `add({..., to: 10.64, duration: 1, ease: "none"}, now: 0)`; `tick(0.5)` and `tick(1)` | Immediate write reads `-10.64` (negative, so `respond` is a no-op here); at `t=0.5` reads `(-10.64 + 10.64*0.72)/2`; at `t=1` reads `10.64*0.72` — the endpoint is mapped once, not the live interpolated value each frame — `TweenTests.testMapsAnEndpointThroughRespondAndThenLerpsInTheMappedSpace` / `tween.test.ts "maps an endpoint through \`respond\` and then lerps in the mapped space"` |
-| aer-016 | tween-color-fallback-on-unmixable-pair | `body.ink` set to an unmixable value (`"#\u{FF10}0ff41"` fullwidth-digit, or `"#abcd"` 4-digit body); `add({channel:"body.ink", to:"#ff2d2d", duration:1, ease:"none"}, now:0)`; ticks at `0.5` and `1` | Value holds the original (unmixable) string at `t=0.5`, then snaps to `#ff2d2d` at `t=1` — `TweenTests.testSnapsAColourPairParseHexCannotReadInsteadOfTrapping` / `tween.test.ts "snaps a colour pair \`parseHex\` cannot read instead of throwing out of the frame loop"` |
+| aer-016 | tween-recognized-value-kinds, tween-unrecognized-pair-snap | `body.ink` set to an unmixable value (`"#\u{FF10}0ff41"` fullwidth-digit, or `"#abcd"` 4-digit body); `add({channel:"body.ink", to:"#ff2d2d", duration:1, ease:"none"}, now:0)`; ticks at `0.5` and `1` | Value holds the original (unmixable) string at `t=0.5`, then snaps to `#ff2d2d` at `t=1` — `TweenTests.testSnapsAColourPairParseHexCannotReadInsteadOfTrapping` / `tween.test.ts "snaps a colour pair \`parseHex\` cannot read instead of throwing out of the frame loop"` |
 | aer-017 | tween-zero-duration-immediate-apply | `Channels(["mouth.family": "mouth"])`; `add({channel:"mouth.family", to:"mouthO", duration:0}, now:3)` | `mouth.family` reads `"mouthO"` before any `tick` runs; `active == 0`; a subsequent `tick(3)` leaves it unchanged — `TweenTests.testAppliesAZeroDurationTweenAtAddTimeBeforeAnyTick` / `tween.test.ts "applies a zero-duration tween at add time, before any tick"` |
 | aer-018 | tween-zero-duration-immediate-apply, tween-path-morph-same-kind | Same-instant pair on `mouth.shape`: a duration-0 snap to family `mouthO`, immediately followed (same `add` call sequence, same `now`) by a `duration: 0.85` morph to a different `mouthO`-family path | The snap's target is written verbatim, then the morph interpolates from it (the snap is not lost, and the morph is a real anchor-to-anchor lerp, not a snap) — `TweenTests.testLetsASameInstantFamilySnapSurviveTheMorphThatSupersedesIt` / `tween.test.ts "lets a same-instant family snap survive the morph that supersedes it"` |
 | aer-019 | tween-path-snap-cross-kind | `mouth.shape` set to an `"MCCCCZ"`-kind path; `add` a `duration:0.3` tween to an `"MLL"`-kind path; ticks at `0.1` and `0.3`; then `add` back to the original kind | The target path is written verbatim on the FIRST tick after `add` (not held to the end of the duration), and the reverse crossing behaves the same way — `TweenTests.testSnapsAPathAcrossShapeFamiliesInsteadOfTrapping` / `tween.test.ts "snaps a path across shape families instead of throwing"` |
 | aer-020 | tween-add-settles-outgoing-tween, tween-tick-progress-and-completion | `add({channel:"x", to:10, duration:1, ease:"none"}, now:0)`; `tick(0.5)`; `add({channel:"x", to:0, duration:1, ease:"none"}, now:0.75)` (an off-tick handoff instant) | `x` reads `7.5` immediately after the second `add` (settled to `0.75`, not left at the `0.5`-tick value of `5`); `tick(1.25)` reads `3.75` (halfway back from `7.5`) — `TweenTests.testSettlesTheTweenItReplacesAtTheInstantOfTheHandoff` / `tween.test.ts "settles the tween it replaces at the instant of the handoff"` |
 | aer-021 | tween-add-settles-outgoing-tween | The same interrupted-handoff animation (ease `power2.in` then `none`, interrupted at `t=0.41`) run to completion at 60fps, 240fps, and 1000fps ticking granularities | All three frame rates land on the identical final value (`≈0.5582601`) — `TweenTests.testHandsOffToTheSameValueAt60And240And1000fps`. No equivalent multi-rate handoff test exists in `tween.test.ts`. |
 | aer-022 | tween-ease-resolution-fails-closed | `TweenSpec.ease` set to a name outside the fixed 24-name vocabulary | Apple: `Tweens.add` crashes (forced unwrap traps). Web: no error at `add`; `resolveEase` throws the first time `write` samples the tween (inside `tick`/`settle`), uncaught by the render loop. Traced to `Ease.swift`'s `resolve(_:) throws` used via `try!` in `Tweens.add`, and `ease.ts`'s `resolveEase` used inside `tween.ts`'s `write`; neither `EaseTests`/`Math`-level test nor `tween.test.ts` exercises an unknown name reaching `Tweens`/`createTweens` directly (only `MathTests`/`ease.test.ts` test `resolveEase`/`Ease.resolve` in isolation). |
-
+| aer-023 | scheduler-catch-up-guard | `every(1, first: 1)` with a counting callback; `tick(100000)` | The callback runs 1001 times in that one call (the guard check follows each fire); the next due time is then `100001`, so `tick(100001)` fires it once more. No existing scheduler test reaches the guard |
+| aer-024 | snap-channel-classification | `snaps("body.pivotX")`, `snaps("body.pivotY")`, `snaps("a.b.pivotX")`, `snaps("pivotX")`, `snaps("body.pivotXY")` | `true`, `true`, `true`, `false` (no `.`), `false` (suffix is not exactly `pivotX`/`pivotY`) |
+| aer-025 | scheduler-tick-order-and-snapshot | Two one-shots `A` (id 1) and `B` (id 2) both due at `1`; `A`'s callback cancels `B` and registers a third one-shot `C` due at `1`; `tick(1)` then `tick(1)` again | First tick runs `A` only (ids ascend, `B` is skipped once cancelled, `C` is not in the snapshot); the second tick runs `C` |
+| aer-026 | scheduler-mid-run-cancellation | `every(1, first: 1)` whose callback cancels its own id on its second fire; `tick(10)` | The callback runs exactly 2 times |
+| aer-027 | scheduler-registers-repeating | `every(0.5, run:)` with no `first`; `tick(0.4)` then `tick(0.5)` | No fire at `0.4`; one fire at `0.5` (the first due time is one full interval, not now) |
+| aer-028 | tween-cancel-by-channel | `Channels(["x": 0])`; `add({channel:"x", to:10, duration:1, ease:"none"}, now:0)`; `cancel("x")`; `cancel("y")`; `tick(1)` | `active == 0` after `cancel("x")`; `cancel("y")` (no live tween) does nothing; `x` still reads `0` after `tick(1)` |
+| aer-029 | tween-tick-ignores-future-start, tween-from-resolves-from-channel | `Channels(["x": 5])`; `add({channel:"x", to:10, duration:1, delay:2, ease:"none"}, now:0)`; `tick(1)`; set `x` to `7`; `tick(2)`; set `x` to `99`; `tick(2.5)` | `x` stays `5` at `tick(1)` (the future-start tween writes nothing); the implicit `from` resolves to `7` at the first write; at `2.5` `x` reads `8.5`, because the resolved `from` is cached and the later `99` is ignored |
+| aer-030 | tween-from-resolves-from-channel | `Channels([:])`; `add({channel:"y", to:10, duration:1, ease:"none"}, now:0)`; `tick(0.5)` | `y` reads `10`: with no stored value the starting value is the (respond-mapped) `to`, so the tween is live but shows no change |
+| aer-031 | tween-default-ease-and-delay | `Channels(["x": 0])`; `add({channel:"x", to:1, duration:1}, now:0)` (no `ease`, no `delay`); `tick(0.5)` | `x` reads `0.9375` (`power3.out` at `0.5`), and the tween started at `now` because the delay defaults to `0` |
+| aer-032 | channel-value-json-round-trip (Apple only) | Encode `ChannelValue.number(3)` and `.text("a")`; decode `3`, `"a"` and `true` | Encodes to bare `3` and `"a"`; decodes to `.number(3)` and `.text("a")`; decoding `true` fails with "a channel value must be a number or a string". No equivalent runtime decode exists on the web |
 ## Edge Cases
 
 - **Never-set channel as a tween source (null/empty input).** A tween with no
@@ -324,7 +342,7 @@ for an assistive technology to describe.
   its starting value to the (respond-mapped) `to` value, per
   **tween-from-resolves-from-channel** — the tween is live and completes
   normally, but produces no visible change because it starts equal to its
-  target. MUST.
+  target.
 - **Zero or negative duration below the snap-channel path.** A duration of
   exactly `0` with `delay: 0` takes the documented immediate-apply path
   (**tween-zero-duration-immediate-apply**). Source does not special-case a
@@ -334,14 +352,14 @@ for an assistive technology to describe.
   defined (no crash, no divide-by-zero), just not called out anywhere in
   source as an intentional input. SHOULD (callers SHOULD NOT rely on a
   negative duration; it is unvalidated, tolerated input, not a documented
-  feature).
+  feature.
 - **Boundary: interval `<= 0` passed to `every`.** As stated in
   **scheduler-one-shot-classification**, `every(0, ...)` and `every(-1, ...)`
   both behave exactly like `once` — one fire, then removal — because `tick`
   branches on `interval <= 0`, not on which factory method was called. MUST.
 - **Boundary: a channel name with no `"."`.** `snaps("pivotX")` (no dot) MUST
   return `false` — the snap rule requires a `"<nodeId>.<prop>"` shape; a bare
-  property name never snaps regardless of its text. MUST.
+  property name never snaps regardless of its text.
 - **Concurrent access.** None of `Channels`, `Scheduler`, or `Tweens`
   synchronizes its mutable state internally — no lock, no actor isolation,
   and (on Apple) none of the three classes conforms to `Sendable`. The
@@ -351,8 +369,7 @@ for an assistive technology to describe.
   `tweens`/`channels`), and `tweens.tick` synchronously, in that order, from
   whatever single caller drives `Engine.tick`. Calling any of these types'
   methods from more than one thread/queue/task concurrently is undefined
-  behavior the source does not guard against. MUST NOT (concurrent,
-  unsynchronized access).
+  behavior the source does not guard against, so callers MUST NOT do it.
 - **Error states: unresolvable ease name.** Covered normatively under
   **tween-ease-resolution-fails-closed** — this is documented, deliberate,
   fail-fast behavior (the config loader is stated to validate every ease name
@@ -361,9 +378,8 @@ for an assistive technology to describe.
   reaches its path branch only after `isPath` confirms both strings start
   with `M`/`m`; it does not otherwise validate path grammar before parsing.
   A malformed value that passes that shape check but fails `parsePath`'s
-  grammar (e.g., a truncated command) reaches `try!` (Apple, traps the
-  process) or an un-try/catch-wrapped `parsePath` call (web, throws
-  uncaught) — the same "not reachable in practice" reasoning as the ease
+  grammar (e.g., a truncated command) traps the Apple process or throws
+  uncaught on the web — the same "not reachable in practice" reasoning as the ease
   case (comments cite upstream loader invariants — `poseKind`, per-timeline
   family checks — that are not part of these three files). Given the sources
   provided for THIS component, `Tweens`/`createTweens` performs no grammar
@@ -502,8 +518,8 @@ appears anywhere in `Channels.swift`/`channels.ts`, `Scheduler.swift`/
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AvatarAnimationEngine/Sources/Runtime/` | unverified |
-| web | `packages/web/packages/avatar-engine/src/runtime/` | unverified |
+| apple | `packages/apple/AvatarAnimationEngine/Sources/Runtime/` | confirmed (1.0.2) |
+| web | `packages/web/packages/avatar-engine/src/runtime/` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -512,8 +528,7 @@ appears anywhere in `Channels.swift`/`channels.ts`, `Scheduler.swift`/
   implementation (`scheduler.ts`) hands the callback the true, unclamped due
   time in every case, and `scheduler.test.ts` has no test exercising this
   path.
-  **Rationale**: Documented in `Scheduler.swift`'s own comments as
-  deliberately closing a real failure mode — a chain of self-re-arming
+  **Rationale**: It deliberately closes a real failure mode — a chain of self-re-arming
   one-shots (any reflex that re-arms itself each time it fires) recovering
   from a long-stopped frame loop would otherwise replay its entire backlog at
   one link per frame, each walking a live channel by one step, which reads as
@@ -543,10 +558,8 @@ appears anywhere in `Channels.swift`/`channels.ts`, `Scheduler.swift`/
   either seeded directly or written there by a previous, already-mapped
   tween); mapping it a second time would double-apply `respond`. An explicit
   `from` is caller-authored data in the same "logical" space as `to`, so it
-  needs the same one-time mapping `to` gets. This asymmetry is not called out
-  in source comments as a rule the way rules 1-5 are numbered elsewhere in
-  `Tweens.swift`, but it is directly observable from where each call site
-  does or omits the `respond`/`.map { respond(...) }` wrapper.
+  needs the same one-time mapping `to` gets. The asymmetry is observable from
+  where `add` does or omits the `respond` mapping.
   **Approved**: pending
 - **Decision**: Neither `Tweens`/`createTweens` nor `Channels`/`createChannels`
   performs any internal synchronization, and on Apple neither class conforms
@@ -555,7 +568,7 @@ appears anywhere in `Channels.swift`/`channels.ts`, `Scheduler.swift`/
   the arbiter (which may call into `tweens`), and `tweens.tick` synchronously
   from a single call to `Engine.tick`, itself driven by one render-loop
   caller; there is no concurrent-access scenario in the shipped usage this
-  recipe's sources cover. A port that drives this runtime from more than one
+  ingredient's sources cover. A port that drives this runtime from more than one
   execution context (e.g., a background thread updating channels while a
   render thread ticks tweens) MUST add its own synchronization — nothing in
   these three files provides it.
@@ -591,5 +604,6 @@ and the higher-level `EngineTests.swift`.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Corrected the cross-kind path snap, color-mix fallback and scheduler guard requirements to match source, added eleven vectors for previously uncovered requirements, remapped aer-007 and aer-016, reworded edge-case keywords and source-detail wording, and linked depends-on and related. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Added `macos`/`ios` to the frontmatter `platforms` list. |
 | 1.0.0 | 2026-09-23 | Mike Fullerton | Initial creation |

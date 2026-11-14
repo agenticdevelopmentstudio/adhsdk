@@ -36,5 +36,6 @@
 **Approved**: pending
 
 **Decision**: `.failure` carries no error code, so the client recognizes an old service by the text `bad request`, held in `MailClient.badRequest`.
-**Rationale**: Adding a code would be another field an older service does not send. The client and `MailIntegrationService` agree on the text by convention; no test ties `MailClient.badRequest` to the service's own constant, and vector 028 shows the service answering that text.
+**Rationale**: Adding a code would be another field an older service does not send. The constant is shared: `MailIntegrationService` answers an undecodable request with `MailClient.badRequest` itself (which is why the constant is `public`), and vector 028 shows the service answering that text.
 **Approved**: pending
+

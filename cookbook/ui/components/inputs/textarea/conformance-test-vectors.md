@@ -18,6 +18,8 @@
 | textarea-015 | text-color | Render component, measure computed style | Text color matches the `apt-text` token value |
 | textarea-016 | placeholder-styling | Render with `placeholder="Enter text"` and no value | Placeholder text renders in the `apt-text-dim` token color |
 | textarea-017 | outline-removal | Focus the textarea | No native browser outline is rendered; only the component's own border/ring focus indicator is visible |
-| textarea-018 | color-transition | Toggle `disabled`, `aria-invalid`, or focus state | The border/ring color change is animated via a CSS transition, not an instant snap |
+| textarea-018 | color-transition | Toggle `aria-invalid` or focus state | The border color change is animated via a CSS transition, not an instant snap; the ring and the disabled opacity change apply instantly |
 | textarea-019 | custom-classname | `className="w-1/2"` (conflicts with the default `w-full`) | Rendered class list contains a single width utility (`w-1/2`); `tailwind-merge` removes the conflicting default rather than both classes coexisting |
-
+| textarea-020 | autofill-suppression | `autoComplete=" OFF "` | Same six suppression attributes as textarea-009 are present (value is trimmed and compared case-insensitively) |
+| textarea-021 | disabled-state | `disabled={true}`, call `.focus()` on the element | The element does not become `document.activeElement`, so the focus indicator never applies |
+| textarea-022 | invalid-state | `aria-invalid="true"`, not focused | Border and ring are already red at rest, without focus |

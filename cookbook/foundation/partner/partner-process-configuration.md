@@ -2,7 +2,7 @@
 id: c77c4cfb-e9be-4339-b40d-3f7abc6a4543
 title: "Partner Process Configuration"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -10,7 +10,7 @@ modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "How the partner's claude process is launched: executable, session, model, permission mode, tools and paths, and the exact argument list they produce."
+summary: "Launch configuration for the partner's claude process and the exact argument list it produces."
 platforms:
   - swift
   - macos
@@ -20,7 +20,8 @@ tags:
   - process
   - claude-cli
 depends-on: []
-related: []
+related:
+  - d2213cbb-1a6e-452e-98f0-acd2007c8430
 references: []
 approved-by: ""
 approved-date: ""
@@ -36,7 +37,6 @@ approved-date: ""
 
 - **value-semantics**: `PartnerProcessConfiguration` MUST be a `Sendable` and `Equatable` struct with the settable fields `executable`, `sessionID` (a UUID), `resume`, `model`, `permissionMode`, `allowedTools` (strings), `mcpConfigPath`, `systemPromptPath` and `workingDirectory`, all set by its initializer.
 - **fixed-prefix**: `arguments` MUST begin with `-p`, `--verbose`, `--input-format`, `stream-json`, `--output-format`, `stream-json`, `--replay-user-messages`, in that order.
-- **verbose-required**: `arguments` MUST always include `--verbose`; the source comment states `-p` with stream-json output requires it.
 - **session-flag**: After the fixed prefix, `arguments` MUST contain `--session-id` when `resume` is false and `--resume` when `resume` is true, never both and never neither, followed by the session ID.
 - **session-id-lowercase**: The session ID in `arguments` MUST be the UUID string in lowercase.
 - **permission-mode**: `arguments` MUST contain `--permission-mode` followed by `permissionMode` unchanged and unconditionally, including when it is empty.
@@ -44,7 +44,7 @@ approved-date: ""
 - **system-prompt**: `arguments` MUST contain `--append-system-prompt-file` followed by `systemPromptPath`.
 - **optional-model**: `arguments` MUST add `--model` followed by `model` only when `model` is not empty; an empty `model` MUST add neither element.
 - **optional-tools**: `arguments` MUST add `--allowedTools` followed by each entry of `allowedTools` as its own element only when `allowedTools` is not empty; an empty list MUST add neither.
-- **order**: The optional arguments MUST come after the required ones, the model option before the tools option.
+- **order**: The required groups MUST appear in this order after the session flag and ID: `--permission-mode` and its value, `--mcp-config` and its value, `--strict-mcp-config`, then `--append-system-prompt-file` and its value. The optional arguments MUST come after the required ones, the model option before the tools option.
 - **pure-computation**: `arguments` MUST be computed from the stored fields alone; it MUST NOT touch the file system, check that the executable or paths exist, or validate any value.
 - **working-directory-not-an-argument**: `workingDirectory` MUST NOT appear in `arguments`; it is the child's current directory, which `PartnerProcess` applies when it launches.
 
@@ -70,13 +70,15 @@ Not applicable — this is a value type that builds a command line, not a visual
 | partner-process-configuration-004 | order, session-id-lowercase, optional-tools | `executable` `/x/claude`, a session ID, `resume` true, `model` `opus`, `permissionMode` `dontAsk`, tools `a` and `b`, `mcpConfigPath` `/m.json`, `systemPromptPath` `/p.md`. | `arguments` equals exactly: `-p`, `--verbose`, `--input-format`, `stream-json`, `--output-format`, `stream-json`, `--replay-user-messages`, `--resume`, the lowercase session ID, `--permission-mode`, `dontAsk`, `--mcp-config`, `/m.json`, `--strict-mcp-config`, `--append-system-prompt-file`, `/p.md`, `--model`, `opus`, `--allowedTools`, `a`, `b` (test: argumentsAreExactlyOrdered). |
 | partner-process-configuration-005 | optional-tools, optional-model | `allowedTools` empty, `model` `opus`. | `arguments` has `--model` and `opus` and no `--allowedTools`. |
 | partner-process-configuration-006 | permission-mode | `permissionMode` empty. | `--permission-mode` is followed by an empty string element. |
-| partner-process-configuration-007 | working-directory-not-an-argument | `workingDirectory` `/w`. | No element of `arguments` equals `/w`. |
-| partner-process-configuration-008 | verbose-required | Any configuration. | `arguments` contains `--verbose` immediately after `-p`. |
+| partner-process-configuration-007 | working-directory-not-an-argument | `workingDirectory` `/work-sentinel`, with `mcpConfigPath` `/mcp-sentinel`, `systemPromptPath` `/prompt-sentinel` and `executable` `/exe-sentinel`. | No element of `arguments` equals `/work-sentinel` or `/exe-sentinel`; `/mcp-sentinel` and `/prompt-sentinel` each appear exactly once. |
+| partner-process-configuration-008 | fixed-prefix | Any configuration. | `arguments` contains `--verbose` immediately after `-p`. |
+| partner-process-configuration-009 | session-flag | `resume` false, then `resume` true, same session ID. | Each `arguments` has exactly one of `--session-id` and `--resume`, counted once, and never the other; the next element is the lowercase session ID. |
 
 ## Edge Cases
 
 - **Null / empty input**: An empty `model` and an empty `allowedTools` each drop their option (MUST). An empty `permissionMode`, `mcpConfigPath`, `systemPromptPath` or `executable` is passed through as an empty element or path; nothing rejects it (MUST NOT validate).
 - **Boundary values**: `allowedTools` of one entry gives one element after `--allowedTools`; every entry is a separate argument, so an entry containing spaces stays one element.
+- **Odd tool entries**: An `allowedTools` entry that is empty, or starts with `-` or `--`, is passed through unchanged as its own element, like every other value (MUST NOT validate); the type does not guard against the CLI reading it as a flag.
 - **Concurrent access**: The type is a `Sendable` value; a copy can be read from any thread or actor.
 - **Error states**: `arguments` cannot fail; a configuration naming a missing executable or file is only discovered when the process is launched, which is `PartnerProcess`'s concern.
 - **Offline / disconnected state**: Not applicable: the type performs no network or file access.
@@ -120,7 +122,7 @@ Not applicable: the source contains no analytics call.
 
 - **Data handled**: Paths, a session ID, a model name and tool names a caller passes in; no credential is held (the MCP token lives in the file at `mcpConfigPath`).
 - **Storage**: None; it persists nothing.
-- **Transmission**: None; the values are passed on the command line of a local process.
+- **Transmission**: None leaves the machine; the values are passed on the command line of a local process, so the session ID and file paths are visible to other processes on the machine (for example through `ps`).
 - **Retention**: None beyond the lifetime of the value the caller holds.
 
 ## Logging
@@ -139,7 +141,7 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcessConfiguration.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcessConfiguration.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -155,19 +157,23 @@ Not applicable: the source calls no logging API.
 **Approved**: pending
 
 **Decision**: `--verbose` is always set.
-**Rationale**: The source comment states that `-p` with stream-json output requires it.
+**Rationale**: The source comment states that `-p` with stream-json output requires it, so the fixed prefix always carries `--verbose` in second place.
 **Approved**: pending
 
+**Decision**: `permissionMode` and `model` are free strings, and an empty `permissionMode` is passed through as `--permission-mode` followed by an empty element.
+**Rationale**: The type only builds the argument list and must not validate (see pure-computation); which modes and model names the CLI accepts is the CLI's concern, so an empty mode is left for the CLI to reject when the process launches.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-`separation-of-concerns` passes because the type only describes a launch and builds the argument list; spawning the process belongs to `PartnerProcess` and the channel beneath it. `unit-test-coverage` passes because `PartnerProcessConfigurationTests` asserts the session and resume flags, the optional model, and the full exact ordering.
+`separation-of-concerns` passes because the type only describes a launch and builds the argument list; spawning the process belongs to `PartnerProcess` and the channel beneath it. `unit-test-coverage` is partial: `PartnerProcessConfigurationTests` asserts the session and resume flags, the optional model, and the full exact ordering, but no test covers an empty `permissionMode`, `workingDirectory` being left out of `arguments`, the empty `allowedTools` case or the `--verbose` position.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Marked test coverage partial, pinned the required argument order, added odd-tool and empty-permission-mode decisions, new vectors, an argv privacy note, a PartnerProcess link and a shorter summary. |

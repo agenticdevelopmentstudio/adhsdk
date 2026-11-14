@@ -2,11 +2,11 @@
 id: 240f8d48-45af-49ea-aebf-95d756d74707
 title: "SplitDivider"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -35,38 +35,38 @@ SplitDivider is a bare separator primitive that allows users to resize the space
 
 - **separator-role**: Component MUST render an element with `role="separator"`.
 - **ratio-change-callback**: Component MUST call `onRatioChange` with a new ratio when the user drags or operates keyboard/step controls.
-- **ratio-clamp**: Component MUST clamp the reported ratio to the range `[minRatio, maxRatio]` before calling `onRatioChange`.
+- **ratio-clamp**: Component MUST clamp the reported ratio to the range `[minRatio, maxRatio]` before calling `onRatioChange`. With inverted bounds (`minRatio > maxRatio`) every reported ratio is `maxRatio`.
 - **horizontal-orientation**: Component MUST support `orientation="horizontal"` (default), splitting vertical space with a horizontal line and responding to vertical drags and up/down arrow keys.
 - **vertical-orientation**: Component MUST support `orientation="vertical"`, splitting horizontal space with a vertical line and responding to horizontal drags and left/right arrow keys.
-- **ratio-prop**: Component MUST accept a `ratio` prop (0–1) and use it to set `aria-valuenow` as a percentage (rounded to nearest integer).
+- **ratio-prop**: Component MUST accept a `ratio` prop (0–1) and use it to set `aria-valuenow` as a percentage (rounded to nearest integer). The incoming `ratio` is not clamped: a `ratio` outside `[minRatio, maxRatio]` is reported as given, so `aria-valuenow` can fall outside `aria-valuemin`/`aria-valuemax`, and a key or step-button press starts from that raw value (the result is then clamped, as in **ratio-clamp**).
 - **minmax-ratio-props**: Component MUST accept `minRatio` (default 0.2) and `maxRatio` (default 0.8) props and expose them as `aria-valuemin` and `aria-valuemax` (as percentages).
 - **container-ref**: Component MUST accept a `containerRef` prop (React.RefObject) pointing to the layout container and use it to measure pointer drag offsets.
-- **drag-resize**: Component MUST support pointer drag to resize; on `pointerdown`, capture the pointer; on `pointermove`, calculate the new ratio as the pointer coordinate minus the container's leading edge (via `getBoundingClientRect`), divided by the container's extent; on `pointerup` or `pointercancel`, release capture and end the drag.
+- **drag-resize**: Component MUST support pointer drag to resize; on `pointerdown`, capture the pointer; on `pointermove`, calculate the new ratio as the pointer coordinate minus the container's leading edge (via `getBoundingClientRect`), divided by the container's extent; on `pointerup`, release capture and end the drag; on `pointercancel` or `lostpointercapture`, end the drag (capture is already gone, so nothing is released).
 - **drag-end-on-release**: Component MUST end the drag if the primary pointer button is released mid-drag (checked via `(event.buttons & 1) === 0`).
-- **step-button-pointerdown-guard**: A `pointerdown` on a step button MUST NOT start a drag on the separator; the buttons are siblings of the `role="separator"` element, outside its pointer-capture area.
+- **step-button-pointerdown-guard**: A `pointerdown` on a step button MUST NOT start a drag on the separator; the buttons are siblings of the `role="separator"` element, outside its pointer-capture area. A step button pressed by a different pointer while a drag is in progress MUST apply its one `step` on click, independent of that drag.
 - **zero-extent-guard**: Component MUST not apply a drag resize if the container extent (height for horizontal, width for vertical) is zero.
 - **keyboard-shrink**: Component MUST decrement the ratio by `step` (default 0.03) on the shrink arrow (up for horizontal, left for vertical) and call `onRatioChange`.
 - **keyboard-grow**: Component MUST increment the ratio by `step` on the grow arrow (down for horizontal, right for vertical) and call `onRatioChange`.
 - **home-key**: Component MUST set the ratio to `minRatio` on Home key press.
 - **end-key**: Component MUST set the ratio to `maxRatio` on End key press.
 - **keyboard-default-prevention**: Component MUST call `preventDefault()` for every handled key (shrink/grow arrows, Home, End) so the page does not scroll while the separator is operated via keyboard.
-- **visual-line**: Component MUST render a thin visual divider line (3px) centered in the 24px grab row/column, colored with `apt-border` and changing to `apt-border-strong` on hover and focus.
-- **step-buttons**: Component MUST render two step buttons (24px × 24px, fully contained within the 24px grab row/column) for incrementing and decrementing the ratio, with aria-labels describing the resize direction.
+- **visual-line**: Component MUST render the thin visual divider line centered in the grab row/column, with the thickness and colors given in `#appearance/visual-line`, `#appearance/line-hover-state` and `#appearance/line-focus-state`.
+- **step-buttons**: Component MUST render two step buttons (sized per `#appearance/step-button-size`, fully contained within the grab row/column) for incrementing and decrementing the ratio, with aria-labels describing the resize direction.
 - **step-button-mapping**: Component MUST render the two step buttons in a fixed order — a shrink button (decrements the ratio by `step` on click) followed by a grow button (increments the ratio by `step` on click) — each showing a directional glyph (▲/▼ for horizontal, shrink/grow respectively; ◀/▶ for vertical, shrink/grow respectively), positioned together near the trailing end of the grab strip (right edge for horizontal, bottom edge for vertical).
 - **grab-cursor**: Component MUST apply `cursor-row-resize` for horizontal orientation and `cursor-col-resize` for vertical orientation.
-- **grab-area-size**: Component MUST size the root row/column to 24px width (vertical) or height (horizontal) and full length on the opposite axis.
+- **grab-area-size**: Component MUST size the root row/column as given in `#appearance/width-height`.
 - **grab-area-focusable**: Component MUST set `tabIndex={0}` on the separator to make it keyboard-operable.
 - **default-label**: Component MUST set `aria-label` to "Resize split" by default (overridable via the `label` prop).
-- **step-button-labels**: Component MUST accept `growBottomLabel` and `growTopLabel` props for accessible step button labels; if not provided, MUST default to labels like "Grow bottom pane" (horizontal) or "Grow left pane" (vertical).
-- **focus-ring**: Component MUST show a focus-visible ring (2px, `apt-gold/40`) when the separator receives keyboard focus, not on pointer focus.
-- **classname-prop**: Component MUST accept a `className` prop for additional CSS classes on the root element.
-- **touch-none**: Component MUST apply `touch-none` CSS class to prevent the default touch-drag behavior and allow the pointer handler to control resize.
-- **select-none**: Component MUST apply `select-none` CSS class to prevent text selection during drag.
+- **step-button-labels**: Component MUST accept `growBottomLabel` and `growTopLabel` props for accessible step button labels. `growBottomLabel` labels the shrink button (▲ horizontal, ◀ vertical) and defaults to "Grow bottom pane" (horizontal) or "Grow right pane" (vertical). `growTopLabel` labels the grow button (▼ horizontal, ▶ vertical) and defaults to "Grow top pane" (horizontal) or "Grow left pane" (vertical). The prop names are fixed by the top/bottom case and keep the same meaning in vertical orientation.
+- **focus-ring**: Component MUST show the focus-visible ring given in `#appearance/focus-ring` when the separator receives keyboard focus, not on pointer focus.
+- **classname-prop**: Component MUST accept a `className` prop for additional CSS classes on the root element (the outer row/column, not the separator).
+- **touch-none**: Component MUST apply `touch-none` CSS class to the `role="separator"` element to prevent the default touch-drag behavior and allow the pointer handler to control resize.
+- **select-none**: Component MUST apply `select-none` CSS class to the `role="separator"` element to prevent text selection during drag.
 
 ## Appearance
 
 - **Width/Height**: 24px (6 units with `h-6` / `w-6` in Tailwind), full length on the opposite axis (full width for horizontal, full height for vertical).
-- **Visual line**: 3px wide (horizontal) or 3px tall (vertical), `apt-border` color, centered in the 24px grab area.
+- **Visual line**: 3px thick (3px tall when horizontal, 3px wide when vertical), full length of the grab area, `apt-border` color, centered in the 24px grab area.
 - **Line hover state**: `apt-border-strong` color on hover.
 - **Line focus state**: `apt-border-strong` color on focus.
 - **Focus ring**: 2px solid ring, color `apt-gold/40`, visible only on keyboard focus (`:focus-visible`).
@@ -76,7 +76,7 @@ SplitDivider is a bare separator primitive that allows users to resize the space
 - **Corner radius**: 4px (`rounded-sm`) on the separator; 4px on step buttons.
 - **Cursor**: `cursor-row-resize` for horizontal, `cursor-col-resize` for vertical.
 - **Background**: Transparent (no explicit background color set).
-
+- **Structure**: The root row/column (receives `className`, the 24px size and `relative flex shrink-0`) contains two children. The first is the `role="separator"` element (receives all ARIA attributes, `tabIndex`, the pointer and key handlers, `touch-none`, `select-none`, the cursor class and the focus ring), which in turn contains the decorative visual line. The second is a sibling button group, absolutely positioned and `pointer-events-none`, holding the two step buttons (`pointer-events-auto`); the buttons are not inside the separator.
 ## States
 
 | State | Appearance change |
@@ -102,7 +102,7 @@ SplitDivider is a bare separator primitive that allows users to resize the space
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | split-divider-001 | separator-role | Component rendered | Element with `role="separator"` is in the DOM |
-| split-divider-002 | ratio-change-callback | Pointer at `clientY` = the container's top edge + 50 (per `getBoundingClientRect`); container is 200px tall | `onRatioChange` is called with ratio ≈ 0.25 (50/200) |
+| split-divider-002 | drag-resize | Pointer at `clientY` = the container's top edge + 50 (per `getBoundingClientRect`); container is 200px tall | `onRatioChange` is called with ratio ≈ 0.25 (50/200) |
 | split-divider-003 | ratio-clamp | `minRatio=0.2, maxRatio=0.8`; user drags to ratio 0.05 | `onRatioChange` is called with 0.2 (clamped to minRatio) |
 | split-divider-004 | ratio-clamp | `minRatio=0.2, maxRatio=0.8`; user drags to ratio 0.95 | `onRatioChange` is called with 0.8 (clamped to maxRatio) |
 | split-divider-005 | horizontal-orientation | `orientation="horizontal"` (default); component rendered | Separator renders as a horizontal line; `aria-orientation="horizontal"` is set; vertical drag is tracked |
@@ -127,8 +127,8 @@ SplitDivider is a bare separator primitive that allows users to resize the space
 | split-divider-024 | grab-area-focusable | Component rendered | Separator is focusable via Tab key |
 | split-divider-025 | default-label | Component rendered without `label` prop | `aria-label="Resize split"` is set |
 | split-divider-026 | default-label | `label="Custom Resize"`; component rendered | `aria-label="Custom Resize"` is set |
-| split-divider-027 | step-button-labels | Component rendered with `orientation="horizontal"` and no custom labels | Step button labels are "Grow top pane" and "Grow bottom pane" (defaults) |
-| split-divider-028 | step-button-labels | `orientation="vertical"`, `growTopLabel="Expand left"`, `growBottomLabel="Expand right"`; component rendered | Step buttons have the custom labels |
+| split-divider-027 | step-button-labels | Component rendered with `orientation="horizontal"` and no custom labels | The shrink button (▲) is labelled "Grow bottom pane" and the grow button (▼) "Grow top pane" |
+| split-divider-028 | step-button-labels | `orientation="vertical"`, `growTopLabel="Expand left"`, `growBottomLabel="Expand right"`; component rendered | The grow button (▶) is labelled "Expand left" and the shrink button (◀) "Expand right" |
 | split-divider-029 | focus-ring | Component is focused via keyboard; component rendered | A 2px `apt-gold/40` focus ring is visible around the separator |
 | split-divider-030 | classname-prop | `className="custom-class"`; component rendered | Root element has class `custom-class` applied |
 | split-divider-031 | keyboard-default-prevention | Component is focused; user presses ArrowDown (horizontal) | `event.preventDefault()` is called; the page does not scroll |
@@ -150,7 +150,10 @@ SplitDivider is a bare separator primitive that allows users to resize the space
 | split-divider-047 | keyboard-grow | Component is focused; user presses ArrowDown twice in quick succession | `onRatioChange` is called twice, once per keypress, each computed from the `ratio` prop value current at that event |
 | split-divider-048 | drag-resize, keyboard-grow | User is dragging (a `pointermove` fires) while also pressing ArrowDown | `onRatioChange` is called for both the pointermove and the keydown; the ratio reflects whichever fired last |
 | split-divider-049 | step-button-pointerdown-guard | A drag is in progress from pointer A; pointer B (a second touch) taps a step button | The step button's `onClick` fires immediately, independent of pointer A's drag |
-
+| split-divider-050 | step-button-labels | Component rendered with `orientation="vertical"` and no custom labels | The shrink button (◀) is labelled "Grow right pane" and the grow button (▶) "Grow left pane" |
+| split-divider-051 | ratio-prop, ratio-clamp | `ratio=0.95`, `maxRatio=0.8`; component rendered, then the shrink arrow pressed | `aria-valuenow="95"`; `onRatioChange` is called with 0.8 (0.92 clamped) |
+| split-divider-052 | ratio-prop, ratio-clamp | `ratio=0.05`, `minRatio=0.2`; the grow arrow pressed | `aria-valuenow` is "5" before the press; `onRatioChange` is called with 0.2 (0.08 clamped) |
+| split-divider-053 | ratio-clamp | `minRatio=0.8`, `maxRatio=0.2` (inverted); user presses the grow arrow | `onRatioChange` is called with 0.2 (`maxRatio`) |
 ## Edge Cases
 
 - **Zero container extent**: If the container has zero height (horizontal) or zero width (vertical), drag calculations divide by zero. The component detects this and ignores the drag; the ratio remains unchanged until the container is resized.
@@ -160,11 +163,24 @@ SplitDivider is a bare separator primitive that allows users to resize the space
 - **Rapid key presses**: Repeated arrow key presses (e.g., held down) will call `onRatioChange` once per `onKeyDown` event, applying step adjustments in sequence. No debouncing is applied; all calls are clamped independently.
 - **Simultaneous drag and key input**: If the user holds down an arrow key while dragging, both `pointermove` and `onKeyDown` will call `onRatioChange`. The component does not prevent this, and the ratio will be set by whichever input fired last.
 - **Step button during drag**: `setPointerCapture` is scoped to the pointer id that started the drag, so a step-button click from that same pointer cannot occur — its `pointerdown`/`pointerup` are captured by the separator, not the button — until the drag ends. A click from a different pointer (e.g., a second touch) is independent of the drag and applies its `step` immediately.
-
+- **Out-of-range `ratio` prop**: The incoming `ratio` is not clamped, so `ratio=0.95` with `maxRatio=0.8` renders `aria-valuenow="95"`, above `aria-valuemax="80"`. A key or step-button press starts from the raw `ratio` and the result is clamped (ArrowUp from 0.95 with `step=0.03` reports 0.8, because 0.92 clamps). See **ratio-prop**.
+- **Inverted bounds**: With `minRatio > maxRatio` (for example `0.8` and `0.2`) the clamp always yields `maxRatio`, so every reported ratio is `maxRatio`. Callers MUST NOT pass inverted bounds.
 ## Configuration
+| Prop | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `ratio` | `number` | yes | — | Current leading-pane ratio (0–1). |
+| `onRatioChange` | `(ratio: number) => void` | yes | — | Called with the new ratio, already clamped to `[minRatio, maxRatio]`. |
+| `containerRef` | `React.RefObject<HTMLElement \| null>` | yes | — | The split container that pointer drags are measured against. |
+| `minRatio` | `number` | no | `0.2` | Lower clamp bound. |
+| `maxRatio` | `number` | no | `0.8` | Upper clamp bound. |
+| `step` | `number` | no | `0.03` | Ratio change per arrow key or step-button press. |
+| `orientation` | `"horizontal" \| "vertical"` | no | `"horizontal"` | The separator's own orientation, per `aria-orientation`. |
+| `label` | `string` | no | `"Resize split"` | `aria-label` of the separator. |
+| `growBottomLabel` | `string` | no | per orientation | `aria-label` of the shrink button (see **step-button-labels**). |
+| `growTopLabel` | `string` | no | per orientation | `aria-label` of the grow button (see **step-button-labels**). |
+| `className` | `string` | no | — | Extra classes on the root row/column. |
 
-Not applicable: The component has no configuration beyond its required and optional props. All behavior is controlled via props (`ratio`, `onRatioChange`, `minRatio`, `maxRatio`, `step`, `containerRef`, `orientation`, `label`, `growBottomLabel`, `growTopLabel`, `className`). There are no configuration files, environment variables, or runtime settings to manage.
-
+There are no configuration files, environment variables, or runtime settings.
 ## Deep Linking
 
 Not applicable: SplitDivider is a layout primitive with no navigation or routing concerns. It does not emit navigable URLs, query parameters, or deep-link states. Deep linking responsibility belongs to the caller's container and routing system.
@@ -209,7 +225,7 @@ Not applicable: The component does not emit log entries, diagnostics, or debuggi
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/split-divider.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/split-divider.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -249,6 +265,9 @@ Not applicable: The component does not emit log entries, diagnostics, or debuggi
 **Rationale**: Each pane keeps at least 20% of the space by default, preventing either pane from becoming unusably small; callers can override the bounds.
 **Approved**: pending
 
+**Decision**: Accept the `reduced-motion` gap: the line's `transition-colors` has no `prefers-reduced-motion` guard.
+**Rationale**: The transition only fades a color on hover or focus; nothing moves or changes size, so the risk is low. Adding `motion-reduce:transition-none` to the line is the repayment, due the next time the appearance changes.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -269,6 +288,7 @@ These statuses rest on `split-divider.tsx`: the `role="separator"` element with 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Lint findings applied: exact step-button label mapping and four defaults, a props table, a structure statement, appearance references from the requirements, lostpointercapture and second-pointer coverage, out-of-range ratio and inverted-bounds rules with vectors, the 3px thickness wording, and a reduced-motion debt decision. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: passed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; reformatted Design Decisions; added the Compliance table; fixed the DRY, citation, correctness, and platform-API findings; added missing requirements, edge-case rules, and test vectors; corrected Platform Notes to keep ratio state caller-owned; rewrote Localization and the step-button-during-drag edge case. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

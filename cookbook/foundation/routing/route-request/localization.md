@@ -3,5 +3,5 @@
 
 | String Key | Default (en) | Context |
 |-----------|-------------|---------|
-| none (inline literal) | The parameter name in backticks, then: must be an ISO8601 timestamp (e.g. 2026-01-31T00:00:00Z); got the quoted raw value | Message of `InvalidTimestamp` from `validatedTimestamp`, `normalizedTimestamp` and `activitySince`. |
+| none (inline literal) | `` `{name}` must be an ISO8601 timestamp (e.g. 2026-01-31T00:00:00Z); got "{raw}" `` | Message of `InvalidTimestamp` from `validatedTimestamp`, `normalizedTimestamp` and `activitySince`. |
 

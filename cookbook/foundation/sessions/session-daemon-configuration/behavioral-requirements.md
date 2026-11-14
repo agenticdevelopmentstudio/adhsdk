@@ -2,8 +2,8 @@
 **Shape**
 
 - **config-value-type**: `SessionDaemonConfiguration` MUST be a `Sendable` struct whose stored properties are `var`s, so a caller can copy it and change a field, as the runtime test does with `hook`.
-- **config-fields**: The struct MUST carry `label` (String), `subsystem` (String), `daemonVersion` (String), `httpPort` (UInt16), `supportDirectory` (URL), `databasePath` (String), `spoolPath` (String), `socketPath` (String), `dropDirectory` (URL), `errorsDirectory` (URL), `hook` (`ClaudeHookConfiguration`), `retentionDays` (Int), `livenessCheckInterval` (TimeInterval), `retentionCheckInterval` (TimeInterval), `claudeJSONPath` (String?), `pluginSearchPaths` ([URL]) and `summariesDefaultEnabled` (Bool).
-- **label-meaning**: `label` MUST be a reverse-DNS label that serves as the log subsystem and the launchd identity.
+- **config-fields**: The struct MUST carry `label` (String), `subsystem` (String), `daemonVersion` (String), `httpPort` (UInt16), `supportDirectory` (URL), `databasePath` (String), `spoolPath` (String), `socketPath` (String), `dropDirectory` (URL), `errorsDirectory` (URL), `hook` (`ClaudeHookConfiguration`, [Claude Hook Configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871)), `retentionDays` (Int), `livenessCheckInterval` (TimeInterval), `retentionCheckInterval` (TimeInterval), `claudeJSONPath` (String?), `pluginSearchPaths` ([URL]) and `summariesDefaultEnabled` (Bool).
+- **label-meaning**: Callers SHOULD pass a reverse-DNS `label`, which serves as the log subsystem and the launchd identity; the struct does not check it (see no-validation).
 - **summaries-no-default**: `summariesDefaultEnabled` MUST have no default value in the initializer, so every daemon states its own.
 
 **Required and defaulted initializer arguments**
@@ -39,5 +39,5 @@
 - **runtime-reads**: `SessionDaemonRuntime` reads `databasePath`, `spoolPath`, `supportDirectory`, `dropDirectory`, `errorsDirectory`, `socketPath`, `subsystem`, `daemonVersion`, `hook`, `claudeJSONPath`, `pluginSearchPaths` and `summariesDefaultEnabled`; it MUST create `supportDirectory` with intermediate directories when it opens.
 - **runtime-queue-label**: The runtime MUST label its queues and threads as the `subsystem`, a dot and a name.
 - **runtime-daemon-name**: The runtime MUST report its daemon name as `configuration.hook.name`.
-- **host-read-fields**: `label`, `httpPort`, `retentionDays`, `livenessCheckInterval` and `retentionCheckInterval` are not read by the SDK's `Database` code searched; they are carried for the host daemon, which owns the HTTP listener, the launchd registration and the timers that use them.
+- **host-read-fields**: `label`, `httpPort`, `retentionDays`, `livenessCheckInterval` and `retentionCheckInterval` are carried for the host daemon, which owns the HTTP listener, the launchd registration and the timers that use them; the shared runtime MUST NOT depend on them.
 

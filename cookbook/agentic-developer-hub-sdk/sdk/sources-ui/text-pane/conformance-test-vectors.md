@@ -12,7 +12,8 @@
 | mtpane-009 | support-attributed-text | Set `pane.setAttributedText(styled)` where styled includes bold/italic attributes | Read `pane.attributedText` returns the styled text with attributes preserved |
 | mtpane-010 | support-focus | Call `pane.focus()` on an onscreen pane | Returns true; keyboard focus moves to text view; user keystrokes are received |
 | mtpane-011 | support-focus | Call `pane.focus()` on a pane without a window | Returns false; no focus change occurs |
-| mtpane-012 | support-theme | Call `applyTheme(palette)` with a palette defining windowBackground, primaryText, cursor, selection, selectionText, and code font | Text view background, text color, insertion point color, selection highlight colors, and font are updated |
+| mtpane-012 | support-theme | On macOS, call `applyTheme(palette)` with a palette defining windowBackground, primaryText, cursor, selection, selectionText, and code font | Text view background, text color, insertion point color, selection highlight colors, and font are updated |
+| mtpane-027 | support-theme | On iOS, call `applyTheme(palette)` with the same palette | Background, text color and font are updated; the selection UI is tinted with the palette's cursor color and no separate selection foreground is set |
 | mtpane-013 | disable-smart-substitutions-ios | On iOS, user types a quote character | No smart quote substitution occurs |
 | mtpane-014 | disable-smart-substitutions-ios | On iOS, user types two hyphens | No smart dash substitution occurs |
 | mtpane-015 | disable-smart-substitutions-macos | On macOS, user types a quote character | No smart quote substitution occurs |
@@ -21,10 +22,12 @@
 | mtpane-018 | scroll-vertically | Pane contains content taller than its bounds | Vertical scrolling is available to reveal off-screen content |
 | mtpane-019 | hide-scrollers-macos | On macOS, scroll a large document and then remain still | Scroll indicator appears momentarily and then auto-hides |
 | mtpane-020 | bounce-vertically-ios | On iOS, scroll vertically past content end | Text view bounces back to content boundary |
-| mtpane-021 | use-8pt-insets | Inspect `textView.textContainerInset` | Equals `NSSize(width: 8, height: 8)` on macOS and `UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)` on iOS |
+| mtpane-021 | use-8pt-insets | Set `pane.text = "X"` in a laid-out pane and measure where the first line sits relative to the pane's bounds | The first line's top edge is 8pt below the pane's top edge on both platforms, and the text starts at least 8pt from the leading edge (the text container's line fragment padding adds to the 8pt horizontally). A unit test inside the module may instead read the private text view's inset, which equals 8pt on every edge |
 | mtpane-022 | enable-find-bar-macos | On macOS, press Cmd+F while the pane is focused | The text view's find bar opens for in-pane search |
 | mtpane-023 | preserve-default-undo-ios | On iOS, edit text then invoke the system undo (e.g. shake gesture, or Cmd+Z with a hardware keyboard) | Text reverts to the prior state; the pane does not intercept or disable the system `undoManager` |
 | mtpane-024 | disable-smart-substitutions-macos | On macOS, user types two hyphens | No smart dash substitution occurs |
 | mtpane-025 | disable-smart-substitutions-macos | On macOS, user types a misspelled word | No automatic spelling correction is applied |
 | mtpane-026 | disable-smart-substitutions-macos | On macOS, user types a recognized text-replacement shortcut | No automatic text replacement occurs |
-
+| mtpane-028 | hide-scrollers-macos | On macOS, inspect the pane's scroll view border | The scroll view draws no border; the text runs edge to edge |
+| mtpane-029 | selectable-when-read-only | Create `MarkdownTextPane(editable: false)`, then select text and copy | Text can be selected and copied although it cannot be edited |
+| mtpane-030 | disable-smart-substitutions-ios | On iOS, user types a misspelled word | No autocorrection is applied |

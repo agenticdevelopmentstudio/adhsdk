@@ -2,11 +2,11 @@
 id: 826184eb-23f0-4ff7-b5f3-dc583fbc8496
 title: "View Tab Bar"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -30,7 +30,7 @@ approved-date: ""
 
 ## Overview
 
-A flexible tab bar component that renders a horizontal strip combining two independent navigation modes: client-state buttons (triggering state callbacks without navigation) and route links (navigating to external views). The component shares visual styling with the Tabs underline idiom (gold bottom border on the active tab via `tabItemClass`), making mixed compositions read as a unified system. Tabs and links are rendered in separate semantic sections — tabs in a `role="tablist"` and links in a `<nav>` — to maintain correct screen reader hierarchy while preserving visual uniformity through consistent gap spacing and alignment.
+A flexible tab bar component that renders a horizontal strip combining two independent navigation modes: client-state buttons (triggering state callbacks without navigation) and route links (navigating to external views). The component shares visual styling with the Tabs underline idiom (an accent-colored bottom border on the active tab, via `tabItemClass`), making mixed compositions read as a unified system. Tabs and links are rendered in separate semantic sections — tabs in a `role="tablist"` and links in a `<nav>` — to maintain correct screen reader hierarchy while preserving visual uniformity through consistent gap spacing and alignment.
 
 ## Behavioral Requirements
 
@@ -43,17 +43,17 @@ A flexible tab bar component that renders a horizontal strip combining two indep
 - **active-link-marking**: Component MUST set `aria-current="page"` on the link whose `active` prop is `true`; other links MUST NOT have this attribute.
 - **active-state-attribute**: Component MUST set `data-active=""` (empty string) on both tab buttons and links when they are in the active state; the attribute MUST NOT be present on inactive items.
 - **tab-role-attribute**: Component MUST render each tab button with `role="tab"`.
-- **icon-tab-label**: Component MUST apply the `title` prop as both the `aria-label` and `title` HTML attribute on each tab button to provide accessible labels when the visible label is an icon.
+- **icon-tab-label**: Component MUST apply the `title` prop as both the `aria-label` and `title` HTML attribute on each tab button to provide accessible labels when the visible label is an icon. When `title` is absent, both attributes are omitted. When the visible label is text, a supplied `title` SHOULD contain that visible text, because `aria-label` replaces the visible text as the accessible name (WCAG 2.5.3 Label in Name).
 - **container-class-merge**: Component MUST accept a `className` prop and merge it with its own layout classes on the outermost container element via the `cn()` utility.
-- **layout-spacing**: Component MUST lay out both the inner tablist row and the nav row as a flex row with bottom-aligned items and a consistent horizontal gap between them; the outer container MUST apply horizontal padding around the whole strip. (Web implementation: `flex items-end gap-4` on each row, `px-4` on the container — see Appearance.)
+- **layout-spacing**: The outer container MUST be a flex row with bottom-aligned items and a horizontal gap, so the tablist and the nav sit side by side on one line, separated by that same gap; the tablist row and the nav row MUST each also be a flex row with bottom-aligned items and the same gap between their items; the outer container MUST apply horizontal padding around the whole strip. (Web implementation: the outer container takes `tabListClass` (`flex items-end gap-4 border-b border-apt-border`) plus `px-4`, and each inner row is `flex items-end gap-4` — see Appearance.)
 - **item-styling**: Component MUST apply one consistent style class to every tab button and link element so all items render uniformly, distinguished only by the active-state attribute. (Web implementation: `tabItemClass` from the Tabs component — see Appearance.)
 - **reactnode-labels**: Component MUST accept `ReactNode` for both tab and link labels, supporting text, icons, or composed elements.
 
 ## Appearance
 
 - **Container padding**: Horizontal padding `px-4` (typically 16px on the x-axis)
-- **Layout**: Flex row with `items-end` alignment and `gap-4` (typically 16px) spacing between items
-- **Tab/Link styling**: Applies `tabItemClass` from the Tabs component (shared underline idiom with gold bottom border on active state)
+- **Layout**: The outer container is a flex row (`tabListClass`: `flex items-end gap-4 border-b border-apt-border`), so the tablist and the nav sit side by side with a 16px gap between the two groups; each group is itself a flex row with `items-end` alignment and `gap-4` (16px) between its items
+- **Tab/Link styling**: Applies `tabItemClass` from the Tabs component (shared underline idiom with an accent-colored bottom border on active state; the React/Web theme's accent is gold, `border-apt-gold`)
 - **Active indicator**: `data-active=""` attribute (empty string) applied to active tabs and links; styling via CSS attribute selector `[data-active]`
 - **Font**: Inherits from `tabItemClass` definition (typically mono labels per the underline idiom)
 - **No visible disabled state**: Component does not render disabled tabs
@@ -63,7 +63,7 @@ A flexible tab bar component that renders a horizontal strip combining two indep
 
 | State | Tab Appearance | Link Appearance |
 |-------|----------------|-----------------|
-| Active | `data-active=""`, `aria-selected="true"`, gold bottom border via `tabItemClass` | `data-active=""`, `aria-current="page"`, gold bottom border via `tabItemClass` |
+| Active | `data-active=""`, `aria-selected="true"`, accent-colored bottom border via `tabItemClass` | `data-active=""`, `aria-current="page"`, accent-colored bottom border via `tabItemClass` |
 | Inactive | No `data-active` attribute, `aria-selected="false"`, underline not visible | No `data-active` attribute, no `aria-current`, underline not visible |
 | Focused | Inherits focus styling from `tabItemClass` definition | Inherits focus styling from `tabItemClass` definition |
 
@@ -75,7 +75,7 @@ A flexible tab bar component that renders a horizontal strip combining two indep
 - **Icon label fallback**: When a tab's visible label is an icon, the `title` prop MUST be provided to populate both `aria-label` and `title` attributes.
 - **Keyboard navigation**: Tabs and links MUST be navigable via Tab key (rendered as interactive elements `<button>` and `<a>`) and active tab/link MUST be indicated by `aria-selected` and `aria-current` respectively. The component relies on native Tab-key focus order between the button/anchor elements; it does not implement the WAI-ARIA tabs pattern's arrow-key/Home-End roving-tabindex navigation or an `aria-controls` link to a tabpanel (see Compliance).
 - **Screen reader announcement**: The distinction between tabs (client-state buttons) and links (navigation) is preserved in the DOM structure (separate `role="tablist"` and `<nav>`), enabling screen readers to announce the navigation mode correctly.
-- **Minimum touch target**: No explicit touch target size constraint in component; implementors MUST ensure tab and link elements meet platform minimum (44×44pt on iOS per Human Interface Guidelines, 48×48dp on Android per Material Design 3, 44×44px on web per WCAG guidance).
+- **Minimum touch target**: No explicit touch target size constraint in component; implementors MUST ensure tab and link elements meet platform minimum (44×44pt on iOS per Human Interface Guidelines, 48×48dp on Android per Material Design 3, 44×44 CSS px on web, the WCAG 2.2 enhanced target size, success criterion 2.5.5 (level AAA); the level AA minimum is 24×24 CSS px, success criterion 2.5.8).
 
 ## Conformance Test Vectors
 
@@ -83,7 +83,7 @@ A flexible tab bar component that renders a horizontal strip combining two indep
 |----|-------------|-------|----------|
 | view-tab-bar-001 | tablist-rendering | `tabs=[{value:"a",label:"Tab A"}]`, `value="a"`, `onChange=()=>{}` | Rendered `<div role="tablist">` containing one `<button role="tab">` |
 | view-tab-bar-002 | empty-tabs-omit-tablist | `tabs=[]`, `links=[]` | No `role="tablist"` element in output |
-| view-tab-bar-003 | nav-links-rendering | `tabs=[]`, `links=[{href:"/a",label:"Link A"}]` | Rendered `<nav aria-label="views">` containing one `<a href="/a">` |
+| view-tab-bar-003 | nav-links-rendering | `tabs=[]`, `value=""`, `onChange=()=>{}`, `links=[{href:"/a",label:"Link A"}]` | Rendered `<nav aria-label="views">` containing one `<a href="/a">` |
 | view-tab-bar-004 | empty-links-omit-nav | `tabs=[{value:"a",label:"Tab A"}]`, `links=[]` | No `<nav>` element in output |
 | view-tab-bar-005 | active-tab-marking | `tabs=[{value:"a",label:"A"},{value:"b",label:"B"}]`, `value="a"` | First tab has `aria-selected="true"`, second has `aria-selected="false"` |
 | view-tab-bar-006 | tab-click-callback | `tabs=[{value:"a",label:"A"}]`, `onChange` spy attached | `onChange("a")` called when tab button is clicked |
@@ -92,12 +92,11 @@ A flexible tab bar component that renders a horizontal strip combining two indep
 | view-tab-bar-009 | active-state-attribute | `tabs=[{value:"a",label:"A"}]`, `value="b"` | Tab button does NOT have `data-active` attribute |
 | view-tab-bar-010 | tab-role-attribute | `tabs=[{value:"a",label:"A"}]` | Each tab button has `role="tab"` attribute |
 | view-tab-bar-011 | icon-tab-label | `tabs=[{value:"a",label:<Icon/>,title:"Icon Label"}]` | Tab button has both `aria-label="Icon Label"` and `title="Icon Label"` attributes |
-| view-tab-bar-012 | container-class-merge | `className="custom-class"` | Outermost container div has class `custom-class` applied (via `cn()`) |
 | view-tab-bar-013 | layout-spacing | Any valid props | Tablist and nav rows each compute `display: flex`, `align-items: flex-end`, and an equal, non-zero horizontal gap between items; the outer container computes non-zero horizontal padding |
 | view-tab-bar-014 | item-styling | Any valid tabs or links | Every tab button and every link resolves to the same style class as each other (identical `className` reference), with only the active item additionally carrying `data-active` |
 | view-tab-bar-015 | reactnode-labels | `tabs=[{value:"a",label:<span>Custom</span>}]` | Tab renders ReactNode label content correctly |
-| view-tab-bar-016 | empty-tabs-omit-tablist, empty-links-omit-nav | `tabs=[]`, `links=[]`, `className="x"` | Outer container renders with `px-4` and the custom class `x`; no `role="tablist"` element and no `<nav>` element are present |
-| view-tab-bar-017 | container-class-merge | `className="custom-class"` | Outer container element has both `px-4` and `custom-class` present simultaneously (merged via `cn()`), not one replacing the other |
+| view-tab-bar-016 | empty-tabs-omit-tablist, empty-links-omit-nav | `tabs=[]`, `links=[]`, `className="x"` | Outer container renders with non-zero computed horizontal padding and the custom class `x`; no `role="tablist"` element and no `<nav>` element are present |
+| view-tab-bar-017 | container-class-merge | `className="custom-class"` | Outer container element has `custom-class` and still computes non-zero horizontal padding (merged via `cn()`), not one replacing the other |
 
 ## Edge Cases
 
@@ -112,12 +111,13 @@ A flexible tab bar component that renders a horizontal strip combining two indep
 
 | Option | Type | Default | Required | Description |
 |--------|------|---------|----------|-------------|
-| `tabs` | `ViewTabItem[]` | — | Yes | Array of tab items, each with `value`, `label`, and optional `title` |
+| `tabs` | `ViewTabItem[]` | — | Yes | Array of tab items, each with `value`, `label`, and optional `title`. A links-only caller passes `[]` |
 | `value` | `string` | — | Yes | The currently active tab value. It MUST match one of the `tabs[].value` entries for a tab to render as active; if none match, no tab is marked active (see Edge Cases) |
-| `onChange` | `(value: string) => void` | — | Yes | Callback invoked when a tab button is clicked, receiving the clicked tab's value |
+| `onChange` | `(value: string) => void` | — | Yes | Callback invoked when a tab button is clicked, receiving the clicked tab's value. A links-only caller passes a no-op |
 | `links` | `ViewTabLink[]` | `[]` | No | Array of link items, each with `href`, `label`, and optional `active` boolean |
 | `className` | `string` | — | No | Additional CSS class(es) to apply to the outer container via `cn()` |
 
+The props are required by the component's type even for links-only use: a links-only caller passes `tabs={[]}`, any `value` (for example `""`), and a no-op `onChange`; nothing is rendered for the empty `tabs`.
 ## Deep Linking
 
 Route links in the component support standard `href` navigation:
@@ -164,22 +164,20 @@ The component collects no data. The `onChange` callback and link `href` are cont
 Not implemented in source. No logging or debug output is emitted.
 
 ## Platform Notes
-
-- **React/Web**: Use this component as provided. Tabs are rendered as `<button role="tab">` elements with `aria-selected` state; links are rendered as `<a>` elements within `<nav aria-label="views">`. The outer container applies `flex items-end gap-4` layout with `px-4` padding. Import `tabListClass` and `tabItemClass` from the shared Tabs component to ensure visual consistency. The source is in `packages/web/packages/ui/src/blocks/view-tab-bar.tsx`.
-
-- **Swift/SwiftUI**: Build the row with `HStack(alignment: .bottom, spacing: 16)` to match the `items-end` + `gap-4` behavior, and apply `.padding(.horizontal, 16)` to the outer `HStack` to match `px-4`. There is no SwiftUI `role` modifier or `.spacing()` modifier on a view — render the tab buttons as `Button` views wrapped in a container with `.accessibilityElement(children: .contain)`, and mark the active one with `.accessibilityAddTraits(.isSelected)` (SwiftUI's nearest equivalent to `aria-selected`). Render route links with `Link` or `NavigationLink`, each with `.accessibilityLabel` set for the "views" grouping. Apply the platform's equivalent of the shared underline idiom (a conditional border/underline modifier keyed off the active state) in place of `tabItemClass`.
+- **Swift/SwiftUI**: Build the row with `HStack(alignment: .bottom, spacing: 16)` to match the `items-end` + `gap-4` behavior, and apply `.padding(.horizontal, 16)` to the outer `HStack` to match `px-4`. There is no SwiftUI `role` modifier or `.spacing()` modifier on a view — render the tab buttons as `Button` views wrapped in a container with `.accessibilityElement(children: .contain)`, and mark the active one with `.accessibilityAddTraits(.isSelected)` (SwiftUI's nearest equivalent to `aria-selected`). Render route links with `Link` or `NavigationLink` in their own `HStack`, and put `.accessibilityElement(children: .contain)` plus `.accessibilityLabel("views")` on that link `HStack` so the group, not each link, carries the label. Apply the platform's equivalent of the shared underline idiom (a conditional border/underline modifier keyed off the active state) in place of `tabItemClass`.
 
 - **Kotlin/Compose**: Use `Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(16.dp))` for both the tab row and the link row. Give the tab row `Modifier.selectableGroup()`, and give each tab `Modifier.selectable(selected = ..., role = Role.Tab) { onChange(...) }` — use `Role.Tab`, not `Role.Button`, so accessibility services announce it correctly. Render links as plain `Text`/`ClickableText` composables (no tab role) inside their own `Row`. Use `LazyRow` if the tab/link list can grow long. Apply the platform's equivalent underline/border active-state styling in place of `tabItemClass`.
 
+- **React/Web**: Use this component as provided. Tabs are rendered as `<button role="tab">` elements with `aria-selected` state; links are rendered as `<a>` elements within `<nav aria-label="views">`. The outer container applies `tabListClass` (`flex items-end gap-4 border-b border-apt-border`) plus `px-4`, and each inner group is `flex items-end gap-4`. Import `tabListClass` and `tabItemClass` from the shared Tabs component to ensure visual consistency.
+
 - **AppKit / UIKit**: On AppKit, use an `NSStackView` (`.orientation = .horizontal`, `.alignment = .bottom`, `spacing = 16`) of `NSButton`s — or an `NSSegmentedControl` — for the client-state tabs; avoid `NSTabView`, which owns and switches its own content panes rather than acting as a stateless button row. Put the route links in a second `NSStackView` of link-styled `NSButton`s (or `NSTextField`s with a link attribute). On UIKit, use `UISegmentedControl` or a custom `UIStackView` of `UIButton`s (wrapped in a `UIScrollView` if the row can overflow) for the tabs, wired to a delegate/`UIAction` equivalent to `onChange`; use a second `UIStackView` of `UIButton`s for the links. Both platforms should apply the platform's equivalent underline/border active-state styling in place of `tabItemClass`, and match `.bottom` alignment with 16pt spacing/padding.
 
-- **WinUI 3**: Use `SelectorBar` with `SelectorBarItem` elements for the client-state tabs, wiring `SelectorBar.SelectionChanged` to the equivalent of `onChange` — `SelectorBar`, not `TabView`, since `TabView` is built for closable document tabs and its `SelectionChanged` targets the whole control rather than a single stateless item. For route links, use a `NavigationView` in `PaneDisplayMode="Top"` or a row of `HyperlinkButton` elements. Apply `Orientation="Horizontal"` and `VerticalAlignment="Bottom"` on the containing `StackPanel`, with `Spacing="16"` for the gap and `Padding="16,0"` for the horizontal padding. Style the active tab with the platform's equivalent of the gold bottom-border underline idiom, driven off the selected state.
-
+- **WinUI 3**: Use `SelectorBar` with `SelectorBarItem` elements for the client-state tabs, wiring `SelectorBar.SelectionChanged` to the equivalent of `onChange` — `SelectorBar`, not `TabView`, since `TabView` is built for closable document tabs and its `SelectionChanged` targets the whole control rather than a single stateless item. For route links, use a `NavigationView` in `PaneDisplayMode="Top"` or a row of `HyperlinkButton` elements. Apply `Orientation="Horizontal"` and `VerticalAlignment="Bottom"` on the containing `StackPanel`, with `Spacing="16"` for the gap and `Padding="16,0"` for the horizontal padding. Style the active tab with the platform's equivalent of the accent-colored bottom-border underline idiom, driven off the selected state.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/view-tab-bar.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/blocks/view-tab-bar.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -200,7 +198,7 @@ Not implemented in source. No logging or debug output is emitted.
   **Approved**: pending
 
 - **Decision**: `links` is optional and defaults to an empty array.
-  **Rationale**: Route navigation is not needed by every tab bar. Some use cases have tabs only, links only, or both.
+  **Rationale**: Route navigation is not needed by every tab bar. Some use cases have tabs only, links only, or both. A links-only caller still passes `tabs=[]`, a `value` and an `onChange`, which the component ignores.
   **Approved**: pending
 
 ## Compliance
@@ -224,5 +222,6 @@ Screen-reader-support, keyboard-navigable, and semantic-markup are `partial` bec
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Lint fixes: specified the outer container layout and where tabListClass applies, stated what links-only callers pass, clarified absent and text-label title behavior, cited WCAG 2.5.5 and 2.5.8, merged the overlapping class-merge vectors and made padding observable, corrected the SwiftUI grouping note, renamed and reordered platform notes, and made the active indicator theme-neutral. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; reformatted Design Decisions to Decision/Rationale/Approved; rewrote Compliance as a real, linked check table instead of an ad hoc "Passed" list; corrected the SwiftUI/Compose/AppKit-UIKit/WinUI 3 platform notes to real native APIs; resolved the onChange/value contradiction between Configuration and Edge Cases; rewrote the incoherent duplicate-value, single-item, and impossible-null-href edge cases; fixed the Deep Linking claim that contradicted the plain-`<a>` source; added the Tabs recipe to `related`; dropped "scrollable" from the summary (no overflow handling exists); removed the undefined "Rule 15" reference; reworded the layout/item-styling requirements and vectors to assert observable/computed outcomes instead of literal Tailwind class strings; added test vectors for the both-empty-arrays case and for `className`/`px-4` merging. |

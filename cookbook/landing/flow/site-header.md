@@ -2,11 +2,11 @@
 id: 93e8b186-b7a6-41c5-90a8-21b67a47ef72
 title: "Site Header"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -41,13 +41,15 @@ A header component for flow pages that displays a wordmark, optional inline navi
 - **bar-nav-visible-at-breakpoint**: The `<nav>` element rendered under **render-bar-nav** MUST be visible at the breakpoint or wider and hidden below it via a CSS media query, while remaining present in the DOM at every width.
 - **render-action**: Component MUST render the `action` prop in a `.lp-site-action` div if provided.
 - **hide-bar-nav**: Component MUST NOT render the inline navigation bar when `bar` is `'drawer'` at any viewport width.
-- **real-anchors**: Component MUST render navigation links as real `<a>` elements with `href` attributes, so they remain discoverable to crawlers and reachable through an assistive-technology link rotor even when **bar-nav-visible-at-breakpoint**'s media query hides them below the breakpoint.
+- **real-anchors**: Component MUST render navigation links as real `<a>` elements with `href` attributes, so they remain discoverable to crawlers even when **bar-nav-visible-at-breakpoint**'s media query hides them below the breakpoint. A CSS-hidden (`display: none`) link is removed from the accessibility tree, so below the breakpoint the drawer is the only route assistive technology has to the destinations.
 - **drawer-visibility**: Component MUST always mount a `NavChrome` component in a drawer wrapper; the wrapper is hidden via CSS at the breakpoint or wider when `bar` is `'nav'`, and stays visible at every width when `bar` is `'drawer'`.
 - **omit-brand-from-drawer**: Component MUST NOT pass the `brand` prop to `NavChrome` in the drawer.
 - **reset-drawer-state**: Component MUST remount `NavChrome` when the drawer wrapper transitions from visible to hidden (the viewport growing from narrower than the breakpoint to at-or-wider than it), to reset `NavChrome`'s internal state.
 - **pass-full-links**: Component MUST always pass the complete `links` array to `NavChrome`, regardless of which links are shown in the bar.
 - **support-bar-prop**: Component MUST accept a `bar` prop that is either `'nav'` (default) or `'drawer'`.
-
+- **action-visible-at-breakpoint**: When `action` is provided, the `.lp-site-action` element MUST be visible at the breakpoint or wider and hidden below it via a CSS media query; below the breakpoint the wordmark is the row's only visible item.
+- **brand-centered-below-breakpoint**: Below the breakpoint, and at every width when `bar` is `'drawer'`, the `.lp-site-brand` element MUST be centered in the bar; at the breakpoint or wider under `bar='nav'` it MUST sit at the left end.
+- **pass-through-props**: Component MUST pass `footer`, `navLabel` and any other `NavChromeProps` it receives through to `NavChrome`, so the drawer's footer and its own `<nav>` label match what the host supplied.
 ## Appearance
 
 - **Breakpoint**: 62rem — referred to below as *the breakpoint*.
@@ -71,8 +73,8 @@ A header component for flow pages that displays a wordmark, optional inline navi
 ## Accessibility
 
 - **Header role**: Component renders a semantic `<header>` element.
-- **Navigation label**: The `<nav>` element inside the bar MUST have an `aria-label` attribute, defaulting to "Site" unless overridden via `navLabel` prop from `NavChromeProps`.
-- **Link announcements**: Navigation links are real `<a>` elements, allowing screen readers to discover them.
+- **Navigation label**: The bar's `<nav>` element carries the `aria-label` required by **render-bar-nav**, overridable via the `navLabel` prop from `NavChromeProps`.
+- **Link announcements**: Navigation links are real `<a>` elements, so screen readers announce them wherever they are rendered. Below the breakpoint the bar's `<nav>` is CSS-hidden and so leaves the accessibility tree (only crawlers still read it); the drawer is the only route assistive technology has to the links there.
 - **Duplicate prevention**: Navigation links in the drawer are not duplicated in the bar under `bar='drawer'`, avoiding duplicate link destinations that assistive technology would discover.
 - **Drawer management**: Focus trap and `inert` handling are delegated to `NavChrome`.
 
@@ -80,20 +82,25 @@ A header component for flow pages that displays a wordmark, optional inline navi
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| site-header-001 | render-header | `{ brand: <div>Logo</div>, links: [{ href: '/', label: 'Home' }], bar: 'nav' }` | Header element renders with brand div visible |
+| site-header-001 | render-header, render-brand | `{ brand: <div>Logo</div>, links: [{ href: '/', label: 'Home' }], bar: 'nav' }` | Header element renders with brand div visible |
 | site-header-002 | render-bar-nav, bar-nav-visible-at-breakpoint | `{ barLinks: [{ href: '/', label: 'Home' }], links: [{ href: '/', label: 'Home' }], bar: 'nav' }`, viewport at the breakpoint or wider | Nav element with aria-label="Site" is present and visible, with links rendered as anchors |
 | site-header-002b | render-bar-nav, bar-nav-visible-at-breakpoint | Same props as site-header-002, viewport narrower than the breakpoint | Nav element is present in the DOM (queryable) but not visible (`display: none`) |
 | site-header-003 | render-action | `{ links: [{ href: '/', label: 'Home' }], action: <button>Sign up</button>, bar: 'nav' }`, viewport at the breakpoint or wider | Action div renders with button visible |
-| site-header-004 | hide-bar-nav, drawer-visibility | `{ links: [{ href: '/', label: 'Home' }], bar: 'drawer' }` at all widths | Inline nav element does not render; drawer renders at all widths |
+| site-header-004 | hide-bar-nav, drawer-visibility, support-bar-prop | `{ links: [{ href: '/', label: 'Home' }], bar: 'drawer' }` at all widths | Inline nav element does not render; the burger and drawer wrapper are visible at every width |
 | site-header-005 | real-anchors | `{ links: [{ href: '/about', label: 'About' }], barLinks: [{ href: '/about', label: 'About' }] }` | Each link renders as `<a href="/about">About</a>` |
-| site-header-006 | omit-brand-from-drawer | `{ brand: <div>Logo</div>, links: [{ href: '/', label: 'Home' }] }` | NavChrome receives no brand prop |
+| site-header-006 | omit-brand-from-drawer | `{ brand: <div>Logo</div>, links: [{ href: '/', label: 'Home' }], bar: 'nav' }`, viewport narrower than the breakpoint (drawer visible) | NavChrome receives no brand prop; the wordmark appears once on the page |
 | site-header-007 | reset-drawer-state | Viewport resizes from narrower than the breakpoint to at-or-wider than it, with the drawer open | NavChrome remounts, drawer state resets |
 | site-header-008 | pass-full-links | `{ barLinks: [short links], links: [all links] }`, viewport at the breakpoint or wider | NavChrome receives full `links` array; drawer shows all links |
-| site-header-009a | support-bar-prop | `{ links: [{ href: '/', label: 'Home' }], bar: 'drawer' }` | Burger shown at every width; inline nav hidden |
 | site-header-009b | support-bar-prop | `{ links: [{ href: '/', label: 'Home' }], bar: 'nav' }` (default), viewport at the breakpoint or wider | Inline nav shown |
 | site-header-010 | drawer-visibility | `{ links: [{ href: '/', label: 'Home' }], bar: 'nav' }`, viewport narrower than the breakpoint | Drawer wrapper is present and visible (not `display: none`) |
 | site-header-011 | drawer-visibility | `{ links: [{ href: '/', label: 'Home' }], bar: 'nav' }`, viewport at the breakpoint or wider | Drawer wrapper remains in the DOM but is hidden via CSS (`display: none`) |
-
+| site-header-012 | edge case: no brand | `{ links: [{ href: '/', label: 'Home' }] }` with no `brand` | No `.lp-site-brand` element is rendered |
+| site-header-013 | edge case: no action, action-visible-at-breakpoint | `{ links: [{ href: '/', label: 'Home' }] }` with no `action`, viewport at the breakpoint or wider | No `.lp-site-action` element is rendered |
+| site-header-014 | action-visible-at-breakpoint | `{ links: [{ href: '/', label: 'Home' }], action: <button>Sign up</button>, bar: 'nav' }`, viewport narrower than the breakpoint | `.lp-site-action` is present in the DOM but not visible (`display: none`) |
+| site-header-015 | edge case: barLinks defaults to links | `{ links: [{ href: '/a', label: 'A' }, { href: '/b', label: 'B' }], bar: 'nav' }` with no `barLinks`, viewport at the breakpoint or wider | The bar's `<nav>` contains anchors for `/a` and `/b` |
+| site-header-016 | render-bar-nav | `{ links: [{ href: '/', label: 'Home' }], navLabel: 'Primary', bar: 'nav' }` | The bar's `<nav>` has `aria-label="Primary"` |
+| site-header-017 | pass-through-props | `{ links: [{ href: '/', label: 'Home' }], footer: <p>Contact</p>, navLabel: 'Primary' }` | NavChrome receives `footer` and `navLabel` unchanged; the drawer's `<nav>` is labelled "Primary" and shows the footer |
+| site-header-018 | brand-centered-below-breakpoint | `{ brand: <div>Logo</div>, links: [{ href: '/', label: 'Home' }], bar: 'nav' }`, viewport narrower than the breakpoint | The wordmark is horizontally centered in the bar |
 ## Edge Cases
 
 - **No brand prop**: Component renders the header without a brand div.
@@ -148,7 +155,7 @@ Not applicable: SiteHeader does not emit logs.
 
 ## Platform Notes
 
-- **TypeScript/Web**: Source files are `SiteHeader.tsx` and `flow.css`. The breakpoint is 62rem, enforced by a CSS media query in `flow.css` (not JavaScript). A `ResizeObserver` on the wrapper element observes the CSS display decision rather than duplicating the breakpoint condition in JavaScript. The component renders real `<a>` anchor elements for navigation links to preserve crawler discoverability and assistive-technology navigation.
+- **React/Web**: Source files are `SiteHeader.tsx` and `flow.css`. The breakpoint (see **Appearance**) is enforced by a CSS media query in `flow.css` (not JavaScript). A `ResizeObserver` on the wrapper element observes the CSS display decision rather than duplicating the breakpoint condition in JavaScript. The component renders real `<a>` anchor elements for navigation links to preserve crawler discoverability and assistive-technology navigation.
 - **SwiftUI**: Reimplement natively — do not wrap the web component. Use a `ScrollView` so the header scrolls away with the page content, matching the source's non-fixed behavior. Switch between the inline nav row and the drawer based on `horizontalSizeClass` (compact maps to the drawer, regular maps to the inline nav), mirroring the breakpoint's role in the web source.
 - **Compose**: Map the web layout to a `Column` with a `Row` header. Use `currentWindowAdaptiveInfo()` / `WindowSizeClass` to determine the available width in dp and pick a breakpoint equivalent to 62rem (there is no `62.rem` unit in Compose); conditional rendering of the nav row replaces the CSS media query. The drawer behavior maps to Compose's `ModalNavigationDrawer`.
 - **AppKit / UIKit**: Reimplement natively — do not embed a `WKWebView`. Use `NSStackView` (macOS) or `UIStackView` (iOS) for the horizontal layout. On iOS, use `registerForTraitChanges` to react to size-class changes (`traitCollectionDidChange` is deprecated); on macOS, observe the view's frame or the window's resize notifications, since there is no size-class API on that platform. Manage drawer state with a property observer or a Combine published property that responds to size changes.
@@ -158,7 +165,7 @@ Not applicable: SiteHeader does not emit logs.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/flow/SiteHeader.tsx` | unverified |
+| web | `packages/web/packages/landing/src/flow/SiteHeader.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -179,7 +186,7 @@ Not applicable: SiteHeader does not emit logs.
 **Approved**: pending
 
 **Decision**: Navigation links are real `<a>` elements that stay in the DOM even where CSS hides them, rather than being removed or duplicated.
-**Rationale**: Below the breakpoint, the bar's `<nav>` stays in the DOM and is hidden purely by the CSS media query (see **bar-nav-visible-at-breakpoint**), so a crawler or an assistive-technology link rotor can still discover the destinations. Under `bar='drawer'`, the links are not rendered in the bar at all — a JSX conditional, not a CSS hide — so the drawer's copy is the only destination discovered, avoiding duplicate in-page links.
+**Rationale**: Below the breakpoint, the bar's `<nav>` stays in the DOM and is hidden purely by the CSS media query (see **bar-nav-visible-at-breakpoint**), so a crawler can still discover the destinations (a CSS-hidden link is out of the accessibility tree, so assistive technology below the breakpoint reaches them through the drawer instead). Under `bar='drawer'`, the links are not rendered in the bar at all — a JSX conditional, not a CSS hide — so the drawer's copy is the only destination discovered, avoiding duplicate in-page links.
 **Approved**: pending
 
 **Decision**: `barLinks` is optional and defaults to `links`.
@@ -196,7 +203,7 @@ Not applicable: SiteHeader does not emit logs.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on `SiteHeader.tsx` rendering a semantic `<header>` element, a `<nav>` element with an `aria-label` (defaulting to `'Site'`), and real `<a>` anchors for every navigation link — native landmarks and native anchors are screen-reader-discoverable and keyboard-focusable without additional ARIA. `separation-of-concerns` passes because `SiteHeader` composes the existing `NavChrome` for the drawer/burger behavior and only adds its own bar/wordmark/action layout, rather than reimplementing navigation chrome. `unit-test-coverage` passes because `site-header.test.tsx` imports `SiteHeader` directly and asserts on brand/nav/action rendering, the `bar='nav'`/`'drawer'` variants, and the breakpoint-driven centering and scroll behavior.
+Statuses rest on `SiteHeader.tsx` rendering a semantic `<header>` element, a `<nav>` element with an `aria-label` (defaulting to `'Site'`), and real `<a>` anchors for every navigation link — native landmarks and native anchors are screen-reader-discoverable and keyboard-focusable without additional ARIA. `separation-of-concerns` passes because `SiteHeader` composes the existing `NavChrome` for the drawer/burger behavior and only adds its own bar/wordmark/action layout, rather than reimplementing navigation chrome. `unit-test-coverage` passes because `site-header.test.tsx` imports `SiteHeader` directly and asserts on brand/nav/action rendering, the `bar='nav'`/`'drawer'` variants (including that no inline link row renders under `bar="drawer"`), and on the text of the `flow.css` rules that centre the wordmark and hide the action below the breakpoint and keep the bar from being fixed. It does not evaluate media queries in a browser, so the breakpoint behavior itself is covered by the real-browser vectors only.
 
 ## Change History
 
@@ -205,3 +212,4 @@ Statuses rest on `SiteHeader.tsx` rendering a semantic `<header>` element, a `<n
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from SiteHeader.tsx web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case; merged the two drawer-mounting requirements and split bar-links rendering from visibility; fixed the remount-direction contradiction and vector 007 to match; reworded real-anchors and Design Decision 5 to match the CSS-hiding behavior; defined the breakpoint once and referenced it by name elsewhere; dropped source-code citations from Edge Cases; split test vector 009 and added missing `links` inputs and breakpoint coverage; replaced Compliance with an accessibility table; converted Design Decisions to Decision/Rationale/Approved form and genericized Design Decision 1; corrected the Compose, AppKit/UIKit, WinUI, and SwiftUI platform notes and removed the web-embedding options; added `tags` and a `depends-on` entry for NavChrome; fixed `hide-bar-nav`'s RFC 2119 casing. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Corrected nav alignment/link-styling/Increase-Contrast per flow.css (right-packed, colored links). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Corrected the link-rotor claim to crawler-only discoverability, added action-visible-at-breakpoint, brand-centered-below-breakpoint and pass-through-props requirements, added vectors for render-brand, edge cases and navLabel, merged vectors 004 and 009a, and tightened vector 006. |

@@ -65,7 +65,7 @@
   and `EngineTests.testAnUnknownTimelineThrows`).
 - **look-clamping**: `look(x, y)` MUST clamp both `x` and `y` independently to
   the closed interval `[-1, 1]` (`min(max(v, -1), 1)`) before storing the
-  result as the gaze target (`Reflexes.swift`'s `look`).
+  result as the gaze target (`Reflexes.swift`'s `look`; `reflexes.ts`'s `look`).
 - **say-side-effect**: `say(text)` MUST store the exact `text` given, with no
   transformation, escaping, or localization applied, as the current speech,
   expiring after the character's configured bubble timing
@@ -107,14 +107,7 @@
   as computed properties on Apple (`engine.state`, `engine.channels`) and as
   zero-argument methods on web (`engine.state()`, `engine.channels()`)
   (`Engine.swift`; `engine.ts`).
-- **config-exposure-divergence**: On Apple, `Engine.config` MUST
-  be a public, readable stored property, so a render layer can read `canvas`
-  and `strokeStyle` off the same engine instance it ticks, per `Engine.swift`'s
-  own comment on the property. The web `Engine` interface exposes no
-  equivalent accessor; a web caller MUST retain its own reference to the
-  `CharacterConfig` it passed to `createEngine`, since it already obtained
-  one from `loadConfig()` before construction (`engine.ts`'s `EngineOptions`/
-  `Engine` interfaces define no `config` member).
+- **config-exposure**: A render layer MUST be able to read `canvas` and `strokeStyle` from the same `CharacterConfig` the engine ticks. On Apple, `Engine.config` MUST be a public, readable stored property for this (per `Engine.swift`'s own comment on the property); on web, the caller MUST retain the `CharacterConfig` it passed to `createEngine`, since the `Engine` interface defines no `config` member (`engine.ts`'s `EngineOptions`/`Engine` interfaces).
 - **single-context-usage**: The engine and its internal collaborators
   (`Prng`, `Scheduler`, `Tweens`, `Arbiter`, `Reflexes`, `Channels`) MUST be
   driven from a single thread/execution context at a time. None carries
@@ -122,12 +115,4 @@
   project's `SWIFT_STRICT_CONCURRENCY: complete` build setting enforces at
   compile time (`Engine.swift`, `Environment.swift`: plain classes and a
   struct with mutable, unsynchronized state).
-- **saying-emptiness-divergence**: `randomSaying`/the
-  mutter callback rely on `Prng.pick` drawing from a non-empty saying list, an
-  invariant the config loader is documented to guarantee. If that invariant
-  is broken, Apple's `Prng.pick` MUST fail via `preconditionFailure` — an
-  unrecoverable, uncatchable process crash — while the web `Prng.pick` MUST
-  throw an ordinary, catchable `Error`. Both are intentional, source-documented
-  responses to the same contract violation, not two implementations of one
-  behavior (`Prng.swift`'s `pick`; `prng.ts`'s `pick`).
-
+- **saying-emptiness-contract-violation**: `randomSaying` and the mutter callback MUST treat an empty saying list as a contract violation of the config loader's non-empty guarantee, and MUST NOT silently return a default. A port MUST fail in its platform's idiom for an impossible state: Apple's `Prng.pick` fails via `preconditionFailure` (an unrecoverable process crash) and the web `Prng.pick` throws an ordinary, catchable `Error` (`Prng.swift`'s `pick`; `prng.ts`'s `pick`).

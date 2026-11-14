@@ -2,7 +2,7 @@
 id: 9e4aba28-ae2b-4733-b6a5-62e9ad5c7a19
 title: "Hook Envelope Builder"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,10 +20,13 @@ tags:
   - envelope
   - wire-format
   - cache
-depends-on: []
+depends-on:
+  - 826153e3-cae8-4917-a1d3-c298a54ab558
+  - fa0fce58-5e17-41da-b3eb-0d2de9e89b46
+  - 8ec76506-7cb3-4aca-a9a0-07f014500e7e
+  - a8bfcd0b-0759-4801-aaf6-a14d7aa3fe49
 related: []
-references:
-  - packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookEnvelopeBuilder.swift (adhsdk)
+references: []
 approved-by: ""
 approved-date: ""
 ---
@@ -34,9 +37,9 @@ approved-date: ""
 
 `HookEnvelopeBuilder` is the daemon-side counterpart of the hook capture command. A daemon that listens for hooks receives them in one of two forms: over its Unix socket, as the wire format a hook script sends (event, `ppid`, `KEY=value` environment lines, a `---` line, then the payload), or over an `http` hook, which carries only the payload JSON. The builder turns either into a `ParsedEvent` ready for ingestion, with the same context shape the capture command writes into a drop file, so events that arrive over the socket and through drop files are queryable identically.
 
-The file holds three things. `HookEnvelopeBuilder` has two `build` overloads (the payload-only http form and the full socket form), `buildContext`, `parseWire` and the stored `daemonWorkingDirectory`. `HookEnvCache` is a lock-guarded memo, with a three-second time to live, for the two expensive lookups the http form needs: which `claude` process owns a working directory, and what that process's environment is. The account lookups are injected closures because the toolkit core has no account store; both default to the empty string, the "no answer" value.
+The file holds two types. `HookEnvelopeBuilder` has two `build` overloads (the payload-only http form and the full socket form), `buildContext`, `parseWire` and the stored `daemonWorkingDirectory`; it builds on [HookCaptureCommand](cookbook:826153e3-cae8-4917-a1d3-c298a54ab558), [ProcessEnv](cookbook:fa0fce58-5e17-41da-b3eb-0d2de9e89b46), [ProcessLiveness](cookbook:8ec76506-7cb3-4aca-a9a0-07f014500e7e) and [RawSetting](cookbook:a8bfcd0b-0759-4801-aaf6-a14d7aa3fe49). `HookEnvCache` is a lock-guarded memo, with a three-second time to live, for the two expensive lookups the http form needs: which `claude` process owns a working directory, and what that process's environment is. The account lookups are injected closures because the toolkit core has no account store; both default to the empty string, the "no answer" value.
 
-The system fields (`hostname`, `os`, `arch`, `uid`, `euid`, `gid`) are computed in the calling process. The source states that a daemon runs as the same user as the hook-firing process, so they match.
+The system fields (`hostname`, `os`, `arch`, `uid`, `euid`, `gid`) are computed in the calling process. The doc comment on `HookEnvelopeBuilder` states that a daemon runs as the same user as the hook-firing process, so they match.
 
 ## Behavioral Requirements
 
@@ -47,7 +50,6 @@ The system fields (`hostname`, `os`, `arch`, `uid`, `euid`, `gid`) are computed 
 - **http-daemon-cwd-guards**: The daemon-directory check MUST NOT apply when the daemon directory is the empty string or `/`, and MUST NOT apply when the payload has no `cwd` string.
 - **http-env-recovery**: When the payload has a `cwd`, the build MUST locate the `claude` pid through the injected `claudePid` resolver for that `cwd`, read that pid's environment through the injected `environment` resolver, and pass the pid on as the `ppid`.
 - **http-env-degrades**: When no `cwd`, no pid or no environment can be found, the build MUST continue with an empty environment and a `ppid` of 0, so the event is still built when the payload carries a `session_id`; token and terminal fields are then simply absent.
-- **http-payload-parsed-once**: The payload MUST be parsed once, and when it parsed as an object that object MUST be handed to the inner build so it is not parsed twice (a payload that is not an object is parsed again by the inner build and yields an empty `hookData`).
 
 ### Full build (socket or recovered environment)
 
@@ -74,7 +76,6 @@ The system fields (`hostname`, `os`, `arch`, `uid`, `euid`, `gid`) are computed 
 - **context-process-subset**: `context.process` MUST carry only `ppid`, `uid`, `euid` and `gid`, and MUST NOT carry `argv`, `cwd` or `pid`, because the hook-firing process has exited by ingest time and a hook script's argv is only its name and the event.
 - **context-system**: `context.system` MUST be the capture command's system information: `hostname`, `os` and `arch`, or an empty object when the system call fails.
 - **context-shell-session-terminal**: `context.shell` MUST carry `shell`, `shlvl` (only when an integer), `lang` and `path`; `context.session` MUST carry `user`, `home`, `logname`, `tmpdir` and `pwd`; `context.terminal` MUST carry `term`, `term_program`, `term_version`, `term_session_id` and `lc_terminal`, each only when set in `env`.
-- **context-event-unused**: The `event` parameter of `buildContext` has no effect on the result.
 
 ### Wire parsing
 
@@ -141,19 +142,20 @@ No test in the repository exercises `HookEnvelopeBuilder` or `HookEnvCache` dire
 | builder-021 | wire-header-lines | `Stop`, newline, `---`, newline, payload (a one-line header) | nil |
 | builder-022 | wire-ppid-lenient | Header lines `Stop` and `abc` | ppid 0 |
 | builder-023 | wire-env-lines | Env lines `A=b=c`, `NOEQ`, an empty line, `A=d` | env is `A` = `d` only |
-| builder-024 | wire-payload-verbatim | A payload that itself contains the separator, or is empty | Returned unchanged, or empty |
+| builder-024 | wire-payload-verbatim | A payload that itself contains the separator | Returned unchanged |
 | builder-025 | wire-header-utf8 | Header bytes that are not valid UTF-8 | nil |
 | builder-026 | wire-empty-event | First line empty | event is the empty string; passing it to `build` returns nil |
 | builder-027 | cache-ttl, cache-nil-pid, default-resolvers | Two `HookEnvCache.pid(inCwd:)` calls for one directory within three seconds | The underlying resolver runs once, including when it returned nil |
 | builder-028 | cache-pid-key | `pid(inCwd:)` for an existing directory `/tmp/x` then for `/private/tmp/x` on macOS | One resolution |
 | builder-029 | cache-empty-env | `env(forPid:)` twice within three seconds where the read fails | One read; both return the empty dictionary |
-| builder-030 | cache-eviction | 129 distinct cwds resolved, then a 130th after the first entries have expired | The expired entries are removed; unexpired entries remain |
+| builder-030 | cache-eviction | 128 distinct cwds resolved and left to expire (more than three seconds), then a 129th cwd resolved | The insert of the 129th takes the map past 128 entries, so the 128 expired entries are removed and only the 129th remains |
 | builder-031 | cache-thread-safety | Concurrent `env(forPid:)` calls for different pids | No crash; each caller receives a dictionary |
 | builder-032 | daemon-cwd-once | Read `daemonWorkingDirectory`, change the working directory, read again | The same value both times |
 | builder-033 | timestamp-format | Any built event | `timestamp` matches `YYYY-MM-DDTHH:MM:SSZ` |
 | builder-034 | context-built, context-system | Any built event | `context` equals `buildContext(event, ppid, env)` and `context.system` has `hostname`, `os`, `arch` |
+| builder-035 | wire-payload-verbatim | A message whose payload after the separator is empty | The payload is empty `Data` |
 
-SHOULD requirements: the document contains none. The open question on `ppid-range` has no vector because the behavior it asks about is undefined. `http-payload-parsed-once` and `context-event-unused` are not separately vectored: the first is an internal efficiency fact verified by `builder-011`, the second by `builder-034`.
+SHOULD requirements: the document contains none. The open question on `ppid-range` has no vector because the behavior it asks about is undefined. The payload is parsed once on the http path and the parsed object is handed to the inner build; that is an internal efficiency detail, not a requirement.
 
 ## Edge Cases
 
@@ -161,7 +163,7 @@ SHOULD requirements: the document contains none. The open question on `ppid-rang
 - **Boundary values**: `daemonCwd` of the empty string or `/` disables the daemon-directory drop (MUST). A cache that exceeds 128 entries drops only expired entries, so a burst of more than 128 distinct live keys keeps them all until they expire (MUST). A wire `ppid` that overflows a 32-bit integer is the open question on `ppid-range`.
 - **Concurrent access**: a daemon may service hook posts concurrently. `HookEnvCache` guards both maps with one lock, resolves outside the lock, and lets duplicate resolution happen (MUST); the declared Swift opt-out `nonisolated(unsafe)` is justified by that lock. `daemonWorkingDirectory` is a once-initialised static. The `build` functions are otherwise pure.
 - **Error states**: a failed process lookup, an unreadable environment, a malformed wire message and a payload that does not parse never raise; they produce nil, an empty environment or an empty `hookData`. A transient read failure is cached for three seconds as an empty environment, so the token and terminal fields are absent for events in that window; the source notes a sessions upsert that coalesces never clobbers an earlier good value.
-- **Stale cache**: because entries live three seconds, an account switch in the middle of a window self-heals within one window, and a pid reused by another process inside the window would return the earlier process's environment; the source documents the first and states nothing about the second.
+- **Stale cache**: because entries live three seconds, an account switch in the middle of a window self-heals within one window, and a pid reused by another process inside the window would return the earlier process's environment; the source documents the first and states nothing about the second (see the pending decision on pid reuse).
 - **Ambiguous directory**: two `claude` processes in one working directory make `ProcessLiveness.claudePid(inCwd:)` return nil, so the event is built with an empty environment and a `ppid` of 0 rather than attributed to the wrong account (MUST pass the nil through).
 - **Headless race**: the env marker `ADH_SDK_HEADLESS` is only readable while the short-lived headless process is alive; the working-directory check is timing-independent and is why it runs first in the http path (MUST).
 - **Offline or disconnected state**: not applicable — the builder performs no network I/O; the socket and http transports that call it belong to the daemon.
@@ -209,7 +211,7 @@ Not applicable: the builder sends no analytics events.
 - **Data collected**: the hook payload, the account name and OAuth login email from the injected closures, and the curated context (home directory, user name, `PATH`, terminal identifiers, host name, operating system and architecture).
 - **Storage**: only in memory. `HookEnvCache` holds a process's entire environment, which may include secrets, for three seconds; the built event carries only the curated subset.
 - **Transmission**: none by this component; the caller ingests the event.
-- **Retention**: cached entries expire after three seconds (the token walk itself is memoised per pid for 30 seconds inside `ProcessEnv`); an expired entry is removed only when a map grows past 128 entries.
+- **Retention**: a cached entry is no longer served after three seconds (the token walk itself is memoised per pid for 30 seconds inside `ProcessEnv`), but it is removed only when a map grows past 128 entries, so an expired entry, with a whole process environment that may hold secrets, can stay in memory until then.
 - **OAuth token**: the token is recovered only to be passed to `accountName`; it is not placed in `hookData` or `context`.
 
 ## Logging
@@ -228,7 +230,7 @@ Not applicable: the builder makes no log call; a rejected event is signalled by 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookEnvelopeBuilder.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookEnvelopeBuilder.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -236,7 +238,7 @@ Not applicable: the builder makes no log call; a rejected event is signalled by 
 ## Design Decisions
 
 **Decision**: The http build drops an event whose `cwd` equals the daemon's own working directory before it reads any process environment.
-**Rationale**: The source comment explains that the headless `claude` a daemon spawns inherits the daemon's directory and never sets its own; the `ADH_SDK_HEADLESS` marker is only recoverable while that short-lived process is alive, so relying on it alone races the summarizer's exit and lets a phantom session in. The working-directory match does not depend on timing.
+**Rationale**: The comment on the http `build` overload explains that the headless `claude` a daemon spawns inherits the daemon's directory and never sets its own; the `ADH_SDK_HEADLESS` marker is only recoverable while that short-lived process is alive, so relying on it alone races the summarizer's exit and lets a phantom session in. The working-directory match does not depend on timing.
 **Approved**: pending
 
 **Decision**: `daemonWorkingDirectory` is read once, lazily.
@@ -256,7 +258,7 @@ Not applicable: the builder makes no log call; a rejected event is signalled by 
 **Approved**: pending
 
 **Decision**: `context.process` omits `argv`, `cwd` and `pid` relative to the capture command's envelope.
-**Rationale**: The source comment says the hook-firing process has exited by ingest time and a hook script's argv is only its name and the event, which is already top-level; `cwd` is omitted without a stated reason. Other divergences from `HookCaptureCommand` are boolean parsing through `RawSetting.bool` (broader than `1` and `true`), the `session_id` requirement, the daemon-directory check, and the order of token sources (the forwarded environment first here; the process walk first in the capture command).
+**Rationale**: The comment in `buildContext` says the hook-firing process has exited by ingest time and a hook script's argv is only its name and the event, which is already top-level; `cwd` is omitted without a stated reason. Other divergences from `HookCaptureCommand` are boolean parsing through `RawSetting.bool` (broader than `1` and `true`), the `session_id` requirement, the daemon-directory check, and the order of token sources (the forwarded environment first here; the process walk first in the capture command).
 **Approved**: pending
 
 **Decision**: Account lookups are injected and default to the empty string.
@@ -267,6 +269,13 @@ Not applicable: the builder makes no log call; a rejected event is signalled by 
 **Rationale**: The doc comment states it returns nil when a required field is missing, currently the session id; a later session upsert needs it. The source discards the value after checking it.
 **Approved**: pending
 
+**Decision**: Remove the unused `event` parameter of `buildContext`.
+**Rationale**: The parameter has no effect on the result today; keeping it is dead surface, and removing it is a source cleanup, not a behavior ports must copy.
+**Approved**: pending
+
+**Decision**: Accept that a pid reused by another process inside the three-second window returns the earlier process's environment, or key the cache by pid plus process start time.
+**Rationale**: The source documents the account-switch case but says nothing about pid reuse; a reused pid could attribute an event to the wrong account for up to one window, so this is recorded as an open choice.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -285,4 +294,5 @@ Separation of concerns is partial: one file holds the event builder, the context
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the source path out of references, linked its dependencies, turned context-event-unused into a pending decision, dropped http-payload-parsed-once, split and corrected vectors, and corrected the retention wording. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

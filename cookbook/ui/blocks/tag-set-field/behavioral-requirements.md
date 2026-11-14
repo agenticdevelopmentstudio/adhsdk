@@ -12,6 +12,9 @@
 - **render-chips-from-value**: Component MUST render all items in the `value` array as chips, maintaining their order.
 - **remove-chip-on-delete**: Component MUST remove an item from `value` and call `onChange` with the updated array when the user clicks the remove action on a chip.
 - **empty-chips-row-renders-nothing**: When `value` is empty, `EntitySelectionChips` (given no `emptySelectionLabel`) MUST render nothing at all — no chips-row element in the DOM, not an empty one — so a field with no selection yet costs no height; there is no "No tags yet" label or placeholder row.
+- **pass-state-to-chooser**: Component MUST render the `EntityChooser` in multi-select mode with `selectionPlacement="host"`, passing `options` (the full vocabulary, unfiltered), `value` and `onChange` straight through, and MUST NOT pass `allowCreate` (so the chooser's default of creation enabled applies).
+- **chooser-select-adds-to-value**: When the user accepts an existing label in the EntityChooser, the chooser MUST call `onChange` with that label appended to `value`; an already-selected label is never added twice.
+- **chooser-create-adds-to-value**: When the user types a label that is not in `options` into the EntityChooser's filter field and confirms the create row, the chooser MUST call `onChange` with the new label appended to `value`.
 - **pass-label-to-chips**: Component MUST pass the `label` prop as the `ariaLabel` to `EntitySelectionChips`.
 - **pass-label-to-chooser**: Component MUST pass the `label` prop as the `ariaLabel` to `EntityChooser`.
 - **noun-in-placeholders**: Component MUST build every piece of microcopy from the singular `noun` prop: the Combobox's `ariaLabel` (`Add a ${noun}`) and `placeholder` (`Add a ${noun}…`), and the EntityChooser's `inputLabel` (`Filter or add a ${noun}`) and `placeholder` (`Filter or add a ${noun}…`).

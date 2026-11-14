@@ -12,6 +12,6 @@
 **Approved**: pending
 
 **Decision**: The title always renders as a fixed `<h3>` heading; there is no `headingLevel` prop to vary the depth.
-**Rationale**: Matches the component's current usage context; a caller needing a different heading depth restyles or wraps Group rather than reconfiguring it, keeping the contract simple.
+**Rationale**: Matches the component's current usage context, where Group sits under a settings panel whose own heading is an `<h2>`; the fixed `<h3>` is valid only in contexts where an `<h2>` precedes it, and nested or standalone use elsewhere breaks heading hierarchy. A caller needing a different heading depth restyles or wraps Group rather than reconfiguring it, keeping the contract simple.
 **Approved**: pending
 

@@ -2,7 +2,7 @@
 id: ccc0d121-4927-4a83-b0e5-337116edebc0
 title: "ThemeTypography"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -23,6 +23,8 @@ tags:
 depends-on: []
 related:
   - 932449c9-b57f-4e2c-992a-1e27584742b6
+  - d15bba09-4574-4fd1-93a0-f7d2cccd04f2
+  - 1f80f43d-5aa4-42cf-bc3e-fb742662b615
 references: []
 approved-by: ""
 approved-date: ""
@@ -34,7 +36,7 @@ approved-date: ""
 
 `ThemeTypography` is the typography half of a theme. It holds one `FontStyle` per `TextRole` plus a global `sizeScale` that multiplies every role's size at once. UI code reads fonts by role (`title`, `heading`, `body`, `caption`, `code`, `button`) the way it reads colors by `ThemeRole`, so a label's meaning survives a theme swap and a global size change.
 
-The source file defines four public types and two clamp helpers: `TextRole` (enum), `FontWeight` (enum), `FontStyle` (struct) and `ThemeTypography` (struct, with `sizeScaleRange` and `clampedSizeScale(_:)`). It imports only `Foundation`; the source comment says `FontWeight` is bridged to `NSFont.Weight` in CoreMacOS so the Core model stays Foundation-only. The bridges to platform fonts live in separate files (the iOS bridge is `ThemeTypography+UIFont.swift`) and are not part of this contract. A `ColorTheme` carries a `ThemeTypography` as its `typography` property (see [ColorTheme](cookbook:932449c9-b57f-4e2c-992a-1e27584742b6)).
+The source file defines four public types and two clamp helpers: `TextRole` (enum), `FontWeight` (enum), `FontStyle` (struct) and `ThemeTypography` (struct, with `sizeScaleRange` and `clampedSizeScale(_:)`). It imports only `Foundation`; the model stays Foundation-only. The bridges to platform fonts (`NSFont` on macOS, `UIFont` on iOS) live in separate files in the UI layer (`SDK/SourcesUI/macOS/Theme/` and `SDK/SourcesUI/iOS/Theme/`) and are not part of this contract. A `ColorTheme` carries a `ThemeTypography` as its `typography` property (see [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.color-theme](cookbook:932449c9-b57f-4e2c-992a-1e27584742b6)). The size clamp is applied by callers such as [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.theme-store](cookbook:d15bba09-4574-4fd1-93a0-f7d2cccd04f2) and [adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.semantic-palette](cookbook:1f80f43d-5aa4-42cf-bc3e-fb742662b615)..
 
 ## Behavioral Requirements
 
@@ -42,7 +44,7 @@ Text roles
 
 - **role-cases**: `TextRole` MUST have exactly six cases: `title`, `heading`, `body`, `caption`, `code` and `button`.
 - **role-raw-value**: `TextRole` MUST be a `String`-backed enum whose raw value equals the case name (`"title"`, `"heading"`, `"body"`, `"caption"`, `"code"`, `"button"`).
-- **role-meaning**: Each role MUST mean what its doc comment says: `title` large window or screen titles; `heading` section or group headers; `body` default body text; `caption` small secondary text; `code` monospaced text; `button` control labels.
+- **role-meaning**: Each role SHOULD be used for the meaning its doc comment gives: `title` large window or screen titles; `heading` section or group headers; `body` default body text; `caption` small secondary text; `code` monospaced text; `button` control labels.
 - **role-conformances**: `TextRole` MUST be `CaseIterable` and `Sendable`.
 
 Font weight
@@ -96,19 +98,15 @@ System defaults
 | `code` | 12 | `.regular` | true |
 | `button` | 13 | `.medium` | false |
 
-- **default-style-basis**: The default sizes mirror AppKit's standard metrics, so an uncustomized theme looks like the app does today (the source's doc comment).
 - **system-constant**: `ThemeTypography.system` MUST equal `ThemeTypography()`: `sizeScale` 1.0, empty `styles`, every role at its system default.
 - **default-covers-roles**: `defaultStyle(_:)` MUST return a style with `size` greater than 0 for every `TextRole` case.
 
 Size scale limits
 
 - **scale-range**: `ThemeTypography.sizeScaleRange` MUST be the closed range 0.5 to 4.
-- **scale-range-rationale**: The lower bound exists because below 0.5 `size(_:)` collapses every role toward zero and takes any constraint built on an intrinsic size with it; the upper bound exists because above 4 the size exceeds what a layout that assumes a roughly system-sized label can hold (the doc comment).
-- **clamp-function**: `clampedSizeScale(_:)` MUST return the value limited to `sizeScaleRange`: a value below 0.5 returns 0.5, a value above 4 returns 4, and a value inside the range is returned unchanged; this holds for finite input (`clamp-nan` covers non-finite input).
-- **clamp-infinity**: `clampedSizeScale(_:)` MUST return `1.0` for negative and positive infinity alike, not the nearest bound, because the finite check runs before the limit.
-- **clamp-nan**: `clampedSizeScale(_:)` MUST return `1.0`, the unscaled size, for a non-finite input (NaN or either infinity), because `min` and `max` would pass NaN straight through the limit. Covered by `clampNonFinite`.
-- **clamp-callers**: The clamp MUST be applied by every path that sets a scale from outside the type: `SemanticPalette.scaled(by:)` (the reader's runtime "Text Size" control) and `ThemeStore.importJSON` (a theme file's declared `typography.sizeScale`). Both call `clampedSizeScale(_:)` so the two cannot drift onto different limits.
-- **clamp-repair-not-refuse**: `ThemeStore.importJSON` repairs an out-of-range scale by clamping it rather than rejecting the file, because a bad scale leaves a theme mis-sized, not unusable (its doc comment).
+- **clamp-function**: `clampedSizeScale(_:)` MUST return the value limited to `sizeScaleRange`: a value below 0.5 returns 0.5, a value above 4 returns 4, and a value inside the range is returned unchanged; this holds for finite input (`clamp-non-finite` covers non-finite input).
+- **clamp-non-finite**: `clampedSizeScale(_:)` MUST return `1.0`, the unscaled size, for a non-finite input (NaN, positive infinity or negative infinity), not the nearest bound, because the finite check runs before the limit and `min` and `max` would pass NaN straight through it. Covered by `clampNonFinite`.
+- **clamp-callers**: Callers that set a scale from outside the type MUST use `clampedSizeScale(_:)`, so every caller shares one limit. The callers' own requirements live in the ThemeStore and SemanticPalette ingredients.
 
 Persistence and side effects
 
@@ -131,7 +129,7 @@ Not applicable — this is a typography data model, not a visual component. `siz
 
 ## Conformance Test Vectors
 
-Tests live in `ThemeTypographyTests` (Swift Testing suite `ThemeTypography`): `systemHasAllRoles`, `sizeScaleApplies`, `explicitStyleWins`, `codableRoundTrip`, `colorThemeCarriesTypography` and `clampNonFinite`. `clampNonFinite` also asserts `clampedSizeScale(9)` is 4 and `(0.1)` is 0.5. The suite has no test of `sizeScaleRange` itself; that vector and the in-range clamp rows derive from the source and from the call sites in `ThemeStore` and `SemanticPalette`.
+Tests live in `ThemeTypographyTests` (Swift Testing suite `ThemeTypography`): `systemHasAllRoles`, `sizeScaleApplies`, `explicitStyleWins`, `codableRoundTrip`, `colorThemeCarriesTypography` and `clampNonFinite`. `clampNonFinite` also asserts `clampedSizeScale(9)` is 4 and `(0.1)` is 0.5. The clamp's callers (`ThemeStore.importJSON`, `SemanticPalette.scaled(by:)`) have their vectors in their own ingredients. The suite has no test of `sizeScaleRange` itself; that vector and the in-range clamp rows derive from the source and from the call sites in `ThemeStore` and `SemanticPalette`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -147,19 +145,17 @@ Tests live in `ThemeTypographyTests` (Swift Testing suite `ThemeTypography`): `s
 | typography-010 | typography-init-defaults, system-constant | `ThemeTypography()` and `ThemeTypography.system` | equal; `sizeScale` 1.0, `styles` empty |
 | typography-011 | style-init-defaults | `FontStyle(size: 14)` | family nil, size 14, weight `.regular`, `monospaced` false |
 | typography-012 | scale-range | `ThemeTypography.sizeScaleRange` | lower bound 0.5, upper bound 4 |
-| typography-013 | clamp-function | `clampedSizeScale(0)`, `(0.1)`, `(0.5)`, `(1.0667)`, `(4)`, `(9)` | 0.5, 0.5, 0.5, 1.0667, 4, 4 |
-| typography-014 | clamp-infinity | `clampedSizeScale(-.infinity)` and `(.infinity)` (test `clampNonFinite`) | 1.0 and 1.0 |
-| typography-015 | clamp-callers, clamp-repair-not-refuse | `ThemeStore.importJSON` of a theme file declaring `"sizeScale": 0` with a valid palette | the imported theme's `typography.sizeScale` is 0.5; no error |
-| typography-016 | clamp-callers | `SemanticPalette.scaled(by: 100)` | behaves as `scaled(by: 4)` |
+| typography-013 | clamp-function | `clampedSizeScale(0.1)` and `(9)` (test `clampNonFinite`) | 0.5 and 4 |
+| typography-014 | clamp-non-finite | `clampedSizeScale(.nan)`, `(.infinity)` and `(-.infinity)` (test `clampNonFinite`) | 1.0 for each |
 | typography-017 | typography-init-no-clamp, size-uses-stored-scale | `ThemeTypography(sizeScale: 0).size(.body)` | 0 |
 | typography-018 | decode-strict | decode `{"sizeScale": 1, "styles": {"body": {"size": 13, "weight": "plush", "monospaced": false}}}` | throws a decoding error; no default weight is substituted |
 | typography-019 | decode-strict | decode `{"sizeScale": 1}` | throws `keyNotFound` for `styles` |
 | typography-020 | role-cases, role-raw-value | `TextRole.allCases.map(\.rawValue)` | `["title", "heading", "body", "caption", "code", "button"]` |
 | typography-021 | weight-cases | `FontWeight.allCases.count` and first and last case | 9; `ultraLight` and `black` |
-| typography-022 | clamp-nan | `clampedSizeScale(.nan)`, `(.infinity)`, `(-.infinity)` | 1.0 for each |
 | typography-023 | styles-unknown-key | `styles["footnote"] = FontStyle(size: 9)`; read every role | every role resolves as before; the unknown key is kept and not read |
 | typography-024 | style-no-size-validation | `FontStyle(size: -3).size` and `ThemeTypography(styles: ["body": FontStyle(size: 0)]).size(.body)` | -3 and 0 |
 
+| typography-025 | clamp-function | `clampedSizeScale(0)`, `(0.5)`, `(1.0667)` and `(4)` (derived from the source; no test) | 0.5, 0.5, 1.0667 and 4 |
 ## Edge Cases
 
 - **Empty `styles`**: every role resolves to `defaultStyle(_:)`; the empty `ThemeTypography()` reproduces the system-font look (`system-constant`). MUST.
@@ -168,12 +164,12 @@ Tests live in `ThemeTypographyTests` (Swift Testing suite `ThemeTypography`): `s
 - **Boundary scale values**: 0.5 and 4 are inside `sizeScaleRange` and pass the clamp unchanged. MUST.
 - **Scale outside the range**: the clamp returns the nearest bound; the stored `sizeScale` inside the type is never clamped on its own, so a value set directly on the property or through `init` stays out of range until a caller clamps it. MUST.
 - **Zero or negative scale**: `size(_:)` returns 0 or a negative size for a stored scale of 0 or below; only the callers listed in `clamp-callers` prevent this. MUST (to match the source).
-- **Non-finite scale**: NaN and both infinities clamp to 1.0, the unscaled size (`clamp-nan`). MUST.
+- **Non-finite scale**: NaN and both infinities clamp to 1.0, the unscaled size (`clamp-non-finite`). MUST.
 - **Non-finite or non-positive style size**: `FontStyle.size` is unvalidated, so the model carries it as given. The platform bridge decides what to do with it. MUST (to match the source).
-- **Imported theme with a bad scale**: repaired by clamping, not refused (`clamp-repair-not-refuse`). MUST.
+- **Imported theme with a bad scale**: repaired by clamping, not refused (see the clamp Design Decision). MUST.
 - **Malformed JSON**: an unknown `weight` string or a missing required key makes decoding throw the decoder's own error; the type does not fall back to a default. MUST.
 - **Unknown `styles` key**: kept in the dictionary, never read by `style(_:)`. MAY.
-- **Concurrent access**: not applicable beyond `Sendable`; each copy is an independent value, so concurrent reads cannot race.
+- **Concurrent access**: see `concurrency`; each copy is an independent value, so concurrent reads cannot race, and mutation of one instance is the caller's to serialize.
 - **Offline or disconnected state**: not applicable; the types perform no network or file access.
 - **Cancellation and timeouts**: not applicable; every operation is synchronous and bounded.
 
@@ -221,11 +217,11 @@ Not applicable: the source makes no log calls.
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeTypography.swift`, imports only `Foundation`, and compiles for macOS and iOS. A SwiftUI view builds `Font.system(size: typography.size(role), weight: ...)` from `size(_:)` and a `FontWeight` to `Font.Weight` switch, uses `.monospaced()` (or `Font.custom` with `family`) when `monospaced` or `family` is set, and keeps that bridge in the UI layer, not in this file.
+- **SwiftUI**: The model imports only `Foundation` and compiles for macOS and iOS. A SwiftUI view builds `Font.system(size: typography.size(role), weight: ...)` from `size(_:)` and a `FontWeight` to `Font.Weight` switch, uses `.monospaced()` (or `Font.custom` with `family`) when `monospaced` or `family` is set, and keeps that bridge in the UI layer, not in this file.
 - **Compose**: Port `TextRole` as an `enum class`, `FontStyle` as a `data class`, and the bridge as `TextStyle(fontSize = (size * sizeScale).sp, fontWeight = FontWeight(...), fontFamily = ...)`. Map the nine weights to Compose's numeric weights (100 to 900); use `FontFamily.Monospace` for `monospaced`. Compose has no AppKit default metrics, so keep the table of defaults from this recipe. `coerceIn(0.5f, 4f)` passes NaN through, so check `isFinite()` first and return 1f, as the source does.
 - **React/Web**: Port as TypeScript string unions and plain readonly objects, with `styles` as `Record<string, FontStyle>` (already string-keyed, so `JSON.stringify` and `JSON.parse` give the same shape). Resolve to CSS with `font-size: calc(...)` or computed `px`, `font-weight` 100 to 900, `font-family` (adding `ui-monospace` or `monospace` when `monospaced`) and `font-variant-numeric: tabular-nums` if fixed-width digits are wanted. `Math.min(Math.max(v, 0.5), 4)` passes NaN through, so guard with `Number.isFinite(v) ? ... : 1` to match the source.
 - **AppKit / UIKit**: The macOS bridge is `ThemeTypography+NSFont.swift` under `SDK/SourcesUI/macOS/Theme/` (`FontWeight` to `NSFont.Weight`, then `NSFont.systemFont(ofSize:weight:)`, `NSFont.monospacedSystemFont(ofSize:weight:)` or `NSFont(name:size:)` for a family); the iOS bridge is `ThemeTypography+UIFont.swift` under `SDK/SourcesUI/iOS/Theme/` (`UIFont.systemFont(ofSize:weight:)`, `UIFont.monospacedSystemFont(ofSize:weight:)`, `UIFont(name:size:)`). Feed the bridge `size(role)` so the scale is applied once.
-- **WinUI 3**: Make `TextRole` and `FontWeightName` `enum`s serialized by name with `JsonStringEnumConverter` (camelCase naming policy to keep `ultraLight`), and `FontStyle` and `ThemeTypography` immutable `record` types (a `record` with `init` setters plus `with` expressions mirrors Swift's value-copy mutation). Use `Dictionary<string, FontStyle>` for `styles` with `System.Text.Json` (string keys serialize as an object). Apply it to a `TextBlock` or `Button` by setting `FontSize` to `size * sizeScale`, `FontFamily` to `new FontFamily(family ?? "Segoe UI Variable")` (or `"Cascadia Mono"` or `"Consolas"` when `monospaced`), and `FontWeight` from `Windows.UI.Text.FontWeights` (`Thin`, `Light`, `Normal`, `Medium`, `SemiBold`, `Bold`, `ExtraBold`, `Black`; WinUI has no `ultraLight` constant, so `new FontWeight { Weight = 100 }` or `ExtraLight` at 200). Expose a role as a named `Style` resource in `ResourceDictionary` (`Setter Property="FontSize"`) or write the values into the XAML type ramp (`TitleTextBlockStyle`, `SubtitleTextBlockStyle`, `BodyTextBlockStyle`, `CaptionTextBlockStyle`) when matching the system look. Clamp with `double.IsFinite(v) ? Math.Clamp(v, 0.5, 4) : 1.0`, because `Math.Clamp` alone passes NaN through and the source returns 1.0 for any non-finite value. WinUI's default sizes are 14 for body, 12 for caption and 28 for title, not this table, so keep the table. A "Text Size" slider binds through `INotifyPropertyChanged` to a view-model that re-applies `size * sizeScale`; the model itself needs no change notification.
+- **WinUI 3**: Make `TextRole` and `FontWeightName` `enum`s (named `FontWeightName` so it does not clash with the `Windows.UI.Text.FontWeight` struct) serialized by name with `JsonStringEnumConverter` (camelCase naming policy to keep `ultraLight`), and `FontStyle` and `ThemeTypography` immutable `record` types (a `record` with `init` setters plus `with` expressions mirrors Swift's value-copy mutation). Use `Dictionary<string, FontStyle>` for `styles` with `System.Text.Json` (string keys serialize as an object). Apply it to a `TextBlock` or `Button` by setting `FontSize` to `size * sizeScale`, `FontFamily` to `new FontFamily(family ?? "Segoe UI Variable")` (or `"Cascadia Mono"` or `"Consolas"` when `monospaced`), and `FontWeight` from the numeric ladder `ultraLight` 100, `thin` 200, `light` 300, `regular` 400, `medium` 500, `semibold` 600, `bold` 700, `heavy` 800, `black` 900, written as `new FontWeight { Weight = n }` because the named `Windows.UI.Text.FontWeights` constants do not line up one to one with the nine cases (every port uses this ladder so weights agree). Expose a role as a named `Style` resource in `ResourceDictionary` (`Setter Property="FontSize"`) or write the values into the XAML type ramp (`TitleTextBlockStyle`, `SubtitleTextBlockStyle`, `BodyTextBlockStyle`, `CaptionTextBlockStyle`) when matching the system look. Clamp with `double.IsFinite(v) ? Math.Clamp(v, 0.5, 4) : 1.0`, because `Math.Clamp` alone passes NaN through and the source returns 1.0 for any non-finite value. WinUI's default sizes are 14 for body, 12 for caption and 28 for title, not this table, so keep the table. A "Text Size" slider binds through `INotifyPropertyChanged` to a view-model that re-applies `size * sizeScale`; the model itself needs no change notification.
 
 ## Reference Implementations
 
@@ -234,7 +230,7 @@ Not applicable: the source makes no log calls.
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeTypography.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeTypography.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -255,7 +251,7 @@ Not applicable: the source makes no log calls.
 **Approved**: pending
 
 **Decision**: The 0.5 to 4 clamp is a shared static (`sizeScaleRange`, `clampedSizeScale(_:)`) applied by callers and not by `init` or `size(_:)`.
-**Rationale**: The source says it is the one place both callers enforce the limit so they cannot drift. It is not enforced in `init` because a decoded or hand-built value is the caller's to repair; `ThemeStore.importJSON` repairs rather than refuses since a bad scale leaves the theme mis-sized, not unusable. The consequence is that a `ThemeTypography` built directly can hold any scale.
+**Rationale**: The source says it is the one place both callers enforce the limit so they cannot drift. The lower bound exists because below 0.5 `size(_:)` collapses every role toward zero and takes any constraint built on an intrinsic size with it; the upper bound exists because above 4 the size exceeds what a layout that assumes a roughly system-sized label can hold (the doc comment). It is not enforced in `init` because a decoded or hand-built value is the caller's to repair; `ThemeStore.importJSON` repairs rather than refuses since a bad scale leaves the theme mis-sized, not unusable. The consequence is that a `ThemeTypography` built directly can hold any scale.
 **Approved**: pending
 
 **Decision**: `defaultStyle(_:)` uses AppKit's standard metrics (22, 15, 13, 11, 12 monospaced, 13 medium).
@@ -272,10 +268,11 @@ Not applicable: the source makes no log calls.
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | security |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | accessibility |
 
-The type is a Foundation-only value model with the platform font bridges kept in separate files, so separation of concerns passes. Unit-test coverage passes: `ThemeTypographyTests` covers defaults, scale, overrides, the `Codable` round trip and `clampedSizeScale(_:)` including non-finite input (`clampNonFinite`). Explicit error handling is partial because decoding failures surface as the decoder's own errors with no defaults, while the clamp maps non-finite input to 1.0. Input sanitization is partial: an imported theme's scale is clamped, but `FontStyle.size` and a directly constructed `sizeScale` are not validated. Dynamic type support is partial: `sizeScale` gives a multiplier a host can drive from a text-size control, but the type has no link to the platform's own Dynamic Type setting.
+The type is a Foundation-only value model with the platform font bridges kept in separate files, so separation of concerns passes. Unit-test coverage is partial: `ThemeTypographyTests` covers defaults, scale, overrides, the `Codable` round trip and `clampedSizeScale(_:)` including non-finite input (`clampNonFinite`), but the vectors whose Input column names no test have none. Explicit error handling is partial because decoding failures surface as the decoder's own errors with no defaults, while the clamp maps non-finite input to 1.0. Input sanitization is partial: an imported theme's scale is clamped, but `FontStyle.size` and a directly constructed `sizeScale` are not validated. Dynamic type support is partial: `sizeScale` gives a multiplier a host can drive from a text-size control, but the type has no link to the platform's own Dynamic Type setting.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Merged the duplicate clamp requirements, moved caller-owned clamp rules to their own ingredients, fixed keyword and WinUI font-weight guidance, removed source paths, trimmed vectors and added related links. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Non-finite size scale becomes 1.0; a delete that matches nothing skips the write; claims verified against source |

@@ -4,7 +4,7 @@
 **Approved**: pending
 
 **Decision**: Images are hidden (`display: none`) until their `onLoad` event fires, then revealed.
-**Rationale**: Prevents an incomplete or default broken-image placeholder from flashing on screen before the real image is ready. This is not lazy loading (`loading="lazy"`) and does not delay or prevent the underlying network fetch — the image request starts immediately regardless of visibility, so hiding it has no bearing on whether a malicious or oversized response is fetched.
+**Rationale**: Prevents an incomplete or default broken-image placeholder from flashing on screen before the real image is ready. This is not lazy loading (`loading="lazy"`); see **hide-until-loaded** for why hiding does not control the fetch.
 **Approved**: pending
 
 **Decision**: On an image load error, the hidden style is removed the same way as on success ("fail open"), rather than leaving the space collapsed indefinitely.
@@ -23,3 +23,6 @@
 **Rationale**: The component applies no sanitization beyond the link-protocol allowlist and the rendering framework's standard attribute encoding; every field is rendered only as inert text or an attribute value, or fetched as an image, never interpreted as markup or executable code. Treating one field (such as alt text) as an exception would contradict the Overview's own untrusted-origin framing without changing what the component actually does.
 **Approved**: pending
 
+**Decision**: A URL that is malformed but parseable as a relative path (for example `ht!tp://invalid`) is accepted as a link href, and relative hrefs are accepted without regard to the host page's scheme; the allowlist governs only the scheme written in the string.
+**Rationale**: The scheme check resolves against a fixed internal base so scheme-less links work on every host. The parser treats such strings as relative paths, so rejecting them would need a separate syntactic rule on the raw string; none of them can resolve to a script-executing scheme. The browser later resolves an accepted relative href against the real page, so on a host page served from `file:`, `http:` or a custom scheme it navigates within that scheme.
+**Approved**: pending

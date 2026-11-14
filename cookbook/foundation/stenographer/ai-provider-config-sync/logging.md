@@ -1,3 +1,1 @@
-
-Not applicable: the types call no logging API.
-
+Not applicable: the types call no logging API. Callers must follow **secrets-not-logged**.

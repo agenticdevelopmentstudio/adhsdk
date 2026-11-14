@@ -4,7 +4,7 @@
   is not required by `React.ComponentProps<"div">`. `variant={undefined}`
   MUST behave identically to omitting the prop (falls back to `default`
   per **default-variant**).
-- **Boundary values**: A `variant` value outside the five accepted
+- **Boundary values**: A `variant` value outside the six accepted
   literals (only reachable by bypassing the `VariantProps` TypeScript
   type, e.g. from untyped/unchecked data): `class-variance-authority`'s
   lookup finds no match for an unrecognized key, so it omits that
@@ -29,7 +29,7 @@
   `role="alert"` / `data-slot="alert"` attributes, because `{...props}` is
   spread in JSX after those two attributes on the root `<div>` — JSX's
   last-attribute-wins rule applies, so the default can be silently
-  replaced. See #test-vectors/alert-019.
-- **Icon detection is structural, not type-based**: See Design Decisions
-  > Icon detection via CSS `:has()`, not an icon prop.
+  replaced. See **override-role-and-data-slot** and #test-vectors/alert-019.
+- **Icon detection is structural, not type-based**: See the Design Decisions entry on
+  detecting the icon via CSS `:has()` rather than an icon prop.
 

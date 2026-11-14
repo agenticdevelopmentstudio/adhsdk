@@ -4,7 +4,7 @@
     "id": "fc9671be-170c-436e-9628-892624952191",
     "title": "MailRPC",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8eb35f6e14245298",
+  "synced": "97288c038a1594da",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

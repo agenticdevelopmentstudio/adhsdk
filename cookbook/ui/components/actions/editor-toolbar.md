@@ -2,11 +2,11 @@
 id: 3c65c844-6c3c-43e2-b792-8575f5dda9cf
 title: "EditorToolbar"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -42,8 +42,8 @@ EditorToolbar is a semantic layout wrapper that houses a horizontal control stri
 - **class-name-merge**: Component MUST accept a `className` prop and merge it with the component's default layout classes so that a caller's classes can override the defaults.
 - **flex-layout**: Component MUST render with `display: flex` to establish flexbox layout for its children.
 - **vertical-center**: Component MUST use flexbox alignment to center children vertically (`align-items: center`).
-- **child-gap**: Component MUST apply a consistent horizontal gap of `0.375rem` (6 pixels) between direct child elements.
-
+- **child-gap**: Component MUST apply a consistent horizontal gap of `0.375rem` (6px at the default 16px root font size) between direct child elements.
+- **accessible-name-from-aria-label**: Component MUST expose its accessible name through the `aria-label` attribute, set to the `ariaLabel` value exactly as given. An explicit empty string is applied as the empty string, with no fallback to the default and no warning (see Edge Cases: Empty ariaLabel).
 ## Appearance
 
 - **Layout**: Flexbox row with horizontal gap
@@ -61,7 +61,7 @@ Not applicable: EditorToolbar is a pure layout container with no interactive sta
 ## Accessibility
 
 - **Role**: `toolbar` — identifies the region as a toolbar to assistive technology (see **toolbar-role**). The component establishes this semantic grouping only; see the Design Decisions entry below for what it deliberately does not provide.
-- **Accessible name**: MUST be provided via `aria-label`. The default name is `"Editor toolbar"` (see **aria-label-default**), which is announced by screen readers when focus enters or the region is explicitly searched. If a caller explicitly passes `ariaLabel=""`, the component applies it as given rather than falling back — see Edge Cases: **Empty ariaLabel** — which leaves the region with no accessible name; that is a caller error the component does not guard against.
+- **Accessible name**: Provided via `aria-label` (see **accessible-name-from-aria-label**). The default name is `"Editor toolbar"` (see **aria-label-default**), which is announced by screen readers when focus enters or the region is explicitly searched. If a caller explicitly passes `ariaLabel=""`, the component applies it as given rather than falling back — see Edge Cases: **Empty ariaLabel** — which leaves the region with no accessible name; that is a caller error the component does not guard against.
 - **Child focus management**: The component does not manage focus; child elements are responsible for their own keyboard and focus behavior. Because `role="toolbar"` alone does not deliver the WAI-ARIA toolbar keyboard pattern (roving tabindex, arrow-key navigation, Home/End), consumers must not expect toolbar keyboard shortcuts from this container — see **keyboard-navigable** in Compliance and the Design Decisions entry below.
 - **Minimum tap target**: Not applicable to the container itself; child elements are responsible for meeting touch target size requirements (44×44pt minimum on iOS, 48×48dp minimum on Android, per platform guidelines).
 
@@ -74,13 +74,13 @@ Not applicable: EditorToolbar is a pure layout container with no interactive sta
 | editor-toolbar-003 | aria-label-prop | Render with `ariaLabel="Custom toolbar"` | Element has `aria-label="Custom toolbar"` |
 | editor-toolbar-004 | render-children | Render with `children={<button>Bold</button>}` | Button element is rendered inside the toolbar |
 | editor-toolbar-005 | class-name-merge | Render with `className="custom-class"` | Element has both default classes and `custom-class` applied |
-| editor-toolbar-006 | flex-layout | Unit test: render component and inspect the rendered `class` attribute | Class attribute contains `flex` |
-| editor-toolbar-007 | vertical-center | Unit test: render component and inspect the rendered `class` attribute | Class attribute contains `items-center` |
-| editor-toolbar-008 | child-gap | Unit test: render component and inspect the rendered `class` attribute | Class attribute contains `gap-1.5` |
+| editor-toolbar-006 | flex-layout | Unit test: render component and read the element's computed style | `display` is `flex` |
+| editor-toolbar-007 | vertical-center | Unit test: render component and read the element's computed style | `align-items` is `center` |
+| editor-toolbar-008 | child-gap | Unit test: render component and read the element's computed style | `column-gap` equals `0.375rem` resolved against the computed root font size |
 | editor-toolbar-009 | vertical-center | Playwright: render with tall and short children in a browser; measure each child's bounding-box vertical center | All children's vertical centers match within a 1px tolerance; no baseline drift |
-| editor-toolbar-010 | child-gap | Playwright: render with multiple child elements in a browser; measure the gap between adjacent children | Horizontal gap is 6px ± 1px |
-| editor-toolbar-011 | child-gap | Playwright: render with `className="gap-4"` and multiple children; measure the gap between adjacent children | Horizontal gap is 16px ± 1px — the caller's `gap-4` overrides the default `gap-1.5` (tailwind-merge resolves the conflict; the later class wins) |
-
+| editor-toolbar-010 | child-gap | Playwright: render with multiple child elements in a browser; measure the gap between adjacent children | Horizontal gap equals 0.375 × the computed root font size, ±1px (6px at a 16px root) |
+| editor-toolbar-011 | child-gap | Playwright: render with `className="gap-4"` and multiple children; measure the gap between adjacent children | Horizontal gap equals 1 × the computed root font size, ±1px (16px at a 16px root) — the caller's `gap-4` overrides the default `gap-1.5` (tailwind-merge resolves the conflict; the later class wins) |
+| editor-toolbar-012 | accessible-name-from-aria-label | Render with `ariaLabel=""` | Element has `aria-label=""`; no fallback to the default and no warning |
 ## Edge Cases
 
 - **No children**: Component MUST render successfully with `children={undefined}` or `children={[]}`, producing an empty `<div role="toolbar">` element.
@@ -128,10 +128,11 @@ Not applicable: EditorToolbar processes no user data and transmits no informatio
 Not applicable: EditorToolbar has no logging. Debugging of toolbar child elements is performed at the child component level.
 
 ## Platform Notes
+The notes below are non-normative port guidance: the artifact's `platforms` list covers only `typescript` and `web`, and native implementations are not specified or tested here.
 
 - **React/Web**: Source file `packages/web/packages/ui/src/components/editor-toolbar.tsx`. Renders a `div` with the Tailwind classes `flex items-center gap-1.5`, merged with a caller-supplied `className` via the `cn()` utility (`clsx` + `tailwind-merge`) from the local `lib/utils` module. `tailwind-merge` resolves conflicting utility classes deterministically — within a class group, the later class wins — so a caller's `gap-4` overrides the default `gap-1.5`. Server-safe; no `use client` directive required.
 - **SwiftUI**: Start from an `HStack(spacing: 6)`. Native toolbar containers (`.toolbar`, `ToolbarItemGroup`) attach chrome to a `NavigationStack` or window and don't apply to a strip embedded above a text view, so use a plain `HStack` instead. Group it for assistive technology with `.accessibilityElement(children: .contain)` and set the accessible name with `.accessibilityLabel(_:)`.
-- **Compose**: Start from a `Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically)`. `Role.ToolBar` does not exist in Compose's semantics API; apply `Modifier.semantics { contentDescription = "Editor toolbar" }` (or the caller-supplied label) to the `Row` instead. Compose's `TopAppBar`/`BottomAppBar` are for app-level chrome, not an in-editor strip, so they don't apply here. Do not use `LazyRow` — toolbar children are a small, fixed set, not a large scrollable dataset.
+- **Compose**: Start from a `Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically)`. `Role.ToolBar` does not exist in Compose's semantics API; apply `Modifier.semantics { contentDescription = <the caller-supplied localized label>; isTraversalGroup = true }` (the counterpart of `.accessibilityElement(children: .contain)`) to the `Row` instead. Compose's `TopAppBar`/`BottomAppBar` are for app-level chrome, not an in-editor strip, so they don't apply here. Do not use `LazyRow` — toolbar children are a small, fixed set, not a large scrollable dataset.
 - **AppKit / UIKit**: Start from an `NSStackView` (AppKit) or `UIStackView` (UIKit) configured with `axis = .horizontal`, `spacing = 6`, and `alignment = .center`. `NSToolbar` (AppKit) and `UIToolbar` (UIKit) attach to a window or navigation bar for app-level chrome and don't apply to a strip embedded above a text view, so use the stack view instead. If using SwiftUI on iOS/macOS, use the native `HStack` above. Apply an accessibility label and container semantics equivalent to `.accessibilityElement(children: .contain)` to the stack view.
 - **WinUI 3**: Start from a `StackPanel` with `Orientation="Horizontal"` and `Spacing="6"`. `VerticalAlignment="Center"` on the `StackPanel` positions the panel itself, not its children; set `VerticalAlignment="Center"` on each child instead (or via an implicit `Style` targeting the child type). The `StackPanel` is the toolbar's root — no additional `Grid` or `Border` parent is needed. `CommandBar` supplies built-in overflow/menu chrome for app-level toolbars and isn't a fit for a plain in-editor strip; prefer the `StackPanel`. Set `AutomationProperties.Name` to the equivalent of the `aria-label` prop for UIA accessibility.
 
@@ -139,7 +140,7 @@ Not applicable: EditorToolbar has no logging. Debugging of toolbar child element
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/editor-toolbar.tsx` | confirmed (1.1.1) |
+| web | `packages/web/packages/ui/src/components/editor-toolbar.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -151,6 +152,9 @@ Not applicable: EditorToolbar has no logging. Debugging of toolbar child element
 **Rationale**: The component composes arbitrary, caller-supplied children and cannot know their keyboard semantics in advance. It establishes the `toolbar` region for assistive technology without promising keyboard behavior it doesn't implement — see **keyboard-navigable** in Compliance for the resulting gap.
 **Approved**: pending
 
+**Decision**: Apply an explicit empty `ariaLabel` as given, without falling back to the default or warning.
+**Rationale**: The component stays a thin pass-through of its prop, with no guard logic to maintain, and `ariaLabel` stays optional with a default for callers who do not care. The cost is that a caller passing `""` gets a toolbar with no accessible name and nothing reports it; the alternative, a fallback name or a development warning, was not adopted.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -170,3 +174,4 @@ Not applicable: EditorToolbar has no logging. Debugging of toolbar child element
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed must-* requirements to subject-only kebab-case; reformatted Design Decisions into Decision/Rationale/Approved form and added a decision documenting the toolbar-role/keyboard-behavior gap; corrected Compliance check names against the catalog and added keyboard-navigable and no-hardcoded-strings; rewrote Platform Notes to drop the Tailwind/`cn()` coupling outside the React/Web note and to address native toolbar controls per platform; split Conformance Test Vectors into unit class assertions and Playwright pixel/gap vectors, adding a vector for className override precedence; reconciled the Accessibility section with the Empty ariaLabel edge case; populated Localization with the hardcoded default string; added the WAI-ARIA toolbar reference; added tags; fixed modified-date quoting |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Added the accessible-name-from-aria-label requirement and an empty-ariaLabel Design Decision with vector 012, rewrote vectors 006-008 to check computed style, stated the gap in rem with root-relative checks, fixed the Compose note, and marked the native Platform Notes as non-normative. |

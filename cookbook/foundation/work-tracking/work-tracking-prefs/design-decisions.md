@@ -8,11 +8,11 @@
 **Approved**: pending
 
 **Decision**: An undecodable id list reads as empty, not as an error.
-**Rationale**: The comment on `decodeIds` says "anything else (absent, empty, garbage) is no ids", so a corrupt row degrades to the default instead of blocking tracking.
+**Rationale**: The comment on `decodeIds` says "anything else (absent, empty, garbage) is no ids", so a corrupt row degrades to the default instead of blocking tracking. The cost is that a corrupt row looks the same as a user who never added any ids, because the source neither logs nor reports the failure.
 **Approved**: pending
 
 **Decision**: A stored `.granted` holds only under the signature recorded with it; a denial holds under any.
-**Rationale**: The doc comment on `trustedAccessibility` explains that TCC keys a grant to the code's designated requirement, so a grant recorded by a differently signed build is not known to hold; trusting a denial never calls Accessibility, while trusting a grant wrongly could make the tracker issue an Accessibility call that stalls (review D1).
+**Rationale**: The doc comment on `trustedAccessibility` explains that TCC keys a grant to the code's designated requirement, so a grant recorded by a differently signed build is not known to hold; trusting a denial never calls Accessibility, while trusting a grant wrongly could make the tracker issue an Accessibility call that stalls.
 **Approved**: pending
 
 **Decision**: The raw last answer and its trusted reading are separate functions.

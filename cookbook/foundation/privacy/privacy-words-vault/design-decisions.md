@@ -19,3 +19,6 @@
 **Rationale**: Its own save already set the filter; the tag also means a second vault in the same process does not refresh from it.
 **Approved**: pending
 
+**Decision**: What a vault does when the reload after another app's save fails: keep the stale filter (today, silently), drop the filter, publish an error, or log it.
+**Rationale**: The source discards the error with `try?` and keeps concealing with the old words, which another app has already replaced; which behavior is right is not settled, so the requirement stays marked until it is.
+**Approved**: pending

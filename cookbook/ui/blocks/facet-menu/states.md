@@ -2,7 +2,7 @@
 | State | Appearance Change |
 |-------|------------------|
 | Trigger Default | Ghost button, chevron down, no count if selection empty |
-| Trigger Disabled | Opacity reduced, pointer-events disabled (when options.length === 0) |
+| Trigger Disabled | Opacity reduced, non-interactive (when options.length === 0) |
 | Trigger Hover | Platform-standard ghost button hover (if enabled) |
 | Trigger Pressed | Platform-standard ghost button pressed |
 | Popover Open | Popover visible, stacked "All"/"None" buttons above scrollable option list |

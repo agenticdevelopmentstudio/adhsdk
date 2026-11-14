@@ -2,7 +2,7 @@
 id: 581dbca7-c086-48ee-a6e9-e4b80536aa1f
 title: "Status Report Rules"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -20,9 +20,12 @@ tags:
   - pure-rules
   - findings
   - verdict
-depends-on: []
+depends-on:
+  - e2b50620-c7b1-4268-a56e-e039fea3349f
+  - 967202ce-c607-4115-9f63-466a4004e7f3
 related:
   - 77587f0b-5a27-44d9-a507-46bb90c9046a
+  - 24b45917-4361-44d8-a3dc-224cc2807aa9
 references: []
 approved-by: ""
 approved-date: ""
@@ -32,9 +35,9 @@ approved-date: ""
 
 ## Overview
 
-The business logic of the status report. `buildReport` takes the seven source reads (each a payload or the reason there is none), a `now` date and a monitor version, and returns the `ReportResponse`: a verdict, severity counts, per-source coverage, a sorted list of findings and one section per source. The module is pure: no I/O, no clock (`now` is an input), so every rule is tested with fixtures. The reading half, which produces the inputs, is the report gather recipe.
+The business logic of the status report. `buildReport` takes the seven source reads (each a payload or the reason there is none), a `now` date and a monitor version, and returns the `ReportResponse`: a verdict, severity counts, per-source coverage, a sorted list of findings and one section per source. The module is pure: no I/O, no clock (`now` is an input), so every rule is tested with fixtures. The reading half, which produces the inputs, is [adhsdk.ingredient.status.service.report.report-gather](cookbook:24b45917-4361-44d8-a3dc-224cc2807aa9).
 
-Two rules carry the rest. First, a missing source is never a healthy source: a failed read, an errored or still-refreshing dashboard section, and a monitor that stopped cycling each land in coverage and make `complete` false, so "no findings" with `complete` false means "don't know". A provider with no credentials is listed as `unconfigured` instead and does not clear `complete`, because it is a standing fact about the deployment. Second, every finding names where it came from (`source`) and, where there is one, where to look next (`link`, `issueKey`). The payload shapes are the report wire types recipe.
+Two rules carry the rest. First, a missing source is never a healthy source: a failed read, an errored or still-refreshing dashboard section, and a monitor that stopped cycling each land in coverage and make `complete` false, so "no findings" with `complete` false means "don't know". A provider with no credentials is listed as `unconfigured` instead and does not clear `complete`, because it is a standing fact about the deployment. Second, every finding names where it came from (`source`) and, where there is one, where to look next (`link`, `issueKey`). The payload shapes are specified by [adhsdk.ingredient.status.service.report.types](cookbook:e2b50620-c7b1-4268-a56e-e039fea3349f).
 
 ## Behavioral Requirements
 
@@ -42,7 +45,7 @@ The public surface is the constants `UPTIME_FLOOR`, `ERROR_ISSUE_CAP`, `RUNTIME_
 
 ### Constants
 
-- **constants-values**: The module MUST use `UPTIME_FLOOR` 99.5, `ERROR_ISSUE_CAP` 15, `RUNTIME_GROUP_CAP` 15, `SITE_ROW_CAP` 10 and `RUNTIME_5XX_MAJOR_COUNT` 5.
+- **constants-values**: The module MUST use `UPTIME_FLOOR` 99.5, `ERROR_ISSUE_CAP` 15, `RUNTIME_GROUP_CAP` 15, `SITE_ROW_CAP` 10 and `RUNTIME_5XX_MAJOR_COUNT` 5. It MUST take the failure-rate line used by `siteTroubled` from the dashboard views module (`telemetry/dashboard/views.ts`, specified by [adhsdk.ingredient.status.service.telemetry.dashboard.views](cookbook:967202ce-c607-4115-9f63-466a4004e7f3)): `FAILURE_RATE_HIGH` is 0.05, and `isFailureRateHigh(failures, requests)` is true when `requests` is above 0 and `failures / requests` is at least 0.05.
 
 ### Text helpers
 
@@ -65,7 +68,7 @@ The public surface is the constants `UPTIME_FLOOR`, `ERROR_ISSUE_CAP`, `RUNTIME_
 
 ### Monitor
 
-- **monitor-problems**: `digestMonitor` MUST make one finding per board problem, with severity the problem's own severity, source `monitor:<problem source>`, title `<name environment>: <source state>` (empty parts dropped), detail from the problem's detail, `since`, `link` as `sourceUrl` else `liveUrl`, and `issueKey` from `issueKeys`.
+- **monitor-problems**: `digestMonitor` MUST make one finding per board problem, with severity the problem's own severity, source `monitor:<problem source>`, title `<name> <environment>: <source> <state>` (the parts of each half joined by single spaces, empty parts omitted), detail from the problem's detail, `since`, `link` as `sourceUrl` else `liveUrl`, and `issueKey` from `issueKeys`.
 - **monitor-no-regrade**: `digestMonitor` MUST NOT raise a finding for a service that has no board problem, and MUST still count it in `byStatus`.
 - **monitor-glitchtip-dedupe**: `digestMonitor` MUST skip a board problem whose target is a GlitchTip errors target when the GlitchTip list is current, and MUST keep it otherwise.
 - **monitor-provider-dedupe**: `digestMonitor` MUST skip a board problem whose target is a platform-health target for a provider present in the deploys read, and MUST keep it when the deploys read is absent or lacks that provider.
@@ -136,7 +139,7 @@ Not applicable — this is a pure rules module, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors are derived from `report-rules.test.ts` (test names in parentheses); vectors 033 to 037 are read directly from the source because the tests do not pin them.
+Vectors are derived from `report-rules.test.ts` (test names in parentheses); vectors 033 to 040 are read directly from the source because the tests do not pin them, so they have no test.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -172,12 +175,14 @@ Vectors are derived from `report-rules.test.ts` (test names in parentheses); vec
 | report-rules-030 | deploys-log-fields | Logs for a (`tail`, 9 lines) and b (`error`) (test: `failing deploys carry their log tail or why there is none`) | `a` has `logTail ['x','y']` and `logLines` 9 with no `logError`; `b` has `logError` `no build log` |
 | report-rules-031 | finding-order, counts-rule | Critical http problem, failed integrations read, Shop at 90% (test: `findings sort by severity, then source, then title`) | Order critical `monitor:http`, major `report`, minor `uptime`; counts 1, 1, 1 |
 | report-rules-032 | build-coverage-keys, section-null-rule | Uptime read failed `db` (test: `every source is covered...`) | Coverage keys in the seven-source order; a section is null exactly when its coverage is not ok |
-| report-rules-033 | first-line, first-line-width, finding-shape | `firstLine('  \n')`; `firstLine('a\nb')`; a 200-character line | null; `a`; 159 characters plus `…` |
+| report-rules-033 | first-line, first-line-width | `firstLine('  \n')`; `firstLine('a\nb')`; a 200-character line | null; `a`; 159 characters plus `…` |
 | report-rules-034 | monitor-stale | `stale` true with `lastCycleAt` null | Note `monitor data is stale: no cycle has completed since the loop started` |
 | report-rules-035 | deploys-config-degraded | Feed `configDegraded` with no reason | Note `monitor config fell back to the static list: reason unknown` |
 | report-rules-036 | uptime-findings | Services at 99.5 (exactly), 99.49 and null uptime | Only the 99.49 service is a finding: `<name>: 99.49% up over <days>d` |
 | report-rules-037 | newest-per-target | Two deployments of one target, an older failed and a newer success | `newestPerTarget` returns only the newer one |
-
+| report-rules-038 | finding-shape, monitor-problems | One board problem (`http`, state `down`, name `Shop`, environment `production`) whose `detail`, `since`, `sourceUrl`, `liveUrl` are all empty or null, with no open issue for its target | One finding with exactly the keys `severity`, `source` (`monitor:http`) and `title` (`Shop production: http down`); no `detail`, `since`, `link` or `issueKey` key |
+| report-rules-039 | site-troubled, errors-site-findings | Three PostHog sites with 100 requests and 3 errors plus 2 failures (5.00%), 101 requests and 5 errors plus failures (4.95%), and 20 requests and 1 failure (5.00%) | The first and third are troubled and raise findings; the second is not |
+| report-rules-040 | errors-issue-findings, errors-issue-overflow | Exactly 15 active GlitchTip issues; then 16 | The first gives 15 `glitchtip` findings and no overflow finding; the second gives 15 plus one minor finding titled `1 more active GlitchTip issues not listed` |
 ## Edge Cases
 
 - **Null and empty inputs** (MUST): an empty `problems` list, no services, no checks, no groups and null optional fields give empty sections and no findings; `firstLine` returns null for empty text; a missing `detail` leaves the field off the finding.
@@ -205,7 +210,7 @@ Vectors are derived from `report-rules.test.ts` (test names in parentheses); vec
 | `RUNTIME_GROUP_CAP` | constant | 15 | Vercel runtime groups listed as findings |
 | `SITE_ROW_CAP` | constant | 10 | PostHog sites considered for findings |
 | `RUNTIME_5XX_MAJOR_COUNT` | constant | 5 | Count at which a 5xx group is major |
-| `FAILURE_RATE_HIGH` | constant in the dashboard views | 0.05 | Failure rate line used by `siteTroubled` |
+| `FAILURE_RATE_HIGH` | constant in the dashboard views | 0.05 | Failure rate line used by `siteTroubled`, defined in `telemetry/dashboard/views.ts` and pinned by `constants-values` |
 
 ## Deep Linking
 
@@ -246,13 +251,13 @@ Not applicable: the module has no log call. Failures are returned as coverage en
 - **Compose**: Port as top-level pure Kotlin functions over `@Serializable` data classes, with a sealed interface for `SourceRead`. Use `sortedWith(compareBy ...)` and compare strings with `compareTo`, which is by UTF-16 code unit like the source.
 - **React/Web**: The source platform. The file is `src/report/report-rules.ts` in the status-server package, tested by `test/report-rules.test.ts`, with types in `types.ts` beside it. `Array.prototype.sort` is stable. `digestRuntimeErrors` adds an explicit index tie-break, so its ranking does not depend on that, but the sort of low-uptime services by percent has no tie-break and keeps input order for equal percents; use a stable sort in any port.
 - **AppKit / UIKit**: Same as SwiftUI; the rules are UI-free and can live in a shared Swift package. Do the build off the main actor if the inputs are large.
-- **WinUI 3**: Write the rules as static methods on a `ReportRules` class over C# `record` types, with `SourceRead<T>` as an abstract record with `Ok` and `Failed` subtypes. Use `OrderBy(...).ThenBy(...)` (stable) with `StringComparer.Ordinal` to match the source's code-unit text comparison, `DateTimeOffset.Parse` for `createdAt` ordering, `DateTimeOffset.FromUnixTimeMilliseconds(atMs).ToString("o")` for the failing-read time, and `ToString("F2", CultureInfo.InvariantCulture)` for the uptime percent (JavaScript's `toFixed(2)` is the source's rounding). Return the report from an ASP.NET Core minimal API handler serialised with `System.Text.Json`.
+- **WinUI 3**: Write the rules as static methods on a `ReportRules` class over C# `record` types, with `SourceRead<T>` as an abstract record with `Ok` and `Failed` subtypes. Use `OrderBy(...).ThenBy(...)` (stable) with `StringComparer.Ordinal` to match the source's code-unit text comparison, `DateTimeOffset.Parse` for `createdAt` ordering, `DateTimeOffset.FromUnixTimeMilliseconds(atMs).ToString("o")` for the failing-read time, and `ToString("F2", CultureInfo.InvariantCulture)` for the uptime percent (JavaScript's `toFixed(2)` is the source's rounding).
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/report/report-rules.ts` | confirmed (1.0.0) |
+| web | `packages/web/packages/status-server/src/report/report-rules.ts` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -310,4 +315,5 @@ The module is pure and separate from reading, so separation of concerns is met. 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Removed the transport sentence from the WinUI note, pinned FAILURE_RATE_HIGH 0.05 and its source module in constants-values, linked the gather and wire-types recipes and added the wire-types and dashboard-views recipes to depends-on, fixed the monitor-problems title format, and added vectors 038 to 040 for finding shape and the 5% and 15-issue boundaries. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

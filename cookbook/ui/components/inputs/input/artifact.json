@@ -4,11 +4,11 @@
     "id": "0f5b7167-b375-4f44-977b-566f720a453d",
     "title": "Input",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,7 +27,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6181c21b3d4767df",
+  "synced": "e74dc806129d3eef",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

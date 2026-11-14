@@ -17,7 +17,9 @@
   import; a React host wraps `buildScene`/`compose` in a ref or a
   non-reactive `requestAnimationFrame` loop, since `compose`'s output
   changes every frame and should not be pushed through React state or a
-  reducer.
+  reducer. `buildScene`, `compose`, `cropList` and `seedChannels` are
+  synchronous, so one JavaScript realm serializes every call and there is no
+  data race to define behavior for.
 - **Compose (Kotlin/Android, port target)**: model `DisplayItem`/
   `DisplayList`/`Scene` as Kotlin data classes, and port `buildScene`,
   `compose`, and `cropList` as ordinary synchronous functions — no
@@ -44,6 +46,12 @@
   per `compose` call, not a live collection observed for later in-place
   mutation; a WinUI host driven by `CompositionTarget.Rendering` simply
   re-invokes `compose` each frame and consumes the new snapshot itself, as
-  `avatar-engine-render`'s WinUI note describes for the render layer
+  [adhsdk.ingredient.avatar-animation-engine.render.platform-shims](cookbook:39f26055-c002-40fe-81e2-74c0f9c9311d)'s WinUI note describes for the render layer
   immediately downstream of this one.
-
+- **Lookup mechanics**: on the web, test variant and crop names with
+  `Object.hasOwn(...)`, because a plain index sees `Object.prototype` members.
+  A transform channel that is not a number falls back through
+  `typeof v === "number" ? v : fallback` (web) or
+  `channels.get(name)?.number ?? fallback` (Apple). The web `resolvePath`
+  `switch` throws from its `default` branch for an unknown shape kind, while
+  Apple's `Shape.Kind` is a closed enum.

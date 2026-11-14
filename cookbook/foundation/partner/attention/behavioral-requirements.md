@@ -1,10 +1,9 @@
 
 **Enumerations**
 
-- **kind-values**: `AttentionKind` MUST be a String-backed enum with exactly the raw values `question`, `blocked` and `notification`, and MUST be `Codable`, `Sendable` and `CaseIterable`.
+- **kind-values**: `AttentionKind` MUST be a String-backed enum with exactly the raw values `question`, `blocked` and `notification`, and MUST be `Codable`, `Sendable` and `CaseIterable`; `AttentionKind.allCases` MUST list the three kinds in declaration order. `AttentionState` and `AttentionActionKind` need not be `CaseIterable`.
 - **state-values**: `AttentionState` MUST be a String-backed enum with exactly the raw values `open`, `discussing`, `sent` and `done`, and MUST be `Codable` and `Sendable`.
 - **action-kind-values**: `AttentionActionKind` MUST be a String-backed enum with exactly the raw values `discuss`, `resolved`, `confirm` and `reopen`, and MUST be `Codable` and `Sendable`.
-- **kind-enumerable**: `AttentionKind.allCases` MUST list the three kinds, which is the one enum that offers enumeration.
 
 **Attention item**
 
@@ -13,9 +12,10 @@
 - **item-mutable**: Every `AttentionItem` field MUST be a mutable stored property, so a holder updates an item in place.
 - **item-init-required**: The `AttentionItem` initializer MUST require `kind`, `text` and `createdBy`.
 - **item-init-id-default**: The `AttentionItem` initializer MUST default `id` to a fresh `UUID().uuidString`.
+- **item-init-explicit**: Every `AttentionItem` initializer parameter MUST be stored exactly as passed.
 - **item-init-defaults**: The `AttentionItem` initializer MUST default `reference` to an empty dictionary, `state` to `.open` and `completedAt` to `nil`.
-- **item-init-dates**: The `AttentionItem` initializer MUST default both `createdAt` and `updatedAt` to the current date at the time of the call, evaluated separately for each.
-- **item-completed-optional**: `completedAt` MUST be `nil` until a holder sets it; the file never sets it and does not tie it to the `done` state.
+- **item-init-dates**: The `AttentionItem` initializer MUST default both `createdAt` and `updatedAt` to the current date at the time of the call; when both default, `createdAt` and `updatedAt` MAY differ slightly.
+- **item-completed-optional**: `completedAt` MUST be `nil` until a holder sets it, and an `AttentionItem` MUST NOT set it or tie it to the `done` state on its own.
 
 **Attention action**
 
@@ -23,7 +23,7 @@
 - **action-conformances**: `AttentionAction` MUST be `Codable`, `Sendable`, `Equatable` and `Identifiable`, with `id` as the identity.
 - **action-init-required**: The `AttentionAction` initializer MUST require `itemID` and `action`.
 - **action-init-defaults**: The `AttentionAction` initializer MUST default `id` to a fresh `UUID().uuidString`, `at` to the current date and `messageID` to `nil`.
-- **action-references-item-by-id**: `AttentionAction.itemID` MUST name its item by the item's `id`; the file does not check that such an item exists.
+- **action-references-item-by-id**: `AttentionAction.itemID` MUST name its item by the item's `id`, and an `AttentionAction` MUST NOT check that such an item exists.
 
 **Wire form**
 
@@ -32,5 +32,5 @@
 - **wire-required-on-decode**: Decoding MUST fail when a non-optional field is missing, because the initializer defaults do not apply to decoding.
 - **wire-optional-on-decode**: Decoding MUST accept a missing `completedAt` or `messageID` as `nil`.
 - **wire-unknown-enum-fails**: Decoding MUST fail for a `kind`, `state` or `action` value outside its enum's raw values; there is no fallback case.
-- **wire-dates-strategy**: The date encoding is the coder's: this file sets no `dateEncodingStrategy` or `dateDecodingStrategy`, so a store chooses and uses one consistently.
+- **wire-dates-strategy**: An encoder and a decoder of these types MUST share one date strategy; the types set no `dateEncodingStrategy` or `dateDecodingStrategy` of their own, so each store chooses one.
 

@@ -4,11 +4,11 @@
     "id": "9f938c20-ea6e-42d7-9ddf-9531a96e3ad0",
     "title": "Markdown Core",
     "type": "ingredient",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,11 +33,15 @@
       "8f2e1c9d-7a4b-4c2e-9d8e-5f6c7d8e9f0a",
       "ee901ea5-cf3e-4276-8367-0693911bc02e"
     ],
-    "references": [],
+    "references": [
+      "https://spec.commonmark.org/",
+      "https://www.postgresql.org/docs/current/functions-string.html",
+      "https://eemeli.org/yaml/"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8da5fe04e00de462",
+  "synced": "e6392a303a865c5e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

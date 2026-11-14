@@ -1,4 +1,16 @@
 
+**Decision**: `feedDeadline` bounds the whole feed at 20 seconds.
+**Rationale**: Each step has its own timeout (5 seconds per `git` call, 2 seconds for the post), so the deadline is the outer bound that keeps feeds from piling up; it is a rationale, and the testable requirement is `feed-deadline`.
+**Approved**: pending
+
+**Decision**: Make `feedDeadline` injectable with 20 seconds as the default.
+**Rationale**: `feedDeadline` is a fixed constant today, so the deadline vector needs a test that waits more than 20 seconds; an injected value would let it run in milliseconds.
+**Approved**: pending
+
+**Decision**: Carry the OAuth token to the detached feed on standard input instead of its environment, or accept the environment.
+**Rationale**: A process listing by the same user (`ps -E`) can read the environment for the life of the feed; the source uses the environment today, which is why Token lifecycle is partial.
+**Approved**: pending
+
 **Decision**: The feed is run by a detached copy of the helper, and the render returns as soon as its line is printed.
 **Rationale**: The source comment explains that the dispatcher kills a renderer still running after 3 seconds while a feed can take up to 17 seconds (three `git` watchdogs and the post); waiting for it threw the line away and killed the post. A detached process is out of the dispatcher's reach and bounded by its own deadline.
 **Approved**: pending

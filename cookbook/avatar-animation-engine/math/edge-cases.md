@@ -19,9 +19,8 @@
 - **`mix` at or beyond the unit interval boundary** (`t <= 0`, `t >= 1`,
   including negative `t` or `t > 1`): MUST short-circuit to the corresponding
   endpoint color without an OKLab conversion, per `mix-endpoint-exactness`.
-  The source does not clamp `t` to `[0,1]` for the values it forwards to
-  `parseHex`/`toHex` in the interpolated case (`0 < t < 1`); any `t` in that
-  open interval is used as given.
+  The source does not clamp `t` in the interpolated case; any `t` in the
+  open interval `(0,1)` is used unclamped as the OKLab interpolation weight.
 - **Ease name outside the closed vocabulary, including near-misses**
   (`"power2"` bare, `"back.out(2.2)"`, `"back.in(2)"`, `"elastic.out"`): MUST
   throw, per `ease-unknown-name-rejected`. The table is a fixed lookup, not a
@@ -40,15 +39,10 @@
   caught by a Swift caller or a test — a documented, intentional
   cross-platform divergence in failure severity for the same misuse (see
   Design Decisions), not an oversight.
-- **Concurrent access to a single `Prng` instance**: `Prng` is a Swift
-  `final class` with four mutable `var` state words and is not declared
-  `Sendable`; `createPrng`'s returned object closes over mutable `let`
-  bindings. Both source comments state the caller obligation that draws
-  happen "ONLY at scheduled events, never per tick" (`prng-scheduled-draw-
-  only`), but neither the Swift type nor the TypeScript type enforces
-  single-writer access — there is no lock, actor isolation, or atomic
-  compare-and-swap around `s0`..`s3` — see **prng-concurrency**
-  below.
+- **Concurrent access to a single `Prng` instance**: draws on one instance
+  are serialized by construction — see **prng-concurrency** below. Callers
+  still MUST draw only at scheduled events, never once per tick
+  (`prng-scheduled-draw-only`), which no type enforces.
 - **prng-concurrency**: The Swift `Prng` is a non-`Sendable` `public final class` with no lock or actor, so strict concurrency confines each instance to one isolation domain and a second thread cannot draw from it; the TypeScript `Prng` runs on the single-threaded JS event loop, where each draw completes synchronously. Draws on one instance are therefore serialized by construction, and the stream order is the order of the caller's calls.
 - **Degenerate/non-finite `Mat` transform inputs** (`NaN` or `Infinity` in
   `rotation`, `scaleX`, `scaleY`, `x`, `y`, or a pivot coordinate): unlike

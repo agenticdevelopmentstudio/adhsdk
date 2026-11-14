@@ -22,6 +22,10 @@
   `URLSessionConfiguration` (no shared cache or cookies), MUST set
   `waitsForConnectivity = false`, and MUST set
   `timeoutIntervalForRequest = 30` seconds.
+- **daemon-transport-fresh-per-call**: Each call to `daemon(port:transport:)`
+  that omits `transport` (or passes `nil`) MUST build a fresh
+  `makeDaemonURLSessionTransport()` and MUST NOT reuse a transport instance
+  from a prior call; each such call gets its own `URLSession`.
 - **transport-injectable-for-tests**: Both `direct(serverURL:transport:)`
   and `daemon(port:transport:)` MAY be called with a caller-supplied
   `ClientTransport` in place of the production one, so a test MAY substitute
@@ -90,6 +94,10 @@
   before `resolve()`/`reresolve()` has ever completed, and MUST return the
   `TransportKind` from the most recently completed `resolve()`/`reresolve()`
   call afterward.
+- **reresolve-last-write-wins**: Two overlapping `reresolve()` calls MUST
+  each run the override/probe decision independently, and whichever finishes
+  last MUST be the value left in `cached`. `reresolve()` makes no exclusivity
+  promise between overlapping calls.
 - **resolver-never-launches-daemon**: `TransportResolver` MUST only detect
   whether a daemon is already listening on `port`; it MUST NOT start,
   install, or otherwise launch a daemon process.

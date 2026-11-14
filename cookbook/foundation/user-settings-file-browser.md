@@ -2,7 +2,7 @@
 id: bad10d4b-c190-40e7-8571-62e4357b2616
 title: "User Settings: File Browser"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -17,7 +17,7 @@ platforms:
 tags:
   - settings
   - file-browser
-  - logic
+  - gitignore
 depends-on:
   - 6363b5ff-f511-4e21-9ba7-6850787dba62
 related:
@@ -50,15 +50,11 @@ The component declares no behavior of its own beyond the key, the value type and
 - **entry-gitignore-syntax**: Each entry MUST be interpreted as one `.gitignore`-style pattern, matched against a path relative to a browser root, with the syntax defined by `GitIgnoreMatcher`.
 - **entry-order-significant**: The list MUST preserve entry order, because `GitIgnoreMatcher` lets the last matching pattern decide, so a later `!` pattern re-includes what an earlier pattern excluded.
 - **entry-no-validation**: The setting MUST NOT validate, trim, deduplicate or reject entries; it stores whatever list it is given, and blank lines and `#` comment lines are ignored later by `GitIgnoreMatcher`, not by the setting.
-- **entry-duplicates-allowed**: The setting MUST accept duplicate entries, because it stores the list as given; the excluded-files panel relies on this by giving each row its own identity instead of using the pattern text.
+- **entry-duplicates-allowed**: The setting MUST accept duplicate entries, because it stores the list exactly as given.
 
 ### Inherited behavior
-
-- **inherits-read-default**: Reading the setting MUST return the empty list when no value has been stored, or when the stored value cannot be decoded as a list of strings, per the get-fallback contract in settings-storage.
-- **inherits-write-publishes**: Writing the setting MUST publish its key name on the settings change stream after the new value is readable, per settings-storage, so a subscriber such as a file browser can re-apply its exclusions.
-- **inherits-main-actor**: The setting MUST be read and written on the main actor, because `UserSetting` is declared `@MainActor`.
-- **inherits-lazy-construction**: The setting MUST be created on first access of `UserSettings.fileBrowserExcludedPatterns`, and at that point it MUST read its current value from `UserSettings.shared`, because `fileBrowserExcludedPatterns` is a `static var` initialised from `UserSetting.init`.
-- **inherits-live-mirror**: The setting's `currentValue` MUST follow the store: whenever the store publishes this key's name, `currentValue` MUST be re-read from `UserSettings.shared`.
+- **inherits-settings-storage**: The setting MUST inherit the get, set, publish and isolation behavior of the generic `UserSetting` and the settings store, unchanged, as specified in [adhsdk.ingredient.foundation.settings-storage](cookbook:6363b5ff-f511-4e21-9ba7-6850787dba62). The only values specific to this setting are the key name, the value type and the empty-list fallback, so a read that finds nothing stored, or a value that cannot be decoded as a list of strings, MUST return the empty list.
+- **inherits-lazy-construction**: The setting MUST read its current value from the shared store when it is first accessed, not before. (The Swift source achieves this with a `static var` initialised on first access.)
 
 ### Persistence and side effects
 
@@ -79,16 +75,16 @@ Not applicable — this is a setting declaration, not a visual component.
 
 ## Conformance Test Vectors
 
-The source has no test file for the setting itself. The vectors below are traced to the declaration and to the settings-storage contract it inherits. The pattern-semantics vectors are traced to `GitIgnoreMatcherTests` and show what a stored list means to the code that consumes it.
+The source has no test file for the setting itself; an implementer should add a `UserSettings+FileBrowser` test that asserts vectors 001 to 003, 007 and 012 (the key, the default, the secure flag, the unchanged round trip and the shared declaration). The vectors below are traced to the declaration and to the settings-storage contract it inherits. The pattern-semantics vectors are traced to `GitIgnoreMatcherTests` and show what a stored list means to the code that consumes it.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | user-settings-file-browser-001 | setting-key-name | Read the setting's `name` | `file_browser.excluded_patterns` |
 | user-settings-file-browser-002 | setting-default-empty, setting-value-type | Read `defaultValue` | The empty list of strings |
 | user-settings-file-browser-003 | setting-not-secure | Read `isSecure` | `false` |
-| user-settings-file-browser-004 | inherits-read-default, no-migration | Read `currentValue` on a store holding nothing under the key | The empty list |
-| user-settings-file-browser-005 | inherits-write-publishes, inherits-live-mirror | Set `value` to `["*.log", "build/"]`, then read `currentValue` | The list `["*.log", "build/"]` in that order, and the key name `file_browser.excluded_patterns` appears on the change stream |
-| user-settings-file-browser-006 | inherits-read-default | Store holds bytes under the key that are not a list of strings, then read | The empty list, no error |
+| user-settings-file-browser-004 | inherits-settings-storage, no-migration | Read `currentValue` on a store holding nothing under the key | The empty list |
+| user-settings-file-browser-005 | inherits-settings-storage | Set `value` to `["*.log", "build/"]`, then read `currentValue` | The list `["*.log", "build/"]` in that order, and the key name `file_browser.excluded_patterns` appears on the change stream |
+| user-settings-file-browser-006 | inherits-settings-storage | Store holds bytes under the key that are not a list of strings, then read | The empty list, no error |
 | user-settings-file-browser-007 | entry-no-validation, entry-duplicates-allowed | Set `value` to `["a", "a", ""]` and read it back | `["a", "a", ""]` unchanged: no trimming, no deduplication, no dropping of the blank entry |
 | user-settings-file-browser-008 | entry-order-significant, entry-gitignore-syntax | List `["*.log", "!keep.log"]` given to `GitIgnoreMatcher`; test `testNegationAndLastMatchWins` | `a.log` excluded, `keep.log` not excluded |
 | user-settings-file-browser-009 | entry-order-significant | List `["!keep.log", "*.log"]` given to `GitIgnoreMatcher`; test `testNegationAndLastMatchWins` | `keep.log` excluded: the later pattern wins |
@@ -102,10 +98,9 @@ The source has no test file for the setting itself. The vectors below are traced
 - **Blank and comment entries (MUST)**: Entries that are empty, whitespace only, or start with `#` are stored as given and ignored by `GitIgnoreMatcher`; the setting MUST NOT strip them. The one editor in the source, `ExcludedFilesSettingsPanelViewController`, trims surrounding spaces and never writes an empty row, but that is the panel's behavior, and a list written by anything else keeps its blanks.
 - **Malformed or unmatchable pattern (MUST)**: The setting accepts any string. What a malformed pattern does is decided by `GitIgnoreMatcher`, not by the setting; the matcher treats regex characters as literal (`testRegexCharactersAreLiteral`).
 - **Case sensitivity (MUST)**: Patterns are stored as typed and matched case-sensitively by `GitIgnoreMatcher` (`testMatchingIsCaseSensitive`), so `*.LOG` does not exclude `a.log`.
-- **Large list (SHOULD)**: The source sets no limit on the number of entries; the whole list is read and written as one value, so each edit rewrites the full list.
-- **Stored value undecodable (MUST)**: A stored value that is not a list of strings reads as the empty list, per the settings-storage get-fallback; nothing is thrown or logged by this component.
-- **Concurrent access (MUST NOT interleave)**: `UserSetting` is `@MainActor`, so reads and writes are serialised on the main actor; concurrent calls from another thread are not part of the contract. Two writers on the main actor each replace the whole list, and the last write wins; the setting has no merge step.
-- **Own-write echo (SHOULD)**: A writer that also observes the setting receives its own write back through the change stream. `ExcludedFilesSettingsPanelViewController` handles this by remembering the list it last wrote and ignoring the matching echo. The setting itself does not suppress echoes.
+- **Large list**: The source sets no limit on the number of entries; the whole list is read and written as one value, so each edit rewrites the full list.
+- **Concurrent access (MUST)**: `UserSetting` is `@MainActor`, so reads and writes are serialised on the main actor; concurrent calls from another thread are not part of the contract. Two writers on the main actor each replace the whole list, and the last write wins; the setting has no merge step.
+- **Own-write echo (SHOULD)**: A writer that also observes the setting receives its own write back through the change stream. A writer that needs to ignore the echo has to remember the list it last wrote. The setting itself does not suppress echoes.
 - **Offline or disconnected (not applicable)**: The setting is read from a local store and makes no network request. With a cloud-synced backend behind `UserSettings.shared` the list could change from another device; that is a property of the store, specified in settings-storage.
 - **Missing file or unreachable server (not applicable)**: The setting never opens a file or contacts a server; the paths in the patterns are matched as strings and never looked up.
 
@@ -114,9 +109,6 @@ The source has no test file for the setting itself. The vectors below are traced
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `file_browser.excluded_patterns` | list of strings | `[]` | `.gitignore`-style patterns, one per entry, matched against paths relative to each browser root. |
-| `isSecure` | boolean | `false` | Not passed by the declaration; the generic setting type's default routes the key to the plain store. |
-| `UserSettings.shared` | settings store | process-wide instance | The store the setting reads from and writes through; the injection point for tests and for a different backend. |
-| `exclusions` (consumer parameter) | `UserSetting` of a list of strings | `UserSettings.fileBrowserExcludedPatterns` | A file browser view controller accepts any setting of this type, defaulting to this one. |
 
 ## Deep Linking
 
@@ -151,17 +143,17 @@ Not applicable: the component makes no log calls; the declaration contains no lo
 
 ## Platform Notes
 
-- **SwiftUI**: The setting is a `UserSetting`, which is already an `ObservableObject` with a `@Published` `currentValue`, so a SwiftUI view binds to it with an `@ObservedObject` and edits `value`. The excluded-files editor in the source is AppKit, not SwiftUI, and a SwiftUI port would use a `List` with `ForEach` over rows that carry their own ids and an `onDelete`/`onMove` or a `TextField` per row.
+- **SwiftUI**: The setting is a `UserSetting`, which is already an `ObservableObject` with a `@Published` `currentValue`, so a SwiftUI view binds to it with an `@ObservedObject` and edits `value`.
 - **Compose**: Model it as a `Preferences` key of a string set in Jetpack `DataStore`, except that a `Set` loses order and duplicates, which this setting keeps; store a JSON array in a string key or use a proto `DataStore`. Expose it as a `StateFlow` of a list of strings with a default of an empty list.
 - **React/Web**: Back it with a key in `localStorage` or `IndexedDB` holding a JSON array, expose it through a `useSyncExternalStore` hook, and treat a missing or unparseable value as an empty array.
-- **AppKit / UIKit**: The declaration is `Core/SettingStorage/UserSettings+FileBrowser.swift`, a Foundation-only file in the core target that extends `UserSettings` with one `public static var` of `UserSetting<[String]>` constructed with the name `file_browser.excluded_patterns` and an empty default. It is `@MainActor` through `UserSetting`. Consumers are `FileBrowserViewController` (default `exclusions` argument, observed with a `UserSettingObserver`) and `ExcludedFilesSettingsPanelViewController` (an editable table whose every edit is written to the setting). The matcher is `Core/FileSystem/GitIgnoreMatcher.swift`.
-- **WinUI 3**: Model the setting as a typed key with name `file_browser.excluded_patterns` and a default of an empty `IReadOnlyList<string>`, stored in `Windows.Storage.ApplicationData.Current.LocalSettings` (an `ApplicationDataContainer`). Its values are limited to simple types, so serialise the list with `System.Text.Json` into a string value, and fall back to an empty list when `JsonSerializer.Deserialize` throws a `JsonException` or returns null. Expose it as an `INotifyPropertyChanged` wrapper (or a CommunityToolkit.Mvvm `ObservableObject`) whose `Value` setter writes the store and raises a change event carrying the key name; marshal that event to the UI with `DispatcherQueue.TryEnqueue`, as the source hops to the main dispatch queue. The editor maps to a `ListView` with an `ObservableCollection` of row view models that hold their own id and a `TextBox` in the item template, and `AppBarButton` add and remove commands; keep the "ignore own echo" guard so editing a `TextBox` does not rebuild the collection. The pattern evaluation needs a ported matcher, because .NET has no gitignore matcher in the framework; `Regex` can implement the translation the source performs, and its tests carry over as the conformance suite.
+- **AppKit / UIKit**: The declaration is a Foundation-only `UserSettings` extension holding one `public static var` of `UserSetting<[String]>` constructed with the name `file_browser.excluded_patterns` and an empty default, so it needs no UI framework and is `@MainActor` through `UserSetting`. A consumer takes a setting of this type as a parameter that defaults to this one, and the store behind `UserSettings.shared` is the injection point for tests and for a different backend.
+- **WinUI 3**: Model the setting as a typed key with name `file_browser.excluded_patterns` and a default of an empty `IReadOnlyList<string>`, stored in `Windows.Storage.ApplicationData.Current.LocalSettings` (an `ApplicationDataContainer`). Its values are limited to simple types, so serialise the list with `System.Text.Json` into a string value, and fall back to an empty list when `JsonSerializer.Deserialize` throws a `JsonException` or returns null. Expose it as an `INotifyPropertyChanged` wrapper (or a CommunityToolkit.Mvvm `ObservableObject`) whose `Value` setter writes the store and raises a change event carrying the key name; marshal that event to the UI with `DispatcherQueue.TryEnqueue`, as the source hops to the main dispatch queue. The pattern evaluation needs a ported matcher, because .NET has no gitignore matcher in the framework; `Regex` can implement the translation the source performs, and its tests carry over as the conformance suite.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+FileBrowser.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+FileBrowser.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -198,4 +190,5 @@ The declaration holds only a key, a type and a default, and leaves storage to th
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Folded the inherited settings behavior into one requirement, trimmed editor and consumer detail from configuration, edge cases and platform notes, replaced the vague tag, and named the test that should cover the setting. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

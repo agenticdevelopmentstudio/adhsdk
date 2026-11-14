@@ -4,11 +4,11 @@
     "id": "b5b27bc2-99b2-469e-9dd4-e446b0157444",
     "title": "Reveal",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "943c0017caa45fab",
+  "synced": "c3bbceb3df5e7311",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

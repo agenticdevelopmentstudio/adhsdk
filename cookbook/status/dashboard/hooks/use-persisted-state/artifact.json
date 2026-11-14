@@ -4,7 +4,7 @@
     "id": "07fab18a-2390-4899-b4ee-a273abc3a3eb",
     "title": "Persisted State",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -17,7 +17,12 @@
       "typescript",
       "web"
     ],
-    "tags": [],
+    "tags": [
+      "persistence",
+      "local-storage",
+      "state",
+      "hooks"
+    ],
     "depends-on": [],
     "related": [
       "3f2ae6c1-bc07-40ab-b15c-bb4b8c77986b",
@@ -28,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5ffe471d3076e2c5",
+  "synced": "c43d15ab31a6b4d0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

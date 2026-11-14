@@ -15,3 +15,6 @@
 **Rationale**: This delays the reveal until the element's top edge is 12% of the viewport height above the bottom — later than an unmodified (0-margin) observer, which would already fire at the element's first visible pixel — so the fade-in reads as a deliberate reveal rather than firing the instant the element's edge appears. See **delayed-reveal-margin**.
 **Approved**: pending
 
+**Decision**: Construct the `IntersectionObserver` without checking that the API exists.
+**Rationale**: `Reveal.tsx` calls `new IntersectionObserver(...)` unconditionally once it has armed, so an environment where the API is undefined throws in the effect after the element is already armed. This records the current behavior as a known gap rather than a requirement, and ports should add a guard that leaves the element in the resting state when the API is missing.
+**Approved**: pending

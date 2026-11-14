@@ -1,6 +1,6 @@
 
 - **render-navigation-element**: Component MUST render a `<nav>` element with `aria-label="Breadcrumb"`.
-- **include-home-crumb**: Component MUST always include a home crumb as the first item, rendered as a link to `homeHref` (default `"/"`).
+- **include-home-crumb**: Component MUST include a home crumb as the first item whenever it renders (see **render-nothing-at-root**), rendered as a link to `homeHref` (default `"/"`).
 - **render-crumbs-list**: Component MUST render crumbs as an ordered list (`<ol>`) with each crumb as a list item (`<li>`).
 - **render-current-as-text**: Component MUST render the last crumb (current page) as plain text, not a link.
 - **render-ancestors-as-links**: Component MUST render all crumbs except the last as links to their `path` values.

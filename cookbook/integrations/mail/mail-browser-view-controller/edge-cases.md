@@ -10,5 +10,5 @@
 - **No accounts or provider not configured**: Not a controller concern: the model clears the list and the panes show their empty state.
 - **Concurrent access**: The controller and model are confined to the main actor; the refresh task hops to the main actor to call the model, so calls are serialized with UI work.
 - **Offline**: The poll reads only the local store, so loss of connectivity does not affect it; the controller makes no network call.
-- **Initial reload not cancelled on disappear**: The initial reload is an unstructured main-actor task whose handle is not kept, so it MAY outlive the view and is not cancelled when the view disappears. A port SHOULD keep the handle and cancel it on disappear.
+- **Initial reload not cancelled on disappear**: The initial reload is an unstructured main-actor task whose handle is not kept, so it MAY outlive the view and is not cancelled when the view disappears. The source does not cancel it; a port may keep the handle and cancel it on disappear.
 

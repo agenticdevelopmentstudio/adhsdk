@@ -24,8 +24,8 @@ Controls
 - **signup-visibility**: `showsSignup` MUST be true exactly when the display is signed-out-like and `hasSignupURL` is true.
 - **logout-visibility**: `showsLogout` MUST be true exactly when `shownUser` is not `nil`.
 - **no-controls-while-restoring**: While the state is `.restoring`, `showsLogin`, `showsSignup` and `showsLogout` MUST all be false.
-- **controls-enabled**: `controlsEnabled` MUST be false exactly when the state is `.busy`, and true in every other state.
-- **enabled-is-independent-of-visibility**: `controlsEnabled` MUST be true while the state is `.restoring` even though no button is visible then; it reflects only whether the state is busy.
+- **controls-enabled**: `controlsEnabled` MUST be false when the state is `.busy` and true when the state is `.signedOut` or `.signedIn`.
+- **enabled-is-independent-of-visibility**: `controlsEnabled` MUST depend only on whether the state is busy, never on which buttons are visible. Its value while the state is `.restoring` is unspecified, because no button is visible then and consumers MUST NOT read it. The source computes `true` there.
 
 Message
 
@@ -40,3 +40,6 @@ Ordering and concurrency
 - **actor-isolation**: The state initializer is nonisolated and callable from any context; only the account-based initializer is `@MainActor`, because `Account` is a main-actor protocol. The value itself is `Sendable` and may cross actors.
 - **caller-feeds-last-user**: The caller MUST pass the previous render's `shownUser` back as `lastUser` on the next render; the display keeps no history of its own, so a caller that passes `nil` while busy gets the signed-out controls.
 
+Verification
+
+- **derived-vectors-tested**: `AccountDisplayTests` SHOULD assert test vectors 008 to 014, so the account-based initializer, `restoringText` and the empty-string message are covered by tests and not only by this document.

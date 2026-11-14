@@ -5,7 +5,7 @@
   `addLine(to:)`/`addCurve(to:control1:control2:)` calls, and a morph can be
   driven either by feeding `morphPath`'s per-frame output into a fresh `Path`
   or by exposing the flat `points` array as a `Shape`'s `animatableData`.
-- **AppKit / UIKit — this recipe's actual Swift consumer**: `Build.swift`,
+- **AppKit / UIKit — this ingredient's actual Swift consumer**: `Build.swift`,
   `Morph.swift`, and `ParsedPath.swift`
   (`packages/apple/AvatarAnimationEngine/Sources/Path/`) are Foundation-only
   and framework-agnostic; the engine's own render layer
@@ -23,7 +23,8 @@
   port `parsePath`'s tokenizer to walk the same `(letter, arity)` grammar and
   call `moveTo`/`lineTo`/`cubicTo`; morph by lerping the shared `FloatArray` of
   points the way `morphPath` does, then re-tokenizing into a `Path` on the
-  animated frame that needs it.
+  animated frame that needs it. Format numbers with `Locale.ROOT` and never
+  in exponent form, so the path text matches the other platforms.
 - **WinUI 3**: Model `ParsedPath` as a `readonly record struct(string Kind,
   double[] Points)` and port `ParsePath`/`EmitPath`/`Fmt` as ordinary static
   methods on a `PathGrammar` class, always parsing/formatting through
@@ -36,8 +37,8 @@
   `Microsoft.UI.Xaml.Shapes.Path`'s `Data` (a `Geometry` built the same way,
   via `PathGeometry`/`PathFigure`/`LineSegment`/`BezierSegment`), with a
   `Storyboard`/`CompositionAnimation` driving the frame-by-frame `t` that
-  `MorphPath` consumes; `Math.Round(x, 6, MidpointRounding.AwayFromZero)` is
-  the direct equivalent of Swift's `Double.rounded()` and is what `Fmt` MUST
-  use to keep this platform's path-data output byte-identical to the other
-  two.
+  `MorphPath` consumes; `Fmt` MUST match the other two platforms: scale by 1e6, round half away
+  from zero (`Math.Round(v, MidpointRounding.AwayFromZero)`), divide by 1e6,
+  print `-0` as `0`, and format with `InvariantCulture` in fixed-point form so
+  no exponent appears.
 

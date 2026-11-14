@@ -7,7 +7,7 @@
   **Rationale**: Acceptable for a static or rarely-reordered list. If the `entries` array is mutated (items added, removed, or reordered), React reuses DOM nodes by index, which can cause open/closed state to attach to the wrong entry. The source does not validate or guard against this, and defines no `id` field — keeping the array stable is the caller's responsibility.
   **Approved**: pending
 
-- **Decision**: Make `open` optional per entry, defaulting to `false`, with the convention (documented in a source comment) that normally exactly one entry carries it.
+- **Decision**: Make `open` optional per entry, defaulting to `false`, with the convention (documented in the `FaqEntry.open` doc comment in `Faq.tsx`: "Normally exactly one entry carries this") that normally exactly one entry carries it.
   **Rationale**: Showing exactly one answer expanded by default reads as an FAQ section rather than a list of collapsed links. The component does not enforce this convention — the caller controls which entries are open.
   **Approved**: pending
 

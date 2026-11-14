@@ -4,11 +4,11 @@
 **Approved**: pending
 
 **Decision**: Outline rows are instances of a private class, not values.
-**Rationale**: The source comment states the outline tracks items by identity, so each rebuild creates new node objects and reloads the outline.
+**Rationale**: The outline tracks items by identity, so each rebuild creates new node objects and reloads the outline.
 **Approved**: pending
 
 **Decision**: A flag, `applyingSelection`, silences the selection callback while the model's selection is applied.
-**Rationale**: Without it, applying the model's selection would call `select(mailbox:)` back and loop between outline and model; the source comment states the change is not sent back.
+**Rationale**: Without it, applying the model's selection would call `select(mailbox:)` back and loop between outline and model.
 **Approved**: pending
 
 **Decision**: Selection is matched on account id and label id, not on mailbox identity.
@@ -16,11 +16,11 @@
 **Approved**: pending
 
 **Decision**: When the model's selection matches no row, the sidebar leaves the outline selection as it is.
-**Rationale**: The source returns early rather than clearing the selection; this keeps the previous row highlighted until the model selects a listed mailbox, which is intended, observable behavior that implementations copy.
+**Rationale**: Observed behavior: the source returns early rather than clearing the selection, which keeps the previous row highlighted until the model selects a listed mailbox. That avoids a flash of no selection while the model's list and selection are briefly out of step, but the source states no reason, so this still needs approval.
 **Approved**: pending
 
 **Decision**: Each rebuild expands all account groups, discarding any collapse by the user.
-**Rationale**: The source expands every root after each reload and tracks no expansion state, so a group the user collapsed re-expands when the model changes. This is intended behavior of the sidebar, so every port copies it.
+**Rationale**: Observed behavior: the source expands every root after each reload and tracks no expansion state, so a group the user collapsed re-expands when the model changes. Expanding keeps every mailbox reachable (and keeps the model's selection visible), but the source states no reason and discarding the user's collapse is a cost, so this still needs approval before a port copies it.
 **Approved**: pending
 
 **Decision**: Mailbox rows indent by 14 points times depth inside the cell, not through the outline's own indentation.
@@ -29,9 +29,5 @@
 
 **Decision**: Mailbox symbols are chosen by a fixed switch on label id with a tag as the fallback.
 **Rationale**: System labels have a known symbol and every user label shares the tag, so no symbol is stored in the model.
-**Approved**: pending
-
-**Decision**: The view controller has no test of its own; coverage comes from the model's tests of mailbox ordering, depth and unread counts.
-**Rationale**: `MailBrowserModelTests` covers the data the sidebar displays, and no test builds this view controller.
 **Approved**: pending
 

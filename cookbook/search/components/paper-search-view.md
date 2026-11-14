@@ -2,11 +2,11 @@
 id: 968f66df-4c2d-47ba-92cf-ff1e34f5deb2
 title: "Paper Search View"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -34,14 +34,15 @@ Paper Search View is a React component that provides a search interface for a pu
 ## Behavioral Requirements
 
 - **document-href-required**: Component MUST accept a required `documentHref` prop that is a function accepting a PaperSearchHit and returning a string representing the document's URL on the host.
-- **search-source-configuration**: Component MUST configure a SearchSource with endpoints for results (`/public/papers`), tags (`/public/papers/tags`), and categories (`/public/papers/categories`).
+- **search-source-configuration**: Component MUST configure a SearchSource with endpoints for results (`/v1/papers`), tags (`/v1/paper_tags`), and categories (`/v1/paper_categories`).
 - **no-store-cache-policy**: Component MUST set cache policy to `no-store` on fetch requests to ensure search results reflect the current corpus state.
-- **author-slug-filter**: Component MAY accept an optional `authorSlug` prop; when provided, search results MUST be filtered to that author.
-- **author-slug-normalization**: When `authorSlug` is provided, the component MUST trim it and convert it to lowercase before use. If the trimmed result is an empty string, the component MUST treat `authorSlug` as if it had not been provided (no `author` fixed param).
-- **base-url-override**: Component MAY accept an optional `baseUrl` prop to override the default API prefix (defaults to same-origin `/api`).
-- **default-search-label**: Component MAY accept an optional `searchLabel` prop; when omitted, defaults to `Search research papers`.
-- **default-search-placeholder**: Component MAY accept an optional `searchPlaceholder` prop; when omitted, defaults to `Search papers…`.
-- **default-landmark-label**: Component MAY accept an optional `searchLandmarkLabel` prop; when omitted, defaults to `Research paper search`.
+- **author-slug-filter**: Component MUST accept an optional `authorSlug` prop; when provided, search results MUST be filtered to that author.
+- **author-slug-normalization**: When `authorSlug` is provided, the component MUST trim it and convert it to lowercase before use. Internal whitespace is kept as is, and percent-encoding is left to the fetch layer when the `author` fixed param becomes part of the query string. If the trimmed result is an empty string, the component MUST treat `authorSlug` as if it had not been provided (no `author` fixed param).
+- **base-url-override**: Component MUST accept an optional `baseUrl` prop that overrides the default API prefix. On web the default is same-origin `/api`; the component performs no validation of the value.
+- **default-search-label**: Component MUST accept an optional `searchLabel` prop; when omitted, defaults to `Search research papers`.
+- **default-search-placeholder**: Component MUST accept an optional `searchPlaceholder` prop; when omitted, defaults to `Search papers…`.
+- **default-landmark-label**: Component MUST accept an optional `searchLandmarkLabel` prop; when omitted, defaults to `Research paper search`.
+- **label-values-verbatim**: Component MUST pass `searchLabel`, `searchPlaceholder` and `searchLandmarkLabel` to SearchView without validating or modifying them.
 - **document-type-registration**: Component MUST register `markdownDocumentType` as the document type for search results.
 - **search-view-props**: Component MUST render the wrapped SearchView component, passing exactly these props: `source` (the configured SearchSource), `documentType`, `documentHref`, `searchLabel`, `searchPlaceholder`, and `searchLandmarkLabel`.
 - **paper-search-source-factory**: The package MUST export `paperSearchSource(options?: { baseUrl?: string; authorSlug?: string }): SearchSource` as a standalone function producing the same SearchSource configuration the component uses internally, so a host can construct it without mounting the component.
@@ -56,14 +57,14 @@ Not applicable: Paper Search View is a stateless wrapper component. All state ma
 
 ## Accessibility
 
-Paper Search View owns the default accessible name (`Search research papers`) and landmark label (`Research paper search`) for the search control, expressed as the `searchLabel` and `searchLandmarkLabel` prop defaults (see **default-search-label**, **default-landmark-label**). Together with `searchPlaceholder` (see **default-search-placeholder**), these are forwarded to the wrapped SearchView on every render (see **search-view-props**). SearchView implements the actual ARIA roles, keyboard interaction, and focus management, as described in its own recipe ([adhsdk.ingredient.search.components.search-view](cookbook:fed0a111-253c-427b-89c0-14f729657a7d)); this component's responsibility ends at supplying correct, overridable label text.
+Paper Search View owns the default accessible name (`Search research papers`) and landmark label (`Research paper search`) for the search control, expressed as the `searchLabel` and `searchLandmarkLabel` prop defaults (see **default-search-label**, **default-landmark-label**). Together with `searchPlaceholder` (see **default-search-placeholder**), these are forwarded to the wrapped SearchView on every render (see **search-view-props**). SearchView implements the actual ARIA roles, keyboard interaction, and focus management, as described in its own ingredient spec ([adhsdk.ingredient.search.components.search-view](cookbook:fed0a111-253c-427b-89c0-14f729657a7d)); this component's responsibility ends at supplying correct, overridable label text.
 
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | psv-001 | document-href-required | PaperSearchViewProps with documentHref function | SearchView rendered with documentHref passed through |
-| psv-002 | search-source-configuration | Default props (no baseUrl, no authorSlug) | SearchSource configured with endpoints `/public/papers`, `/public/papers/tags`, `/public/papers/categories` and baseUrl `/api` |
+| psv-002 | search-source-configuration | Default props (no baseUrl, no authorSlug) | SearchSource configured with endpoints `/v1/papers`, `/v1/paper_tags`, `/v1/paper_categories` and baseUrl `/api` |
 | psv-003 | no-store-cache-policy | Any props | SearchSource fetchInit set to `{ cache: 'no-store' }` |
 | psv-004 | author-slug-filter | PaperSearchViewProps with authorSlug='author-name' | SearchSource fixedParams includes `{ author: 'author-name' }` (already lowercase) |
 | psv-005 | base-url-override | PaperSearchViewProps with baseUrl='/custom/api' | SearchSource baseUrl set to `/custom/api` |
@@ -76,24 +77,23 @@ Paper Search View owns the default accessible name (`Search research papers`) an
 | psv-012 | document-type-registration | Any props | SearchView receives documentType=markdownDocumentType |
 | psv-013 | author-slug-normalization | PaperSearchViewProps with authorSlug='  Jane Doe  ' | SearchSource fixedParams includes `{ author: 'jane doe' }` |
 | psv-014 | author-slug-normalization | PaperSearchViewProps with authorSlug='   ' (whitespace only) | SearchSource has no `fixedParams.author` key |
-| psv-015 | paper-search-source-factory | `paperSearchSource()` called directly with no options | Returns `{ baseUrl: '/api', endpoints: { results: '/public/papers', tags: '/public/papers/tags', categories: '/public/papers/categories' }, fetchInit: { cache: 'no-store' } }` with no `fixedParams` key |
+| psv-015 | paper-search-source-factory | `paperSearchSource()` called directly with no options | Returns `{ baseUrl: '/api', endpoints: { results: '/v1/papers', tags: '/v1/paper_tags', categories: '/v1/paper_categories' }, fetchInit: { cache: 'no-store' } }` with no `fixedParams` key |
 | psv-016 | search-view-props | Any props | SearchView rendered with exactly the props source, documentType, documentHref, searchLabel, searchPlaceholder, searchLandmarkLabel — no others |
-
+| psv-017 | author-slug-filter | PaperSearchViewProps without authorSlug | SearchSource has no `fixedParams` key |
+| psv-018 | paper-search-source-factory | Component rendered with baseUrl='/custom/api' and authorSlug='Jane', and `paperSearchSource({ baseUrl: '/custom/api', authorSlug: 'Jane' })` called directly | The `source` SearchView receives deep-equals the factory's return value |
+| psv-019 | label-values-verbatim | PaperSearchViewProps with searchLabel='  Mixed Case  ' | SearchView receives searchLabel='  Mixed Case  ' unchanged |
 ## Edge Cases
 
-- **Missing documentHref**: `documentHref` is a required, non-optional prop with no runtime default. This is a type-level constraint enforced by the TypeScript compiler at call sites, not an observable runtime behavior, so it has no conformance test vector.
-- **authorSlug whitespace**: See **author-slug-normalization** — authorSlug is trimmed and lowercased before being passed to fixedParams, and an empty string after trimming is treated as authorSlug not having been provided.
-- **baseUrl override**: When baseUrl is provided, it MUST override the default `/api` value. No validation of baseUrl format is performed by the component.
-- **Label customization**: The searchLabel, searchPlaceholder, and searchLandmarkLabel props exist to support host-specific terminology. The component MUST NOT validate or modify these values.
-- **Empty corpus response**: No edge case handling is specified for empty search results; this is handled by SearchView.
-
+- **authorSlug whitespace**: See **author-slug-normalization** — authorSlug is trimmed and lowercased before being passed to fixedParams (internal whitespace is kept), and an empty string after trimming is treated as authorSlug not having been provided.
+- **baseUrl override**: See **base-url-override** — a provided baseUrl replaces the default `/api` and its format is not validated.
+- **Label customization**: The searchLabel, searchPlaceholder, and searchLandmarkLabel props exist to support host-specific terminology. See **label-values-verbatim**.
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | documentHref | `(hit: PaperSearchHit) => string` | Required | URL mapping function for search result links |
 | authorSlug | `string` | undefined | Author slug to filter corpus results |
-| baseUrl | `string` | `/api` | API prefix override |
+| baseUrl | `string` | `/api` on web only; required (absolute URL) on native platforms | API prefix override |
 | searchLabel | `string` | `Search research papers` | Accessible label for search input |
 | searchPlaceholder | `string` | `Search papers…` | Placeholder text for search input |
 | searchLandmarkLabel | `string` | `Research paper search` | Landmark label for search region |
@@ -131,18 +131,16 @@ Not applicable: Paper Search View does not collect, store, or transmit sensitive
 Not applicable: Paper Search View does not implement logging. Any debug or error logging is handled by SearchView or the backend API.
 
 ## Platform Notes
-
-- **Web**: PaperSearchView is defined in `packages/web/packages/search/src/components/PaperSearchView.tsx`. It is a React functional component that wraps SearchView (`./SearchView`). The `paperSearchSource` helper function constructs the SearchSource configuration (see **paper-search-source-factory**). Developers import both `PaperSearchView` and `paperSearchSource` directly.
 - **SwiftUI**: Implement as a SwiftUI View using `.searchable(text:prompt:)` to drive the search field, wrapping an underlying SearchView implementation configured with the same parameters (documentHref closure, authorSlug, baseUrl, label customizations). Because there is no same-origin browsing context on Apple platforms, `baseUrl` MUST be supplied as an absolute URL rather than defaulting to `/api`.
 - **Compose**: Implement as a Composable function accepting the same parameters as the web component. Use Compose Material 3 `SearchBar` or similar native component for the search field, and configure the underlying SearchView Composable with the provided SearchSource configuration. As on other native platforms, `baseUrl` MUST be an absolute URL — there is no same-origin default to fall back to.
+- **React/Web**: PaperSearchView is defined in `packages/web/packages/search/src/components/PaperSearchView.tsx`. It is a React functional component that wraps SearchView (`./SearchView`). The `paperSearchSource` helper function constructs the SearchSource configuration (see **paper-search-source-factory**). Developers import both `PaperSearchView` and `paperSearchSource` directly.
 - **AppKit / UIKit**: Implement as a view controller or view class wrapping `NSSearchField` (AppKit) or `UISearchBar` (UIKit). Accept the same configuration parameters and configure the underlying SearchView implementation with the SearchSource endpoints and options. `baseUrl` MUST be supplied as an absolute URL on these platforms; there is no same-origin browser context to default from.
 - **WinUI 3**: Implement as a UserControl wrapping the native WinUI 3 SearchView port (an `AutoSuggestBox`-based control) configured with the same parameters as the other platforms (documentHref callback, authorSlug, baseUrl, label customizations), rather than querying the SearchSource endpoints directly. Set `AutoSuggestBox.PlaceholderText` from `searchPlaceholder`, use `AutomationProperties.LandmarkType="Search"` together with `AutomationProperties.Name` (from `searchLandmarkLabel`) for the accessible landmark, and use `searchLabel` as the control's accessible name. Because there is no same-origin browser context, `baseUrl` MUST be supplied as an absolute URL — never default to `/api`. Bind `documentHref` as a navigation callback when results are selected.
-
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/search/src/components/PaperSearchView.tsx` | unverified |
+| web | `packages/web/packages/search/src/components/PaperSearchView.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -174,6 +172,7 @@ Not applicable: Paper Search View does not implement logging. Any debug or error
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Corrected the endpoint paths to match source, made the optional props MUST-accept, added a label-values-verbatim requirement, clarified slug whitespace handling and the native baseUrl default, and added vectors psv-017 to psv-019. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed all requirements to subject-only kebab-case; added author-slug-normalization and paper-search-source-factory requirements with vectors; reworded search-view-props to list exact props with a vector; reworded the missing-documentHref edge case as a type-level constraint; filled in Accessibility and Compliance sections; reformatted Design Decisions into Decision/Rationale/Approved blocks; defined the LINK seam by its source in types.ts; corrected the SwiftUI and WinUI 3 platform notes and added a native absolute-baseUrl note to all native platforms; added depends-on for search-view |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation (drafted by Claude Haiku 4.5) |

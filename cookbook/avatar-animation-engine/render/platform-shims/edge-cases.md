@@ -24,7 +24,14 @@
   from the current one leaves its `<path>` in the DOM with stale attributes,
   since `render` has no code path that removes or hides an element for a
   vanished `id`. `renderToString` has no equivalent gap, since it always
-  rebuilds its output from scratch and so cannot go stale this way.
+  rebuilds its output from scratch and so cannot go stale this way. Design
+  Decisions records this as an accepted limitation.
+- **Attribute values containing `"`, `<` or `&` (Web)**: `attrsOf`/`renderToString`
+  write `d`, `fill`/`stroke` ink, `data-id` and the stroke style verbatim and
+  escape nothing, so a value containing a double quote would end its attribute
+  early in the `renderToString` output. `setAttribute` on the live DOM path
+  takes the value as data and is unaffected. The values come from the engine and
+  the validated character config, not from end users.
 - **Off-main-actor use of `AvatarEnvironment.live()`'s closure (Apple)**:
   calling the returned `reducedMotion` closure off the main actor traps the
   process via `MainActor.assumeIsolated`; this is documented, deliberate

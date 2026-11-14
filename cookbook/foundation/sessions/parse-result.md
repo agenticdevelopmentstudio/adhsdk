@@ -2,7 +2,7 @@
 id: 67b656ef-78a2-41ae-a910-f87f527360b1
 title: "Parse Result"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,8 @@ tags:
   - sessions
   - claude-hooks
   - parsing
-depends-on: []
+depends-on:
+  - 81735174-d7d7-4103-87df-7be5944c78cc
 related: []
 references: []
 approved-by: ""
@@ -39,13 +40,13 @@ The parser reads the envelope `{"event": "PreToolUse", "timestamp": "...", "hook
 ### Cases
 
 - **four-cases**: The enum MUST have exactly the cases `.event(ParsedEvent)`, `.skip(reason: String)`, `.lostEvent` and `.unparseable`.
-- **sendable**: `ParseResult` MUST be `Sendable`; its `ParsedEvent` payload is `@unchecked Sendable`, so the guarantee rests on `ParsedEvent` never being mutated.
+- **sendable**: `ParseResult` MUST be `Sendable`; its `ParsedEvent` ([adhsdk.ingredient.foundation.sessions.parsed-event](cookbook:81735174-d7d7-4103-87df-7be5944c78cc)) payload is `@unchecked Sendable`, so the guarantee rests on `ParsedEvent` never being mutated, which holds because every stored property of `ParsedEvent` is a `let`.
 
 ### Parsing
 
 - **parse-signature**: `ParseResult.parse(envelopeJSON:)` MUST take the envelope as a `String` and return a `ParseResult`; it MUST NOT throw.
 - **empty-is-lost**: Text that is empty or only whitespace and newlines MUST return `.lostEvent`, decided before any JSON parsing, so the live scan and the quarantine retry cannot disagree on what "empty" means.
-- **not-an-object-is-unparseable**: Text that is not a JSON object (invalid JSON, or a JSON array, string, number or `null`) MUST return `.unparseable`.
+- **not-an-object-is-unparseable**: Text that is not a JSON object (invalid JSON, a JSON array, string, number or `null`, or valid JSON followed by trailing text) MUST return `.unparseable`.
 - **missing-event-is-unparseable**: An object whose `event` key is missing, not a string or an empty string MUST return `.unparseable`.
 - **event-check-before-session-check**: The `event` check MUST come first, so an object with no usable `event` is `.unparseable` even when it also has no `session_id`.
 - **missing-session-is-skip**: An object with a usable `event` whose `hook_data.session_id` is missing, not a string or empty MUST return `.skip(reason: "no session_id — not a trackable session event")`; this is a deliberate discard, never an error (a StatusLine drop that carries only `term_session_id` is the example).
@@ -55,13 +56,14 @@ The parser reads the envelope `{"event": "PreToolUse", "timestamp": "...", "hook
 - **context-optional**: `context` MUST be the envelope's `context` object when it is an object, and nil otherwise; it is present in v5+ drops and absent in legacy v4 drops and hand-written fixtures.
 - **account-email-default**: `accountEmail` MUST be the `account_email` string, and the empty string when the key is missing or not a string.
 - **oauth-email-nil-when-absent**: `oauthAccountEmail` MUST be the `oauth_account_email` string when present, including an empty string, and nil when the key is missing or not a string; nil means the envelope predates the field and empty means "resolved, no oauth login".
+- **json-null-is-absent**: A JSON `null` value for any key the parser reads MUST be treated as that key being absent.
 - **extra-keys-ignored**: Keys the parser does not read MUST be ignored without error.
-- **no-session-id-on-result**: The parsed `session_id` is validated but not stored on the result; callers read it from `hookData` (or `ParsedEvent.sessionId`).
+- **no-session-id-on-result**: The result MUST NOT store `session_id`; callers MUST read it from `hookData` or `ParsedEvent.sessionId`.
 
 ### Ordering and side effects
 
 - **pure-function**: `parse(envelopeJSON:)` MUST be a pure function of its argument: no file, network, log or notification effect, so it MAY be called concurrently from any thread.
-- **single-decoder**: Every capture path that reads an envelope (drop-file scan, spool drain, quarantine retry) MUST decode through this function; callers that need to act on the outcome do so themselves (the drainer discards `.skip`, quarantines `.unparseable` and records `.lostEvent` as a terminal `lost` row, per this type's doc comments).
+- **single-decoder**: Every capture path that reads an envelope (drop-file scan, spool drain, quarantine retry) MUST decode through this function; this type only classifies the text, and callers act on the outcome themselves.
 
 ## Appearance
 
@@ -84,9 +86,9 @@ Not applicable — this is a parse-outcome enum, not a visual component.
 | parse-result-003 | not-an-object-is-unparseable | `"{not json"` | `.unparseable` |
 | parse-result-004 | not-an-object-is-unparseable | `"[]"` and `"null"` | `.unparseable`, `.unparseable` |
 | parse-result-005 | missing-event-is-unparseable | `{"hook_data":{"session_id":"s1"}}` | `.unparseable` |
-| parse-result-006 | missing-event-is-unparseable | `{"event":"","hook_data":{"session_id":"s-u"}}` (an envelope spooled from an event with an empty type) | `.unparseable`; the drainer quarantines it without reaching the database (test `testAnUnparseableEnvelopeIsQuarantinedWithoutReachingTheDatabase`) |
+| parse-result-006 | missing-event-is-unparseable | `{"event":"","hook_data":{"session_id":"s-u"}}` (an envelope spooled from an event with an empty type) | `.unparseable` |
 | parse-result-007 | missing-event-is-unparseable | `{"event":5,"hook_data":{"session_id":"s1"}}` | `.unparseable` |
-| parse-result-008 | missing-session-is-skip | `{"event":"StatusLine","hook_data":{"term_session_id":"t1"}}` | `.skip(reason: "no session_id — not a trackable session event")`; a spooled StatusLine with empty session is discarded quietly and never quarantined (test `testAnUntrackableEventIsDiscardedQuietlyAndNeverQuarantined`) |
+| parse-result-008 | missing-session-is-skip | `{"event":"StatusLine","hook_data":{"term_session_id":"t1"}}` | `.skip(reason: "no session_id — not a trackable session event")` |
 | parse-result-009 | hook-data-fallback | `{"event":"Stop","hook_data":[]}` | `.skip` |
 | parse-result-010 | event-check-before-session-check | `{"hook_data":{}}` | `.unparseable`, not `.skip` |
 | parse-result-011 | event-fields, timestamp-default, account-email-default, context-optional | `{"event":"PreToolUse","hook_data":{"session_id":"s1"}}` | `.event` with `eventType == "PreToolUse"`, `timestamp == ""`, `accountEmail == ""`, `context == nil`, `oauthAccountEmail == nil`, `hookData == ["session_id": "s1"]` |
@@ -95,15 +97,17 @@ Not applicable — this is a parse-outcome enum, not a visual component.
 | parse-result-014 | oauth-email-nil-when-absent | `"oauth_account_email":""` then `"oauth_account_email":"me@x.y"` then the key absent or `null` | `""`, `"me@x.y"`, nil |
 | parse-result-015 | context-optional | `"context":"text"` | `.event` with `context == nil` |
 | parse-result-016 | extra-keys-ignored | the 011 envelope plus `"unknown":1` | the same `.event` as 011 |
+| parse-result-017 | not-an-object-is-unparseable | `{"event":"Stop","hook_data":{"session_id":"s1"}} trailing` | `.unparseable` |
+| parse-result-018 | json-null-is-absent | `{"event":"Stop","timestamp":null,"account_email":null,"hook_data":{"session_id":"s1"}}` | `.event` with `timestamp == ""` and `accountEmail == ""` |
 
 ## Edge Cases
 
 - **Empty or whitespace-only file** (MUST): `.lostEvent`, never `.unparseable`, so the retry budget is not burned on a file that can never parse and the error badge does not stay lit.
 - **Malformed JSON** (MUST): `.unparseable`, a real error the caller quarantines.
-- **Wrong-typed fields** (MUST): `event`, `timestamp`, `account_email`, `oauth_account_email` and `session_id` of a non-string type are treated as missing; `hook_data` and `context` of a non-object type are treated as missing. No field type raises an error by itself.
+- **Wrong-typed fields** (MUST): `event`, `timestamp`, `account_email`, `oauth_account_email` and `session_id` of a non-string type are treated as missing; `hook_data` and `context` of a non-object type are treated as missing; a JSON `null` for any of them counts as missing too (**json-null-is-absent**). No field type raises an error by itself.
 - **Missing `session_id`** (MUST): `.skip`, with a fixed reason string; never quarantined, because every retry would re-parse to the same skip.
 - **Boundary: both event and session missing** (MUST): `.unparseable`, by the check order.
-- **Valid JSON, trailing garbage** (SHOULD): rejected by `JSONSerialization`, so `.unparseable`.
+- **Valid JSON, trailing garbage** (MUST): `.unparseable`, because the whole text must parse as one JSON object.
 - **Concurrent calls** (MUST): safe, the function holds no state.
 - **Cancellation, timeouts** (not applicable): the function is synchronous and does no I/O.
 - **Error states, offline or disconnected** (not applicable): the input is already a `String` in memory; reading the file, and what to do when it cannot be read, belong to the caller.
@@ -112,7 +116,7 @@ Not applicable — this is a parse-outcome enum, not a visual component.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `rawJson` | `String` | caller | The envelope text, passed as `parse(envelopeJSON:)` |
+| `envelopeJSON` | `String` | caller | The envelope text, passed as `parse(envelopeJSON:)` |
 
 The parser reads no environment variable, setting or injected dependency.
 
@@ -150,13 +154,13 @@ Not applicable: this code makes no log call; the caller logs the outcome.
 - **Compose**: Port as a Kotlin `sealed interface ParseResult` with `data class Event`, `data class Skip`, and `object LostEvent` and `object Unparseable`; parse with `kotlinx.serialization.json.Json.parseToJsonElement` inside `runCatching`, since the source's `try?` swallows the decode error.
 - **React/Web**: Port as a discriminated union on a `kind` field; `JSON.parse` in `try`/`catch`, then check `typeof` for each field and reject arrays and `null` as non-objects before reading keys.
 - **AppKit / UIKit**: `Core/Sessions/ParseResult.swift`, using `JSONSerialization.jsonObject(with:)` cast to `[String: Any]` and `String.trimmingCharacters(in: .whitespacesAndNewlines)`; the rest is Foundation.
-- **WinUI 3**: Use an abstract record `ParseResult` with sealed records `Event`, `Skip`, `LostEvent` and `Unparseable` (or a `OneOf`-style union), `string.IsNullOrWhiteSpace` for the empty test, and `System.Text.Json.JsonDocument.Parse` in `try`/`catch (JsonException)`, checking `JsonValueKind.Object` and `JsonValueKind.String` as the source's casts do. Keep the empty-versus-malformed order, and treat a JSON `null` for `oauth_account_email` as absent. `JsonDocument` is disposable: clone `hook_data` and `context` with `JsonElement.Clone()` or convert them to `Dictionary<string, object?>` before it is disposed.
+- **WinUI 3**: Use an abstract record `ParseResult` with sealed records `Event`, `Skip`, `LostEvent` and `Unparseable` (or a `OneOf`-style union), `string.IsNullOrWhiteSpace` for the empty test, and `System.Text.Json.JsonDocument.Parse` in `try`/`catch (JsonException)`, checking `JsonValueKind.Object` and `JsonValueKind.String` as the source's casts do. Keep the empty-versus-malformed order. `JsonDocument` is disposable: clone `hook_data` and `context` with `JsonElement.Clone()` or convert them to `Dictionary<string, object?>` before it is disposed.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParseResult.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParseResult.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -196,4 +200,5 @@ separation-of-concerns passes: the function only decodes text into one of four o
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Removed drainer outcomes from vectors 006 and 008, linked ParsedEvent, reworded no-session-id-on-result and sendable, made trailing garbage a MUST with a vector, stated the JSON null rule once, and fixed the configuration label to envelopeJSON. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

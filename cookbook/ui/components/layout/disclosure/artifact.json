@@ -4,11 +4,11 @@
     "id": "c99e2822-f5a9-4e84-8740-9341880bb82a",
     "title": "Disclosure",
     "type": "ingredient",
-    "version": "1.3.1",
+    "version": "1.3.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -23,12 +23,16 @@
       "expander"
     ],
     "depends-on": [],
-    "related": [],
-    "references": [],
+    "related": [
+      "16e99364-8af3-40cb-beaf-d5a66a2fa2c0"
+    ],
+    "references": [
+      "https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/"
+    ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4d61c0ca326f0da8",
+  "synced": "5b94a3312194cd4a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

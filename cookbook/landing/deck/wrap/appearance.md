@@ -1,5 +1,5 @@
 
-Wrap itself accepts no appearance-related props, but it is not stylistically inert: it ships the `.lp-wrap` class as part of the landing package's own stylesheet, not the consuming application's. The rule lives in `.lp-wrap`, defined in `packages/web/packages/landing/src/css/base.css`:
+Wrap itself accepts no appearance-related props, but it is not stylistically inert: it ships the `.lp-wrap` class as part of the landing package's own stylesheet, not the consuming application's. The rule lives in `.lp-wrap`, in the landing package's `base.css`:
 
 ```css
 .lp-wrap {

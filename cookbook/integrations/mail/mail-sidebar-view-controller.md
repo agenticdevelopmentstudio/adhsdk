@@ -2,11 +2,11 @@
 id: 83a5a5e0-3337-4aff-aef8-40a7393dabfe
 title: "Mail Sidebar View Controller"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -36,7 +36,7 @@ approved-date: ""
 
 The left column of the mail window. It shows a source-list outline: each mail account is a group row labeled with its email address, and that account's mailboxes sit beneath it. A mailbox row carries a symbol, the mailbox title indented by nesting depth, and an unread count when there is one. It owns no mail state: it reads `accounts`, `mailboxes` and `selectedMailbox` from `MailBrowserModel`, and it calls `select(mailbox:)` on it when the user picks a mailbox.
 
-The sidebar reads these fields from `MailBrowserModel` (see the model ingredient for the full type):
+The sidebar reads these fields from `MailBrowserModel` (see [adhsdk.ingredient.integrations.mail.mail-browser-model](cookbook:b3edb32d-7473-464b-acfb-c19cdd44e99e) for the full type):
 
 | Field | Type | Used for |
 |-------|------|----------|
@@ -47,6 +47,7 @@ The sidebar reads these fields from `MailBrowserModel` (see the model ingredient
 | mailbox `title` | string | Row text and accessibility label. |
 | mailbox `depth` | integer | Row indent. |
 | mailbox `unread` | optional integer | Trailing count. |
+
 ## Behavioral Requirements
 
 - **single-column-outline**: The sidebar MUST be an outline with one column (identifier `mailbox`) used as the outline column, and no header view.
@@ -65,7 +66,7 @@ The sidebar reads these fields from `MailBrowserModel` (see the model ingredient
 - **mailbox-row-indent**: A mailbox row MUST indent its content from the leading edge by 14 points times the mailbox's nesting depth.
 - **mailbox-row-symbol**: A mailbox row MUST show a symbol tinted with the control accent color, chosen by label id: `INBOX` is `tray`, `STARRED` is `star`, `IMPORTANT` is `exclamationmark.circle`, `SENT` is `paperplane`, `DRAFT` is `doc`, no label id (All Mail) is `tray.full`, `SPAM` is `xmark.bin`, `TRASH` is `trash`, and any other label is `tag`. When the system symbol cannot be created, the row falls back to an empty image.
 - **mailbox-row-unread-count**: A mailbox row MUST show the unread count, in the small system font and the secondary label color at the trailing end, only when the count is present and greater than zero.
-- **unread-count-plain-integer**: The unread count MUST be drawn as the plain decimal integer string, with no number formatter and no locale grouping.
+- **unread-count-localized**: The unread count SHOULD be drawn with a locale-aware number formatter. The source draws the plain decimal integer string with no formatter and no locale grouping; that is a known deviation, reported as failed under locale-aware formatting in Compliance.
 - **mailbox-row-title-yields**: A mailbox row's title MUST give up width before the symbol and the count do.
 - **only-mailboxes-selectable**: The sidebar MUST allow selection of mailbox rows only and MUST NOT allow selection of an account group row.
 - **selection-to-model**: When the user selects a mailbox row, the sidebar MUST ask the model to select the mailbox with that row's account id and label id.
@@ -119,7 +120,7 @@ The sidebar reads these fields from `MailBrowserModel` (see the model ingredient
 
 ## Conformance Test Vectors
 
-The view controller has no test of its own. The model it reads has tests in `MailBrowserModelTests`, notably `mailboxesFollowGmailsOrderAndSkipAttributeLabels`, which asserts depths of `0, 0, 0, 0, 1, 0, 0` and an inbox unread count of 3; the rows below that name no test are derived from the source.
+The view controller has no test of its own. Rows whose input is "Inspect" are inspection-only, and mail-sidebar-023 is inspection-only too, because the source traps at run time and a test cannot observe that. The model it reads has tests in `MailBrowserModelTests`, notably `mailboxesFollowGmailsOrderAndSkipAttributeLabels`, which asserts depths of `0, 0, 0, 0, 1, 0, 0` and an inbox unread count of 3; the rows below that name no test are derived from the source.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -140,12 +141,12 @@ The view controller has no test of its own. The model it reads has tests in `Mai
 | mail-sidebar-015 | selection-from-model | The model selects All Mail (label id nil) | The All Mail row is selected. |
 | mail-sidebar-016 | selection-no-match | The model's `selectedMailbox` is nil | The outline selection is unchanged. |
 | mail-sidebar-017 | selection-no-match | The model selects a mailbox that is not listed | The outline selection is unchanged. |
-| mail-sidebar-018 | selection-no-op | The model sets `selectedMailbox` to the row already selected | No selection call reaches the outline. |
+| mail-sidebar-018 | selection-no-op | The model sets `selectedMailbox` to the row already selected, with the outline stubbed or its selection-change notification counted | No selection call reaches the outline, and the selection-change notification count is zero. |
 | mail-sidebar-019 | selection-clear-ignored | The outline selection clears | The model is not called. |
 | mail-sidebar-020 | accessibility-identifier | Inspect the outline | Identifier is `mail.sidebar`. |
 | mail-sidebar-021 | mailbox-accessibility-label | Mailbox titled `Inbox` | Row accessibility label is `Inbox`. |
 | mail-sidebar-022 | single-column-outline, source-list-style | Inspect the outline | One column `mailbox`, no header, source list style, group rows do not float. |
-| mail-sidebar-023 | model-injection | Build the controller from a coder | The process stops with the fatal error `init(coder:) has not been implemented`. |
+| mail-sidebar-023 | model-injection | Inspect the controller's coder initializer (inspection-only) | `init(coder:)` calls `fatalError("init(coder:) has not been implemented")`; the only working initializer takes a `MailBrowserModel`. |
 | mail-sidebar-024 | selection-single | Inbox row selected; the model selects the Sent row | Only the Sent row is selected. |
 | mail-sidebar-025 | mailbox-row-title-yields | A mailbox with a long title and unread 12 in a narrow sidebar | The title truncates at the tail; the symbol and the `12` count stay fully visible. |
 | mail-sidebar-026 | account-row-truncation | Account email longer than the sidebar width | The group row text truncates at the tail. |
@@ -153,17 +154,19 @@ The view controller has no test of its own. The model it reads has tests in `Mai
 | mail-sidebar-028 | selection-after-rebuild | Inbox of `a1` is selected, then the model's `mailboxes` changes | After the reload the Inbox row of `a1` is selected again. |
 | mail-sidebar-029 | empty-accounts | The model has no accounts | The outline has zero rows and no message is drawn. |
 | mail-sidebar-030 | group-expandable-with-children | One account with no mailboxes and one with Inbox | The first group row is not expandable; the second is. |
-| mail-sidebar-031 | unread-count-plain-integer | Mailbox with unread 1234 | The count label reads `1234`. |
-| mail-sidebar-032 | selection-task-unhandled | The model's `select(mailbox:)` fails and sets `errorMessage` | The sidebar shows no error itself and the model's `errorMessage` is set. |
+| mail-sidebar-031 | unread-count-localized | Mailbox with unread 1234, locale en_US | The count label reads `1,234`; the source reads `1234`, a known deviation. |
+| mail-sidebar-032 | selection-task-unhandled | The model's `select(mailbox:)` fails | The sidebar shows no error UI of its own and does not await the task. |
+| mail-sidebar-033 | selection-no-match | Collapse the group of account `a1`, then the model selects the Inbox of `a1` | The outline selection stays unchanged. |
+
 ## Edge Cases
 
 - **No accounts**: With no accounts the outline has zero rows and no message is drawn (empty-accounts; mail-sidebar-029).
 - **Account with no mailboxes**: The group row shows with no children and is not expandable (mail-sidebar-002, mail-sidebar-030; group-expandable-with-children).
-- **Unread zero or absent**: A count of zero or nil MUST draw no count label (mail-sidebar-009, mail-sidebar-010).
-- **Unknown label**: A label id with no symbol of its own MUST show the tag symbol (mail-sidebar-005).
+- **Unread zero or absent**: A count of zero or nil draws no count label (mailbox-row-unread-count; mail-sidebar-009, mail-sidebar-010).
+- **Unknown label**: A label id with no symbol of its own shows the tag symbol (mailbox-row-symbol; mail-sidebar-005).
 - **Deep nesting**: Indentation grows by 14 points per depth level with no upper bound in the source, so a deep label can push its title off the row; the title truncates at the tail.
-- **Selection not listed**: When the selected mailbox is nil or not in the list, the sidebar MUST leave the outline selection alone rather than clear it (mail-sidebar-016, mail-sidebar-017).
-- **Selection echo**: The sidebar MUST suppress the selection callback while it applies the model's selection (mail-sidebar-013).
+- **Selection not listed**: When the selected mailbox is nil or not in the list, the sidebar leaves the outline selection alone rather than clear it (selection-no-match; mail-sidebar-016, mail-sidebar-017, mail-sidebar-033).
+- **Selection echo**: The selection callback is suppressed while the sidebar applies the model's selection (selection-echo-guard; mail-sidebar-013).
 - **Selection cleared by the outline**: A cleared outline selection sends nothing to the model, so the model keeps its selected mailbox (mail-sidebar-019).
 - **Rebuild resets expansion**: The source tracks no expansion state, and each rebuild expands every group again (expand-on-rebuild), so a group the user collapsed re-expands the next time accounts or mailboxes change.
 - **Selection after rebuild**: Rebuilding re-applies the model's selection, so the selected row survives a reload (selection-after-rebuild; mail-sidebar-028).
@@ -188,6 +191,7 @@ Not applicable: the controller registers no URL scheme and handles no link; the 
 | Apple | none |
 | Android | none |
 | Web | none |
+| Windows | none |
 
 ## Localization
 
@@ -242,14 +246,14 @@ Not applicable: the source writes no log lines.
 - **SwiftUI**: Start from a `List` with the `.sidebar` style and a `Section` per account whose header is the email, with a `Label` per mailbox (symbol and title) and a `.badge` for the unread count. A selection binding of the mailbox id replaces the manual echo guard, and `.selectionDisabled` on headers matches the group rows. Indent by depth with `.padding(.leading)` or nest the rows in `OutlineGroup`.
 - **Compose**: Start from a `LazyColumn` with a header item per account and an item per mailbox, a leading `Icon`, a title `Text` with `maxLines = 1` and `TextOverflow.Ellipsis`, and a trailing count `Text`. Indent with `Modifier.padding(start = 14.dp * depth)`, highlight the row matching the selected id, and set `Modifier.semantics` with `contentDescription` to the title. Header items take no click handler, so they are not selectable.
 - **React/Web**: Start from a `role="tree"` with a `role="group"` per account and `role="treeitem"` mailboxes carrying `aria-selected`, with `aria-label` set to the title. Truncate with CSS `text-overflow: ellipsis`, indent with a depth custom property, and render the count in a span beside the title. Account headers are plain non-focusable elements.
-- **AppKit / UIKit**: The source is the implementation recorded for this recipe in `index.json`: an `NSViewController` that is its own `NSOutlineViewDataSource` and delegate, with a private class `Node` because the outline tracks items by identity, a private `NSTableCellView` subclass for the mailbox row, and Combine sinks on the model's published properties. Its specific pieces are `isGroupItem` for accounts, `shouldSelectItem` limiting selection to mailboxes, and the `applyingSelection` flag around programmatic selection. On UIKit the equivalent is a `UICollectionView` with a sidebar list configuration, `UICollectionViewDiffableDataSource` with section snapshots (headers as expandable parents), and cell registrations for rows.
+- **AppKit / UIKit**: The source is the implementation recorded for this ingredient in `index.json`: an `NSViewController` that is its own `NSOutlineViewDataSource` and delegate, with a private class `Node` because the outline tracks items by identity, a private `NSTableCellView` subclass for the mailbox row, and Combine sinks on the model's published properties. Its specific pieces are `isGroupItem` for accounts, `shouldSelectItem` limiting selection to mailboxes, and the `applyingSelection` flag around programmatic selection. On UIKit the equivalent is a `UICollectionView` with a sidebar list configuration, `UICollectionViewDiffableDataSource` with section snapshots (headers as expandable parents), and cell registrations for rows.
 - **WinUI 3**: Use a `TreeView` (or `NavigationView` with `MenuItemsSource`) bound to a collection of account nodes whose `Children` are mailbox nodes, with `SelectionMode="Single"`. Use an `ItemTemplate` per level through a `TreeViewItemTemplateSelector`: the account template is a `TextBlock` with `FontSize="12"`, `FontWeight="SemiBold"`, `Foreground="{ThemeResource TextFillColorSecondaryBrush}"` and `TextTrimming="CharacterEllipsis"`, and the mailbox template is a `Grid` with an `Auto` column for a `FontIcon` or `SymbolIcon` filled with `AccentFillColorDefaultBrush`, a `*` column for a trimmed `TextBlock` title, and an `Auto` column for the unread count `TextBlock` whose `Visibility` is bound to count greater than zero. Indent by depth with `Margin` on the template (14 epx times depth) or by nesting nodes, and set `IsExpanded="True"` on each account node. Disable selection of account nodes by handling `ItemInvoked` and ignoring them, or by using `NavigationViewItemHeader` for accounts in `NavigationView`. Set `AutomationProperties.Name` on the mailbox template to the title for Narrator. `TreeViewItem` supplies the `PointerOver`, `Pressed` and `Selected` visual states, and arrow keys expand, collapse and move selection.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailSidebarViewController.swift` | confirmed (1.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailSidebarViewController.swift` | confirmed (1.0.1) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -262,11 +266,11 @@ Not applicable: the source writes no log lines.
 **Approved**: pending
 
 **Decision**: Outline rows are instances of a private class, not values.
-**Rationale**: The source comment states the outline tracks items by identity, so each rebuild creates new node objects and reloads the outline.
+**Rationale**: The outline tracks items by identity, so each rebuild creates new node objects and reloads the outline.
 **Approved**: pending
 
 **Decision**: A flag, `applyingSelection`, silences the selection callback while the model's selection is applied.
-**Rationale**: Without it, applying the model's selection would call `select(mailbox:)` back and loop between outline and model; the source comment states the change is not sent back.
+**Rationale**: Without it, applying the model's selection would call `select(mailbox:)` back and loop between outline and model.
 **Approved**: pending
 
 **Decision**: Selection is matched on account id and label id, not on mailbox identity.
@@ -274,11 +278,11 @@ Not applicable: the source writes no log lines.
 **Approved**: pending
 
 **Decision**: When the model's selection matches no row, the sidebar leaves the outline selection as it is.
-**Rationale**: The source returns early rather than clearing the selection; this keeps the previous row highlighted until the model selects a listed mailbox, which is intended, observable behavior that implementations copy.
+**Rationale**: Observed behavior: the source returns early rather than clearing the selection, which keeps the previous row highlighted until the model selects a listed mailbox. That avoids a flash of no selection while the model's list and selection are briefly out of step, but the source states no reason, so this still needs approval.
 **Approved**: pending
 
 **Decision**: Each rebuild expands all account groups, discarding any collapse by the user.
-**Rationale**: The source expands every root after each reload and tracks no expansion state, so a group the user collapsed re-expands when the model changes. This is intended behavior of the sidebar, so every port copies it.
+**Rationale**: Observed behavior: the source expands every root after each reload and tracks no expansion state, so a group the user collapsed re-expands when the model changes. Expanding keeps every mailbox reachable (and keeps the model's selection visible), but the source states no reason and discarding the user's collapse is a cost, so this still needs approval before a port copies it.
 **Approved**: pending
 
 **Decision**: Mailbox rows indent by 14 points times depth inside the cell, not through the outline's own indentation.
@@ -287,10 +291,6 @@ Not applicable: the source writes no log lines.
 
 **Decision**: Mailbox symbols are chosen by a fixed switch on label id with a tag as the fallback.
 **Rationale**: System labels have a known symbol and every user label shares the tag, so no symbol is stored in the model.
-**Approved**: pending
-
-**Decision**: The view controller has no test of its own; coverage comes from the model's tests of mailbox ordering, depth and unread counts.
-**Rationale**: `MailBrowserModelTests` covers the data the sidebar displays, and no test builds this view controller.
 **Approved**: pending
 
 ## Compliance
@@ -302,12 +302,16 @@ Not applicable: the source writes no log lines.
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | accessibility |
 | [adc.check.platform-compliance.native-controls-preference](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d49de883-3811-54ed-b227-c2d807cac551) | passed | platform-compliance |
+| [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
 | [adc.check.internationalization.locale-aware-formatting](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c87ff1f1-9d77-5167-b0c4-f13f2aae5acb) | failed | internationalization |
 
-The controller only displays model state and forwards one call, so separation of concerns passes. Unit-test coverage is partial: the model's mailbox building has tests, while the controller and its cells have none. Screen-reader support is partial because mailbox rows have a title label but no unread count and the account group sets no label of its own. Keyboard navigation passes through the native outline, with no custom handling. It uses `NSOutlineView` in the source list style with system fonts and colors, so native controls pass. Locale-aware formatting fails because the unread count is built with plain string interpolation, not a number formatter.
+The controller only displays model state and forwards one call, so separation of concerns passes. Unit-test coverage is partial: the model's mailbox building has tests, while the controller and its cells have none. Screen-reader support is partial because mailbox rows have a title label but no unread count and the account group sets no label of its own. Keyboard navigation passes through the native outline, with no custom handling. It uses `NSOutlineView` in the source list style with system fonts and colors, so native controls pass. Contrast is partial because the system secondary label colors on the sidebar material have not been measured in every appearance and selection state. Locale-aware formatting fails because the unread count is built with plain string interpolation, not a number formatter.
+
+Known debt: the view controller has no test of its own, and `MailBrowserModelTests` covers only the data the sidebar displays (mailbox order, depth and unread counts). Planned remedy: add a controller test that builds the sidebar from a model and covers the selection echo guard, the account-and-label selection match and the symbol mapping.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Reworded the expand-on-rebuild and no-match decisions as observed behavior needing approval, moved the missing controller test into known debt, made the unread count a SHOULD for locale formatting, removed MUST keywords from Edge Cases, linked the model ingredient, added a Windows deep-link row, a contrast check and a collapsed-group vector, and rewrote vectors 018, 023 and 032 so they can be observed. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

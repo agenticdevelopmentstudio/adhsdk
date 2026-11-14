@@ -23,6 +23,14 @@
 **Rationale**: An unrepresentable value raises an Objective-C exception that `try?` does not catch, which would kill the status-line command and blank the line.
 **Approved**: pending
 
+**Decision**: When the branch resolves but the status or log command then fails, report the sample as failed (nil, or a marked field) instead of as a clean tree with the empty-string hash.
+**Rationale**: Today the failure is read as `""`, so the fingerprint claims no drift when the truth is unknown; see the open question on `sample-subcommand-failure`.
+**Approved**: pending
+
+**Decision**: When the branch resolves but the status or log command then fails, report the sample as failed (nil, or a marked field) instead of as a clean tree with the empty-string hash.
+**Rationale**: Today the failure is read as `""`, so the fingerprint claims no drift when the truth is unknown; see the open question on `sample-subcommand-failure`.
+**Approved**: pending
+
 **Decision**: Any failure returns the payload unchanged.
 **Rationale**: Enrichment decorates a row; losing the decoration is cheaper than losing the row.
 **Approved**: pending

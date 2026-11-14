@@ -2,7 +2,7 @@
 id: 591d0b87-ce71-4b11-8642-149fc405cce9
 title: "RGBAColor Theme Extension"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -21,9 +21,9 @@ tags:
   - wcag
   - contrast
   - logic
-depends-on: []
-related:
+depends-on:
   - ad5bae6b-0172-4cd4-a4b7-297eb58eb28d
+related: []
 references: []
 approved-by: ""
 approved-date: ""
@@ -35,7 +35,7 @@ approved-date: ""
 
 `RGBAColor+Theme.swift` is an `extension RGBAColor` that adds the color math the theme layer needs to derive a whole palette from a few base colors. It measures a color (`relativeLuminance`, `isDark`, `contrastRatio(against:)`), writes it out (`hexStringRGB`), and builds new colors from it (`blended(withFraction:of:)`, `composited(over:)`, `bestTextColor(black:white:)`, `dimmed(towards:by:minContrast:)`, `desaturated(by:)`). It also adds two constants, `opaqueBlack` and `opaqueWhite`.
 
-Every member is a pure computation over the four `Double` components of `RGBAColor` (see the RGBAColor recipe for the value type and its clamping). Nothing here reads or writes files, the network, defaults or logs. The callers are `SemanticPalette` (derives surface, text and accent roles), `ITermColorsParser` (derives a missing selection color and the dark or light appearance) and `VSCodeThemeImporter` in the Core layer (composites a declared selection over the background, derives a fallback selection and infers the appearance).
+Every member is a pure computation over the four `Double` components of `RGBAColor` (see the [RGBAColor](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d) ingredient for the value type and its clamping). Nothing here reads or writes files, the network, defaults or logs. Theme derivation and import code are the example consumers, for instance palette role derivation and the iTerm color importer; the list of callers is not part of this contract.
 
 ## Behavioral Requirements
 
@@ -53,7 +53,7 @@ Hex output
 - **hex-rgb-format**: `hexStringRGB` MUST return `"#"` followed by six lower-case hexadecimal digits in the order red, green, blue, each zero-padded to two digits; it is always 7 characters long.
 - **hex-rgb-no-alpha**: `hexStringRGB` MUST omit alpha; colors that differ only in alpha produce the same string.
 - **hex-rgb-rounding**: Each channel MUST be clamped to 0 to 1, multiplied by 255 and rounded to the nearest integer, with halves rounded away from zero.
-- **hex-rgb-purpose**: The format MUST match the terminal palette's color string, per the doc comment, so that `ColorTheme` can project onto `TerminalSessionColorPalette`. The RGBAColor recipe's `hexString` differs: it is upper-case and carries alpha.
+- **hex-rgb-purpose**: The format MUST match the terminal palette's color string: lower-case, six digits, no alpha. The [RGBAColor](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d) ingredient's `hexString` differs: it is upper-case and carries alpha.
 
 Blending and compositing
 
@@ -65,14 +65,13 @@ Blending and compositing
 - **composite-opaque-source**: When `self.alpha` is 1, `composited(over:)` MUST return a color equal to `self`.
 - **composite-clear-source**: When `self.alpha` is 0 and the backdrop is opaque, `composited(over:)` MUST return a color equal to the backdrop.
 - **composite-transparent-result**: When the output alpha is 0 (both operands fully transparent), `composited(over:)` MUST return `RGBAColor(red: 0, green: 0, blue: 0, alpha: 0)` instead of dividing by zero.
-- **composite-purpose**: A translucent color has no meaningful luminance or contrast alone, so a caller MUST resolve it with `composited(over:)` against its real backdrop before measuring it.
 
 Contrast
 
 - **contrast-formula**: `contrastRatio(against:)` MUST return `(lighter + 0.05) / (darker + 0.05)`, where `lighter` and `darker` are the greater and lesser of the two `relativeLuminance` values.
 - **contrast-range**: The result MUST be 1 for two colors of equal luminance and 21 for opaque black against opaque white.
 - **contrast-symmetric**: `a.contrastRatio(against: b)` MUST equal `b.contrastRatio(against: a)`.
-- **contrast-opaque-precondition**: Callers MUST pass opaque operands. The doc comment states the method "assumes both operands are opaque"; the code does not check alpha, so a translucent operand is measured by its channel values alone.
+- **contrast-opaque-precondition**: Callers MUST pass opaque operands. A translucent color has no meaningful luminance or contrast alone, so a caller MUST resolve it with `composited(over:)` against its real backdrop before measuring it. The doc comment states the method "assumes both operands are opaque"; the code does not check alpha, so a translucent operand is measured by its channel values alone.
 - **best-text-color**: `bestTextColor(black:white:)` MUST return `white` when `contrastRatio(against: white) >= contrastRatio(against: black)`, and `black` otherwise. A tie therefore returns `white`.
 - **best-text-defaults**: The `black` and `white` parameters MUST default to `RGBAColor.opaqueBlack` and `RGBAColor.opaqueWhite`.
 - **best-text-returns-argument**: `bestTextColor` MUST return one of the two supplied colors unchanged; it does not blend or adjust.
@@ -82,7 +81,7 @@ Dimming
 - **dimmed-search**: `dimmed(towards:by:minContrast:)` MUST clamp `fraction` to 0 to 1, then try `blended(withFraction: amount, of: background)` starting at that amount and reducing `amount` by 0.05 after each failed attempt.
 - **dimmed-accept**: It MUST return the first candidate whose `contrastRatio(against: background)` is at least `minContrast`.
 - **dimmed-fallback**: When `amount` falls to 0 or below without a candidate qualifying, or when the clamped fraction is 0, it MUST return `self` unchanged. The result is then below `minContrast` if `self` itself was; the method does not report that.
-- **dimmed-step**: The returned amount is quantized to the starting fraction minus a whole number of 0.05 steps; the method does not search for the exact amount that meets `minContrast`.
+- **dimmed-step**: The returned amount MUST be the starting fraction minus a whole number of 0.05 steps; the method does not search for the exact amount that meets `minContrast`.
 
 Desaturation
 
@@ -95,7 +94,7 @@ Desaturation
 Constants, concurrency and side effects
 
 - **opaque-constants**: `opaqueBlack` MUST be (0, 0, 0, 1) and `opaqueWhite` MUST be (1, 1, 1, 1).
-- **total-functions**: No member MUST throw, trap or return an optional; every color result is built through the `RGBAColor` component initializer, which clamps each component to 0 to 1, so a returned color is always in range.
+- **total-functions**: Members MUST NOT throw, trap or return an optional; every color result is built through the `RGBAColor` component initializer, which clamps each component to 0 to 1, so a returned color is always in range.
 - **concurrency**: Every member is a pure function of immutable values on a `Sendable` type, so any thread MAY call it concurrently without synchronization.
 - **no-side-effects**: Members MUST NOT perform I/O, logging, notification or persistence.
 
@@ -113,7 +112,7 @@ Not applicable — this is a color-math extension, not a visual component. It su
 
 ## Conformance Test Vectors
 
-Tests beside the source: `RGBAColorThemeTests` (compositing), `IdleStatusInkTests` (`desaturated`), `SemanticPaletteRolesTests` ("contrastRatio matches WCAG extremes"), `ITermColorsParserTests` (selection derived by `blended`) and `SemanticPaletteTests` and `ChatRoleDerivationTests` (contrast floors). `relativeLuminance` thresholds, `isDark`, `hexStringRGB`, `bestTextColor` and `dimmed` have no direct assertions, so their vectors are derived from the source and computed by hand (approximate values stated to 0.001).
+Tests beside the source: `RGBAColorThemeTests` (compositing), `IdleStatusInkTests` (`desaturated`) and `SemanticPaletteRolesTests` ("contrastRatio matches WCAG extremes"). Indirect coverage only, through consumers of this extension rather than direct assertions on it: `ITermColorsParserTests` (selection derived by `blended`), and `SemanticPaletteTests` and `ChatRoleDerivationTests` (contrast floors). `relativeLuminance` thresholds, `isDark`, `hexStringRGB`, `bestTextColor` and `dimmed` have no direct assertions, so their vectors are derived from the source and computed by hand (approximate values stated to 0.001).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -121,7 +120,7 @@ Tests beside the source: `RGBAColorThemeTests` (compositing), `IdleStatusInkTest
 | rgbacolor-theme-002 | relative-luminance, luminance-linearization | color (0.5, 0.5, 0.5, 1) | luminance about 0.214 |
 | rgbacolor-theme-003 | luminance-ignores-alpha | (0.5, 0.5, 0.5, 0.1) and (0.5, 0.5, 0.5, 1) | equal luminance |
 | rgbacolor-theme-004 | is-dark-threshold | `opaqueBlack.isDark`, `opaqueWhite.isDark` | true, false |
-| rgbacolor-theme-005 | is-dark-threshold, is-dark-contract | color (0.5, 0.5, 0.5, 1) | `isDark` is true and `bestTextColor()` is `opaqueBlack` |
+| rgbacolor-theme-005 | is-dark-threshold, is-dark-contract | PROVISIONAL, tied to the open `is-dark-contract` question: it records current behavior, not an agreed contract, so a fix that changes it is not a regression. Color (0.5, 0.5, 0.5, 1) | `isDark` is true and `bestTextColor()` is `opaqueBlack` |
 | rgbacolor-theme-006 | hex-rgb-format, hex-rgb-rounding | (0.2, 0.4, 0.6, 1).`hexStringRGB` | `"#336699"` |
 | rgbacolor-theme-007 | hex-rgb-rounding, hex-rgb-format | (1, 0.5, 0.25, 1).`hexStringRGB` | `"#ff8040"` (127.5 rounds to 128, 63.75 to 64) |
 | rgbacolor-theme-008 | hex-rgb-no-alpha | (1, 0, 0, 0.2) and (1, 0, 0, 1) | both `"#ff0000"` |
@@ -133,12 +132,12 @@ Tests beside the source: `RGBAColorThemeTests` (compositing), `IdleStatusInkTest
 | rgbacolor-theme-014 | composite-formula | (0, 0, 0, 0.5) over opaque white ("50% grey over white lands midway") | alpha 1; each channel 0.5 within 0.001 |
 | rgbacolor-theme-015 | composite-formula | (1, 1, 1, 0.5) over (0, 0, 0, 0.5) ("compositing two translucent colours accumulates alpha correctly") | alpha 0.75; red 2/3 within 0.001 |
 | rgbacolor-theme-016 | composite-transparent-result, total-functions | (0, 0, 0, 0) over (0, 0, 0, 0) | (0, 0, 0, 0); no division by zero |
-| rgbacolor-theme-017 | contrast-formula, contrast-range | `opaqueBlack` against `opaqueWhite` (SemanticPaletteRolesTests "contrastRatio matches WCAG extremes") | above 20; 21 by the formula |
+| rgbacolor-theme-017 | contrast-formula, contrast-range | `opaqueBlack` against `opaqueWhite` (SemanticPaletteRolesTests "contrastRatio matches WCAG extremes") | 21 within 0.0001 |
 | rgbacolor-theme-018 | contrast-range | `opaqueWhite` against `opaqueWhite` | 1 within 0.0001 |
 | rgbacolor-theme-019 | contrast-symmetric | `a.contrastRatio(against: b)` and `b.contrastRatio(against: a)` for (0.2, 0.4, 0.6, 1) and (0.9, 0.9, 0.1, 1) | equal |
 | rgbacolor-theme-020 | best-text-color | `opaqueBlack.bestTextColor()`, `opaqueWhite.bestTextColor()` | `opaqueWhite`, `opaqueBlack` |
 | rgbacolor-theme-021 | best-text-color | color (0.4, 0.4, 0.4, 1).bestTextColor() | `opaqueWhite` (contrast 5.74 against white, 3.66 against black); (0.6, 0.6, 0.6, 1) gives `opaqueBlack` |
-| rgbacolor-theme-022 | best-text-returns-argument, best-text-defaults | `opaqueBlack.bestTextColor(black: X, white: Y)` for custom X and Y | returns Y unchanged |
+| rgbacolor-theme-022 | best-text-returns-argument, best-text-defaults | `opaqueBlack.bestTextColor(black: (0.1, 0.1, 0.1, 1), white: (0.9, 0.9, 0.9, 1))` | returns (0.9, 0.9, 0.9, 1) unchanged (contrast about 16.7 against it, 1.2 against the supplied black) |
 | rgbacolor-theme-023 | dimmed-accept | `opaqueWhite.dimmed(towards: opaqueBlack, by: 0.5, minContrast: 1)` | grey (0.5, 0.5, 0.5, 1); contrast about 5.28 passes at the first attempt |
 | rgbacolor-theme-024 | dimmed-search, dimmed-step | `opaqueWhite.dimmed(towards: opaqueBlack, by: 0.5, minContrast: 11)` | grey 0.75 within 0.001; attempts at 0.5 through 0.30 give contrast below 11, 0.25 gives about 11.45 |
 | rgbacolor-theme-025 | dimmed-fallback | any color dimmed by a fraction of 0 | equals `self` |
@@ -154,17 +153,17 @@ Tests beside the source: `RGBAColorThemeTests` (compositing), `IdleStatusInkTest
 
 ## Edge Cases
 
-- **Translucent operand to contrast**: `contrastRatio(against:)` and `bestTextColor` read channel values only. A caller that passes a translucent color gets the ratio of the unblended color, not what a viewer sees. Resolve with `composited(over:)` first. MUST (caller precondition documented in the source).
-- **Fully transparent composite**: both alphas 0 returns (0, 0, 0, 0) rather than NaN. MUST.
-- **Fraction out of range**: `blended`, `dimmed` and `desaturated` clamp the fraction or amount to 0 to 1. MUST.
-- **Unreachable minimum contrast**: `dimmed` returns `self` with no error or flag when no candidate meets `minContrast`. This is a documented fallback, not a silent failure. MUST.
-- **Fraction not on the 0.05 grid**: `dimmed` tries the clamped fraction first, then steps down by 0.05, so a fraction of 0.32 tries 0.32, 0.27, 0.22 and so on. MUST.
-- **Negative fraction in `dimmed`**: clamps to 0 and returns `self` without entering the loop. MUST.
-- **Luminance exactly 0.5**: `isDark` is false. MUST.
-- **Contrast tie**: `bestTextColor` returns `white`. MUST.
-- **Grey input to `desaturated`**: unchanged within floating-point error. MUST.
-- **Alpha through blend, composite and desaturate**: `blended` blends alpha linearly; `composited` produces source-over alpha; `desaturated` keeps alpha. `hexStringRGB` drops alpha. MUST.
-- **Non-finite color math**: color results are built through the clamping `RGBAColor` initializer, so a NaN produced by color math is stored as 0. The `Double` values that `relativeLuminance` and `contrastRatio` return are not clamped. MUST.
+- **Translucent operand to contrast**: `contrastRatio(against:)` and `bestTextColor` read channel values only. A caller that passes a translucent color gets the ratio of the unblended color, not what a viewer sees. Resolve with `composited(over:)` first (see `contrast-opaque-precondition`, a caller precondition documented in the source).
+- **Fully transparent composite**: both alphas 0 returns (0, 0, 0, 0) rather than NaN (see `composite-transparent-result`).
+- **Fraction out of range**: `blended`, `dimmed` and `desaturated` clamp the fraction or amount to 0 to 1 (see `blend-clamp`, `dimmed-search`, `desaturate-blend`).
+- **Unreachable minimum contrast**: `dimmed` returns `self` with no error or flag when no candidate meets `minContrast`. See `dimmed-fallback`: the caller gets no signal that the result is below `minContrast`.
+- **Fraction not on the 0.05 grid**: `dimmed` tries the clamped fraction first, then steps down by 0.05, so a fraction of 0.32 tries 0.32, 0.27, 0.22 and so on (see `dimmed-search`).
+- **Negative fraction in `dimmed`**: clamps to 0 and returns `self` without entering the loop (see `dimmed-fallback`).
+- **Luminance exactly 0.5**: `isDark` is false (see `is-dark-threshold`).
+- **Contrast tie**: `bestTextColor` returns `white` (see `best-text-color`).
+- **Grey input to `desaturated`**: unchanged within floating-point error (see `desaturate-idempotent`).
+- **Alpha through blend, composite and desaturate**: `blended` blends alpha linearly; `composited` produces source-over alpha; `desaturated` keeps alpha. `hexStringRGB` drops alpha (see `blend-alpha`, `composite-formula`, `desaturate-alpha`, `hex-rgb-no-alpha`).
+- **Non-finite color math**: color results are built through the clamping `RGBAColor` initializer, so a NaN produced by color math is stored as 0. The `Double` values that `relativeLuminance` and `contrastRatio` return are not clamped (see `total-functions`).
 - **Concurrent access**: not applicable beyond `Sendable`; the members are pure over immutable values, so concurrent calls cannot race.
 - **Offline or disconnected state**: not applicable; no network or file access.
 - **Cancellation and timeouts**: not applicable; every member is synchronous and bounded (`dimmed` runs at most about 21 iterations).
@@ -223,7 +222,7 @@ Not applicable: the source makes no log calls; `dimmed` returns `self` without a
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor+Theme.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor+Theme.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -244,23 +243,24 @@ Not applicable: the source makes no log calls; `dimmed` returns `self` without a
 **Approved**: pending
 
 **Decision**: `isDark` is `relativeLuminance < 0.5`, and `hexStringRGB` is lower-case with no alpha.
-**Rationale**: The 0.5 cut is the source's classifier for theme appearance (`ITermColorsParser` uses it to pick dark or light) and does not match its own "can host light text" comment for mid tones (see the open question on `is-dark-contract`). The lower-case six-digit form matches the terminal palette's color string, per the doc comment.
+**Rationale**: The 0.5 cut is the source's classifier for theme appearance (`ITermColorsParser` uses it to pick dark or light) and does not match its own "can host light text" comment for mid tones (see the open question on `is-dark-contract`). The lower-case six-digit form matches the terminal palette's color string, per the doc comment, so `ColorTheme` can project onto `TerminalSessionColorPalette` (the rationale for `hex-rgb-purpose`).
 **Approved**: pending
 
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
-| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
-| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
+| [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 
-Separation of concerns passes because the file holds only pure color math on `RGBAColor`; the value type, platform-color bridges and palette policy live elsewhere. Unit-test coverage is partial: `composited` and `desaturated` have direct tests and `contrastRatio` has the extremes test, but `relativeLuminance`, `isDark`, `hexStringRGB`, `blended`, `bestTextColor` and `dimmed` are exercised only through the palette and parser tests. Explicit error handling passes because no member can fail: the zero-alpha composite is guarded, and `dimmed` has a defined fallback. Data integrity passes because every returned color is built through the clamping initializer.
+Separation of concerns passes because the file holds only pure color math on `RGBAColor`; the value type, platform-color bridges and palette policy live elsewhere. Unit-test coverage is partial: `composited` and `desaturated` have direct tests and `contrastRatio` has the extremes test, but `relativeLuminance`, `isDark`, `hexStringRGB`, `blended`, `bestTextColor` and `dimmed` are exercised only through the palette and parser tests. Explicit error handling is partial: no member can fail and the zero-alpha composite is guarded, but `dimmed` silently returns a color below `minContrast` when no candidate qualifies (`dimmed-fallback`) and tells the caller nothing. Data integrity passes because every returned color is built through the clamping initializer.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Moved RGBAColor to depends-on with links, dropped the caller list, merged composite-purpose into contrast-opaque-precondition, fixed RFC 2119 wording, made vectors 017 and 022 precise, marked vector 005 provisional, split indirect test coverage, and set explicit-error-handling to partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

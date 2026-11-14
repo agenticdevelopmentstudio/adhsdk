@@ -8,7 +8,7 @@
 | Empty (no filter) | Table displays empty message, bar and filters visible |
 | Empty (filtered) | Table displays filtered-empty message, current filters visible |
 | Rows selected | Selection count button appears in bar, highlighted row(s) in table |
-| Hidden selected rows | Selection count button shows hidden count in gold next to main count |
+| Hidden selected rows | Selection count button shows hidden count in the accent color next to main count |
 | Details pane shown | Split view with table on top, details pane on bottom |
 | Details pane - no selection | Details pane shows empty message |
 | Details pane - many selected | Details pane shows many-selection message |

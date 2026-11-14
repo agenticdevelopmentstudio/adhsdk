@@ -1,0 +1,5 @@
+
+The Categories and Tags component is a composition of two independent field components—a category field and a tag set field—arranged vertically in a shared table-like layout. The component coordinates the label alignment between the two rows by sharing a CSS custom property, ensuring visual consistency when captions are right-aligned. Each field maintains its own state; the component manages neither category nor tag data, only layout and disabled state.
+
+**Props**: `category: { label: string; noun: string; options: readonly string[]; nodes?: readonly CategoryTreeNode[]; value: string; onChange: (next: string) => void; onRename?: (node: CategoryTreeNode, nextName: string) => void | Promise<void> }`, `tags: { label: string; noun: string; options: readonly string[]; value: string[]; onChange: (next: string[]) => void }`, `disabled?: boolean` (default `false`), and `className?: string`. `label` and `noun` are required (non-optional) on both `category` and `tags`; the type carries no default and no optional fallback for either.
+

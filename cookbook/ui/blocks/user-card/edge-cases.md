@@ -14,6 +14,6 @@
   transitions to its error state and reveals `AvatarFallback`, which resolves
   through the same fallback chain (initials, then slug, then `UserIcon`) as a
   null `avatarUrl` (see **show-initials-fallback**).
-- **Large persona list**: each persona item wraps text; no truncation; the `<ul>` is scrollable by the parent container.
+- **Large persona list**: each persona item wraps text; no truncation; the card grows to fit its content with no height cap and never scrolls itself; scrolling long lists is the consumer's job.
 - **createdAt edge case**: `formatMemberSince` returns the locale-specific month+year. An invalid date string renders as "Invalid Date" — callers should validate upstream.
 

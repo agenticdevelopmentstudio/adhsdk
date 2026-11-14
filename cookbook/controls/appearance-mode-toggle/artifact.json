@@ -4,11 +4,11 @@
     "id": "46e077a8-1171-4564-9781-7997ff76813a",
     "title": "Appearance Mode Toggle",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,12 +24,15 @@
       "dark-mode"
     ],
     "depends-on": [],
-    "related": [],
+    "related": [
+      "3bff70de-bfca-4bfd-b112-2a6044416ddc",
+      "7b54db6e-755d-4665-a091-d34cfcaac146"
+    ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4b24987657501df5",
+  "synced": "d23ce913e5182311",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

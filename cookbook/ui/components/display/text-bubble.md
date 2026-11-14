@@ -2,11 +2,11 @@
 id: 7f84a93a-013e-452f-a963-7ffb4808dd5c
 title: "TextBubble"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-07-03
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -21,7 +21,8 @@ tags:
   - decorative
   - ui
 depends-on: []
-related: []
+related:
+  - 441dd61d-3e76-499b-b45c-92869015eced
 references:
   - https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix
   - https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
@@ -40,8 +41,12 @@ traveling-"distortion lens" over it: a soft lens glides along the text in readin
 order, and each glyph under the lens is magnified, faintly blurred, and
 colour-shifted from `colorFrom` toward `colorTo`. When the lens reaches the end
 it restarts at the beginning (a forward loop), optionally parking for `pauseMs`
-between sweeps. Ported from the distortion bubble on mikefullerton.com; used by
-the concept graph's founder note.
+between sweeps.
+
+A separate headless primitive, `@adh-sdk/textlens`
+([adhsdk.ingredient.textlens](cookbook:441dd61d-3e76-499b-b45c-92869015eced)), sweeps a lens over per-character spans
+that a caller has already built. `TextBubble` does its own splitting, owns its own
+forward loop, and does not compose it.
 
 The effect is decoration only — the real text content stays intact and legible:
 
@@ -66,6 +71,8 @@ Two symbols ship from `@adh-sdk/ui/components/text-bubble`:
 - **color-shift-under-lens**: The component MUST shift each in-lens glyph's colour from `colorFrom` toward `colorTo` in proportion to its nearness to the lens centre.
 - **preserve-accessible-text**: While animating, the component MUST keep the full string available to assistive technology and MUST mark the visible per-glyph copy `aria-hidden`.
 - **restore-on-cleanup**: On unmount, on `active` becoming false, or on a `resetKey` change, the component MUST restore the element's original plain text.
+- **sweep-duration**: The component MUST make one sweep last `max(minDuration, text.length × msPerChar)` ms, where `text.length` is the length of the original string.
+- **idle-hold-before-sweep**: Each cycle MUST begin with an idle hold of `pauseMs` ms during which every glyph is plain, followed by one sweep; with `pauseMs` of 0 there is no hold and the first sweep starts immediately.
 - **follow-text-direction**: The lens MUST travel left-to-right for `ltr` elements and right-to-left for `rtl` elements, top line to bottom line.
 - **skip-cursive-scripts**: For text containing cursive-joining scripts — the Unicode `Script=` values `Arabic`, `Syriac`, `Mongolian`, `Nko`, `Mandaic`, `Adlam` (matched by `\p{Script=Arabic}|\p{Script=Syriac}|\p{Script=Mongolian}|\p{Script=Nko}|\p{Script=Mandaic}|\p{Script=Adlam}`) — the component MUST leave the text rendered normally and MUST NOT split it into per-character spans.
 - **not-break-words-at-wrap**: The component MUST only allow line breaks between words (never mid-word) when it splits the visible copy into glyphs.
@@ -78,15 +85,15 @@ A lens (influence radius `radius`, default 44px) travels the string; glyphs near
 its centre bulge and soften:
 
 ```
-The founder note text under the traveling lens
+Sample text under the traveling lens
               ~~~( O )~~~
                   ^ glyphs here: scale↑, blur↑, color colorFrom→colorTo
    glyphs outside the radius: plain, untouched
 ```
 
 - Nearness `t = smoothstep(1 − dist/radius)` drives all three effects together:
-  `transform: scale(1 + t·maxScale)`, `filter: blur(t·maxBlur)` (dropped below
-  ~0.03px), `color: color-mix(in oklab, colorFrom, colorTo t%)`.
+  `transform: scale(1 + t·maxScale)`, `filter: blur(t·maxBlur)` (dropped at or below
+  0.03px), `color: color-mix(in oklab, colorFrom, colorTo t%)`.
 - Only glyphs currently under the lens get `will-change` promoted; it is dropped
   as each glyph leaves the lens, so at most a handful are ever composited.
 - Defaults are subtle by design: `maxScale 0.18`, `maxBlur 0.4px`, `radius 44px`,
@@ -99,7 +106,7 @@ The founder note text under the traveling lens
 | State | Behavior |
 |---|---|
 | Inactive (`active === false`) | plain, un-split text; no animation |
-| Active — idle hold | during the leading/`pauseMs` window each cycle, glyphs are cleared to plain |
+| Active — idle hold | during the `pauseMs` window at the start of each cycle, glyphs are cleared to plain; with `pauseMs` of 0 there is no hold and the first sweep starts immediately |
 | Active — sweeping | lens glides along glyph centres; in-lens glyphs scale/blur/shift |
 | Loop restart | at the end of a sweep the lens returns to the start (after `pauseMs`) |
 | Cursive script text | left rendered normally; effect disabled for that string |
@@ -133,11 +140,11 @@ The founder note text under the traveling lens
 | T7 | skip-cursive-scripts | `text` = Arabic string, active | text unchanged; no per-character spans created |
 | T8 | not-break-words-at-wrap | multi-word text, active | each word wrapped in an `inline-block; white-space:nowrap` span |
 | T9 | follow-text-direction | `dir="rtl"` host, active | reading order sorts right-to-left within each line |
-| T10 | remeasure-on-resize (Playwright) | active, resize host to rewrap | glyph centres re-measured; lens stays aligned |
+| T10 | remeasure-on-resize (Playwright) | active, resize host to rewrap | glyph centres are re-measured, so each glyph's lens centre equals its current `offsetLeft + offsetWidth / 2`, `offsetTop + offsetHeight / 2` |
 | T11 | noop-on-empty-text | empty/whitespace `text`, active | no spans built; nothing animates |
-| T12 | animate-lens-when-active | active, `pauseMs=500` | for the first ~500ms of each cycle every glyph is cleared (plain) before the sweep begins |
-| T13 | animate-lens-when-active | active, 3-character `text`, default `minDuration` (4500ms) | the sweep across the string takes at least 4500ms (the duration floor applies) |
-
+| T12 | idle-hold-before-sweep | active, `pauseMs=500` | for the first 500ms of each cycle (give or take one animation frame) every glyph is cleared (plain) before the sweep begins; with `pauseMs=0` the first sweep starts immediately |
+| T13 | sweep-duration | active, 3-character `text`, default `minDuration` (4500ms) | the sweep across the string takes 4500ms, since `max(4500, 3 × 48)` is the floor; a 200-character string takes `200 × 48` = 9600ms |
+| T14 | splitting unit (edge case) | active, `text` = `"e\u0301 \u{1F468}\u200D\u{1F469}"` | one span per code point: `e`, the combining mark, the two emoji and the ZWJ are each their own span |
 ## Edge Cases
 
 - **Empty or whitespace-only text**: the hook bails early (nothing to split), so
@@ -160,7 +167,12 @@ The founder note text under the traveling lens
   and cleared as they leave, so only a handful of glyphs are promoted at once.
 - **`pauseMs > 0`**: the lens parks (text plain) for `pauseMs` before each sweep;
   the first park is the start delay, later parks are the between-loop pause.
-
+- **Splitting unit**: the visible copy is split per Unicode code point, not per
+  grapheme cluster, so an emoji ZWJ sequence or a base letter plus a combining mark
+  becomes several spans, and the lens scales and blurs each part separately.
+- **Vertical writing modes**: reading order is lines top-to-bottom, then horizontal
+  along each line by `direction`. Hosts with `writing-mode: vertical-*` are not
+  supported: the sweep order is not meaningful there.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -217,7 +229,7 @@ telemetry.
 
 ## Platform Notes
 
-- **React/Web** (source): File `packages/web/packages/ui/src/components/text-bubble.tsx`. Client-side only (`"use client"`), uses `useEffect`/`useRef`, `requestAnimationFrame`, and `ResizeObserver` (guarded for SSR). Color shift via `color-mix(in oklab, …)` — a modern CSS feature; an inline style with an unsupported value is invalid at computed-value time, so older engines fall back to the element's inherited/`currentColor` value instead of applying it. No external dependencies beyond React.
+- **React/Web**: Client-side only (`"use client"`), uses `useEffect`/`useRef`, `requestAnimationFrame`, and `ResizeObserver` (guarded for SSR). Color shift via `color-mix(in oklab, …)` — a modern CSS feature; an inline style with an unsupported value is invalid at computed-value time, so older engines fall back to the element's inherited/`currentColor` value instead of applying it. No external dependencies beyond React.
 - **SwiftUI**: Build on `TimelineView(.animation)` driving a `Canvas` (or, on iOS 18+/macOS 15+, a custom `TextRenderer`) that draws each glyph with its own scale/blur/colour — `CADisplayLink` plus a `GeometryReader` per character is not idiomatic SwiftUI, and this avoids both. Measure glyph centres from the resolved glyph runs (`Canvas`'s `context.resolve(text:)`, or `TextRenderer`'s layout) rather than a per-character view, and use `displayScale` for DPI-aware radius. Detect cursive-joining scripts with the same Unicode `Script=` set and skip splitting for them (**skip-cursive-scripts**); keep whole words undivided so wrapping only breaks between words (**not-break-words-at-wrap**); expose the full string via `.accessibilityLabel` on the container while the per-glyph drawing stays `.accessibilityHidden(true)` (**preserve-accessible-text**).
 - **Compose (Android)**: `graphicsLayer` applies to composables, not to `AnnotatedString` spans, so draw each glyph yourself: measure glyph boxes with `TextLayoutResult.getBoundingBox(index)` and either render one small composable per glyph (each with its own `graphicsLayer` for scale/blur/colour) or draw the glyphs directly with `drawText` in a `Canvas`/`drawBehind`. Use `Animatable`/`withInfiniteAnimationFrameMillis` to drive the lens position. Detect cursive scripts with the same Unicode `Script=` set and skip per-glyph rendering for them (**skip-cursive-scripts**); group glyphs into word units so wrapping only breaks between words (**not-break-words-at-wrap**); keep the full string as the container's `contentDescription` and mark the per-glyph drawing `clearAndSetSemantics {}` so it is hidden from accessibility (**preserve-accessible-text**).
 - **AppKit / UIKit**: `NSTextField`/`UITextView` attributed-string splitting can't drive per-glyph transforms; use a custom `NSView`/`UIView` subclass that draws Core Text runs itself, so each glyph can be scaled/blurred/tinted independently. Measure glyph frames from `CTLine`/`CTRun` (`CTLineGetGlyphRuns`, `CTRunGetPositions`), not bounding rects. Use `CADisplayLink` for animation timing. RTL detection: `NSLocale.characterDirection(forLanguage:)` on macOS, `UITextView.textDirection`/`NSParagraphStyle.baseWritingDirection` on iOS. Skip cursive scripts via the same Unicode `Script=` set (**skip-cursive-scripts**); lay out whole words as undividable runs so breaks stay between words (**not-break-words-at-wrap**); back the view with an accessibility element whose label/value is the full string, with the glyph-drawing layer `accessibilityElementsHidden` (**preserve-accessible-text**).
@@ -227,7 +239,7 @@ telemetry.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/text-bubble.tsx` | confirmed (1.2.1) |
+| web | `packages/web/packages/ui/src/components/text-bubble.tsx` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -278,6 +290,7 @@ Statuses rest on the source: the off-screen full-text span plus `aria-hidden` on
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Added sweep-duration and idle-hold-before-sweep requirements, documented the code-point splitting unit and unsupported vertical writing modes, made thresholds exact, linked textlens as related with the boundary stated, and removed app-specific provenance and the file path. |
 | 1.2.1 | 2026-09-25 | Mike Fullerton | Restored on-main 1.0.0 Change History wording ("Initial recipe" not "Initial ingredient"); added missing separation-of-concerns/unit-test-coverage Compliance rows. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirement IDs to subject-only kebab-case; narrow render-plain-text to the inactive state; add noop-on-empty-text (remaps T11) and pauseMs/minDuration test vectors (T12/T13); name the exact cursive-script Unicode set; rewrite Platform Notes for SwiftUI/Compose/AppKit-UIKit/WinUI 3 with correct APIs and per-platform cursive-skip/word-wrap/accessible-text coverage; reformat Design Decisions into Decision/Rationale/Approved form and add a reduced-motion opt-out decision; resolve the Accessibility Options contradiction; rewrite Compliance as canonical linked checks; add references; correct Change History wording and authorship. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | AI-assisted (Claude Haiku 4.5): bump version, update modified date, add all template sections (Deep Linking, Localization, Accessibility Options, Feature Flags, Analytics, Privacy marked not applicable; expand Platform Notes with concrete WinUI/AppKit/UIKit/Compose guidance). |

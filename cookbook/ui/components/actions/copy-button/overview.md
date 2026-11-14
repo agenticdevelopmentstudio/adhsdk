@@ -6,7 +6,7 @@ short window. It composes two shared parts rather than re-implementing either: t
 family `Button` (`variant="outline"`, `size="icon"`, shrunk to `size-6`) for the
 chrome and press feel, and the `useClipboard` hook for the write + transient
 `copied` flag. `useClipboard` is a small internal hook, not independently
-catalogued in this cookbook, so it has no domain of its own to list under
+catalogued in this cookbook, so it has no artifact UUID in the index to list under
 `depends-on`.
 
 The payload is a function, not a string: `getText()` runs at click time, so the

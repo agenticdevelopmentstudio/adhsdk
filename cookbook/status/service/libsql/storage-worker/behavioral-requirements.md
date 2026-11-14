@@ -10,7 +10,7 @@
 
 - **startup-order**: The module MUST run these steps in this order and each step MUST complete before the next begins: `openLibsql(conn)`, `tuneDbForConcurrency(db, conn)`, `migrateDb(db)`, `createStorageServer(createLibsqlStorage(db, conn))`, attach the `message` listener, post the ready reply.
 - **single-connection**: The module MUST open exactly one database connection, via one `openLibsql` call, and MUST pass that same connection to tuning, migration and `createLibsqlStorage`.
-- **tune-before-migrate**: The module MUST apply `tuneDbForConcurrency` before `migrateDb`. For an embedded `file:` URL, `tuneDbForConcurrency` sets `PRAGMA journal_mode = WAL`, `PRAGMA busy_timeout = 5000` and `PRAGMA synchronous = NORMAL`; for any other URL it returns without change (these behaviors belong to `client.ts`).
+- **tune-before-migrate**: The module MUST apply `tuneDbForConcurrency` before `migrateDb`. What `tuneDbForConcurrency` does to the connection belongs to `libsql/client.ts`, not to this module.
 - **self-migrate-on-boot**: The module MUST call `migrateDb(db)` with the default migrations folder on every boot, for every connection kind, per the source comment "embedded-file deployments self-migrate on boot". `migrateDb` is idempotent, because drizzle skips migrations already recorded in `__drizzle_migrations`.
 - **storage-composition**: The module MUST build the served `Storage` with `createLibsqlStorage(db, conn)` and MUST wrap it with `createStorageServer` exactly once, so every attached port shares one server and therefore one FIFO queue.
 - **ready-after-listener**: The module MUST attach the `message` listener on the parent port before it posts `{ ready: true }`, so a listener is already in place when the host sees the ready reply.
@@ -19,22 +19,19 @@
 ### Startup failure
 
 - **startup-failure-reply**: When any startup step (open, tune, migrate, storage or server construction) throws or rejects, the module MUST post `{ ready: false, error: <message> }` to the parent port, where `<message>` is `err.message` for an `Error` and `String(err)` for any other thrown value.
-- **startup-failure-no-listener**: When startup fails before the listener step, the module MUST NOT attach the `message` listener, so no attach request is served.
-- **startup-failure-no-exit**: The module MUST NOT call `process.exit`, `port.close` or any other termination on startup failure; the module does nothing to end the worker after posting the failure reply (it attaches no listener either), and ending it is the host's decision.
-- **startup-failure-no-log**: The module MUST NOT log a startup failure; the posted reply is the only signal. The host (`startStorageThread`) turns it into `Error("storage thread failed to start: <error>")`.
+- **startup-failure-no-listener**: When startup fails, the module MUST NOT attach the `message` listener, so no attach request is served.
+- **startup-failure-no-exit**: Current behavior: on startup failure the module calls no `process.exit`, `port.close` or other termination; it does nothing to end the worker after posting the failure reply (it attaches no listener either), and ending it is the host's decision.
+- **startup-failure-no-log**: Current behavior: the module does not log a startup failure; the posted reply is the only signal. The host (`startStorageThread`) turns it into `Error("storage thread failed to start: <error>")`.
 
 ### Serving
 
 - **attach-request**: For each message received on the parent port, the module MUST treat it as a `StorageWorkerRequest` (`{ attach: MessagePort }`) and call `server.serve(msg.attach)` once.
-- **attach-no-validation**: The module MUST NOT validate the shape of a received message; the `StorageWorkerRequest` type is the documented contract, and the host's `connect()` is the only sender.
+- **attach-no-validation**: Current behavior: the module does not validate the shape of a received message; the `StorageWorkerRequest` type is the documented contract, and the host's `connect()` is the only sender.
 - **attach-multiplicity**: The module MUST accept any number of attach requests over the life of the thread, one per connecting thread, each served by the same server and queue.
-- **one-at-a-time-queue**: Every Storage call from every attached port MUST be run one at a time in arrival order (FIFO) on the single connection, per the contract of `createStorageServer` in `storage/remote.ts`; a call's statements MUST NOT interleave with another call's.
-- **attach-reply**: On each attach the server MUST post a `{ shape }` hello (the method tree of the `Storage`) on the attached port; a client resolves once it has received it.
-- **error-fidelity**: A Storage call that throws MUST reach the caller as an `Error` carrying `name`, `message`, `stack`, `code` (as a string) and a `cause` chain of at most 4 further levels, so callers that match on `code` or the cause chain (for example `isUniqueViolation`) still work. This is `createStorageServer` behavior that the worker exposes.
-- **slow-call-warning**: A single Storage call that takes 2000 ms or more MUST be logged by the server with `console.warn` as `[storage] slow call <path> <ms>ms`, because it holds up the whole queue. This is `createStorageServer` behavior that the worker exposes.
+- **serving-is-remote**: Everything about how an attached port is served MUST be as Storage Remote ([adhsdk.ingredient.status.service.storage.remote](cookbook:e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d)) specifies for `createStorageServer`: `single-queue` (one call at a time, in arrival order, with no interleaving), `shape-handshake` (the `{ shape }` hello on attach), `error-flatten` (errors that keep their detail) and `slow-call-log` (the 2000 ms warning). This module adds none of that behavior; it only wraps the storage once (`storage-composition`).
 
 ### Runtime failure
 
-- **post-startup-throws-uncaught**: The module has no handler for a throw inside its `message` listener after startup; such a throw is an uncaught exception in the worker thread, which ends the worker and surfaces on the host as the Worker's `error` and `exit` events (`startStorageThread` forwards both to `opts.onExit`).
+- **post-startup-throws-uncaught**: The host MUST treat a throw inside the worker's `message` listener after startup as the end of the worker: the module has no handler for it, so it is an uncaught exception in the worker thread, which ends the worker and surfaces on the host as the Worker's `error` and `exit` events (`startStorageThread` forwards both to `opts.onExit`).
 - **no-restart**: The module MUST NOT reopen or retry the connection after startup; recovery from a dead database thread is the host's responsibility.
 

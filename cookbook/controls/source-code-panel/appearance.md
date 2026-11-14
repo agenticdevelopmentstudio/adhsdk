@@ -10,4 +10,4 @@
 - **Max height**: Applied as inline `max-height` CSS on body container if maxHeight prop is provided
 - **Font**: Shiki theme controls font rendering in highlighted code; fallback uses browser default monospace
 - **Colors**: Shiki theme controls syntax highlighting colors; fallback text color follows default foreground
-
+- **Body scrolling**: `.scp-body` has `overflow: auto`, so content taller or wider than the body (including taller than `maxHeight`) scrolls inside the body rather than growing the panel.

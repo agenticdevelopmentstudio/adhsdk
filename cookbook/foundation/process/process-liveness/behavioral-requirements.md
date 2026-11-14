@@ -1,5 +1,5 @@
 
-- **claude-identity**: A process MUST count as a Claude Code CLI when the executable path it was launched with has the last path component `claude` or contains the component `/claude/`.
+- **claude-identity**: A process MUST count as a Claude Code CLI when the executable path it was launched with has the last path component exactly `claude` or contains the text `/claude/`, both compared case-sensitively. The test looks only at the path, so any non-CLI executable under a `/claude/` directory also counts; that false positive is accepted.
 - **claude-identity-desktop**: A process whose launch path has neither the last component `claude` nor a `/claude/` component, such as the desktop app's main executable `/Applications/Claude.app/Contents/MacOS/Claude`, MUST NOT count as a Claude Code CLI; the desktop app is left out by this test, with no separate check for its path.
 - **claude-identity-unreadable**: A process whose launch data cannot be read, is empty, or is no larger than the 4-byte argument count MUST NOT count as a Claude Code CLI.
 - **claude-identity-same-user**: Only processes of the current user MUST be considered; a process of another user MUST count as not Claude.
@@ -14,7 +14,7 @@
 - **live-cwd-canonical**: The `cwd` of a listed process MUST be the real path of its launch directory.
 - **live-cwd-empty**: The `cwd` of a listed process MUST be the empty string when the kernel would not name it (a revoked vnode, an unmounted volume), and such a process MUST claim nothing by directory.
 - **live-cwd-launch**: The `cwd` MUST be the directory the process was launched in; it MUST NOT follow the agent, because `cd` and `EnterWorktree` move the hook's directory and never the process's.
-- **live-parent**: `parentPid` MUST be nil when the parent cannot be read, and a parent that is itself a live `claude` marks the process as that CLI's helper, not a session.
+- **live-parent**: `parentPid` MUST be nil when the parent cannot be read.
 - **cwd-read**: A process's directory MUST be read from the kernel's per-process path info, and MUST be nil when the kernel does not return a full record or the path bytes are not valid UTF-8.
 - **cwd-bounded**: The directory string MUST be read within the width of the path field, so a path field with no end marker cannot be over-read.
 - **session-file-path**: The session file of a pid MUST be read from `<config dir>/sessions/<pid>.json`, where the config directory is the `CLAUDE_CONFIG_DIR` of the process's environment when that is non-empty, and `~/.claude` otherwise.
@@ -24,7 +24,7 @@
 - **session-current**: The session id MUST come from the session file the CLI rewrites on resume or clear, so it names the current session and not the first.
 - **headless-entrypoint**: `isHeadless(argv:sessionFile:)` MUST, when the session file has a non-empty `entrypoint` string, answer true exactly when the entrypoint starts with `sdk`, and MUST ignore the arguments.
 - **headless-kind-ignored**: `isHeadless(argv:sessionFile:)` MUST NOT use the file's `kind`, which reads `interactive` for both scripted and terminal runs.
-- **headless-argv**: With no usable entrypoint, `isHeadless(argv:sessionFile:)` MUST answer true when `-p` or `--print` appears among the arguments after the first and before any `--`.
+- **headless-argv**: With no usable entrypoint, `isHeadless(argv:sessionFile:)` MUST answer true when an argument exactly equal to `-p` or `--print` appears among the arguments after the first and before any `--`. The match is on whole tokens: `--print=x` and a combined flag such as `-pv` do not count, while a `-p` token given as an option's value does count.
 - **headless-after-separator**: An argument after `--` MUST NOT count as a switch.
 - **headless-default**: `isHeadless(argv:sessionFile:)` MUST answer false with nil arguments and no usable entrypoint.
 - **unique-match**: `claudePid(inCwd:)` MUST return the pid of the one live `claude` process whose directory equals the given directory after both are made real paths, and MUST return nil when there is none.
@@ -39,4 +39,4 @@
 - **attachment-headless**: `terminalAttachment(ofPid:)` MUST return `.detached` for a headless `claude` whether or not it has a terminal, because it takes its prompt from its arguments and typed keystrokes never reach it.
 - **attachment-tty**: `terminalAttachment(ofPid:)` MUST return `.detached` when the process's controlling terminal device is all bits set (the kernel's no-device value), and `.attached` otherwise.
 - **attachment-nil-is-maybe**: Callers MUST read a nil attachment as "might be attached", never as "detached".
-
+- **env-minimal**: Only `CLAUDE_CONFIG_DIR` MUST be read from an inspected process's environment, and the environment MUST NOT be returned, stored or logged.

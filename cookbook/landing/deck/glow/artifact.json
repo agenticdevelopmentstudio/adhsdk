@@ -4,11 +4,11 @@
     "id": "b341dd02-fbcb-4da8-b2b6-897807b4ebbc",
     "title": "Glow",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -22,17 +22,17 @@
       "decorative"
     ],
     "depends-on": [
-      "fae23662-e69b-4472-9c7d-049feadf1211"
+      "fae23662-e69b-4472-9c7d-049feadf1211",
+      "07c437af-a291-4356-bd83-c896bd4facde"
     ],
     "related": [
-      "fae23662-e69b-4472-9c7d-049feadf1211",
       "05930e64-fa82-49ef-b50d-22d87fa7d182"
     ],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "03b133cea3fcb8d8",
+  "synced": "2b56a1abf9d7cb87",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

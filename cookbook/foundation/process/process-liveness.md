@@ -2,7 +2,7 @@
 id: 8ec76506-7cb3-4aca-a9a0-07f014500e7e
 title: "Process Liveness"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -18,7 +18,8 @@ tags:
   - process
   - liveness
   - sessions
-depends-on: []
+depends-on:
+  - fa0fce58-5e17-41da-b3eb-0d2de9e89b46
 related: []
 references: []
 approved-by: ""
@@ -43,7 +44,7 @@ Identity comes from the launched executable path, not from `proc_pidpath`. The s
 
 ## Behavioral Requirements
 
-- **claude-identity**: A process MUST count as a Claude Code CLI when the executable path it was launched with has the last path component `claude` or contains the component `/claude/`.
+- **claude-identity**: A process MUST count as a Claude Code CLI when the executable path it was launched with has the last path component exactly `claude` or contains the text `/claude/`, both compared case-sensitively. The test looks only at the path, so any non-CLI executable under a `/claude/` directory also counts; that false positive is accepted.
 - **claude-identity-desktop**: A process whose launch path has neither the last component `claude` nor a `/claude/` component, such as the desktop app's main executable `/Applications/Claude.app/Contents/MacOS/Claude`, MUST NOT count as a Claude Code CLI; the desktop app is left out by this test, with no separate check for its path.
 - **claude-identity-unreadable**: A process whose launch data cannot be read, is empty, or is no larger than the 4-byte argument count MUST NOT count as a Claude Code CLI.
 - **claude-identity-same-user**: Only processes of the current user MUST be considered; a process of another user MUST count as not Claude.
@@ -58,7 +59,7 @@ Identity comes from the launched executable path, not from `proc_pidpath`. The s
 - **live-cwd-canonical**: The `cwd` of a listed process MUST be the real path of its launch directory.
 - **live-cwd-empty**: The `cwd` of a listed process MUST be the empty string when the kernel would not name it (a revoked vnode, an unmounted volume), and such a process MUST claim nothing by directory.
 - **live-cwd-launch**: The `cwd` MUST be the directory the process was launched in; it MUST NOT follow the agent, because `cd` and `EnterWorktree` move the hook's directory and never the process's.
-- **live-parent**: `parentPid` MUST be nil when the parent cannot be read, and a parent that is itself a live `claude` marks the process as that CLI's helper, not a session.
+- **live-parent**: `parentPid` MUST be nil when the parent cannot be read.
 - **cwd-read**: A process's directory MUST be read from the kernel's per-process path info, and MUST be nil when the kernel does not return a full record or the path bytes are not valid UTF-8.
 - **cwd-bounded**: The directory string MUST be read within the width of the path field, so a path field with no end marker cannot be over-read.
 - **session-file-path**: The session file of a pid MUST be read from `<config dir>/sessions/<pid>.json`, where the config directory is the `CLAUDE_CONFIG_DIR` of the process's environment when that is non-empty, and `~/.claude` otherwise.
@@ -68,7 +69,7 @@ Identity comes from the launched executable path, not from `proc_pidpath`. The s
 - **session-current**: The session id MUST come from the session file the CLI rewrites on resume or clear, so it names the current session and not the first.
 - **headless-entrypoint**: `isHeadless(argv:sessionFile:)` MUST, when the session file has a non-empty `entrypoint` string, answer true exactly when the entrypoint starts with `sdk`, and MUST ignore the arguments.
 - **headless-kind-ignored**: `isHeadless(argv:sessionFile:)` MUST NOT use the file's `kind`, which reads `interactive` for both scripted and terminal runs.
-- **headless-argv**: With no usable entrypoint, `isHeadless(argv:sessionFile:)` MUST answer true when `-p` or `--print` appears among the arguments after the first and before any `--`.
+- **headless-argv**: With no usable entrypoint, `isHeadless(argv:sessionFile:)` MUST answer true when an argument exactly equal to `-p` or `--print` appears among the arguments after the first and before any `--`. The match is on whole tokens: `--print=x` and a combined flag such as `-pv` do not count, while a `-p` token given as an option's value does count.
 - **headless-after-separator**: An argument after `--` MUST NOT count as a switch.
 - **headless-default**: `isHeadless(argv:sessionFile:)` MUST answer false with nil arguments and no usable entrypoint.
 - **unique-match**: `claudePid(inCwd:)` MUST return the pid of the one live `claude` process whose directory equals the given directory after both are made real paths, and MUST return nil when there is none.
@@ -83,7 +84,7 @@ Identity comes from the launched executable path, not from `proc_pidpath`. The s
 - **attachment-headless**: `terminalAttachment(ofPid:)` MUST return `.detached` for a headless `claude` whether or not it has a terminal, because it takes its prompt from its arguments and typed keystrokes never reach it.
 - **attachment-tty**: `terminalAttachment(ofPid:)` MUST return `.detached` when the process's controlling terminal device is all bits set (the kernel's no-device value), and `.attached` otherwise.
 - **attachment-nil-is-maybe**: Callers MUST read a nil attachment as "might be attached", never as "detached".
-
+- **env-minimal**: Only `CLAUDE_CONFIG_DIR` MUST be read from an inspected process's environment, and the environment MUST NOT be returned, stored or logged.
 ## Appearance
 
 Not applicable — this is a process-inspection utility, not a visual component.
@@ -113,8 +114,10 @@ Not applicable — this is a process-inspection utility, not a visual component.
 | process-liveness-011 | headless-argv (no test in source) | No session file; argv `claude -p ping`; argv `node cli.js --print ping` | true; true |
 | process-liveness-012 | headless-after-separator, headless-default (no test in source) | No session file; argv `claude -- -p`; argv `claude`; nil argv | false; false; false |
 | process-liveness-013 | attachment-unknown (test: testTerminalAttachmentIsUnknownForAProcessThatIsNotClaude) | `terminalAttachment(ofPid: 0)` and of the test runner's own pid | nil; nil |
-| process-liveness-014 | live-list-empty, live-list-failed | `liveClaudeProcesses()` on a machine running `claude` or not | nil only if the pid scan itself failed; otherwise an array (empty when no `claude` runs) |
+| process-liveness-014 | live-list-empty, live-list-failed | `liveClaudeProcesses()`; the result depends on the host, so assert only its shape | nil only if the pid scan itself failed; otherwise an array (empty when no `claude` runs) |
 | process-liveness-015 | canonical-fallback | `canonicalPath("/no/such/path")` | `/no/such/path` |
+| process-liveness-016 | claude-identity, claude-identity-desktop (no test in source; derived from the doc comment) | Launch paths `/Applications/Claude.app/Contents/MacOS/Claude`, `/usr/local/bin/Claude`, `/opt/claude/bin/tool` and `/usr/local/bin/claude` | not Claude (case differs); not Claude (case differs); Claude (accepted false positive: a `/claude/` component); Claude |
+| process-liveness-017 | headless-argv (no test in source) | No session file; argv `claude --print=x`; argv `claude -pv`; argv `claude --model -p` | false; false; true |
 
 The requirements `claude-identity-desktop`, `live-list-session-keeps`, `live-cwd-empty`, `cwd-bounded`, `enumeration-headroom` and `attachment-tty` need a real process or a kernel record and have no unit vector in the source; a port should add integration checks for them.
 
@@ -139,9 +142,8 @@ The requirements `claude-identity-desktop`, `live-list-session-keeps`, `live-cwd
 | `argv` | `[String]` or nil | none | The inspected process's arguments, passed to `isHeadless(argv:sessionFile:)`. |
 | `sessionFile` | `Data` or nil | none | The raw session file, passed to `isHeadless(argv:sessionFile:)`. |
 | `directory`, `isClaude`, `canonical` | functions | the kernel path read, the launch-path test, `canonicalPath` | Probes of `uniqueClaude`. |
-| pid headroom | integer constant | 256 | Spare pid entries beyond the kernel's count. |
-| accepted launch-path forms | rule | last component `claude`, or contains `/claude/` | The test for a Claude Code CLI. |
 
+Constants, not options (no override exists): the pid headroom of 256 spare entries beyond the kernel's count, and the launch-path test for a Claude Code CLI (last component `claude`, or contains `/claude/`).
 ## Deep Linking
 
 Not applicable: this component defines no URL scheme or route; it reads process and session-file data.
@@ -175,17 +177,17 @@ Not applicable: this component contains no log call; failures are returned as ni
 
 ## Platform Notes
 
-- **SwiftUI**: The source is `packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessLiveness.swift` in the `AgenticDeveloperHubSDKCore` target. It uses `proc_listpids` (with `PROC_UID_ONLY`), `proc_pidinfo` (`PROC_PIDVNODEPATHINFO`), `sysctl` (`KERN_PROCARGS2`, `KERN_PROC_PID`), `realpath` and `JSONSerialization`. It depends on `ProcessEnv` for the environment, arguments and parent pid. It has no SwiftUI content.
+- **SwiftUI**: Not applicable: there is no UI. Use the Foundation type as it is.
 - **Compose**: Android cannot list other apps' processes. Within one app, read `/proc` for the same uid: `/proc/<pid>/cmdline` for the launch path, `/proc/<pid>/cwd` (a symlink) with `File.canonicalPath` for the directory, and `/proc/<pid>/stat` for the parent and terminal device number. Parse the session file with `org.json.JSONObject` or kotlinx.serialization.
-- **React/Web**: In Node on Linux use `/proc` as above; on macOS run `ps` or `lsof -a -d cwd -p <pid>` (the source avoids subprocesses for cost). `fs.realpathSync.native` is the counterpart of `realpath`, and `JSON.parse` reads the session file. A browser cannot do this.
-- **AppKit / UIKit**: The same libproc and sysctl calls work on macOS. iOS sandboxing forbids inspecting other processes, so this does not port to UIKit.
+- **React/Web**: In Node on Linux use `/proc` as above; on macOS the conforming route is a native addon binding libproc and sysctl, since the type's no-subprocess property is part of its contract. Running `ps` or `lsof -a -d cwd -p <pid>` is a deliberate deviation from that property, acceptable only where cost does not matter. `fs.realpathSync.native` is the counterpart of `realpath`, and `JSON.parse` reads the session file. A browser cannot do this.
+- **AppKit / UIKit**: The same libproc and sysctl calls work on macOS: `proc_listpids` (with `PROC_UID_ONLY`), `proc_pidinfo` (`PROC_PIDVNODEPATHINFO`), `sysctl` (`KERN_PROCARGS2`, `KERN_PROC_PID`), `realpath` and `JSONSerialization`, with `ProcessEnv` supplying the environment, arguments and parent pid. iOS sandboxing forbids inspecting other processes, so this does not port to UIKit.
 - **WinUI 3**: Use `System.Diagnostics.Process.GetProcesses()` filtered to the current user (compare `WindowsIdentity` of the process token through `OpenProcessToken`), `Process.MainModule.FileName` for the launch path (it can throw `Win32Exception` for protected processes; treat as not Claude), and `NtQueryInformationProcess` with `ProcessBasicInformation` for the parent pid. The working directory comes from the PEB's `RTL_USER_PROCESS_PARAMETERS` through `ReadProcessMemory`. Resolve a real path with `Path.GetFullPath` plus `File.ResolveLinkTarget` (or `GetFinalPathNameByHandle`). Windows has no controlling terminal: replace `terminalAttachment` with a check of the console attached through `GetConsoleProcessList` or leave it unknown (nil). Read the session file with `System.Text.Json.JsonDocument`, at `%USERPROFILE%\.claude\sessions\<pid>.json` unless `CLAUDE_CONFIG_DIR` is set in the process's environment block.
 
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessLiveness.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessLiveness.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -193,7 +195,7 @@ Not applicable: this component contains no log call; failures are returned as ni
 ## Design Decisions
 
 **Decision**: A process is a Claude Code CLI by its launched executable path from the argument read, not by `proc_pidpath`.
-**Rationale**: Per the source comment, the CLI's real image is a version-named binary whose basename is the version, and `proc_pidpath` fails once an update removes an old version's file. The launch path is recorded at exec time, so it is stable and present for every process.
+**Rationale**: The type's doc comment on `ProcessLiveness` and the `isClaudeProcess(_:)` comment say the CLI's real image is a version-named binary whose basename is the version, and `proc_pidpath` fails once an update removes an old version's file. The launch path is recorded at exec time, so it is stable and present for every process.
 **Approved**: pending
 
 **Decision**: The pid scan is limited to the current user's processes and the buffer has 256 spare entries.
@@ -201,7 +203,7 @@ Not applicable: this component contains no log call; failures are returned as ni
 **Approved**: pending
 
 **Decision**: An unreadable directory does not drop a process that names its session.
-**Rationale**: Per the source comment, the directory lookup fails durably for a revoked vnode or an unmounted volume (a deleted worktree, an ejected disk), and dropping the whole process hid a live `claude` from liveness on every tick, which ended its session while it was still running.
+**Rationale**: The doc comment on `liveClaudeProcesses()` says the directory lookup fails durably for a revoked vnode or an unmounted volume (a deleted worktree, an ejected disk), and dropping the whole process hid a live `claude` from liveness on every tick, which ended its session while it was still running.
 **Approved**: pending
 
 **Decision**: A failed pid scan returns nil, not an empty list.
@@ -213,7 +215,7 @@ Not applicable: this component contains no log call; failures are returned as ni
 **Approved**: pending
 
 **Decision**: Ambiguity in a directory is a refusal, not a guess.
-**Rationale**: The recovered pid's environment decides which account an event is billed to; choosing a first match among two sessions could bill session B's event to session A's account. Returning nil makes the caller use the read-time OAuth account, the safe fallback, consistent with the token-only account-attribution invariant.
+**Rationale**: The recovered pid's environment decides which account an event is billed to; choosing a first match among two sessions could bill session B's event to session A's account. Returning nil makes the caller use the read-time OAuth account, the safe fallback, so an ambiguous event is never attributed to the wrong account.
 **Approved**: pending
 
 **Decision**: The directory match is two passes, cheapest first, and the real-path lookup only runs on `claude` processes.
@@ -221,11 +223,11 @@ Not applicable: this component contains no log call; failures are returned as ni
 **Approved**: pending
 
 **Decision**: `canonicalPath` uses `realpath`, not `URL.resolvingSymlinksInPath`.
-**Rationale**: Per the source comment, the URL form deliberately leaves `/tmp`, `/var` and `/etc` unresolved, so a stored logical `$PWD` would not equal the physical path the kernel reports (`/private/tmp/x`).
+**Rationale**: The doc comment on `canonicalPath(_:)` says the URL form deliberately leaves `/tmp`, `/var` and `/etc` unresolved, so a stored logical `$PWD` would not equal the physical path the kernel reports (`/private/tmp/x`).
 **Approved**: pending
 
 **Decision**: Headless detection trusts the session file's `entrypoint` first, then the arguments, and ignores `kind`.
-**Rationale**: Per the source comment, every scripted entry starts with `sdk` (`claude -p` is `sdk-cli`) where a terminal session is `cli`, while `kind` reads `interactive` for both. Without an entrypoint (an older CLI, or the moment before the file is written) `-p` or `--print` decides.
+**Rationale**: The doc comment on `isHeadless(argv:sessionFile:)` says every scripted entry starts with `sdk` (`claude -p` is `sdk-cli`) where a terminal session is `cli`, while `kind` reads `interactive` for both. Without an entrypoint (an older CLI, or the moment before the file is written) `-p` or `--print` decides.
 **Approved**: pending
 
 **Decision**: A headless `claude` is detached even when it has a terminal, and an unknown attachment is nil.
@@ -233,9 +235,12 @@ Not applicable: this component contains no log call; failures are returned as ni
 **Approved**: pending
 
 **Decision**: The directory string is read within the field width.
-**Rationale**: Per the source comment, a path field with no end marker (a kernel bug) must not make the string read run into adjacent struct memory.
+**Rationale**: The comment on the directory read in `ProcessLiveness.swift` says a path field with no end marker (a kernel bug) must not make the string read run into adjacent struct memory.
 **Approved**: pending
 
+**Decision**: Whether a parent that is itself a live `claude` marks a process as that CLI's helper is the caller's reading of `parentPid`, not something this type decides.
+**Rationale**: The doc comment on `LiveClaudeProcess.parentPid` says such a process is that CLI's helper, not a session. The type only reports the parent; a session reconciler applies the interpretation.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
@@ -252,3 +257,4 @@ Not applicable: this component contains no log call; failures are returned as ni
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Pinned case-sensitive identity and whole-token headless matching with new vectors, added an env-minimal requirement, moved the helper interpretation to a Design Decision, cited doc comments, added the ProcessEnv dependency, and fixed the Configuration and platform notes. |

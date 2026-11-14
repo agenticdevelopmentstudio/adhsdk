@@ -1,6 +1,6 @@
 
 | State | Appearance change |
 |-------|---|
-| Horizontal (default) | 1px height, full width, horizontal line |
-| Vertical | 1px width, full height, vertical line |
+| Horizontal (default) | hairline thickness (height), full width, horizontal line |
+| Vertical | hairline thickness (width), full height, vertical line |
 

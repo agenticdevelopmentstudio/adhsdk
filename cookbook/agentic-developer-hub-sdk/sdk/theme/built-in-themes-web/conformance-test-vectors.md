@@ -1,5 +1,5 @@
 
-Derived from `PortedThemeTests` (Swift Testing suite "Ported web themes") and from the literals in `BuiltInThemes+Web.swift`.
+Vectors theme-web-001 to theme-web-013 are backed by tests in `PortedThemeTests` (Swift Testing suite "Ported web themes"), named in each row. Vectors theme-web-014 to theme-web-026 are literal-only: they are derived from the literals in `BuiltInThemes+Web.swift` and no test asserts them.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -28,4 +28,4 @@ Derived from `PortedThemeTests` (Swift Testing suite "Ported web themes") and fr
 | theme-web-023 | send-button-hover-present | Presence of `sendButtonHover` in Signal `roleOverrides` | Present, `#ffc85aff` |
 | theme-web-024 | theme-appearance, theme-attribution | Any ported theme's `appearance` and `attribution` | `.dark` and "Agentic Developer Hub SDK" |
 | theme-web-025 | hex-literals-valid | `RGBAColor(hexString: "#12345")` (five digits) | `nil`, which a force-unwrap in the generated file would turn into a trap |
-
+| theme-web-026 | hex-literals-valid | Read every theme in `webPorted` (instantiating each static constant forces every colour literal to parse) | All 21 themes are read without a trap, and every colour in them is non-nil (literal-only; no test) |

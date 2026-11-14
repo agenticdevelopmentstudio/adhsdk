@@ -2,7 +2,7 @@
 - **Accessible name = children.** The link's name comes from its text content;
   the `↗` glyph is `aria-hidden`, so a link reading "PostHog ↗" is named
   "PostHog", not "PostHog up-right arrow".
-- **Keyboard focus is visible.** `focus-visible:ring-2 ring-apt-gold/40` gives a
+- **Keyboard focus is visible.** A `focus-visible` ring in the accent token gives a
   clear focus indicator without a persistent outline on mouse click.
 - **New-tab safety.** `rel="noopener noreferrer"` is always present, closing the
   reverse-tabnabbing hole that a bare `target="_blank"` would open.

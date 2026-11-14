@@ -4,11 +4,11 @@
     "id": "b3a92adc-a28e-4a33-8120-c33f8f0abdf6",
     "title": "Progress",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-07-03",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "24dad3fceea4cd8c",
+  "synced": "abcd0b090651002f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

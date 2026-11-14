@@ -30,6 +30,7 @@
 - **first-page-replaces**: A loaded first page MUST replace `messages`, `nextCursor` and `hasMore`, with `hasMore` true only when the page has a next cursor.
 - **first-page-drops-missing-selection**: When the open message's id is not in a refreshed list, the model MUST close the open message.
 - **first-page-failure**: When the first page fails, the model MUST set `errorMessage` to the failure's `localizedDescription`.
+- **generation-bump-points**: `listGeneration` MUST be bumped each time a first page starts loading (`select(mailbox:)`, and `reload` when a selected mailbox is kept) and whenever the list is cleared; `messageGeneration` MUST be bumped by `select(messageId:)` when the id differs from `selectedMessageId`, and whenever the list is cleared.
 - **stale-list-dropped**: A page, or a page failure, that answers a list replaced since the request began MUST be discarded without changing the model.
 - **load-more-appends**: `loadMore` MUST request the page named by the stored cursor and append its messages to `messages`.
 - **load-more-dedupes**: `loadMore` MUST NOT append a message whose id is already in `messages`.
@@ -46,7 +47,7 @@
 - **mark-read-on-open**: When the opened message carries the `UNREAD` label, the model MUST send a modify-labels request for that message that removes `UNREAD` and adds nothing.
 - **mark-read-no-request-when-read**: When the opened message does not carry `UNREAD`, the model MUST NOT send a modify-labels request.
 - **mark-read-updates-copies**: After marking read, the model MUST copy the returned labels and label names onto the matching message in `messages` and onto `openedMessage`.
-- **mark-read-lowers-counts**: After marking read, the model MUST lower by one the unread count of each of the account's mailboxes whose label id is among the opened message's labels.
+- **mark-read-lowers-counts**: After marking read, the model MUST lower by one the unread count of each mailbox of the account that the opened message was loaded for (the account found by **select-message-account-by-email**, which may be the fallback to the selected account) whose label id is among the opened message's labels.
 - **unread-count-floor**: A lowered unread count MUST NOT go below zero.
 - **unread-count-nil-untouched**: A mailbox with a nil label id (All Mail) or a nil unread count MUST be left unchanged when counts are lowered.
 - **mark-read-superseded**: A modify-labels answer that arrives after another message was opened MUST still be copied onto the matching message in `messages` and lowered into the counts, and MUST be copied onto `openedMessage` only when that is the same message. A failure of that request MUST still set `errorMessage`, because the mark-read call carries no generation check.
@@ -66,6 +67,6 @@
 - **list-date-locale**: `listDate` MUST format with the calendar's time zone and the given locale.
 - **date-parse-fractional**: The date helpers MUST accept ISO 8601 text with or without fractional seconds.
 - **date-unparseable**: `listDate` and `fullDate` MUST return the input text unchanged when it is not ISO 8601.
-- **full-date**: `fullDate` MUST return the complete date with the short time (`Date.FormatStyle` date `.complete`, time `.shortened`). It takes no locale or calendar and uses the current ones, so unlike `listDate` it cannot be tested deterministically.
+- **full-date**: `fullDate` MUST return the complete date with the short time (`Date.FormatStyle` date `.complete`, time `.shortened`).
 - **is-unread**: `isUnread` MUST be true only when the message's labels contain `UNREAD`.
 

@@ -1,4 +1,5 @@
 
+- **Token namespace**: `apt` is the published prefix of the ADH theme tokens (`--color-apt-*`); the names are not placeholders to rename per app.
 - **Container positioning**: Absolute, full inset (top, right, bottom, left: 0), z-index 50
 - **Container background**: color-mix(in srgb, bg 90%, transparent) with 3px blur (backdrop-filter: blur(3px) + -webkit-backdrop-filter: blur(3px))
 - **Card container**: Flex column, center-aligned, centered horizontally and vertically in viewport
@@ -8,7 +9,7 @@
 - **Card border**: 1px solid, border theme token (var(--color-apt-border))
 - **Card shadow**: 0 8px 40px rgba(0,0,0,0.35)
 - **Card gap between elements**: 13px
-- **Card max-width**: 46ch
+- **Card max-width**: 46ch (about 440px for the 16px monospace face the card inherits, assuming a 0.6em advance)
 - **Font family**: ui-monospace with monospace fallback
 - **Heading font**: 17px, weight 700, letter-spacing 0.02em, text color (var(--color-apt-text))
 - **Subheading font**: 12.5px, color muted (var(--color-apt-text-muted)), line-height 1.5

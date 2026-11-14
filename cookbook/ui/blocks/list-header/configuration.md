@@ -8,7 +8,7 @@
 | `search.label` | `string` | `"Filter"` | Accessible name for the input. |
 | `search.placeholder` | `string` | `"Filter…"` | Placeholder text when empty. |
 | `search.autoFocus` | `boolean` | `false` | Focus the field when its `<input>` attaches — re-fires on every remount, unlike the native attribute. Re-renders never steal focus (stable ref identity). |
-| `search.grow` | `boolean` | `false` | Let the field flex (`flex-1`) past `max-w-xs` instead of capping there — it shares the row's free space equally with the always-present trailing spacer, so even with no `actions` it fills only about half of the free space, never all of it. See **filter-width-cap**. |
+| `search.grow` | `boolean` | `false` | Remove the `max-w-xs` cap so the field takes ALL remaining row width, and drop the trailing spacer (the field is the flex). See **filter-width-cap**. |
 | `actions` | `React.ReactNode` | — | Right-aligned actions (e.g., `+ New` button, Delete). Optional. |
 | `ariaLabel` | `string` | — | Accessible name for the toolbar (required). |
 | `className` | `string` | — | Extra CSS classes applied to the `ButtonBar` container. |

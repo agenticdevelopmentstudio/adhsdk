@@ -4,7 +4,7 @@
     "id": "8ec76506-7cb3-4aca-a9a0-07f014500e7e",
     "title": "Process Liveness",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -22,14 +22,16 @@
       "liveness",
       "sessions"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "fa0fce58-5e17-41da-b3eb-0d2de9e89b46"
+    ],
     "related": [],
     "references": [],
     "approved-by": "",
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "f4bb0f8deb51409c",
+  "synced": "d0e8c6cc165e2832",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

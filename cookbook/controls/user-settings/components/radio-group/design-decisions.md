@@ -19,3 +19,6 @@
 **Rationale**: Supports both string and numeric choice values, allowing consumers to work with their own type systems without additional conversion.
 **Approved**: pending
 
+6. **Decision**: Nest a `<div role="radiogroup">` inside the `<fieldset>` and leave it without its own accessible name.
+**Rationale**: The div carries the `radiogroup` role around exactly the choices, keeping the field-level hint outside it; the fieldset/legend pair supplies the group name (see #accessibility). Pointing the div's `aria-labelledby` at the legend is a possible improvement the source does not make.
+**Approved**: pending

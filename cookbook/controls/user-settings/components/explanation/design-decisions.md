@@ -1,6 +1,6 @@
 
 - **Decision**: Combine class names using an array filter-and-join pattern (`[defaultClass, className].filter(Boolean).join(' ')`).
-  **Rationale**: Prevents invalid or malformed `class` attributes (e.g., a trailing double space from a falsy `className`) while keeping the implementation simple and readable.
+  **Rationale**: Prevents invalid or malformed `class` attributes (e.g., without the filter a falsy `className` yields `"aws-explanation "` or `"aws-explanation undefined"`) while keeping the implementation simple and readable.
   **Approved**: pending
 
 - **Decision**: Use a `<p>` element as the component's root, rather than a `<div>` or `<span>`.

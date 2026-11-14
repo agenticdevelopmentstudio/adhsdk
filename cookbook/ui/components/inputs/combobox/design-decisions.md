@@ -15,7 +15,10 @@
 **Rationale**: Plain strings mirror the `<datalist>` pattern this component replaces; richer item shapes belong to `ListChooser` / `OptionMenu`.
 **Approved**: pending
 
-**Decision**: The wrapper adds theme only, no additional behavior beyond styling and the controlled `value`/`onValueChange` surface.
+**Decision**: The wrapper adds theme and the current-value check mark only, with no other behavior beyond styling and the controlled `value`/`onValueChange` surface.
 **Rationale**: Keeping the wrapper disposable and easy to track against upstream Base UI changes.
 **Approved**: pending
 
+**Decision**: Suggestion rows use the shared `adh-touch-row` class, which grows a row's padding by 30% on coarse pointers, instead of a fixed 44×44pt minimum height.
+**Rationale**: The family has one touch-growth rule for list rows, so the popup keeps its compact density on fine pointers and follows the same rule as the other list rows. The rows still fall short of the 44×44pt / 48×48dp minimum, which is why `touch-target-size` is recorded as `failed`.
+**Approved**: pending

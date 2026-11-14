@@ -6,7 +6,7 @@
 - **enter-selection**: When the user presses Enter and an item is highlighted, component MUST call the onSelect callback with the highlighted item and prevent the default form submission via the input's own keydown handling. When no item is highlighted, pressing Enter MUST NOT call onSelect; the form's onSubmit handler independently prevents the browser's default submission regardless of highlight state (see **prevent-form-submission**).
 - **escape-clears-highlight**: When the user presses Escape and an item is highlighted, component MUST clear the highlight by setting highlightedIndex to -1 and prevent the default action.
 - **reset-highlight-on-input-change**: When the user types in the input field, component MUST reset the highlighted item index to -1.
-- **clamp-highlight-when-visible-shrinks**: When the visible items list shrinks and the currently highlighted index exceeds the new length, component MUST adjust the highlight to the last item in the visible list, or to -1 if the list is now empty.
+- **clamp-highlight-when-visible-shrinks**: When the visible items list shrinks and the currently highlighted index exceeds the new length, component MUST adjust the highlight to the last item in the visible list, or to -1 if the list is now empty. Typing resets the highlight first (see **reset-highlight-on-input-change**), so in practice this applies when the `items` prop shrinks.
 - **render-item-list**: Component MUST render all visible items as `<li>` elements within a `<ul>` list with role="listbox".
 - **item-role-option**: Each rendered `<li>` item MUST have role="option", identifying it as a listbox option.
 - **render-item-title**: When renderItem is not provided, each item MUST render its title via the getTitle callback in a `fl-title` element.
@@ -30,5 +30,10 @@
 - **prevent-form-submission**: The form MUST prevent default submission on submit event, regardless of whether an item is highlighted.
 - **autofill-prevention**: Component MUST apply noAutofillProps to the input to disable browser autofill.
 - **autofocus-on-mount**: Component MUST focus the input on mount when autoFocus is true.
-- **arrow-keys-noop-when-no-items**: Component MUST NOT prevent the default behavior for arrow keys if no visible items exist.
-
+- **arrow-keys-noop-when-no-items**: When no visible items exist, component MUST ignore ArrowUp, ArrowDown, Enter and Escape: it MUST NOT call preventDefault, change the highlight, or call onSelect.
+- **initial-query**: Component MUST start with the query and the input text set to `initialQuery` (default `""`), filtering the items by it on first render.
+- **root-class-name**: When `className` is provided, component MUST render the root element with class `fl-root {className}`; otherwise `fl-root`.
+- **custom-match**: When `match` is provided, component MUST use it instead of the default matcher, calling it with the item and the lower-cased, trimmed query, and keep the items for which it returns true.
+- **escape-restores-query**: After Escape clears the highlight, the input MUST show the current query text again, not the title of the previously highlighted item.
+- **selection-keeps-state**: Selecting an item by Enter or click MUST call onSelect only; the component does not change the query or clear the highlight, so the input keeps showing the selected item's title while it stays highlighted.
+- **footer-visibility**: When `total === 0` the list element is absent, so the footer MUST NOT render; when `total > 0` and filtering leaves zero visible items, the footer MUST render after the no-matches message.

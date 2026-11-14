@@ -10,7 +10,7 @@
 - **unicode-and-special-characters**: A value with quotes, backslashes or non-ASCII characters MUST survive the `installedJSON()` then `parse(json:)` round trip, because the JSON layer escapes and decodes them.
 - **large-input**: The source sets no size limit on the data; the whole input is decoded in memory. A caller SHOULD impose a limit before calling if the file comes from an untrusted source.
 - **missing-keys-message**: The single missing-keys reason names both `installed.client_id` and `installed.client_secret` even when only one is absent, empty or mistyped, because the code does not distinguish which check failed (see Design Decisions).
-- **secret-printed-by-description**: The struct's synthesized `description` and `dump` output includes `clientSecret`, and the source adds no masking.
+- **secret-printed-by-description**: Gap against #behavioral-requirements/secret-masked-in-descriptions: the struct's synthesized `description` and `dump` output includes `clientSecret`, and the source adds no masking. This is the one statement of the gap; Design Decisions and Compliance point here.
 - **concurrent-calls**: Not applicable beyond `no-shared-state`: both functions are pure and the type is immutable, so there is nothing to serialise.
 - **network-and-offline**: Not applicable: the type performs no network, file-system or Keychain access, so there is no unreachable dependency or offline state.
 - **cancellation-and-timeout**: Not applicable: both operations are synchronous and complete without suspension, so there is nothing to cancel and no timeout exists.

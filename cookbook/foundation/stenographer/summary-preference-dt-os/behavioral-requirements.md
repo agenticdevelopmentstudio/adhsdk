@@ -5,6 +5,11 @@
 - **default-prompt**: `SummaryDefaults.prompt` MUST be the system prompt template that opens `You write a title of at most {maxWords} words for a coding session.` and carries the placeholder once, in that first sentence.
 - **default-prompt-instructions**: The default prompt MUST tell the model to start with a verb ending in -ing, to be brief and plain, never to ask questions, explain or say it lacks context, to guess from what is there when the activity is unclear, and to output only the short phrase.
 - **default-prompt-examples**: The default prompt MUST give four examples: `fixing the sessions window UI`, `adding keyboard shortcuts`, `cleaning up old code` and `exploring the codebase`.
+- **default-prompt-verbatim**: `SummaryDefaults.prompt` MUST be exactly this text, with `{maxWords}` as the placeholder and no newline:
+
+  ```text
+  You write a title of at most {maxWords} words for a coding session. Start with a verb ending in -ing. Be brief and plain — no jargon, no technical detail, no explanation. NEVER ask questions. NEVER explain. NEVER say you lack context. If the activity is unclear, make your best guess from what is there. Output ONLY the short phrase and nothing else. Examples: "fixing the sessions window UI", "adding keyboard shortcuts", "cleaning up old code", "exploring the codebase".
+  ```
 - **default-prompt-single-line**: The default prompt MUST be one logical line: each source line break is a line continuation, so the string holds no newline.
 - **default-max-words**: `SummaryDefaults.maxWords` MUST be 8.
 - **default-activity-lines**: `SummaryDefaults.activityLines` MUST be 60, the count of the session's most recent events that go into the prompt.

@@ -4,11 +4,11 @@
     "id": "12cc7564-cb08-4b62-9785-c3b1cc0c46f0",
     "title": "Chips",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5f88d4bf2a9ff012",
+  "synced": "d6190d2527e80c9e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

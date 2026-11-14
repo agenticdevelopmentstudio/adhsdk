@@ -10,4 +10,6 @@
 | points-007 | ordered-class | `{entries: [{detail: "First"}, {detail: "Second"}], ordered: true}` | Root element has class `lp-points--ordered` |
 | points-008 | ordered-class-exclusion | `{entries: [{detail: "Item"}], ordered: false}` | Root element does not have class `lp-points--ordered` |
 | points-009 | term-bold, detail-text | `{entries: [{term: <em>Note</em>, detail: <a href="#more">link</a>}]}` | Renders `<li><span><b><em>Note</em></b> <a href="#more">link</a></span></li>` — ReactNode `term`/`detail` render as-is |
-
+| points-010 | ordered-class-exclusion | `{entries: [{detail: "Item"}]}` (`ordered` omitted) | Root is a `<ul>` and does not have class `lp-points--ordered` |
+| points-011 | detail-text, content-span | `{entries: [{detail: ""}]}` | Renders `<li><span></span></li>` |
+| points-012 | term-omission, term-bold | `{entries: [{term: null, detail: "D"}, {term: "", detail: "D"}, {term: 0, detail: "D"}]}` | Each item renders a `<b>` followed by a space: `<li><span><b></b> D</span></li>` for `null` and `""`, and `<li><span><b>0</b> D</span></li>` for `0`; only `undefined` omits the `<b>` |

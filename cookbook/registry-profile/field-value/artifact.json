@@ -4,11 +4,11 @@
     "id": "6579e030-0455-453c-81cf-177dae3dd82e",
     "title": "Field Value",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -22,7 +22,9 @@
       "field-rendering",
       "data-presentation"
     ],
-    "depends-on": [],
+    "depends-on": [
+      "3828874a-ce76-4e8d-a106-97a867ed583d"
+    ],
     "related": [
       "6c034a7a-3a43-4da6-bc1a-0cbc39f32cc4",
       "fe09968a-6575-40d0-b0b8-af6ce52d8efd"
@@ -31,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7ad9196604a2ca06",
+  "synced": "38e9a0ab08c2de57",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
