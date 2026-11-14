@@ -214,6 +214,9 @@ struct GitWindowSessionTests {
         let shaSearch = "sha:" + older.prefix(8)
         pane.paneSearch(for: shaSearch)
         await session.searchTask?.value
+        // The window opened on the working copy; the search brought the checked-out branch's history forward.
+        #expect(session.centre.content === session.history)
+        #expect(session.selection != .workingCopy)
         #expect(session.history.selectedCommitID == older)
 
         let messageSearch = "two.txt"
@@ -259,15 +262,43 @@ struct GitWindowSessionTests {
         #expect(asked == 1)
     }
 
-    @Test("the Git panes' spec validates against their registry, three fixed panes of one each")
+    @Test("without terminals the Git panes are three fixed panes of one each")
     func panesSpecValidates() throws {
+        let session = makeIdleSession()
+        let layout = try GitWindowPanes.layout(terminals: nil) { _ in session }
+        let tree = layout.spec.blueprint()
+        let leaves = ComposableTabLayoutSpec.leaves(in: tree)
+        #expect(leaves.map { ComposableTabLayoutSpec.viewID(ofLeaf: $0.id, in: tree) }
+            == [GitWindowPanes.overview, GitWindowPanes.history, GitWindowPanes.commit])
+        #expect(leaves.allSatisfy { layout.spec.isFixed($0.id, in: tree) })
+    }
+
+    @Test("with terminals a terminal sits under the commit pane, splittable but never closed while alone")
+    func panesSpecHasATerminalUnderTheCommit() throws {
+        let session = makeIdleSession()
+        let terminals = TerminalPaneFamily(preferredAxis: .vertical)
+        let layout = try GitWindowPanes.layout(terminals: terminals) { _ in session }
+        let tree = layout.spec.blueprint()
+        let leaves = ComposableTabLayoutSpec.leaves(in: tree)
+        let ids = leaves.map { ComposableTabLayoutSpec.viewID(ofLeaf: $0.id, in: tree) }
+        #expect(ids == [GitWindowPanes.overview, GitWindowPanes.history, GitWindowPanes.commit, .terminal])
+        let terminal = try #require(leaves.last)
+        #expect(!layout.spec.isFixed(terminal.id, in: tree))
+        #expect(layout.spec.canSplit(terminal.id, in: tree))
+        #expect(!layout.spec.canRemove(terminal.id, from: tree))
+        let offered = layout.spec.allowedInsertions(at: terminal.id, in: tree, registry: layout.registry)
+            .map(\.viewID)
+        #expect(Set(offered) == Set([.terminal, .terminalChat]))
+        for leaf in leaves.dropLast() {
+            #expect(layout.spec.isFixed(leaf.id, in: tree))
+            #expect(layout.spec.allowedInsertions(at: leaf.id, in: tree, registry: layout.registry).isEmpty)
+        }
+    }
+
+    private func makeIdleSession() -> GitWindowSession {
         let model = GitRepositoryModel(
             root: URL(fileURLWithPath: "/nonexistent"), client: client, watcher: IdleWatcher())
-        let session = GitWindowSession(model: model, client: client, coloring: nil)
-        let layout = try GitWindowPanes.layout { _ in session }
-        let ids = layout.registry.registeredViewIDs
-        #expect(Set([GitWindowPanes.overview, GitWindowPanes.history, GitWindowPanes.commit]).isSubset(of: Set(ids)))
-        #expect(layout.spec.isFixed)
+        return GitWindowSession(model: model, client: client, coloring: nil)
     }
 
     @Test("a window's title names its kind: Git and Code with the branch, Files with the folder")

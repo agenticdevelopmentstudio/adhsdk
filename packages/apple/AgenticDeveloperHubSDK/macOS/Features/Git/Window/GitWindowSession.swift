@@ -117,9 +117,23 @@ final class GitWindowSession {
     // MARK: - Search and refresh
 
     /// Sends the search text to the history; the history decides which call is latest.
+    /// A search typed over the working copy picks the checked-out branch first, as a
+    /// click on it would, so the history it filters is the one on screen.
     func search(_ text: String) {
+        if selection == .workingCopy,
+           !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           !selectCheckedOutBranch() {
+            centre.show(history)
+        }
         let history = history
         searchTask = Task { await history.setQuery(text) }
+    }
+
+    /// Picks the checked-out branch in the sidebar, which shows it in the history;
+    /// false on a detached HEAD, which has no branch row.
+    private func selectCheckedOutBranch() -> Bool {
+        guard let head = model.refs.first(where: { $0.kind == .localBranch && $0.isHead }) else { return false }
+        return sidebar.select(refNamed: head.fullName)
     }
 
     /// Reloads every part of the model, then every view, and shows the selection again.

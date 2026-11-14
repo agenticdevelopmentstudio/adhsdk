@@ -1358,7 +1358,8 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     /// The display path for the window's current state: the project, the tab
     /// in front, the pane the user is working in, and what that pane says is
-    /// selected.
+    /// selected. A window without tab bars has no tab the user can see, so its
+    /// path skips the tab and its default "Tab 1" never reaches the footer.
     ///
     /// `internal`, and a computed property rather than a stored string, so a
     /// test can read it without a window on screen and so there is exactly one
@@ -1367,7 +1368,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         let pane = activePane
         return PaneDisplayPath.format([
             project.displayName,
-            activeTabTitle,
+            tabbed.showsTabBars ? activeTabTitle : nil,
             pane?.resolvedTitle,
             pane?.selectionDescription
         ])

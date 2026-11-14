@@ -35,11 +35,15 @@ public final class GitWindowFeature: AppFeature {
     private let client: GitClient
     private let database: ProjectDatabase
     private let windows: ProjectWindowManager
+    /// The terminal panes under the commit pane; nil leaves the right column the commit alone.
+    private let terminals: TerminalPaneFamily?
     /// Each open window's session, by its row's id.
     private(set) var sessions: [UUID: GitWindowSession] = [:]
     private lazy var layout: ComposableTabsLayout? = {
         do {
-            return try GitWindowPanes.layout { [unowned self] context in self.session(for: context) }
+            return try GitWindowPanes.layout(terminals: terminals) { [unowned self] context in
+                self.session(for: context)
+            }
         } catch {
             Self.logger.error("The Git window layout is invalid: \(String(describing: error), privacy: .public)")
             return nil
@@ -74,6 +78,7 @@ public final class GitWindowFeature: AppFeature {
     ///     alias matches it (`GrammarRegistry.languageID(named:)`).
     ///   - database: the projects database the windows' `.gitWindow` rows go in.
     ///   - windows: the window manager that opens them.
+    ///   - terminals: the terminal panes the window offers under its commit pane.
     ///   - openRoots: where the open windows' roots are remembered.
     public init(
         commandRegistry registry: CommandRegistry,
@@ -84,6 +89,7 @@ public final class GitWindowFeature: AppFeature {
         extensionGrammars: @escaping () -> (any GrammarSource)?,
         fileTypeOverride: @escaping @Sendable (URL) -> String?,
         client: GitClient = .shared,
+        terminals: TerminalPaneFamily? = nil,
         openRoots: UserSetting<[String]> = UserSettings.openGitWindowRoots
     ) {
         self.resources = resources
@@ -93,6 +99,7 @@ public final class GitWindowFeature: AppFeature {
         self.client = client
         self.database = database
         self.windows = windows
+        self.terminals = terminals
         self.openRoots = openRoots
         super.init()
         registry.register(AppCommand(

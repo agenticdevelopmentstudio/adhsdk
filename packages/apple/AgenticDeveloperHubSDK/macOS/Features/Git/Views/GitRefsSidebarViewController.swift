@@ -152,6 +152,16 @@ public final class GitRefsSidebarViewController: NSViewController {
         list.selectItem(withId: Self.workingCopyID)
     }
 
+    /// Selects the row of the ref named `fullName` and tells the delegate, as a
+    /// click does; false when no row shows that ref.
+    @discardableResult
+    func select(refNamed fullName: String) -> Bool {
+        guard case .ref = targets[fullName] else { return false }
+        list.selectItem(withId: fullName)
+        select(itemID: fullName)
+        return true
+    }
+
     /// A remote branch's name less its `<remote>/` prefix, or the whole name
     /// when that would leave nothing (a ref directly under `refs/remotes/<x>`).
     private static func remoteBranchTitle(_ ref: GitRef, remote: String) -> String {

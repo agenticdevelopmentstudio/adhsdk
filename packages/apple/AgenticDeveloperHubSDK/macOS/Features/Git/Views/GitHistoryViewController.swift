@@ -233,8 +233,10 @@ public final class GitHistoryViewController: NSViewController {
             sendTask = nil
             reload()
         }
-        guard let prefix = GitHistorySearch.shaPrefix(text),
-              let match = commits.first(where: { $0.id.lowercased().hasPrefix(prefix) }) else { return }
+        guard let prefix = GitHistorySearch.shaPrefix(text) else { return }
+        // The snapshot is taken when the view loads; a list never shown has none yet.
+        loadViewIfNeeded()
+        guard let match = commits.first(where: { $0.id.lowercased().hasPrefix(prefix) }) else { return }
         select(commitID: match.id)
     }
 
