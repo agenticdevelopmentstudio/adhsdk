@@ -1397,9 +1397,9 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             ?? project.directoryURL
     }
 
-    /// `project → branch` over the active directory's path. The branch is read
-    /// off the main thread (it runs git); until it arrives the title is the
-    /// project's name alone.
+    /// The title for the window's kind over the active directory's path
+    /// (`title(kind:name:directory:branch:)`). The branch is read off the main
+    /// thread (it runs git); until it arrives the title has no branch.
     private func refreshTitle() {
         let directory = activeWorkingDirectory
         // A window that is one file's shows that file, not its folder.
@@ -1418,14 +1418,10 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             setTitle(titleDocumentURL?.lastPathComponent ?? project.displayName)
             return
         }
-        // A File Browser window (no top-level tabs) names its folder; a
-        // project window names its project and branch.
-        guard tabbed.showsTabBars else {
-            setTitle("Files: \(directory.lastPathComponent)")
-            return
-        }
         let name = project.displayName
-        setTitle(Self.title(project: name, branch: branchNames[directory] ?? nil))
+        setTitle(Self.title(kind: kind, name: name, directory: directory, branch: branchNames[directory] ?? nil))
+        // A File Browser window names no branch, so it never asks for one.
+        guard kind != .fileBrowser else { return }
         // Read again even when known: the checkout may have switched branch.
         Task.detached(priority: .userInitiated) { [weak self] in
             let branch = GitProjectRoot.currentBranchName(at: directory.path)
@@ -1433,9 +1429,16 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
                 guard let self else { return }
                 self.branchNames[directory] = .some(branch)
                 guard self.titleDirectory == directory else { return }
-                self.setTitle(Self.title(project: name, branch: branch))
+                self.setTitle(Self.title(kind: kind, name: name, directory: directory, branch: branch))
             }
         }
+    }
+
+    /// Reads the active directory's branch again and retitles the window: the
+    /// checkout's branch moved under it (a Git window's refs changed).
+    public func refreshTitleBranch() {
+        titleDirectory = nil
+        refreshTitle()
     }
 
     private func setTitle(_ title: String) {
@@ -1460,10 +1463,21 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         window?.contentView?.layoutSubtreeIfNeeded()
     }
 
-    /// `adkitchen → main`, or the name alone outside a repository.
-    nonisolated static func title(project: String, branch: String?) -> String {
-        guard let branch, !branch.isEmpty else { return "Code: \(project)" }
-        return "Code: \(project) \u{2192} \(branch)"
+    /// What a window of `kind` is called: a project's `Code: adkitchen → main`,
+    /// a Git window's `Git: adkitchen → main` (either with the name alone
+    /// outside a repository or before the branch is known), a File Browser
+    /// window's `Files: <directory>`, and a Document window's bare name
+    /// (`refreshTitle` names it for its file before it gets here).
+    nonisolated static func title(kind: GitRepo.Kind, name: String, directory: URL, branch: String?) -> String {
+        let prefix: String
+        switch kind {
+        case .fileBrowser: return "Files: \(directory.lastPathComponent)"
+        case .document, .documentTabs: return name
+        case .project: prefix = "Code"
+        case .gitWindow: prefix = "Git"
+        }
+        guard let branch, !branch.isEmpty else { return "\(prefix): \(name)" }
+        return "\(prefix): \(name) \u{2192} \(branch)"
     }
 
     /// A file chosen in the title's breadcrumb opens in the active tab's

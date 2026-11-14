@@ -13,9 +13,9 @@ private final class IdleWatcher: GitRepositoryWatching {
 
 /// The Git window's routing (recipe `workspace/git/git-window`, "Layout" and
 /// "Selection"), over a real repository and a real model.
-@Suite("GitWindowSplitViewController", .serialized)
+@Suite("GitWindowSession", .serialized)
 @MainActor
-struct GitWindowSplitViewControllerTests {
+struct GitWindowSessionTests {
     private static let epoch = 1_767_268_800
     private let client = GitClient(configuration: .default)
 
@@ -28,16 +28,18 @@ struct GitWindowSplitViewControllerTests {
 
     private func makeWindow(
         _ repository: GitTestRepository
-    ) async -> (GitRepositoryModel, GitWindowSplitViewController) {
+    ) async -> (GitRepositoryModel, GitWindowSession) {
         let model = GitRepositoryModel(root: repository.root, client: client, watcher: IdleWatcher())
         await model.start()
-        let controller = GitWindowSplitViewController(model: model, client: client, coloring: nil)
-        controller.loadViewIfNeeded()
+        let controller = GitWindowSession(model: model, client: client, coloring: nil)
+        for pane in [controller.overviewPane, controller.centre, controller.commitPane] as [NSViewController] {
+            pane.loadViewIfNeeded()
+        }
         return (model, controller)
     }
 
     /// Selects the sidebar row `id` the way a click does: in the list, then reported.
-    private func click(_ controller: GitWindowSplitViewController, _ id: String) {
+    private func click(_ controller: GitWindowSession, _ id: String) {
         let sidebar = controller.sidebar
         sidebar.list.selectItem(withId: id)
         sidebar.list.onSelect?(sidebar.sections.flatMap(\.items).first { $0.id == id })
@@ -196,58 +198,88 @@ struct GitWindowSplitViewControllerTests {
         #expect(controller.fileHistory.entries.count == 2)
     }
 
-    @Test("the toolbar's search reaches the history, and a sha search selects its commit")
+    @Test("the toolbar's search reaches the history through its pane, and a sha search selects its commit")
     func searchIsForwardedToTheHistory() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-window-split")
         defer { repository.tearDown() }
         try await commitFile(repository, "one.txt", "one\n", at: 100)
         try await commitFile(repository, "two.txt", "two\n", at: 200)
         let older = try await repository.sha("HEAD~1")
-        let window = GitWindowController(
-            root: repository.root, client: client, coloring: nil, onOpenDirectory: { _ in }, onClose: {})
-        defer { window.model.stop() }
-        window.loadWindow()
-
-        // The window starts its model itself, and its views reload when the model tells
-        // its observers, after every part has loaded; a sha search selects among those.
-        var historyLoaded = false
-        let observation = window.model.observe { changes in
-            if changes.contains(.history) { historyLoaded = true }
-        }
-        for _ in 0..<250 where !historyLoaded {
-            try await Task.sleep(for: .milliseconds(20))
-        }
-        withExtendedLifetime(observation) {}
-        try #require(window.model.commits.count == 2)
+        let (model, session) = await makeWindow(repository)
+        defer { session.stop() }
+        try #require(model.commits.count == 2)
+        let pane: any PaneSearchable = session.centre
+        #expect(pane.paneSearchPlaceholder == "Search History")
 
         let shaSearch = "sha:" + older.prefix(8)
-        window.search(shaSearch)
-        await window.searchTask?.value
-        #expect(window.content.history.selectedCommitID == older)
+        pane.paneSearch(for: shaSearch)
+        await session.searchTask?.value
+        #expect(session.history.selectedCommitID == older)
 
         let messageSearch = "two.txt"
-        window.search(messageSearch)
-        await window.searchTask?.value
-        #expect(window.model.query == GitHistorySearch.parse(messageSearch))
-        #expect(window.model.commits.map(\.subject) == ["two.txt 200"])
+        pane.paneSearch(for: messageSearch)
+        await session.searchTask?.value
+        #expect(model.query == GitHistorySearch.parse(messageSearch))
+        #expect(model.commits.map(\.subject) == ["two.txt 200"])
     }
 
-    @Test("a branch read that fails keeps the last subtitle")
-    func failedBranchReadKeepsTheSubtitle() async throws {
+    @Test("the history pane is titled after what it shows, and says so when that changes")
+    func historyPaneTitleFollowsItsContent() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-window-split")
         defer { repository.tearDown() }
         try await commitFile(repository, "one.txt", "one\n", at: 100)
-        let window = GitWindowController(
-            root: repository.root, client: client, coloring: nil, onOpenDirectory: { _ in }, onClose: {})
-        defer { window.model.stop() }
-        window.loadWindow()
-        window.updateSubtitle()
-        await window.subtitleTask?.value
-        #expect(window.window?.subtitle == "main")
+        let (_, session) = await makeWindow(repository)
+        defer { session.stop() }
+        #expect(session.centre.paneTitle == "Working Copy")
+        var changes = 0
+        session.centre.onPaneTitleChange = { changes += 1 }
 
-        try FileManager.default.moveItem(at: repository.url(".git"), to: repository.url("moved-away"))
-        window.updateSubtitle()
-        await window.subtitleTask?.value
-        #expect(window.window?.subtitle == "main")
+        click(session, "refs/heads/main")
+        #expect(session.centre.paneTitle == "History")
+        #expect(changes == 1)
+        click(session, "refs/heads/main")
+        #expect(changes == 1)
+        #expect(session.overviewPane.paneTitle == "Overview")
+        #expect(session.commitPane.paneTitle == "Commit")
+    }
+
+    @Test("the refs changing asks the window to read its branch again")
+    func refsChangeAsksForTheBranch() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-window-split")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "one.txt", "one\n", at: 100)
+        let (model, session) = await makeWindow(repository)
+        defer { session.stop() }
+        var asked = 0
+        session.onRefsChange = { asked += 1 }
+        await model.refresh([.history])
+        #expect(asked == 0)
+        try await repository.run(["branch", "other"])
+        await model.refresh([.refs])
+        #expect(asked == 1)
+    }
+
+    @Test("the Git panes' spec validates against their registry, three fixed panes of one each")
+    func panesSpecValidates() throws {
+        let model = GitRepositoryModel(
+            root: URL(fileURLWithPath: "/nonexistent"), client: client, watcher: IdleWatcher())
+        let session = GitWindowSession(model: model, client: client, coloring: nil)
+        let layout = try GitWindowPanes.layout { _ in session }
+        let ids = layout.registry.registeredViewIDs
+        #expect(Set([GitWindowPanes.overview, GitWindowPanes.history, GitWindowPanes.commit]).isSubset(of: Set(ids)))
+        #expect(layout.spec.isFixed)
+    }
+
+    @Test("a window's title names its kind: Git and Code with the branch, Files with the folder")
+    func titleNamesTheKind() {
+        let directory = URL(fileURLWithPath: "/tmp/adkitchen")
+        #expect(ComposableTabsWindowController.title(kind: .gitWindow, name: "adkitchen", directory: directory,
+                                                     branch: "main") == "Git: adkitchen \u{2192} main")
+        #expect(ComposableTabsWindowController.title(kind: .gitWindow, name: "adkitchen", directory: directory,
+                                                     branch: nil) == "Git: adkitchen")
+        #expect(ComposableTabsWindowController.title(kind: .project, name: "adkitchen", directory: directory,
+                                                     branch: "main") == "Code: adkitchen \u{2192} main")
+        #expect(ComposableTabsWindowController.title(kind: .fileBrowser, name: "x", directory: directory,
+                                                     branch: "main") == "Files: adkitchen")
     }
 }

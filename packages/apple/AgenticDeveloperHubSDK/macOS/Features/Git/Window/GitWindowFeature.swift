@@ -8,6 +8,10 @@ import os
 /// level, so a subdirectory and its repository's root open the same window (recipe
 /// `workspace/git/git-window`).
 ///
+/// A Git window is the project window's controller over a `.gitWindow` row, with
+/// no tabs and the three panes of `GitWindowPanes`; each window's state lives in
+/// its `GitWindowSession`, made by the first pane the layout asks for.
+///
 /// The open windows are remembered in `openRoots` and reopened at launch without
 /// taking the foreground; a root that is no longer a repository is dropped. Every
 /// window shares one syntax highlighter, built on the first window from the user's
@@ -29,19 +33,31 @@ public final class GitWindowFeature: AppFeature {
     private let extensionGrammars: () -> (any GrammarSource)?
     private let fileTypeOverride: @Sendable (URL) -> String?
     private let client: GitClient
+    private let database: ProjectDatabase
+    private let windows: ProjectWindowManager
+    /// Each open window's session, by its row's id.
+    private(set) var sessions: [UUID: GitWindowSession] = [:]
+    private lazy var layout: ComposableTabsLayout? = {
+        do {
+            return try GitWindowPanes.layout { [unowned self] context in self.session(for: context) }
+        } catch {
+            Self.logger.error("The Git window layout is invalid: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+    }()
 
     /// Built by the first window; `nil` inside means it could not be built (logged once).
     private var sharedColoring: GitSyntaxColoring??
 
-    private lazy var windowSet = KeyedWindowSet<GitWindowController>(
+    private lazy var windowSet = KeyedWindowSet<ComposableTabsWindowController>(
         setting: openRoots,
         open: { [unowned self] key, activates, onClose in
             self.makeWindow(key: key, activates: activates, onClose: onClose)
         },
-        bringForward: { controller in
+        bringForward: { [unowned self] controller in
             controller.showWindow(nil)
             controller.window?.makeKeyAndOrderFront(nil)
-            NSApp.activateUnlessQuiet()
+            self.windows.activateApp()
         }
     )
     private let openRoots: UserSetting<[String]>
@@ -56,9 +72,13 @@ public final class GitWindowFeature: AppFeature {
     ///   - fileTypeOverride: the name of the language a file is mapped to (a File
     ///     Types display name or a language id), used only when a grammar's id or
     ///     alias matches it (`GrammarRegistry.languageID(named:)`).
+    ///   - database: the projects database the windows' `.gitWindow` rows go in.
+    ///   - windows: the window manager that opens them.
     ///   - openRoots: where the open windows' roots are remembered.
     public init(
         commandRegistry registry: CommandRegistry,
+        database: ProjectDatabase,
+        windows: ProjectWindowManager = .shared,
         resources: TextMateResources?,
         userGrammarsDirectory: URL,
         extensionGrammars: @escaping () -> (any GrammarSource)?,
@@ -71,6 +91,8 @@ public final class GitWindowFeature: AppFeature {
         self.extensionGrammars = extensionGrammars
         self.fileTypeOverride = fileTypeOverride
         self.client = client
+        self.database = database
+        self.windows = windows
         self.openRoots = openRoots
         super.init()
         registry.register(AppCommand(
@@ -124,7 +146,7 @@ public final class GitWindowFeature: AppFeature {
     ///   foreground.
     /// - Returns: the window, or nil when `path` is in no repository (logged).
     @discardableResult
-    public func open(path: URL, activates: Bool = true) async -> GitWindowController? {
+    public func open(path: URL, activates: Bool = true) async -> ComposableTabsWindowController? {
         let topLevel: URL
         do {
             topLevel = try await client.topLevel(of: path)
@@ -159,29 +181,63 @@ public final class GitWindowFeature: AppFeature {
 
     // MARK: - Windows
 
-    private func makeWindow(key: String, activates: Bool, onClose: @escaping () -> Void) -> GitWindowController? {
+    private func makeWindow(
+        key: String, activates: Bool, onClose: @escaping () -> Void
+    ) -> ComposableTabsWindowController? {
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: key, isDirectory: &isDirectory), isDirectory.boolValue,
               FileManager.default.fileExists(atPath: (key as NSString).appendingPathComponent(".git")) else {
             Self.logger.error("Not a repository: \(key, privacy: .public)")
             return nil
         }
-        let controller = GitWindowController(
-            root: URL(fileURLWithPath: key, isDirectory: true),
-            client: client,
-            coloring: coloring(),
-            onOpenDirectory: { [weak self] directory in
+        guard let layout else { return nil }
+        let repo: GitRepo
+        do {
+            repo = try row(for: URL(fileURLWithPath: key, isDirectory: true))
+        } catch {
+            Self.logger.error("Could not record the Git window row for \(key, privacy: .public): \(error)")
+            return nil
+        }
+        guard let controller = windows.openStandaloneWindow(
+            repo, layout: layout, startsLanguageServices: false, activates: activates,
+            onClose: { [weak self] repo in
+                self?.sessions.removeValue(forKey: repo.id)?.stop()
+                onClose()
+            }) else { return nil }
+        if let session = sessions[repo.id] {
+            session.onRefsChange = { [weak controller] in controller?.refreshTitleBranch() }
+            session.onOpenDirectory = { [weak self] directory in
                 guard let self else { return }
                 Task { await self.open(path: directory) }
-            },
-            onClose: onClose
-        )
-        controller.showWindow(nil)
-        if activates {
-            controller.window?.makeKeyAndOrderFront(nil)
-            NSApp.activateUnlessQuiet()
+            }
+            Task { await session.start() }
+        } else {
+            Self.logger.error("The Git window on \(key, privacy: .public) made no session")
         }
         return controller
+    }
+
+    /// The session of the window `context` names, made the first time one of its
+    /// panes is asked for.
+    private func session(for context: ComposableTabsViewContext) -> GitWindowSession {
+        if let existing = sessions[context.project.id] { return existing }
+        let root = context.project.directoryURL
+        let model = GitRepositoryModel(
+            root: root, client: client, watcher: GitDeferredRepositoryWatcher(root: root, client: client))
+        let session = GitWindowSession(model: model, client: client, coloring: coloring())
+        sessions[context.project.id] = session
+        return session
+    }
+
+    /// The `.gitWindow` row for `url`, inserted the first time.
+    private func row(for url: URL) throws -> GitRepo {
+        if let existing = try database.repo(path: url.path, kind: .gitWindow) {
+            return existing
+        }
+        let name = url.lastPathComponent.isEmpty ? url.path : url.lastPathComponent
+        let repo = GitRepo(path: url.path, name: name, kind: .gitWindow)
+        try database.insert(repo)
+        return repo
     }
 
     // MARK: - Highlighting

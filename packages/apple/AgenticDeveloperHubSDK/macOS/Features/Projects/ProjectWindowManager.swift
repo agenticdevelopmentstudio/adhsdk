@@ -459,8 +459,8 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
 
     // MARK: - File Browser and Document windows
 
-    /// The standalone windows this manager opened — File Browser and Document
-    /// windows — by row id, with the kind of each. A subset of `controllers`,
+    /// The standalone windows this manager opened — File Browser, Document
+    /// and Git windows — by row id, with the kind of each. A subset of `controllers`,
     /// so scripting, the pane commands and the extension placer see one as
     /// the composable-tabs window it is; this is what keeps it out of
     /// everything that is a *project's*: groups, the shelf, the persisted
@@ -478,7 +478,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     }
 
     /// Whether `repoID` names an open window that is not a project's: a File
-    /// Browser or a Document window.
+    /// Browser, Document or Git window.
     public func isStandaloneWindow(_ repoID: UUID) -> Bool {
         standaloneWindowKinds[repoID] != nil
     }
@@ -487,11 +487,11 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// brings forward the one already open on it.
     ///
     /// A composable-tabs window like a project's, but with its own `layout`,
-    /// no shelf, no group, no project controller (it is a folder, not a
-    /// repository: no checkout tabs, no branch commands), no persisted open
-    /// flag — its owner keeps its own list of what to reopen, told through
-    /// `onClose` — and no part in `UserSettings.lastActiveProjectWindow`,
-    /// so a new project is never arranged like a File Browser window.
+    /// no tab bars, no shelf, no group, no project controller (no checkout
+    /// tabs, no branch commands), no persisted open flag — its owner keeps its
+    /// own list of what to reopen, told through `onClose` — and no part in
+    /// `UserSettings.lastActiveProjectWindow`, so a new project is never
+    /// arranged like one.
     ///
     /// - Parameter onClose: called when the user closes the window, never for
     ///   the closes AppKit makes on the way out of the app (quitting with a
@@ -505,9 +505,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         activates: Bool = true,
         onClose: @escaping @MainActor (GitRepo) -> Void
     ) -> ComposableTabsWindowController? {
-        openStandaloneWindow(
-            repo, layout: layout, languageServices: languageServicesFactory,
-            activates: activates, onClose: onClose)
+        openStandaloneWindow(repo, layout: layout, activates: activates, onClose: onClose)
     }
 
     /// Opens a Document window over `repo` — a `.document` or `.documentTabs`
@@ -525,16 +523,27 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         onClose: @escaping @MainActor (GitRepo) -> Void
     ) -> ComposableTabsWindowController? {
         openStandaloneWindow(
-            repo, layout: layout, languageServices: nil, activates: activates, onClose: onClose)
+            repo, layout: layout, startsLanguageServices: false, activates: activates, onClose: onClose)
     }
 
-    private func openStandaloneWindow(
+    /// Opens a standalone window over `repo` — any row that is not a
+    /// `.project` — or brings forward the one already open on it. What
+    /// `openFileBrowserWindow` and `openDocumentWindow` call, and what the
+    /// Git window opens through. Its title follows the row's kind
+    /// (`ComposableTabsWindowController.title(kind:name:directory:branch:)`).
+    ///
+    /// - Parameter startsLanguageServices: false for a window with no
+    ///   workspace a language server could be rooted at (a Document window)
+    ///   or no documents to serve (the Git window).
+    @discardableResult
+    public func openStandaloneWindow(
         _ repo: GitRepo,
         layout: ComposableTabsLayout,
-        languageServices factory: (@MainActor (URL) -> ProjectLanguageServices)?,
-        activates: Bool,
+        startsLanguageServices: Bool = true,
+        activates: Bool = true,
         onClose: @escaping @MainActor (GitRepo) -> Void
     ) -> ComposableTabsWindowController? {
+        precondition(repo.kind != .project, "a project opens through openProject(_:)")
         if let existing = controllers[repo.id] {
             existing.showWindow(nil)
             existing.window?.makeKeyAndOrderFront(nil)
@@ -546,7 +555,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
                 "Cannot open a window on \(repo.name, privacy: .public): no project database attached")
             return nil
         }
-        let languageServices = factory?(repo.url)
+        let languageServices = startsLanguageServices ? languageServicesFactory?(repo.url) : nil
         let workspace = ProjectWorkspace(
             repo: repo,
             database: database,

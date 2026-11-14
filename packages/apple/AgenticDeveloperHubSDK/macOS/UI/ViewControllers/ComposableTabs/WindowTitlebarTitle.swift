@@ -118,12 +118,30 @@ public final class WindowTitlebarTitle: NSTitlebarAccessoryViewController {
         if let resizeObserver { NotificationCenter.default.removeObserver(resizeObserver) }
     }
 
+    public override func viewWillAppear() {
+        super.viewWillAppear()
+        resize()
+    }
+
     /// A leading accessory is as wide as its view's frame: the title's own
     /// width, but never more than the window leaves it.
+    ///
+    /// And as tall as the whole title bar. AppKit pins a leading accessory to
+    /// the bottom of the title bar, so one shorter than a unified toolbar's
+    /// 52pt sat its title 12pt below the traffic lights; filling the bar puts
+    /// the stack's centre on theirs.
     private func resize() {
         let fitting = stack.fittingSize
         let available = (view.window?.frame.width ?? .greatestFiniteMagnitude) - Self.reservedWidth
-        let height = max(fitting.height, 28)
+        let height = max(fitting.height, Self.titlebarHeight(of: view.window))
         stack.setFrameSize(NSSize(width: max(0, min(fitting.width, available)), height: height))
+    }
+
+    /// The height of `window`'s title bar, toolbar included: what lies above
+    /// its content layout rect. A plain title bar's 28pt before there is a window.
+    static func titlebarHeight(of window: NSWindow?) -> CGFloat {
+        guard let window else { return 28 }
+        let height = window.frame.height - window.contentLayoutRect.maxY
+        return height > 0 ? height : 28
     }
 }

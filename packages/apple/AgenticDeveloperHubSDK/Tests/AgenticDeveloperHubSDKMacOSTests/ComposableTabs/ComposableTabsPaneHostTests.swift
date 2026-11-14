@@ -603,6 +603,32 @@ final class ComposableTabsPaneHostTests: XCTestCase {
 
     /// Gives a tree a real size and lets AppKit lay it out, so the divider
     /// positions `captureThicknessFractions()` reads actually exist.
+    /// A window lays its content out at its default size and is placed
+    /// afterwards — its saved frame, or a sibling's size cascaded. A split that
+    /// kept the widths of that first pass gave every extra point to the pane
+    /// that holds its width least, so the Git window, placed at a 4,000pt
+    /// sibling's size, opened with its overview at its 180pt minimum. Until the
+    /// window is on screen nobody can have dragged anything, so the share has
+    /// to follow the window to its real size.
+    func testASplitPlacedBeforeItsWindowIsShownKeepsItsPreferredShare() throws {
+        let root = try sideBySide(preferredFraction: 0.3)
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 600),
+                              styleMask: [.titled], backing: .buffered, defer: true)
+        window.isReleasedWhenClosed = false
+        window.contentViewController = root
+        window.setContentSize(NSSize(width: 1000, height: 600))
+        root.view.layoutSubtreeIfNeeded()
+        let left = try leaf(leftID, in: root)
+        XCTAssertFalse(window.isVisible, "the case is a window not yet shown")
+        XCTAssertEqual(left.view.frame.width, 300, accuracy: 2, "the share at the default size")
+
+        window.setContentSize(NSSize(width: 4000, height: 600))
+        root.view.layoutSubtreeIfNeeded()
+
+        XCTAssertEqual(left.view.frame.width / root.splitView.bounds.width, 0.3, accuracy: 0.01,
+                       "the share at the size the window was placed at, not the default size's points")
+    }
+
     private func layOut(_ root: ComposableTabsViewController) {
         root.view.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
         root.view.layoutSubtreeIfNeeded()

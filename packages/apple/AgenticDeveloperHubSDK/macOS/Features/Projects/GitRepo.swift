@@ -24,6 +24,10 @@ public struct GitRepo: Sendable, Identifiable, Equatable {
         /// The workspace behind the one Document window that holds single
         /// documents as tabs. One row, whose `path` is the home directory.
         case documentTabs
+        /// The workspace behind a Git window over one repository's top level:
+        /// its panes and their arrangement. Never listed, scanned or
+        /// reconciled as a project.
+        case gitWindow
 
         /// A Document window's row, of either sort.
         public var isDocument: Bool { self == .document || self == .documentTabs }

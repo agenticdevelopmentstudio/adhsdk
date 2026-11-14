@@ -9,11 +9,27 @@ import Testing
 @MainActor
 struct GitWindowFeatureTests {
 
-    /// A feature over its own registry and its own remembered-roots setting, so
-    /// nothing a test opens reaches the app's real list.
-    private func makeFeature(_ openRoots: UserSetting<[String]>) -> GitWindowFeature {
-        GitWindowFeature(
-            commandRegistry: CommandRegistry(),
+    /// A database of its own, deleted with `removeDatabase`.
+    private let databaseURL = FileManager.default.temporaryDirectory
+        .appendingPathComponent("git-window-feature-\(UUID().uuidString).db")
+
+    private func removeDatabase() {
+        try? FileManager.default.removeItem(at: databaseURL)
+    }
+
+    /// A feature over its own registry, database, window manager and remembered-roots
+    /// setting, so nothing a test opens reaches the app's real ones.
+    private func makeFeature(
+        _ openRoots: UserSetting<[String]>, registry: CommandRegistry = CommandRegistry()
+    ) throws -> GitWindowFeature {
+        let database = try ProjectDatabase(path: databaseURL.path)
+        let windows = ProjectWindowManager()
+        windows.attach(database: database)
+        windows.gitClient = GitClient(configuration: .default)
+        return GitWindowFeature(
+            commandRegistry: registry,
+            database: database,
+            windows: windows,
             resources: nil,
             userGrammarsDirectory: FileManager.default.temporaryDirectory
                 .appendingPathComponent("git-window-grammars-\(UUID().uuidString)"),
@@ -35,7 +51,8 @@ struct GitWindowFeatureTests {
         try FileManager.default.createDirectory(at: repository.url("sub"), withIntermediateDirectories: true)
         let setting = makeSetting()
         defer { setting.remove() }
-        let feature = makeFeature(setting)
+        defer { removeDatabase() }
+        let feature = try makeFeature(setting)
         defer { feature.unregister() }
 
         let first = await feature.open(path: repository.url("sub"), activates: false)
@@ -45,8 +62,14 @@ struct GitWindowFeatureTests {
 
         let key = repository.root.standardizedFileURL.resolvingSymlinksInPath().path
         #expect(second === controller)
-        #expect(controller.windowID == "git:" + key)
+        #expect(controller.project.repo.path == key)
+        #expect(controller.project.repo.kind == .gitWindow)
+        #expect(feature.sessions[controller.project.id] != nil, "the layout made the window's session")
+        #expect(controller.window?.title.hasPrefix("Git: ") == true)
         #expect(setting.value == [key])
+
+        controller.window?.close()
+        #expect(feature.sessions.isEmpty, "closing the window drops its session")
     }
 
     @Test("a directory outside any repository opens nothing and remembers nothing")
@@ -57,7 +80,8 @@ struct GitWindowFeatureTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let setting = makeSetting()
         defer { setting.remove() }
-        let feature = makeFeature(setting)
+        defer { removeDatabase() }
+        let feature = try makeFeature(setting)
         defer { feature.unregister() }
 
         let controller = await feature.open(path: directory, activates: false)
@@ -80,12 +104,8 @@ struct GitWindowFeatureTests {
         let registry = CommandRegistry()
         let setting = makeSetting()
         defer { setting.remove() }
-        let feature = GitWindowFeature(
-            commandRegistry: registry, resources: nil,
-            userGrammarsDirectory: FileManager.default.temporaryDirectory
-                .appendingPathComponent("git-window-grammars-\(UUID().uuidString)"),
-            extensionGrammars: { nil }, fileTypeOverride: { _ in nil },
-            client: GitClient(configuration: .default), openRoots: setting)
+        defer { removeDatabase() }
+        let feature = try makeFeature(setting, registry: registry)
         defer { feature.unregister() }
         let command = try #require(registry.command(id: GitWindowFeature.CommandID.openForPath))
 

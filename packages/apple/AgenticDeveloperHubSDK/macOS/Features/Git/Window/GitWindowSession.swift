@@ -3,17 +3,19 @@ import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKUI
 import os
 
-/// The Git window's content (recipe `workspace/git/git-window`, "Layout"): the refs
-/// sidebar, a centre column that shows the history or the working copy, and a right
-/// column of the commit detail over a bottom pane that shows a diff, a blame or a
-/// file's history.
+/// One Git window's state and routing (recipe `workspace/git/git-window`, "Layout"):
+/// the repository model, every Git view, and the three panes the window's
+/// composable-tabs layout shows (`GitWindowPanes`) — the overview (the refs
+/// sidebar), the history (the history or the working copy) and the commit (the
+/// commit detail over a bottom pane that shows a diff, a blame or a file's
+/// history).
 ///
-/// It owns the views and routes what each reports to the next: the sidebar picks the
-/// centre, a commit picks the detail, a file picks the diff, and the diff's Blame and
-/// History buttons pick the bottom pane. It observes the model and reloads only the
-/// views a change names. Used on the main thread.
+/// It routes what each view reports to the next: the sidebar picks the history
+/// pane's content, a commit picks the detail, a file picks the diff, and the
+/// diff's Blame and History buttons pick the bottom pane. It observes the model
+/// and reloads only the views a change names. Used on the main thread.
 @MainActor
-final class GitWindowSplitViewController: ThemedSplitViewController {
+final class GitWindowSession {
 
     /// What the sidebar has selected.
     enum Selection: Equatable {
@@ -33,13 +35,19 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
     let blame: GitBlameViewController
     let fileHistory: GitFileHistoryViewController
 
-    let centre = GitWindowContainerViewController(identifier: "git.window.centre")
-    let bottom = GitWindowContainerViewController(identifier: "git.window.bottom")
+    /// The three panes, as the layout's factories hand them out.
+    let overviewPane: GitWindowOverviewPaneViewController
+    let centre: GitWindowHistoryPaneViewController
+    let commitPane = GitWindowContainerViewController(identifier: "git.window.commit", paneTitle: "Commit")
+
+    let bottom = GitWindowContainerViewController(identifier: "git.window.bottom", paneTitle: "")
     let detailHost: GitWindowDetailHostViewController
     private let right: GitWindowRightSplitViewController
 
     /// Called when a submodule or worktree row asks for a window of its own.
     var onOpenDirectory: ((URL) -> Void)?
+    /// Called when the refs change, so the window can read its branch again.
+    var onRefsChange: (() -> Void)?
 
     private(set) var selection: Selection = .workingCopy
     /// The commit the selected ref pointed at when it was last shown in the history;
@@ -49,6 +57,8 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
     private var loadGeneration = 0
     /// The single-commit read in flight or last finished; tests await it.
     private(set) var commitLoadTask: Task<Void, Never>?
+    /// The search in flight or last finished; tests await it.
+    private(set) var searchTask: Task<Void, Never>?
     private let client: GitClient
     private var observation: AnyObject?
 
@@ -65,7 +75,10 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
         detailHost = GitWindowDetailHostViewController(detail: detail)
         right = GitWindowRightSplitViewController(
             top: detailHost, bottom: bottom, autosaveName: Self.autosaveName("git.window.right", root: model.root))
-        super.init(nibName: nil, bundle: nil)
+        overviewPane = GitWindowOverviewPaneViewController()
+        centre = GitWindowHistoryPaneViewController()
+        overviewPane.onRefresh = { [weak self] in self?.refresh() }
+        centre.onSearch = { [weak self] text in self?.search(text) }
         sidebar.delegate = self
         history.delegate = self
         workingCopy.delegate = self
@@ -74,44 +87,49 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
         blame.delegate = self
         fileHistory.diffViewController.delegate = self
         sidebar.selectWorkingCopy()
+        overviewPane.show(sidebar)
         centre.show(workingCopy)
+        commitPane.show(right)
         bottom.show(diff)
         observation = model.observe { [weak self] changes in
             self?.modelDidChange(changes)
         }
     }
 
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.accessibilityID("git.window.content")
-
-        let sidebarItem = NSSplitViewItem(sidebarWithViewController: sidebar)
-        sidebarItem.minimumThickness = 160
-        sidebarItem.maximumThickness = 360
-        sidebarItem.canCollapse = true
-        sidebarItem.holdingPriority = .defaultLow + 1
-
-        let centreItem = NSSplitViewItem(viewController: centre)
-        centreItem.minimumThickness = 360
-
-        let rightItem = NSSplitViewItem(viewController: right)
-        rightItem.minimumThickness = 320
-
-        addSplitViewItem(sidebarItem)
-        addSplitViewItem(centreItem)
-        addSplitViewItem(rightItem)
-
-        splitView.dividerStyle = .thin
-        splitView.accessibilityID("git.window.split")
-        splitView.autosaveName = Self.autosaveName("git.window.split", root: model.root)
-    }
-
     /// One divider layout per repository, so two Git windows never share theirs.
     static func autosaveName(_ base: String, root: URL) -> NSSplitView.AutosaveName {
         NSSplitView.AutosaveName(base + ":" + root.path)
+    }
+
+    // MARK: - Lifetime
+
+    /// Reads every part of the model and starts watching the repository.
+    func start() async {
+        await model.start()
+    }
+
+    /// Stops watching the repository and drops a search in flight; the window closed.
+    func stop() {
+        searchTask?.cancel()
+        model.stop()
+    }
+
+    // MARK: - Search and refresh
+
+    /// Sends the search text to the history; the history decides which call is latest.
+    func search(_ text: String) {
+        let history = history
+        searchTask = Task { await history.setQuery(text) }
+    }
+
+    /// Reloads every part of the model, then every view, and shows the selection again.
+    func refresh() {
+        Task { [weak self] in
+            guard let self else { return }
+            await self.model.refresh(Set(GitRepositoryChange.allCases))
+            self.reloadAll()
+            self.onRefsChange?()
+        }
     }
 
     // MARK: - Model changes
@@ -122,7 +140,10 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
     /// working file on a working-copy change, a file's history on a history change.
     func modelDidChange(_ changes: Set<GitRepositoryChange>) {
         let workingCopyChanged = !changes.isDisjoint(with: [.workingCopy, .operation])
-        if changes.contains(.refs) { sidebar.reload() }
+        if changes.contains(.refs) {
+            sidebar.reload()
+            onRefsChange?()
+        }
         if changes.contains(.history) { history.reload() }
         if workingCopyChanged { workingCopy.reload() }
         if !changes.isDisjoint(with: [.refs, .history]) { reapplyRefSelection() }
@@ -248,7 +269,7 @@ final class GitWindowSplitViewController: ThemedSplitViewController {
 
 // MARK: - GitRefsSidebarDelegate
 
-extension GitWindowSplitViewController: GitRefsSidebarDelegate {
+extension GitWindowSession: GitRefsSidebarDelegate {
     func sidebar(_ sidebar: GitRefsSidebarViewController, didSelect ref: GitRef) {
         selection = .ref(ref.fullName)
         loadGeneration += 1
@@ -281,7 +302,7 @@ extension GitWindowSplitViewController: GitRefsSidebarDelegate {
 
 // MARK: - GitHistoryDelegate
 
-extension GitWindowSplitViewController: GitHistoryDelegate {
+extension GitWindowSession: GitHistoryDelegate {
     func history(_ history: GitHistoryViewController, didSelect commit: GitCommit?) {
         loadGeneration += 1
         detailHost.clearError()
@@ -292,7 +313,7 @@ extension GitWindowSplitViewController: GitHistoryDelegate {
 
 // MARK: - GitCommitDetailDelegate
 
-extension GitWindowSplitViewController: GitCommitDetailDelegate {
+extension GitWindowSession: GitCommitDetailDelegate {
     func commitDetail(_ detail: GitCommitDetailViewController, didSelectCommit id: String) {
         showCommit(id: id)
     }
@@ -309,7 +330,7 @@ extension GitWindowSplitViewController: GitCommitDetailDelegate {
 
 // MARK: - GitWorkingCopyDelegate
 
-extension GitWindowSplitViewController: GitWorkingCopyDelegate {
+extension GitWindowSession: GitWorkingCopyDelegate {
     func workingCopy(_ workingCopy: GitWorkingCopyViewController, didSelect target: GitDiffTarget?) {
         guard let target, let file = Self.file(of: target) else {
             clearDiff()
@@ -321,7 +342,7 @@ extension GitWindowSplitViewController: GitWorkingCopyDelegate {
 
 // MARK: - GitDiffDelegate
 
-extension GitWindowSplitViewController: GitDiffDelegate {
+extension GitWindowSession: GitDiffDelegate {
     func diff(_ diff: GitDiffViewController, didRequestBlameFor path: String, at revision: String?) {
         bottom.show(blame)
         blame.show(path: path, at: revision)
@@ -335,26 +356,34 @@ extension GitWindowSplitViewController: GitDiffDelegate {
 
 // MARK: - GitBlameDelegate
 
-extension GitWindowSplitViewController: GitBlameDelegate {
+extension GitWindowSession: GitBlameDelegate {
     func blame(_ blame: GitBlameViewController, didSelectCommit id: String) {
         showCommit(id: id)
     }
 }
 
-extension GitWindowSplitViewController: Loggable {
+extension GitWindowSession: Loggable {
     static nonisolated let logger = makeLogger()
 }
 
 // MARK: - Containers
 
 /// Shows one child view controller at a time, filling its view; `show(_:)` swaps it.
+/// As a pane's content it names the pane (`PaneTitleProviding`).
 @MainActor
-final class GitWindowContainerViewController: NSViewController {
+class GitWindowContainerViewController: NSViewController, PaneTitleProviding {
     private(set) var content: NSViewController?
     private let identifierString: String
 
-    init(identifier: String) {
+    /// What the pane's title bar says.
+    var paneTitle: String {
+        didSet { if paneTitle != oldValue { onPaneTitleChange?() } }
+    }
+    var onPaneTitleChange: (() -> Void)?
+
+    init(identifier: String, paneTitle: String) {
         identifierString = identifier
+        self.paneTitle = paneTitle
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -370,6 +399,7 @@ final class GitWindowContainerViewController: NSViewController {
 
     /// Makes `controller` the one child shown; showing the current one does nothing.
     func show(_ controller: NSViewController) {
+        defer { contentDidChange() }
         guard controller !== content else { return }
         if let content {
             content.view.removeFromSuperview()
@@ -378,6 +408,9 @@ final class GitWindowContainerViewController: NSViewController {
         content = controller
         if isViewLoaded { install(controller) }
     }
+
+    /// Called after every `show(_:)`, for a pane whose title follows its content.
+    func contentDidChange() {}
 
     private func install(_ controller: NSViewController) {
         addChild(controller)
@@ -390,6 +423,63 @@ final class GitWindowContainerViewController: NSViewController {
             child.topAnchor.constraint(equalTo: view.topAnchor),
             child.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+}
+
+/// The overview pane: the refs sidebar, with the Refresh button in the pane's
+/// title bar (`PaneAccessoryProviding`).
+@MainActor
+final class GitWindowOverviewPaneViewController: GitWindowContainerViewController, PaneAccessoryProviding {
+    /// What the Refresh button does.
+    var onRefresh: (() -> Void)?
+
+    init() {
+        super.init(identifier: "git.window.overview", paneTitle: "Overview")
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    func makePaneAccessoryViews() -> [NSView] {
+        let title = "Refresh"
+        let image = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: title) ?? NSImage()
+        let button = NSButton(image: image, target: self, action: #selector(refresh(_:)))
+        button.isBordered = false
+        button.bezelStyle = .accessoryBarAction
+        button.toolTip = title
+        button.setAccessibilityLabel(title)
+        button.accessibilityID("git.window.refresh")
+        return [button]
+    }
+
+    @objc private func refresh(_ sender: Any?) {
+        onRefresh?()
+    }
+}
+
+/// The history pane: the history or the working copy, titled after the one it
+/// shows. The window's toolbar search reaches the history through it
+/// (`PaneSearchable`).
+@MainActor
+final class GitWindowHistoryPaneViewController: GitWindowContainerViewController, PaneSearchable {
+    /// Where a search goes.
+    var onSearch: ((String) -> Void)?
+
+    init() {
+        super.init(identifier: "git.window.centre", paneTitle: "History")
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func contentDidChange() {
+        paneTitle = content is GitWorkingCopyViewController ? "Working Copy" : "History"
+    }
+
+    var paneSearchPlaceholder: String { "Search History" }
+
+    func paneSearch(for query: String) {
+        onSearch?(query)
     }
 }
 

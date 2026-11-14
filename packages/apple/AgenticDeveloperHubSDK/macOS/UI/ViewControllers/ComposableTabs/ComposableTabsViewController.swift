@@ -130,6 +130,16 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     /// describe an arrangement that is no longer on screen.
     private var hasAppliedPreferredThicknesses = false
 
+    /// The thickness the fractions were last applied against. A window lays its
+    /// content out at its default size before it is placed — the saved frame,
+    /// or a sibling's size cascaded, is set afterwards in `loadWindow()` — and
+    /// a split that latched there handed all of the growth to whichever pane
+    /// holds its width least, so a Git window placed at a sibling's 4,000pt
+    /// opened with its overview and history at their minimums. Until the
+    /// window is on screen nobody can have dragged a divider, so a new
+    /// thickness re-applies the fractions instead.
+    private var preferredThicknessesTotal: CGFloat?
+
     /// See `holdThicknessFractions()`: raised on the split it was called on,
     /// and the constraints each split in the tree holds its panes with.
     private var isHoldingShares = false
@@ -568,11 +578,15 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     }
 
     private func applyPreferredThicknessesIfNeeded() {
-        guard !hasAppliedPreferredThicknesses else { return }
         let total = splitView.isVertical ? splitView.bounds.width : splitView.bounds.height
+        if hasAppliedPreferredThicknesses {
+            guard let window = view.window, !window.isVisible,
+                  let applied = preferredThicknessesTotal, abs(applied - total) > 0.5 else { return }
+        }
         // A zero-thickness pass carries no information; wait for a real one.
         guard total > 1, splitViewItems.count == layoutChildren.count else { return }
         hasAppliedPreferredThicknesses = true
+        preferredThicknessesTotal = total
 
         var offset: CGFloat = 0
         for index in 0..<max(splitViewItems.count - 1, 0) {
