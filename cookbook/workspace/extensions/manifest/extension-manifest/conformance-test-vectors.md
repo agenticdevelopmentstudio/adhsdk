@@ -30,3 +30,4 @@
 | extension-manifest-027 | contributions-encode-lossy, decoding-failures-not-encoded | A manifest decoded with one malformed theme (extension-manifest-007), then re-encoded | The re-encoded `themes` list holds only the surviving entries; no decoding-failures field appears anywhere in the output |
 | extension-manifest-028 | manifest-and-contributions-are-thread-safe | Two independent decodes of identical manifest bytes, compared for equality | The two results are equal; both values are safe to use across any concurrency boundary |
 | extension-manifest-029 | grammar-shape, lenient-array-element-isolation | `grammars: [{ language: "widget", scopeName: "source.widget", path: "./w.json", embeddedLanguages: {} }, { scopeName: "text.inject", path: "./i.json" }, { scopeName: 7, path: "./x.json" }]` | Two grammar entries, the second with no `language`; the third is dropped with a decoding failure at index `2` |
+

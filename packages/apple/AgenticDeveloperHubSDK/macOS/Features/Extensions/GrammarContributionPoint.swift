@@ -71,7 +71,20 @@ public final class GrammarContributionPoint: ContributionPoint {
         let file: URL
     }
 
+    /// A scope claimed by an extension after a lower identifier took it.
+    private struct Conflict: Hashable {
+        let scopeName: String
+        let extensionIdentifier: String
+    }
+
     private var registrations: [String: Registration] = [:]
+
+    /// The contested scopes as of the last rebuild, so each is logged once
+    /// rather than on every rebuild while it stands.
+    private var conflicts = Set<Conflict>()
+
+    /// How many contested-scope log lines have been written; tests read it.
+    private(set) var conflictReportCount = 0
 
     /// The enabled extensions' grammars as of the last apply or withdraw.
     public private(set) var source = ExtensionGrammarSource.empty
@@ -141,6 +154,13 @@ public final class GrammarContributionPoint: ContributionPoint {
     }
 
     /// Rebuilds `source` from every registration, in identifier order.
+    ///
+    /// A grammar is served by its scope name whatever else is true. It adds a
+    /// `LanguageEntry` only when the applied extensions declare at least one
+    /// file extension or name for its language: an entry with neither would
+    /// resolve no file, yet would still hide the bundled entry of the same id,
+    /// because `GrammarRegistry` keeps each language id's first entry and this
+    /// source comes first.
     private func rebuild() {
         let identifiers = registrations.keys.sorted()
         let ordered = identifiers.compactMap { registrations[$0] }
@@ -148,26 +168,43 @@ public final class GrammarContributionPoint: ContributionPoint {
         var files: [String: URL] = [:]
         var languages: [LanguageEntry] = []
         var languageIDs = Set<String>()
+        var conflicts = Set<Conflict>()
         for (identifier, registration) in zip(identifiers, ordered) {
             for grammar in registration.grammars {
                 guard files[grammar.scopeName] == nil else {
-                    Self.logSkip(identifier, grammar.scopeName, "the scope is taken")
+                    conflicts.insert(Conflict(scopeName: grammar.scopeName, extensionIdentifier: identifier))
                     continue
                 }
                 files[grammar.scopeName] = grammar.file
                 guard let id = grammar.language, languageIDs.insert(id).inserted else { continue }
                 let declared = ordered.flatMap { $0.languages.filter { $0.id == id } }
+                let extensions = Self.unique(
+                    declared.flatMap { $0.extensions ?? [] }.compactMap(Self.normalizedExtension))
+                let filenames = Self.unique(declared.flatMap { $0.filenames ?? [] })
+                guard !extensions.isEmpty || !filenames.isEmpty else { continue }
                 languages.append(LanguageEntry(
                     id: id,
                     scopeName: grammar.scopeName,
                     aliases: Self.unique(declared.flatMap { $0.aliases ?? [] }),
-                    extensions: Self.unique(
-                        declared.flatMap { $0.extensions ?? [] }.compactMap(Self.normalizedExtension)),
-                    filenames: Self.unique(declared.flatMap { $0.filenames ?? [] })
+                    extensions: extensions,
+                    filenames: filenames
                 ))
             }
         }
+        report(conflicts)
         source = ExtensionGrammarSource(grammarFiles: files, languages: languages)
+    }
+
+    /// Logs the conflicts that were not standing at the last rebuild.
+    private func report(_ current: Set<Conflict>) {
+        let fresh = current.subtracting(conflicts).sorted {
+            ($0.scopeName, $0.extensionIdentifier) < ($1.scopeName, $1.extensionIdentifier)
+        }
+        for conflict in fresh {
+            conflictReportCount += 1
+            Self.logSkip(conflict.extensionIdentifier, conflict.scopeName, "the scope is taken")
+        }
+        conflicts = current
     }
 
     /// A declared `extensions` value as a `LanguageEntry` extension: lowercased

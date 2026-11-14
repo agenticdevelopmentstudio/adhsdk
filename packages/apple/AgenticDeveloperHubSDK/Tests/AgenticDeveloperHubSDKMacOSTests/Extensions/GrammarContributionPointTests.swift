@@ -49,8 +49,9 @@ struct GrammarContributionPointTests {
     }
     """
 
-    private func manifest(name: String, contributes: String) throws -> ExtensionManifest {
-        let json = """
+    /// The `package.json` text of a test extension contributing `contributes`.
+    private static func manifestJSON(name: String, contributes: String) -> String {
+        """
         {
             "name": "\(name)",
             "publisher": "test",
@@ -59,6 +60,10 @@ struct GrammarContributionPointTests {
             "contributes": \(contributes)
         }
         """
+    }
+
+    private func manifest(name: String, contributes: String) throws -> ExtensionManifest {
+        let json = Self.manifestJSON(name: name, contributes: contributes)
         return try JSONDecoder().decode(ExtensionManifest.self, from: Data(json.utf8))
     }
 
@@ -66,19 +71,29 @@ struct GrammarContributionPointTests {
     /// folder under `root` and returns the folder.
     private func writeWidgetExtension(name: String = "widget", in root: URL) throws -> URL {
         let directory = root.appendingPathComponent("\(name)-1.0.0")
-        let json = """
-        {
-            "name": "\(name)",
-            "publisher": "test",
-            "version": "1.0.0",
-            "engines": { "vscode": "^1.74.0" },
-            "contributes": \(Self.widgetContributes)
-        }
-        """
+        let json = Self.manifestJSON(name: name, contributes: Self.widgetContributes)
         try ExtensionFixtures.write(json, to: "package.json", in: directory)
         try ExtensionFixtures.write(Self.widgetGrammar, to: "syntaxes/widget.tmLanguage.json", in: directory)
         try ExtensionFixtures.write(Self.injectionGrammar, to: "syntaxes/injection.json", in: directory)
         return directory
+    }
+
+    /// Applies `contributes` as extension `name`, with each of `files` written
+    /// into its folder first.
+    private func apply(
+        _ point: GrammarContributionPoint,
+        name: String,
+        contributes: String,
+        files: [String: String] = [:],
+        in root: URL
+    ) throws {
+        let directory = root.appendingPathComponent("\(name)-1.0.0")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        for (path, text) in files {
+            try ExtensionFixtures.write(text, to: path, in: directory)
+        }
+        let manifest = try manifest(name: name, contributes: contributes)
+        try point.apply(try #require(manifest.contributes), from: manifest, at: directory)
     }
 
     private func makeRoot() throws -> URL {
@@ -192,6 +207,129 @@ struct GrammarContributionPointTests {
         #expect(point.source.languages.map(\.id) == ["widget"])
     }
 
+    // MARK: - Joining with languages
+
+    @Test("a grammar-only extension leaves the bundled language's extensions in force")
+    func grammarOnlyExtensionKeepsTheBundledLanguage() throws {
+        let root = try makeRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let extensionGrammar = #"{ "scopeName": "source.cpp", "name": "extension" }"#
+        let point = GrammarContributionPoint()
+        try apply(
+            point,
+            name: "cpptools",
+            contributes: #"{ "grammars": [{ "language": "cpp", "scopeName": "source.cpp", "path": "./cpp.json" }] }"#,
+            files: ["cpp.json": extensionGrammar],
+            in: root
+        )
+        let bundled = StubGrammarSource(
+            languages: [
+                LanguageEntry(id: "cpp", scopeName: "source.cpp", aliases: [], extensions: [".cpp"], filenames: [])
+            ],
+            grammars: ["source.cpp": #"{ "scopeName": "source.cpp", "name": "bundled" }"#]
+        )
+
+        let registry = GrammarRegistry(sources: [point.source, bundled])
+        let resolver = LanguageResolver(registry: registry)
+
+        #expect(point.source.languages.isEmpty)
+        #expect(resolver.languageID(for: URL(fileURLWithPath: "/tmp/x.cpp")) == "cpp")
+        #expect(registry.grammarText(scopeName: "source.cpp") == extensionGrammar)
+    }
+
+    @Test("a language declared by another extension joins the grammar that names it")
+    func languageDeclaredElsewhereJoins() throws {
+        let root = try makeRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let point = GrammarContributionPoint()
+        try apply(
+            point,
+            name: "grammar",
+            contributes: #"{ "grammars": [{ "language": "gadget", "scopeName": "source.gadget", "path": "g.json" }] }"#,
+            files: ["g.json": #"{ "scopeName": "source.gadget" }"#],
+            in: root
+        )
+        try apply(
+            point,
+            name: "language",
+            contributes: #"{ "languages": [{ "id": "gadget", "extensions": [".gdg"], "filenames": ["Gadgetfile"] }] }"#,
+            in: root
+        )
+
+        #expect(point.source.languages == [
+            LanguageEntry(
+                id: "gadget", scopeName: "source.gadget", aliases: [], extensions: [".gdg"], filenames: ["Gadgetfile"]
+            )
+        ])
+    }
+
+    @Test("a multi-dot extension is kept whole")
+    func multiDotExtensionIsKept() throws {
+        let root = try makeRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let point = GrammarContributionPoint()
+        try apply(
+            point,
+            name: "autoconf",
+            contributes: """
+            {
+                "grammars": [{ "language": "hin", "scopeName": "source.hin", "path": "./h.json" }],
+                "languages": [{ "id": "hin", "extensions": [".H.in"] }]
+            }
+            """,
+            files: ["h.json": #"{ "scopeName": "source.hin" }"#],
+            in: root
+        )
+
+        #expect(point.source.languages.first?.extensions == [".h.in"])
+        let resolver = LanguageResolver(registry: GrammarRegistry(sources: [point.source]))
+        #expect(resolver.languageID(for: URL(fileURLWithPath: "/tmp/config.h.in")) == "hin")
+    }
+
+    @Test("a grammar path that is not JSON is skipped")
+    func nonJSONGrammarPathIsSkipped() throws {
+        let root = try makeRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let point = GrammarContributionPoint()
+        try apply(
+            point,
+            name: "plist",
+            contributes: """
+            {
+                "grammars": [{ "language": "pl", "scopeName": "source.pl", "path": "./pl.plist" }],
+                "languages": [{ "id": "pl", "extensions": [".pl"] }]
+            }
+            """,
+            files: ["pl.plist": "<plist/>"],
+            in: root
+        )
+
+        #expect(!point.source.hasGrammar(scopeName: "source.pl"))
+        #expect(point.source.languages.isEmpty)
+    }
+
+    @Test("a contested scope is reported once, not on every rebuild")
+    func aConflictIsReportedOnce() throws {
+        let root = try makeRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let point = GrammarContributionPoint()
+        let claim = #"{ "grammars": [{ "scopeName": "source.shared", "path": "./s.json" }] }"#
+        let files = ["s.json": #"{ "scopeName": "source.shared" }"#]
+        try apply(point, name: "alpha", contributes: claim, files: files, in: root)
+        try apply(point, name: "beta", contributes: claim, files: files, in: root)
+        #expect(point.conflictReportCount == 1)
+
+        // Unrelated rebuilds leave the same conflict standing: nothing new to say.
+        try apply(point, name: "gamma", contributes: #"{ "grammars": [] }"#, in: root)
+        point.withdraw(extensionIdentifier: "test.gamma")
+        #expect(point.conflictReportCount == 1)
+
+        // Once it is gone, its return is news again.
+        point.withdraw(extensionIdentifier: "test.beta")
+        try apply(point, name: "beta", contributes: claim, files: files, in: root)
+        #expect(point.conflictReportCount == 2)
+    }
+
     // MARK: - Enablement
 
     @Test("a disabled extension contributes nothing, and re-enabling restores it")
@@ -236,7 +374,12 @@ struct GrammarContributionPointTests {
         let alpha = try manifest(name: "alpha", contributes: Self.widgetContributes)
         let beta = try manifest(
             name: "beta",
-            contributes: #"{ "grammars": [{ "language": "beta", "scopeName": "source.beta", "path": "./b.json" }] }"#
+            contributes: """
+            {
+                "grammars": [{ "language": "beta", "scopeName": "source.beta", "path": "./b.json" }],
+                "languages": [{ "id": "beta", "extensions": [".beta"] }]
+            }
+            """
         )
         let point = GrammarContributionPoint()
         try point.apply(try #require(alpha.contributes), from: alpha, at: alphaDirectory)
@@ -248,4 +391,12 @@ struct GrammarContributionPointTests {
         #expect(point.source.hasGrammar(scopeName: "source.beta"))
         #expect(point.source.languages.map(\.id) == ["beta"])
     }
+}
+
+/// A source standing in for the bundled grammars.
+private struct StubGrammarSource: GrammarSource {
+    let languages: [LanguageEntry]
+    let grammars: [String: String]
+
+    func grammarText(scopeName: String) -> String? { grammars[scopeName] }
 }
