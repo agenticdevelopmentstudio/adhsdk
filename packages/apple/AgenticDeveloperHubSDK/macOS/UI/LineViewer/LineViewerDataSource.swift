@@ -8,6 +8,17 @@ public protocol LineViewerDataSource: AnyObject {
     var gutterColumnCount: Int { get }
     var rowCount: Int { get }
     func row(at index: Int) -> LineViewerRow
+    /// The width of gutter column `column`, in characters of the code font,
+    /// not counting the one character of padding the viewer adds on each side.
+    /// A value wider than this is clipped to its column.
+    func gutterColumnWidth(_ column: Int) -> Int
+}
+
+public extension LineViewerDataSource {
+    /// Wide enough for a line number: `max(3, digits of rowCount)`.
+    func gutterColumnWidth(_ column: Int) -> Int {
+        max(3, String(rowCount).count)
+    }
 }
 
 /// Hears about selection changes and gutter clicks. Row indices are the data

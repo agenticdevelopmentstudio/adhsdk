@@ -2441,6 +2441,7 @@
 		95FFEA0F279D5C8204866387 /* ThemeBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FCC0B1545C581AC9A093FA /* ThemeBinding.swift */; };
 		9614B518423C3C430E5F5A78 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16537FC007F4A3DCF92DAC5A /* ThemePickerView.swift */; };
 		96245D950E6F3A33A2731DD1 /* ConversationExtractCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CCD9CC9ADA6E38FE18A9B8B /* ConversationExtractCacheTests.swift */; };
+		964931B3E62D41767BE5B422 /* LineViewerGutterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1CE03EC1D7AD0C5D6C7198C /* LineViewerGutterView.swift */; };
 		96563F05A624F41255C0B10D /* ClaudeTranscriptPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD17FEC1A8D161C8F846F /* ClaudeTranscriptPayload.swift */; };
 		965FE586A9F065B0489ACA92 /* LocalChatSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDAA47D323E439CE23177E4A /* LocalChatSessionTests.swift */; };
 		96626DFEFB83EA8CA6A20C01 /* OpenVSXCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0442D12CA06998C8AFB6A5E /* OpenVSXCatalogTests.swift */; };
@@ -9439,6 +9440,7 @@
 		C17E7AB8B998E99D315A36CE /* ComposableTabsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabsViewController.swift; sourceTree = "<group>"; };
 		C1A8FD791EDA4063D751A103 /* ClaudePipelineSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudePipelineSlot.swift; sourceTree = "<group>"; };
 		C1B71FC9939A89858A9EC2C0 /* UniversalControlMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalControlMonitorTests.swift; sourceTree = "<group>"; };
+		C1CE03EC1D7AD0C5D6C7198C /* LineViewerGutterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineViewerGutterView.swift; sourceTree = "<group>"; };
 		C1D97431F6F60EE073684ACF /* ModeCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeCatalogTests.swift; sourceTree = "<group>"; };
 		C214A9A6F3C92F697E640F80 /* ScriptJSONTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptJSONTests.swift; sourceTree = "<group>"; };
 		C22897A1DAFB65561ECA65F2 /* ProcessTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessTable.swift; sourceTree = "<group>"; };
@@ -13252,6 +13254,7 @@
 			isa = PBXGroup;
 			children = (
 				6D3FFA03B0AD73C8A186D182 /* LineViewerDataSource.swift */,
+				C1CE03EC1D7AD0C5D6C7198C /* LineViewerGutterView.swift */,
 				5473DFDB3FFC7494B100DF28 /* LineViewerRow.swift */,
 				DF136398CFBE41A4AF1A54C3 /* LineViewerScrollSync.swift */,
 				4A88140C4679860A3B78DBB4 /* LineViewerView.swift */,
@@ -23460,6 +23463,7 @@
 				70C5E2FCE06E354F265CFD30 /* LaunchAtLoginManager.swift in Sources */,
 				B42B8DB4AB8F45F714B6A824 /* LayoutNode.swift in Sources */,
 				358B746443C3B9FD0FCEE731 /* LineViewerDataSource.swift in Sources */,
+				964931B3E62D41767BE5B422 /* LineViewerGutterView.swift in Sources */,
 				FB45FF7C9BB111D1AC4943AB /* LineViewerRow.swift in Sources */,
 				6AB2158AB4EB1E16239B5D06 /* LineViewerScrollSync.swift in Sources */,
 				EC82810EBB3CC9F05F6F0A98 /* LineViewerView.swift in Sources */,

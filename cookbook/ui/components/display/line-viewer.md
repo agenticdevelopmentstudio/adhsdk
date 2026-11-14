@@ -2,7 +2,7 @@
 id: 5f9e0c63-382d-4803-bd50-a8fb90ea9e4d
 title: "Line Viewer"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-13
@@ -37,16 +37,19 @@ A read-only, virtualised view of many lines of text: each row is a text line or 
 
 ## Behavioral Requirements
 
-- **data-source**: The viewer MUST read rows only through `LineViewerDataSource` (`gutterColumnCount`, `rowCount`, `row(at:)`); it MUST NOT copy the rows. `reloadData()` MUST re-read the counts, clear folds and selection, and resize the document view.
+- **data-source**: The viewer MUST read rows only through `LineViewerDataSource` (`gutterColumnCount`, `rowCount`, `row(at:)`, and `gutterColumnWidth(_:)`, whose protocol-extension default is `max(3, digits(rowCount))`); it MUST NOT copy the rows. `reloadData()` MUST re-read the counts, clear folds and selection, and resize the document view.
 - **geometry**: The document view MUST be flipped and exactly `displayedRowCount × rowHeight` tall, where `rowHeight` is `ceil(ascent + descent + leading) + 4` of the theme's code font and `displayedRowCount` is `rowCount` less the rows hidden by folds. Its width MUST be the larger of the clip view's width and the widest row drawn so far.
 - **virtualised-drawing**: Drawing MUST ask the data source only for the rows intersecting the dirty rect; drawing a 10-row rect of a 100 000-row source MUST call `row(at:)` at most 20 times.
+- **visible-slice**: A row longer than 1 024 UTF-16 units MUST be laid out only across the horizontal extent of the dirty rect, padded by 8 columns each side and widened to whole composed character sequences (never splitting a surrogate pair or a combining sequence), treating each UTF-16 unit as one advance of `0`; drawing a 400 pt wide, one-row rect of a 1 000 000-unit line MUST lay out fewer than 1 000 units, wherever along the line the rect is. Shorter rows are laid out whole.
+- **gutter-columns**: Gutter column `c` MUST be `gutterColumnWidth(c) + 2` advances of `0` wide (one advance of padding each side), columns laid out left to right. A value MUST be right-aligned in its column's content area, left-aligned when wider than it, and clipped to it: nothing a value draws may reach another column.
+- **pinned-gutter**: The gutter MUST stay at the visible left edge while the text scrolls horizontally under it (its x equals the clip view's horizontal origin) and scroll vertically with the rows. A click on the pinned gutter is a gutter click wherever the text is scrolled.
 - **folding**: With `foldsAtHeaders`, clicking a header row MUST hide the rows after it up to (not including) the next header or the end, and clicking it again MUST show them. Folding MUST remove hidden rows from the selection. A header click MUST NOT change the selection. Without `foldsAtHeaders` a header row selects like any row.
 - **selection**: A click MUST select the clicked row; shift-click MUST extend from the anchor row; command-click MUST toggle the row; dragging MUST extend from the anchor. Every change MUST call `lineViewer(_:didSelectRows:)` with data-source row indices. `selectedRows` is in data-source indices.
 - **gutter-click**: A click inside gutter column `c` of row `r` MUST call `lineViewer(_:didClickGutterColumn: c, row: r)` and MUST NOT change the selection.
 - **copy**: Copy (Cmd-C, `copy(_:)`) MUST put the selected rows' `text`, in row order, joined by `\n` with no trailing newline, on the general pasteboard as a plain string; with nothing selected the menu item MUST be disabled and the pasteboard left alone.
 - **scroll-to-row**: `scrollToRow(_:)` MUST unfold the fold hiding the row, if any, then scroll vertically so the row is at the top, clamped to the scrollable range, keeping the horizontal offset.
 - **scroll-sync**: `LineViewerScrollSync` MUST keep the vertical scroll offset of every viewer it holds equal to the last one scrolled, leaving each viewer's horizontal offset alone, without re-entering itself. It holds the viewers weakly; rows are assumed aligned.
-- **theme**: The viewer MUST repaint and re-measure (font, row height, gutter width) on every theme change, through `ThemePaletteObserver`.
+- **theme**: The viewer MUST repaint and re-measure (font, row height, gutter column widths) on every theme change, through `ThemePaletteObserver`.
 
 ## Appearance
 
@@ -63,7 +66,7 @@ A read-only, virtualised view of many lines of text: each row is a text line or 
 - A run's `highlight` paints that role behind the run's glyphs, full row height, with the same colours (an `emphasis` run on an added row is `.success` at 0.40).
 - Selected rows are overlaid with `.selection`.
 - Text: each run's `foreground`, or `.primaryText` where no run says; `fontStyle` maps bold and italic to font traits, underline and strikethrough to single lines.
-- Gutter: one column per `gutterColumnCount`, each `(max(3, digits(rowCount)) + 2)` advances of `0` wide, values right-aligned in `.secondaryText`, a 1 pt `.divider` line after the last column. Text starts one advance after the gutter.
+- Gutter: one column per `gutterColumnCount`, each `gutterColumnWidth(c) + 2` advances of `0` wide (default content width `max(3, digits(rowCount))`), values right-aligned in `.secondaryText` and clipped to their column, a 1 pt `.divider` line after the last column. The gutter is pinned to the visible left edge and carries each row's background and selection. Text starts one advance after the gutter.
 - With `foldsAtHeaders`, a header row draws a down chevron (expanded) or right chevron (folded) in `.secondaryText` before its text.
 
 ## States
@@ -87,12 +90,15 @@ A read-only, virtualised view of many lines of text: each row is a text line or 
 | line-viewer-002 | folding | rows: header, 3 text, header, 2 text; `foldsAtHeaders`; click row 0 | 4 rows displayed, height `4 × rowHeight`; display row 1 is data row 4; click again restores 7. |
 | line-viewer-003 | copy, selection | rows `a`, `b`, `c`; rows 0 and 2 selected | pasteboard string `a\nc`. |
 | line-viewer-004 | virtualised-drawing | 100 000-row source; draw a 10-row rect | 10 to 20 calls to `row(at:)`. |
+| line-viewer-006 | visible-slice | one 1 000 000-unit row; draw a 400 pt by one-row rect at x 0, then at 600 000 advances along | fewer than 1 000 units laid out each time. |
+| line-viewer-007 | gutter-columns | widths 8 and 4; column 0 value 26 characters | column 0 is 10 advances wide, column 1 starts at its end and is 6 wide; column 1 stays one uniform colour. |
+| line-viewer-008 | pinned-gutter, gutter-click | document 5 000 pt wide; scroll the clip view to x 300; click one advance right of 300 | the gutter's x is 300; a column-0 gutter click, no selection. |
 | line-viewer-005 | scroll-sync | two 1 000-row viewers in a sync; scroll one to row 500 | both clip views have the same vertical origin, `500 × rowHeight`. |
 
 ## Edge Cases
 
 - **Null / empty input**: No data source or no rows draws only the background; copy is disabled.
-- **Boundary values**: A run range past the end of its row is clipped to the row; a run of zero length draws nothing. A click below the last row selects nothing.
+- **Boundary values**: A run range past the end of its row is clipped to the row; a run of zero length draws nothing. A click below the last row selects nothing. A gutter value wider than its column is left-aligned and clipped. A slice boundary that falls inside a surrogate pair or composed sequence widens to include all of it.
 - **Concurrent access**: Main actor only; the data source is asked on the main thread during drawing.
 - **Error states**: None: the viewer draws whatever rows it is given.
 - **Offline / disconnected state**: Not applicable: no network.
@@ -142,7 +148,7 @@ Not applicable: The viewer logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -152,6 +158,14 @@ Not applicable: The viewer logs nothing.
 
 **Decision**: The document width grows to the widest row drawn so far instead of measuring every row up front.
 **Rationale**: Measuring every row would ask the data source for all of them, which is exactly what virtualisation avoids; growing on demand keeps horizontal scrolling correct for everything the reader has seen.
+**Approved**: pending
+
+**Decision**: A row longer than 1 024 UTF-16 units is laid out only where the dirty rect crosses it, mapping UTF-16 units to monospaced columns, rather than caching a whole-line `CTLine` per row.
+**Rationale**: A cached line still draws every glyph of a 1 MB minified line on each frame; slicing bounds a frame by the rect's width. The cost is that a long line with tabs, wide or combining characters drifts from its true layout, which short lines (laid out whole) never do.
+**Approved**: pending
+
+**Decision**: The gutter is a subview of the document view kept at the clip view's horizontal origin, not drawn in each row.
+**Rationale**: Side-by-side diff needs line numbers visible while long lines scroll sideways; a subview moved on bounds change keeps vertical scrolling free (it scrolls with the rows) and lets the text draw under it.
 **Approved**: pending
 
 **Decision**: Folds are held as data-source ranges and cleared by `reloadData()`.
@@ -171,4 +185,5 @@ Not applicable: The viewer logs nothing.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-13 | Mike Fullerton | Long rows lay out only the visible slice; gutter column widths come from the data source and values are clipped; the gutter is pinned to the visible left edge. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

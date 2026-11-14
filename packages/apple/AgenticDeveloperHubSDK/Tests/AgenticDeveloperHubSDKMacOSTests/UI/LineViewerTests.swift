@@ -53,14 +53,59 @@ struct LineViewerTests {
         }
     }
 
+    /// Serves fixed rows and supplies its own gutter column widths.
+    @MainActor
+    private final class WidthSource: LineViewerDataSource {
+        let rows: [LineViewerRow]
+        let widths: [Int]
+        var gutterColumnCount: Int { widths.count }
+        var rowCount: Int { rows.count }
+
+        init(rows: [LineViewerRow], widths: [Int]) {
+            self.rows = rows
+            self.widths = widths
+        }
+
+        func row(at index: Int) -> LineViewerRow { rows[index] }
+        func gutterColumnWidth(_ column: Int) -> Int { widths[column] }
+    }
+
     /// The viewer holds its data source weakly, so each test keeps `source` alive.
-    private func makeViewer(_ source: FakeSource) -> LineViewerViewController {
+    private func makeViewer(_ source: LineViewerDataSource) -> LineViewerViewController {
         let viewer = LineViewerViewController(identifier: "test.lineViewer")
         viewer.view.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
         viewer.view.layoutSubtreeIfNeeded()
         viewer.dataSource = source
         viewer.reloadData()
         return viewer
+    }
+
+    /// Draws `rect` of `document` into a bitmap of the same size.
+    private func draw(_ document: LineViewerView, _ rect: NSRect) throws {
+        let bitmap = try #require(NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: Int(rect.width.rounded(.up)), pixelsHigh: Int(rect.height.rounded(.up)),
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        let context = try #require(NSGraphicsContext(bitmapImageRep: bitmap))
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        document.draw(rect)
+        NSGraphicsContext.restoreGraphicsState()
+    }
+
+    /// The distinct pixel colours of `view` inside `rect` (view coordinates).
+    private func colours(of view: NSView, in rect: NSRect) throws -> Set<String> {
+        let rep = try #require(view.bitmapImageRepForCachingDisplay(in: view.bounds))
+        view.cacheDisplay(in: view.bounds, to: rep)
+        let scale = CGFloat(rep.pixelsWide) / view.bounds.width
+        var seen = Set<String>()
+        let flippedTop = view.isFlipped ? rect.minY : view.bounds.height - rect.maxY
+        for pixelY in Int(flippedTop * scale)..<Int((flippedTop + rect.height) * scale) {
+            for pixelX in Int(rect.minX * scale)..<Int(rect.maxX * scale) {
+                if let colour = rep.colorAt(x: pixelX, y: pixelY) { seen.insert(colour.description) }
+            }
+        }
+        return seen
     }
 
     /// A point inside the text area (right of the gutter) of display row `row`.
@@ -79,6 +124,10 @@ struct LineViewerTests {
         #expect(viewer.scrollView.documentView === viewer.documentView)
         #expect(viewer.scrollView.accessibilityIdentifier() == "test.lineViewer")
         #expect(viewer.documentView.accessibilityIdentifier() == "test.lineViewer.text")
+        // Default gutter width: max(3, digits of rowCount) characters plus one of padding each side.
+        let charWidth = viewer.documentView.charWidth
+        #expect(viewer.documentView.gutterColumnFrame(0).width == 5 * charWidth)
+        #expect(viewer.documentView.gutterColumnFrame(1).minX == 5 * charWidth)
         withExtendedLifetime(source) {}
     }
 
@@ -161,5 +210,71 @@ struct LineViewerTests {
         right.scrollToRow(100)
         #expect(left.scrollView.contentView.bounds.origin.y == 100 * right.rowHeight)
         withExtendedLifetime((sync, leftSource, rightSource)) {}
+    }
+
+    @Test func longLineLaysOutOnlyTheVisibleSlice() throws {
+        let line = String(repeating: "x", count: 1_000_000)
+        let source = FakeSource(rows: [LineViewerRow(text: line)])
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+
+        try draw(document, NSRect(x: 0, y: 0, width: 400, height: viewer.rowHeight))
+        #expect(document.laidOutLength > 0)
+        #expect(document.laidOutLength < 1000)
+
+        // Far along the line: still only the slice under the rect.
+        let farX = document.textOriginX + 600_000 * document.charWidth
+        try draw(document, NSRect(x: farX, y: 0, width: 400, height: viewer.rowHeight))
+        #expect(document.laidOutLength > 0)
+        #expect(document.laidOutLength < 1000)
+    }
+
+    @Test func gutterColumnsHonourSuppliedWidthsAndClipWideValues() throws {
+        let source = WidthSource(
+            rows: [LineViewerRow(text: "a", gutter: ["0123456789ABCDEFGHIJKLMNOP", nil])],
+            widths: [8, 4])
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+        let charWidth = document.charWidth
+        let first = document.gutterColumnFrame(0)
+        let second = document.gutterColumnFrame(1)
+        #expect(first.minX == 0)
+        #expect(first.width == 10 * charWidth)
+        #expect(second.minX == first.maxX)
+        #expect(second.width == 6 * charWidth)
+
+        let row = NSRect(x: 0, y: 0, width: 1, height: viewer.rowHeight)
+        let gutter = document.gutterView
+        #expect(try colours(of: gutter, in: NSRect(x: first.minX, y: 0, width: first.width, height: row.height))
+            .count > 1)
+        // The 26-character value is clipped to its 8-character column: nothing spills into the next one.
+        #expect(try colours(of: gutter, in: NSRect(x: second.minX, y: 0, width: second.width - 1,
+                                                    height: row.height)).count == 1)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func gutterStaysPinnedDuringHorizontalScroll() {
+        let source = FakeSource(count: 50)
+        let viewer = makeViewer(source)
+        let recorder = Recorder()
+        viewer.delegate = recorder
+        let document = viewer.documentView
+        document.setFrameSize(NSSize(width: 5000, height: document.frame.height))
+        #expect(document.gutterView.frame.minX == 0)
+
+        let clip = viewer.scrollView.contentView
+        clip.scroll(to: NSPoint(x: 300, y: 0))
+        viewer.scrollView.reflectScrolledClipView(clip)
+        #expect(clip.bounds.minX == 300)
+        #expect(document.gutterView.frame.minX == document.visibleRect.minX)
+        #expect(document.gutterView.frame.minX == 300)
+        #expect(document.gutterView.frame.width > 0)
+
+        // A click on the pinned gutter is a gutter click, not a text click.
+        document.handleClick(at: NSPoint(x: 300 + document.charWidth, y: viewer.rowHeight / 2), modifiers: [])
+        #expect(recorder.gutterClicks.count == 1)
+        #expect(recorder.gutterClicks.first?.column == 0)
+        #expect(viewer.selectedRows.isEmpty)
+        withExtendedLifetime(source) {}
     }
 }

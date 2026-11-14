@@ -5,8 +5,10 @@ import AgenticDeveloperHubSDKLanguage
 
 /// The `LineViewerViewController`'s document view: flipped, exactly
 /// `displayedRowCount × rowHeight` tall, drawing only the rows that intersect
-/// the dirty rect with Core Text. Selection, folding and copy live here because
-/// they are all row geometry; the controller forwards to it.
+/// the dirty rect with Core Text, and of a long line only the stretch under the
+/// dirty rect. The gutter is a subview (`gutterView`) pinned to the visible
+/// left edge. Selection, folding and copy live here because they are all row
+/// geometry; the controller forwards to it.
 @MainActor
 final class LineViewerView: NSView {
 
@@ -19,9 +21,12 @@ final class LineViewerView: NSView {
             guard foldsAtHeaders != oldValue else { return }
             folds = []
             updateFrameSize()
-            needsDisplay = true
+            invalidate()
         }
     }
+
+    /// The pinned gutter; it draws through `drawGutter(in:width:)`.
+    let gutterView = LineViewerGutterView(frame: .zero)
 
     private(set) var selectedRows = IndexSet()
     private(set) var rowHeight: CGFloat = 0
@@ -30,10 +35,16 @@ final class LineViewerView: NSView {
     private var font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
     private var ascent: CGFloat = 0
     private var xHeight: CGFloat = 0
-    private var charWidth: CGFloat = 0
+    /// The advance of "0" in the code font: one column of a monospaced line.
+    private(set) var charWidth: CGFloat = 0
+    /// UTF-16 units laid out by the last `draw(_:)`; the seam that shows long
+    /// lines are sliced rather than laid out whole.
+    private(set) var laidOutLength = 0
 
     private var rowCount = 0
     private var gutterColumnCount = 0
+    /// Each gutter column's content width in characters, from the data source.
+    private var gutterCharacterWidths: [Int] = []
     /// Folded headers and the data rows each hides, sorted by header.
     private var folds: [(header: Int, hidden: Range<Int>)] = []
     private var anchorRow: Int?
@@ -45,9 +56,17 @@ final class LineViewerView: NSView {
     private static let emphasisAlpha: CGFloat = 0.40
     private static let diffAlpha: CGFloat = 0.18
     private static let hatchSpacing: CGFloat = 6
+    /// Lines longer than this (UTF-16 units) are laid out only where the dirty
+    /// rect crosses them, treating each unit as one monospaced column.
+    private static let sliceThreshold = 1024
+    /// Columns laid out beyond each side of the dirty rect, so glyphs cut by
+    /// its edges still draw whole.
+    private static let slicePadding = 8
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        gutterView.host = self
+        addSubview(gutterView)
         measure()
         observeTheme { view, palette in view.apply(palette) }
     }
@@ -69,7 +88,7 @@ final class LineViewerView: NSView {
         font = palette.font(.code)
         measure()
         updateFrameSize()
-        needsDisplay = true
+        invalidate()
     }
 
     private func measure() {
@@ -80,16 +99,33 @@ final class LineViewerView: NSView {
         charWidth = ("0" as NSString).size(withAttributes: [.font: font]).width
     }
 
-    private var gutterColumnWidth: CGFloat {
-        CGFloat(max(3, String(rowCount).count) + 2) * charWidth
+    /// Gutter column `column`'s rect in `gutterView` coordinates, one row tall
+    /// at y 0: its content width plus one character of padding on each side.
+    func gutterColumnFrame(_ column: Int) -> NSRect {
+        var minX: CGFloat = 0
+        for earlier in 0..<column { minX += columnWidth(earlier) }
+        return NSRect(x: minX, y: 0, width: columnWidth(column), height: rowHeight)
     }
 
+    private func columnWidth(_ column: Int) -> CGFloat {
+        let characters = column < gutterCharacterWidths.count ? gutterCharacterWidths[column] : 3
+        return CGFloat(characters + 2) * charWidth
+    }
+
+    /// The gutter's width, its divider included; zero with no gutter columns.
     private var gutterWidth: CGFloat {
-        gutterColumnCount > 0 ? CGFloat(gutterColumnCount) * gutterColumnWidth + 1 : 0
+        guard gutterColumnCount > 0 else { return 0 }
+        return (0..<gutterColumnCount).reduce(0) { $0 + columnWidth($1) } + 1
     }
 
-    /// Where a text row's text starts.
+    /// Where a text row's text starts, in document coordinates.
     var textOriginX: CGFloat { gutterWidth + charWidth }
+
+    /// Marks the rows and the gutter for redrawing.
+    private func invalidate() {
+        needsDisplay = true
+        gutterView.needsDisplay = true
+    }
 
     // MARK: - Rows and folds
 
@@ -119,12 +155,13 @@ final class LineViewerView: NSView {
     func reload() {
         rowCount = dataSource?.rowCount ?? 0
         gutterColumnCount = dataSource?.gutterColumnCount ?? 0
+        gutterCharacterWidths = (0..<gutterColumnCount).map { max(1, dataSource?.gutterColumnWidth($0) ?? 3) }
         folds = []
         selectedRows = []
         anchorRow = nil
         widestRow = 0
         updateFrameSize()
-        needsDisplay = true
+        invalidate()
     }
 
     /// Shows the rows of the fold that hides data row `row`, if any.
@@ -132,7 +169,7 @@ final class LineViewerView: NSView {
         guard let index = folds.firstIndex(where: { $0.hidden.contains(row) }) else { return }
         folds.remove(at: index)
         updateFrameSize()
-        needsDisplay = true
+        invalidate()
     }
 
     private func toggleFold(header: Int) {
@@ -149,7 +186,7 @@ final class LineViewerView: NSView {
             setSelection(remaining)
         }
         updateFrameSize()
-        needsDisplay = true
+        invalidate()
     }
 
     func updateFrameSize() {
@@ -158,11 +195,27 @@ final class LineViewerView: NSView {
         if frame.size != NSSize(width: width, height: height) {
             setFrameSize(NSSize(width: width, height: height))
         }
+        pinGutter()
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        pinGutter()
+    }
+
+    /// Keeps the gutter at the clip view's left edge, full height.
+    private func pinGutter() {
+        let width = gutterWidth
+        gutterView.isHidden = width == 0
+        let left = max(0, (superview as? NSClipView)?.bounds.minX ?? 0)
+        let pinned = NSRect(x: left, y: 0, width: width, height: bounds.height)
+        if gutterView.frame != pinned { gutterView.frame = pinned }
     }
 
     override func viewWillMove(toSuperview newSuperview: NSView?) {
         if let superview {
             NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: superview)
+            NotificationCenter.default.removeObserver(self, name: NSView.boundsDidChangeNotification, object: superview)
         }
         super.viewWillMove(toSuperview: newSuperview)
     }
@@ -173,6 +226,9 @@ final class LineViewerView: NSView {
         superview.postsFrameChangedNotifications = true
         NotificationCenter.default.addObserver(self, selector: #selector(superviewFrameDidChange(_:)),
                                                name: NSView.frameDidChangeNotification, object: superview)
+        superview.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(self, selector: #selector(superviewBoundsDidChange(_:)),
+                                               name: NSView.boundsDidChangeNotification, object: superview)
         updateFrameSize()
     }
 
@@ -180,25 +236,37 @@ final class LineViewerView: NSView {
         updateFrameSize()
     }
 
+    @objc private func superviewBoundsDidChange(_ notification: Notification) {
+        pinGutter()
+    }
+
     // MARK: - Drawing
 
+    /// The display rows that intersect the vertical span of `rect`.
+    private func displayRows(in rect: NSRect) -> ClosedRange<Int>? {
+        let displayed = displayedRowCount
+        guard displayed > 0, rowHeight > 0 else { return nil }
+        let first = max(0, Int(floor(rect.minY / rowHeight)))
+        let last = min(displayed - 1, Int(ceil(rect.maxY / rowHeight)) - 1)
+        return first <= last ? first...last : nil
+    }
+
     override func draw(_ dirtyRect: NSRect) {
+        laidOutLength = 0
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         palette.windowBackgroundColor.setFill()
         dirtyRect.fill()
-        let displayed = displayedRowCount
-        guard let source = dataSource, displayed > 0, rowHeight > 0 else { return }
-        let first = max(0, Int(floor(dirtyRect.minY / rowHeight)))
-        let last = min(displayed - 1, Int(ceil(dirtyRect.maxY / rowHeight)) - 1)
-        guard first <= last else { return }
+        guard let source = dataSource, let rows = displayRows(in: dirtyRect) else { return }
 
         context.saveGState()
         context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         var widest = widestRow
-        for display in first...last {
+        for display in rows {
             let index = dataRow(forDisplayRow: display)
             let rect = NSRect(x: 0, y: CGFloat(display) * rowHeight, width: bounds.width, height: rowHeight)
-            widest = max(widest, drawRow(source.row(at: index), index: index, in: rect, context: context))
+            let row = source.row(at: index)
+            drawBackground(row, index: index, in: rect, context: context)
+            widest = max(widest, drawText(row, index: index, in: rect, span: dirtyRect, context: context))
         }
         context.restoreGState()
 
@@ -209,8 +277,8 @@ final class LineViewerView: NSView {
         }
     }
 
-    /// Draws one row and answers the width its content needs.
-    private func drawRow(_ row: LineViewerRow, index: Int, in rect: NSRect, context: CGContext) -> CGFloat {
+    /// A row's background role and its selection overlay, across `rect`.
+    private func drawBackground(_ row: LineViewerRow, index: Int, in rect: NSRect, context: CGContext) {
         if row.background == .filler {
             drawHatching(in: rect, context: context)
         } else if let fill = color(for: row.background, rowTone: row.background) {
@@ -221,8 +289,13 @@ final class LineViewerView: NSView {
             palette.selectionColor.setFill()
             rect.fill()
         }
-        drawGutter(row, in: rect)
+    }
 
+    /// Draws one row's text, laying out only the stretch of a long line that
+    /// the horizontal extent of `span` crosses, and answers the width the row
+    /// needs.
+    private func drawText(_ row: LineViewerRow, index: Int, in rect: NSRect, span: NSRect,
+                          context: CGContext) -> CGFloat {
         var textX = textOriginX
         let baseline = rect.minY + Self.verticalPadding + ascent
         if foldsAtHeaders, row.kind == .header {
@@ -234,43 +307,93 @@ final class LineViewerView: NSView {
             textX += 2 * charWidth
         }
 
-        let length = (row.text as NSString).length
-        let line = CTLineCreateWithAttributedString(attributedText(row, length: length))
-        for run in row.runs {
-            let range = Self.clip(run.range, to: length)
-            guard range.length > 0 else { continue }
+        let text = row.text as NSString
+        let length = text.length
+        let slice = visibleSlice(of: text, length: length, textX: textX, span: span)
+        laidOutLength += slice.length
+        let sliceX = textX + CGFloat(slice.location) * charWidth
+        let runs = row.runs.compactMap { run -> (range: NSRange, run: LineViewerRun)? in
+            let local = Self.localRange(run.range, length: length, slice: slice)
+            return local.length > 0 ? (local, run) : nil
+        }
+        let line = CTLineCreateWithAttributedString(attributedText(text.substring(with: slice), runs: runs))
+        for (range, run) in runs {
             let start = CTLineGetOffsetForStringIndex(line, range.location, nil)
             let end = CTLineGetOffsetForStringIndex(line, NSMaxRange(range), nil)
             if let role = run.highlight, let fill = color(for: role, rowTone: row.background) {
                 fill.setFill()
-                NSRect(x: textX + start, y: rect.minY, width: end - start, height: rect.height).fill()
+                NSRect(x: sliceX + start, y: rect.minY, width: end - start, height: rect.height).fill()
             }
         }
-        context.textPosition = CGPoint(x: textX, y: baseline)
+        context.textPosition = CGPoint(x: sliceX, y: baseline)
         CTLineDraw(line, context)
-        drawDecorations(row, line: line, length: length, textX: textX, baseline: baseline)
+        drawDecorations(runs, line: line, textX: sliceX, baseline: baseline)
+        if slice.length < length {
+            return textX + CGFloat(length) * charWidth + charWidth
+        }
         return textX + CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil)) + charWidth
     }
 
-    private func drawGutter(_ row: LineViewerRow, in rect: NSRect) {
+    /// The whole line when it is short; otherwise the UTF-16 range under the
+    /// horizontal extent of `span` (each unit one monospaced column), padded
+    /// and widened so it neither starts nor ends inside a composed character
+    /// sequence or surrogate pair.
+    private func visibleSlice(of text: NSString, length: Int, textX: CGFloat, span: NSRect) -> NSRange {
+        guard length > Self.sliceThreshold, charWidth > 0 else { return NSRange(location: 0, length: length) }
+        let first = Int(floor((span.minX - textX) / charWidth)) - Self.slicePadding
+        let last = Int(ceil((span.maxX - textX) / charWidth)) + Self.slicePadding
+        let lower = min(max(0, first), length)
+        let upper = min(max(lower, last), length)
+        guard upper > lower else { return NSRange(location: lower, length: 0) }
+        return text.rangeOfComposedCharacterSequences(for: NSRange(location: lower, length: upper - lower))
+    }
+
+    /// `range` clipped to the line, then to `slice`, relative to the slice.
+    private static func localRange(_ range: NSRange, length: Int, slice: NSRange) -> NSRange {
+        let clipped = clip(range, to: length)
+        let start = max(clipped.location, slice.location)
+        let end = min(NSMaxRange(clipped), NSMaxRange(slice))
+        return end > start ? NSRange(location: start - slice.location, length: end - start) : NSRange()
+    }
+
+    /// Draws the gutter's rows in `gutterView` coordinates (y is the document's):
+    /// each row's background and selection, each column's value right-aligned
+    /// in its column (left-aligned when wider) and clipped to it, and the divider.
+    func drawGutter(in dirtyRect: NSRect, width: CGFloat) {
+        guard let context = NSGraphicsContext.current?.cgContext else { return }
+        palette.windowBackgroundColor.setFill()
+        dirtyRect.fill()
         guard gutterColumnCount > 0 else { return }
-        let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: palette.secondaryTextColor]
-        for column in 0..<gutterColumnCount {
-            guard column < row.gutter.count, let value = row.gutter[column] else { continue }
-            let text = NSAttributedString(string: value, attributes: attributes)
-            let width = text.size().width
-            let right = CGFloat(column + 1) * gutterColumnWidth - charWidth
-            text.draw(at: NSPoint(x: right - width, y: rect.minY + Self.verticalPadding))
+        if let source = dataSource, let rows = displayRows(in: dirtyRect) {
+            let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: palette.secondaryTextColor]
+            for display in rows {
+                let index = dataRow(forDisplayRow: display)
+                let row = source.row(at: index)
+                let top = CGFloat(display) * rowHeight
+                drawBackground(row, index: index, in: NSRect(x: 0, y: top, width: width, height: rowHeight),
+                               context: context)
+                for column in 0..<min(gutterColumnCount, row.gutter.count) {
+                    guard let value = row.gutter[column] else { continue }
+                    let content = gutterColumnFrame(column).offsetBy(dx: 0, dy: top).insetBy(dx: charWidth, dy: 0)
+                    let text = NSAttributedString(string: value, attributes: attributes)
+                    let valueWidth = text.size().width
+                    let originX = valueWidth <= content.width ? content.maxX - valueWidth : content.minX
+                    context.saveGState()
+                    context.clip(to: content)
+                    text.draw(at: NSPoint(x: originX, y: top + Self.verticalPadding))
+                    context.restoreGState()
+                }
+            }
         }
         palette.dividerColor.setFill()
-        NSRect(x: gutterWidth - 1, y: rect.minY, width: 1, height: rect.height).fill()
+        NSRect(x: gutterWidth - 1, y: dirtyRect.minY, width: 1, height: dirtyRect.height).fill()
     }
 
     /// Core Text draws no underline or strikethrough, so those are drawn here.
-    private func drawDecorations(_ row: LineViewerRow, line: CTLine, length: Int, textX: CGFloat, baseline: CGFloat) {
-        for run in row.runs where run.fontStyle.contains(.underline) || run.fontStyle.contains(.strikethrough) {
-            let range = Self.clip(run.range, to: length)
-            guard range.length > 0 else { continue }
+    /// `runs` carry ranges relative to `line`.
+    private func drawDecorations(_ runs: [(range: NSRange, run: LineViewerRun)], line: CTLine, textX: CGFloat,
+                                 baseline: CGFloat) {
+        for (range, run) in runs where run.fontStyle.contains(.underline) || run.fontStyle.contains(.strikethrough) {
             let start = CTLineGetOffsetForStringIndex(line, range.location, nil)
             let end = CTLineGetOffsetForStringIndex(line, NSMaxRange(range), nil)
             (run.foreground.map { NSColor($0) } ?? palette.primaryTextColor).setFill()
@@ -283,12 +406,11 @@ final class LineViewerView: NSView {
         }
     }
 
-    private func attributedText(_ row: LineViewerRow, length: Int) -> NSAttributedString {
-        let text = NSMutableAttributedString(string: row.text,
+    /// `string` styled by `runs`, whose ranges are relative to it.
+    private func attributedText(_ string: String, runs: [(range: NSRange, run: LineViewerRun)]) -> NSAttributedString {
+        let text = NSMutableAttributedString(string: string,
                                              attributes: [.font: font, .foregroundColor: palette.primaryTextColor])
-        for run in row.runs {
-            let range = Self.clip(run.range, to: length)
-            guard range.length > 0 else { continue }
+        for (range, run) in runs {
             if let foreground = run.foreground {
                 text.addAttribute(.foregroundColor, value: NSColor(foreground), range: range)
             }
@@ -368,14 +490,15 @@ final class LineViewerView: NSView {
         isDragSelecting = false
     }
 
-    /// A click at `point`: a gutter click, a fold toggle on a header, or a
-    /// selection change, in that order.
+    /// A click at `point` (document coordinates): a gutter click, a fold toggle
+    /// on a header, or a selection change, in that order.
     func handleClick(at point: NSPoint, modifiers: NSEvent.ModifierFlags) {
         isDragSelecting = false
         guard let display = displayRowIndex(at: point), let source = dataSource else { return }
         let row = dataRow(forDisplayRow: display)
-        if gutterColumnCount > 0, point.x < gutterWidth {
-            let column = min(gutterColumnCount - 1, Int(point.x / gutterColumnWidth))
+        let gutterX = point.x - gutterView.frame.minX
+        if gutterColumnCount > 0, gutterX >= 0, gutterX < gutterWidth {
+            let column = (0..<gutterColumnCount).first { gutterX < gutterColumnFrame($0).maxX } ?? gutterColumnCount - 1
             owner?.notifyGutterClick(column: column, row: row)
             return
         }
@@ -407,7 +530,7 @@ final class LineViewerView: NSView {
     private func setSelection(_ rows: IndexSet) {
         guard rows != selectedRows else { return }
         selectedRows = rows
-        needsDisplay = true
+        invalidate()
         owner?.notifySelection(rows)
     }
 
@@ -431,12 +554,8 @@ final class LineViewerView: NSView {
     override func accessibilityRole() -> NSAccessibility.Role? { .textArea }
 
     override func accessibilityValue() -> Any? {
-        guard let source = dataSource, displayedRowCount > 0, rowHeight > 0 else { return "" }
-        let visible = visibleRect
-        let first = max(0, Int(floor(visible.minY / rowHeight)))
-        let last = min(displayedRowCount - 1, Int(ceil(visible.maxY / rowHeight)) - 1)
-        guard first <= last else { return "" }
-        return (first...last).map { source.row(at: dataRow(forDisplayRow: $0)).text }.joined(separator: "\n")
+        guard let source = dataSource, let rows = displayRows(in: visibleRect) else { return "" }
+        return rows.map { source.row(at: dataRow(forDisplayRow: $0)).text }.joined(separator: "\n")
     }
 }
 
