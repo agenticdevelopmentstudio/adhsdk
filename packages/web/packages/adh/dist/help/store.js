@@ -1,11 +1,12 @@
 // ../adh-site-config/content/help.en.json
 var help_en_default = {
-  _comment: "Unified help store for the hierarchical topic/detail views. Key = the route to the details page + ui element: `<feature>` for a feature's breadcrumb/landing help, `<feature>/<topic>` for a topic's detail pane. See recipe agenticdeveloperhub://recipes/hierarchical-topic-detail (must-source-help-from-config).",
+  _comment: "Unified help store for the hierarchical topic/detail views. Key = the route to the details page + ui element: `<feature>` for a feature's breadcrumb/landing help, `<feature>/<topic>` for a topic's detail pane. See recipe adhsdk.recipe.ui.blocks.hierarchical-topic-detail (cookbook/ui/blocks/hierarchical-topic-detail/, must-source-help-from-config).",
   ecosystems: "Ecosystems group your applications, buckets, users, and access. Pick an ecosystem to configure it.",
   "ecosystems/settings": "The selected ecosystem's identifier, name, region, and domain.",
   "ecosystems/applications": "Applications access your ADH data via schema permissions and access tokens. Each one has a login registration of its own, and signs its customers in under the ecosystem's sign-in settings (Users \u25B8 Authentication).",
   "ecosystems/feature-flags": "Per-product feature flags \u2014 named on/off toggles this product's apps can read.",
   "ecosystems/server-bags": "Per-product server bags \u2014 arbitrary key \u2192 JSON config values for this product.",
+  "ecosystems/sync": "Which tables this product's apps keep on the device for offline use. Syncing a table overrides the platform default for this product; Reset to default removes the override.",
   "ecosystems/client-auth": "How your customers sign in to your apps. One set of settings for the whole ecosystem: whether sign-in is allowed, email and password, the sign-up mode (open, invite only, or closed), and which OAuth providers are on. Each application's login registration, the client id and redirect URIs it signs in through, is in that application's own settings.",
   "ecosystems/schemas": "Reusable, composable collections of ADH tables. Applications grant permissions on these.",
   "ecosystems/access": "Access lists for your buckets: who can read or write each bucket, type, or row.",
