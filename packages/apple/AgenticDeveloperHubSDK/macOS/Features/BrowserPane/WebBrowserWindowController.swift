@@ -75,8 +75,13 @@ public final class WebBrowserWindowController: SingleWindowController {
 
     /// Opens a new window, on `url` when given, else on the Home Page, and
     /// brings it forward. `nil`, logged, when no host has set `makePane`.
+    /// `configure` writes the window's own settings before the browser is
+    /// built, so construction-time keys (the storage jar) take effect too.
     @discardableResult
-    public static func openNew(url: URL? = nil, purpose: Purpose = .browsing) -> WebBrowserWindowController? {
+    public static func openNew(
+        url: URL? = nil, purpose: Purpose = .browsing,
+        configure: ((SettingsStore) -> Void)? = nil
+    ) -> WebBrowserWindowController? {
         let build: (PaneStateStore, SettingsStore) -> WebBrowserPaneViewController
         if purpose == .safariExtensions {
             build = { SafariBrowserPaneViewController(store: $0, settings: $1) }
@@ -99,6 +104,7 @@ public final class WebBrowserWindowController: SingleWindowController {
         if purpose == .privateBrowsing {
             settings.set(true, for: UserSettings.browserPrivateBrowsing)
         }
+        configure?(settings)
         let controller = WebBrowserWindowController(pane: build(store, settings), purpose: purpose)
         openWindows.append(controller)
         controller.showWindow()
