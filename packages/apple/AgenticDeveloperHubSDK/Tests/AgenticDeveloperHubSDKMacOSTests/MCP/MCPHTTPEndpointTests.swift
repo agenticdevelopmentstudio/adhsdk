@@ -225,6 +225,21 @@ final class MCPHTTPEndpointTests: XCTestCase {
         XCTAssertNil(json)
     }
 
+    /// FlyingFox's run task never ends by itself, so a stop takes the whole
+    /// grace: the default would cost a quitting app a full second.
+    func testStopWithNoGraceReturnsAtOnce() async throws {
+        let started = ContinuousClock.now
+        await endpoint.stop(grace: 0)
+        let took = ContinuousClock.now - started
+        XCTAssertLessThan(took, .milliseconds(Int(MCPHTTPEndpoint.defaultStopGrace * 500)))
+        // Stopped means the port is free again: a second stop is a no-op and
+        // the endpoint can start afresh.
+        await endpoint.stop(grace: 0)
+        port = try await endpoint.start()
+        let (status, _) = try await send(body: rpc("tools/list"))
+        XCTAssertEqual(status, 200)
+    }
+
     func testStartWhileRunningReturnsTheSamePort() async throws {
         let again = try await endpoint.start()
         XCTAssertEqual(again, port)

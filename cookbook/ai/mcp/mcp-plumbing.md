@@ -2,11 +2,11 @@
 id: 52650804-a096-4b71-b4eb-da3afa95ac56
 title: "MCP Plumbing"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -145,6 +145,11 @@ The host MCP server
 - **host-server-unknown-tool-is-not-an-error-throw**: Calling any tool name other than the two declared tools MUST return a result with an error flag set and text "Unknown tool: <name>" — it MUST NOT throw.
 - **host-server-ignores-tool-arguments**: The tool handlers MUST NOT read the call's arguments — both declared input schemas have no properties and no handler inspects the arguments given, so any arguments a caller supplies are accepted and ignored.
 
+The HTTP endpoint
+
+- **http-endpoint-stop-grace-default**: Stopping the HTTP endpoint MUST take a grace, the time a response already being written is given to finish, and that grace MUST default to 1 second.
+- **http-endpoint-stop-takes-the-whole-grace**: Stopping MUST close the listening socket, hand the HTTP server the grace as its stop timeout, cancel the endpoint's own run task and then stop the host MCP server, in that order; because the HTTP server's run task never ends by itself, a stop takes the whole grace, so a caller that must not wait (an app that is quitting) MUST pass a grace of 0, which cancels the server at once.
+- **http-endpoint-stop-is-idempotent**: Stopping an endpoint that is idle or already stopping MUST do nothing; stopping one that is still starting MUST make that start tear everything down and throw its stopped-while-starting error.
 ## Appearance
 
 Not applicable — this is a Model Context Protocol connection and reconciliation layer, not a visual component.
@@ -280,6 +285,7 @@ The client itself has its own logger, but the given source contains no call site
 | apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift` | unverified |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift` | unverified |
 | apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/SubprocessTransport.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPHTTPEndpoint.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -326,6 +332,7 @@ Two further gaps that qualify these findings are recorded beside the requirement
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-14 | Mike Fullerton | The HTTP endpoint's stop grace |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the tool-list-refresh-failure NEEDS REVIEW marker as current behavior plus a pending Design Decision; reworded host-server-ignores-tool-arguments as a MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/mcp/. |

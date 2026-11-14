@@ -518,7 +518,7 @@ or its immediate collaborators (the move menu, the arrange overlay).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsPaneViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsPaneViewController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 

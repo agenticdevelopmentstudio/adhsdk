@@ -104,9 +104,19 @@ public actor MCPHTTPEndpoint {
         return bound
     }
 
+    /// How long `stop()` lets a response already being written finish.
+    public static let defaultStopGrace: TimeInterval = 1
+
     /// Stops listening. Called while `start()` is binding, it records the
     /// request and `start()` tears down what it built and throws.
-    public func stop() async {
+    ///
+    /// The HTTP server's run task never ends by itself, so `grace` is not an
+    /// upper bound but the time every stop takes: the listening socket and
+    /// every connection are closed at once, and the wait only gives a response
+    /// that is mid-write the chance to finish. An app that is quitting passes
+    /// `0`; nothing it could still send has a reader worth a second of the
+    /// quit.
+    public func stop(grace: TimeInterval = MCPHTTPEndpoint.defaultStopGrace) async {
         switch phase {
         case .starting:
             stopRequested = true
@@ -120,7 +130,7 @@ public actor MCPHTTPEndpoint {
         // await, so a `start()` arriving meanwhile can neither see the closing
         // port nor bind a second server.
         phase = .stopping
-        await tearDown()
+        await tearDown(grace: grace)
         phase = .idle
     }
 
@@ -128,14 +138,14 @@ public actor MCPHTTPEndpoint {
         if stopRequested { throw StartError.stoppedWhileStarting }
     }
 
-    private func tearDown() async {
+    private func tearDown(grace: TimeInterval = MCPHTTPEndpoint.defaultStopGrace) async {
         let closingHTTP = http
         let closingTask = runTask
         http = nil
         runTask = nil
         transport = nil
         port = nil
-        await closingHTTP?.stop(timeout: 1)
+        await closingHTTP?.stop(timeout: grace)
         closingTask?.cancel()
         await server.stop()
     }

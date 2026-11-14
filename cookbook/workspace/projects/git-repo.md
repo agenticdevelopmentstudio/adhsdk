@@ -352,6 +352,12 @@ Not applicable: this component contains no logging call of any kind.
   if a bound UI needs to react to the counts changing — nothing in this
   file requires that on its own.
 
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/GitRepo.swift` | confirmed (1.2.0) |
+
 ## Design Decisions
 
 **Decision**: `GitRepo`'s `Equatable` conformance is the compiler-synthesized
