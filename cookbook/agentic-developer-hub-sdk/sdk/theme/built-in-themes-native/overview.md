@@ -1,0 +1,5 @@
+
+`BuiltInThemes+Native.swift` extends the `BuiltInThemes` enum with the native app's adjustments to the themes ported from the web catalogue. `BuiltInThemes+Web.swift` is generated from the web CSS and must not be hand-edited, and the web catalogue has no tokens for the native chrome these adjustments touch (the selection fill, cards, the project window's plane). The adjustments therefore live in a separate file and are applied over the generated values, so a re-run of the generator cannot silently drop them.
+
+The file exposes `webPortedNative`, the generated `webPorted` list with each theme passed through `nativeAdjusted`. `BuiltInThemes.all` is the hand-authored set followed by `webPortedNative`. Today exactly one theme is adjusted: Fishlamp. Its generated chrome put the selection (amber at 30% over near-black), the cards and settings groups, and the pane title bars on one warm grey-brown. The adjustment turns the selection into a cool slate marked with an amber line, and drops cards and the plane the panes sit on to the theme's own `#17130f`, so the title bars are the only thing left on that grey.
+

@@ -12430,6 +12430,20 @@
       "path": "workspace/projects/project-reconciler",
       "rdid": "adhsdk.ingredient.workspace.projects.project-reconciler"
     },
+    "fd1f8d3c-6110-4687-a715-c8fa7c7caa5b": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Native.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/theme/built-in-themes-native",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.built-in-themes-native"
+    },
     "fdfdaf38-95de-4475-98f4-e09fb998bb57": {
       "implementations": [
         {
