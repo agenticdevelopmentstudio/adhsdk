@@ -77,7 +77,7 @@ public final class MobileThinkingIndicatorView: UIView, Themeable {
     @available(*, unavailable)
     public required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    deinit {
+    isolated deinit {
         timer?.invalidate()
         phaseTimer?.invalidate()
     }
