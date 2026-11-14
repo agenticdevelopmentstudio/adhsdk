@@ -4,7 +4,7 @@
     "id": "bdd3a72d-8810-439b-bad7-ec16233cb2a3",
     "title": "Git Views",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "The git window's AppKit views, each reading one data-source protocol of the repository model and reporting to an injected delegate: the refs sidebar (working copy, branches with ahead/behind, remotes by remote, tags, stashes, submodules, worktrees).",
+    "summary": "The git window's AppKit views, each reading one data-source protocol of the repository model and reporting to an injected delegate: the refs sidebar (working copy, branches with ahead/behind, remotes by remote, tags, stashes, submodules, worktrees) and the history list (graph, subject with ref badges, author, date, short sha; paging; search).",
     "platforms": [
       "swift",
       "macos"
@@ -20,22 +20,29 @@
     "tags": [
       "git",
       "ui",
-      "sidebar"
+      "sidebar",
+      "history",
+      "search"
     ],
     "depends-on": [
       "a2394ca0-3988-410b-9fc8-e0c9e253fc94",
-      "ce223be3-818a-4310-b136-9e1e84e9af54"
+      "ce223be3-818a-4310-b136-9e1e84e9af54",
+      "595f1a5e-0f92-49c5-a980-af6f809be932",
+      "e3a2394d-d0d0-4495-bde4-59197f9d7866",
+      "873f79b1-444d-4c2c-8a5f-4fc01cd9022e",
+      "2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f"
     ],
     "related": [
       "779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344"
     ],
     "references": [
-      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/ (adhsdk)"
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/ (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "98340687142b2666",
+  "synced": "3f4bcbb6add6e2eb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

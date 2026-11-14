@@ -7,3 +7,9 @@
 - **Error states**: The sidebar shows whatever the data source last loaded; it has no error state of its own.
 - **Offline / disconnected state**: Not applicable: no network.
 
+- **History, empty**: an unborn repository has no commits; the list has no rows and asks for one page at most.
+- **History, end reached**: a `loadMore` that adds nothing is not repeated until the count or the query changes.
+- **History, ambiguous sha prefix**: the first (newest) loaded match is selected.
+- **History, search text with regex characters**: plain text is passed to git as `--grep` (a regular expression, case-insensitive); `-S` is a literal string.
+- **History, non-UTF-8 messages**: shown as the model decoded them (lossily), never dropped.
+
