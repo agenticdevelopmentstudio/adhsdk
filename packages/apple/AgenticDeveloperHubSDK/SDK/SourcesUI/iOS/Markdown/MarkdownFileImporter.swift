@@ -23,13 +23,16 @@ public enum MarkdownFileImporter {
             let completion = self.completion
             guard let url = urls.first else { completion(nil); return }
             let scoped = url.startAccessingSecurityScopedResource()
-            // Reading is dispatched off the main thread so a large document
-            // does not freeze the UI while it loads; the security scope stays
-            // open until that read finishes.
-            DispatchQueue.global(qos: .userInitiated).async {
-                let text = try? String(contentsOf: url, encoding: .utf8)
-                if scoped { url.stopAccessingSecurityScopedResource() }
-                DispatchQueue.main.async { completion(text) }
+            // Reading runs off the main thread so a large document does not
+            // freeze the UI while it loads; the security scope stays open until
+            // that read finishes. The completion never leaves the main actor.
+            Task { @MainActor in
+                let text = await Task.detached(priority: .userInitiated) {
+                    let text = try? String(contentsOf: url, encoding: .utf8)
+                    if scoped { url.stopAccessingSecurityScopedResource() }
+                    return text
+                }.value
+                completion(text)
             }
         }
 

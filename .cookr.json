@@ -1238,6 +1238,30 @@
       "group": "agentic-developer-hub-sdk/sdk/theme"
     },
     {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Text",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "agentic-developer-hub-sdk/sdk/text"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "foundation"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Keychain",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "foundation"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Logging",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "foundation"
+    },
+    {
       "path": "packages/web/packages/themes/src",
       "platform": "web",
       "kind": "logic",
@@ -1284,6 +1308,36 @@
       "platform": "python",
       "kind": "logic",
       "group": "apt-terminal"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/Integrations",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "integrations"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/Mail",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "integrations"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations",
+      "platform": "macos",
+      "kind": "ui",
+      "group": "integrations"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts",
+      "platform": "apple",
+      "kind": "logic",
+      "group": "auth/accounts"
+    },
+    {
+      "path": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Accounts",
+      "platform": "ios",
+      "kind": "ui",
+      "group": "auth/accounts"
     }
   ],
   "ignore": [

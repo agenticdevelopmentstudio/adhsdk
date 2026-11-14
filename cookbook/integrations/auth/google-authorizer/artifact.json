@@ -1,0 +1,72 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "fafeef0d-c283-4ecf-92fb-b5de35d71f79",
+    "title": "Google Authorizer",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Google OAuth for a desktop app: loopback browser sign-in under a deadline, form-encoded token refresh and revoke, and a coalescing, Keychain-backed token provider.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "integrations",
+      "auth",
+      "oauth",
+      "google",
+      "token-refresh"
+    ],
+    "depends-on": [
+      "238f4d91-4a22-4a0d-ae4b-b4070d02b357",
+      "351e3bf8-b137-4f59-94de-c769aa8b0666",
+      "d274abfa-3696-4fd0-b3e8-cff6fdffb825",
+      "667825e5-d557-4410-b54e-29dcf98ca930"
+    ],
+    "related": [
+      "aed9acc9-6340-487b-acfb-b7b13f14e59a"
+    ],
+    "references": [
+      "https://developers.google.com/identity/protocols/oauth2/native-app (Google OAuth 2.0 for installed apps)",
+      "https://accounts.google.com/o/oauth2/v2/auth (Google authorization endpoint)",
+      "https://oauth2.googleapis.com/token (Google token endpoint)",
+      "https://oauth2.googleapis.com/revoke (Google revoke endpoint)",
+      "https://www.rfc-editor.org/rfc/rfc8252 (RFC 8252, OAuth 2.0 for Native Apps)",
+      "https://www.rfc-editor.org/rfc/rfc7636 (RFC 7636, PKCE)",
+      "https://www.rfc-editor.org/rfc/rfc3986#section-2.3 (RFC 3986, unreserved characters)",
+      "https://github.com/openid/AppAuth-iOS (AppAuth)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "a0368c6bfa28ed33",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

@@ -50,6 +50,22 @@
   specification never reads, displays, or edits it, and the update shape has no
   field to write it back; this component offers no way to view or change the
   allowed providers.
+- **auth-login-allow-list-wire**: the web data layer's `AuthSettings` (and so
+  `ClientAuthPolicy`) MUST carry `loginAllowedCustomerIds: string[] | null`, read
+  from the wire's `login_allowed_customer_ids`. `null` means every customer may
+  sign in and `[]` means nobody; a response that omits the field (an older
+  backend) MUST read as `null`. A patch that sets it to `null` MUST send the
+  explicit `null`, never drop it, so "every customer" can be restored.
+- **auth-login-allow-list-edit**: the web ecosystem client-auth pane MUST draw a
+  "Who can sign in" section with an "Only listed customers" switch. Off is `null`;
+  turning it on starts one blank customer-id row, which saves as `[]` (nobody)
+  if left blank. A save MUST send the list trimmed, with blank rows and
+  duplicates dropped and the first occurrence's order kept; a blank row added to
+  a saved list MUST NOT count as an edit.
+- **auth-login-allow-list-bounds**: Save MUST be blocked, with the reason shown,
+  when the cleaned list holds more than 500 ids or any id longer than 36
+  characters — the backend's own bounds, mirrored so the refusal comes before
+  the round trip. The backend stays authoritative.
 
 ### Sign-in Apps
 
@@ -255,3 +271,41 @@
   carries only a `prefix`); the alternate client gives no other route through which
   the raw secret can be retrieved again.
 
+
+### Sync tables (web)
+
+Which catalog resources one ecosystem syncs to offline clients. The backend
+contract is adhbackend's sync-table-enrollment recipe; this topic is its client
+and pane. It is web-only for now.
+
+- **sync-tables-two-families**: the sync-tables client MUST be built for one of two
+  route families. `"admin"` addresses `/api/v1/sync/tables/{id}`, with one resource
+  at `/api/v1/sync/tables/{id}/resources/{resource}`, for platform staff.
+  `"ecosystem"` addresses `/api/v1/ecosystems/{id}/sync_tables`, with one resource
+  at `/api/v1/ecosystems/{id}/sync_tables/{resource}`, for the ecosystem's
+  managers. The ecosystem id and the resource MUST be URL-encoded in both.
+- **sync-tables-camel-rows**: each catalog row MUST be mapped from the wire's
+  snake_case (`push_mode`, `default_enabled`) to `pushMode` and `defaultEnabled`,
+  keeping `resource`, `scope`, `enabled` and `overridden` as they are.
+- **sync-tables-read-drains-list**: reading the catalog MUST drain the /v1 list
+  envelope, so every resource is returned however the server pages it.
+- **sync-tables-set-returns-catalog**: setting a resource MUST POST
+  `{ enabled }` to its resource path and return the full refreshed catalog from the
+  response's `tables`.
+- **sync-tables-clear-rereads**: clearing a resource's override MUST DELETE its
+  resource path and then re-read the catalog, because /v1 answers a DELETE with a
+  tombstone, not the catalog.
+- **sync-tables-schema-of**: a row's schema MUST be the part of its resource before
+  the first dot.
+- **sync-tables-pane-family**: the pane MUST take the family as a prop, defaulting
+  to `"ecosystem"`, and MUST key its cached catalog by family and ecosystem id, so
+  the admin console and the hub never share a cache entry.
+- **sync-tables-pane-skips-noops**: Sync and Don't sync MUST act only on selected
+  rows not already in that state, and Reset to default only on selected rows that
+  are overridden. A no-op set would store an override that pins the resource
+  against a later change to its default.
+- **sync-tables-pane-sequential**: the pane's bulk actions MUST run one resource at
+  a time through the shared batch runner, halting on the first failure until the
+  user continues or stops, and leaving earlier saves in place.
+- **sync-tables-pane-reseed**: after each write the pane MUST replace its cached
+  catalog with the catalog the write returned, then refetch once the write settles.

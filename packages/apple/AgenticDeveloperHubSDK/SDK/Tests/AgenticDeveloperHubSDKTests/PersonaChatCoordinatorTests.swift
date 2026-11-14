@@ -11,12 +11,12 @@ import XCTest
 /// scenarios prove both.
 @MainActor
 final class PersonaChatCoordinatorTests: XCTestCase {
-    private let hello = [("token", #"{"text":"Hel"}"#), ("token", #"{"text":"lo"}"#), ("done", "{}")]
+    nonisolated private static let hello = [("token", #"{"text":"Hel"}"#), ("token", #"{"text":"lo"}"#), ("done", "{}")]
 
     // MARK: Conversation lifecycle
 
     func test_pcc001_lazyConversation_constructedCoordinatorMakesNoRequests() async {
-        let f = makeFixture { sse(self.hello) }
+        let f = makeFixture { sse(Self.hello) }
         defer { f.tearDown() }
 
         await f.collector.quiesce()
@@ -25,7 +25,7 @@ final class PersonaChatCoordinatorTests: XCTestCase {
     }
 
     func test_pcc002_conversationReuse_twoSendsShareOneConversation() async throws {
-        let f = makeFixture { sse(self.hello) }
+        let f = makeFixture { sse(Self.hello) }
         defer { f.tearDown() }
 
         _ = try await f.coordinator.send(text: "one", attachments: [])
@@ -38,7 +38,7 @@ final class PersonaChatCoordinatorTests: XCTestCase {
     }
 
     func test_pcc003_noHistory_requestCarriesOnlyTheNewMessage() async throws {
-        let f = makeFixture { sse(self.hello) }
+        let f = makeFixture { sse(Self.hello) }
         defer { f.tearDown() }
 
         _ = try await f.coordinator.send(text: "hello", attachments: [])
@@ -56,7 +56,7 @@ final class PersonaChatCoordinatorTests: XCTestCase {
     // MARK: Streaming
 
     func test_pcc004_accumulate_draftsCarryTheWholeTextSoFar() async throws {
-        let f = makeFixture { sse(self.hello) }
+        let f = makeFixture { sse(Self.hello) }
         defer { f.tearDown() }
 
         _ = try await f.coordinator.send(text: "hey", attachments: [])
@@ -66,7 +66,7 @@ final class PersonaChatCoordinatorTests: XCTestCase {
     }
 
     func test_pcc005_commitOnce_oneMessageThenTheDraftClears() async throws {
-        let f = makeFixture { sse(self.hello) }
+        let f = makeFixture { sse(Self.hello) }
         defer { f.tearDown() }
 
         _ = try await f.coordinator.send(text: "hey", attachments: [])
@@ -223,7 +223,7 @@ final class PersonaChatCoordinatorTests: XCTestCase {
     }
 
     func test_conversationCreationFailure_isReportedAgainstTheMessage() async throws {
-        let f = makeFixture(conversationStatus: 500) { sse(self.hello) }
+        let f = makeFixture(conversationStatus: 500) { sse(Self.hello) }
         defer { f.tearDown() }
 
         _ = try await f.coordinator.send(text: "hey", attachments: [])
@@ -256,7 +256,7 @@ final class PersonaChatCoordinatorTests: XCTestCase {
     }
 
     func test_pcc015_noReuseAfterDestroy_sendFailsFast() async {
-        let f = makeFixture { sse(self.hello) }
+        let f = makeFixture { sse(Self.hello) }
         defer { f.tearDown() }
 
         f.coordinator.destroy()
@@ -308,7 +308,7 @@ final class PersonaChatCoordinatorTests: XCTestCase {
     // MARK: Contract edges
 
     func test_attachmentsAreRefusedRatherThanDroppedSilently() async {
-        let f = makeFixture { sse(self.hello) }
+        let f = makeFixture { sse(Self.hello) }
         defer { f.tearDown() }
 
         do {

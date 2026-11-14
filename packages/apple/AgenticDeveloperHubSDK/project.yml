@@ -806,6 +806,209 @@ targets:
       - package: GRDB
         product: GRDB
 
+  # Hub sync client: the engine's SyncTransport over the client's ADHSyncAPI.
+  # Spec: cookbook/data/sync/hub-sync-transport.md.
+  AgenticDeveloperHubSDKHubSync:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - HubSync
+    dependencies:
+      - target: AgenticDeveloperHubSDKSync
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  # Hub Mail: the hub's Gmail tables mirrored into a local GRDB store, typed
+  # reads over them, and send through the hub's `send` action. No Gmail code.
+  # Spec: cookbook/integrations/hub-mail.md.
+  AgenticDeveloperHubSDKHubMail:
+    type: framework
+    supportedDestinations: [macOS, iOS]
+    templates:
+      - SwiftLint
+    sources:
+      - HubMail
+    dependencies:
+      - target: AgenticDeveloperHubSDKHubSync
+      - target: AgenticDeveloperHubSDKSync
+      - target: AgenticDeveloperHubSDKSyncGRDB
+      - target: AgenticDeveloperHubSDKDatabase
+      - package: GRDB
+        product: GRDB
+      - sdk: libsqlite3.tbd
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKHubMailTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKHubMailTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKHubMail
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSyncGRDB
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+
+  # The mail vocabulary every platform shares: the RPC (MailRequest,
+  # MailResponse, MailClient, MailSource) and the records it carries. Foundation
+  # and GRDB only, so iOS reads mail through the same client the macOS mail
+  # browser uses. Integrations re-exports it.
+  AgenticDeveloperHubSDKMail:
+    type: framework
+    supportedDestinations:
+      - macOS
+      - iOS
+    templates:
+      - SwiftLint
+    sources:
+      - Mail
+    dependencies:
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKHubMailBridge:
+    type: framework
+    supportedDestinations:
+      - macOS
+      - iOS
+    templates:
+      - SwiftLint
+    sources:
+      - HubMailBridge
+    dependencies:
+      - target: AgenticDeveloperHubSDKMail
+      - target: AgenticDeveloperHubSDKHubMail
+      # HTMLText: snippets and HTML-only bodies read as text.
+      - target: AgenticDeveloperHubSDK-macOS
+        destinationFilters: [macOS]
+      - target: AgenticDeveloperHubSDK-iOS
+        destinationFilters: [iOS]
+      # HubMailService: sign-in drives the mirror, so it reaches the session
+      # (HubAuth, one target per platform), the sync engine and the hub
+      # client's sync API.
+      - target: AgenticDeveloperHubSDKHubAuth-macOS
+        destinationFilters: [macOS]
+      - target: AgenticDeveloperHubSDKHubAuth-iOS
+        destinationFilters: [iOS]
+      - target: AgenticDeveloperHubSDKHubSync
+      - target: AgenticDeveloperHubSDKSync
+      - target: AgenticDeveloperHubSDKDatabase
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+    settings:
+      base:
+        SDKROOT: auto
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+
+  AgenticDeveloperHubSDKHubMailBridgeTests:
+    type: bundle.unit-test
+    platform: macOS
+    templates:
+      - SwiftLint
+    sources:
+      - Tests/AgenticDeveloperHubSDKHubMailBridgeTests
+    dependencies:
+      - target: AgenticDeveloperHubSDKHubMailBridge
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubAuth-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDK-macOS
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubMail
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKMail
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKHubSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSyncGRDB
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKSync
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubSDKDatabase
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubClient
+        embed: true
+        codeSign: true
+      - target: AgenticDeveloperHubClient/AgenticDeveloperHubAuth
+        embed: true
+        codeSign: true
+      - package: GRDB
+        product: GRDB
+      - package: swift-openapi-runtime
+        product: OpenAPIRuntime
+      - package: swift-http-types
+        product: HTTPTypes
+      - package: swift-openapi-urlsession
+        product: OpenAPIURLSession
+    settings:
+      base:
+        MACOSX_DEPLOYMENT_TARGET: "26.0"
+
   # Two targets, not one `supportedDestinations: [macOS, iOS]` target: this
   # framework depends on AgenticDeveloperHubSDK, which exposes only
   # platform-specific targets, and a multi-destination target cannot depend on
@@ -900,6 +1103,7 @@ targets:
     sources:
       - Integrations
     dependencies:
+      - target: AgenticDeveloperHubSDKMail
       - target: AgenticDeveloperHubSDKCore
       - target: AIPluginKit
       - target: AgenticDeveloperHubSDKDatabase
@@ -921,6 +1125,9 @@ targets:
         excludes:
           - "Fixtures/**"
     dependencies:
+      - target: AgenticDeveloperHubSDKMail
+        embed: true
+        codeSign: true
       - target: AgenticDeveloperHubSDKIntegrations
         embed: true
         codeSign: true
@@ -939,135 +1146,6 @@ targets:
         codeSign: true
       - package: GRDB
         product: GRDB
-
-  # The Desktop: App abstraction, icon layout, window management.
-  AgenticDeveloperHubSDKDesktop:
-    type: framework
-    platform: macOS
-    templates:
-      - SwiftLint
-    sources:
-      - Desktop
-    dependencies:
-      - target: AgenticDeveloperHubSDKCore
-      - target: AgenticDeveloperHubSDKCoreUI
-
-  AgenticDeveloperHubSDKDesktopTests:
-    type: bundle.unit-test
-    platform: macOS
-    templates:
-      - SwiftLint
-    sources:
-      - Tests/AgenticDeveloperHubSDKDesktopTests
-    dependencies:
-      - target: AgenticDeveloperHubSDKDesktop
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCoreUI
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCore
-        embed: true
-        codeSign: true
-      # Closure completion -- see the note in AgenticDeveloperHubSDKLanguageTests.
-      - target: AgenticDeveloperHubSDK-macOS
-        embed: true
-        codeSign: true
-
-  # The Desktop's built-in Apps: Hello World and Email.
-  AgenticDeveloperHubSDKDesktopApps:
-    type: framework
-    platform: macOS
-    templates:
-      - SwiftLint
-    sources:
-      - DesktopApps
-    dependencies:
-      - target: AgenticDeveloperHubSDKDesktop
-      - target: AgenticDeveloperHubSDKMacOS
-      - target: AgenticDeveloperHubSDKIntegrations
-      - target: AgenticDeveloperHubSDKCore
-      - target: AgenticDeveloperHubSDKCoreUI
-    settings:
-      base:
-        MACOSX_DEPLOYMENT_TARGET: "26.0"
-
-  AgenticDeveloperHubSDKDesktopAppsTests:
-    type: bundle.unit-test
-    platform: macOS
-    templates:
-      - SwiftLint
-    sources:
-      - path: Tests/AgenticDeveloperHubSDKDesktopAppsTests
-    dependencies:
-      - target: AgenticDeveloperHubSDKMacOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKIntegrations
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKScripting
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCoreMacOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCoreUI
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKCore
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDK-macOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKUI-macOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKMarkdown-macOS
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKPermissions
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKPermissionsUI
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKDisplays
-        embed: true
-        codeSign: true
-      - target: AIPluginKit
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKLanguage
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKDatabase
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKSync
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKSyncGRDB
-        embed: true
-        codeSign: true
-      - package: GRDB
-        product: GRDB
-      # Closure completion: the test bundle loads frameworks from its own Frameworks directory.
-      - package: Sparkle
-        product: Sparkle
-      - package: FlyingFox
-        product: FlyingFox
-      - package: KeyboardShortcuts
-      - target: AgenticDeveloperHubSDKDesktop
-        embed: true
-        codeSign: true
-      - target: AgenticDeveloperHubSDKDesktopApps
-        embed: true
-        codeSign: true
-    settings:
-      base:
-        MACOSX_DEPLOYMENT_TARGET: "26.0"
 
   # Activity capture and tracking, moved verbatim from Olylo's Timeline:
   # the usage-capture pipeline (FocusTracker, UsageCollector, UsageStore),
@@ -2086,6 +2164,10 @@ aggregateTargets:
       - AgenticDeveloperHubSDKLanguage
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
+      - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKMail
+      - AgenticDeveloperHubSDKHubMail
+      - AgenticDeveloperHubSDKHubMailBridge
       - AgenticDeveloperHubSDKSemanticSearch
       - AgenticDeveloperHubSDKSemanticSearchStore
       - AgenticDeveloperHubSDKMarkdown-macOS
@@ -2096,8 +2178,6 @@ aggregateTargets:
       - AgenticDeveloperHubSDKHubUI-macOS
       - AgenticDeveloperHubSDKActivity-macOS
       - AgenticDeveloperHubSDKIntegrations
-      - AgenticDeveloperHubSDKDesktop
-      - AgenticDeveloperHubSDKDesktopApps
 
   # The spec files this store under "macOS, iOS", and `AgenticDeveloperHubSDKMarkdown-iOS`
   # existed but was reachable from no aggregate and no scheme — so nothing ever
@@ -2112,6 +2192,10 @@ aggregateTargets:
       - AgenticDeveloperHubSDKNotifications
       - AgenticDeveloperHubSDKSync
       - AgenticDeveloperHubSDKSyncGRDB
+      - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKMail
+      - AgenticDeveloperHubSDKHubMail
+      - AgenticDeveloperHubSDKHubMailBridge
       - AgenticDeveloperHubSDKSemanticSearch
       - AgenticDeveloperHubSDKSemanticSearchStore
       - AgenticDeveloperHubSDKMarkdown-iOS
@@ -2164,6 +2248,12 @@ aggregateTargets:
       - AgenticDeveloperHubSDKSyncTests
       - AgenticDeveloperHubSDKSyncGRDB
       - AgenticDeveloperHubSDKSyncGRDBTests
+      - AgenticDeveloperHubSDKHubSync
+      - AgenticDeveloperHubSDKMail
+      - AgenticDeveloperHubSDKHubMail
+      - AgenticDeveloperHubSDKHubMailTests
+      - AgenticDeveloperHubSDKHubMailBridge
+      - AgenticDeveloperHubSDKHubMailBridgeTests
       - AgenticDeveloperHubSDKSemanticSearch
       - AgenticDeveloperHubSDKSemanticSearchTests
       - AgenticDeveloperHubSDKSemanticSearchStore
@@ -2182,10 +2272,6 @@ aggregateTargets:
       - AgenticDeveloperHubSDKActivityTests
       - AgenticDeveloperHubSDKIntegrations
       - AgenticDeveloperHubSDKIntegrationsTests
-      - AgenticDeveloperHubSDKDesktop
-      - AgenticDeveloperHubSDKDesktopTests
-      - AgenticDeveloperHubSDKDesktopApps
-      - AgenticDeveloperHubSDKDesktopAppsTests
 
 schemes:
   AgenticDeveloperHubSDKChromium:
@@ -2303,6 +2389,70 @@ schemes:
     archive:
       config: Release
 
+  AgenticDeveloperHubSDKHubSync:
+    build:
+      targets:
+        AgenticDeveloperHubSDKHubSync: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKHubMailTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKHubMailBridge:
+    build:
+      targets:
+        AgenticDeveloperHubSDKHubMailBridge: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKHubMailBridgeTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKMail:
+    build:
+      targets:
+        AgenticDeveloperHubSDKMail: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  AgenticDeveloperHubSDKHubMail:
+    build:
+      targets:
+        AgenticDeveloperHubSDKHubMail: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AgenticDeveloperHubSDKHubMailTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
   AgenticDeveloperHubSDKSemanticSearch:
     build:
       targets:
@@ -2354,39 +2504,7 @@ schemes:
     archive:
       config: Release
 
-  AgenticDeveloperHubSDKDesktop:
-    build:
-      targets:
-        AgenticDeveloperHubSDKDesktop: all
-    run:
-      config: Debug
-    test:
-      config: Debug
-      targets:
-        - AgenticDeveloperHubSDKDesktopTests
-    profile:
-      config: Release
-    analyze:
-      config: Debug
-    archive:
-      config: Release
 
-  AgenticDeveloperHubSDKDesktopApps:
-    build:
-      targets:
-        AgenticDeveloperHubSDKDesktopApps: all
-    run:
-      config: Debug
-    test:
-      config: Debug
-      targets:
-        - AgenticDeveloperHubSDKDesktopAppsTests
-    profile:
-      config: Release
-    analyze:
-      config: Debug
-    archive:
-      config: Release
 
   AgenticDeveloperHubSDKIntegrations:
     build:

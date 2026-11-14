@@ -60,6 +60,44 @@
       "path": "foundation/billing/billing-prefs",
       "rdid": "adhsdk.ingredient.foundation.billing.billing-prefs"
     },
+    "018e4a69-cbeb-4105-8f39-dae3e6f7d8ec": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mail/mail-browser-view-controller",
+      "rdid": "adhsdk.ingredient.integrations.mail.mail-browser-view-controller"
+    },
     "01942f60-6711-43e7-a7b2-a8e7cb4c2cda": {
       "implementations": [
         {
@@ -634,6 +672,13 @@
           },
           "location": "packages/web/packages/data/src/query/index.tsx",
           "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/web/packages/data/src/query/use-batch-run.ts",
+          "platform": "web"
         }
       ],
       "kind": "ingredient",
@@ -681,6 +726,38 @@
       "kind": "ingredient",
       "path": "ui/components/overlays/sheet",
       "rdid": "adhsdk.ingredient.ui.components.overlays.sheet"
+    },
+    "1157bca1-0d27-49e9-a989-d637505ba5f1": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailSyncWorker.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-sync-worker",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-sync-worker"
     },
     "11f7a665-60e9-42df-853c-fe4de3af0fd8": {
       "implementations": [
@@ -927,6 +1004,38 @@
       "path": "agentic-developer-hub-sdk/sdk/sources-ui/macos/chat/inline-chat-view",
       "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.macos.chat.inline-chat-view"
     },
+    "18871853-95b7-492a-9f1f-417283594824": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailAPI.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-api",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-api"
+    },
     "18ad68ea-187b-463d-9f5c-b855b9bc36a9": {
       "implementations": [
         {
@@ -1094,6 +1203,44 @@
       "kind": "ingredient",
       "path": "status/service/monitor/refresh-project-meta",
       "rdid": "adhsdk.ingredient.status.service.monitor.refresh-project-meta"
+    },
+    "1c826ac4-20e0-4089-870f-5d1fd4b59983": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/IntegrationsSettingsPanel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/integrations-settings-panel",
+      "rdid": "adhsdk.ingredient.integrations.integrations-settings-panel"
     },
     "1cacbe17-bca6-458c-bf1f-df9efa3652be": {
       "implementations": [
@@ -1640,6 +1787,38 @@
       "path": "workspace/extensions/manifest/contributed-views",
       "rdid": "adhsdk.ingredient.workspace.extensions.manifest.contributed-views"
     },
+    "238f4d91-4a22-4a0d-ae4b-b4070d02b357": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleOAuthClientConfig.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/auth/google-o-auth-client-config",
+      "rdid": "adhsdk.ingredient.integrations.auth.google-o-auth-client-config"
+    },
     "240f8d48-45af-49ea-aebf-95d756d74707": {
       "implementations": [
         {
@@ -1751,6 +1930,44 @@
       "kind": "ingredient",
       "path": "ui/components/overlays/dropdown-menu",
       "rdid": "adhsdk.ingredient.ui.components.overlays.dropdown-menu"
+    },
+    "26473390-9629-40f0-ae98-32ccab2fc5da": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailMessageListViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mail/mail-message-list-view-controller",
+      "rdid": "adhsdk.ingredient.integrations.mail.mail-message-list-view-controller"
     },
     "267cdb61-52e4-440c-bfa2-799d8e9e12dc": {
       "implementations": [
@@ -2123,6 +2340,44 @@
       "path": "ai/chat/chat-window/chat-transcript-row-view",
       "rdid": "adhsdk.ingredient.ai.chat.chat-window.chat-transcript-row-view"
     },
+    "2fa64944-9744-4d71-8fed-f785e7ce1e51": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsModel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail-settings-model",
+      "rdid": "adhsdk.ingredient.integrations.gmail-settings-model"
+    },
     "31198bb7-2270-449e-94c1-026b68d2bc81": {
       "implementations": [
         {
@@ -2227,6 +2482,38 @@
       "kind": "ingredient",
       "path": "ui/blocks/batch-select",
       "rdid": "adhsdk.ingredient.ui.blocks.batch-select"
+    },
+    "351e3bf8-b137-4f59-94de-c769aa8b0666": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationError.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/model/integration-error",
+      "rdid": "adhsdk.ingredient.integrations.model.integration-error"
     },
     "355a8f54-aee5-45cd-a28d-12c3b7a3085c": {
       "implementations": [
@@ -2417,6 +2704,38 @@
       "path": "registry-types",
       "rdid": "adhsdk.ingredient.registry-types"
     },
+    "39a27113-5478-468c-8417-a291d587aab6": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsSchema.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/store/integrations-schema",
+      "rdid": "adhsdk.ingredient.integrations.store.integrations-schema"
+    },
     "39a7192e-7e1e-4e93-b615-312a5ddf69b0": {
       "implementations": [
         {
@@ -2563,6 +2882,38 @@
       "kind": "ingredient",
       "path": "ui/components/actions/editor-toolbar",
       "rdid": "adhsdk.ingredient.ui.components.actions.editor-toolbar"
+    },
+    "3d12c073-edc3-44fb-a988-5edec20575e0": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailCommandSupport.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/service/mail-command-support",
+      "rdid": "adhsdk.ingredient.integrations.service.mail-command-support"
     },
     "3dc693ab-28e4-4624-9b2d-8dc81f81e037": {
       "implementations": [
@@ -3432,6 +3783,44 @@
       "path": "status/dashboard/logic/health",
       "rdid": "adhsdk.ingredient.status.dashboard.logic.health"
     },
+    "4f066e76-2eca-4cd7-8b73-840178e4edf3": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/GmailSettingsView.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail-settings-view",
+      "rdid": "adhsdk.ingredient.integrations.gmail-settings-view"
+    },
     "5069f11f-e0c6-40c3-92ca-6152b8df3bc2": {
       "implementations": [
         {
@@ -4184,210 +4573,270 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c244b4bdb1c8e536e3508ec615371a8cd93f7a077b2ceb6ac015b7ce64a9e05f",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/ColorSetting.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6eda8a634709585b75cf8e443f00126760846d3527296a3fe7c353003929595f",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySecureSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/InMemorySecureSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:2e26118ab89799be4b2df803e0220401b814ece07f5294fad8de1db5417f35aa",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/InMemorySettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/InMemorySettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:86a322672b3e2fe8ba7f601dafdbf2519024a9fa0e7c06d6bae1c1daca328d6e",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/KeychainSecureSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/KeychainSecureSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0127e242be98c6e1e208f798dfb085c1ca71798d95b3eb268fedd7ef3679a2da",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SecureStoredSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/SecureStoredSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4f023036d4a49d94b713906634042022364354f7f7aa82ff846a2324a8744a00",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/SqliteStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:7ead67deb74d602993472e117055098609cad1c8397c32e069c4086c0ffd4804",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/UserDefaultsSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/Providers/UserDefaultsSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:95a01456948969d37024857a35814caf5a2556abe535a81eaf6ea71de08921f5",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStorageProviders/iCloudSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:d70d89e48024b9535c327c0ad58920367712f61ba7ecd1dce2888b26e6187603",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/SettingsStore.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/SettingsStore.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:2f9406b7545b884f19b63a70365258320008eacd2ab6013e61c98790882cdc6e",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StorableSetting.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/StorableSetting.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c4e01cebcdc54044b1e0e91ddddca516b863a5dbd031af9f53123e2adf63afce",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingPropertyWrapper.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:db034218f6a549aff7acce99079fbbe266a3bdec6f815e1a3ce272fdf2b311e9",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/StoredSettingsStorageProvider.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/StoredSettingsStorageProvider.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4ad5664cd60b599b0b34ed9cf64609aa2f8fae4b29cdeca7e405b106f9bdf56c",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSetting.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:8eb64c7c712a31c00508511b83e11dfcc84f9eecf105da87eaff2445605d095c",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Editor.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:8b1e8e626d188028af459756516d021b5daa93c4455997b3344380c0a2c75203",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Git.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:59777dbd8ce2f74e47bb7e3c9385b2fe95a4697953b339e60110af604d25abf6",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+Theme.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:b891b81d7d945e54b88a85025136990549146241d9d40ee42b4b607290e08dc8",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Settings/UserSettings.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:f15a260ab2f01c89d6ad151849988841d363d7a5994013e36da0009523ba285e",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteCoordinator.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0ad6a68a74ec7b4c4473b5ea6249281758cc84aef303be1c7931e34d9a170197",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/CommandPalette/CommandPaletteModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:85c26ac71623baeae443367631db975e30a73d3cc3e68b687b95c293187cbddc",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/Appearance/AppearanceManager.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:b3b0793cffcce319f013b4d2746cab4fea59de81dc9dd6dfd52f40bd5f1b7f0e",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/AbstractViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:008f55dd8c3f8823934e0ac165c9f9ae610747d3e8674de007491dfd34798026",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ButtonViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:e0dcc9174dfe9e8c203c0494d34db7a02f075e6ebeb3b6a4d459485279cdd443",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ChoiceViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:059fff7c48381f0cd2a0f2b17da1855cfd3b6e4e17be61a493d8345ddf00cc95",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ColorViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c0d035096b1d957188422165bf95e0b1e95ad4223ba28fca6f009f8bab738c5d",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/FontViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:40c5ef551537b43eb7dd709d4947f4b838ebca6ed3a89a595b46aee6ac32ac87",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ProgressViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:90bf13c3d9c7f471fc1005a0d00a793505dd10adb37846fbb42affaf06b028a1",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/RangeViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6f9056f5537b9a1eb1cbe9fde73f1b84877e10f11913a2df546ec3185fd40390",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ThemeChoiceViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:3b0f17e9e8d4c206275d2959ee4e4be79eedbb9a570ae047ab581b716e23bf76",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/ViewModels/ViewModel.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:96552455314e44f9bdccce364013c013e2c122b5f026bb8a4b7ca0d42a5c4395",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/LaunchAtLogin/LaunchAtLoginManager.swift",
           "platform": "apple"
@@ -4523,6 +4972,32 @@
       "path": "workspace/extensions/vscode-api/webviews/webview-panel-options",
       "rdid": "adhsdk.ingredient.workspace.extensions.vscode-api.webviews.webview-panel-options"
     },
+    "667825e5-d557-4410-b54e-29dcf98ca930": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Support/RaceBox.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/support/race-box",
+      "rdid": "adhsdk.ingredient.integrations.support.race-box"
+    },
     "66b7f642-d41d-4d84-aea7-624a5f47eef3": {
       "implementations": [
         {
@@ -4649,6 +5124,22 @@
       "path": "ui/blocks/list-with-details-pane",
       "rdid": "adhsdk.recipe.ui.blocks.list-with-details-pane"
     },
+    "6b0f3c52-8e47-4d1a-9a35-2f7c1d9e4a60": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:ff184af97e33639007d68d16b40710a8219500278d961c0e748853c060c9f948",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/web/packages/hub-mail/src/",
+          "platform": "web"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/hub-mail-web-client",
+      "rdid": "adhsdk.ingredient.integrations.hub-mail-web-client"
+    },
     "6b796310-ff12-4d38-a1a9-1d3af3f1e87f": {
       "implementations": [
         {
@@ -4739,6 +5230,31 @@
       "kind": "ingredient",
       "path": "search/components/markdown/markdown-preview",
       "rdid": "adhsdk.ingredient.search.components.markdown.markdown-preview"
+    },
+    "6edbc7b8-b533-4cca-b62d-74b92ce3f650": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:8e5d8a9114e565ccdcb20f12adfc58af3d3285d76144029221100080a8a4ce5c",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubSync/",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:8e5d8a9114e565ccdcb20f12adfc58af3d3285d76144029221100080a8a4ce5c",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubSync/",
+          "platform": "ios"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "data/sync/hub-sync-transport",
+      "rdid": "adhsdk.ingredient.data.sync.hub-sync-transport"
     },
     "6f5f455d-b744-425d-a21e-494fc18caaf2": {
       "implementations": [
@@ -5748,6 +6264,44 @@
       "path": "status/service/monitor/time-ago",
       "rdid": "adhsdk.ingredient.status.service.monitor.time-ago"
     },
+    "83a5a5e0-3337-4aff-aef8-40a7393dabfe": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailSidebarViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mail/mail-sidebar-view-controller",
+      "rdid": "adhsdk.ingredient.integrations.mail.mail-sidebar-view-controller"
+    },
     "840b5a7a-921a-4770-8dea-5ffbf9a2ee6c": {
       "implementations": [
         {
@@ -5901,6 +6455,22 @@
       "path": "status/service/monitor/issue-sources",
       "rdid": "adhsdk.ingredient.status.service.monitor.issue-sources"
     },
+    "86eccc6f-cd1b-4ac7-bb98-851eb7c54324": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:ee7f7da8c07f4f89a6bb4c86ec42aa81a866a84181de370330507fbc21b3f990",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "auth/accounts/account-display",
+      "rdid": "adhsdk.ingredient.auth.accounts.account-display"
+    },
     "87ca0139-6cd0-46dd-a9fb-40ad3406f175": {
       "implementations": [
         {
@@ -5915,6 +6485,20 @@
             "state": "unverified"
           },
           "location": "packages/web/packages/data/src/ecosystem-config/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/web/packages/features/ecosystem-config/src/",
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/web/packages/data/src/ecosystem-config/sync-tables.ts",
           "platform": "web"
         }
       ],
@@ -5935,6 +6519,38 @@
       "kind": "ingredient",
       "path": "status/dashboard/state/refresh-all",
       "rdid": "adhsdk.ingredient.status.dashboard.state.refresh-all"
+    },
+    "888b7ba2-61f6-4251-88df-3586c5c86b1f": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationRecords.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/model/integration-records",
+      "rdid": "adhsdk.ingredient.integrations.model.integration-records"
     },
     "88d69611-4a12-4777-9509-8af6c0626dc7": {
       "implementations": [
@@ -6662,6 +7278,22 @@
       "path": "ui/components/overlays/dialog",
       "rdid": "adhsdk.ingredient.ui.components.overlays.dialog"
     },
+    "98226063-be5d-4fa8-a980-02227df3418b": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:86020d8d38d4ec1d3543767827d258f3c4d35946ea49b11326181e557e3cd2b0",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountRegistry.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "auth/accounts/account-registry",
+      "rdid": "adhsdk.ingredient.auth.accounts.account-registry"
+    },
     "98444e89-1044-43a7-9ec5-75da579c528a": {
       "implementations": [
         {
@@ -6760,6 +7392,20 @@
       "path": "workspace/files/git-status-provider",
       "rdid": "adhsdk.ingredient.workspace.files.git-status-provider"
     },
+    "9a4dcb9e-5e7e-479b-922c-37d066a8a18a": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Text/HTMLText.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/text/html-text",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.text.html-text"
+    },
     "9ab21212-c31d-4a4a-b563-2a2666eec03d": {
       "implementations": [
         {
@@ -6857,6 +7503,22 @@
       "kind": "ingredient",
       "path": "agentic-developer-hub-sdk/sdk/coordinator",
       "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.coordinator"
+    },
+    "9cf9784d-48c9-4b29-b553-c72ffdfce7b9": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:0a6e405275e533c02b99998bc7b870541d5eb013d75d0223bc50ea7d6fd9268b",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/Account.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "auth/accounts/account",
+      "rdid": "adhsdk.ingredient.auth.accounts.account"
     },
     "9d2d3132-0853-4e3a-8e81-503356e4585d": {
       "implementations": [],
@@ -7319,6 +7981,31 @@
       "path": "landing/blocks/stats",
       "rdid": "adhsdk.ingredient.landing.blocks.stats"
     },
+    "a6442464-e17d-451e-b47a-3be23a2dc753": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:8f3fcf2318f84798acde62364594d29e74505646b96656f933e59f433a5847e6",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMail/",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:8f3fcf2318f84798acde62364594d29e74505646b96656f933e59f433a5847e6",
+            "state": "confirmed",
+            "version": "1.1.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMail/",
+          "platform": "ios"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/hub-mail",
+      "rdid": "adhsdk.ingredient.integrations.hub-mail"
+    },
     "a70a5906-e2c2-4e15-8b2c-913453ff3714": {
       "implementations": [
         {
@@ -7639,6 +8326,44 @@
       "path": "status/dashboard/logic/snapshot-staleness",
       "rdid": "adhsdk.ingredient.status.dashboard.logic.snapshot-staleness"
     },
+    "ac5b0100-ea5d-4abf-a9aa-11a477878514": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailReaderViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mail/mail-reader-view-controller",
+      "rdid": "adhsdk.ingredient.integrations.mail.mail-reader-view-controller"
+    },
     "acd561ca-90a4-4303-a411-cfe23410b42a": {
       "implementations": [
         {
@@ -7784,6 +8509,38 @@
       "kind": "ingredient",
       "path": "ui/settings/rows/choice-slider-view",
       "rdid": "adhsdk.ingredient.ui.settings.rows.choice-slider-view"
+    },
+    "aed9acc9-6340-487b-acfb-b7b13f14e59a": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailIntegrationService.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/service/mail-integration-service",
+      "rdid": "adhsdk.ingredient.integrations.service.mail-integration-service"
     },
     "afa90dd0-0ee6-435b-8cac-f5c6065e7496": {
       "implementations": [
@@ -8057,6 +8814,44 @@
       "kind": "ingredient",
       "path": "status/service/monitor/fetch-cloudflare",
       "rdid": "adhsdk.ingredient.status.service.monitor.fetch-cloudflare"
+    },
+    "b3edb32d-7473-464b-acfb-c19cdd44e99e": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailBrowserModel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "ios"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mail/mail-browser-model",
+      "rdid": "adhsdk.ingredient.integrations.mail.mail-browser-model"
     },
     "b4cfbb31-cacc-4532-97c3-03e53852e8d3": {
       "implementations": [
@@ -8387,6 +9182,38 @@
       "path": "workspace/extensions/vscode-api/languages/main-thread-languages",
       "rdid": "adhsdk.ingredient.workspace.extensions.vscode-api.languages.main-thread-languages"
     },
+    "be4db0fe-628d-41f8-9fdf-25a6d46844cf": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/CLI/MailCommandLine.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/cli/mail-command-line",
+      "rdid": "adhsdk.ingredient.integrations.cli.mail-command-line"
+    },
     "bea6525c-171f-4547-bbb3-7c709543552e": {
       "implementations": [
         {
@@ -8485,6 +9312,38 @@
       "path": "ui/settings/rows/text-edit-view",
       "rdid": "adhsdk.ingredient.ui.settings.rows.text-edit-view"
     },
+    "c19280fd-b80c-46f3-a6a7-0b60a0c90d91": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Store/IntegrationsStore.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/store/integrations-store",
+      "rdid": "adhsdk.ingredient.integrations.store.integrations-store"
+    },
     "c1caa827-f7f1-4e69-b4c6-adbfef22e636": {
       "implementations": [
         {
@@ -8582,6 +9441,38 @@
       "kind": "ingredient",
       "path": "workspace/extensions/manifest/contributed-settings",
       "rdid": "adhsdk.ingredient.workspace.extensions.manifest.contributed-settings"
+    },
+    "c448c9f4-195d-4625-a49d-22dd5468a914": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailRESTClient.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-rest-client",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-rest-client"
     },
     "c4f76978-5aef-430c-a7e1-a20326da6709": {
       "implementations": [
@@ -8905,6 +9796,38 @@
       "path": "workspace/extensions/host/js-value-bridge",
       "rdid": "adhsdk.ingredient.workspace.extensions.host.js-value-bridge"
     },
+    "cbee8b02-9456-4d9b-942a-51f8a9c074fc": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/MCP/MailToolSource.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/mcp/mail-tool-source",
+      "rdid": "adhsdk.ingredient.integrations.mcp.mail-tool-source"
+    },
     "cc43f118-215c-4794-bb67-6d97bab9dfe4": {
       "implementations": [
         {
@@ -8960,6 +9883,38 @@
       "kind": "ingredient",
       "path": "status/dashboard/logic/auto-configure",
       "rdid": "adhsdk.ingredient.status.dashboard.logic.auto-configure"
+    },
+    "cdadfe1d-e4a2-4e2d-96a7-a5eb615a1302": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailMessageParser.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-message-parser",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-message-parser"
     },
     "ce157d5a-c145-4348-b58f-6a76c9fda1d6": {
       "implementations": [
@@ -9035,42 +9990,54 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:00eea35eb1cf566139794da7fdbb7ba738aa1f3754f06da2431d2f893884ad7f",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/CodableIgnored.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0cd90dcfba420e447bc444698798d096ca5625192339f2ed4677a5246f2082b6",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/KeychainHelper.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Keychain/KeychainHelper.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:703d30dbffd4e162b30bfa2fdff6f7e1edc33868c4d7451900af739f8c6e562e",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Loggable.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Logging/Loggable.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:12f5af2dd2d51bfe22ffe82b631ee347e2827691807029e164f52753e2711826",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MathUtils.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:acab26ce09bedc8118cdd1649be6242f663a29a6965780558dc7ae10d0150a7e",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SemanticVersion.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:55f555fbe72ec8fc70460645ca7900762b21cbdee50cec8a7a3e6dede99b4ba6",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/TextFolding.swift",
           "platform": "apple"
@@ -9758,6 +10725,38 @@
       "path": "workspace/projects/project-database-layout",
       "rdid": "adhsdk.ingredient.workspace.projects.project-database-layout"
     },
+    "df121975-deb8-49a9-b023-0aadcb0923d8": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailSyncSettings.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/model/mail-sync-settings",
+      "rdid": "adhsdk.ingredient.integrations.model.mail-sync-settings"
+    },
     "df9b416b-ba3d-430a-a82d-e39b11a55f2d": {
       "implementations": [
         {
@@ -9827,6 +10826,40 @@
       "kind": "ingredient",
       "path": "landing/flow/band",
       "rdid": "adhsdk.ingredient.landing.flow.band"
+    },
+    "e12914f0-3a3b-4fb7-ac0c-6332de37de4f": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:c4c7afd343b20cf6ca97648a06267595c3d1b37e4ee20f11630f03f7c2d2c972",
+            "state": "confirmed",
+            "version": "1.3.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:c4c7afd343b20cf6ca97648a06267595c3d1b37e4ee20f11630f03f7c2d2c972",
+            "state": "confirmed",
+            "version": "1.3.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:c4c7afd343b20cf6ca97648a06267595c3d1b37e4ee20f11630f03f7c2d2c972",
+            "state": "confirmed",
+            "version": "1.3.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
+          "platform": "ios"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/hub-mail-bridge",
+      "rdid": "adhsdk.ingredient.integrations.hub-mail-bridge"
     },
     "e16d896e-9318-48ac-bf1e-b48ef648d73c": {
       "implementations": [
@@ -10213,6 +11246,38 @@
       "path": "data/storage/database",
       "rdid": "adhsdk.ingredient.data.storage.database"
     },
+    "ea7a9ec6-0a0c-4e97-8b03-ebc5f6246a43": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailClassification.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/model/mail-classification",
+      "rdid": "adhsdk.ingredient.integrations.model.mail-classification"
+    },
     "eb0b16a5-f27e-4b28-9517-12bedc892b7f": {
       "implementations": [
         {
@@ -10381,6 +11446,38 @@
       "path": "markdown/components/markdown-reading-palette",
       "rdid": "adhsdk.ingredient.markdown.components.markdown-reading-palette"
     },
+    "eeb038a0-67f3-476a-b1cd-e93cdfc5e9dd": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailDaemonTransport.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/service/mail-daemon-transport",
+      "rdid": "adhsdk.ingredient.integrations.service.mail-daemon-transport"
+    },
     "eeb45f5b-e482-4bea-8827-74f80a1fd21b": {
       "implementations": [
         {
@@ -10464,6 +11561,38 @@
       "kind": "ingredient",
       "path": "ui/settings/views/live-timer-list-view",
       "rdid": "adhsdk.ingredient.ui.settings.views.live-timer-list-view"
+    },
+    "f0543d0b-31fe-4dcc-833e-21ead91bdca5": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Gmail/GmailQuotaPacer.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/gmail/gmail-quota-pacer",
+      "rdid": "adhsdk.ingredient.integrations.gmail.gmail-quota-pacer"
     },
     "f064de5a-b117-4147-96a9-c1ed11d5c976": {
       "implementations": [
@@ -10667,6 +11796,22 @@
       "kind": "ingredient",
       "path": "ui/settings/layout/dismissible-hint-view",
       "rdid": "adhsdk.ingredient.ui.settings.layout.dismissible-hint-view"
+    },
+    "f46b9323-7954-4f66-a476-970fcc9db372": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:d46382c15d54a75448475edb484e44b1c2ba478c5cb391df0ce4021042ab2996",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Accounts/MobileAccountViewController.swift",
+          "platform": "ios"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "auth/accounts/mobile-account-view-controller",
+      "rdid": "adhsdk.ingredient.auth.accounts.mobile-account-view-controller"
     },
     "f4740433-221c-4c89-b888-ee8da7aa4b3c": {
       "implementations": [
@@ -11032,6 +12177,38 @@
       "path": "ui/settings/layout/panel-host-view",
       "rdid": "adhsdk.ingredient.ui.settings.layout.panel-host-view"
     },
+    "fafeef0d-c283-4ecf-92fb-b5de35d71f79": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Auth/GoogleAuthorizer.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/auth/google-authorizer",
+      "rdid": "adhsdk.ingredient.integrations.auth.google-authorizer"
+    },
     "fb3a0db4-691e-4025-a391-2853908248b5": {
       "implementations": [
         {
@@ -11087,6 +12264,52 @@
       "kind": "ingredient",
       "path": "data/sync/sync-testing",
       "rdid": "adhsdk.ingredient.data.sync.sync-testing"
+    },
+    "fc9671be-170c-436e-9628-892624952191": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "web"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "android"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "platform": "windows"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Support/MailReExport.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift",
+          "platform": "ios"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "integrations/service/mail-rpc",
+      "rdid": "adhsdk.ingredient.integrations.service.mail-rpc"
     },
     "fcb8a0a4-2446-46f9-99bb-49b0317529d4": {
       "implementations": [

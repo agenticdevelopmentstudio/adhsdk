@@ -1355,6 +1355,7 @@ import {
   ScrollText,
   Send,
   Server,
+  RefreshCw,
   Settings as Settings2,
   ShieldCheck,
   ShoppingBag,
@@ -1425,6 +1426,7 @@ var ICONS = {
   "/persona-services": Boxes,
   "/server-bags": Server,
   "/settings": Settings2,
+  "/sync": RefreshCw,
   "/signin-apps": LogIn,
   // The workspace's ecosystem sign-in CONFIGURATION — a hub knob, which is why it is written
   // out here beside its neighbours rather than folded in from the registry. It sat in the
