@@ -15,14 +15,17 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
       "import": "./dist/index.js"
     },
     "./contract": {
       "types": "./dist/contract/index.d.ts",
+      "development": "./src/contract/index.ts",
       "import": "./dist/contract/index.js"
     },
     "./runtime": {
       "types": "./dist/runtime/index.d.ts",
+      "development": "./src/runtime/index.ts",
       "import": "./dist/runtime/index.js"
     },
     "./css/base.css": "./dist/css/base.css",
