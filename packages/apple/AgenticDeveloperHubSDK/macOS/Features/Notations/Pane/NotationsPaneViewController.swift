@@ -65,6 +65,15 @@ public final class NotationsPaneViewController: NSViewController {
         self.projectPath = projectPath
         self.workingDirectory = workingDirectory
         super.init(nibName: nil, bundle: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(flushForTermination),
+            name: NotationsFeature.flushPendingSavesNotification, object: nil)
+    }
+
+    /// At quit: writes the debounced edit and waits for every queued save.
+    @objc private func flushForTermination() {
+        flushPendingSave()
+        saveQueue.sync {}
     }
 
     @available(*, unavailable)

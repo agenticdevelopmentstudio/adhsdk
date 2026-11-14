@@ -115,6 +115,15 @@ public final class NotationsFeature: AppFeature {
         }
     }
 
+    /// Posted at quit: every pane and the window write their debounced edit
+    /// now and wait for it, before the process ends.
+    public static let flushPendingSavesNotification = Notification.Name("NotationsFlushPendingSaves")
+
+    public override func terminate() async {
+        NotificationCenter.default.post(name: Self.flushPendingSavesNotification, object: nil)
+        await super.terminate()
+    }
+
     public override func stop() {
         timer?.invalidate()
         timer = nil
