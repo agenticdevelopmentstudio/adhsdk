@@ -864,7 +864,7 @@ open class WebBrowserPaneViewController: NSViewController {
 
         configureInstalledBar()
         let bar = NSStackView(views: [
-            backButton, forwardButton, reloadButton, addressBox, refusalNotice, pausedBadge, drivenBadge,
+            backButton, forwardButton, reloadButton, addressBox, refusalNotice, drivenBadge,
             installedBar, menuButton
         ])
         bar.orientation = .horizontal
@@ -877,7 +877,7 @@ open class WebBrowserPaneViewController: NSViewController {
         bar.detachesHiddenViews = true
 
         addressBar = bar
-        badgeObservations = [pausedBadge, drivenBadge, refusalNotice].map { badge in
+        badgeObservations = [drivenBadge, refusalNotice].map { badge in
             badge.observe(\.isHidden) { [weak self] _, _ in
                 MainActor.assumeIsolated { self?.refreshBarInsets() }
             }
@@ -909,7 +909,8 @@ open class WebBrowserPaneViewController: NSViewController {
             agentVisibilityButton, symbol: "cursorarrow.rays", label: "Agent Visibility",
             action: #selector(showAgentVisibilityMenu(_:)))
         agentVisibilityButton.setAccessibilityIdentifier("browser.agent-visibility")
-        configureButton(privacyButton, symbol: "hand.raised", label: "Privacy", action: #selector(showPrivacyDialog))
+        configureButton(privacyButton, symbol: "eye", label: "Privacy", action: #selector(showPrivacyDialog))
+        privacyButton.toolTip = "This tab's privacy settings"
         privacyButton.setAccessibilityIdentifier("browser.privacy")
         configureButton(
             pauseEventsButton, symbol: "pause.circle", label: "Pause Events", action: #selector(togglePauseEvents))
@@ -917,11 +918,13 @@ open class WebBrowserPaneViewController: NSViewController {
         configureButton(
             privacyStripToggle, symbol: "list.bullet.rectangle", label: "Privacy Status",
             action: #selector(togglePrivacyStrip))
+        privacyStripToggle.toolTip = "Show or hide the privacy status bar"
         privacyStripToggle.setButtonType(.pushOnPushOff)
         privacyStripToggle.setAccessibilityIdentifier("browser.privacy-strip-toggle")
         configureButton(
             menuButton, symbol: "line.3.horizontal", label: "Browser Menu", action: #selector(showBrowserMenu(_:)))
         menuButton.setAccessibilityIdentifier("browser.menu")
+        menuButton.toolTip = "Browser menu: settings, log and more"
         for button in [agentVisibilityButton, privacyButton, pauseEventsButton, privacyStripToggle, menuButton] {
             button.isBordered = false
         }
@@ -934,7 +937,7 @@ open class WebBrowserPaneViewController: NSViewController {
             installedBar.setVisibilityPriority(.mustHold, for: button)
             button.setContentCompressionResistancePriority(.required, for: .horizontal)
         }
-        installedBar.spacing = 2
+        installedBar.spacing = 8
         installedBar.alignment = .centerY
         installedBar.setAccessibilityIdentifier("browser.installed-buttons")
         installedBar.setContentHuggingPriority(.required, for: .horizontal)
@@ -946,12 +949,14 @@ open class WebBrowserPaneViewController: NSViewController {
         let access = agentAccess
         agentVisibilityButton.image = NSImage(
             systemSymbolName: access.symbolName, accessibilityDescription: access.visibilityDescription)
-        agentVisibilityButton.toolTip = access.visibilityDescription
+        agentVisibilityButton.toolTip = "Agent visibility: " + access.visibilityDescription
         agentVisibilityButton.setAccessibilityValue(access.rawValue)
         let pauseLabel = isEventsPaused ? "Resume Events" : "Pause Events"
         pauseEventsButton.image = NSImage(
             systemSymbolName: isEventsPaused ? "play.circle" : "pause.circle", accessibilityDescription: pauseLabel)
-        pauseEventsButton.toolTip = pauseLabel
+        pauseEventsButton.toolTip = isEventsPaused
+            ? "Resume events: the page gets them again as its privacy settings allow"
+            : "Pause events: block every event from reaching the page"
         pauseEventsButton.setAccessibilityValue(isEventsPaused ? "paused" : "active")
         let stripShown = privacyStripRow.map { !$0.isHidden } ?? false
         privacyStripToggle.state = stripShown ? .on : .off
@@ -985,7 +990,7 @@ open class WebBrowserPaneViewController: NSViewController {
     }
 
     @objc func showPrivacyDialog() {
-        BrowserPrivacySettingsDialog.present(for: self)
+        BrowserPrivacySettingsDialog.present(for: self, from: privacyButton)
     }
 
     @objc func togglePrivacyStrip() {
@@ -1014,7 +1019,7 @@ open class WebBrowserPaneViewController: NSViewController {
         refreshBarInsets()
     }
 
-    private static let barInsets = NSEdgeInsets(top: 5, left: 6, bottom: 5, right: 6)
+    private static let barInsets = NSEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
 
     /// A bar with nothing visible in it collapses to nothing, insets
     /// included, so the page starts right under the tabs.
@@ -1188,6 +1193,7 @@ open class WebBrowserPaneViewController: NSViewController {
 
     private func configureButton(_ button: NSButton, symbol: String, label: String, action: Selector) {
         button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)
+        button.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
         button.imagePosition = .imageOnly
         button.bezelStyle = .texturedRounded
         button.isBordered = true

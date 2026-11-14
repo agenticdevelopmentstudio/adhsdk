@@ -8,7 +8,7 @@ import AgenticDeveloperHubSDKCore
 final class BrowserAddressBox: NSView {
 
     /// The box's height; the address row is this plus its insets.
-    static let height: CGFloat = 28
+    static let height: CGFloat = 34
     /// The radius while rounded corners are preferred: a pill, half the height.
     static let roundedRadius: CGFloat = height / 2
     /// The radius while they are not: just off square, as a text field's.
@@ -96,9 +96,9 @@ extension BrowserAgentAccess {
     /// The SF Symbol the agent visibility button shows for this access.
     var symbolName: String {
         switch self {
-        case .full: "cursorarrow.rays"
-        case .readOnly: "eye"
-        case .hidden: "eye.slash"
+        case .full: "cursorarrow.click.2"
+        case .readOnly: "text.magnifyingglass"
+        case .hidden: "nosign"
         }
     }
 

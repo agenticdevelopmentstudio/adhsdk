@@ -25,11 +25,18 @@ import AgenticDeveloperHubSDKCore
 final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
 
     /// Builds the Agent Privacy group and opens the words editor from it.
-    private lazy var agentPrivacy = AgentPrivacySettingsGroup(binding: binding) { [weak self] in
-        self?.view.window
+    /// The editor's window is the panel's own unless the host names another:
+    /// a popover is no window to put a sheet on.
+    private lazy var agentPrivacy = AgentPrivacySettingsGroup(binding: binding) { [weak self, editorWindow] in
+        editorWindow?() ?? self?.view.window
     }
 
-    init(binding: BrowserSettingsBinding) {
+    private let editorWindow: (() -> NSWindow?)?
+
+    /// - Parameter editorWindow: the window Edit Privacy Words… opens its
+    ///   editor over; `nil` uses the panel's own window.
+    init(binding: BrowserSettingsBinding, editorWindow: (() -> NSWindow?)? = nil) {
+        self.editorWindow = editorWindow
         super.init(title: "Privacy", symbol: "hand.raised", binding: binding)
     }
 
