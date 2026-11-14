@@ -6,10 +6,32 @@ import Foundation
 public struct GitStatus: Sendable, Equatable {
     public let files: [String: GitFileStatus]
     public let directories: [String: GitFileStatus]
+    /// Each path's index column on its own: what a commit would record now.
+    public let stagedFiles: [String: GitFileStatus]
+    /// Each path's work-tree column on its own, plus untracked files and
+    /// conflicts: what is not staged yet.
+    public let unstagedFiles: [String: GitFileStatus]
 
-    public init(files: [String: GitFileStatus], directories: [String: GitFileStatus]) {
+    public init(files: [String: GitFileStatus], directories: [String: GitFileStatus],
+                stagedFiles: [String: GitFileStatus] = [:], unstagedFiles: [String: GitFileStatus] = [:]) {
         self.files = files
         self.directories = directories
+        self.stagedFiles = stagedFiles
+        self.unstagedFiles = unstagedFiles
+    }
+
+    /// One porcelain column read alone: `M` and `T` are modified, `A` added,
+    /// `D` deleted, `R` renamed, `C` copied, and anything else (a space above
+    /// all) leaves the path out of that column.
+    private static func columnStatus(_ column: Character) -> GitFileStatus? {
+        switch column {
+        case "M", "T": .modified
+        case "A": .added
+        case "D": .deleted
+        case "R": .renamed
+        case "C": .copied
+        default: nil
+        }
     }
 
     public static let empty = GitStatus(files: [:], directories: [:])
@@ -38,6 +60,8 @@ public struct GitStatus: Sendable, Equatable {
     /// `"old -> new"`) impossible: there is no arrow to look for any more.
     public static func parse(porcelain output: String) -> GitStatus {
         var fileStatuses: [String: GitFileStatus] = [:]
+        var staged: [String: GitFileStatus] = [:]
+        var unstaged: [String: GitFileStatus] = [:]
 
         let fields = output.split(separator: "\u{0}", omittingEmptySubsequences: true)
         var index = fields.startIndex
@@ -101,6 +125,19 @@ public struct GitStatus: Sendable, Equatable {
             guard let filePath = String(bytes: bytes.dropFirst(3), encoding: .utf8),
                   !filePath.isEmpty else { continue }
 
+            // The two columns, each on its own, from the same record. A
+            // conflict and an untracked file belong to the unstaged side
+            // only; an ignored file to neither.
+            let pair = String([indexStatus, workTreeStatus])
+            if Self.unmergedPairs.contains(pair) {
+                unstaged[filePath] = .conflicted
+            } else if pair == "??" {
+                unstaged[filePath] = .untracked
+            } else if pair != "!!" {
+                if let column = Self.columnStatus(indexStatus) { staged[filePath] = column }
+                if let column = Self.columnStatus(workTreeStatus) { unstaged[filePath] = column }
+            }
+
             if isRename || isCopy {
                 // A copy is its own status, not nothing. Both shapes key
                 // under the *new* path and both consume an origin field, so
@@ -155,6 +192,6 @@ public struct GitStatus: Sendable, Equatable {
             }
         }
 
-        return GitStatus(files: fileStatuses, directories: dirStatuses)
+        return GitStatus(files: fileStatuses, directories: dirStatuses, stagedFiles: staged, unstagedFiles: unstaged)
     }
 }

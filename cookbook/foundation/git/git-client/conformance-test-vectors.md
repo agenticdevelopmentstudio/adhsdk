@@ -49,4 +49,6 @@
 | git-client-046 | error-description-vs-log-description | Produce the log-facing description of a command-failed outcome carrying verb `status`, exit status `128`, and standard-error text `"fatal: ... '/Users/secret/repo'"`. | Excludes `"secret"`; includes `"status"` and `"128"`. |
 | git-client-047 | error-description-vs-log-description | Produce the log-facing description of a launch-failed outcome carrying reason `"secret-path-in-the-reason"`. | Excludes `"secret"`. |
 | git-client-048 | error-description-vs-log-description | Produce the log-facing description of an executable-not-found outcome carrying path `"/Users/secret/bin/git"`. | Excludes `"secret"`. |
+| git-client-049 | status-staged-unstaged-columns | Parse status output `MM both.txt`, `A  new.txt`, ` D gone.txt`, `?? loose.txt`. | Staged: `both.txt` modified, `new.txt` added. Unstaged: `both.txt` modified, `gone.txt` deleted, `loose.txt` untracked. |
+| git-client-050 | status-staged-unstaged-columns | Parse status output `UU fight.txt`, `RM new.txt` (origin `old.txt`), `!! ignored.txt`. | Staged: `new.txt` renamed. Unstaged: `fight.txt` conflicted, `new.txt` modified. `ignored.txt` is in neither; `old.txt` is in neither. |
 

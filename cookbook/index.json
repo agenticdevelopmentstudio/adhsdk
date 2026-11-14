@@ -1041,7 +1041,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:67d943c36eb1c7eacdf44d452cf85fffed4bebae4d2b502b4cad0e91eab2f6ef",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/",
           "platform": "apple"
@@ -5258,7 +5260,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:17de9825120b03dec7def0412787844b2afb7f6401137d402c7e3ea78a847add",
+            "hash": "sha256:4912d466cb2531efe41084c6ce79593f17e00a73a93d772dc1307ef48d5e67c1",
             "state": "confirmed",
             "version": "1.2.0"
           },
@@ -7367,6 +7369,22 @@
       "kind": "ingredient",
       "path": "ui/settings/views/add-remove-footer-view",
       "rdid": "adhsdk.ingredient.ui.settings.views.add-remove-footer-view"
+    },
+    "a2394ca0-3988-410b-9fc8-e0c9e253fc94": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:67aac9d8a90dbc3040246f71aa6cadb4097e7b188d66e7f088816a0c4e3c2131",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/git/git-repository-model",
+      "rdid": "adhsdk.ingredient.workspace.git.git-repository-model"
     },
     "a252605d-12ce-4235-9eb4-2582678f6f49": {
       "implementations": [

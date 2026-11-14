@@ -167,6 +167,12 @@
   `true` for a path if and only if the path equals a prefix in `prefixes`
   exactly, or starts with that prefix followed by `"/"`; it MUST NOT use a
   bare prefix match without that separator.
+- **watcher-root-paths**: The watcher MUST watch every root path it is
+  given in one stream (a single root being the common case), so a caller
+  can watch directories that lie outside one another — a linked
+  worktree's git directory and the repository's common directory are
+  outside its working tree — and MUST drop a root that equals or lies
+  inside another given root, so no event is reported twice.
 - **watcher-start-idempotent**: Start MUST do nothing — create no new
   stream, install no new callback — when the watcher already has a live
   stream.

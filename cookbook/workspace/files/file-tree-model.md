@@ -2,11 +2,11 @@
 id: 1b64553a-ab58-4154-b9d5-30f34eb33caf
 title: "File Tree Model"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-13
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -238,6 +238,12 @@ swallowed directory-read failures are consumed one layer up.
   `true` for a path if and only if the path equals a prefix in `prefixes`
   exactly, or starts with that prefix followed by `"/"`; it MUST NOT use a
   bare prefix match without that separator.
+- **watcher-root-paths**: The watcher MUST watch every root path it is
+  given in one stream (a single root being the common case), so a caller
+  can watch directories that lie outside one another — a linked
+  worktree's git directory and the repository's common directory are
+  outside its working tree — and MUST drop a root that equals or lies
+  inside another given root, so no event is reported twice.
 - **watcher-start-idempotent**: Start MUST do nothing — create no new
   stream, install no new callback — when the watcher already has a live
   stream.
@@ -650,7 +656,7 @@ type's own name.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/FileBrowser/Model/FileSystem/` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -762,6 +768,7 @@ rather than propagating a fatal error.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-13 | Mike Fullerton | The file-system watcher watches several root paths in one stream, dropping repeats and nested roots. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restated the concurrent-sync-reentrancy open question as current behavior and recorded it as a pending design decision. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/files/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

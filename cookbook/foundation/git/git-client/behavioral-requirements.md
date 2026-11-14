@@ -213,6 +213,15 @@
   record as conflicted when its two-character status pair is exactly one
   of `DD`, `AU`, `UD`, `UA`, `DU`, `AA`, `UU`, ahead of the
   modified/added/deleted ladder.
+- **status-staged-unstaged-columns**: Parsing status MUST also keep each
+  column on its own, in the same pass over the same records: a staged map
+  from the index column and an unstaged map from the work-tree column,
+  each keyed by the new path. `M` and `T` MUST read as modified, `A` as
+  added, `D` as deleted, `R` as renamed and `C` as copied; a space MUST
+  leave the path out of that column's map. An unmerged pair MUST appear as
+  conflicted in the unstaged map only, `??` as untracked in the unstaged
+  map only, and `!!` in neither. A path changed in both columns MUST appear
+  in both maps.
 - **status-byte-accurate-path-decode**: Parsing status MUST slice and
   count each record in UTF-8 bytes rather than by character, and MUST drop
   a record whose remaining bytes fail to decode as UTF-8 or decode to an

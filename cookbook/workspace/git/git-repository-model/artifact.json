@@ -1,0 +1,62 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "a2394ca0-3988-410b-9fc8-e0c9e253fc94",
+    "title": "Git Repository Model",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-11-13",
+    "modified": "2026-11-13",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "A main-actor model of one repository (refs, paged history with graph rows, staged and unstaged changes, content on demand) behind four view protocols, refreshed by kind from a debounced FSEvents watcher of the working tree, git directory and common directory.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "git",
+      "model",
+      "file-watching"
+    ],
+    "depends-on": [
+      "779ac6ea-9ef5-4fb0-8ed9-dc6b9d617344",
+      "750fe184-d20a-4b58-867b-3edd094d59b4"
+    ],
+    "related": [
+      "9a4aa2a8-c01b-4cec-b789-6c89c100d8d3",
+      "1b64553a-ab58-4154-b9d5-30f34eb33caf"
+    ],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/ (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "806a59ecec4b44ed",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

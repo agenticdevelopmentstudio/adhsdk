@@ -1431,6 +1431,8 @@ targets:
         buildPhase: resources
       # The in-memory billing service, shared with the Core billing tests.
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Billing/FakeBillingClient.swift
+      # The throwaway git repository fixture, shared with the Core git tests.
+      - path: Tests/AgenticDeveloperHubSDKCoreTests/Git/GitTestRepository.swift
       # Real claude output, shared with the Core stream-json tests.
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Partner/ClaudeStreamFixtures.swift
       - path: Tests/AgenticDeveloperHubSDKCoreTests/Partner/Fixtures

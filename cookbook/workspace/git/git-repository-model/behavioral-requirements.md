@@ -1,0 +1,18 @@
+
+- **start-loads**: `start()` MUST start the watcher and load refs, stashes, submodules, worktrees, the first history page with its graph rows, and the working-copy status.
+- **history-paging**: `loadMore()` MUST ask for the next page (`skip` = commits loaded), append its commits, and append their graph rows from the same layout, so paged rows equal one long load. A page shorter than the query's `limit` MUST end paging; `loadMore()` while a page is loading or after paging ended MUST do nothing.
+- **set-query**: `setQuery(_:)` MUST replace the query, clear commits, graph rows and paging, and load the first page of the new query.
+- **refs-at**: `refs(at:)` MUST return every ref whose `target` is the commit id, in ref order, and none for an unknown id.
+- **working-copy-split**: `staged` and `unstaged` MUST come from `GitClient.status`'s per-column maps, sorted by path; untracked files MUST be unstaged with `isUntracked` true; a file changed in both columns MUST appear in both lists.
+- **refresh-scope**: `refresh(_:)` MUST reload `.refs` → refs, stashes, submodules and worktrees; `.history` → the history from the top, covering at least as many commits as were loaded, with the graph rebuilt; `.workingCopy` and `.operation` → the working-copy status.
+- **watcher-drives-refresh**: Every change set the watcher reports MUST be passed to `refresh(_:)` on the main actor.
+- **observe**: After a refresh, every live observer MUST be called on the main actor with the kinds whose data reloaded, and with history after `setQuery(_:)` and after each page `loadMore()` appends; dropping the token returned by `observe(_:)` MUST stop its calls. No call is made when nothing reloaded.
+- **failures-keep-state**: A git call that fails MUST leave that part's last loaded value in place and be logged; `start()` and `refresh(_:)` MUST NOT throw. A repository deleted under the model keeps showing what it last loaded.
+- **stale-results-dropped**: A history result that a later `setQuery(_:)` or refresh superseded MUST be discarded, and so MUST a page from `loadMore()` that finishes after one.
+- **unborn**: A repository with no commits MUST load an empty history and no refs without failing, and its working copy MUST list its files.
+- **content-pass-through**: `diff`, `contents`, `blame` and `fileHistory` MUST call the git client in the model's root; `fileHistory` MUST follow renames; `commit(_:)` MUST return a loaded commit by id, or nil.
+- **watcher-classify**: `classify(relativePath:)` MUST map a path inside the git directory (written `.git/<path>`) as follows: `HEAD`, `packed-refs`, `refs` and anything under `refs/` → refs and history; `index` → working copy; `MERGE_HEAD`, `CHERRY_PICK_HEAD`, `rebase-merge`, `rebase-apply` and anything under the last two → operation; `worktrees/<name>` (the directory itself) → refs; anything under `objects/`, any name ending `.lock`, and everything else inside the git directory → nothing. Any path outside the git directory MUST map to working copy.
+- **watcher-paths**: The watcher MUST watch the working tree, the git directory and the common directory through the toolkit's file-system watcher, MUST exclude the common directory's `objects`, and MUST write a path under the git directory or the common directory as `.git/<path relative to it>` (the git directory wins when both contain it) before classifying it.
+- **watcher-debounce**: The watcher MUST call `onChange` once, 300 ms after the last event, with the union of the kinds since its last call, and MUST NOT call it for events that classify to nothing. `stop()` MUST stop the stream and drop a pending call.
+- **main-actor**: The model MUST be used on the main actor; every git call MUST be `async` and never block it.
+
