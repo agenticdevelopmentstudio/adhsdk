@@ -6439,6 +6439,22 @@
       "path": "status/service/monitor/issue-sources",
       "rdid": "adhsdk.ingredient.status.service.monitor.issue-sources"
     },
+    "86eccc6f-cd1b-4ac7-bb98-851eb7c54324": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:ee7f7da8c07f4f89a6bb4c86ec42aa81a866a84181de370330507fbc21b3f990",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "auth/accounts/account-display",
+      "rdid": "adhsdk.ingredient.auth.accounts.account-display"
+    },
     "87ca0139-6cd0-46dd-a9fb-40ad3406f175": {
       "implementations": [
         {
@@ -7246,6 +7262,22 @@
       "path": "ui/components/overlays/dialog",
       "rdid": "adhsdk.ingredient.ui.components.overlays.dialog"
     },
+    "98226063-be5d-4fa8-a980-02227df3418b": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:86020d8d38d4ec1d3543767827d258f3c4d35946ea49b11326181e557e3cd2b0",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountRegistry.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "auth/accounts/account-registry",
+      "rdid": "adhsdk.ingredient.auth.accounts.account-registry"
+    },
     "98444e89-1044-43a7-9ec5-75da579c528a": {
       "implementations": [
         {
@@ -7455,6 +7487,22 @@
       "kind": "ingredient",
       "path": "agentic-developer-hub-sdk/sdk/coordinator",
       "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.coordinator"
+    },
+    "9cf9784d-48c9-4b29-b553-c72ffdfce7b9": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:0a6e405275e533c02b99998bc7b870541d5eb013d75d0223bc50ea7d6fd9268b",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/Account.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "auth/accounts/account",
+      "rdid": "adhsdk.ingredient.auth.accounts.account"
     },
     "9d2d3132-0853-4e3a-8e81-503356e4585d": {
       "implementations": [],
@@ -10767,25 +10815,27 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c55eb494b398542fe4a9efaa2a1b60affe6ec69e45e00bf837ebfd61526315f9",
+            "hash": "sha256:c4c7afd343b20cf6ca97648a06267595c3d1b37e4ee20f11630f03f7c2d2c972",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
           "platform": "macos"
         },
         {
           "conformance": {
-            "hash": "sha256:06c3a2375849afeca4a55eb062e3f7fcddf57e2f481cd99f3d0bc4815e12e332",
+            "hash": "sha256:c4c7afd343b20cf6ca97648a06267595c3d1b37e4ee20f11630f03f7c2d2c972",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c4c7afd343b20cf6ca97648a06267595c3d1b37e4ee20f11630f03f7c2d2c972",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
           "platform": "ios"
@@ -11730,6 +11780,22 @@
       "kind": "ingredient",
       "path": "ui/settings/layout/dismissible-hint-view",
       "rdid": "adhsdk.ingredient.ui.settings.layout.dismissible-hint-view"
+    },
+    "f46b9323-7954-4f66-a476-970fcc9db372": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:d46382c15d54a75448475edb484e44b1c2ba478c5cb391df0ce4021042ab2996",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/iOS/Accounts/MobileAccountViewController.swift",
+          "platform": "ios"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "auth/accounts/mobile-account-view-controller",
+      "rdid": "adhsdk.ingredient.auth.accounts.mobile-account-view-controller"
     },
     "f4740433-221c-4c89-b888-ee8da7aa4b3c": {
       "implementations": [

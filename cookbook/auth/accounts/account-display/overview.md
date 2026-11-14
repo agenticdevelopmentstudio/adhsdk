@@ -1,0 +1,3 @@
+
+`AccountDisplay` is an immutable value that turns one account's state into the visibility decisions every account detail view needs: which user to show, whether the "Checking sign-in…" status line and a spinner show, which of Login, Signup and Logout show, whether the buttons are enabled, and which error or status message line shows. It is the platform-free half of the accounts screen: macOS and iOS each draw it with their own controls, and the rules for what is visible live here once. It is a pure function of its inputs (an `AccountState`, a message, whether a signup URL exists, and the previous render's shown user); it holds no storage, performs no I/O and starts no work.
+

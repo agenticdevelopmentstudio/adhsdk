@@ -1,29 +1,29 @@
 ---
 id: 86eccc6f-cd1b-4ac7-bb98-851eb7c54324
-title: Account Display
+title: "Account Display"
 type: ingredient
 version: 1.0.0
 status: review
 language: en
-created: '2026-11-14'
-modified: '2026-11-14'
-author: mfullerton
-copyright: 2026 mfullerton
+created: 2026-11-14
+modified: 2026-11-14
+author: Mike Fullerton
+copyright: 2026 Mike Fullerton
 license: MIT
 summary: "Platform-free rules for what an accounts screen shows per account state: visible controls, spinner, status line and user."
 platforms:
-- swift
-- macos
-- ios
+  - swift
+  - macos
+  - ios
 tags:
-- auth
-- accounts
-- display
+  - auth
+  - accounts
+  - display
 depends-on: []
 related: []
 references: []
-approved-by: ''
-approved-date: ''
+approved-by: ""
+approved-date: ""
 ---
 
 # Account Display
@@ -89,7 +89,7 @@ Not applicable — this is a display-rules value, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 006 mirror the tests in `AccountDisplayTests` (`restoring_showsTheStatusLineAndSpinner_andNoButtons`, `signedOut_showsLoginAndSignup_onlyWithASignupURL`, `signedIn_showsTheUserAndLogout`, `busyAfterSignedIn_keepsShowingTheUser_withControlsDisabled`, `busyFromSignedOut_keepsTheSignedOutControls`, `signedOut_forgetsTheLastUser`). Vectors 007 to 012 are derived from the initializer and are not asserted by those tests. `U` is a user such as id `u1`, name `Ada Lovelace`.
+Vectors 001 to 007 mirror the tests in `AccountDisplayTests` (`restoring_showsTheStatusLineAndSpinner_andNoButtons`, `signedOut_showsLoginAndSignup_onlyWithASignupURL`, `signedIn_showsTheUserAndLogout`, `busyAfterSignedIn_keepsShowingTheUser_withControlsDisabled`, `busyFromSignedOut_keepsTheSignedOutControls`, `signedOut_forgetsTheLastUser`). Vectors 008 to 014 are derived from the initializer and are not asserted by those tests. `U` is a user such as id `u1`, name `Ada Lovelace`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -172,8 +172,14 @@ Not applicable: the source calls no logging API.
 - **SwiftUI**: The file imports only `Foundation`, so a SwiftUI view model uses it unchanged: build a new `AccountDisplay` on each `Account.onChange` and store the previous `shownUser` to pass as `lastUser`. Bind `controlsEnabled` to `.disabled(!display.controlsEnabled)` and conditionally include Login, Signup, Logout and a `ProgressView` from the `shows` flags.
 - **Compose**: Model it as an immutable data class with a companion factory taking state, message, hasSignupURL and lastUser; hold the account state in a `StateFlow` and derive the display with `map`. Render buttons with `Button(enabled = display.controlsEnabled)` and a `CircularProgressIndicator` for the spinner.
 - **React/Web**: A pure function returning a frozen object (or a `useMemo` over the inputs); keep the previous `shownUser` in a `useRef` and pass it back as `lastUser`. Map `controlsEnabled` to the `disabled` attribute and `showsSpinner` to a `role="progressbar"` element.
-- **AppKit / UIKit**: This is the source platform. The shared tier is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift`; the macOS detail panel (`AccountDetailPanelViewController`) and the iOS `MobileAccountViewController` each construct it and draw it with `NSButton`/`NSProgressIndicator` and `UIButton`/`UIActivityIndicatorView`. The account-based initializer is `@MainActor`, matching the view controllers.
+- **AppKit / UIKit**: This is the source platform. The shared tier is `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift`; the macOS detail panel (`AccountDetailPanelViewController`) constructs it and draws it with `ThemedActionButton` (a push-button subclass) for Login, Signup and Logout, hiding each from the `shows` flags, and an `NSProgressIndicator`; the iOS `MobileAccountViewController` rebuilds it with `lastUser` set to the previous `display.shownUser` and maps it to table rows (user, status with a `UIActivityIndicatorView`, Login, Signup, Logout) through `rows(for:)`, so the iOS buttons are list cells rather than `UIButton`. The account-based initializer is `@MainActor`, matching the view controllers.
 - **WinUI 3**: Implement it as an immutable C# `record` (value equality matches `Equatable`) with a constructor taking `AccountState`, `string?`, `bool` and `AccountUser?`, where `AccountState` is a discriminated union (an abstract record with `Restoring`, `SignedOut`, `Busy` and `SignedIn(AccountUser)` subtypes). Expose the flags to XAML through a view model that implements `INotifyPropertyChanged` and rebuilds the record on the account's change event; bind `Visibility` to the `shows` flags with a `BoolToVisibilityConverter` (or `x:Bind` function binding), `Button.IsEnabled` to `ControlsEnabled`, and a `ProgressRing` with `IsActive` to `ShowsSpinner`. Marshal the rebuild onto the UI thread through `DispatcherQueue.TryEnqueue`, the analogue of the source's `@MainActor` account initializer.
+
+## Reference Implementations
+
+| Platform | Location | Conformance |
+|----------|----------|-------------|
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift` | confirmed (1.0.0) |
 
 ## Design Decisions
 
