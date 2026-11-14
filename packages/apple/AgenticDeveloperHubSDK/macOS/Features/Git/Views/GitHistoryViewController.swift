@@ -31,6 +31,10 @@ public final class GitHistoryViewController: NSViewController {
     /// list that changed under it between `reloadData` calls.
     private var commits: [GitCommit] = []
     private var graphRows: [CommitGraphLayout<String>.Row] = []
+    /// The refs at each snapshot commit that has any, and the data source's query, both
+    /// as of the last `reload()`, so badges and paging agree with the rows on screen.
+    private var refsByCommit: [String: [GitRef]] = [:]
+    private var shownQuery = GitLogQuery()
     /// The query and commit count when the last page was asked for; no new request until
     /// either changes. The query is part of it so a new search whose first page happens to
     /// be the same size as the last one's still pages.
@@ -40,7 +44,14 @@ public final class GitHistoryViewController: NSViewController {
     /// Set while the list changes the selection itself, which reports on its own terms.
     private var isApplyingSelection = false
     /// Bumped by every `setQuery(_:)`; a call that finds it moved was overtaken.
-    private var queryGeneration = 0
+    private(set) var queryGeneration = 0
+    /// The query this list last sent to the data source (applied or still in flight), and
+    /// the task sending it. Nil until the first search sends one, when the data source's
+    /// own query is the starting point. Never read back from the data source afterwards:
+    /// the model takes a new query before it awaits, so its query says nothing about
+    /// whether the results have arrived.
+    private var sentQuery: GitLogQuery?
+    private var sendTask: Task<Void, Never>?
 
     private enum Column: String, CaseIterable {
         case graph, subject, author, date, sha
@@ -100,6 +111,7 @@ public final class GitHistoryViewController: NSViewController {
         tableView.accessibilityID("git.history.table")
 
         scrollView.documentView = tableView
+        scrollView.accessibilityID("git.history.scroll")
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
@@ -123,6 +135,13 @@ public final class GitHistoryViewController: NSViewController {
         let selectedID = selectedCommit?.id
         commits = source.commits
         graphRows = source.graphRows
+        shownQuery = source.query
+        var refs: [String: [GitRef]] = [:]
+        for commit in commits {
+            let atCommit = source.refs(at: commit.id)
+            if !atCommit.isEmpty { refs[commit.id] = atCommit }
+        }
+        refsByCommit = refs
         guard isViewLoaded else { return }
 
         let widest = graphRows.map(\.width).max() ?? 1
@@ -168,16 +187,22 @@ public final class GitHistoryViewController: NSViewController {
     // MARK: - Search
 
     /// Applies the window's search text (`GitHistorySearch.parse(_:)`). A query that
-    /// differs from the data source's is sent to it and the list reloads; a `sha:`
-    /// search then selects the first loaded commit with that prefix. A search
-    /// overtaken by a later one selects nothing.
+    /// differs from the one last sent is sent to the data source; a query equal to one
+    /// still in flight waits for it rather than being sent again. The latest call then
+    /// reloads the list and, for a `sha:` search, selects the first loaded commit with
+    /// that prefix. A call overtaken by a later one does neither.
     public func setQuery(_ text: String) async {
         queryGeneration += 1
         let generation = queryGeneration
         let query = GitHistorySearch.parse(text)
-        if query != source.query {
-            await source.setQuery(query)
+        if query != (sentQuery ?? source.query) {
+            sentQuery = query
+            sendTask = Task { [source] in await source.setQuery(query) }
+        }
+        if let sendTask {
+            await sendTask.value
             guard generation == queryGeneration else { return }
+            self.sendTask = nil
             reload()
         }
         guard let prefix = GitHistorySearch.shaPrefix(text),
@@ -188,11 +213,14 @@ public final class GitHistoryViewController: NSViewController {
     // MARK: - Paging
 
     /// Called as the table shows `row`: a row in the last `pagingWindow` asks the data
-    /// source for the next page, once per commit count, so the end of the history does
-    /// not loop.
+    /// source for the next page, once per query and commit count, so the end of the
+    /// history does not loop. Both come from the snapshot, so a model that cleared its
+    /// commits for a search in flight does not page. The model also announces the new
+    /// page, which the owner answers with `reload()`; the reload here is the one that
+    /// counts, so the list does not depend on the owner for its own pages.
     func rowWillAppear(_ row: Int) {
-        let count = source.commits.count
-        let query = source.query
+        let count = commits.count
+        let query = shownQuery
         guard row >= count - Self.pagingWindow else { return }
         if let lastPaged, lastPaged.query == query, lastPaged.count == count { return }
         lastPaged = (query, count)
@@ -220,7 +248,8 @@ extension GitHistoryViewController: NSTableViewDelegate {
             return cell
         case .subject:
             let cell = reuse(tableView, GitHistorySubjectCellView.identifier) { GitHistorySubjectCellView() }
-            cell.configure(subject: commit.subject, badges: GitHistoryRefBadge.badges(for: source.refs(at: commit.id)))
+            let refs = refsByCommit[commit.id] ?? []
+            cell.configure(subject: commit.subject, badges: GitHistoryRefBadge.badges(for: refs))
             return cell
         case .author:
             let cell = reuse(tableView, GitHistoryAuthorCellView.identifier) { GitHistoryAuthorCellView() }
@@ -243,7 +272,9 @@ extension GitHistoryViewController: NSTableViewDelegate {
     }
 
     public func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
-        GitHistoryRowView(frame: .zero)
+        let rowView = GitHistoryRowView(frame: .zero)
+        rowView.accessibilityID("git.history.row")
+        return rowView
     }
 
     public func tableView(_ tableView: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {

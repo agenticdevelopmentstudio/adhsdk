@@ -27,3 +27,11 @@
 **Rationale**: The table only requests rows it is about to show, so the request is the visibility signal; the count guard keeps a finished history from reloading in a loop.
 **Approved**: pending
 
+**Decision**: After a page arrives the list reloads itself; the owner's reload on the model's history notification is a second, harmless one.
+**Rationale**: The list must not depend on its owner to show the pages it asked for; the owner's reload is still needed for changes the list did not ask for (refresh, refs).
+**Approved**: pending
+
+**Decision**: `setQuery` tracks the query it sent and the task sending it, never the data source's query after the first search.
+**Rationale**: The model takes the new query before it awaits the log, so its query says nothing about whether results have arrived.
+**Approved**: pending
+
