@@ -55,3 +55,19 @@
 **Rationale**: The diff is the one source the content source offers and its parser already reads renames, copies and binaries; a second call per commit is a second process for the same facts.
 **Approved**: pending
 
+**Decision**: The diff models are `LineViewerDataSource`s built once per diff, layout and toggle, not views.
+**Rationale**: The line viewer already draws runs, backgrounds, gutters and fillers; a diff is a configuration of it (built from the shared component upward), and a model is testable without a window.
+**Approved**: pending
+
+**Decision**: The diff shows its rows uncoloured as soon as the diff arrives, then recolours when both sides are read and highlighted.
+**Rationale**: Highlighting reads two file versions and runs the interpreted TextMate engine; the change itself should never wait for its colours.
+**Approved**: pending
+
+**Decision**: `GitSyntaxColoring` lives with the views in `AgenticDeveloperHubSDKMacOS`, not in `AgenticDeveloperHubSDKLanguage`.
+**Rationale**: It reads a `GitContentSource`, which is a macOS-tier protocol; `lines(for:path:)` itself uses only Language types, so it could move down if another tier ever needs it.
+**Approved**: pending
+
+**Decision**: The blame colours the lines it already has rather than reading the file again.
+**Rationale**: The blame's lines are the file at that revision; a second read is a second process for the same bytes.
+**Approved**: pending
+

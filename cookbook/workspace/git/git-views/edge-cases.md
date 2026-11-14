@@ -28,3 +28,12 @@
 - **Working copy, a conflicted file**: listed unstaged with `U` in purple; selecting it reports `.unstaged`.
 - **Working copy, a file both staged and modified**: listed in both lists; each selection reports its own target.
 
+- **Diff, a whitespace-only change with Ignore Whitespace on**: the diff lists no file; the viewer is empty, with no error.
+- **Diff, a pure rename or mode change**: no hunks, so no rows.
+- **Diff, huge or minified files**: over 1 MB, or a line over 10,000 UTF-16 units, the side is uncoloured; the viewer draws only visible rows.
+- **Diff, non-UTF-8 content**: decoded as ISO Latin-1, so it is coloured rather than dropped; the diff's own lines are decoded by the model.
+- **Diff, a lone `\r` line ending**: the highlighter splits on it but git does not, so colours after it can land a line off; text is never lost.
+- **Diff, awkward paths**: the language comes from the path's file name and extension; spaces, unicode and newlines are passed through to the content source as they are.
+- **Blame, uncommitted lines**: the all-zero id shows as `00000000` with the `Not Committed Yet` author; clicking it selects nothing.
+- **File history, renames**: the history follows renames, but each commit's diff is asked for the current path, so a commit from before a rename shows no rows.
+

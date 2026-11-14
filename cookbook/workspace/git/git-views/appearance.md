@@ -19,3 +19,15 @@ The header scrolls on its own above the changed-files list and takes at most hal
 
 Two panes in a horizontal-divider `ThemedSplitView`, staged above unstaged, each a heading-weight caption header over its changed-files list.
 
+### Diff
+
+A controls row (the native segmented control, two checkboxes and two push buttons, small control size) above the toolkit's line viewer in the theme's code font. Inline: one viewer. Side by side: two viewers in a vertical-divider `ThemedSplitView`, split evenly. Rows use the viewer's backgrounds: added `.success` and removed `.danger` at 0.18 alpha, emphasis runs at 0.40, headers `.surface`, fillers hatched `.surface`.
+
+### Blame
+
+One line viewer; its three gutter columns are 8, the widest initials (at least 2) and 10 characters wide.
+
+### File history
+
+A vertical-divider `ThemedSplitView`: the commit list (a headerless single-column `ThemedTableView`, rows of a primary-colour subject over a secondary-colour detail line) on the left, the diff on the right.
+

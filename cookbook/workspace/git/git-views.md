@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-11-13
@@ -48,6 +48,7 @@ The **history list** (`GitHistoryViewController`) is a paged table of the [commi
 The **changed-files list** (`GitFileListViewController`) is one list of `GitFileListItem`s (`AgenticDeveloperHubSDKCore`), each a status letter in its status colour, the file type's icon and the path (`old → new` for a rename), reused wherever the window lists files.
 The **commit detail** (`GitCommitDetailViewController`) shows one commit's subject, body, author and committer with their avatars, dates, full sha with a copy button and its parents as links, over a changed-files list read from the `GitContentSource`'s diff of that commit; the latest `show(commit:)` always wins over a load still in flight.
 The **working copy** (`GitWorkingCopyViewController`) shows the `GitWorkingCopyDataSource`'s staged and unstaged files in two changed-files lists and reports the selected file as the `GitDiffTarget` that shows its diff.
+The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTarget` on the toolkit's line viewer, inline (`GitInlineDiffModel`) or side by side (`GitSideBySideDiffModel`), with word-level emphasis and syntax colour from `GitSyntaxColoring`, which reads both sides' contents and highlights them with the TextMate highlighter. The **blame** (`GitBlameViewController`) shows a file's lines with the sha, author initials and date at the start of each commit's run, and the **file history** (`GitFileHistoryViewController`) lists the commits that changed a file beside a diff of the selected one's change to it.
 
 ## Behavioral Requirements
 
@@ -100,6 +101,33 @@ The **working copy** (`GitWorkingCopyViewController`) shows the `GitWorkingCopyD
 - **wc-reload**: `reload()` MUST re-read both lists from the data source. A selected file still in its list stays selected without a delegate call, unless its status changed, when the delegate is called once with its new target (an untracked file that becomes intent-to-add moves from `.untracked` to `.unstaged`); one that left its list is deselected and the delegate is called once with nil.
 - **wc-ui-thread**: The working copy MUST be used on the UI thread.
 
+### Diff
+
+- **diff-inline-rows**: `GitInlineDiffModel(diff:oldLines:newLines:wordHighlights:)` MUST have two gutter columns and, per hunk in order, one `.header` row (background `.header`, no gutter values) titled `@@ -<oldStart>,<oldCount> +<newStart>,<newCount> @@`, followed by ` <section>` when the section is not empty, then one row per hunk line: a context line with gutter `[old, new]` and no background, a removed line `[old, nil]` with background `.removed`, an added line `[nil, new]` with background `.added`, and a no-newline marker as a text row `\ No newline at end of file` with no gutter values. Numbers are decimal strings.
+- **diff-side-by-side-rows**: `GitSideBySideDiffModel.make(diff:oldLines:newLines:wordHighlights:)` MUST return a left and a right data source of one gutter column each, with the same row count, aligned row for row: each hunk's header on both sides; a context line on both (old number left, new number right); within each run of removed and added lines, the removed lines in order on the left and the added lines in order on the right, the shorter side padded with `.filler` rows (empty text, no gutter value) to the longer side's length; a no-newline marker on the side of the line before it, a filler opposite, or on both sides after a context line.
+- **diff-binary**: A binary file MUST be one `.header` row `Binary file`, on each side for side by side, whatever its hunks.
+- **diff-word-emphasis**: With `wordHighlights` on, each removed line paired with an added line by `GitWordDiff.pairs(in:)` MUST carry one run with highlight `.emphasis` (no foreground) per range `GitWordDiff.changedRanges(old:new:)` reports for its side; with it off, no row carries an emphasis run.
+- **diff-syntax-runs**: A removed line MUST carry the runs of `oldLines[old − 1]`, an added line those of `newLines[new − 1]`, and a context line those of `newLines[new − 1]`, else `oldLines[old − 1]`; nil lines or a number past the end carry no syntax runs. Emphasis runs follow the syntax runs.
+- **diff-coloring**: `GitSyntaxColoring.lines(for:path:)` MUST return nil for nil data, for data over `SyntaxHighlighter.maximumBytes`, for a path whose language the resolver does not know or whose scope has no grammar, and when the highlighter returns nil (a line over `maximumLineLength`); otherwise the highlighter's lines for the data decoded as UTF-8, or as ISO Latin-1 when it is not UTF-8, decoded off the UI thread. A highlighter that throws is logged and gives nil.
+- **diff-coloring-revisions**: The old side MUST be read with `contents(path: oldPath, at:)` at `:0` for unstaged, `HEAD` for staged, `<id>^1` for a commit and `from` for a range, and is absent for an untracked file; the new side with `contents(path: newPath, at:)` at the working file (nil) for unstaged and untracked, `:0` for staged, the commit's id and `to` for a range. A side whose path is nil (an added file's old side, a deleted file's new side) is not read. A read that throws is logged and leaves that side uncoloured.
+- **diff-show**: `GitDiffViewController.show(target:file:)` MUST ask the content source for `diff(target, options:)` with `ignoreWhitespace` from its setting, show the file diff whose new path is `file`, else whose old path is `file`, else the first, at once uncoloured, then read both sides through `GitSyntaxColoring` and show them coloured. Without a coloring the diff stays uncoloured. A diff that throws MUST be logged by `GitClientError.logDescription` and leave the viewer empty with the error's description shown (`git.diff.error`, danger colour); the next `show` or `clear()` hides it.
+- **diff-latest-wins**: The latest `show(target:file:)` or `clear()` MUST win: a diff or colouring requested by an earlier call never changes the view, whichever order they finish in, decided by the view's own counter, bumped before it awaits.
+- **diff-controls**: The view MUST offer a segmented control `Inline` / `Side by Side`, checkboxes `Ignore Whitespace` and `Word Highlighting`, and buttons `Blame` and `History`. The three settings MUST be read from and written to `UserSettings` keys `git_diff_layout` (`inline` or `sideBySide`, default `inline`), `git_diff_ignore_whitespace` (default false) and `git_diff_word_highlight` (default true). Changing the layout or word highlighting MUST rebuild from the loaded diff without asking the source again; changing ignore-whitespace MUST ask for the shown target again. Side by side locks the two sides' vertical scroll together.
+- **diff-blame-history**: `Blame` MUST call the delegate's `diff(_:didRequestBlameFor:at:)` with the shown file and the revision its new side is at (the commit's id, a range's `to`, otherwise nil for the working file); for a deleted file, the revision before it (`<id>^1`, `from`, otherwise `HEAD`). `History` MUST call `diff(_:didRequestHistoryFor:)` with the shown file. Both are disabled while no file is shown.
+- **diff-ui-thread**: The diff, its models and its coloring MUST be used on the UI thread; every read and highlight is awaited, never blocked on.
+
+### Blame
+
+- **blame-rows**: `GitBlameViewController.show(path:at:)` MUST ask the content source for `blame(path:at:)` and show one row per blame line, in order, its text the line's text, with three gutter columns filled only on the first line of each `GitBlame.Run`: the commit's first eight characters, the author's initials (`PersonInitials.of(name:fallback:)` with the email as fallback), and the author date as `yyyy-MM-dd` in the current time zone.
+- **blame-coloring**: After showing the lines it MUST colour them by passing the lines joined with `\n` to `GitSyntaxColoring.lines(for:path:)`, line i taking the i-th styled line's runs; nil leaves them uncoloured. The blame is not read a second time.
+- **blame-select-commit**: A click in the sha gutter column on any row MUST call the delegate's `blame(_:didSelectCommit:)` once with that row's commit's full id; the all-zero id of uncommitted lines calls nothing.
+- **blame-errors-latest-wins**: A blame that throws MUST be logged and shown as the error's description (`git.blame.error`) over an empty viewer; the latest `show` or `clear()` wins as in diff-latest-wins.
+
+### File history
+
+- **file-history-list**: `GitFileHistoryViewController.show(path:)` MUST ask the content source for `fileHistory(path:)` and list its commits in order, each row the subject and `<shortID> · <author initials> · <relative date>`, then select the first (newest) and show its change to the file in its `diffViewController` as `show(target: .commit(<id>, paths: [path]), file: path)`. Selecting another row shows that commit the same way; clearing the selection clears the diff.
+- **file-history-errors-latest-wins**: A history that throws MUST be logged and shown as the error's description (`git.fileHistory.error`) over an empty list, with the diff cleared; the latest `show(path:)` wins as in diff-latest-wins.
+
 ## Appearance
 
 ### Refs sidebar
@@ -121,6 +149,18 @@ The header scrolls on its own above the changed-files list and takes at most hal
 ### Working copy
 
 Two panes in a horizontal-divider `ThemedSplitView`, staged above unstaged, each a heading-weight caption header over its changed-files list.
+
+### Diff
+
+A controls row (the native segmented control, two checkboxes and two push buttons, small control size) above the toolkit's line viewer in the theme's code font. Inline: one viewer. Side by side: two viewers in a vertical-divider `ThemedSplitView`, split evenly. Rows use the viewer's backgrounds: added `.success` and removed `.danger` at 0.18 alpha, emphasis runs at 0.40, headers `.surface`, fillers hatched `.surface`.
+
+### Blame
+
+One line viewer; its three gutter columns are 8, the widest initials (at least 2) and 10 characters wide.
+
+### File history
+
+A vertical-divider `ThemedSplitView`: the commit list (a headerless single-column `ThemedTableView`, rows of a primary-colour subject over a secondary-colour detail line) on the left, the diff on the right.
 
 ## States
 
@@ -155,6 +195,22 @@ Two panes in a horizontal-divider `ThemedSplitView`, staged above unstaged, each
 - **Unborn repository**: staged files are listed as added; nothing throws.
 - **Selected file moved or gone**: after a reload that no longer lists it in its list, nothing is selected and the delegate is told nil.
 
+### Diff
+
+- **Nothing shown**: before the first `show` and after `clear()`, no rows and the Blame and History buttons are disabled.
+- **Loading**: the previous file's rows stay until the new diff arrives; then the rows show uncoloured until both sides are coloured.
+- **Diff failed**: no rows and the error's description shown until the next `show` or `clear()`.
+- **Binary**: one header row `Binary file`.
+
+### Blame
+
+- **Blame failed**: no rows and the error's description shown until the next `show` or `clear()`.
+
+### File history
+
+- **No commits**: no rows; the diff is cleared.
+- **History failed**: no rows, the diff cleared, the error's description shown until the next `show`.
+
 ## Accessibility
 
 ### Refs sidebar
@@ -176,6 +232,18 @@ The root view carries `git.detail`, the header's scroll view `git.detail.header`
 ### Working copy
 
 The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`.
+
+### Diff
+
+The root view carries `git.diff`; the controls `git.diff.controls`, `git.diff.layout`, `git.diff.ignoreWhitespace`, `git.diff.wordHighlight`, `git.diff.blame` and `git.diff.history`; the inline viewer `git.diff.inline` and the side-by-side viewers `git.diff.left` and `git.diff.right` (in `git.diff.split`), each with the viewer's own `.text` and `.gutter`; the error label `git.diff.error`.
+
+### Blame
+
+The root view carries `git.blame`, its viewer `git.blame.lines` (with `.text` and `.gutter`) and the error label `git.blame.error`.
+
+### File history
+
+The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the list's scroll view `git.fileHistory.scroll`, its table `git.fileHistory.table`, each row view `git.fileHistory.row`, each cell `git.fileHistory.commit` with `git.fileHistory.subject` and `git.fileHistory.details`, the error label `git.fileHistory.error`, and the diff's own `git.diff`.
 
 ## Conformance Test Vectors
 
@@ -220,6 +288,20 @@ The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHead
 | git-views-037 | file-list-files, wc-reload | Unstaged `c` untracked selected; reload with `c` added (intent-to-add) | Delegate `.untracked(path: "c")`, then `.unstaged(paths: ["c"])` once; `c` stays selected; a second identical reload reports nothing. |
 | git-views-038 | detail-files | A commit whose diff lists no files | The list is empty and no error is shown. |
 | git-views-039 | detail-latest-wins, detail-clear | `show(A)` held and failing; `show(B)` returns; A released; then B fails and `show(nil)` | No error after A's late failure, B's files listed; B's failure shown; hidden after nil. |
+| git-views-040 | diff-inline-rows | A modified file with hunk `-1,3 +1,3` section `func a()` (context `let a = 1`, removed `let b = 2`, added `let b = 3`, context `let c = 4`) and hunk `-10,2 +10,3` (context `x`, added `y`, context `z`) | Nine rows: header `@@ -1,3 +1,3 @@ func a()`; `1 1`; `2 -` removed; `- 2` added; `3 3`; header `@@ -10,2 +10,3 @@`; `10 10`; `- 11` added; `11 12`. |
+| git-views-041 | diff-word-emphasis | 040 with word highlighting on, then off | On: row 2 and row 3 each carry one emphasis run at 8 length 1. Off: no emphasis run. |
+| git-views-042 | diff-side-by-side-rows | A hunk: context `c`, removed `r1`, `r2`, `r3`, added `a1`, context `d` | Six rows each side; left `header, c, r1, r2, r3, d`; right `header, c, a1, filler, filler, d`; left `r1` and right `a1` carry the pair's emphasis. |
+| git-views-043 | diff-binary | A binary file with no hunks | Inline: one header row `Binary file`; side by side: one on each side. |
+| git-views-044 | diff-syntax-runs | 040 with old lines whose line n has one run of length n, new lines likewise with a different colour | Removed `2 -` has old line 2's run; added `- 2` has new line 2's run; context `11 12`, whose new line 12 is past the end, has old line 11's run; with one line on each side, rows `2 -`, `- 2` and `11 12` have none; nil lines give none. |
+| git-views-045 | diff-coloring | Real highlighter; `let x = 1` as `a.swift`; the same as `a.unknownext`; nil data; 1,000,001 bytes; one line of 10,001 characters; `let é` in Latin-1 | One line whose first run is 0 length 3; nil; nil; nil; nil; one line with runs. |
+| git-views-046 | diff-coloring-revisions | Each target with a modified file `a.swift`; a commit with a rename `old.swift` → `new.swift`; an added file in a commit | unstaged `:0`/working; staged `HEAD`/`:0`; untracked none/working; commit `c1^1`/`c1`; range `from`/`to`; the rename reads `old.swift` at `c1^1` and `new.swift` at `c1`; the added file reads only its new side. |
+| git-views-047 | diff-show, diff-controls | `show(.commit(c1, paths: [a]), file: a)` with ignore whitespace stored true and the layout stored `sideBySide` | The source is asked for that target with `ignoreWhitespace` true; the side-by-side viewers show the rows; switching to Inline stores `inline` and asks the source nothing. |
+| git-views-048 | diff-latest-wins | `show(A)` held, `show(B)` held; released B then A, and again A then B | The rows are B's in both orders, and only B's sides are coloured. |
+| git-views-049 | diff-show | The diff throws `commandFailed(verb: "diff", …)`; then `show(B)` | The error label shows the description and the viewer is empty; after B it is hidden and B's rows show. |
+| git-views-050 | diff-blame-history | Showing `.commit(c1, paths: [a])`; press Blame, History; then a deleted file `d` in the same commit | Blame `a` at `c1`; History `a`; blame `d` at `c1^1`. |
+| git-views-051 | blame-rows, blame-select-commit | Lines 1–2 from `c1` (Ann Lee), line 3 from `c2` (Bob Roe), line 4 from `c1` | Gutters `[c1 short, AL, date]`, `[]`, `[c2 short, BR, date]`, `[c1 short, AL, date]`; a sha click on row 1 selects `c1`; on an uncommitted row nothing. |
+| git-views-052 | blame-errors-latest-wins | `show` held then a second `show`, released in both orders; a failing blame | The latest blame's rows; the failure's description in `git.blame.error`. |
+| git-views-053 | file-history-list, file-history-errors-latest-wins | `fileHistory` returns `c2`, `c1`; select row 1; a failing history | Rows `c2`, `c1`; the diff is asked for `.commit(c2, paths: [path])`, then `.commit(c1, …)`; the failure shown with the list empty. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -251,6 +333,15 @@ The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHead
 - **Working copy, a conflicted file**: listed unstaged with `U` in purple; selecting it reports `.unstaged`.
 - **Working copy, a file both staged and modified**: listed in both lists; each selection reports its own target.
 
+- **Diff, a whitespace-only change with Ignore Whitespace on**: the diff lists no file; the viewer is empty, with no error.
+- **Diff, a pure rename or mode change**: no hunks, so no rows.
+- **Diff, huge or minified files**: over 1 MB, or a line over 10,000 UTF-16 units, the side is uncoloured; the viewer draws only visible rows.
+- **Diff, non-UTF-8 content**: decoded as ISO Latin-1, so it is coloured rather than dropped; the diff's own lines are decoded by the model.
+- **Diff, a lone `\r` line ending**: the highlighter splits on it but git does not, so colours after it can land a line off; text is never lost.
+- **Diff, awkward paths**: the language comes from the path's file name and extension; spaces, unicode and newlines are passed through to the content source as they are.
+- **Blame, uncommitted lines**: the all-zero id shows as `00000000` with the `Not Committed Yet` author; clicking it selects nothing.
+- **File history, renames**: the history follows renames, but each commit's diff is asked for the current path, so a commit from before a rename shows no rows.
+
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -265,6 +356,11 @@ The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHead
 | `source` (detail) | `GitContentSource` | none | Where the commit detail reads the commit's diff. |
 | `pasteboard` (detail) | `NSPasteboard` | `.general` | Where the copy button puts the sha. |
 | `delegate` (detail) | `GitCommitDetailDelegate?` | nil | Told which parent link and which file were chosen. |
+| `source` (diff) | `GitContentSource` | none | Where the diff reads diffs and contents. |
+| `coloring` (diff, blame, file history) | `GitSyntaxColoring?` | none | Syntax colour; nil shows text uncoloured. |
+| `settings` (diff, file history) | `SettingsStore` | `UserSettings.shared` | Where the layout and toggles are stored. |
+| `delegate` (diff) | `GitDiffDelegate?` | nil | Told when Blame or History is pressed. |
+| `delegate` (blame) | `GitBlameDelegate?` | nil | Told which commit a sha click chose. |
 | `source` (working copy) | `GitWorkingCopyDataSource` | none | Where the working copy reads its staged and unstaged files. |
 | `delegate` (working copy) | `GitWorkingCopyDelegate?` | nil | Told the selected file's diff target, or nil. |
 
@@ -277,6 +373,7 @@ Not applicable: the views define no URL scheme, route or navigation destination.
 Section titles (`Workspace`, `Branches`, `Remotes · <remote>`, `Tags`, `Stashes`, `Submodules`, `Worktrees`) and `Working Copy` are English literals today; ref names, messages and paths are shown verbatim.
 The history list's column titles (`Graph`, `Subject`, `Author`, `Date`, `SHA`) are English literals today; relative and absolute dates follow the current locale; the search prefixes (`author:`, `sha:`, `-S`) are not localized.
 The working copy's headers (`Staged (<count>)`, `Unstaged (<count>)`), the commit detail's field captions (`Author`, `Committer`, `SHA`, `Parents`) and the copy button's label (`Copy SHA`) are English literals today; detail dates follow the current locale; status letters are git's and are not localized.
+The diff's controls (`Inline`, `Side by Side`, `Ignore Whitespace`, `Word Highlighting`, `Blame`, `History`), its `Binary file` and `\ No newline at end of file` rows are English literals today; blame dates are `yyyy-MM-dd` in every locale, and file-history dates follow the current locale.
 
 ## Accessibility Options
 
@@ -296,7 +393,7 @@ The views show local repository data only and send nothing anywhere.
 
 ## Logging
 
-The commit detail logs a failed diff at error level, by `GitClientError.logDescription` (case and fields, never git's output), under its own `Loggable` category; the other views log nothing, and the model logs failed reloads.
+The commit detail, the diff, the blame and the file history each log a failed load (diff, blame, history, or a side's contents) at error level, by `GitClientError.logDescription` (case and fields, never git's output), under their own `Loggable` categories; `GitSyntaxColoring` logs a highlighter error by its type; the other views log nothing, and the model logs failed reloads.
 
 ## Platform Notes
 
@@ -372,6 +469,22 @@ The commit detail logs a failed diff at error level, by `GitClientError.logDescr
 **Rationale**: The diff is the one source the content source offers and its parser already reads renames, copies and binaries; a second call per commit is a second process for the same facts.
 **Approved**: pending
 
+**Decision**: The diff models are `LineViewerDataSource`s built once per diff, layout and toggle, not views.
+**Rationale**: The line viewer already draws runs, backgrounds, gutters and fillers; a diff is a configuration of it (built from the shared component upward), and a model is testable without a window.
+**Approved**: pending
+
+**Decision**: The diff shows its rows uncoloured as soon as the diff arrives, then recolours when both sides are read and highlighted.
+**Rationale**: Highlighting reads two file versions and runs the interpreted TextMate engine; the change itself should never wait for its colours.
+**Approved**: pending
+
+**Decision**: `GitSyntaxColoring` lives with the views in `AgenticDeveloperHubSDKMacOS`, not in `AgenticDeveloperHubSDKLanguage`.
+**Rationale**: It reads a `GitContentSource`, which is a macOS-tier protocol; `lines(for:path:)` itself uses only Language types, so it could move down if another tier ever needs it.
+**Approved**: pending
+
+**Decision**: The blame colours the lines it already has rather than reading the file again.
+**Rationale**: The blame's lines are the file at that revision; a second read is a second process for the same bytes.
+**Approved**: pending
+
 ## Compliance
 
 | Check | Status | Category |
@@ -391,3 +504,4 @@ The commit detail logs a failed diff at error level, by `GitClientError.logDescr
 | 1.1.1 | 2026-11-13 | Mike Fullerton | setQuery tracks the query it sent and waits for one in flight; paging and badges read the reload snapshot; scroll and row identifiers; vectors 019-022 |
 | 1.2.0 | 2026-11-13 | Mike Fullerton | Changed-files list, commit detail and working copy: GitFileListItem in Core, one shared list, latest-call-wins detail, staged/unstaged targets; vectors 023-036 |
 | 1.3.0 | 2026-11-13 | Mike Fullerton | Commit detail logs a failed diff and shows its description; surviving items re-report on a status change; single-line titles; collapsed empty header; vectors 033, 037-039 |
+| 1.4.0 | 2026-11-13 | Mike Fullerton | Diff, blame and file history views: inline and side-by-side diff models, syntax colouring, persisted diff toggles |
