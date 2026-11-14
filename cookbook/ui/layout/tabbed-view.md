@@ -2,11 +2,11 @@
 id: d1257c76-fb28-47a5-bc2b-d4fb1ef87b53
 title: "Multi-Edge Tabbed View"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -176,6 +176,12 @@ The multi-edge tabbed view hosts up to four edge-docked tab bars — top, right,
 - **explicit-group-override**: A caller MAY supply an explicit group id when
   creating a tab, differing from its own id, to tie multiple tab instances
   (typically one per edge) together as siblings of one logical tab.
+- **center-outline-is-optional**: The outline around the center content
+  MUST be drawn by default and MUST be removable by the owner, with the
+  content then filling the space the outline's inset took.
+- **tab-strips-are-optional**: The owner MAY hide the tab strips; hiding
+  and showing them MUST relay out the content without adding, removing or
+  reselecting any tab.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -633,3 +639,4 @@ compliance-catalog checks, so they are not listed here.
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Center outline and tab strips can be hidden |

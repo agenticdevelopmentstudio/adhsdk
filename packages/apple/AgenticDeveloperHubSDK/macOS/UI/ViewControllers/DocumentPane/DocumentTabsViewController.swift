@@ -35,6 +35,26 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
 
     private var splitsByTabID: [UUID: ComposableTabsViewController] = [:]
 
+    /// Whether the editors are outlined, the focused one in the accent. Off
+    /// in a Document window, which has no other kind of pane to tell an
+    /// editor from.
+    public var showsPaneOutlines = true {
+        didSet { splitsByTabID.values.forEach { $0.showsPaneOutlines = showsPaneOutlines } }
+    }
+
+    /// Hides the tab strip while there is one tab and shows it from the
+    /// second: a window on one document has nothing to switch between until
+    /// another is opened beside it.
+    public var hidesTabBarForSingleTab = false {
+        didSet { refreshTabBarVisibility() }
+    }
+
+    private func refreshTabBarVisibility() {
+        guard hidesTabBarForSingleTab else { return }
+        let shows = tabs(on: .top).count > 1
+        if showsTabBars != shows { showsTabBars = shows }
+    }
+
     /// The editors `wireTitles(in:tabID:)` has already hooked. It walks every
     /// editor in a tab, and `openToTheSide` calls it again after each split,
     /// so without this an editor that survives three side-splits ends up with
@@ -192,6 +212,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
         // back/forward and breadcrumb row, so the editors have no pane title
         // bar (and so no gear) of their own.
         root.showsPaneTitleBars = false
+        root.showsPaneOutlines = showsPaneOutlines
         // These editors are not layout nodes: they exist only inside this
         // pane's own stored layout, so what they remember has to be filed
         // against the node the window *does* know, or the next `saveTabs`
@@ -221,6 +242,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
         let tab = Tab(title: title, viewController: root)
         splitsByTabID[tab.id] = root
         addTab(tab, on: .top)
+        refreshTabBarVisibility()
         wireTitles(in: root, tabID: tab.id)
         return tab.id
     }
@@ -535,6 +557,7 @@ extension DocumentTabsViewController: MultiTabbedViewControllerDelegate {
         splitsByTabID.removeValue(forKey: tabID)?.tearDownPanes()
         lastFocusedPanes.removeObject(forKey: tabID as NSUUID)
         removeTab(id: tabID)
+        refreshTabBarVisibility()
         persistTabs()
     }
 

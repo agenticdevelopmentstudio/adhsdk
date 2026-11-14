@@ -2,11 +2,11 @@
 id: 4d75a371-181e-4d80-a16b-022d37dc0d48
 title: "Composable Tabs Leaf Pane"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -243,6 +243,10 @@ means.
   implementation; it is not a constraint against adding a secondary cue —
   see Differentiate Without Color in Accessibility Options, which records
   that no such cue is implemented.
+- **outline-follows-the-owner**: A leaf pane MUST draw no outline, active
+  or inactive, while the split that owns it has pane outlines switched
+  off (a window that is one pane and has nothing to tell it from), and
+  MUST pick the setting up when it is created as well as when it changes.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -557,6 +561,7 @@ Accessibility statuses rest on the explicit `accessibilityDescription` labels al
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Pane outline follows the split's outline setting |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

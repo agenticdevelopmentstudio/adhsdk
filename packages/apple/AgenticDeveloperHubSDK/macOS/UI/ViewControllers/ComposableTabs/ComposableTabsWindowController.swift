@@ -325,18 +325,24 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     ///   the window has no shelf and no toggle for one.
     /// - Parameter showsTabBars: false for a window with one fixed
     ///   arrangement and no top-level tabs to switch (the File Browser window).
+    /// - Parameter showsPaneChrome: false for a window that is one pane and
+    ///   nothing else (a Document window): no pane title bar, no pane outline
+    ///   or active-pane border, and no frame spacing around the pane.
     public init(
         project: ProjectWorkspace,
         tabItemDataSource: ComposableTabsTabItemDataSource? = nil,
         shelf: ProjectShelfViewController? = nil,
-        showsTabBars: Bool = true
+        showsTabBars: Bool = true,
+        showsPaneChrome: Bool = true
     ) {
         self.project = project
         self.shelf = shelf
+        self.showsPaneChrome = showsPaneChrome
         // Locals first: a stored property cannot be read back before
         // `super.init`, and the host needs the tab controller to wrap.
         let tabbed = MultiTabbedViewController()
         tabbed.showsTabBars = showsTabBars
+        tabbed.showsCenterOutline = showsPaneChrome
         let content = WindowFooterContentViewController(
             contentViewController: tabbed,
             accessibilityPrefix: "project.footer"
@@ -354,14 +360,14 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             persistsFrame: true
         )
         self.windowTitle = project.displayName
-        self.windowTitleSymbolName = "folder"
+        self.windowTitleSymbolName = project.repo.kind.isDocument ? "doc" : "folder"
         // Full-size content: the panes' backdrop runs up behind a clear
         // titlebar, as Settings' does — see `configureWindow(_:)`.
         self.windowStyleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
         self.minSize = NSSize(width: 400, height: 300)
 
         tabbed.delegate = self
-        Self.applyPaneSpacing(PaneSpacing.contentInsets, to: tabbed)
+        Self.applyPaneSpacing(frameSpacing, to: tabbed)
         backdropObserver = ThemePaletteObserver(host: tabbed.view) { [weak self] palette in
             self?.tabbed.centerBackgroundColor = NSColor(palette.projectPaneBackdrop)
             self?.tabbed.centerOutlineColor = NSColor(palette.projectPaneOutline)
@@ -390,8 +396,8 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         }
         spacingObservers = PaneSpacing.edgeSettings.values.map { setting in
             UserSettingObserver(setting) { [weak self] _ in
-                guard let tabbed = self?.tabbed else { return }
-                Self.applyPaneSpacing(PaneSpacing.contentInsets, to: tabbed)
+                guard let self else { return }
+                Self.applyPaneSpacing(frameSpacing, to: tabbed)
             }
         }
         self.tabItemDataSource = tabItemDataSource
@@ -423,6 +429,34 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// `MultiTabbedViewController` is generic and knows nothing about pane
     /// chrome, so the arithmetic belongs here, where the spacing and the
     /// pane's own title bar are both in view.
+    /// Whether this window's panes wear their chrome — see `init`.
+    private let showsPaneChrome: Bool
+
+    /// The room left around the panes: the user's frame spacing, or none for
+    /// a window whose one pane runs to its edges.
+    private var frameSpacing: NSEdgeInsets {
+        showsPaneChrome ? PaneSpacing.contentInsets : NSEdgeInsetsZero
+    }
+
+    /// A tree root built for this window, stripped of pane chrome when the
+    /// window shows none. Both properties stamp down the subtree.
+    private func applyPaneChrome(to root: ComposableTabsViewController) {
+        guard !showsPaneChrome else { return }
+        root.showsPaneTitleBars = false
+        root.showsPaneOutlines = false
+    }
+
+    /// The file a Document window is showing, set by whoever follows its
+    /// Document pane's focus. The window's title is this file's name; `nil`
+    /// falls back to the project's display name.
+    public var titleDocumentURL: URL? {
+        didSet {
+            guard titleDocumentURL != oldValue else { return }
+            titleDirectory = nil
+            refreshTitle()
+        }
+    }
+
     static func applyPaneSpacing(_ insets: NSEdgeInsets, to tabbed: MultiTabbedViewController) {
         tabbed.contentInsets = insets
         let firstTabTop = insets.top + ComposableTabsPaneViewController.titleBarBottom
@@ -489,12 +523,11 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         // Settings' seamless titlebar, shared with the Coding Partner window.
         // The title stays — see above.
         WindowTitlebarAccessory.applyIntegratedTitlebar(to: window)
-        if shelf != nil {
-            // The toolbar draws the title after the shelf instead — see
-            // `WindowToolbarItem.projectShelfItems`.
-            window.titleVisibility = .hidden
-            toolbarDelegate.titleWindow = window
-        }
+        // The toolbar draws the title — after the shelf toggle when there is
+        // a shelf, first when there is none — so it is the same size and on
+        // the same line as the toolbar's controls in every window.
+        window.titleVisibility = .hidden
+        toolbarDelegate.titleWindow = window
 
         // The window, not `self.window`: this runs *during* `loadWindow()`, so
         // the controller's own property is not pointing at it yet.
@@ -538,9 +571,10 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     // MARK: - Project shelf
 
-    /// The toggle, when there is a shelf to toggle.
+    /// The shelf toggle and the title after it, or the title alone in a
+    /// window with no shelf.
     private var shelfToolbarItems: [WindowToolbarItem] {
-        guard shelf != nil else { return [] }
+        guard shelf != nil else { return [.windowTitle(identifier: .projectTitle)] }
         return WindowToolbarItem.projectShelfItems(
             toggleAction: #selector(ComposableTabsWindowController.toggleShelf),
             splitView: { [weak self] in self?.windowContent.splitView })
@@ -865,6 +899,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
             workingDirectory: workingDirectory,
             isRoot: true
         )
+        applyPaneChrome(to: split)
         wireLayoutCallback(on: split, tabID: tabID)
         splitControllersByTabID[tabID] = split
         return split
@@ -1365,13 +1400,18 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         let directory = activeWorkingDirectory
         // A window that is one file's shows that file, not its folder.
         let kind = project.repo.kind
-        titleBreadcrumb.fileURL = kind == .document ? URL(fileURLWithPath: project.repo.path) : directory
+        if kind.isDocument, let titleDocumentURL {
+            titleBreadcrumb.fileURL = titleDocumentURL
+        } else {
+            titleBreadcrumb.fileURL = kind == .document ? URL(fileURLWithPath: project.repo.path) : directory
+        }
         guard directory != titleDirectory else { return }
         titleDirectory = directory
-        // A Document window is named for its file, or "Documents" when it
-        // holds several as tabs.
+        // A Document window is named for the file it is showing; until its
+        // pane reports one, for its row (the file it was opened on, or
+        // "Documents").
         guard !kind.isDocument else {
-            setTitle(project.displayName)
+            setTitle(titleDocumentURL?.lastPathComponent ?? project.displayName)
             return
         }
         // A File Browser window (no top-level tabs) names its folder; a
@@ -1545,6 +1585,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
                 workingDirectory: directory,
                 isRoot: true
             )
+            applyPaneChrome(to: split)
             wireLayoutCallback(on: split, tabID: record.id)
             splitControllersByTabID[record.id] = split
             if let focusedNodeID = record.focusedNodeID {

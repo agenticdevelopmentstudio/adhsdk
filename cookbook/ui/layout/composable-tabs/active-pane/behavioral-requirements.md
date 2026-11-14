@@ -166,5 +166,9 @@
   own.
 - **the-backdrop-repaints-on-a-highlight-setting-change**: The backdrop MUST
   reapply its theme when the highlight setting changes.
+- **the-backdrop-outline-is-optional**: The backdrop MUST draw its outline
+  by default and MUST draw none, in either the active or the inactive
+  color, while its owner has switched the outline off; switching it MUST
+  repaint the backdrop.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

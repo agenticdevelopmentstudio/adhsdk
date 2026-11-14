@@ -52,5 +52,14 @@
 
 - **breadcrumb-selection-routes-out**: A URL chosen through the breadcrumb (a crumb, or a file from its popover) MUST be reported through the open-request callback, not opened directly in this editor.
 - **editor-open-request-routes-out**: A URL the hosted file editor resolves and reports through its open-file callback MUST be reported through the open-request callback, not opened directly in this editor.
+- **history-segment-lists-the-trail**: The navigation row's control MUST
+  be back, a document segment, and forward. Clicking the document segment
+  MUST pop down the editor's own trail — the same entries back and forward
+  walk — most recent first, each with its file's name and icon, the one
+  showing checked. The segment MUST be disabled while the trail is empty.
+- **choosing-from-the-trail-is-a-step-along-it**: Choosing an entry MUST
+  show that file in this editor and move the trail's cursor to it without
+  adding, removing or reordering entries; choosing the entry already
+  showing MUST do nothing.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

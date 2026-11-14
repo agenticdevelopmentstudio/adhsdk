@@ -141,5 +141,11 @@
 - **explicit-group-override**: A caller MAY supply an explicit group id when
   creating a tab, differing from its own id, to tie multiple tab instances
   (typically one per edge) together as siblings of one logical tab.
+- **center-outline-is-optional**: The outline around the center content
+  MUST be drawn by default and MUST be removable by the owner, with the
+  content then filling the space the outline's inset took.
+- **tab-strips-are-optional**: The owner MAY hide the tab strips; hiding
+  and showing them MUST relay out the content without adding, removing or
+  reselecting any tab.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

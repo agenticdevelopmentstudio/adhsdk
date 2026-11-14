@@ -2,11 +2,11 @@
 id: 4205c688-865a-4d74-890d-f803ee66fdcb
 title: "Document Editor"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -91,6 +91,15 @@ This component is one editor inside one pane of one tab. It hosts a breadcrumb a
 
 - **breadcrumb-selection-routes-out**: A URL chosen through the breadcrumb (a crumb, or a file from its popover) MUST be reported through the open-request callback, not opened directly in this editor.
 - **editor-open-request-routes-out**: A URL the hosted file editor resolves and reports through its open-file callback MUST be reported through the open-request callback, not opened directly in this editor.
+- **history-segment-lists-the-trail**: The navigation row's control MUST
+  be back, a document segment, and forward. Clicking the document segment
+  MUST pop down the editor's own trail — the same entries back and forward
+  walk — most recent first, each with its file's name and icon, the one
+  showing checked. The segment MUST be disabled while the trail is empty.
+- **choosing-from-the-trail-is-a-step-along-it**: Choosing an entry MUST
+  show that file in this editor and move the trail's cursor to it without
+  adding, removing or reordering entries; choosing the entry already
+  showing MUST do nothing.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -256,6 +265,7 @@ Not applicable: no logging call appears anywhere in this file.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/BackForwardControl.swift` | unverified |
 
 ## Design Decisions
 
@@ -300,3 +310,4 @@ The `screen-reader-support` status is partial: the reset button's and each toggl
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/documents/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns (passed) and unit-test-coverage (partial) compliance rows. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Recent-documents menu between back and forward |

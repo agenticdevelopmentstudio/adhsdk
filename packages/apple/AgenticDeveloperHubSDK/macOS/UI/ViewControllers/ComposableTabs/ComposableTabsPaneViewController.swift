@@ -90,7 +90,18 @@ public final class ComposableTabsPaneViewController: PaneViewController {
     /// The backdrop that draws the active-pane outline. Unchanged — it is the
     /// reason this pane has a container of its own at all.
     public override func makeContainerView() -> NSView {
-        ComposableTabsPaneBackgroundView(nodeID: nodeID)
+        let background = ComposableTabsPaneBackgroundView(nodeID: nodeID)
+        background.drawsOutline = showsOutline
+        return background
+    }
+
+    /// Whether the backdrop draws this pane's outline. Stamped by the
+    /// enclosing split from its `showsPaneOutlines`.
+    var showsOutline = true {
+        didSet {
+            guard showsOutline != oldValue, isViewLoaded else { return }
+            (view as? ComposableTabsPaneBackgroundView)?.drawsOutline = showsOutline
+        }
     }
 
     /// `nil` only if the project went away first.

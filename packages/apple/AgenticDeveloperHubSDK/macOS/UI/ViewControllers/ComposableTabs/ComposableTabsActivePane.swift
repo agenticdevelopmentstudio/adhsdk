@@ -432,6 +432,16 @@ public final class ComposableTabsPaneBackgroundView: NSView, Themeable {
 
     public let nodeID: UUID
 
+    /// Whether the outline is drawn. Off, the track it would be drawn in is
+    /// painted as the pane's own fill, square, so the pane has no edge of its
+    /// own and no active-pane colour.
+    public var drawsOutline = true {
+        didSet {
+            guard drawsOutline != oldValue else { return }
+            applyTheme(scopedPalette)
+        }
+    }
+
     /// The pane itself: `windowBackground`, the plane a pane paints, inside
     /// the backdrop track.
     private let fill = ThemedBackgroundView(role: .windowBackground)
@@ -537,6 +547,15 @@ public final class ComposableTabsPaneBackgroundView: NSView, Themeable {
         // to the workspace's edge. Paint this track in the pane's own fill and
         // the tab is cut off from the workspace by a dark hairline.
         layer?.backgroundColor = NSColor(palette.projectPaneBackdrop).cgColor
+        guard drawsOutline else {
+            layer?.backgroundColor = palette.nsColor(.windowBackground).cgColor
+            layer?.borderWidth = 0
+            layer?.cornerRadius = 0
+            layer?.masksToBounds = false
+            fill.layer?.cornerRadius = 0
+            fill.layer?.masksToBounds = false
+            return
+        }
 
         // A theme may override both the switch and the color; neither is set
         // until the user edits the theme's Project topic, so by default the

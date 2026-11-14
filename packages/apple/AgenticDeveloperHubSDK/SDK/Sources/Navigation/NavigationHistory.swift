@@ -11,7 +11,7 @@ public struct NavigationHistory<Element: Equatable>: Equatable {
 
     /// Every visited place, oldest first, including the ones ahead of the
     /// cursor that a forward step would return to.
-    private var entries: [Element] = []
+    public private(set) var entries: [Element] = []
 
     /// Index into `entries` of where the user is now; -1 before anything is
     /// visited.
@@ -60,6 +60,21 @@ public struct NavigationHistory<Element: Equatable>: Equatable {
         guard canGoForward else { return nil }
         cursor += 1
         return entries[cursor]
+    }
+
+    /// Index into `entries` of the current place, or nil before anything is
+    /// visited: which row of a list of the trail is the checked one.
+    public var currentIndex: Int? {
+        entries.indices.contains(cursor) ? cursor : nil
+    }
+
+    /// Jumps straight to `entries[index]` and returns it, or nil for an index
+    /// outside the trail. A step along the trail, like back and forward: it
+    /// moves the cursor and discards nothing.
+    public mutating func go(to index: Int) -> Element? {
+        guard entries.indices.contains(index) else { return nil }
+        cursor = index
+        return entries[index]
     }
 
     /// Forgets the whole trail, for when the places it names stop meaning

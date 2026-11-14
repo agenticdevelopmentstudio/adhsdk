@@ -2,11 +2,11 @@
 id: 08bfb299-851b-4b01-a84a-6a2a13e07c12
 title: "Composable Tabs Active Pane"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -227,6 +227,10 @@ controller, not to this component, and is out of scope for this ingredient.
   own.
 - **the-backdrop-repaints-on-a-highlight-setting-change**: The backdrop MUST
   reapply its theme when the highlight setting changes.
+- **the-backdrop-outline-is-optional**: The backdrop MUST draw its outline
+  by default and MUST draw none, in either the active or the inactive
+  color, while its owner has switched the outline off; switching it MUST
+  repaint the backdrop.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -644,3 +648,4 @@ the contrast requirement and its pending decision.
 | 1.1.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the contrast NEEDS REVIEW marker as current behavior (no contrast check) with a vector and a pending decision; added separation-of-concerns (passed) and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. Corrected unit-test-coverage to partial: the pane backdrop's fill and backdrop color are tested in ComposableTabsPaneChromeTests. |
+| 1.4.0 | 2026-11-14 | Mike Fullerton | Outline can be switched off for a single-pane window |

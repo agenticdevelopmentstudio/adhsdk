@@ -168,7 +168,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:5b65139ed52c24dba5ead5b95caa14aee1209b8ba423eb0e9b14064b6a8da5e3",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift",
           "platform": "apple"
@@ -308,7 +310,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:08bff327dfeda745604caa50b3ead42cc7d72921922e613c0911fdf021decd43",
+            "state": "confirmed",
+            "version": "1.4.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift",
           "platform": "apple"
@@ -2780,10 +2784,21 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:ac9106edce15e5849f94b708abcd70599d3dc4101e07e9a51c8f27c909c0dfbd",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:37091826732e552ea9292bac82c141820f9fe8bdf5eacafb02fcf4f3fbc9c080",
+            "state": "confirmed",
+            "version": "1.3.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/BackForwardControl.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",
@@ -3340,7 +3355,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:79997d5328273f6051a4c485232844f2ff83d40b7f11fdc4adeb9183872b2b41",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsPaneViewController.swift",
           "platform": "apple"
@@ -3696,7 +3713,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:5461844bf8e492416210998c59b3dec5d3211d49b8328cf22e37c7a14d69dccf",
+            "hash": "sha256:59e6c4e291115ac4578045f42dfcbf9e7ccba9167f21795fc743a7b303227cdf",
             "state": "confirmed",
             "version": "1.3.0"
           },
@@ -5532,7 +5549,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:e1af6fc9d3ca22641f75d3bc8ba61349d89e4ab1ec5470f65e8c6eadb09c67ee",
+            "hash": "sha256:7caebeaf628885e17f7e8cc52fe3791c820ff407505eecf3ab5d1219f2a5c612",
             "state": "confirmed",
             "version": "1.2.0"
           },
@@ -9174,7 +9191,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:5a01e4d6558890da3d9649788662c377b14552a0280c7be17925b87f09522bb0",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/MultiTabbedViewController.swift",
           "platform": "apple"

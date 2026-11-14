@@ -526,7 +526,8 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         )
         languageServices?.start()
         // No top-level tabs: a standalone window is one fixed arrangement.
-        let controller = ComposableTabsWindowController(project: workspace, showsTabBars: false)
+        let controller = ComposableTabsWindowController(
+            project: workspace, showsTabBars: false, showsPaneChrome: !repo.kind.isDocument)
         controllers[repo.id] = controller
         openOrder.append(repo.id)
         standaloneWindowKinds[repo.id] = repo.kind

@@ -75,5 +75,45 @@ struct NavigationHistoryTests {
         #expect(history.current == nil)
         #expect(!history.canGoBack)
         #expect(!history.canGoForward)
+        #expect(history.entries.isEmpty)
+        #expect(history.currentIndex == nil)
+    }
+
+    @Test("the trail lists every entry and which one is current")
+    func entriesAndCurrentIndex() {
+        var history = NavigationHistory<String>()
+        #expect(history.currentIndex == nil)
+        history.record("a")
+        history.record("b")
+        history.record("c")
+        _ = history.goBack()
+
+        #expect(history.entries == ["a", "b", "c"])
+        #expect(history.currentIndex == 1)
+    }
+
+    @Test("jumping to an entry moves the cursor and keeps the trail")
+    func goToIndexKeepsTheTrail() {
+        var history = NavigationHistory<String>()
+        history.record("a")
+        history.record("b")
+        history.record("c")
+
+        #expect(history.go(to: 0) == "a")
+
+        #expect(history.entries == ["a", "b", "c"])
+        #expect(history.current == "a")
+        #expect(!history.canGoBack)
+        #expect(history.goForward() == "b")
+    }
+
+    @Test("jumping outside the trail goes nowhere")
+    func goToIndexOutsideTheTrail() {
+        var history = NavigationHistory<String>()
+        history.record("a")
+
+        #expect(history.go(to: 3) == nil)
+        #expect(history.go(to: -1) == nil)
+        #expect(history.current == "a")
     }
 }

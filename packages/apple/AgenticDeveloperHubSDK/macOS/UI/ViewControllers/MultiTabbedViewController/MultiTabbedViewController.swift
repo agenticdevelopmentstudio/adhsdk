@@ -296,6 +296,16 @@ open class MultiTabbedViewController: NSViewController {
         didSet { applyCenterOutline(centerContainer.resolvedThemeScope.palette) }
     }
 
+    /// Whether the centre is outlined and rounded at all. Off for a window
+    /// whose centre runs to the window's own edges, where a second line
+    /// inside the window's would be a frame around nothing.
+    public var showsCenterOutline = true {
+        didSet {
+            guard showsCenterOutline != oldValue, isViewLoaded else { return }
+            applyCenterOutline(centerContainer.resolvedThemeScope.palette)
+        }
+    }
+
     /// The four constraints pinning the mounted content, kept so an inset
     /// change is a constant update rather than a teardown.
     private var centerContentConstraints: [NSLayoutConstraint] = []
@@ -674,6 +684,12 @@ open class MultiTabbedViewController: NSViewController {
     /// line as well — a border property on the shared view would be carried by
     /// every other user of it for this one caller's sake.
     private func applyCenterOutline(_ palette: SemanticPalette) {
+        guard showsCenterOutline else {
+            centerContainer.layer?.cornerRadius = 0
+            centerContainer.layer?.masksToBounds = false
+            centerContainer.layer?.borderWidth = 0
+            return
+        }
         // Rounded with the pane around it, so the two lines nest instead of
         // a square box sitting inside a rounded one.
         centerContainer.layer?.cornerRadius = CornerStyle.radius(CornerStyle.tabRadius)

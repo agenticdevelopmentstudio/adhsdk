@@ -187,5 +187,9 @@
   implementation; it is not a constraint against adding a secondary cue —
   see Differentiate Without Color in Accessibility Options, which records
   that no such cue is implemented.
+- **outline-follows-the-owner**: A leaf pane MUST draw no outline, active
+  or inactive, while the split that owns it has pane outlines switched
+  off (a window that is one pane and has nothing to tell it from), and
+  MUST pick the setting up when it is created as well as when it changes.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

@@ -39,7 +39,7 @@ public final class DocumentEditorViewController: NSViewController {
 
     /// The `‹ ›` that walks `history`, first in the row above the editor.
     /// Internal so a test can read its segments.
-    let backForward = BackForwardControl()
+    let backForward = BackForwardControl(showsHistoryMenu: true)
 
     /// Fires when the displayed file changes, so the tab bar can retitle.
     public var onTitleChange: (() -> Void)?
@@ -111,6 +111,7 @@ public final class DocumentEditorViewController: NSViewController {
         backForward.accessibilityID("document.back-forward")
         backForward.onBack = { [weak self] in self?.goBack() }
         backForward.onForward = { [weak self] in self?.goForward() }
+        backForward.historyMenu = { [weak self] in self?.makeHistoryMenu() }
         optionsObserver = options.objectWillChange.sink { [weak self] _ in
             self?.refreshOptionRows()
         }
@@ -152,6 +153,40 @@ public final class DocumentEditorViewController: NSViewController {
         show(url, persist: true, recordsHistory: false)
     }
 
+    /// The files in this editor's trail, oldest first, and which is showing.
+    public var historyURLs: [URL] { history.entries }
+    public var historyIndex: Int? { history.currentIndex }
+
+    /// Shows the file at `index` of the trail, without pushing it.
+    public func goToHistory(at index: Int) {
+        guard index != history.currentIndex, let url = history.go(to: index) else { return }
+        show(url, persist: true, recordsHistory: false)
+    }
+
+    /// The trail as a menu, most recent first, the file showing checked.
+    func makeHistoryMenu() -> NSMenu {
+        let menu = NSMenu()
+        for (index, url) in history.entries.enumerated().reversed() {
+            let item = NSMenuItem(
+                title: url.lastPathComponent,
+                action: #selector(historyItemChosen(_:)),
+                keyEquivalent: "")
+            item.target = self
+            item.tag = index
+            item.state = index == history.currentIndex ? .on : .off
+            item.toolTip = url.path
+            let icon = NSWorkspace.shared.icon(forFile: url.path)
+            icon.size = NSSize(width: 16, height: 16)
+            item.image = icon
+            menu.addItem(item)
+        }
+        return menu
+    }
+
+    @objc private func historyItemChosen(_ sender: NSMenuItem) {
+        goToHistory(at: sender.tag)
+    }
+
     /// `recordsHistory` is false only for a step along the trail itself; every
     /// other way a file arrives — the tree, a breadcrumb, go-to-definition, a
     /// restore — is a new place, and pushes. Emptying the editor pushes
@@ -176,6 +211,7 @@ public final class DocumentEditorViewController: NSViewController {
         }
         backForward.canGoBack = history.canGoBack
         backForward.canGoForward = history.canGoForward
+        backForward.canShowHistory = !history.entries.isEmpty
         if persist {
             store.setPaneStateValue(url?.path, forKey: Self.fileURLKey)
         }

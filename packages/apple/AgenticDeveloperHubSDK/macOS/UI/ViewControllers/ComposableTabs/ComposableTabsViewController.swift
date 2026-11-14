@@ -231,6 +231,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
                 pane.stateOwnerNodeID = stateOwnerNodeID
                 pane.clampsToContainer = clampsToContainer
                 pane.showsTitleBar = showsPaneTitleBars
+                pane.showsOutline = showsPaneOutlines
             }
             if let split = child as? ComposableTabsViewController {
                 split.layoutParent = self
@@ -239,6 +240,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
                 split.stateOwnerNodeID = stateOwnerNodeID
                 split.clampsToContainer = clampsToContainer
                 split.showsPaneTitleBars = showsPaneTitleBars
+                split.showsPaneOutlines = showsPaneOutlines
             }
         }
     }
@@ -380,6 +382,14 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
     /// nested splits alike, so a pane added later by a split or a rebuild
     /// inherits it the moment it joins the tree.
     public var showsPaneTitleBars: Bool = true {
+        didSet { stampOwnershipOnChildren() }
+    }
+
+    /// Whether the panes in this tree are outlined, the active one in the
+    /// accent. Off for a tree in a window that is one kind of pane and
+    /// nothing else (a Document window), where there is no other pane to
+    /// tell this one from. Stamped down the subtree like `showsPaneTitleBars`.
+    public var showsPaneOutlines: Bool = true {
         didSet { stampOwnershipOnChildren() }
     }
 
@@ -938,6 +948,7 @@ public final class ComposableTabsViewController: ThemedSplitViewController {
         inner.stateOwnerNodeID = stateOwnerNodeID
         inner.clampsToContainer = clampsToContainer
         inner.showsPaneTitleBars = showsPaneTitleBars
+        inner.showsPaneOutlines = showsPaneOutlines
 
         layoutChildren[index] = inner
         if isViewLoaded {

@@ -15,9 +15,15 @@ import os
 ///
 /// - `.tabs`: one shared Document window, each file a tab of its Document
 ///   pane. Its workspace is the single `.documentTabs` row.
-/// - `.windows`: a window per file, the pane's tab strip hidden. Its
-///   workspace is a `.document` row found by the file's path, so opening a
-///   file that already has a window brings that window forward.
+/// - `.windows`: a window per file, the pane's tab strip hidden until a
+///   second tab is opened in it. Its workspace is a `.document` row found by
+///   the file's path, so opening a file that already has a window brings
+///   that window forward.
+///
+/// Inside a Document window a file chosen from an editor's breadcrumb loads
+/// in the current tab, joining that editor's back/forward trail; with Option
+/// held it opens in a new tab of the same window. The window's title is the
+/// name of the file its focused editor shows.
 ///
 /// A file already open in a window of its own comes forward there whatever
 /// the setting says: the setting decides where a file *opens*, not where an
@@ -40,7 +46,16 @@ public final class DocumentWindowsFeature: AppFeature {
 
     /// Files opened into a window whose Document pane has not been built yet,
     /// by row id; shown when the pane attaches.
-    private var pendingFiles: [UUID: [URL]] = [:]
+    private var pendingFiles: [UUID: [PendingFile]] = [:]
+
+    /// A file on its way to a pane. `onlyIfEmpty` is launch restore: the
+    /// editor brings back the file it was last showing, which the user may
+    /// have navigated away from the one the window was opened on, and only an
+    /// editor that restored nothing takes the row's file.
+    private struct PendingFile {
+        let url: URL
+        let onlyIfEmpty: Bool
+    }
 
     /// - Parameter layout: the Document window's layout — the Document pane
     ///   alone — built by the host over the same pane registry as the project
@@ -98,7 +113,9 @@ public final class DocumentWindowsFeature: AppFeature {
         for path in UserSettings.openDocumentWindowFiles.currentValue {
             let url = URL(fileURLWithPath: path)
             let reopened = FileManager.default.fileExists(atPath: path)
-                && (try? row(for: url)).flatMap { openWindow($0, showing: url, activates: false) } != nil
+                && (try? row(for: url)).flatMap {
+                    openWindow($0, showing: url, activates: false, onlyIfEmpty: true)
+                } != nil
             if !reopened { forget(path) }
         }
         if UserSettings.documentTabsWindowOpen.currentValue, let row = try? tabsRow() {
@@ -112,7 +129,8 @@ public final class DocumentWindowsFeature: AppFeature {
     private func openWindow(
         _ repo: GitRepo,
         showing file: URL?,
-        activates: Bool
+        activates: Bool,
+        onlyIfEmpty: Bool = false
     ) -> ComposableTabsWindowController? {
         let controller = windows.openDocumentWindow(
             repo,
@@ -125,7 +143,7 @@ public final class DocumentWindowsFeature: AppFeature {
         case .document: remember(repo.path)
         default: UserSettings.documentTabsWindowOpen.value = true
         }
-        if let file { show(file, in: repo) }
+        if let file { show(PendingFile(url: file, onlyIfEmpty: onlyIfEmpty), in: repo) }
         return controller
     }
 
@@ -146,18 +164,45 @@ public final class DocumentWindowsFeature: AppFeature {
     /// first and wait in `pendingFiles`.
     public func attach(_ pane: DocumentTabsViewController, to project: ProjectWorkspace) {
         guard project.repo.kind.isDocument else { return }
-        // A window of its own is one document: no strip of one tab above it.
-        if project.repo.kind == .document { pane.showsTabBars = false }
-        panes.setObject(pane, forKey: project.id as NSUUID)
+        // A window of its own is one document: no strip of one tab above it,
+        // until a second is opened beside it.
+        if project.repo.kind == .document { pane.hidesTabBarForSingleTab = true }
+        // The window is this pane and nothing else: no outline to tell its
+        // editors from other panes, no accent on the focused one.
+        pane.showsPaneOutlines = false
+        pane.showsCenterOutline = false
+        // A file chosen in a breadcrumb stays in this window: the current tab
+        // (and its editor's trail), or a new tab with Option held.
+        pane.onOpenRequest = { [weak pane] url in
+            if NSEvent.modifierFlags.contains(.option) {
+                pane?.openInNewTab(url)
+            } else {
+                pane?.openInSelectedPane(url)
+            }
+        }
+        // The window is titled for the file in front. Chained, because the
+        // host's factory may already be listening.
+        let repoID = project.id
+        let previous = pane.onFocusedDocumentChange
+        pane.onFocusedDocumentChange = { [weak self] url in
+            previous?(url)
+            self?.windows.windowController(for: repoID)?.titleDocumentURL = url
+        }
+        panes.setObject(pane, forKey: repoID as NSUUID)
         // The factory has not returned the pane yet, so it is in no view
         // hierarchy: deliver once this turn has put it there.
-        DispatchQueue.main.async { [weak self] in
-            guard let self, let files = self.pendingFiles.removeValue(forKey: project.id) else { return }
-            files.forEach { self.show($0, in: project.repo) }
+        let repo = project.repo
+        DispatchQueue.main.async { [weak self, weak pane] in
+            guard let self else { return }
+            self.pendingFiles.removeValue(forKey: repoID)?.forEach { self.show($0, in: repo) }
+            // What the editors restored was never announced: name it now.
+            if let pane {
+                self.windows.windowController(for: repoID)?.titleDocumentURL = pane.focusedEditor?.fileURL
+            }
         }
     }
 
-    private func show(_ file: URL, in repo: GitRepo) {
+    private func show(_ file: PendingFile, in repo: GitRepo) {
         guard let pane = panes.object(forKey: repo.id as NSUUID) else {
             pendingFiles[repo.id, default: []].append(file)
             return
@@ -165,12 +210,13 @@ public final class DocumentWindowsFeature: AppFeature {
         pane.loadViewIfNeeded()
         switch repo.kind {
         case .document:
-            // One window, one file: it replaces whatever the editor restored.
-            if pane.focusedEditor?.fileURL?.standardizedFileURL != file.standardizedFileURL {
-                pane.openInSelectedPane(file)
+            let showing = pane.focusedEditor?.fileURL
+            if file.onlyIfEmpty, showing != nil { return }
+            if showing?.standardizedFileURL != file.url.standardizedFileURL {
+                pane.openInSelectedPane(file.url)
             }
         default:
-            pane.show(file)
+            pane.show(file.url)
         }
     }
 
