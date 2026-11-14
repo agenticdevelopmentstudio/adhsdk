@@ -219,6 +219,12 @@ open class SingleWindowController: NSWindowController, NSWindowDelegate {
         // state (and then `restoreFrame` would read back that just-written
         // default frame instead of the spec's geometric center).
         newWindow.delegate = self
+        if preferredInitialFrame != nil {
+            // A window built at a given frame may never move or resize, so
+            // the delegate hooks never save it; record the frame (and the
+            // frame tag) under this window's id now.
+            WindowManager.shared.frames.saveFrame(for: newWindow, id: windowID)
+        }
     }
 
     /// Puts `windowTitleSymbolName` before the title, through the shared
