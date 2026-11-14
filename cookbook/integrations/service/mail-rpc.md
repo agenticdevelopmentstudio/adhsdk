@@ -2,11 +2,11 @@
 id: fc9671be-170c-436e-9628-892624952191
 title: "MailRPC"
 type: ingredient
-version: 1.0.0
+version: 1.1.0
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -14,6 +14,7 @@ summary: "The mail service wire contract: MailRequest and MailResponse, their re
 platforms:
   - swift
   - macos
+  - ios
 tags:
   - mail
   - rpc
@@ -266,10 +267,10 @@ Not applicable: the source makes no log call; failures are thrown or returned.
 
 ## Platform Notes
 
-- **SwiftUI**: Source platform is Swift: `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailRPC.swift`. It uses `Foundation` only: synthesized `Codable` for the enums (which gives the `_0` payload keys seen in the tests), `JSONEncoder` and `JSONDecoder` with default settings, `LocalizedError` on `MailClientError`, and a `@Sendable` async closure as the transport. Tests live in `Tests/AgenticDeveloperHubSDKIntegrationsTests`. A SwiftUI host holds a `MailClient` and awaits its methods from tasks.
+- **SwiftUI**: Source platform is Swift: `packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift`, in the `AgenticDeveloperHubSDKMail` framework, which builds for macOS and iOS and depends on `Foundation` and GRDB only (the records live beside it in `Mail/Model/`). The RPC file itself uses `Foundation` only: synthesized `Codable` for the enums (which gives the `_0` payload keys seen in the tests), `JSONEncoder` and `JSONDecoder` with default settings, `LocalizedError` on `MailClientError`, and a `@Sendable` async closure as the transport. Tests live in `Tests/AgenticDeveloperHubSDKIntegrationsTests`. The macOS-only `AgenticDeveloperHubSDKIntegrations` framework re-exports the Mail framework (`Integrations/Support/MailReExport.swift`, `@_exported import AgenticDeveloperHubSDKMail`), so a macOS caller that imports Integrations still sees every type here; `MailClient.clamp` and `MailClient.badRequest` are `public` because `MailIntegrationService` in Integrations uses them across that module boundary. A SwiftUI host holds a `MailClient` and awaits its methods from tasks.
 - **Compose**: Model `MailRequest` and `MailResponse` as sealed interfaces with `kotlinx.serialization`, and give each case a serializer that writes the same `_0` payload key (a custom serializer, since Kotlin's default class discriminator differs). Use `Int.coerceIn(1, 500)` for the limit, default values for the lenient decode, and `ignoreUnknownKeys = true` so a new field does not break an older client. The transport becomes a `suspend (ByteArray) -> ByteArray`; `MailClientError` is a sealed `Exception` pair, and the page-flag checks run exactly as in `messages(_:)`.
 - **React/Web**: Use TypeScript discriminated unions for the two enums, writing the wire form by hand to keep the `_0` keys, and `fetch` or a socket as the transport (`(bytes: Uint8Array) => Promise<Uint8Array>`). Missing booleans must be read as false (`page.appliedQuery ?? false`) so the older-service checks still fire. `Math.min(Math.max(limit, 1), 500)` replaces the clamp; there is no property observer, so clamp in a setter or a factory. Throw `Error` subclasses for `remote` and `notFound`.
-- **AppKit / UIKit**: The source is `Foundation` only, and this recipe lists `swift` and `macos`; an iOS build is planned. An AppKit or UIKit host calls the client from an async task and shows `errorDescription` in an alert or label; it gates any non-UI client on `isMailboxAccess` and keeps administration requests behind its own settings panel.
+- **AppKit / UIKit**: The same Swift source builds for both macOS and iOS, and this recipe lists `swift`, `macos` and `ios`. An AppKit or UIKit host calls the client from an async task and shows `errorDescription` in an alert or label; it gates any non-UI client on `isMailboxAccess` and keeps administration requests behind its own settings panel.
 - **WinUI 3**: Port to C# records with `System.Text.Json`. Model each enum as an abstract record with one derived record per case and a custom `JsonConverter` that writes the case name as the single key and the payload under `_0`; mark optional fields nullable and give `MailMessagePage.AppliedAnyLabels` and `AppliedQuery` a default of false so a missing key reads as false. Use `Math.Clamp(limit, 1, 500)` in the constructor and in the property setter. The transport is a `Func<byte[], CancellationToken, Task<byte[]>>` (named pipe, `Windows.Networking.Sockets`, or an in-process call), and `MailClient` is a sealed class with `async Task<T>` methods that throw `MailClientException` carrying a `NotFound` flag. Keep results as immutable records; there is no `INotifyPropertyChanged` need, since the types are wire data, and a view model that wants binding wraps them in an `ObservableCollection` of its own. Add a `CancellationToken` parameter, which the Swift source lacks, but keep the same refusals and messages.
 
 ## Reference Implementations
@@ -279,7 +280,9 @@ Not applicable: the source makes no log call; failures are thrown or returned.
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailRPC.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Integrations/Support/MailReExport.swift` | unverified |
+| ios | `packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift` | unverified |
 
 ## Design Decisions
 
@@ -342,3 +345,4 @@ The file separates the wire contract and a one-round-trip client from the servic
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-11-14 | Mike Fullerton | Mail RPC moved to the AgenticDeveloperHubSDKMail framework, built for macOS and iOS; Integrations re-exports it |

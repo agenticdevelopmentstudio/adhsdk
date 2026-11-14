@@ -1,7 +1,7 @@
 import XCTest
 import AgenticDeveloperHubSDKDatabase
 import AgenticDeveloperHubSDKSync
-import AgenticDeveloperHubSDKIntegrations
+import AgenticDeveloperHubSDKMail
 import AgenticDeveloperHubSDKHubMail
 import AgenticDeveloperHubSDKHubAuth
 @testable import AgenticDeveloperHubSDKHubMailBridge

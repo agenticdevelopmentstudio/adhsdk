@@ -2497,7 +2497,7 @@
           "conformance": {
             "state": "unverified"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Model/IntegrationError.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationError.swift",
           "platform": "apple"
         },
         {
@@ -6534,7 +6534,7 @@
           "conformance": {
             "state": "unverified"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Model/IntegrationRecords.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Model/IntegrationRecords.swift",
           "platform": "apple"
         },
         {
@@ -7383,6 +7383,20 @@
       "kind": "ingredient",
       "path": "workspace/files/git-status-provider",
       "rdid": "adhsdk.ingredient.workspace.files.git-status-provider"
+    },
+    "9a4dcb9e-5e7e-479b-922c-37d066a8a18a": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Text/HTMLText.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "agentic-developer-hub-sdk/sdk/text/html-text",
+      "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.text.html-text"
     },
     "9ab21212-c31d-4a4a-b563-2a2666eec03d": {
       "implementations": [
@@ -10677,7 +10691,7 @@
           "conformance": {
             "state": "unverified"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Model/MailSyncSettings.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailSyncSettings.swift",
           "platform": "apple"
         },
         {
@@ -10792,6 +10806,13 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/HubMailBridge/",
+          "platform": "ios"
         }
       ],
       "kind": "ingredient",
@@ -11189,7 +11210,7 @@
           "conformance": {
             "state": "unverified"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Model/MailClassification.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailClassification.swift",
           "platform": "apple"
         },
         {
@@ -12210,8 +12231,22 @@
           "conformance": {
             "state": "unverified"
           },
-          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Service/MailRPC.swift",
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Integrations/Support/MailReExport.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Mail/Service/MailRPC.swift",
+          "platform": "ios"
         }
       ],
       "kind": "ingredient",

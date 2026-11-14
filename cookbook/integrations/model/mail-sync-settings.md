@@ -175,7 +175,7 @@ Not applicable: the source makes no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Integrations/Model/MailSyncSettings.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Mail/Model/MailSyncSettings.swift` | unverified |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |

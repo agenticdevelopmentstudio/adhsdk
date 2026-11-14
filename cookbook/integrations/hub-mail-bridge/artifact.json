@@ -4,18 +4,19 @@
     "id": "e12914f0-3a3b-4fb7-ac0c-6332de37de4f",
     "title": "Hub Mail Bridge",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-13",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
     "summary": "Answers the mail RPC (MailRequest / MailResponse) from the hub-sourced mail mirror, so the macOS mail browser, Email App and settings panel read hub mail through the same MailClient they use for the direct Gmail worker.",
     "platforms": [
       "swift",
-      "macos"
+      "macos",
+      "ios"
     ],
     "tags": [
       "integrations",
@@ -35,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8b0ccc4e88519aee",
+  "synced": "b2175065d02d4d42",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
