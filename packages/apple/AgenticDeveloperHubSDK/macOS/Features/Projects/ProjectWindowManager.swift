@@ -344,8 +344,11 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// a new one, when there is no project window at all.
     public func openProject(_ repo: GitRepo) {
         guard !pendingLoads.contains(repo.id) else { return }
-        if let group = group(containing: repo.id), let existing = controllers[repo.id] {
-            existing.project.update(repo: repo)
+        if let group = group(containing: repo.id) {
+            // Built or deferred (a restored window builds only its selected
+            // project), a project active in a window is put on screen there:
+            // one project has one set of panes, in one window.
+            controllers[repo.id]?.project.update(repo: repo)
             present(repo.id, in: group)
             // Asking for a project that is already open is still the user
             // asking for it, and a window raised behind the app that is
@@ -376,7 +379,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
             present(repo.id, in: group)
             return
         }
-        if controllers[repo.id] != nil {
+        if controllers[repo.id] != nil || self.group(containing: repo.id) != nil {
             openProject(repo)
             return
         }
