@@ -40,20 +40,21 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
     private static let sessionHelpTopics: [ComposableSettings.PanelHelp.Topic] = [
         .init(
             title: "Input",
-            body: "Keyboard and Mouse and scrolling decide whether the page receives "
-                + "what you type and click. Blocked, the pane drops the event before "
+            body: "Disable keyboard events and Disable mouse and scrolling events decide "
+                + "whether the page receives what you type and click. Checked, the pane drops the event before "
                 + "the browser engine sees it, so the page never learns it happened; menu "
                 + "shortcuts still reach the menu bar, and the address bar and the "
-                + "back, forward and reload buttons still work. Pointer tracking "
-                + "decides when the page is told where the pointer is — hover, "
-                + "movement, entering and leaving — and Drag and drop whether a drag "
-                + "from outside may enter the page. All four are enforced natively. "
+                + "back, forward and reload buttons still work. Disable pointer tracking "
+                + "stops the page being told where the pointer is — hover, "
+                + "movement, entering and leaving — and Disable drag and drop stops a drag "
+                + "from outside entering the page. All four are unchecked until you check them "
+                + "and are enforced natively. "
                 + "The agent's own clicks and keys pass, unless the pane is paused "
                 + "and Agent while paused says the agent pauses too."
         ),
         .init(
             title: "Focus and Visibility",
-            body: "Hide focus and visibility changes makes the page see a document that "
+            body: "Disable activation events makes the page see a document that "
                 + "is always focused and visible, so it cannot tell when you switch to "
                 + "another window or app. It is best-effort: a script installed before "
                 + "the page's own answers the page's questions about focus and "
@@ -65,7 +66,7 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                 + "window is covered, applies at once."
         ),
         .init(
-            title: "Agent Partner",
+            title: "Coding Partner",
             body: "Agent access decides how much of this browser the agent sees: hidden "
                 + "leaves the pane out of its list altogether, read only lets it read "
                 + "the page, its text, its console and screenshots but not click, type "
@@ -165,29 +166,69 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
         binding.add(view, model: model, key: key, to: group)
     }
 
+    /// A "Disable …" checkbox over a setting whose default lets the page
+    /// have the input: checked writes `disabled`, the most private value,
+    /// unchecked writes `allowed`, the default. It reads checked only while
+    /// the setting is `disabled`, so an unchecked box is the default
+    /// meaning "allowed". Checked is always the more private choice.
+    private func addDisable<Value: Codable & Sendable & Equatable>(
+        _ title: String,
+        _ key: UserSetting<Value>,
+        disabled: Value,
+        allowed: Value,
+        id: String,
+        to group: ComposableSettings.GroupView
+    ) {
+        let access = binding.accessors(key)
+        let model = ComposableSettings.ViewModel<Bool>(
+            title: title,
+            get: { access.get() == disabled },
+            set: { access.set($0 ? disabled : allowed) }
+        )
+        let view = ComposableSettings.CheckboxView(with: model)
+        _ = view.toggle.accessibilityID(Self.identifier(id))
+        binding.add(view, name: key.name, model: model, to: group, refresh: {
+            if model.refreshHandler != nil { model.refresh() } else { model.onChange?(model.value) }
+        }, hasOverride: { [weak binding] in
+            binding?.layered?.hasOverride(key) ?? false
+        }, revert: { [weak binding] in
+            binding?.layered?.removeOverride(key)
+            if model.refreshHandler != nil { model.revert() } else { model.onChange?(model.value) }
+        })
+    }
+
     private func makeInputGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Input")
-        addChoice("Keyboard", UserSettings.browserPrivacyKeyboard, label: \.label, id: "keyboard", to: group)
-        addChoice("Mouse and scrolling", UserSettings.browserPrivacyMouse, label: \.label, id: "mouse", to: group)
-        addChoice(
-            "Pointer tracking", UserSettings.browserPrivacyPointerTracking,
-            label: \.label, id: "pointer-tracking", to: group
+        addDisable(
+            "Disable keyboard events", UserSettings.browserPrivacyKeyboard,
+            disabled: .block, allowed: .allow, id: "keyboard", to: group
         )
-        addSwitch("Drag and drop", UserSettings.browserPrivacyDragAndDrop, id: "drag-and-drop", to: group)
+        addDisable(
+            "Disable mouse and scrolling events", UserSettings.browserPrivacyMouse,
+            disabled: .block, allowed: .allow, id: "mouse", to: group
+        )
+        addDisable(
+            "Disable pointer tracking", UserSettings.browserPrivacyPointerTracking,
+            disabled: .never, allowed: .always, id: "pointer-tracking", to: group
+        )
+        addDisable(
+            "Disable drag and drop", UserSettings.browserPrivacyDragAndDrop,
+            disabled: false, allowed: true, id: "drag-and-drop", to: group
+        )
         return group
     }
 
     private func makeFocusGroup() -> ComposableSettings.GroupView {
         let group = ComposableSettings.GroupView(withTitle: "Focus and visibility")
-        addSwitch(
-            "Hide focus and visibility changes", UserSettings.browserPrivacyHideActivation,
-            id: "hide-activation", to: group
+        addDisable(
+            "Disable activation events", UserSettings.browserPrivacyHideActivation,
+            disabled: true, allowed: false, id: "hide-activation", to: group
         )
         return group
     }
 
     private func makeAgentGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Agent Partner")
+        let group = ComposableSettings.GroupView(withTitle: "Coding Partner")
         addChoice("Agent access", UserSettings.browserPrivacyAgentAccess, label: \.label, id: "agent-access", to: group)
         addChoice(
             "Agent while paused", UserSettings.browserPrivacyAgentWhilePaused,

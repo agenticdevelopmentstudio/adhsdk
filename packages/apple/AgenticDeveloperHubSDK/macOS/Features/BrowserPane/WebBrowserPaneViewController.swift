@@ -60,8 +60,13 @@ open class WebBrowserPaneViewController: NSViewController {
     /// and the entry is refused rather than searched for, because a search
     /// engine is a choice this pane does not make (`explicit-over-implicit`).
     /// Returns `nil` for an entry that resolves to nothing loadable.
+    ///
+    /// A path — `/Users/x/a.html` or `~/a.html` — that names an existing file
+    /// or directory loads as a file URL, spaces and all; `file://` loads as
+    /// written, like any other scheme.
     public static func resolveAddress(_ entry: String) -> URL? {
         let trimmed = entry.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let fileURL = resolveFilePath(trimmed) { return fileURL }
         guard !trimmed.isEmpty, trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) == nil else {
             return nil
         }
@@ -72,6 +77,16 @@ open class WebBrowserPaneViewController: NSViewController {
             return url
         }
         return URL(string: "https://" + trimmed)
+    }
+
+    /// `entry` as a file URL when it is an absolute or home-relative path to
+    /// something that exists, else `nil`.
+    static func resolveFilePath(_ entry: String) -> URL? {
+        guard entry.hasPrefix("/") || entry.hasPrefix("~") else { return nil }
+        let path = (entry as NSString).expandingTildeInPath
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) else { return nil }
+        return URL(fileURLWithPath: path, isDirectory: isDirectory.boolValue)
     }
 
     /// The state-store key the current address lives under.
@@ -280,6 +295,30 @@ open class WebBrowserPaneViewController: NSViewController {
         return label
     }()
     let addressField = NSTextField()
+    /// The bordered, rounded box the address field sits in.
+    private(set) lazy var addressBox = BrowserAddressBox(field: addressField)
+    /// The installed buttons between the address box and the menu button:
+    /// the pane's own (agent visibility, privacy, pause, strip toggle) first,
+    /// then whatever `addToolbarAccessory` adds (a Safari pane's extensions).
+    let installedBar = NSStackView()
+    let agentVisibilityButton = NSButton()
+    let privacyButton = NSButton()
+    let pauseEventsButton = NSButton()
+    let privacyStripToggle = NSButton()
+    /// The browser menu at the row's trailing end (`makePaneMenuItems`).
+    let menuButton = NSButton()
+    /// The one-line privacy status under the address row, while shown.
+    let privacyStrip: NSTextField = {
+        let label = NSTextField(labelWithString: "")
+        label.textColor = .secondaryLabelColor
+        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        label.lineBreakMode = .byTruncatingTail
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.setAccessibilityIdentifier("browser.privacy-strip")
+        return label
+    }()
+    /// The pane-state key the privacy strip's visibility is kept under.
+    static let privacyStripKey = "privacy-strip"
     let backButton = NSButton()
     let forwardButton = NSButton()
     let reloadButton = NSButton()
@@ -605,6 +644,7 @@ open class WebBrowserPaneViewController: NSViewController {
                 self.eventLog.record(channel: "settings", event: "changed", decision: .info, detail: key)
                 self.refreshInputGate()
                 self.refreshActivationShield()
+                self.refreshAddressRowControls()
                 if key == UserSettings.browserAcceptsCookies.name { self.applyCookiePolicy() }
                 if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
                 if key == UserSettings.browserAgentPrivacy.name {
@@ -822,8 +862,10 @@ open class WebBrowserPaneViewController: NSViewController {
         addressField.setContentHuggingPriority(.defaultLow, for: .horizontal)
         addressField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
+        configureInstalledBar()
         let bar = NSStackView(views: [
-            backButton, forwardButton, reloadButton, addressField, refusalNotice, pausedBadge, drivenBadge
+            backButton, forwardButton, reloadButton, addressBox, refusalNotice, pausedBadge, drivenBadge,
+            installedBar, menuButton
         ])
         bar.orientation = .horizontal
         bar.alignment = .centerY
@@ -840,7 +882,126 @@ open class WebBrowserPaneViewController: NSViewController {
                 MainActor.assumeIsolated { self?.refreshBarInsets() }
             }
         }
-        installTabStrip(addressBar: bar)
+        let strip = NSStackView(views: [privacyStrip])
+        strip.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 4, right: 12)
+        strip.setAccessibilityIdentifier("browser.privacy-strip-row")
+        privacyStripRow = strip
+        let rows = NSStackView(views: [bar, strip])
+        rows.orientation = .vertical
+        rows.alignment = .leading
+        rows.spacing = 0
+        rows.detachesHiddenViews = true
+        rows.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            bar.widthAnchor.constraint(equalTo: rows.widthAnchor),
+            strip.widthAnchor.constraint(equalTo: rows.widthAnchor)
+        ])
+        strip.isHidden = store.paneStateValue(forKey: Self.privacyStripKey) != "shown"
+        refreshAddressRowControls()
+        installTabStrip(addressBar: rows)
+    }
+
+    /// The strip's row, hidden with the toggle off.
+    private weak var privacyStripRow: NSView?
+
+    private func configureInstalledBar() {
+        configureButton(
+            agentVisibilityButton, symbol: "cursorarrow.rays", label: "Agent Visibility",
+            action: #selector(showAgentVisibilityMenu(_:)))
+        agentVisibilityButton.setAccessibilityIdentifier("browser.agent-visibility")
+        configureButton(privacyButton, symbol: "hand.raised", label: "Privacy", action: #selector(showPrivacyDialog))
+        privacyButton.setAccessibilityIdentifier("browser.privacy")
+        configureButton(
+            pauseEventsButton, symbol: "pause.circle", label: "Pause Events", action: #selector(togglePauseEvents))
+        pauseEventsButton.setAccessibilityIdentifier("browser.pause-events")
+        configureButton(
+            privacyStripToggle, symbol: "list.bullet.rectangle", label: "Privacy Status",
+            action: #selector(togglePrivacyStrip))
+        privacyStripToggle.setButtonType(.pushOnPushOff)
+        privacyStripToggle.setAccessibilityIdentifier("browser.privacy-strip-toggle")
+        configureButton(
+            menuButton, symbol: "line.3.horizontal", label: "Browser Menu", action: #selector(showBrowserMenu(_:)))
+        menuButton.setAccessibilityIdentifier("browser.menu")
+        for button in [agentVisibilityButton, privacyButton, pauseEventsButton, privacyStripToggle, menuButton] {
+            button.isBordered = false
+        }
+        installedBar.setViews(
+            [agentVisibilityButton, privacyButton, pauseEventsButton, privacyStripToggle], in: .leading)
+        installedBar.orientation = .horizontal
+        // Every installed button stays: a stack view otherwise detaches the
+        // trailing ones first when the row is short of room.
+        for button in installedBar.views {
+            installedBar.setVisibilityPriority(.mustHold, for: button)
+            button.setContentCompressionResistancePriority(.required, for: .horizontal)
+        }
+        installedBar.spacing = 2
+        installedBar.alignment = .centerY
+        installedBar.setAccessibilityIdentifier("browser.installed-buttons")
+        installedBar.setContentHuggingPriority(.required, for: .horizontal)
+    }
+
+    /// Brings the installed buttons and the strip up to date with the pane's
+    /// settings and pause state.
+    func refreshAddressRowControls() {
+        let access = agentAccess
+        agentVisibilityButton.image = NSImage(
+            systemSymbolName: access.symbolName, accessibilityDescription: access.visibilityDescription)
+        agentVisibilityButton.toolTip = access.visibilityDescription
+        agentVisibilityButton.setAccessibilityValue(access.rawValue)
+        let pauseLabel = isEventsPaused ? "Resume Events" : "Pause Events"
+        pauseEventsButton.image = NSImage(
+            systemSymbolName: isEventsPaused ? "play.circle" : "pause.circle", accessibilityDescription: pauseLabel)
+        pauseEventsButton.toolTip = pauseLabel
+        pauseEventsButton.setAccessibilityValue(isEventsPaused ? "paused" : "active")
+        let stripShown = privacyStripRow.map { !$0.isHidden } ?? false
+        privacyStripToggle.state = stripShown ? .on : .off
+        privacyStrip.stringValue = BrowserPrivacyStatus.text(
+            settings: settings, isPaused: isEventsPaused, isAgentPrivacyOn: isAgentPrivacyOn)
+    }
+
+    @objc func showAgentVisibilityMenu(_ sender: NSButton) {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        let current = agentAccess
+        for access in [BrowserAgentAccess.full, .readOnly, .hidden] {
+            let item = NSMenuItem(
+                title: access.menuTitle, action: #selector(chooseAgentVisibility(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = access.rawValue
+            item.state = access == current ? .on : .off
+            item.image = NSImage(systemSymbolName: access.symbolName, accessibilityDescription: nil)
+            item.accessibilityID("browser.agent-visibility." + access.rawValue)
+            menu.addItem(item)
+        }
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.maxY + 4), in: sender)
+    }
+
+    /// Sets this pane's Agent access: a per-pane override on a layered store.
+    @objc func chooseAgentVisibility(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let access = BrowserAgentAccess(rawValue: raw)
+        else { return }
+        settings.set(access, for: UserSettings.browserPrivacyAgentAccess)
+        refreshAddressRowControls()
+    }
+
+    @objc func showPrivacyDialog() {
+        BrowserPrivacySettingsDialog.present(for: self)
+    }
+
+    @objc func togglePrivacyStrip() {
+        guard let row = privacyStripRow else { return }
+        row.isHidden.toggle()
+        store.setPaneStateValue(row.isHidden ? nil : "shown", forKey: Self.privacyStripKey)
+        refreshAddressRowControls()
+    }
+
+    /// Pops the pane's menu (Pause Events, Settings…, Show Browser Log) under
+    /// the menu button.
+    @objc func showBrowserMenu(_ sender: NSButton) {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        makePaneMenuItems().forEach(menu.addItem)
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.maxY + 4), in: sender)
     }
 
     /// Hides the pane's navigation controls when the engine draws its own
@@ -849,11 +1010,11 @@ open class WebBrowserPaneViewController: NSViewController {
     /// knows it is paused or being driven.
     private func applyToolbarOwnership() {
         let hidden = engine.providesOwnToolbar
-        [backButton, forwardButton, reloadButton, addressField].forEach { $0.isHidden = hidden }
+        [backButton, forwardButton, reloadButton, addressBox].forEach { $0.isHidden = hidden }
         refreshBarInsets()
     }
 
-    private static let barInsets = NSEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
+    private static let barInsets = NSEdgeInsets(top: 5, left: 6, bottom: 5, right: 6)
 
     /// A bar with nothing visible in it collapses to nothing, insets
     /// included, so the page starts right under the tabs.
@@ -1297,12 +1458,11 @@ open class WebBrowserPaneViewController: NSViewController {
         closeTab(tab)
     }
 
-    /// Puts `accessory` in the bar after the address field, ahead of the
-    /// badges: a Safari pane's extension buttons.
+    /// Puts `accessory` at the end of the installed-buttons bar, after the
+    /// pane's own buttons: a Safari pane's extension buttons.
     public func addToolbarAccessory(_ accessory: NSView) {
         loadViewIfNeeded()
-        guard let bar = addressBar, let index = bar.arrangedSubviews.firstIndex(of: addressField) else { return }
-        bar.insertArrangedSubview(accessory, at: index + 1)
+        installedBar.addView(accessory, in: .leading)
     }
 
     /// Closes `tab`. The last tab is never closed: it goes back to a blank
@@ -1729,6 +1889,7 @@ extension WebBrowserPaneViewController {
         refreshInputGate()
         refreshActivationShield()
         pausedBadge.setPaused(paused)
+        refreshAddressRowControls()
         eventLog.record(channel: "pane", event: paused ? "pause" : "unpause", decision: .info)
     }
 }

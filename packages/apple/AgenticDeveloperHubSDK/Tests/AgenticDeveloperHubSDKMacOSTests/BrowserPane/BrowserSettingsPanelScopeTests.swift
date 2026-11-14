@@ -415,13 +415,13 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
 
         // Spec section 10, in order.
         XCTAssertEqual(layout, [
-            "Input / Keyboard",
-            "Input / Mouse and scrolling",
-            "Input / Pointer tracking",
-            "Input / Drag and drop",
-            "Focus and visibility / Hide focus and visibility changes",
-            "Agent Partner / Agent access",
-            "Agent Partner / Agent while paused",
+            "Input / Disable keyboard events",
+            "Input / Disable mouse and scrolling events",
+            "Input / Disable pointer tracking",
+            "Input / Disable drag and drop",
+            "Focus and visibility / Disable activation events",
+            "Coding Partner / Agent access",
+            "Coding Partner / Agent while paused",
             "Storage / Cookie and storage jar",
             "Scripts / Third-party content",
             "Scripts / Capture page console"

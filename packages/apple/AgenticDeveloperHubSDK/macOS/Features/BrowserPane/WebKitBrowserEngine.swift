@@ -38,7 +38,7 @@ public class WebKitPageDriver: NSObject, BrowserPageDriver {
         return CGSize(width: webView.bounds.width / zoom, height: webView.bounds.height / zoom)
     }
 
-    public func load(_ url: URL) { webView.load(URLRequest(url: url)) }
+    public func load(_ url: URL) { webView.loadAllowingFiles(URLRequest(url: url)) }
     public func goBack() { webView.goBack() }
     public func goForward() { webView.goForward() }
 
@@ -303,7 +303,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         if isApplyingContentRules {
             heldLoad = request
         } else {
-            webView.load(request)
+            webView.loadAllowingFiles(request)
         }
     }
 
@@ -546,7 +546,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         isApplyingContentRules = false
         guard let request = heldLoad else { return }
         heldLoad = nil
-        webView.load(request)
+        webView.loadAllowingFiles(request)
     }
 
     private func observeSettings() {
@@ -840,6 +840,21 @@ extension WebKitBrowserEngine: WKUIDelegate {
         case true?: return .grant
         case false?: return .deny
         case nil: return .prompt
+        }
+    }
+}
+
+extension WKWebView {
+    /// Loads `request`, and a file URL through `loadFileURL`, which grants
+    /// the page read access to the file's directory, so a typed path's page
+    /// can load the images and stylesheets beside it. `load(_:)` alone
+    /// refuses a file URL in a WKWebView.
+    func loadAllowingFiles(_ request: URLRequest) {
+        if let url = request.url, url.isFileURL {
+            let directory = url.hasDirectoryPath ? url : url.deletingLastPathComponent()
+            loadFileURL(url, allowingReadAccessTo: directory)
+        } else {
+            load(request)
         }
     }
 }

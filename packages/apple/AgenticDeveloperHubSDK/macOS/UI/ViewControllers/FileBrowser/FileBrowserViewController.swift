@@ -411,20 +411,28 @@ public final class FileBrowserViewController: NSViewController {
 
     /// Puts the keyboard in the filter field. Internal so a test can drive it.
     func focusFilter() {
+        // Already being typed in: `makeFirstResponder` would end that edit and
+        // start a new one, throwing away the caret the reader just placed.
+        guard filterField.currentEditor() == nil else { return }
         view.window?.makeFirstResponder(filterField)
     }
 
     /// The filter takes the keyboard whenever this pane becomes the active
     /// one — by the keyboard, a menu, a tab switch — except when the reader
-    /// clicked into the list itself, which already says where they want to be.
+    /// clicked somewhere in the pane, which already says where they want to be.
+    ///
+    /// A click anywhere in the pane carries its own focus. Refocusing the
+    /// filter a turn later, after a click *in the filter*, ran while the field
+    /// editor was still tracking that mouse-down: the edit was torn down and
+    /// restarted under it, and the keys the reader typed next went nowhere.
     private func activePaneDidChange(in window: NSWindow?) {
         guard isViewLoaded, let window, window === view.window else { return }
         let isActive = ComposableTabsActivePane.shared.isInActivePane(view)
         defer { wasActivePane = isActive }
         guard isActive, !wasActivePane else { return }
         if let event = NSApp.currentEvent, Self.isMouseDown(event), event.window === window {
-            let point = tree.view.convert(event.locationInWindow, from: nil)
-            if tree.view.bounds.contains(point) { return }
+            let point = view.convert(event.locationInWindow, from: nil)
+            if view.bounds.contains(point) { return }
         }
         if let responder = window.firstResponder as? NSView, responder.isDescendant(of: view) { return }
         // After the click or key that activated the pane has been handled, so

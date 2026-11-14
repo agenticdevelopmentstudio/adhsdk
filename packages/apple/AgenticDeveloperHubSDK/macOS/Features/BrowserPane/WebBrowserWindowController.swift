@@ -15,9 +15,9 @@ private let logger = Logger(subsystem: "AgenticDeveloperHubSDK", category: "WebB
 ///
 /// The browser is a whole browser pane (its tabs, Chrome's toolbar, its
 /// settings), so the window adds only what a pane in a project window gets
-/// from that window: the integrated title bar a project window wears, the
-/// pane's settings behind a gear at the right of it, and the window's title
-/// following the page in front.
+/// from that window: the integrated title bar a project window wears and the
+/// window's title following the page in front. The pane's settings are
+/// behind its own browser menu, at the end of its address row.
 ///
 /// The pane belongs to no project, so it is on the global jar unless the
 /// shared settings say otherwise, and it keeps nothing once its window
@@ -76,7 +76,6 @@ public final class WebBrowserWindowController: SingleWindowController {
 
     static let windowIDPrefix = "web-browser"
     static let accessibilityWindowID = "web-browser.window"
-    static let settingsButtonID = "web-browser.settings-button"
 
     // MARK: - Opening
 
@@ -206,14 +205,6 @@ public final class WebBrowserWindowController: SingleWindowController {
         backdropObserver = ThemePaletteObserver { [weak window] palette in
             window?.backgroundColor = NSColor(palette.projectPaneBackdrop)
         }
-        let gear = WindowTitlebarAccessory.makeButton(
-            symbolName: "gearshape",
-            description: "Browser Options",
-            toolTip: "Pause Events and settings for this browser",
-            target: self,
-            action: #selector(showOptions(_:)))
-        gear.setAccessibilityIdentifier(Self.settingsButtonID)
-        WindowTitlebarAccessory.install([gear], in: window)
         titleAccessory.install(in: window)
         refreshTitle()
     }
@@ -258,16 +249,6 @@ public final class WebBrowserWindowController: SingleWindowController {
         window.setFrame(NSRect(origin: window.frame.origin, size: front.frame.size), display: false)
         let topLeft = window.cascadeTopLeft(from: NSPoint(x: front.frame.minX, y: front.frame.maxY))
         window.cascadeTopLeft(from: topLeft)
-    }
-
-    /// The same items a browser pane's gear offers (Pause Events,
-    /// Settings…, and in Debug Show Browser Log), so a standalone browser
-    /// window can pause its events as a pane can (spec section 7).
-    @objc func showOptions(_ sender: NSView) {
-        let menu = NSMenu()
-        menu.autoenablesItems = false
-        pane.makePaneMenuItems().forEach(menu.addItem)
-        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.maxY + 4), in: sender)
     }
 
     public override func windowDidMove(_ notification: Notification) {

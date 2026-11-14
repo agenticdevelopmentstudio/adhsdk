@@ -415,7 +415,7 @@ final class BrowserSettingsBinding {
     /// drops writes, so it cannot create the override it is locked against.
     /// Asked at each read and write, since a lock can change while the
     /// sheet is up.
-    private func accessors<Value: Codable & Sendable>(
+    func accessors<Value: Codable & Sendable>(
         _ key: UserSetting<Value>
     ) -> (get: () -> Value, set: (Value) -> Void) {
         let store = self.store

@@ -860,7 +860,27 @@ final class FileTreeOutlineViewController: NSViewController {
             item.target = self
             item.representedObject = OpenRequest(url: url, destination: destination)
             return item
-        }
+        } + webBrowserMenuItems(for: url)
+    }
+
+    /// The extensions a web page is saved under, which the app's own browser
+    /// can show rendered rather than as source.
+    private static let webPageExtensions: Set<String> = ["html", "htm", "xhtml"]
+
+    /// "Open in Web Browser" for a web page — `[]` for anything else, so the
+    /// open verbs stay the same three for every other file.
+    private func webBrowserMenuItems(for url: URL) -> [NSMenuItem] {
+        guard Self.webPageExtensions.contains(url.pathExtension.lowercased()) else { return [] }
+        let item = NSMenuItem(title: "Open in Web Browser", action: #selector(openInWebBrowser(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = url as NSURL
+        item.accessibilityID("file-browser.menu.open-in-web-browser")
+        return [item]
+    }
+
+    @objc private func openInWebBrowser(_ sender: NSMenuItem) {
+        guard let url = sender.representedObject as? NSURL else { return }
+        WebBrowserWindowController.openNew(url: url as URL)
     }
 
     /// Reveal and copy, which apply to anything that exists — a file, a folder,
