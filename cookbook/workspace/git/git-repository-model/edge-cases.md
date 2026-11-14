@@ -7,4 +7,4 @@
 - **Cancellation**: A superseded history load still runs to completion, and its result is dropped.
 - **Linked worktrees**: The git directory (`<common>/worktrees/<name>`) and the common directory lie outside the working tree, so all three are watched.
 - **Event storms**: A checkout or rebase writes many files; the 300 ms debounce folds them into one refresh, and lock files and objects never trigger one.
-
+- **Symlinked location**: A repository under `/tmp` or `/var` is reported by the event stream as `/private/...`; the roots are canonicalised with realpath to match, never with a resolver that strips `/private`.

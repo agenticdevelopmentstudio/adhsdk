@@ -8,4 +8,5 @@
 | git-repository-model-005 | unborn | `git init`, one untracked file; `start()` | No commits, no graph rows, no refs; unstaged lists the file. |
 | git-repository-model-006 | failures-keep-state | `start()`, delete the repository directory, `refresh` of every kind | Refs, commits and status are unchanged; nothing throws. |
 | git-repository-model-007 | watcher-classify | `.git/HEAD`, `.git/refs/heads/main`, `.git/packed-refs`, `.git/index`, `.git/MERGE_HEAD`, `.git/rebase-merge/done`, `.git/objects/ab/cd`, `.git/index.lock`, `.git/refs/heads/main.lock`, `.git/config`, `src/a.swift` | refs+history ×3, working copy, operation ×2, nothing ×4, working copy. |
-
+| git-repository-model-008 | watcher-classify | `.git/worktrees/other`, `.git/worktrees/other/HEAD`, `.git/worktrees/other/index`, `.git/worktrees/other/HEAD.lock` | refs ×2, nothing ×2. |
+| git-repository-model-009 | watcher-canonical-roots | The real watcher started on a fixture under the temporary directory, then `git checkout -b x` | `onChange` receives a set containing `.refs` within 10 s. |
