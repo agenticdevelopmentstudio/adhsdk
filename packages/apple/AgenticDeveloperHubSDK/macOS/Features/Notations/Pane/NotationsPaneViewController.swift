@@ -144,6 +144,10 @@ public final class NotationsPaneViewController: NSViewController {
 
     private func apply(_ resolution: NotationResolution, generation: Int) {
         guard generation == resolveGeneration else { return }
+        // Whatever was typed so far was typed into the notation on screen:
+        // write it under that notation's key and id before they change, or
+        // the debounced save would file it under the new branch.
+        flushPendingSave()
         switch resolution {
         case .branch(let key, let notation):
             self.key = key
