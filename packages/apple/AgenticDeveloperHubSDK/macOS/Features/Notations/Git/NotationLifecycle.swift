@@ -16,22 +16,38 @@ public enum NotationLifecycle {
         /// Whether the branch is the default branch itself, which is always
         /// reachable from itself and is never "merged".
         public var isDefaultBranch: Bool
+        /// Whether a reconcile has ever seen the branch at a commit of its
+        /// own (a recorded tip other than the fork point). A branch with no
+        /// commits yet that is fast-forwarded or rebased onto newer
+        /// default-branch commits is reachable from the default branch too;
+        /// this is what tells it apart from a merged one.
+        public var hasHadOwnCommits: Bool
 
-        public init(localTip: String?, forkPoint: String, tipReachableFromDefault: Bool, isDefaultBranch: Bool) {
+        public init(localTip: String?, forkPoint: String, tipReachableFromDefault: Bool, isDefaultBranch: Bool,
+                    hasHadOwnCommits: Bool) {
             self.localTip = localTip
             self.forkPoint = forkPoint
             self.tipReachableFromDefault = tipReachableFromDefault
             self.isDefaultBranch = isDefaultBranch
+            self.hasHadOwnCommits = hasHadOwnCommits
+        }
+
+        /// The branch has no commits of its own and its tip has only moved
+        /// along the default branch.
+        public var isEmptyBranchMovedAlongDefault: Bool {
+            guard let localTip, !isDefaultBranch else { return false }
+            return localTip != forkPoint && tipReachableFromDefault && !hasHadOwnCommits
         }
     }
 
-    /// Archive when the local ref is gone, or when the branch has commits of
-    /// its own (tip ≠ fork point) that the default branch now contains. A
-    /// branch with no commits yet that still exists stays active.
+    /// Archive when the local ref is gone, or when the branch has had commits
+    /// of its own (tip ≠ fork point) that the default branch now contains. A
+    /// branch with no commits yet that still exists stays active, even when
+    /// its tip has moved onto newer default-branch commits.
     public static func shouldArchive(_ facts: ArchiveFacts) -> Bool {
         guard let tip = facts.localTip else { return true }
         if facts.isDefaultBranch { return false }
-        return tip != facts.forkPoint && facts.tipReachableFromDefault
+        return tip != facts.forkPoint && facts.tipReachableFromDefault && facts.hasHadOwnCommits
     }
 
     /// What a reconcile knows about an archived notation's branch.

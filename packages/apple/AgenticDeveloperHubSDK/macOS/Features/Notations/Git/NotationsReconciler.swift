@@ -98,11 +98,10 @@ public actor NotationsReconciler {
         guard let tip else {
             return try store.archive(id: notation.id, at: now)
         }
-        if tip != notation.lastTip {
-            try store.recordTip(id: notation.id, tip: tip)
-        }
+        let hasHadOwnCommits = notation.lastTip.map { $0 != notation.forkPoint } ?? false
         guard let defaultBranch = try await defaultBranch(for: notation.projectPath, in: directory,
                                                           cache: &defaultBranches) else {
+            if tip != notation.lastTip { try store.recordTip(id: notation.id, tip: tip) }
             return false
         }
         let isDefault = notation.branch == defaultBranch
@@ -111,7 +110,13 @@ public actor NotationsReconciler {
             : try await git.isAncestor(tip, of: "refs/heads/\(defaultBranch)", in: directory)
         let facts = NotationLifecycle.ArchiveFacts(
             localTip: tip, forkPoint: notation.forkPoint,
-            tipReachableFromDefault: reachable, isDefaultBranch: isDefault)
+            tipReachableFromDefault: reachable, isDefaultBranch: isDefault,
+            hasHadOwnCommits: hasHadOwnCommits)
+        // The recorded tip is the branch's last commit of its own; an empty
+        // branch carried along the default branch has none to record.
+        if tip != notation.lastTip, !facts.isEmptyBranchMovedAlongDefault {
+            try store.recordTip(id: notation.id, tip: tip)
+        }
         guard NotationLifecycle.shouldArchive(facts) else { return false }
         return try store.archive(id: notation.id, at: now)
     }
