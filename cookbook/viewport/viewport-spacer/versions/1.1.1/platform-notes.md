@@ -1,0 +1,7 @@
+
+- **SwiftUI**: Place a plain `Spacer()` inside the enclosing `VStack`; a `Spacer` already expands to fill the available space along the stack's axis, matching **fills-remaining-space**.
+- **Compose**: Use `Spacer(modifier = Modifier.weight(1f))` within a `Column` layout to absorb available vertical space and push siblings downward.
+- **React/Web**: The `ViewportSpacer` component as defined in the source. Requires a flex-column parent (`ViewportShell`, `display: flex; flex-direction: column`). The `vp-spacer` class implements **fills-remaining-space** via `flex: 1 1 0; min-height: 0`.
+- **AppKit / UIKit**: Add a plain `NSView` (AppKit) or `UIView` (UIKit) as an arranged subview of the enclosing `NSStackView` / `UIStackView` with no intrinsic content size, and set its content-hugging priority to `.defaultLow` (250) and its compression-resistance priority to `.defaultLow` (250) on the stack's axis, so it absorbs the leftover space, matching **fills-remaining-space**. Without a stack view, pin the view with Auto Layout constraints and give its sizing constraint the lowest priority in the view hierarchy.
+- **WinUI 3**: Use a `Grid` (not a `StackPanel`, whose children are given unlimited height) with a `RowDefinition Height="*"` for the spacer's row and `Height="Auto"` for every sibling row; the star-sized row absorbs the leftover vertical space, matching **fills-remaining-space**.
+

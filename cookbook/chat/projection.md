@@ -99,7 +99,7 @@ Not applicable — this is a data projection module, not a visual component; it 
 | ccp-008 | committed-message-failure | `projectMessages` with `m1.deliveryStatus = { kind: "failed", reason: "network error" }` | The projected message's `failure` is `"network error"`. |
 | ccp-009 | draft-tool-call-precedence, active-command-to-tool-call-running | `projectMessages` with a draft for `participantID: "bot"` whose `attachments` decode to `toolCalls: [{ name: "old", arguments: "{}", status: "completed" }]`, and `view.activeCommands` holding one entry for `participantID: "bot"` with `invocation: { commandName: "search", argumentsJSON: "{}", ... }` and `result: undefined` | The projected draft's `toolCalls` is `[{ name: "search", arguments: "{}", status: "started" }]`. |
 | ccp-010 | draft-tool-call-fallback | Same draft as ccp-009, but `view.activeCommands` has no entry for `"bot"` | The projected draft's `toolCalls` is the decoded `[{ name: "old", arguments: "{}", status: "completed" }]`. |
-| ccp-011 | active-command-to-tool-call-finished | `toToolCallInfo` on `{ participantID: "p", invocation: { commandName: "run", argumentsJSON: "{}", ... }, result: { invocationID: "i1", ok: false, errorMessage: "boom", completedAt: D } }` | Returns `{ name: "run", arguments: "{}", status: "failed", ok: false, result: "boom" }`. |
+| ccp-011 | active-command-to-tool-call-finished | `projectMessages` with one draft for `participantID: "bot"` and `view.activeCommands` holding `{ participantID: "bot", invocation: { commandName: "run", argumentsJSON: "{}", ... }, result: { invocationID: "i1", ok: false, errorMessage: "boom", completedAt: D } }` (the module-private `toToolCallInfo` is exercised through the projection) | The projected draft's `toolCalls` is `[{ name: "run", arguments: "{}", status: "failed", ok: false, result: "boom" }]`. |
 | ccp-012 | draft-identity | `draftMessageID("bot-42")` | Returns `"draft:bot-42"`. |
 | ccp-013 | committed-message-sender, committed-message-persona-flag | `projectMessages` with `parts.localParticipantID: "local"` and two committed messages, one with `senderID: "local"` and one with `senderID: "bot"` | First: `sender` is `parts.user`, `isPersona` is `false`. Second: `sender` is `parts.persona`, `isPersona` is `true`. |
 | ccp-014 | committed-message-rich-display | `projectMessages` with one committed message whose `attachments` holds `encodeRichDisplay({ popover: { title: "Info" } }, "a1")` | The projected message's `popover` equals `{ title: "Info" }`; `content` and `toolCalls` are `undefined`. |
@@ -218,7 +218,7 @@ Not applicable: neither `richContent.ts` nor `toChatMessages.ts` calls a console
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | Reliability |
 

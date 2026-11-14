@@ -2,11 +2,11 @@
 id: 556f7dbf-2a14-4e97-aaa2-0954c7488e6f
 title: "ViewportSpacer"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -122,7 +122,7 @@ Not applicable: ViewportSpacer contains no logging or diagnostic output in the s
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/viewport/src/ViewportSpacer.tsx` | unverified |
+| web | `packages/web/packages/viewport/src/ViewportSpacer.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -140,14 +140,15 @@ Not applicable: ViewportSpacer contains no logging or diagnostic output in the s
 |-------|--------|----------|
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-This rests on the source rendering a plain `div` with no role, label, or tabindex attributes — correct, minimal markup for a purely structural element. `separation-of-concerns` passes because the component is pure presentation over `children`/`className` with no business logic; `unit-test-coverage` fails because no test exercises it.
+This rests on the source rendering a plain `div` with no role, label, or tabindex attributes — correct, minimal markup for a purely structural element. `separation-of-concerns` passes because the component is pure presentation over `children`/`className` with no business logic; `unit-test-coverage` passes because `ViewportSpacer.test.tsx` covers every vector.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ViewportSpacer.test.tsx, all 9 vectors); unit-test-coverage now passed. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: failed). |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: add fills-remaining-space, root-element and assistive-tech-invisible requirements grounded in the source CSS and markup; merge the duplicate custom-class requirements into class-composition and remap their vectors; move Edge Case MUST rules into named requirements; populate tags, depends-on and related; unquote the modified date; rewrite Design Decisions in Decision/Rationale/Approved form; replace fabricated Compliance checks with a real accessibility check; correct the SwiftUI, AppKit/UIKit and WinUI 3 platform notes; state real accessibility guidance in place of "Not applicable" |
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |

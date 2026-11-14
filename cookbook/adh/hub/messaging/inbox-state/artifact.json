@@ -4,11 +4,11 @@
     "id": "8da824cf-e518-4cee-b897-3a8e17f9c32a",
     "title": "Inbox State",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "240ae528f0585360",
+  "synced": "11af8e07ac9282c0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

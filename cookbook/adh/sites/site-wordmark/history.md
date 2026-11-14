@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.4.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (SiteWordmark.test.tsx, 7 of 7 vectors); unit-test-coverage now passed. |
 | 1.4.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.4.0 | 2026-10-04 | Mike Fullerton | Filled Reference Implementations; completed missing sections; contrast gap restated as current behavior with a pending decision; added separation-of-concerns and unit-test-coverage compliance; WinUI 3 guidance. |
 | 1.3.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/sites/. |

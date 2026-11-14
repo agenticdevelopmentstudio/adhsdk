@@ -2,7 +2,7 @@
 id: 9cf9784d-48c9-4b29-b553-c72ffdfce7b9
 title: "Account"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -19,7 +19,10 @@ tags:
   - auth
   - accounts
 depends-on: []
-related: []
+related:
+  - 86eccc6f-cd1b-4ac7-bb98-851eb7c54324
+  - 98226063-be5d-4fa8-a980-02227df3418b
+  - f46b9323-7954-4f66-a476-970fcc9db372
 references: []
 approved-by: ""
 approved-date: ""
@@ -35,7 +38,7 @@ approved-date: ""
 
 - **account-declaration**: The protocol MUST be declared as `@MainActor public protocol Account: AnyObject` with get-only `id`, `displayName`, `summary` (`String`), `state` (`AccountState`), `message` (`String?`) and `signupURL` (`URL?`); a get-set `onChange` of type `@MainActor () -> Void`; a synchronous `func restore()`; a synchronous `func presentSignIn(from anchor: AccountPresentationAnchor)`; and `func signOut() async`.
 - **account-protocol-main-actor**: `Account` MUST be a class-bound protocol (`AnyObject`) isolated to `@MainActor`, so every property read and verb call happens on the main actor.
-- **account-id**: An `Account` MUST expose a `String` `id`.
+- **account-id**: An `Account` MUST expose a `String` `id`. The `id` SHOULD stay the same for the life of the account and SHOULD be unique among the accounts an app holds, because an account registry ([adhsdk.ingredient.auth.accounts.account-registry](cookbook:98226063-be5d-4fa8-a980-02227df3418b)) treats two accounts with equal `id` strings as the same account.
 - **account-display-name**: An `Account` MUST expose a `String` `displayName`, the account's title.
 - **account-summary**: An `Account` MUST expose a `String` `summary`, one line shown under the title while the account is signed out.
 - **account-state**: An `Account` MUST expose its current `AccountState` through `state`.
@@ -111,16 +114,7 @@ Vectors AC-001 to AC-003 and AC-006 are derived from `AccountUserTests` and `Acc
 - **Cancellation, timeout, retry**: The protocol declares none; `signOut()` has no cancellation hook and `restore()` has no timeout.
 
 ## Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `id` | `String` | supplied by the conformer | Identity; an account registry treats an id already present as a duplicate |
-| `displayName` | `String` | supplied by the conformer | Title shown for the account |
-| `summary` | `String` | supplied by the conformer | One line under the title while signed out |
-| `signupURL` | `URL?` | supplied by the conformer | Where to sign up; `nil` hides Signup |
-| `onChange` | `@MainActor () -> Void` | set by the conformer's initial value | Single observer slot, set by the accounts UI |
-| `AccountUser.avatarURL` | `URL?` | none | Optional avatar image address |
-
+Not applicable — `Account` is a protocol and value types with no options. Every property (`id`, `displayName`, `summary`, `signupURL`, `onChange`) is supplied by the conformer and specified under Behavioral Requirements, and `AccountUser.avatarURL` is an optional field of the value type.
 ## Deep Linking
 
 Not applicable: the file has no routes or URL schemes; its only URL, `signupURL`, is an outbound web address.
@@ -164,7 +158,7 @@ Not applicable: the source makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/Account.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/Account.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -202,3 +196,4 @@ The contract separates concerns cleanly: the protocol and value types hold no UI
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Design rationales, full declaration, initials rules and untested-vector notes (earlier round); now links the accounts UI and registry as related, adds an id stability and uniqueness requirement, and marks Configuration not applicable. |

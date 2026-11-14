@@ -4,11 +4,11 @@
     "id": "556f7dbf-2a14-4e97-aaa2-0954c7488e6f",
     "title": "ViewportSpacer",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b8400702cd8c42df",
+  "synced": "aacae6c7e909f330",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

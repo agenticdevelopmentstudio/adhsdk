@@ -4,11 +4,11 @@
     "id": "98d7c94e-4db9-42c9-b36e-1a2a59409fda",
     "title": "Organizations",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -40,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bf6f3e51e581f659",
+  "synced": "e2753157433932d6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

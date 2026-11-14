@@ -4,11 +4,11 @@
     "id": "21cbbc1c-38a0-4e7a-8ca0-06e2f29429f5",
     "title": "Site Wordmark",
     "type": "ingredient",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "status": "review",
     "language": "en",
     "created": "2026-06-26",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "83a495947ea1f9cc",
+  "synced": "a5efec403ace90aa",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

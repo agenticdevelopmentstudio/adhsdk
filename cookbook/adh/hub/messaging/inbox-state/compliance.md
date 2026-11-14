@@ -2,7 +2,7 @@
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 | [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
@@ -16,10 +16,12 @@
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
 `separation-of-concerns` passes: both files contain zero JSX or DOM code — they export hooks and
-plain functions consumed by a separate presentation layer. `unit-test-coverage` fails: this
-checkout has no test file next to either `use-dms.ts` or `use-notifications.ts`, and the one
-messaging-adjacent test found (`MessagingPane.test.tsx`, in a different package) exercises a
-different component and neither imports nor mocks either file. `explicit-error-handling` is
+plain functions consumed by a separate presentation layer. `unit-test-coverage` is `partial`:
+`hooks/__tests__/use-notifications.test.ts` and `hooks/__tests__/use-dms.test.ts` cover 30 of the 33
+conformance vectors with passing tests. Vectors `hub-domain-hooks-031` (401 refresh waterfall) and
+`-032` (`access_token` query parameter) belong to the shared `authedFetch` and `connectSse`
+transport and are skipped; `-033` (a send resolving after a chat switch merges into the new
+thread) is a source bug and is skipped with a `BUG` note. `explicit-error-handling` is
 `partial`: every plain HTTP failure either throws (`AuthHttpError`/`Error`) or lands in an exposed
 `error` field, but several catches (`fetchPresenceMap`, the SSE malformed-frame handler, and both
 poll-fallback refetches) discard the error with no signal at all beyond a silent fallback.

@@ -2,7 +2,7 @@
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.security.server-side-authorization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90e085e3-5112-5c02-9c10-4a2e324eeca1) | passed | Security |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | partial | Security |
@@ -11,11 +11,9 @@
 
 `separation-of-concerns` passes: `tokens.ts`, `bucket-access.ts`, and `wire.ts` contain zero UI or
 presentation code — both the module's own comments and `index.ts` describe it as the public surface
-of a data domain, consumed by a separate presentation layer. `unit-test-coverage` fails: this checkout
-has no `__tests__` directory, and no test file of any kind, under
-`packages/web/packages/data/src/security/` — none of `tokensApi`'s four methods or
-`bucketAccessApi`'s eight methods has a dedicated unit test, unlike the sibling `access.ts`, which has
-at least one tested method. `explicit-error-handling` passes: nothing in either file swallows an
+of a data domain, consumed by a separate presentation layer. `unit-test-coverage` passes: `security/__tests__/security.test.ts`
+covers all 24 conformance vectors, exercising every one of `tokensApi`'s methods and
+`bucketAccessApi`'s methods against a stubbed `fetch`. `explicit-error-handling` passes: nothing in either file swallows an
 error — every failure either throws `AuthHttpError` (via the shared `authedFetch`) or, at the three
 `rethrowConflict` sites, a plain translated `Error`; nothing is caught and discarded.
 `server-side-authorization` passes: neither client performs a client-side permission check of any
