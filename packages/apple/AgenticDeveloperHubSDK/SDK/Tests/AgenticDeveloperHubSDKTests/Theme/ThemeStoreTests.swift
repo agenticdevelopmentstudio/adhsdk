@@ -49,6 +49,14 @@ struct ThemeStoreTests {
         #expect(store.allThemes.contains { $0.id == builtIn.id })
     }
 
+    @Test("deleting the active built-in theme leaves it active")
+    func deletingActiveBuiltInKeepsIt() throws {
+        let builtIn = try #require(store.allThemes.first { $0.isBuiltIn })
+        storage.activeThemeID = builtIn.id
+        store.delete(id: builtIn.id)
+        #expect(storage.activeThemeID == builtIn.id)
+    }
+
     // MARK: - Catalog
 
     @Test("starts with only the built-in themes")

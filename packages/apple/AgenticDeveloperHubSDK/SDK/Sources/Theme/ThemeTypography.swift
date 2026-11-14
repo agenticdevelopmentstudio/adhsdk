@@ -104,8 +104,10 @@ public struct ThemeTypography: Codable, Equatable, Sendable {
     public static let sizeScaleRange: ClosedRange<Double> = 0.5...4
 
     /// Clamps `value` into `sizeScaleRange`. The one place both callers above
-    /// enforce the limit.
+    /// enforce the limit. A non-finite value (NaN, which `min`/`max` would pass
+    /// straight through, or an infinity) falls back to `1.0`, the unscaled size.
     public static func clampedSizeScale(_ value: Double) -> Double {
-        Swift.min(Swift.max(value, sizeScaleRange.lowerBound), sizeScaleRange.upperBound)
+        guard value.isFinite else { return 1.0 }
+        return Swift.min(Swift.max(value, sizeScaleRange.lowerBound), sizeScaleRange.upperBound)
     }
 }
