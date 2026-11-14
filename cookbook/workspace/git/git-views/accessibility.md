@@ -17,7 +17,7 @@ The root view carries `git.detail`, the header's scroll view `git.detail.header`
 
 ### Working copy
 
-The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`.
+The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`; the header buttons `git.workingCopy.stageAll` and `git.workingCopy.unstageAll`; the menu items `git.workingCopy.menu.stage`, `git.workingCopy.menu.unstage`, `git.workingCopy.menu.discard` and `git.workingCopy.menu.discardAll`. The commit box carries `git.commitBox`, its header `git.commitBox.header`, the message `git.commitBox.message`, the checkbox `git.commitBox.amend` and the button `git.commitBox.commit`.
 
 ### Diff
 

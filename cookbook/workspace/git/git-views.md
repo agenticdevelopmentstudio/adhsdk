@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.5.0
+version: 1.6.0
 status: review
 language: en
 created: 2026-11-13
@@ -47,7 +47,7 @@ The views of a git window: each one an AppKit view controller that reads one nar
 The **history list** (`GitHistoryViewController`) is a paged table of the [commit graph cell](cookbook:595f1a5e-0f92-49c5-a980-af6f809be932), the subject behind a [badge](cookbook:2cfe57f0-cdd4-4723-a6e0-2ce4f136ce7f) per ref at the commit, the author's [avatar](cookbook:e3a2394d-d0d0-4495-bde4-59197f9d7866) and name, the [relative date](cookbook:873f79b1-444d-4c2c-8a5f-4fc01cd9022e) and the short sha. It reads a `GitHistoryDataSource`, asks for the next page as the end of the list comes into view, and takes the window's search text through `setQuery(_:)`, which `GitHistorySearch.parse(_:)` (Foundation only, in `AgenticDeveloperHubSDKCore`) turns into a `GitLogQuery`.
 The **changed-files list** (`GitFileListViewController`) is one list of `GitFileListItem`s (`AgenticDeveloperHubSDKCore`), each a status letter in its status colour, the file type's icon and the path (`old → new` for a rename), reused wherever the window lists files.
 The **commit detail** (`GitCommitDetailViewController`) shows one commit's subject, body, author and committer with their avatars, dates, full sha with a copy button and its parents as links, over a changed-files list read from the `GitContentSource`'s diff of that commit; the latest `show(commit:)` always wins over a load still in flight.
-The **working copy** (`GitWorkingCopyViewController`) shows the `GitWorkingCopyDataSource`'s staged and unstaged files in two changed-files lists and reports the selected file as the `GitDiffTarget` that shows its diff.
+The **working copy** (`GitWorkingCopyViewController`) shows the `GitWorkingCopyDataSource`'s staged and unstaged files in two changed-files lists and reports the selected file as the `GitDiffTarget` that shows its diff. Under them the **commit box** (`GitCommitBoxViewController`) holds the message, Amend and Commit. Staging, unstaging, discarding and committing are intents (`GitWorkingCopyIntent`) sent to the delegate, never git run by the view.
 The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTarget` on the toolkit's line viewer, inline (`GitInlineDiffModel`) or side by side (`GitSideBySideDiffModel`), with word-level emphasis and syntax colour from `GitSyntaxColoring`, which reads both sides' contents and highlights them with the TextMate highlighter. The **blame** (`GitBlameViewController`) shows a file's lines with the sha, author initials and date at the start of each commit's run, and the **file history** (`GitFileHistoryViewController`) lists the commits that changed a file beside a diff of the selected one's change to it.
 
 ## Behavioral Requirements
@@ -99,6 +99,12 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **wc-lists**: The working copy MUST show two changed-files lists, `Staged` (context `staged`) over the data source's `staged` files and `Unstaged` (context `unstaged`) over its `unstaged` files, in the data source's order, each item `GitFileListItem(change:)`, each under a header titled `Staged (<count>)` or `Unstaged (<count>)`.
 - **wc-selection**: Selecting a file MUST call the delegate's `workingCopy(_:didSelect:)` once with its diff target: a staged file `.staged(paths: [path])`, an untracked unstaged file `.untracked(path:)`, any other unstaged file `.unstaged(paths: [path])`. Selecting in one list MUST clear the other without a delegate call for the clearing. Clearing the selection calls the delegate once with nil.
 - **wc-reload**: `reload()` MUST re-read both lists from the data source. A selected file still in its list stays selected without a delegate call, unless its status changed, when the delegate is called once with its new target (an untracked file that becomes intent-to-add moves from `.untracked` to `.unstaged`); one that left its list is deselected and the delegate is called once with nil.
+- **wc-intents-only**: The working copy MUST NOT run git. Every action is one call of the delegate's `workingCopy(_:didRequest:)` with a `GitWorkingCopyIntent` (`stage([String])`, `unstage([String])`, `discard([String])`, `stageAll`, `unstageAll`, `discardAll`, `commit(message:amend:)`, `amendChanged(Bool)`); confirming a discard is the owner's.
+- **wc-stage-all**: A trailing borderless `Stage All` button beside the Unstaged header MUST send `.stageAll`, and `Unstage All` beside the Staged header `.unstageAll`.
+- **wc-menus**: A staged row's context menu MUST hold `Unstage` (`.unstage`); an unstaged row's `Stage` (`.stage([path])`), `Discard Changes…` (`.discard([path])`), a separator and `Discard All Changes…` (`.discardAll`). A staged item's paths are its `oldPath` (when it has one) and its `path`, so a staged rename unstages both. The changed-files list builds the menu for the clicked row through its `menuProvider` and has none for a click outside the rows.
+- **wc-double-click**: Double-clicking a staged row MUST send `.unstage` with its paths, an unstaged row `.stage([path])`, through the changed-files list's `onDoubleClick`.
+- **wc-commit-box**: Under the two lists, the commit box MUST offer a plain-text message, an `Amend` checkbox and a `Commit` button (⌘↩). Commit is enabled only when the message trimmed of whitespace and newlines is not empty and there are staged changes (the data source's `staged` is not empty) or Amend is on. Pressing it sends `.commit(message:amend:)` with the message exactly as typed.
+- **wc-amend**: Ticking or unticking Amend MUST send `.amendChanged(_:)` with its new state; the owner may then fill the message. `canAmend` (set by the owner, false until it is told otherwise) disables the checkbox and unticks it when false, without a delegate call. `commitDidSucceed()` empties the message and unticks Amend, without a delegate call.
 - **wc-ui-thread**: The working copy MUST be used on the UI thread.
 
 ### Diff
@@ -151,7 +157,7 @@ The header scrolls on its own above the changed-files list and takes at most hal
 
 ### Working copy
 
-Two panes in a horizontal-divider `ThemedSplitView`, staged above unstaged, each a heading-weight caption header over its changed-files list.
+Three panes in a horizontal-divider `ThemedSplitView`: staged, unstaged, then the commit box. Each list pane is a heading-weight caption header, with a trailing borderless small button (`Unstage All`, `Stage All`), over its changed-files list. The commit box is a `Commit Message` caption header over a scrolled native `NSTextView` (plain text, the theme's body font and primary text colour, no placeholder), then a row of the `Amend` checkbox and the `Commit` push button at the trailing edge.
 
 ### Diff
 
@@ -197,6 +203,10 @@ A vertical-divider `ThemedSplitView`: the commit list (a headerless single-colum
 - **Clean**: both lists are empty, headers `Staged (0)` and `Unstaged (0)`.
 - **Unborn repository**: staged files are listed as added; nothing throws.
 - **Selected file moved or gone**: after a reload that no longer lists it in its list, nothing is selected and the delegate is told nil.
+- **Nothing staged**: Commit is disabled unless Amend is on.
+- **Empty or blank message**: Commit is disabled.
+- **No commit to amend** (`canAmend` false): the Amend checkbox is disabled and unticked.
+- **Commit succeeded**: after `commitDidSucceed()` the message is empty and Amend unticked.
 
 ### Diff
 
@@ -234,7 +244,7 @@ The root view carries `git.detail`, the header's scroll view `git.detail.header`
 
 ### Working copy
 
-The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`.
+The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`; the header buttons `git.workingCopy.stageAll` and `git.workingCopy.unstageAll`; the menu items `git.workingCopy.menu.stage`, `git.workingCopy.menu.unstage`, `git.workingCopy.menu.discard` and `git.workingCopy.menu.discardAll`. The commit box carries `git.commitBox`, its header `git.commitBox.header`, the message `git.commitBox.message`, the checkbox `git.commitBox.amend` and the button `git.commitBox.commit`.
 
 ### Diff
 
@@ -309,6 +319,10 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-055 | diff-blame-history | Show a deleted `a` in `c1`; show `b` in `c2`, held; press Blame and History | Blame `b` at `c2`; History `b`. |
 | git-views-056 | diff-show | `c1`'s diff holds only `other`; show `mine` | No rows. |
 | git-views-057 | diff-coloring | Colour `let a = 1\rx\nlet b = 2` as Swift | Two lines; the second's first run covers `let`. |
+| git-views-058 | wc-menus, wc-double-click | Staged `new` renamed from `old`; unstaged `b` modified. Each menu item, then a double-click on each row | `.unstage(["old", "new"])`; `.stage(["b"])`, `.discard(["b"])`, `.discardAll`; then `.unstage(["old", "new"])`, `.stage(["b"])`, once each. |
+| git-views-059 | wc-stage-all | Press `Stage All`, then `Unstage All` | `.stageAll`, then `.unstageAll`. |
+| git-views-060 | wc-commit-box | Nothing staged, message `Fix\n\nBody`; then Amend ticked; press Commit | Commit disabled for an empty or blank message and with a message but nothing staged; enabled with Amend; `.commit(message: "Fix\n\nBody", amend: true)`. |
+| git-views-061 | wc-amend | `canAmend` true, tick Amend; set `canAmend` false; then `commitDidSucceed()` | `.amendChanged(true)` once; the checkbox disabled and unticked; the message empty. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -371,7 +385,10 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | `delegate` (diff) | `GitDiffDelegate?` | nil | Told when Blame or History is pressed. |
 | `delegate` (blame) | `GitBlameDelegate?` | nil | Told which commit a sha click chose. |
 | `source` (working copy) | `GitWorkingCopyDataSource` | none | Where the working copy reads its staged and unstaged files. |
-| `delegate` (working copy) | `GitWorkingCopyDelegate?` | nil | Told the selected file's diff target, or nil. |
+| `delegate` (working copy) | `GitWorkingCopyDelegate?` | nil | Told the selected file's diff target, or nil, and every `GitWorkingCopyIntent`. |
+| `canAmend` (working copy, commit box) | `Bool` | false | Whether Amend can be ticked; the owner sets it when there is a commit to amend. |
+| `menuProvider` (changed-files list) | `((GitFileListItem) -> NSMenu?)?` | nil | The clicked row's context menu. |
+| `onDoubleClick` (changed-files list) | `((GitFileListItem) -> Void)?` | nil | Called with a double-clicked row's item. |
 
 ## Deep Linking
 
@@ -416,14 +433,16 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.4.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.4.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.4.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.4.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.4.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.4.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.4.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.4.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.5.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.5.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.5.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.5.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.5.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.5.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.5.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.5.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.5.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.5.0) |
 
 ## Design Decisions
 
@@ -506,7 +525,7 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind, reload with a selection kept or dropped, and directory rows restoring the selection, against a fake data source; `GitHistoryViewControllerTests` covers the columns, ref badges per row, the graph width, paging, selection and reload, and `setQuery`, and `GitHistorySearchTests` each search form; `GitFileListItemTests` covers the item mapping, `GitFileListViewControllerTests` the rows, selection and `files` changes, `GitCommitDetailViewControllerTests` the header, copy, parent links, files, file selection, clearing and latest-call-wins in both finishing orders, and `GitWorkingCopyViewControllerTests` the lists, targets and reload, all against fakes that behave like the model.
+`separation-of-concerns` passes because the views read data-source protocols and report to delegates; none calls git or knows its window. `unit-test-coverage` passes: `GitRefsSidebarViewControllerTests` covers section order and titles, badges, emphasis, omitted sections, selection of every row kind, reload with a selection kept or dropped, and directory rows restoring the selection, against a fake data source; `GitHistoryViewControllerTests` covers the columns, ref badges per row, the graph width, paging, selection and reload, and `setQuery`, and `GitHistorySearchTests` each search form; `GitFileListItemTests` covers the item mapping, `GitFileListViewControllerTests` the rows, selection and `files` changes, `GitCommitDetailViewControllerTests` the header, copy, parent links, files, file selection, clearing and latest-call-wins in both finishing orders, `GitWorkingCopyViewControllerTests` the lists, targets, reload, header buttons, menus and double-clicks, and `GitCommitBoxViewControllerTests` the Commit button's enabling, the commit and amend intents, `canAmend` and `commitDidSucceed()`, all against fakes that behave like the model.
 
 ## Change History
 
@@ -521,3 +540,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.4.0 | 2026-11-13 | Mike Fullerton | Diff, blame and file history views: inline and side-by-side diff models, syntax colouring, persisted diff toggles |
 | 1.4.1 | 2026-11-14 | Mike Fullerton | File history diffs each commit under the file's path at that commit; Blame and History act on the latest show; a file missing from the diff shows no rows; blame's uncommitted id at either hash length; colouring decodes each line as the diff text does |
 | 1.5.0 | 2026-11-14 | Mike Fullerton | Final review: debounced cancellable search; commit detail lists changed files without the patch; colouring resolves the language before a capped read; file-history reload keeps the current selection; one error-label helper; key style; readable status label |
+| 1.6.0 | 2026-11-14 | Mike Fullerton | Working copy actions: stage, unstage and discard by menu, double-click and header buttons, and a commit box with Amend; every action a GitWorkingCopyIntent sent to the delegate; vectors 058-061 |

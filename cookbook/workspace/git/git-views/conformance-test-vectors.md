@@ -58,3 +58,7 @@
 | git-views-055 | diff-blame-history | Show a deleted `a` in `c1`; show `b` in `c2`, held; press Blame and History | Blame `b` at `c2`; History `b`. |
 | git-views-056 | diff-show | `c1`'s diff holds only `other`; show `mine` | No rows. |
 | git-views-057 | diff-coloring | Colour `let a = 1\rx\nlet b = 2` as Swift | Two lines; the second's first run covers `let`. |
+| git-views-058 | wc-menus, wc-double-click | Staged `new` renamed from `old`; unstaged `b` modified. Each menu item, then a double-click on each row | `.unstage(["old", "new"])`; `.stage(["b"])`, `.discard(["b"])`, `.discardAll`; then `.unstage(["old", "new"])`, `.stage(["b"])`, once each. |
+| git-views-059 | wc-stage-all | Press `Stage All`, then `Unstage All` | `.stageAll`, then `.unstageAll`. |
+| git-views-060 | wc-commit-box | Nothing staged, message `Fix\n\nBody`; then Amend ticked; press Commit | Commit disabled for an empty or blank message and with a message but nothing staged; enabled with Amend; `.commit(message: "Fix\n\nBody", amend: true)`. |
+| git-views-061 | wc-amend | `canAmend` true, tick Amend; set `canAmend` false; then `commitDidSucceed()` | `.amendChanged(true)` once; the checkbox disabled and unticked; the message empty. |

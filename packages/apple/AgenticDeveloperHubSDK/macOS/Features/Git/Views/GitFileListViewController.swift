@@ -11,7 +11,8 @@ import AgenticDeveloperHubSDKCore
 /// title. The commit detail and both working-copy lists are each one of these.
 ///
 /// The owner sets `files`; the list keeps a selected path that is still listed and tells
-/// the delegate nil when it is gone. Used on the main thread.
+/// the delegate nil when it is gone. A right-click shows `menuProvider`'s menu for the
+/// clicked row and a double-click calls `onDoubleClick` with it. Used on the main thread.
 @MainActor
 public final class GitFileListViewController: NSViewController {
 
@@ -28,7 +29,15 @@ public final class GitFileListViewController: NSViewController {
         didSet { filesDidChange(from: oldValue) }
     }
 
+    /// The context menu for a right-clicked row's item; nil, or a nil menu, shows none.
+    public var menuProvider: ((GitFileListItem) -> NSMenu?)?
+
+    /// Called with a double-clicked row's item.
+    public var onDoubleClick: ((GitFileListItem) -> Void)?
+
     let tableView = ThemedTableView()
+    /// The table's menu, refilled from `menuProvider` each time it opens.
+    private let rowMenu = NSMenu()
     private let scrollView = ThemedScrollView()
     private static let column = NSUserInterfaceItemIdentifier("file")
     /// The item the delegate was last told about, so it hears each change once.
@@ -60,6 +69,10 @@ public final class GitFileListViewController: NSViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.accessibilityID("git.fileList.\(context).table")
+        tableView.target = self
+        tableView.doubleAction = #selector(tableDoubleClicked(_:))
+        rowMenu.delegate = self
+        tableView.menu = rowMenu
 
         scrollView.documentView = tableView
         scrollView.accessibilityID("git.fileList.\(context).scroll")
@@ -85,6 +98,22 @@ public final class GitFileListViewController: NSViewController {
         isApplyingSelection = true
         tableView.deselectAll(nil)
         isApplyingSelection = false
+    }
+
+    /// `menuProvider`'s menu for `row`'s item, or nil for a row outside the list.
+    func contextMenu(forRow row: Int) -> NSMenu? {
+        guard files.indices.contains(row) else { return nil }
+        return menuProvider?(files[row])
+    }
+
+    /// Calls `onDoubleClick` with `row`'s item; nothing for a row outside the list.
+    func doubleClick(row: Int) {
+        guard files.indices.contains(row) else { return }
+        onDoubleClick?(files[row])
+    }
+
+    @objc private func tableDoubleClicked(_ sender: Any?) {
+        doubleClick(row: tableView.clickedRow)
     }
 
     private var selectedItem: GitFileListItem? {
@@ -114,6 +143,18 @@ public final class GitFileListViewController: NSViewController {
         guard item != reportedItem else { return }
         reportedItem = item
         delegate?.fileList(self, didSelect: item)
+    }
+}
+
+extension GitFileListViewController: NSMenuDelegate {
+    /// Moves the clicked row's menu items into the table's menu as it opens; with no menu
+    /// for the click it opens empty, which AppKit does not show.
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        guard let provided = contextMenu(forRow: tableView.clickedRow) else { return }
+        let items = provided.items
+        provided.removeAllItems()
+        for item in items { menu.addItem(item) }
     }
 }
 

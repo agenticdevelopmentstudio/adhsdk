@@ -29,6 +29,10 @@
 - **Clean**: both lists are empty, headers `Staged (0)` and `Unstaged (0)`.
 - **Unborn repository**: staged files are listed as added; nothing throws.
 - **Selected file moved or gone**: after a reload that no longer lists it in its list, nothing is selected and the delegate is told nil.
+- **Nothing staged**: Commit is disabled unless Amend is on.
+- **Empty or blank message**: Commit is disabled.
+- **No commit to amend** (`canAmend` false): the Amend checkbox is disabled and unticked.
+- **Commit succeeded**: after `commitDidSucceed()` the message is empty and Amend unticked.
 
 ### Diff
 

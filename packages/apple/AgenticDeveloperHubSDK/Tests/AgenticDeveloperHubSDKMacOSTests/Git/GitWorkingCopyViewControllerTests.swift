@@ -14,8 +14,12 @@ private final class FakeWorkingCopySource: GitWorkingCopyDataSource {
 @MainActor
 private final class RecordingWorkingCopyDelegate: GitWorkingCopyDelegate {
     private(set) var events: [GitDiffTarget?] = []
+    private(set) var intents: [GitWorkingCopyIntent] = []
     func workingCopy(_ workingCopy: GitWorkingCopyViewController, didSelect target: GitDiffTarget?) {
         events.append(target)
+    }
+    func workingCopy(_ workingCopy: GitWorkingCopyViewController, didRequest intent: GitWorkingCopyIntent) {
+        intents.append(intent)
     }
 }
 
@@ -136,6 +140,129 @@ struct GitWorkingCopyViewControllerTests {
         workingCopy.loadViewIfNeeded()
         #expect(workingCopy.splitView.accessibilityIdentifier() == "git.workingCopy.split")
         #expect(workingCopy.splitView.arrangedSubviews.map { $0.accessibilityIdentifier() }
-                == ["git.workingCopy.stagedPane", "git.workingCopy.unstagedPane"])
+                == ["git.workingCopy.stagedPane", "git.workingCopy.unstagedPane", "git.commitBox"])
+    }
+
+    // MARK: - Intents
+
+    /// A staged rename `old` → `new` and an unstaged modified `b`.
+    private static func renameSource() -> FakeWorkingCopySource {
+        let source = FakeWorkingCopySource()
+        source.staged = [GitFileChange(path: "new", status: .renamed)]
+        source.unstaged = [GitFileChange(path: "b", status: .modified)]
+        return source
+    }
+
+    private func loaded(
+        _ source: FakeWorkingCopySource
+    ) -> (GitWorkingCopyViewController, RecordingWorkingCopyDelegate) {
+        let workingCopy = GitWorkingCopyViewController(source: source)
+        let delegate = RecordingWorkingCopyDelegate()
+        workingCopy.delegate = delegate
+        workingCopy.loadViewIfNeeded()
+        return (workingCopy, delegate)
+    }
+
+    private func fire(_ item: NSMenuItem) {
+        guard let action = item.action, let target = item.target as? NSObject else {
+            Issue.record("menu item \(item.title) has no target and action")
+            return
+        }
+        _ = target.perform(action, with: item)
+    }
+
+    @Test("a staged row's menu is Unstage, and a staged rename unstages both paths")
+    func stagedMenu() throws {
+        let (workingCopy, delegate) = loaded(Self.renameSource())
+        workingCopy.stagedList.files = [GitFileListItem(path: "new", oldPath: "old", status: .renamed)]
+        let menu = try #require(workingCopy.stagedList.contextMenu(forRow: 0))
+        #expect(menu.items.map(\.title) == ["Unstage"])
+        #expect(menu.items.map { $0.accessibilityIdentifier() } == ["git.workingCopy.menu.unstage"])
+        fire(menu.items[0])
+        #expect(delegate.intents == [.unstage(["old", "new"])])
+    }
+
+    @Test("an unstaged row's menu is Stage, Discard Changes…, a separator and Discard All Changes…")
+    func unstagedMenu() throws {
+        let (workingCopy, delegate) = loaded(Self.renameSource())
+        let menu = try #require(workingCopy.unstagedList.contextMenu(forRow: 0))
+        #expect(menu.items.map(\.title) == ["Stage", "Discard Changes…", "", "Discard All Changes…"])
+        #expect(menu.items[2].isSeparatorItem)
+        #expect(menu.items.map { $0.accessibilityIdentifier() } == [
+            "git.workingCopy.menu.stage", "git.workingCopy.menu.discard", "", "git.workingCopy.menu.discardAll"
+        ])
+        fire(menu.items[0])
+        fire(menu.items[1])
+        fire(menu.items[3])
+        #expect(delegate.intents == [.stage(["b"]), .discard(["b"]), .discardAll])
+    }
+
+    @Test("no menu for a row outside the list")
+    func noMenuOutsideRows() {
+        let (workingCopy, _) = loaded(Self.renameSource())
+        #expect(workingCopy.unstagedList.contextMenu(forRow: -1) == nil)
+        #expect(workingCopy.stagedList.contextMenu(forRow: 5) == nil)
+    }
+
+    @Test("double-clicking a staged row unstages it, an unstaged row stages it")
+    func doubleClick() {
+        let (workingCopy, delegate) = loaded(Self.renameSource())
+        workingCopy.stagedList.files = [GitFileListItem(path: "new", oldPath: "old", status: .renamed)]
+        workingCopy.stagedList.doubleClick(row: 0)
+        workingCopy.unstagedList.doubleClick(row: 0)
+        workingCopy.unstagedList.doubleClick(row: 7)
+        #expect(delegate.intents == [.unstage(["old", "new"]), .stage(["b"])])
+    }
+
+    @Test("the table's double action and menu reach the list")
+    func tableWiring() {
+        let (workingCopy, _) = loaded(Self.renameSource())
+        let table = workingCopy.unstagedList.tableView
+        #expect(table.doubleAction != nil)
+        #expect(table.target === workingCopy.unstagedList)
+        #expect(table.menu != nil)
+    }
+
+    @Test("Stage All and Unstage All send their intents")
+    func headerButtons() {
+        let (workingCopy, delegate) = loaded(Self.renameSource())
+        #expect(workingCopy.stageAllButton.title == "Stage All")
+        #expect(workingCopy.stageAllButton.accessibilityIdentifier() == "git.workingCopy.stageAll")
+        #expect(workingCopy.stageAllButton.isBordered == false)
+        #expect(workingCopy.unstageAllButton.title == "Unstage All")
+        #expect(workingCopy.unstageAllButton.accessibilityIdentifier() == "git.workingCopy.unstageAll")
+        workingCopy.stageAllButton.performClick(nil)
+        workingCopy.unstageAllButton.performClick(nil)
+        #expect(delegate.intents == [.stageAll, .unstageAll])
+    }
+
+    @Test("the commit box reports commit and amend intents, and knows whether anything is staged")
+    func commitBox() {
+        let source = Self.renameSource()
+        let (workingCopy, delegate) = loaded(source)
+        #expect(workingCopy.commitBox.hasStagedChanges == true)
+        workingCopy.canAmend = true
+        #expect(workingCopy.commitBox.canAmend == true)
+
+        workingCopy.commitBox.amendBox.performClick(nil)
+        workingCopy.commitBox.message = "Fix\n\nBody"
+        workingCopy.commitBox.commitButton.performClick(nil)
+        #expect(delegate.intents == [.amendChanged(true), .commit(message: "Fix\n\nBody", amend: true)])
+
+        source.staged = []
+        workingCopy.reload()
+        #expect(workingCopy.commitBox.hasStagedChanges == false)
+    }
+
+    @Test("commitDidSucceed empties the message and unticks Amend without a report")
+    func commitDidSucceed() {
+        let (workingCopy, delegate) = loaded(Self.renameSource())
+        workingCopy.canAmend = true
+        workingCopy.commitBox.amendBox.performClick(nil)
+        workingCopy.commitBox.message = "Fix"
+        workingCopy.commitDidSucceed()
+        #expect(workingCopy.commitBox.message == "")
+        #expect(workingCopy.commitBox.isAmend == false)
+        #expect(delegate.intents == [.amendChanged(true)])
     }
 }

@@ -352,6 +352,10 @@ extension GitWindowSession: GitWorkingCopyDelegate {
         }
         showDiff(target: target, file: file)
     }
+
+    /// The session does not act on working-copy intents yet; nothing is staged,
+    /// discarded or committed from here.
+    func workingCopy(_ workingCopy: GitWorkingCopyViewController, didRequest intent: GitWorkingCopyIntent) {}
 }
 
 // MARK: - GitDiffDelegate

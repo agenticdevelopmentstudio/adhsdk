@@ -17,5 +17,8 @@
 | `delegate` (diff) | `GitDiffDelegate?` | nil | Told when Blame or History is pressed. |
 | `delegate` (blame) | `GitBlameDelegate?` | nil | Told which commit a sha click chose. |
 | `source` (working copy) | `GitWorkingCopyDataSource` | none | Where the working copy reads its staged and unstaged files. |
-| `delegate` (working copy) | `GitWorkingCopyDelegate?` | nil | Told the selected file's diff target, or nil. |
+| `delegate` (working copy) | `GitWorkingCopyDelegate?` | nil | Told the selected file's diff target, or nil, and every `GitWorkingCopyIntent`. |
+| `canAmend` (working copy, commit box) | `Bool` | false | Whether Amend can be ticked; the owner sets it when there is a commit to amend. |
+| `menuProvider` (changed-files list) | `((GitFileListItem) -> NSMenu?)?` | nil | The clicked row's context menu. |
+| `onDoubleClick` (changed-files list) | `((GitFileListItem) -> Void)?` | nil | Called with a double-clicked row's item. |
 

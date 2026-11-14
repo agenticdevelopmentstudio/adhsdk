@@ -16425,9 +16425,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:5d0fe1e446a7c6636ec0370ae63dc47d5c56eb83f0b240050ee77771fbfcd2ef",
+            "hash": "sha256:bdfc07a0e646fb744147107c7ef8a96c44cc75a2737a8e8f8e646e4efdcbe41d",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/",
           "platform": "apple"
@@ -16436,7 +16436,7 @@
           "conformance": {
             "hash": "sha256:89c5b6d54c6bf328fc8223f850d2f26c9978a2023b50ec769ea4f20075d67a4d",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift",
           "platform": "apple"
@@ -16445,7 +16445,7 @@
           "conformance": {
             "hash": "sha256:593070f97af18f3629fd3c20443251a80859a29d88575ab9c431f471ae7f984f",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift",
           "platform": "apple"
@@ -16454,7 +16454,7 @@
           "conformance": {
             "hash": "sha256:f0c049680e2ce613c8e73280598f55cbf4c160f306a95c20733a8b95826063f8",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift",
           "platform": "macos"
@@ -16463,7 +16463,7 @@
           "conformance": {
             "hash": "sha256:58255e34a72b3d6aa1dbb75a65d22a2b13c34b76731177e8e9cec56256fef780",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift",
           "platform": "macos"
@@ -16472,7 +16472,7 @@
           "conformance": {
             "hash": "sha256:11a6e9f585f50421c7e04dac338726ee384c7d484d7c5b040057e804c4a7304d",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift",
           "platform": "macos"
@@ -16481,7 +16481,7 @@
           "conformance": {
             "hash": "sha256:cabd6c13d64cc0be5f228ba877652aff1a8d7744343b59a836643d88621bfba3",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift",
           "platform": "macos"
@@ -16490,7 +16490,7 @@
           "conformance": {
             "hash": "sha256:52d9045038dc81aaa012a0392663f9e515b26ed7bd3850e957ab90d16ccd5fba",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift",
           "platform": "macos"
@@ -16499,7 +16499,7 @@
           "conformance": {
             "hash": "sha256:b812e8ef8c5eff5b36bf3df3faa473a1df51eba93e6bd8b715bcfcec3d54f25a",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift",
           "platform": "apple"
@@ -16508,7 +16508,7 @@
           "conformance": {
             "hash": "sha256:6f51fe0eb4d35f7ec88e067e89e52a6f7193178281494c5423c51a986665b3ae",
             "state": "confirmed",
-            "version": "1.5.0"
+            "version": "1.6.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift",
           "platform": "apple"
