@@ -51,9 +51,12 @@ public final class ExtensionsCoordinator: AppFeature {
     public let snippetStore: SnippetStore
     public let languagePoint: LanguageContributionPoint
     public let configurationPoint: ConfigurationContributionPoint
+    /// The enabled extensions' TextMate grammars; its `source` is what the
+    /// highlighter's grammar registry reads.
+    public let grammarPoint: GrammarContributionPoint
     /// `nil` when the host has no tabs registry to register panes into — a
     /// headless host, or a wiring site that runs before the layout is
-    /// installed. The other four points do not depend on the window layout.
+    /// installed. The other points do not depend on the window layout.
     public let viewsPoint: ViewsContributionPoint?
 
     /// The registry `viewsPoint` registers contributed panes into, kept
@@ -107,6 +110,7 @@ public final class ExtensionsCoordinator: AppFeature {
         self.snippetStore = SnippetStore()
         self.languagePoint = LanguageContributionPoint()
         self.configurationPoint = ConfigurationContributionPoint()
+        self.grammarPoint = GrammarContributionPoint()
         self.viewRegistry = viewRegistry
         self.viewsPoint = viewRegistry.map { ViewsContributionPoint(registry: $0) }
         self.notImplementedLedger = NotImplementedLedger()
@@ -117,6 +121,7 @@ public final class ExtensionsCoordinator: AppFeature {
         registry.register(snippetStore)
         registry.register(languagePoint)
         registry.register(configurationPoint)
+        registry.register(grammarPoint)
         if let viewsPoint {
             registry.register(viewsPoint)
         }
