@@ -65,4 +65,34 @@ struct GitWindowFeatureTests {
         #expect(controller == nil)
         #expect(setting.value.isEmpty)
     }
+
+    @Test("Open Git Window for Path takes exactly one non-empty string and ignores anything else")
+    func openForPathTakesOneString() {
+        #expect(GitWindowFeature.path(from: ["/tmp/repo"]) == "/tmp/repo")
+        #expect(GitWindowFeature.path(from: []) == nil)
+        #expect(GitWindowFeature.path(from: [42]) == nil)
+        #expect(GitWindowFeature.path(from: [""]) == nil)
+        #expect(GitWindowFeature.path(from: ["/a", "/b"]) == nil)
+    }
+
+    @Test("Open Git Window for Path with a missing or non-string argument opens no window")
+    func openForPathIgnoresBadArguments() async throws {
+        let registry = CommandRegistry()
+        let setting = makeSetting()
+        defer { setting.remove() }
+        let feature = GitWindowFeature(
+            commandRegistry: registry, resources: nil,
+            userGrammarsDirectory: FileManager.default.temporaryDirectory
+                .appendingPathComponent("git-window-grammars-\(UUID().uuidString)"),
+            extensionGrammars: { nil }, fileTypeOverride: { _ in nil },
+            client: GitClient(configuration: .default), openRoots: setting)
+        defer { feature.unregister() }
+        let command = try #require(registry.command(id: GitWindowFeature.CommandID.openForPath))
+
+        _ = command.run([])
+        _ = command.run([42])
+        for _ in 0..<100 { await Task.yield() }
+
+        #expect(setting.value.isEmpty)
+    }
 }

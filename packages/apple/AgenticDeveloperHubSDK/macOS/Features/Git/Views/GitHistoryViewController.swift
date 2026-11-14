@@ -163,13 +163,20 @@ public final class GitHistoryViewController: NSViewController {
 
     /// Selects the loaded commit with exactly `commitID`, scrolls to it and tells the
     /// delegate. An id that is not loaded changes nothing.
-    public func select(commitID: String) {
-        guard let index = commits.firstIndex(where: { $0.id == commitID }) else { return }
+    ///
+    /// - Returns: whether the list holds the commit and selected it.
+    @discardableResult
+    public func select(commitID: String) -> Bool {
+        guard let index = commits.firstIndex(where: { $0.id == commitID }) else { return false }
         loadViewIfNeeded()
         tableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
         tableView.scrollRowToVisible(index)
         report(commits[index])
+        return true
     }
+
+    /// The commit the list has selected, or nil.
+    public var selectedCommitID: String? { selectedCommit?.id }
 
     private var selectedCommit: GitCommit? {
         guard isViewLoaded else { return nil }

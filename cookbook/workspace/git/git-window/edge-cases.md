@@ -5,6 +5,9 @@
 - **Remembered root gone**: dropped at restore.
 - **Remembered root no longer a repository**: dropped at restore, since it no longer resolves.
 - **Detached HEAD**: subtitle `detached HEAD`.
+- **Two repositories open side by side**: each keeps its own divider positions.
+- **A repository path containing a newline**: the watcher reads each directory with its own `rev-parse`, so the path is not split.
+- **Refresh with nothing changed**: a commit picked by hand in the history stays selected.
 - **Fast typing in search**: the history view serialises queries; the window only forwards text.
 - **Quick selection changes**: generations drop stale stash and subtitle loads; the views drop their own.
 - **Offline / disconnected state**: Not applicable: no network.

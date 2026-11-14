@@ -37,4 +37,27 @@ public final class GrammarRegistry: Sendable {
     public func scopeName(languageID: String) -> String? {
         scopeByLanguageID[languageID]
     }
+
+    /// The id of the language a person's `name` for it means: a language id or alias
+    /// in any case (`Objective-C`, `C++`, `C#`), else the first whose id or alias is
+    /// the same once spaces and punctuation other than `+` and `#` are dropped
+    /// (`Shell Script` is `shellscript`). Nil when no language goes by it.
+    public func languageID(named name: String) -> String? {
+        let lowered = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !lowered.isEmpty else { return nil }
+        if let exact = languages.first(where: { $0.id == lowered || $0.aliases.contains(lowered) }) {
+            return exact.id
+        }
+        let compact = Self.compact(lowered)
+        guard !compact.isEmpty else { return nil }
+        return languages.first { language in
+            Self.compact(language.id) == compact || language.aliases.contains { Self.compact($0) == compact }
+        }?.id
+    }
+
+    private static func compact(_ name: String) -> String {
+        String(String.UnicodeScalarView(name.lowercased().unicodeScalars.filter {
+            CharacterSet.alphanumerics.contains($0) || $0 == "+" || $0 == "#"
+        }))
+    }
 }

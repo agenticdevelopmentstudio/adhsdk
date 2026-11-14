@@ -51,8 +51,9 @@ public final class GitWindowFeature: AppFeature {
     ///   - userGrammarsDirectory: the user's own grammars, ahead of every other source.
     ///   - extensionGrammars: the grammars an extension contributes, read when the
     ///     highlighter is built.
-    ///   - fileTypeOverride: the language a file is mapped to, used only when a
-    ///     grammar knows that language.
+    ///   - fileTypeOverride: the name of the language a file is mapped to (a File
+    ///     Types display name or a language id), used only when a grammar's id or
+    ///     alias matches it (`GrammarRegistry.languageID(named:)`).
     ///   - openRoots: where the open windows' roots are remembered.
     public init(
         commandRegistry registry: CommandRegistry,
@@ -84,8 +85,7 @@ public final class GitWindowFeature: AppFeature {
             title: "Open Git Window for Path",
             category: "Git",
             run: { [weak self] arguments in
-                guard let self, arguments.count == 1, let path = arguments.first as? String,
-                      !path.isEmpty else { return nil }
+                guard let self, let path = Self.path(from: arguments) else { return nil }
                 Task { await self.open(path: URL(fileURLWithPath: path)) }
                 return nil
             }
@@ -106,7 +106,6 @@ public final class GitWindowFeature: AppFeature {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.prompt = "Open"
-        panel.message = "Choose a folder in a git repository."
         panel.begin { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
             MainActor.assumeIsolated {
@@ -142,6 +141,13 @@ public final class GitWindowFeature: AppFeature {
     /// foreground. A root that is no longer a repository is dropped.
     public func restoreOpenWindows() {
         windowSet.restore()
+    }
+
+    /// The one non-empty string `openForPath` takes; nil for anything else, which the
+    /// command ignores.
+    static func path(from arguments: [Any]) -> String? {
+        guard arguments.count == 1, let path = arguments.first as? String, !path.isEmpty else { return nil }
+        return path
     }
 
     /// One spelling per repository: `/tmp/x` and `/private/tmp/x` are one window.
@@ -188,7 +194,7 @@ public final class GitWindowFeature: AppFeature {
 
     private func buildColoring() -> GitSyntaxColoring? {
         guard let resources else {
-            Self.logger.info("No TextMate resources: Git windows are uncoloured")
+            Self.logger.error("No TextMate resources: Git windows are uncoloured")
             return nil
         }
         do {
@@ -199,15 +205,15 @@ public final class GitWindowFeature: AppFeature {
             let highlighter = try SyntaxHighlighter(resources: resources, registry: registry)
             let override = fileTypeOverride
             let resolver = LanguageResolver(registry: registry) { url in
-                guard let id = override(url), registry.scopeName(languageID: id) != nil else { return nil }
-                return id
+                guard let name = override(url) else { return nil }
+                return registry.languageID(named: name)
             }
             return GitSyntaxColoring(
                 highlighter: highlighter, resolver: resolver, registry: registry,
                 theme: { CodeTheme(palette: ThemePaletteObserver.currentPalette) })
         } catch {
-            let kind = String(describing: type(of: error))
-            Self.logger.error("Could not build the highlighter: \(kind, privacy: .public)")
+            let description = String(describing: error)
+            Self.logger.error("Could not build the highlighter: \(description, privacy: .public)")
             return nil
         }
     }

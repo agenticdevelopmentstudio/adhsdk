@@ -136,4 +136,18 @@ struct GrammarRegistryTests {
         }
         #expect(throws: Never.self) { try TextMateFixture.resources() }
     }
+
+    @Test("a File Types name maps to the language id it means, by id, alias or compacted spelling")
+    func languageIDNamedMapsDisplayNames() throws {
+        let registry = GrammarRegistry(sources: [try BundledGrammarSource(resources: TextMateFixture.resources())])
+
+        #expect(registry.languageID(named: "C++") == "cpp")
+        #expect(registry.languageID(named: "C#") == "csharp")
+        #expect(registry.languageID(named: "Objective-C") == "objective-c")
+        #expect(registry.languageID(named: "Shell Script") == "shellscript")
+        #expect(registry.languageID(named: "Swift") == "swift")
+        #expect(registry.languageID(named: "bash") == "shellscript")
+        #expect(registry.languageID(named: "Not A Language") == nil)
+        #expect(registry.languageID(named: "  ") == nil)
+    }
 }

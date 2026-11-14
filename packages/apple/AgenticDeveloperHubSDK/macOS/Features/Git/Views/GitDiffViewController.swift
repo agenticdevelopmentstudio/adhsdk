@@ -135,6 +135,23 @@ public final class GitDiffViewController: NSViewController {
         load()
     }
 
+    /// Reads the shown target's diff again (the file changed on disk, or a Refresh),
+    /// keeping the current rows until it lands; the latest `show`, `reload` or `clear`
+    /// wins. Nothing shown, nothing read.
+    public func reload() {
+        guard request != nil else { return }
+        load()
+    }
+
+    /// Whether the shown target is the working copy (staged, unstaged or untracked),
+    /// whose diff changes as files are edited.
+    public var isShowingWorkingCopy: Bool {
+        switch request?.target {
+        case .unstaged, .staged, .untracked: true
+        case .commit, .range, .none: false
+        }
+    }
+
     /// Shows nothing and drops any request in flight.
     public func clear() {
         generation += 1
