@@ -46,6 +46,46 @@ final class BrowserPaneTests: XCTestCase {
         XCTAssertNil(WebBrowserPaneViewController.resolveAddress("   "))
     }
 
+    // MARK: - Typed paths
+
+    private func makeTemporaryFile() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BrowserPaneTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let file = directory.appendingPathComponent("page one.html")
+        try Data("<p>hi</p>".utf8).write(to: file)
+        addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
+        return file
+    }
+
+    /// A path to an existing file loads as a standardized file URL, as File ▸
+    /// Open Location reads the same text.
+    func testAPathToAFileLoadsAsAStandardizedFileURL() throws {
+        let file = try makeTemporaryFile()
+        let dotted = file.deletingLastPathComponent().path + "/./" + file.lastPathComponent
+        let resolved = WebBrowserPaneViewController.resolveAddress(dotted)
+        XCTAssertEqual(resolved, URL(fileURLWithPath: file.path).standardizedFileURL)
+        XCTAssertEqual(resolved?.path.contains("/./"), false)
+        XCTAssertEqual(WebBrowserPaneViewController.resolveAddress(file.absoluteString), resolved,
+                       "a file:// address reads the same way")
+    }
+
+    /// WebKit draws no listing for a directory, so a directory loads nothing,
+    /// typed as a path or as a `file://` address.
+    func testAPathToADirectoryResolvesToNothing() throws {
+        let directory = try makeTemporaryFile().deletingLastPathComponent()
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress(directory.path))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress(directory.absoluteString))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("~"))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("/"))
+    }
+
+    /// A missing path is refused, not turned into `https:///…`.
+    func testAMissingPathResolvesToNothing() {
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("/no/such/\(UUID().uuidString).html"))
+        XCTAssertNil(WebBrowserPaneViewController.resolveAddress("~/no-such-\(UUID().uuidString).html"))
+    }
+
     // MARK: - Remembering where it was
 
     func testAFreshPaneOpensOnTheHomePage() {

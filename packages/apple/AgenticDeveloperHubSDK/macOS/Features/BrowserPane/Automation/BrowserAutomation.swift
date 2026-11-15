@@ -178,10 +178,12 @@ public final class BrowserAutomation: NSObject {
         !url.lowercased().hasPrefix("file:")
     }
 
-    /// Throws when the page now showing is a local file. Every runtime call
-    /// and every action checks this at the moment it runs, not when it was
-    /// queued, so a page that became a local file while the call waited at
-    /// the gate (a back or forward that landed on one, say) is refused too.
+    /// Throws when the page now showing is a local file. Every runtime call,
+    /// every action (before and after it acts), every pass of a wait and a
+    /// screenshot (before and after its snapshot) check this at the moment
+    /// they run, not when the call was queued, so a page that became a local
+    /// file while the call waited at the gate (a back or forward that landed
+    /// on one, say) is refused too.
     public func ensureDrivable() throws {
         guard Self.isDrivable(currentURL) else { throw BrowserAutomationError.localFile }
     }
@@ -559,14 +561,25 @@ public final class BrowserAutomation: NSObject {
         try await act("navigate") { self.driver.load(url) }
     }
 
+    /// `browser_open`'s navigation. A new pane loads its own first page, the
+    /// Home Page, before the model's address, and a Home Page may be a local
+    /// file. That page is only left, never read: the check before the action
+    /// and the runtime's mutation count are skipped while it shows. The check
+    /// after the action still refuses a pane that ends on a local file.
+    public func open(_ url: URL) async throws -> BrowserActionDelta {
+        try await act("navigate", leavingAnyPage: true) { self.driver.load(url) }
+    }
+
     public func goBack() async throws -> BrowserActionDelta { try await act("goBack") { self.driver.goBack() } }
     public func goForward() async throws -> BrowserActionDelta { try await act("goForward") { self.driver.goForward() } }
 
     /// Runs one action, reports it to `onAction` by name and outcome, and
     /// returns its delta.
-    private func act(_ name: String, _ body: () async throws -> Void) async throws -> BrowserActionDelta {
+    private func act(
+        _ name: String, leavingAnyPage: Bool = false, _ body: () async throws -> Void
+    ) async throws -> BrowserActionDelta {
         do {
-            let delta = try await gatherDelta(body)
+            let delta = try await gatherDelta(leavingAnyPage: leavingAnyPage, body)
             onAction?(name, true)
             return delta
         } catch {
@@ -576,12 +589,16 @@ public final class BrowserAutomation: NSObject {
     }
 
     /// Gathers one action's delta: arm the mutation counter and navigation
-    /// counters, act, wait 300 ms, read what moved.
-    private func gatherDelta(_ body: () async throws -> Void) async throws -> BrowserActionDelta {
-        try ensureDrivable()
+    /// counters, act, wait 300 ms, read what moved. `leavingAnyPage` lets the
+    /// action start from a local file (`open(_:)`), which is then not read.
+    private func gatherDelta(
+        leavingAnyPage: Bool = false, _ body: () async throws -> Void
+    ) async throws -> BrowserActionDelta {
+        let startsDrivable = Self.isDrivable(currentURL)
+        if !leavingAnyPage { try ensureDrivable() }
         let urlBefore = currentURL, titleBefore = currentTitle
         let startedBefore = navigationsStarted, finishedBefore = navigationsFinished
-        let mutationsBefore = (try? await call("mutations") as? Int) ?? 0
+        let mutationsBefore = startsDrivable ? ((try? await call("mutations") as? Int) ?? 0) : 0
         pendingDialog = nil
         lastRefusal = nil
         try await body()
@@ -594,11 +611,12 @@ public final class BrowserAutomation: NSObject {
             while driver.isLoading && Date() < deadline { try await Task.sleep(nanoseconds: 100_000_000) }
             if driver.isLoading { delta.pending = true } else { delta.navigated = navigationsFinished > finishedBefore }
             lastSnapshotLines = nil
-            // A back or forward can land on a local file the pane once
-            // showed. Nothing below may run against it, the runtime least of
-            // all, so the landing is reported as the refusal it is.
-            try ensureDrivable()
         }
+        // A back or forward can land on a local file the pane once showed,
+        // and a page can send itself to one. Nothing below may run against
+        // it, the runtime least of all, and its address and title are not
+        // reported, so the landing is reported as the refusal it is.
+        try ensureDrivable()
         // A #fragment navigation leaves `navigated` false; this URL diff still reports it.
         if currentURL != urlBefore { delta.url = currentURL }
         if currentTitle != titleBefore { delta.title = currentTitle }
@@ -631,6 +649,9 @@ public final class BrowserAutomation: NSObject {
         var idleSince: Date?
         var lastMutations = -1
         while Date() < deadline {
+            // Checked on every pass: a wait that outlasts a move to a local
+            // file is refused rather than reporting its address and title.
+            try ensureDrivable()
             let satisfied: Bool
             switch condition {
             case .text(let t): satisfied = (try? await call("hasText", ["needle": t]) as? Bool) ?? false
@@ -648,7 +669,11 @@ public final class BrowserAutomation: NSObject {
                 if m != lastMutations { lastMutations = m; idleSince = Date() }
                 satisfied = !driver.isLoading && idleSince.map { Date().timeIntervalSince($0) >= 0.5 } == true
             }
-            if satisfied { return BrowserWaitResult(satisfied: true, url: currentURL, title: currentTitle) }
+            if satisfied {
+                // The condition's own reads await; the page may have moved.
+                try ensureDrivable()
+                return BrowserWaitResult(satisfied: true, url: currentURL, title: currentTitle)
+            }
             try await Task.sleep(nanoseconds: 100_000_000)
         }
         throw BrowserAutomationError.timeout(condition.description)
@@ -694,6 +719,7 @@ public final class BrowserAutomation: NSObject {
     /// part of the element inside the viewport, and an element wholly outside
     /// it is refused.
     public func screenshot(ref: String?, generation: Int?, scrolls: Bool = true) async throws -> Data {
+        try ensureDrivable()
         guard let window = driver.view.window, window.isVisible else { throw BrowserAutomationError.notOnScreen }
         // The viewport, or the element's rect, in CSS pixels: what the image shows.
         var shown = CGRect(origin: .zero, size: driver.viewportSize)
@@ -724,6 +750,9 @@ public final class BrowserAutomation: NSObject {
                 }
             }
         }
+        // The snapshot awaits; a picture of a page that became a local file
+        // meanwhile is not handed back.
+        try ensureDrivable()
         guard let cg = Self.capped(full, side: Self.maximumScreenshotSide),
               let png = NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:]) else {
             throw BrowserAutomationError.script("could not encode the screenshot")

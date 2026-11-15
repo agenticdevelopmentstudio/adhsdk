@@ -61,12 +61,16 @@ open class WebBrowserPaneViewController: NSViewController {
     /// engine is a choice this pane does not make (`explicit-over-implicit`).
     /// Returns `nil` for an entry that resolves to nothing loadable.
     ///
-    /// A path — `/Users/x/a.html` or `~/a.html` — that names an existing file
-    /// or directory loads as a file URL, spaces and all; `file://` loads as
-    /// written, like any other scheme.
+    /// A path — `/Users/x/a.html` or `~/a.html` — or a `file://` address
+    /// loads as a file URL, spaces and all, only when it names an existing
+    /// file; a directory or a missing path resolves to nothing. WebKit draws
+    /// no listing for a directory, and loading one would grant the page read
+    /// access to the whole tree for a page that never renders.
     public static func resolveAddress(_ entry: String) -> URL? {
         let trimmed = entry.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let fileURL = resolveFilePath(trimmed) { return fileURL }
+        if trimmed.hasPrefix("/") || trimmed.hasPrefix("~") || trimmed.lowercased().hasPrefix("file:") {
+            return resolveFilePath(trimmed)
+        }
         guard !trimmed.isEmpty, trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) == nil else {
             return nil
         }
@@ -79,14 +83,13 @@ open class WebBrowserPaneViewController: NSViewController {
         return URL(string: "https://" + trimmed)
     }
 
-    /// `entry` as a file URL when it is an absolute or home-relative path to
-    /// something that exists, else `nil`.
-    static func resolveFilePath(_ entry: String) -> URL? {
-        guard entry.hasPrefix("/") || entry.hasPrefix("~") else { return nil }
-        let path = (entry as NSString).expandingTildeInPath
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) else { return nil }
-        return URL(fileURLWithPath: path, isDirectory: isDirectory.boolValue)
+    /// `entry` — an absolute or home-relative path, or a `file://` address —
+    /// as a standardized file URL when it names an existing file, else `nil`.
+    /// The path rules are File ▸ Open Location's (`OpenLocation`), so the two
+    /// places that take a typed path read it the same way.
+    static func resolveFilePath(_ entry: String, fileManager: FileManager = .default) -> URL? {
+        guard case .file(let url) = OpenLocation.resolve(entry, fileManager: fileManager) else { return nil }
+        return url
     }
 
     /// The state-store key the current address lives under.

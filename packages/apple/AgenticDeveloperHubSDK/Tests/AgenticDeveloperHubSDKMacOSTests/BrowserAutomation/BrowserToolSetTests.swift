@@ -232,6 +232,52 @@ final class BrowserToolSetTests: XCTestCase {
         XCTAssertEqual(text.content, "pane F shows a local file, which models may not drive")
     }
 
+    /// Calls queued while the pane showed a web page, run after it moved to a
+    /// local file: the console, the wait and the screenshot are refused when
+    /// dequeued, as every other tool is, and nothing of the file comes back.
+    func testCallsQueuedBeforeAMoveToALocalFileAreRefused() async throws {
+        let page = OffscreenWebView()
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("local-\(UUID().uuidString).html")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try "<title>Secret</title><p>local</p>".write(to: url, atomically: true, encoding: .utf8)
+        await page.navigate(to: URL(string: "https://web.test/")!, html: "<title>Web</title><p>web</p>")
+        let automation = BrowserAutomation(webView: page.webView, console: BrowserConsoleLog())
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: automation)]
+        let calls: [(String, [String: Any])] = [
+            ("browser_console", [:]), ("browser_wait_for", ["load": true]), ("browser_screenshot", [:])
+        ]
+        for (tool, args) in calls {
+            await page.navigate(to: URL(string: "https://web.test/")!, html: "<title>Web</title><p>web</p>")
+            let held = Task { @MainActor in
+                try await automation.drive {
+                    try await Task.sleep(nanoseconds: 100_000_000)
+                    _ = await page.load(fileURL: url)
+                }
+            }
+            try await Task.sleep(nanoseconds: 30_000_000)
+            let reply = await call(tool, args)
+            _ = try await held.value
+            XCTAssertTrue(reply.isError, "\(tool): \(reply.content)")
+            XCTAssertEqual(reply.content, "the pane shows a local file, which models may not drive", tool)
+            XCTAssertFalse(reply.content.contains("Secret"), tool)
+        }
+    }
+
+    /// `browser_list` names neither the file nor its title for a pane on one.
+    func testListNamesNoLocalFile() async throws {
+        let page = OffscreenWebView()
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("local-\(UUID().uuidString).html")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try "<title>Secret</title><p>local</p>".write(to: url, atomically: true, encoding: .utf8)
+        _ = await page.load(fileURL: url)
+        directory.panes = [BrowserPaneHandle(id: "F", project: "p", tab: "t", automation: BrowserAutomation(webView: page.webView, console: BrowserConsoleLog()))]
+        let list = await call("browser_list")
+        XCTAssertFalse(list.isError)
+        XCTAssertFalse(list.content.contains(url.lastPathComponent), list.content)
+        XCTAssertFalse(list.content.contains("Secret"), list.content)
+        XCTAssertTrue(list.content.contains(BrowserToolSet.localFileName), list.content)
+    }
+
     func testAutomationOffLeavesOnlyList() async {
         store.set(false, for: UserSettings.browserAutomationEnabled)
         let list = await call("browser_list")

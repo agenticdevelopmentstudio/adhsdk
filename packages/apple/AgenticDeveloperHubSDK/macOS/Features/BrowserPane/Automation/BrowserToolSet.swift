@@ -203,8 +203,10 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     }
 
     /// Refuses a pane showing a local file before the call is queued, naming
-    /// the pane. `BrowserAutomation` enforces the same rule again at the moment
-    /// each call runs, which is what holds when the page changes meanwhile.
+    /// the pane. `requireSwitches(for:paneID:)` checks again once the call is
+    /// dequeued, for every tool, and `BrowserAutomation` once more inside each
+    /// call that reads the page over time (an action, a wait, a screenshot),
+    /// which is what holds when the page changes meanwhile.
     @MainActor
     private func guardDrivable(_ pane: BrowserPaneHandle) throws -> BrowserPaneHandle {
         if !BrowserAutomation.isDrivable(pane.url) {
@@ -229,6 +231,13 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
     /// hide it or close it while the call waits. `browserPanes()` is the
     /// lookup because it is the plain list of what the agent may see.
     ///
+    /// A pane that came to show a local file while the call waited is
+    /// refused here, whatever the tool — `browser_console` and
+    /// `browser_screenshot` have no other check before they read. The one
+    /// exception is `browser_open`, whose new pane may already be on its Home
+    /// Page, a local file among them, which the call leaves without reading
+    /// (`BrowserAutomation.open(_:)`).
+    ///
     /// Returns the pane's Agent Privacy as it stands now, so the call is
     /// concealed with the words of the moment it runs.
     @MainActor
@@ -239,6 +248,7 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
             throw ToolError(sentence: "pane \(paneID) was closed; call browser_list")
         }
         try requireAccess(for: name, on: pane)
+        if name != "browser_open" { try pane.automation.ensureDrivable() }
         return pane.agentPrivacy
     }
 
@@ -345,8 +355,15 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
                 // the same as every other call's, so it can never be skipped.
                 let privacy = try self.requireSwitches(for: name, paneID: pane.id)
                 return try await self.concealed(name, args, privacy, paneID: pane.id) { _ in
-                    let delta = try await pane.automation.navigate(to: url)
-                    return "opened pane \(pane.id)\n" + delta.rendered()
+                    do {
+                        let delta = try await pane.automation.open(url)
+                        return "opened pane \(pane.id)\n" + delta.rendered()
+                    } catch BrowserAutomationError.localFile {
+                        // A pane that ends on a local file is not left behind
+                        // for the model to retry into, one more each time.
+                        self.directory.closeBrowserPane(id: pane.id)
+                        throw BrowserAutomationError.localFile
+                    }
                 }
             }
         }
@@ -519,11 +536,16 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         // conceals its project and branch: the title and address are the
         // page's words, and the project and tab names are the user's. One
         // whose words cannot be used shows none of them.
+        // A pane on a local file names neither the file nor its title: the
+        // user's disk is not the model's to read through a pane, a listing
+        // included.
         let rows: [[String: Any]] = panes.map { pane in
             let privacy = pane.agentPrivacy
+            let drivable = BrowserAutomation.isDrivable(pane.url)
             return [
-                "id": pane.id, "title": privacy.concealing(pane.title),
-                "url": privacy.concealing(pane.url), "project": privacy.concealing(pane.project),
+                "id": pane.id, "title": drivable ? privacy.concealing(pane.title) : Self.localFileName,
+                "url": drivable ? privacy.concealing(pane.url) : Self.localFileName,
+                "project": privacy.concealing(pane.project),
                 "tab": privacy.concealing(pane.tab), "engine": pane.engine.rawValue, "is_default": pane.id == defaultID,
                 "access": Self.accessName(pane.access), "agent_privacy": pane.agentPrivacy.isOn
             ]
@@ -531,6 +553,10 @@ public final class BrowserToolSet: ChatToolSource, @unchecked Sendable {
         let data = (try? JSONSerialization.data(withJSONObject: rows, options: [.sortedKeys])) ?? Data()
         return String(bytes: data, encoding: .utf8) ?? ""
     }
+
+    /// What `browser_list` shows for the title and address of a pane on a
+    /// local file.
+    static let localFileName = "(local file)"
 
     /// How `browser_list` names a pane's Agent access.
     static func accessName(_ access: BrowserAgentAccess) -> String {
