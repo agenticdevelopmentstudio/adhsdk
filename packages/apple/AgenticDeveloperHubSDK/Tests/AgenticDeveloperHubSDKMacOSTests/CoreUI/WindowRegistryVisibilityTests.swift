@@ -96,4 +96,35 @@ final class WindowRegistryVisibilityTests: XCTestCase {
         WindowManager.shared.frames.clearVisibility(for: "registry-visibility-transient")
         XCTAssertFalse(registry.hasVisibleWindow)
     }
+
+    /// A window whose id is made per opening leaves nothing under that id
+    /// once it is forgotten: no spec, no registry entry.
+    func testForgettingAOneOffWindowDropsItsSpecAndRegistryEntry() {
+        let controller = probe()
+        controller.windowSpec = WindowSpec(defaultSize: NSSize(width: 200, height: 120),
+                                           minSize: NSSize(width: 100, height: 60),
+                                           defaultPosition: .center)
+        XCTAssertTrue(WindowManager.shared.registry.controller(forID: controller.windowID) === controller)
+
+        WindowManager.shared.forgetOneOffWindow(controller)
+
+        XCTAssertNil(controller.windowSpec)
+        XCTAssertNil(WindowManager.shared.registry.controller(forID: controller.windowID))
+    }
+
+    /// Forgetting a controller never drops a newer one registered under the
+    /// same id.
+    func testUnregisterLeavesAnotherControllerUnderTheSameID() {
+        let registry = WindowRegistry()
+        let id = "registry-visibility-\(UUID().uuidString)"
+        let first = SingleWindowController(windowID: id, contentViewController: FakeVC())
+        let second = SingleWindowController(windowID: id, contentViewController: FakeVC())
+        made.append(contentsOf: [first, second])
+        registry.register(first)
+        registry.register(second)
+
+        registry.unregister(first)
+
+        XCTAssertTrue(registry.controller(forID: id) === second)
+    }
 }

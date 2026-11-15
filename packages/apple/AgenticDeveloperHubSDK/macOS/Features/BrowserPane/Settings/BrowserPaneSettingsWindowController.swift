@@ -129,5 +129,7 @@ final class BrowserPaneSettingsWindowController: SingleWindowController {
         stopModal()
         isClosed = true
         settings.finish(dismissing: false)
+        // Unique to this opening, so nothing will ask for it again.
+        WindowManager.shared.forgetOneOffWindow(self)
     }
 }

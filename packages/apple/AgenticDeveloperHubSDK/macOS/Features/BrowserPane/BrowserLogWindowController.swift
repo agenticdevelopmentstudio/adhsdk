@@ -45,5 +45,7 @@ final class BrowserLogWindowController: SingleWindowController {
     override func windowWillClose(_ notification: Notification) {
         super.windowWillClose(notification)
         Self.open[key] = nil
+        // Unique to this opening, so nothing will ask for it again.
+        WindowManager.shared.forgetOneOffWindow(self)
     }
 }

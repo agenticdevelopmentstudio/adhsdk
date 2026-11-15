@@ -273,6 +273,6 @@ public final class WebBrowserWindowController: SingleWindowController {
         pane.paneContentWillBeDiscarded()
         Self.openWindows.removeAll { $0 === self }
         // Unique to this window, so nothing will ask for it again.
-        windowSpec = nil
+        WindowManager.shared.forgetOneOffWindow(self)
     }
 }
