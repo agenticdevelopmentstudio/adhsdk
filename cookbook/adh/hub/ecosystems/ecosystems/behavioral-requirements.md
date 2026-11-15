@@ -195,10 +195,10 @@
   settings MUST use their own dedicated route rather than the generic
   ecosystems create/read/update/delete base.
 - **auth-settings-login-allow-list-mapping**: Auth settings read from the
-  wire MUST carry `loginAllowedCustomerIds` from `login_allowed_customer_ids`,
+  wire MUST carry `loginAllowedEmails` from `login_allowed_emails`,
   reading an absent field as `null` (every customer may sign in) and keeping
   `[]` (no customer may) distinct from it. An auth-settings patch that sets the
-  field MUST send it as `login_allowed_customer_ids`, sending an explicit
+  field MUST send it as `login_allowed_emails`, sending an explicit
   `null` rather than omitting it.
 
 ### Child ecosystems

@@ -71,7 +71,7 @@ export function ClientAuthPolicyFields({
   idPrefix: string;
   generation?: number;
 }) {
-  const listed = policy.loginAllowedCustomerIds;
+  const listed = policy.loginAllowedEmails;
   const onCount = providers.filter((p) => providerOn(policy, p.slug)).length;
   return (
     <>
@@ -109,30 +109,30 @@ export function ClientAuthPolicyFields({
           <CardContent className="flex flex-col gap-5">
             <SettingRow
               id={`${idPrefix}-allow-list`}
-              label="Only listed customers"
+              label="Only listed people"
               help={
                 listed === null
-                  ? "Every customer can sign in."
-                  : "Only the customers listed here can sign in. An empty list lets no one in."
+                  ? "Everyone can sign in."
+                  : "Only the people listed here can sign in. An empty list lets no one in."
               }
             >
               <Switch
                 id={`${idPrefix}-allow-list`}
                 checked={listed !== null}
                 // On starts with one blank row to type into; a blank row saves as nobody.
-                onCheckedChange={(on) => onChange({ loginAllowedCustomerIds: on ? [""] : null })}
+                onCheckedChange={(on) => onChange({ loginAllowedEmails: on ? [""] : null })}
               />
             </SettingRow>
             {listed !== null && (
               <UrlRowsEditor
                 key={`allow-list-${generation}`}
-                label="Customers"
-                helpText="Customer ids. Someone you invite who is not listed still joins, but can't sign in until you add them."
-                placeholder="Customer id"
-                addLabel="Add customer"
-                removeLabel="Remove customer"
+                label="People"
+                helpText="Email addresses. A person matches when they sign in with a provider that has verified this address, or have verified it on their account. Someone you invite who is not listed still joins, but can't sign in until you add them."
+                placeholder="name@example.com"
+                addLabel="Add person"
+                removeLabel="Remove person"
                 values={listed}
-                onChange={(loginAllowedCustomerIds) => onChange({ loginAllowedCustomerIds })}
+                onChange={(loginAllowedEmails) => onChange({ loginAllowedEmails })}
               />
             )}
           </CardContent>

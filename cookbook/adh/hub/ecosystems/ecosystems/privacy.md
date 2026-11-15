@@ -3,9 +3,11 @@
   `slug`/`identifier`, `description`, `region`, primary domain, timestamps,
   and the caller's own `canManage` flag. None of these fields are personal
   data about an end user; they describe a product/ecosystem record, not a
-  person. Two identifiers do refer to people: the auth settings' `loginAllowedCustomerIds`
-  (customer ids) and the provisioner principal id on a provisioned feature row; both are
-  opaque ids, never names or contact details.
+  person. Two fields do refer to people: the auth settings' `loginAllowedEmails`, the
+  email addresses an owner lists as allowed to sign in, which are contact details; and the
+  provisioner principal id on a provisioned feature row, an opaque id. The emails are
+  carried only as the owner typed them (trimmed and lowercased) between the hub and the
+  backend, and nothing here stores them beyond the in-memory query cache.
 - **Storage**: One reference implementation holds no cache of its own —
   every call is a live round-trip to whatever data source the host
   supplies. The other holds results in a shared in-memory query-client

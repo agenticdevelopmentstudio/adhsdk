@@ -147,42 +147,47 @@ export function samePolicy(a: ClientAuthPolicy | null, b: ClientAuthPolicy | nul
     a.loginEnabled === b.loginEnabled &&
     a.passwordEnabled === b.passwordEnabled &&
     sameProviders(a.allowedProviders, b.allowedProviders) &&
-    sameCustomerList(a.loginAllowedCustomerIds, b.loginAllowedCustomerIds)
+    sameEmailList(a.loginAllowedEmails, b.loginAllowedEmails)
   );
 }
 
-/** The backend's bounds on the login allow-list (auth/clientAuthPolicy.ts), mirrored so Save is
- *  refused before the round trip. */
-export const MAX_LOGIN_ALLOWED_CUSTOMERS = 500;
-const MAX_CUSTOMER_ID_LENGTH = 36;
+/** The backend's bounds on the login allow-list (routes/ecosystemAuthSettings.ts), mirrored so
+ *  Save is refused before the round trip. */
+export const MAX_LOGIN_ALLOWED_EMAILS = 500;
+const MAX_EMAIL_LENGTH = 254;
+/** The allow-list's email grammar: exactly one `@`, a non-empty local part with no whitespace and
+ *  no quote, and a domain of at least two non-empty dot-separated labels. The backend's zod check
+ *  is authoritative; this only refuses sooner what it would refuse. */
+const EMAIL_SHAPE = /^[^\s@"]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 
 /**
- * The login allow-list as a save sends it: each id trimmed, blank rows dropped, duplicates dropped
- * with the first kept. `null` (every customer) stays `null`, and an empty list stays `[]`, which
- * means nobody — the editor's switch, not the row count, decides between the two.
+ * The login allow-list as a save sends it: each email trimmed and lowercased, blank rows dropped,
+ * duplicates dropped with the first kept — the form the backend stores. `null` (every customer)
+ * stays `null`, and an empty list stays `[]`, which means nobody — the editor's switch, not the
+ * row count, decides between the two.
  */
-export function cleanCustomerList(ids: string[] | null): string[] | null {
-  if (ids === null) return null;
-  return [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+export function cleanEmailList(emails: string[] | null): string[] | null {
+  if (emails === null) return null;
+  return [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
 }
 
 /** Two allow-lists are the same when they would SAVE the same, compared as sets. */
-function sameCustomerList(a: string[] | null, b: string[] | null): boolean {
-  const ca = cleanCustomerList(a);
-  const cb = cleanCustomerList(b);
+function sameEmailList(a: string[] | null, b: string[] | null): boolean {
+  const ca = cleanEmailList(a);
+  const cb = cleanEmailList(b);
   if (ca === null || cb === null) return ca === cb;
-  return ca.length === cb.length && ca.every((id) => cb.includes(id));
+  return ca.length === cb.length && ca.every((e) => cb.includes(e));
 }
 
 /** Why the policy cannot be saved as it stands, or null when it can. The backend is
  *  authoritative; this only says it sooner. */
 export function policyError(policy: ClientAuthPolicy | null): string | null {
-  const ids = cleanCustomerList(policy?.loginAllowedCustomerIds ?? null);
-  if (ids === null) return null;
-  if (ids.length > MAX_LOGIN_ALLOWED_CUSTOMERS)
-    return `At most ${MAX_LOGIN_ALLOWED_CUSTOMERS} customers can be listed.`;
-  const long = ids.find((id) => id.length > MAX_CUSTOMER_ID_LENGTH);
-  if (long) return `"${long}" is not a customer id.`;
+  const emails = cleanEmailList(policy?.loginAllowedEmails ?? null);
+  if (emails === null) return null;
+  if (emails.length > MAX_LOGIN_ALLOWED_EMAILS)
+    return `At most ${MAX_LOGIN_ALLOWED_EMAILS} people can be listed.`;
+  const bad = emails.find((e) => e.length > MAX_EMAIL_LENGTH || !EMAIL_SHAPE.test(e));
+  if (bad) return `"${bad}" is not an email address.`;
   return null;
 }
 
@@ -225,7 +230,7 @@ export function policyPatch(
   if (draft.passwordEnabled !== base.passwordEnabled) patch.passwordEnabled = draft.passwordEnabled;
   if (!sameProviders(draft.allowedProviders, base.allowedProviders))
     patch.allowedProviders = draft.allowedProviders;
-  if (!sameCustomerList(draft.loginAllowedCustomerIds, base.loginAllowedCustomerIds))
-    patch.loginAllowedCustomerIds = cleanCustomerList(draft.loginAllowedCustomerIds);
+  if (!sameEmailList(draft.loginAllowedEmails, base.loginAllowedEmails))
+    patch.loginAllowedEmails = cleanEmailList(draft.loginAllowedEmails);
   return Object.keys(patch).length > 0 ? patch : undefined;
 }

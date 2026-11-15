@@ -39,7 +39,7 @@
   `AuthSettings.allowedProviders: [String]?` decodes from
   `AuthSettingsDataSource.get`'s response but `AuthSettingsTopic.detail`'s form
   specification never surfaces it, and `AuthSettingsUpdate` has no field for it. The
-  login allow-list (`login_allowed_customer_ids`) is not decoded on Apple at all
+  login allow-list (`login_allowed_emails`) is not decoded on Apple at all
   yet; that editor is planned.
 
   `SigninApp.leaf(in:)` implements leaf computation; the duplicate check compares
@@ -92,11 +92,14 @@
   The login allow-list (**auth-login-allow-list-edit**,
   **auth-login-allow-list-bounds**) is the exception: its editor lives in
   `packages/web/packages/features/ecosystem-config/src/` — `ClientAuthFields.tsx`
-  draws the section, `client-auth-model.ts` holds `cleanCustomerList`,
+  draws the section, `client-auth-model.ts` holds `cleanEmailList`,
   `policyPatch`, `samePolicy` and `policyError`, and `ClientAuthSettingsPane.tsx`
   blocks Save on `policyError` and re-keys the rows editor on each re-seed.
-  There is no customer picker: the hub has no owner-scoped customer listing, so
-  ids are typed.
+  Emails are typed: the list names people by email so an owner can admit someone
+  who has never signed in, and the hub has no owner-scoped customer listing to
+  pick from. The email shape check is a local regular expression in
+  `client-auth-model.ts`, because no shared web package exports an email
+  validator; the backend's zod check stays authoritative.
   The sync-tables topic is web-only. `sync-tables.ts` in the same data folder is
   the client (`syncTablesApi(family)`, `schemaOf`). `SyncTablesPane.tsx` in the
   features package holds `SyncTablesEditor` (the list and its progress modal, no
@@ -116,8 +119,8 @@
   equality pitfall **bags-json-equality-int-number** documents applies to
   `JsonPrimitive` unless normalized the same way. Model the sync-tables client as a
   Kotlin `interface` with `suspend fun`s that return the refreshed catalog, and the
-  login allow-list as a `List<String>?` where `null` means every customer and an
-  empty list means nobody.
+  login allow-list as a `List<String>?` of lowercase emails, where `null` means
+  every customer and an empty list means nobody.
 - **WinUI 3**: model each data-source interface as a C# interface returning
   `Task<T>` (e.g. `Task<IReadOnlyList<FeatureFlag>> ListAsync(string
   ecosystemId)`) backed by `HttpClient` and `System.Text.Json` for
@@ -130,6 +133,6 @@
   any DPAPI-backed store — so the "shown once" contract this component enforces is
   preserved rather than accidentally persisted. Model the sync-tables client as a
   C# interface with one `Task`-returning method per operation, and the login
-  allow-list editor as a view-model holding a nullable `List<string>`, where `null`
-  means every customer and an empty list means nobody.
+  allow-list editor as a view-model holding a nullable `List<string>` of lowercase
+  emails, where `null` means every customer and an empty list means nobody.
 

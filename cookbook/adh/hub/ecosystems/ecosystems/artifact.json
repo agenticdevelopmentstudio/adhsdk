@@ -4,11 +4,11 @@
     "id": "201572ee-2e0f-4839-94f5-252f8044c4bf",
     "title": "Ecosystems",
     "type": "ingredient",
-    "version": "1.4.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-11-13",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e78b3508330c791e",
+  "synced": "4fdfd99f665eb688",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

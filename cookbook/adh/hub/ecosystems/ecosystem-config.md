@@ -2,11 +2,11 @@
 id: 87ca0139-6cd0-46dd-a9fb-40ad3406f175
 title: "Ecosystem Config"
 type: ingredient
-version: 1.3.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-13
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -107,21 +107,24 @@ fetch-based operations with no view code of its own.
   edits it, and the update shape has no field to write it back, so the Swift topic
   offers no way to view or change the allowed providers.
 - **auth-login-allow-list-wire**: the web data layer's `AuthSettings` (and so
-  `ClientAuthPolicy`) MUST carry `loginAllowedCustomerIds: string[] | null`, read
-  from the wire's `login_allowed_customer_ids`. `null` means every customer may
+  `ClientAuthPolicy`) MUST carry `loginAllowedEmails: string[] | null`, read
+  from the wire's `login_allowed_emails`. `null` means every customer may
   sign in and `[]` means nobody; a response that omits the field (an older
   backend) MUST read as `null`. A patch that sets it to `null` MUST send the
   explicit `null`, never drop it, so "every customer" can be restored.
 - **auth-login-allow-list-edit**: the web ecosystem client-auth pane MUST draw a
-  "Who can sign in" section with an "Only listed customers" switch. Off is `null`;
-  turning it on starts one blank customer-id row, which saves as `[]` (nobody)
-  if left blank. A save MUST send the list trimmed, with blank rows and
+  "Who can sign in" section with an "Only listed people" switch. Off is `null`;
+  turning it on starts one blank email row, which saves as `[]` (nobody) if left
+  blank. A save MUST send each email trimmed and lowercased, with blank rows and
   duplicates dropped and the first occurrence's order kept; a blank row added to
-  a saved list MUST NOT count as an edit.
+  a saved list, or an entry whose only change is letter case, MUST NOT count as
+  an edit.
 - **auth-login-allow-list-bounds**: Save MUST be blocked, with the reason shown,
-  when the cleaned list holds more than 500 ids or any id longer than 36
-  characters — the backend's own bounds, mirrored so the refusal comes before
-  the round trip. The backend stays authoritative.
+  when the cleaned list holds more than 500 emails, or any entry longer than 254
+  characters or not shaped as an email address (exactly one `@`, a non-empty
+  local part with no whitespace and no quote, and a domain of at least two
+  non-empty dot-separated labels) — the backend's own bounds, mirrored so the
+  refusal comes before the round trip. The backend stays authoritative.
 
 ### Sign-in Apps
 
@@ -423,9 +426,9 @@ component not among these given sources.
 | ecosystem-config-027 | sync-tables-clear-rereads | The `"ecosystem"` client clears `content.notes`, and the DELETE answers a tombstone | DELETE `/api/v1/ecosystems/eco-1/sync_tables/content.notes`, then a fresh read of the catalog is returned |
 | ecosystem-config-028 | sync-tables-schema-of | Resource `persona_memory.links` | Schema `persona_memory` |
 | ecosystem-config-029 | sync-tables-pane-skips-noops | Two rows selected, one already synced, then Sync | One POST, for the row that was not synced |
-| ecosystem-config-030 | auth-login-allow-list-wire | A response omitting `login_allowed_customer_ids`, then one carrying `[]`, then a patch setting `loginAllowedCustomerIds` to `null` | The first reads `null`; the second reads `[]`; the patch body carries `"login_allowed_customer_ids": null` rather than dropping the key |
-| ecosystem-config-031 | auth-login-allow-list-edit | The allow-list `[" cus_a ", "", "cus_b", "cus_a"]`, then `null`, then `[]` | The first saves as `["cus_a", "cus_b"]`; `null` stays `null`; `[]` stays `[]`; a blank row added to a saved list is not counted as an edit |
-| ecosystem-config-032 | auth-login-allow-list-bounds | An allow-list of 501 distinct ids, then a list holding one 37-character id | The first is refused with "At most 500 customers can be listed."; the second with `"<the id>" is not a customer id.`; in both Save is blocked |
+| ecosystem-config-030 | auth-login-allow-list-wire | A response omitting `login_allowed_emails`, then one carrying `[]`, then a patch setting `loginAllowedEmails` to `null` | The first reads `null`; the second reads `[]`; the patch body carries `"login_allowed_emails": null` rather than dropping the key |
+| ecosystem-config-031 | auth-login-allow-list-edit | The allow-list `[" A@x.com ", "", "b@x.com", "a@X.com"]`, then `null`, then `[]` | The first saves as `["a@x.com", "b@x.com"]`; `null` stays `null`; `[]` stays `[]`; a blank row added to a saved list, or a case-only change, is not counted as an edit |
+| ecosystem-config-032 | auth-login-allow-list-bounds | An allow-list of 501 distinct emails; then one entry each of `alice`, `a@x`, `a b@x.com`, `"a"@x.com`, and a 255-character address; then a 254-character address | 501 is refused with "At most 500 people can be listed."; each bad entry with `"<the entry>" is not an email address.`; Save is blocked in each; the 254-character address is accepted |
 | ecosystem-config-033 | sync-tables-set-returns-catalog | The `"ecosystem"` client sets `content.notes` on for "eco-1" and the response is `{tables: [...]}` | The result is the full refreshed catalog mapped from `tables`, not a single row |
 | ecosystem-config-034 | sync-tables-pane-family | The pane mounted with no `family`, then with `family="admin"`, both for "eco-1" | The first uses the `"ecosystem"` family; the two keep separate cached catalogs, keyed by family and ecosystem id |
 | ecosystem-config-035 | sync-tables-pane-sequential | Three rows selected, Sync, and the second write fails | The writes run one at a time; the run halts at the second until the user continues or stops; the first save stays in place |
@@ -540,7 +543,9 @@ kind.
 
 - **Data collected**: this component collects no analytics of its own. It
   transports user-auth, sign-in-app, feature-flag, and server-bag records —
-  configuration entities holding no end-user personal data — and storage-token
+  configuration entities holding no end-user personal data, except the user-auth
+  login allow-list, which holds the email addresses an owner types to name who
+  may sign in — and storage-token
   records, which do carry a security-sensitive secret: the raw `adh_`-prefixed
   token minted by the create/mint operation.
 - **Storage**: on the primary implementation, the revealed-secrets store holds the
@@ -609,7 +614,7 @@ kind.
   `AuthSettings.allowedProviders: [String]?` decodes from
   `AuthSettingsDataSource.get`'s response but `AuthSettingsTopic.detail`'s form
   specification never surfaces it, and `AuthSettingsUpdate` has no field for it. The
-  login allow-list (`login_allowed_customer_ids`) is not decoded on Apple at all
+  login allow-list (`login_allowed_emails`) is not decoded on Apple at all
   yet; that editor is planned.
 
   `SigninApp.leaf(in:)` implements leaf computation; the duplicate check compares
@@ -662,11 +667,14 @@ kind.
   The login allow-list (**auth-login-allow-list-edit**,
   **auth-login-allow-list-bounds**) is the exception: its editor lives in
   `packages/web/packages/features/ecosystem-config/src/` — `ClientAuthFields.tsx`
-  draws the section, `client-auth-model.ts` holds `cleanCustomerList`,
+  draws the section, `client-auth-model.ts` holds `cleanEmailList`,
   `policyPatch`, `samePolicy` and `policyError`, and `ClientAuthSettingsPane.tsx`
   blocks Save on `policyError` and re-keys the rows editor on each re-seed.
-  There is no customer picker: the hub has no owner-scoped customer listing, so
-  ids are typed.
+  Emails are typed: the list names people by email so an owner can admit someone
+  who has never signed in, and the hub has no owner-scoped customer listing to
+  pick from. The email shape check is a local regular expression in
+  `client-auth-model.ts`, because no shared web package exports an email
+  validator; the backend's zod check stays authoritative.
   The sync-tables topic is web-only. `sync-tables.ts` in the same data folder is
   the client (`syncTablesApi(family)`, `schemaOf`). `SyncTablesPane.tsx` in the
   features package holds `SyncTablesEditor` (the list and its progress modal, no
@@ -686,8 +694,8 @@ kind.
   equality pitfall **bags-json-equality-int-number** documents applies to
   `JsonPrimitive` unless normalized the same way. Model the sync-tables client as a
   Kotlin `interface` with `suspend fun`s that return the refreshed catalog, and the
-  login allow-list as a `List<String>?` where `null` means every customer and an
-  empty list means nobody.
+  login allow-list as a `List<String>?` of lowercase emails, where `null` means
+  every customer and an empty list means nobody.
 - **WinUI 3**: model each data-source interface as a C# interface returning
   `Task<T>` (e.g. `Task<IReadOnlyList<FeatureFlag>> ListAsync(string
   ecosystemId)`) backed by `HttpClient` and `System.Text.Json` for
@@ -700,8 +708,8 @@ kind.
   any DPAPI-backed store — so the "shown once" contract this component enforces is
   preserved rather than accidentally persisted. Model the sync-tables client as a
   C# interface with one `Task`-returning method per operation, and the login
-  allow-list editor as a view-model holding a nullable `List<string>`, where `null`
-  means every customer and an empty list means nobody.
+  allow-list editor as a view-model holding a nullable `List<string>` of lowercase
+  emails, where `null` means every customer and an empty list means nobody.
 
 ## Reference Implementations
 
@@ -792,7 +800,7 @@ console already sits above it. The owner approved this in the Temporal plan on 2
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.3.0 | 2026-11-13 | Mike Fullerton | Login allow-list (loginAllowedCustomerIds): web wire field, the client-auth pane's Who can sign in editor, and its bounds |
+| 2.0.0 | 2026-11-15 | Mike Fullerton | Login allow-list by email (loginAllowedEmails, login_allowed_emails): the client-auth pane's Who can sign in editor, lowercased on save, with email-shape, 254-character and 500-entry bounds |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/ecosystems/. |

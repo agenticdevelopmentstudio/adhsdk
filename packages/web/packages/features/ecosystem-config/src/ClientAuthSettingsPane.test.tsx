@@ -23,7 +23,7 @@ function config(over: Partial<EcosystemClientAuth['settings']> = {}): EcosystemC
       loginEnabled: true,
       passwordEnabled: true,
       allowedProviders: null,
-      loginAllowedCustomerIds: null,
+      loginAllowedEmails: null,
       ...over,
     },
     registration: null,
@@ -105,81 +105,81 @@ describe('ClientAuthSettingsPane', () => {
 })
 
 describe('ClientAuthSettingsPane: who can sign in', () => {
-  const ALICE = '0b6f3c1e-2a4d-4e5f-8a9b-0c1d2e3f4a5b'
-  const BOB = '1c7a4d2f-3b5e-4f60-9bac-1d2e3f4a5b6c'
-  const idInputs = () => screen.queryAllByPlaceholderText('Customer id') as HTMLInputElement[]
-  const addCustomer = () => fireEvent.click(screen.getByRole('button', { name: 'Add customer' }))
+  const ALICE = 'alice@example.com'
+  const BOB = 'bob@example.com'
+  const emailInputs = () => screen.queryAllByPlaceholderText('name@example.com') as HTMLInputElement[]
+  const addPerson = () => fireEvent.click(screen.getByRole('button', { name: 'Add person' }))
 
-  it('starts as everyone, with no customer list drawn', async () => {
+  it('starts as everyone, with no list drawn', async () => {
     await renderPane(config())
-    expect(sw('Only listed customers')).not.toHaveAttribute('data-checked')
-    expect(idInputs()).toHaveLength(0)
-    expect(screen.getByText('Every customer can sign in.')).toBeInTheDocument()
+    expect(sw('Only listed people')).not.toHaveAttribute('data-checked')
+    expect(emailInputs()).toHaveLength(0)
+    expect(screen.getByText('Everyone can sign in.')).toBeInTheDocument()
   })
 
   it('turned on and left blank, sends an empty list: nobody', async () => {
     await renderPane(config())
-    fireEvent.click(sw('Only listed customers'))
-    expect(idInputs()).toHaveLength(1)
+    fireEvent.click(sw('Only listed people'))
+    expect(emailInputs()).toHaveLength(1)
     save()
     await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
-    expect(putBody()?.settings).toEqual({ loginAllowedCustomerIds: [] })
+    expect(putBody()?.settings).toEqual({ loginAllowedEmails: [] })
   })
 
-  it('sends the listed ids trimmed, without blanks or duplicates', async () => {
+  it('sends the listed emails trimmed and lowercased, without blanks or duplicates', async () => {
     await renderPane(config())
-    fireEvent.click(sw('Only listed customers'))
-    fireEvent.change(idInputs()[0]!, { target: { value: `  ${ALICE} ` } })
-    addCustomer()
-    addCustomer()
-    addCustomer()
-    fireEvent.change(idInputs()[1]!, { target: { value: BOB } })
-    fireEvent.change(idInputs()[3]!, { target: { value: ALICE } })
+    fireEvent.click(sw('Only listed people'))
+    fireEvent.change(emailInputs()[0]!, { target: { value: `  ${ALICE} ` } })
+    addPerson()
+    addPerson()
+    addPerson()
+    fireEvent.change(emailInputs()[1]!, { target: { value: BOB } })
+    fireEvent.change(emailInputs()[3]!, { target: { value: 'Alice@Example.com' } })
     save()
     await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
-    expect(putBody()?.settings).toEqual({ loginAllowedCustomerIds: [ALICE, BOB] })
+    expect(putBody()?.settings).toEqual({ loginAllowedEmails: [ALICE, BOB] })
   })
 
   it('shows a saved list, and turning it off sends null: everyone', async () => {
-    await renderPane(config({ loginAllowedCustomerIds: [ALICE] }))
-    expect(idInputs().map((i) => i.value)).toEqual([ALICE])
-    fireEvent.click(sw('Only listed customers'))
-    expect(idInputs()).toHaveLength(0)
+    await renderPane(config({ loginAllowedEmails: [ALICE] }))
+    expect(emailInputs().map((i) => i.value)).toEqual([ALICE])
+    fireEvent.click(sw('Only listed people'))
+    expect(emailInputs()).toHaveLength(0)
     save()
     await waitFor(() => expect(clientAuthApi.updateEcosystem).toHaveBeenCalled())
-    expect(putBody()?.settings).toEqual({ loginAllowedCustomerIds: null })
+    expect(putBody()?.settings).toEqual({ loginAllowedEmails: null })
   })
 
   it('a blank row added to a saved list is not an edit', async () => {
-    await renderPane(config({ loginAllowedCustomerIds: [ALICE] }))
-    addCustomer()
-    expect(idInputs()).toHaveLength(2)
+    await renderPane(config({ loginAllowedEmails: [ALICE] }))
+    addPerson()
+    expect(emailInputs()).toHaveLength(2)
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
   })
 
-  it('ecosystem-config-032: refuses an id too long to be a customer id, before the round trip', async () => {
+  it('ecosystem-config-032: refuses an entry that is not an email address, before the round trip', async () => {
     await renderPane(config())
-    fireEvent.click(sw('Only listed customers'))
-    fireEvent.change(idInputs()[0]!, { target: { value: 'x'.repeat(37) } })
-    expect(screen.getByText(/is not a customer id/)).toBeInTheDocument()
+    fireEvent.click(sw('Only listed people'))
+    fireEvent.change(emailInputs()[0]!, { target: { value: 'alice' } })
+    expect(screen.getByText('"alice" is not an email address.')).toBeInTheDocument()
     save()
     expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
   })
 
-  it('ecosystem-config-032: refuses a 501st customer id, and Save stays blocked', async () => {
-    const many = Array.from({ length: 500 }, (_, i) => `cus_${i}`)
-    await renderPane(config({ loginAllowedCustomerIds: many }))
-    addCustomer()
-    fireEvent.change(idInputs()[500]!, { target: { value: 'cus_extra' } })
-    expect(screen.getByText('At most 500 customers can be listed.')).toBeInTheDocument()
+  it('ecosystem-config-032: refuses a 501st email, and Save stays blocked', async () => {
+    const many = Array.from({ length: 500 }, (_, i) => `p${i}@example.com`)
+    await renderPane(config({ loginAllowedEmails: many }))
+    addPerson()
+    fireEvent.change(emailInputs()[500]!, { target: { value: 'extra@example.com' } })
+    expect(screen.getByText('At most 500 people can be listed.')).toBeInTheDocument()
     save()
     expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
   })
 
   it('Cancel puts the saved rows back', async () => {
-    await renderPane(config({ loginAllowedCustomerIds: [ALICE] }))
-    fireEvent.change(idInputs()[0]!, { target: { value: BOB } })
+    await renderPane(config({ loginAllowedEmails: [ALICE] }))
+    fireEvent.change(emailInputs()[0]!, { target: { value: BOB } })
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    await waitFor(() => expect(idInputs().map((i) => i.value)).toEqual([ALICE]))
+    await waitFor(() => expect(emailInputs().map((i) => i.value)).toEqual([ALICE]))
   })
 })
