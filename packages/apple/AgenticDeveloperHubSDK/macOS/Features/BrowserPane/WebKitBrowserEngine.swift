@@ -362,6 +362,7 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         webView.evaluateJavaScript(source, in: nil, in: .page) { _ in }
     }
 
+    /// The words the committed document was drawn through.
     public private(set) var pageWordFilter: TextSubstitutionFilter?
 
     /// The filter's script goes in with the other user scripts, at document
@@ -369,25 +370,72 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
     /// too; the reload brings the page showing to the new answer. Only a
     /// change of script reloads: no filter and a filter with no pairs both
     /// draw the page as it is, as the Chromium engine also decides.
+    ///
+    /// A navigation never needs this reload: its destination's words are put
+    /// in at its policy decision, before its document starts
+    /// (`preparePageWords(for:)`), so the pane's call at commit finds them in
+    /// place. And it never reloads under a provisional navigation, which a
+    /// reload would cancel: the script is installed and that navigation's own
+    /// document picks it up, and the pane checks again when it commits.
     public func setPageWordFilter(_ filter: TextSubstitutionFilter?) {
         let script = filter.flatMap(BrowserPageWordFilter.script(for:))
         pageWordFilter = filter
+        preparedPageWordFilter = filter
         guard script != pageWordScript else { return }
         pageWordScript = script
         installUserScripts()
-        guard webView.url != nil else { return }
-        isReloadingForPageWords = true
+        guard provisionalNavigation == nil, let url = webView.url else { return }
+        pageWordReloadURL = url
         webView.reload()
     }
 
-    /// The script `setPageWordFilter` last installed.
+    /// Puts the words for `url`, where the main frame is about to go, in as
+    /// the next document's script, without a reload: the document has not
+    /// started yet. The delegate answers which words apply there.
+    private func preparePageWords(for url: URL?) {
+        guard let delegate else { return }
+        let filter = delegate.browserEngine(self, pageWordFilterFor: url)
+        pageWordPreparations += 1
+        preparedPageWordFilter = filter
+        let script = filter.flatMap(BrowserPageWordFilter.script(for:))
+        guard script != pageWordScript else { return }
+        pageWordScript = script
+        installUserScripts()
+    }
+
+    /// Puts the committed document's words back as the script, without a
+    /// reload, after a navigation prepared for another address did not commit.
+    private func restoreCommittedPageWords() {
+        preparedPageWordFilter = pageWordFilter
+        let script = pageWordFilter.flatMap(BrowserPageWordFilter.script(for:))
+        guard script != pageWordScript else { return }
+        pageWordScript = script
+        installUserScripts()
+    }
+
+    /// The script `setPageWordFilter` or `preparePageWords(for:)` last
+    /// installed, which the next document starts with.
     private var pageWordScript: String?
 
-    /// Set while the reload a filter change asked for is being decided. A
-    /// page reached by a POST would be posted again by that reload — an order
-    /// submitted twice — so its resubmission is cancelled and the page left
-    /// as it is drawn; the next page it loads follows the new filter.
-    private var isReloadingForPageWords = false
+    /// The filter `pageWordScript` was built from; becomes `pageWordFilter`
+    /// when the navigation it was prepared for commits.
+    private var preparedPageWordFilter: TextSubstitutionFilter?
+
+    /// The main frame's navigation from its provisional start to its commit
+    /// or failure, and how many preparations had been made when it started.
+    private var provisionalNavigation: (navigation: WKNavigation, preparations: Int)?
+
+    /// Counts `preparePageWords(for:)`, so a navigation that fails can tell
+    /// whether a newer one has prepared its own words since.
+    private var pageWordPreparations = 0
+
+    /// The page the reload a filter change asked for is reloading, while that
+    /// reload is being decided. A page reached by a POST would be posted again
+    /// by that reload — an order submitted twice — so its resubmission is
+    /// cancelled and the page left as it is drawn; the next page it loads
+    /// follows the new filter. Only a reload of this address takes it, so a
+    /// navigation the user starts meanwhile is never mistaken for it.
+    private var pageWordReloadURL: URL?
 
     /// The cookie policy belongs to the data store, which may be shared; the
     /// pane decides what goes on it and says so only when the answer moves.
@@ -681,13 +729,17 @@ extension WebKitBrowserEngine: WKNavigationDelegate {
     ) async -> (WKNavigationActionPolicy, WKWebpagePreferences) {
         preferences.allowsContentJavaScript = settings.get(UserSettings.browserJavaScriptEnabled)
         preferences.isLockdownModeEnabled = settings.get(UserSettings.browserLockdownMode)
-        if navigationAction.targetFrame?.isMainFrame ?? true {
-            let forPageWords = isReloadingForPageWords
-            isReloadingForPageWords = false
-            if forPageWords, navigationAction.navigationType == .formResubmitted {
-                logger.info("page word filter reload would resubmit a form; the page is left as drawn")
-                return (.cancel, preferences)
+        if navigationAction.targetFrame?.isMainFrame == true {
+            let type = navigationAction.navigationType
+            if let reloading = pageWordReloadURL, navigationAction.request.url == reloading,
+               type == .reload || type == .formResubmitted {
+                pageWordReloadURL = nil
+                if type == .formResubmitted {
+                    logger.info("page word filter reload would resubmit a form; the page is left as drawn")
+                    return (.cancel, preferences)
+                }
             }
+            if !navigationAction.shouldPerformDownload { preparePageWords(for: navigationAction.request.url) }
         }
         return (navigationAction.shouldPerformDownload ? .download : .allow, preferences)
     }
@@ -712,11 +764,16 @@ extension WebKitBrowserEngine: WKNavigationDelegate {
     }
 
     public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        provisionalNavigation = (navigation, pageWordPreparations)
         delegate?.browserEngineDidStartNavigation(self)
         onNavigationStart?()
     }
 
+    /// The new document started with the words prepared for it; the pane's
+    /// commit handler checks them against the committed address.
     public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        provisionalNavigation = nil
+        pageWordFilter = preparedPageWordFilter
         delegate?.browserEngineDidCommitNavigation(self)
     }
 
@@ -729,6 +786,13 @@ extension WebKitBrowserEngine: WKNavigationDelegate {
         didFailProvisionalNavigation navigation: WKNavigation!,
         withError error: Error
     ) {
+        // The document showing stays, so the words it was drawn through are
+        // put back for the frames it loads next, unless a newer navigation
+        // (the one that cancelled this) has prepared its own since.
+        if let provisional = provisionalNavigation, provisional.navigation === navigation {
+            provisionalNavigation = nil
+            if provisional.preparations == pageWordPreparations { restoreCommittedPageWords() }
+        }
         // A cancelled load is the next navigation starting, not a failure.
         guard (error as NSError).code != NSURLErrorCancelled else { return }
         delegate?.browserEngine(self, didFailNavigationWith: error)

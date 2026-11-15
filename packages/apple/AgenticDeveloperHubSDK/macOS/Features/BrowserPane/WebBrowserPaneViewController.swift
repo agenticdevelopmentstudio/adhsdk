@@ -193,7 +193,11 @@ open class WebBrowserPaneViewController: NSViewController {
     public var privacyWordsURL: URL? { Self.privacyWordsURL(of: engine) }
 
     private static func privacyWordsURL(of engine: BrowserEngine) -> URL? {
-        engine.url.flatMap { $0 == blankPage ? nil : $0 }
+        privacyWordsURL(engine.url)
+    }
+
+    private static func privacyWordsURL(_ url: URL?) -> URL? {
+        url.flatMap { $0 == blankPage ? nil : $0 }
     }
 
     /// What Agent Privacy means for a model tool call on this pane right now:
@@ -469,10 +473,14 @@ open class WebBrowserPaneViewController: NSViewController {
     /// sites match its address while Agent Privacy is on and they can be read
     /// and used (`BrowserAgentPrivacy`), otherwise none. The one place that
     /// answer is computed, so the switch, an edit of the words, a navigation
-    /// (`browserEngineAddressDidChange`) and a rebuilt engine (through
-    /// `wireEngine`) all land on the same one.
+    /// (asked before its document starts, and checked at its commit) and a
+    /// rebuilt engine (through `wireEngine`) all land on the same one.
     private func pageWordFilter(for engine: BrowserEngine) -> TextSubstitutionFilter? {
-        if case .enabled(let filter) = agentPrivacy(at: Self.privacyWordsURL(of: engine)) { return filter }
+        pageWordFilter(at: engine.url)
+    }
+
+    private func pageWordFilter(at url: URL?) -> TextSubstitutionFilter? {
+        if case .enabled(let filter) = agentPrivacy(at: Self.privacyWordsURL(url)) { return filter }
         return nil
     }
 
@@ -1622,9 +1630,10 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
 
     public func browserEngineAddressDidChange(_ engine: BrowserEngine) {
         if tab(for: engine) != nil { tabObserver?.pane(self, tabDidChange: engine) }
-        // A new address can match other words' sites; the engine reloads
-        // only when that changes the words it draws through.
-        if tab(for: engine) != nil, isAgentPrivacyOn { engine.setPageWordFilter(pageWordFilter(for: engine)) }
+        // The page's words are not set here: the address moves before a
+        // navigation commits (a reload then would cancel it) and on a
+        // same-document change (`pushState`), which keeps its document and
+        // the words it was drawn through. The commit sets them.
         guard isFront(engine), let url = engine.url else { return }
         // A field being edited is the user's; overwriting it mid-keystroke
         // because a redirect landed would throw away what they typed. A field
@@ -1655,6 +1664,10 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
 
     public func browserEngineDidCommitNavigation(_ engine: BrowserEngine) {
         recordNavigation("commit", of: engine)
+        // The committed address can match other words' sites. The engine
+        // prepared them before the document started, so this reloads only
+        // when that answer was missed (a redirect it was not asked about).
+        if tab(for: engine) != nil, isAgentPrivacyOn { engine.setPageWordFilter(pageWordFilter(for: engine)) }
         if let tab = tab(for: engine) {
             tab.storedTitle = nil
             // The engine names its own page from here on.
@@ -1667,6 +1680,12 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         guard isFront(engine) else { return }
         rememberAddress()
         jarLabelGate.navigationDidCommit()
+    }
+
+    public func browserEngine(_ engine: BrowserEngine, pageWordFilterFor url: URL?) -> TextSubstitutionFilter? {
+        // Any engine this pane is the delegate of, a popup not yet in a tab
+        // included: its first page is drawn through the pane's words too.
+        pageWordFilter(at: url)
     }
 
     public func browserEngineDidFinishNavigation(_ engine: BrowserEngine) {

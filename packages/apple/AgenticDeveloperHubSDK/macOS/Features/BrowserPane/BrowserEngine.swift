@@ -79,6 +79,12 @@ public protocol BrowserEngineDelegate: AnyObject {
     func browserEngineDidStartNavigation(_ engine: BrowserEngine)
     func browserEngineDidCommitNavigation(_ engine: BrowserEngine)
     func browserEngineDidFinishNavigation(_ engine: BrowserEngine)
+    /// The privacy words a document at `url` is to be drawn through, asked
+    /// before the main frame's document there starts, so the engine can put
+    /// them in without reloading it. `nil` draws it as it is. Required, with
+    /// no default: a host that answered nothing would leave every new page
+    /// drawn through the last page's words until its commit reloaded it.
+    func browserEngine(_ engine: BrowserEngine, pageWordFilterFor url: URL?) -> TextSubstitutionFilter?
     /// A JavaScript dialog the engine has already dismissed.
     func browserEngine(_ engine: BrowserEngine, didRaise dialog: BrowserDialog)
     /// Where to save a download; `nil` refuses it.
@@ -143,7 +149,10 @@ public protocol BrowserEngine: BrowserPageDriver {
     var pageWordFilter: TextSubstitutionFilter? { get }
     /// Draws every document from now on through `filter` and reloads the
     /// page showing, so a change — on, off or new words — applies to it at
-    /// once. Setting the filter already in place does nothing.
+    /// once. Setting the filter already in place does nothing. The pane calls
+    /// it when the words change and when a navigation commits, never on an
+    /// address change alone: a same-document change (`pushState`) keeps its
+    /// document, and a reload under a provisional navigation would cancel it.
     func setPageWordFilter(_ filter: TextSubstitutionFilter?)
 
     // MARK: Session privacy
