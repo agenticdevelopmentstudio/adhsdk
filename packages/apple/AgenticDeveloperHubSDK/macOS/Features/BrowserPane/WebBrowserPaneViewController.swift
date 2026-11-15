@@ -252,12 +252,19 @@ open class WebBrowserPaneViewController: NSViewController {
     /// (`BrowserSettings.constructionSnapshot`), so closing the settings
     /// sheet can tell whether the pane still matches them.
     private(set) var builtConstructionSettings: [String: String]
-    /// The construction-time settings in effect when the pane's settings
-    /// sheet opened; `nil` while no sheet is up. Closing the sheet rebuilds
-    /// only for what changed since then, so a global change made earlier —
-    /// which an open pane does not follow (spec sections 3 and 4) — is never
-    /// applied by a Done that changed nothing.
+    /// The construction-time settings in effect when the first of the
+    /// pane's open settings sessions opened; `nil` while none is up. Closing
+    /// the last one rebuilds only for what changed since then, so a global
+    /// change made earlier — which an open pane does not follow (spec
+    /// sections 3 and 4) — is never applied by a close that changed nothing.
     private(set) var settingsSheetSnapshot: [String: String]?
+    /// How many settings sessions are open on the pane: the settings window
+    /// and the Privacy popover can both be up. They share the one snapshot,
+    /// taken by the first to open and compared by the last to close, so
+    /// neither overwrites what the other recorded, the first close never
+    /// consumes it from under the other, and a jar change held back while
+    /// either was up is applied once both have gone.
+    private var openSettingsSessions = 0
     /// Whether the pane's settings sheet is up. While it is, a jar change
     /// waits for the sheet to close rather than rebuilding under it.
     var isSettingsSheetOpen: Bool { settingsSheetSnapshot != nil }
@@ -2051,8 +2058,9 @@ extension WebBrowserPaneViewController: PaneMenuProviding {
     }
 
     /// The pane's settings sheet, ready to present: its construction-time
-    /// values are recorded now, and its close rebuilds the engine for
-    /// whatever of them changed while it was up (spec section 3). `nil` for a
+    /// values are recorded now, unless another settings session already
+    /// recorded them, and the last close rebuilds the engine for whatever of
+    /// them changed while any was up (spec section 3). `nil` for a
     /// pane with no settings layer of its own. Internal so a test can drive
     /// open and close without a window.
     func makePaneSettingsSheet() -> BrowserPaneSettingsSheetController? {
@@ -2060,15 +2068,20 @@ extension WebBrowserPaneViewController: PaneMenuProviding {
             logger.info("browser pane settings requested, but the pane has no settings layer of its own")
             return nil
         }
-        settingsSheetSnapshot = BrowserSettings.constructionSnapshot(in: settings)
+        if openSettingsSessions == 0 {
+            settingsSheetSnapshot = BrowserSettings.constructionSnapshot(in: settings)
+        }
+        openSettingsSessions += 1
         sheet.onClose = { [weak self] in self?.paneSettingsSheetDidClose() }
         return sheet
     }
 
-    /// The sheet has gone: rebuild if a construction-time value differs from
-    /// what it was when the sheet opened.
+    /// A settings session has gone. When it was the last one open, rebuild
+    /// if a construction-time value differs from what it was when the first
+    /// opened.
     private func paneSettingsSheetDidClose() {
-        guard let snapshot = settingsSheetSnapshot else { return }
+        openSettingsSessions = max(0, openSettingsSessions - 1)
+        guard openSettingsSessions == 0, let snapshot = settingsSheetSnapshot else { return }
         settingsSheetSnapshot = nil
         guard !isDiscarded else { return }
         if needsRebuild(after: snapshot) { rebuildEngine() }

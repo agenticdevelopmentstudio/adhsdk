@@ -361,6 +361,30 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertFalse(pane.isSettingsSheetOpen)
     }
 
+    /// The settings window and the Privacy popover can both be up on one
+    /// pane. Whichever closes first leaves the snapshot to the other, and
+    /// the last close rebuilds for a change made while either was up.
+    func testTwoSessionsShareOneSnapshotAndTheLastCloseRebuilds() throws {
+        let global = makeSettings()
+        let layered = makeLayered(over: global)
+        let pane = try makePane(settings: layered)
+        let built = pane.webView
+
+        let window = try XCTUnwrap(pane.makePaneSettingsSheet())
+        layered.set(false, for: UserSettings.browserPrivacyConsoleCapture)
+        settle()
+        let popover = try XCTUnwrap(pane.makePaneSettingsSheet())
+
+        window.finish()
+        XCTAssertTrue(pane.isSettingsSheetOpen, "the popover is still up")
+        XCTAssertTrue(pane.webView === built, "nothing is rebuilt while a session is up")
+
+        popover.finish()
+        XCTAssertFalse(pane.isSettingsSheetOpen)
+        XCTAssertFalse(pane.webView === built, "the last close rebuilds for the change the first session made")
+        XCTAssertFalse(pane.capturesConsole)
+    }
+
     func testAcceptCookiesLockFollowsTheJarTheSheetShows() throws {
         let global = makeSettings()
         let layered = makeLayered(over: global)
