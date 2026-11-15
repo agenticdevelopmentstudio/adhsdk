@@ -78,7 +78,12 @@ enum BrowserPrivacyStatus {
         var text: String { "\(title): \(state ?? (isOn ? "On" : "Off"))" }
     }
 
-    static func items(settings: SettingsStore, isPaused: Bool, isAgentPrivacyOn: Bool) -> [Item] {
+    /// `agentPrivacy` is what Agent Privacy means for the front page now
+    /// (`WebBrowserPaneViewController.agentPrivacy()`), not the switch alone:
+    /// Privacy Words is on only while the words are being applied, so a pane
+    /// with no vault, words the keychain will not give up without a prompt,
+    /// or conflicting words shows it off, with the reason as its state.
+    static func items(settings: SettingsStore, isPaused: Bool, agentPrivacy: BrowserAgentPrivacy) -> [Item] {
         let live = !isPaused
         let agentPaused = isPaused && settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
         let access = settings.get(UserSettings.browserPrivacyAgentAccess)
@@ -103,14 +108,27 @@ enum BrowserPrivacyStatus {
                  state: thirdParty == .allow ? "On" : thirdParty == .blockScripts ? "No Scripts" : "Off"),
             Item(symbol: "circle.hexagongrid", title: "Cookies",
                  isOn: settings.get(UserSettings.browserAcceptsCookies)),
-            Item(symbol: "text.badge.xmark", title: "Privacy Words", isOn: isAgentPrivacyOn),
+            privacyWordsItem(agentPrivacy),
             Item(symbol: "eye.slash", title: "Hide Images",
                  isOn: settings.get(UserSettings.browserPrivacyHideImages))
         ]
     }
 
-    static func text(settings: SettingsStore, isPaused: Bool, isAgentPrivacyOn: Bool) -> String {
-        items(settings: settings, isPaused: isPaused, isAgentPrivacyOn: isAgentPrivacyOn)
+    private static func privacyWordsItem(_ privacy: BrowserAgentPrivacy) -> Item {
+        let state: String
+        switch privacy {
+        case .off: state = "Off"
+        case .enabled: state = "On"
+        case .unavailable: state = "Unavailable"
+        case .conflicting: state = "Conflicting"
+        }
+        var isApplied = false
+        if case .enabled = privacy { isApplied = true }
+        return Item(symbol: "text.badge.xmark", title: "Privacy Words", isOn: isApplied, state: state)
+    }
+
+    static func text(settings: SettingsStore, isPaused: Bool, agentPrivacy: BrowserAgentPrivacy) -> String {
+        items(settings: settings, isPaused: isPaused, agentPrivacy: agentPrivacy)
             .map(\.text).joined(separator: "  ·  ")
     }
 }

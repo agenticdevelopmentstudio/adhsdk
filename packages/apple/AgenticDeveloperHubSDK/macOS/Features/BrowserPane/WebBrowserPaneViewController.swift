@@ -494,6 +494,16 @@ open class WebBrowserPaneViewController: NSViewController {
         }
         if addressField.currentEditor() == nil { showAddress(engine.url ?? activeTab.requestedURL) }
         announceTitleChange()
+        refreshAgentPrivacyStatus()
+    }
+
+    /// Brings what the pane says of Agent Privacy — the toolbar's Privacy
+    /// Words item and the title-bar indicator — up to what it means for the
+    /// front page now (`agentPrivacy()`): the switch, the vault, its words
+    /// and the page's site all move it, not the switch alone.
+    private func refreshAgentPrivacyStatus() {
+        refreshAddressRowControls()
+        (parent as? PaneViewController)?.refreshAccessories()
     }
 
     /// `text` as the pane's own chrome shows it — the address, the tab names
@@ -675,10 +685,7 @@ open class WebBrowserPaneViewController: NSViewController {
                 self.refreshAddressRowControls()
                 if key == UserSettings.browserAcceptsCookies.name { self.applyCookiePolicy() }
                 if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
-                if key == UserSettings.browserAgentPrivacy.name {
-                    (self.parent as? PaneViewController)?.refreshAccessories()
-                    self.refreshPageWordFilter()
-                }
+                if key == UserSettings.browserAgentPrivacy.name { self.refreshPageWordFilter() }
             }
             .store(in: &cancellables)
         // A pane overriding the cookie setting hides the shared value's
@@ -973,7 +980,7 @@ open class WebBrowserPaneViewController: NSViewController {
         privacyButton.contentTintColor = isEventsPaused ? .systemRed : nil
         privacyButton.setAccessibilityValue(isEventsPaused ? "paused" : "active")
         let items = BrowserPrivacyStatus.items(
-            settings: settings, isPaused: isEventsPaused, isAgentPrivacyOn: isAgentPrivacyOn)
+            settings: settings, isPaused: isEventsPaused, agentPrivacy: agentPrivacy())
         for view in privacyStrip.arrangedSubviews { privacyStrip.removeView(view) }
         for view in items.map(Self.stripItemView) { privacyStrip.addArrangedSubview(view) }
         placePrivacyButton()
@@ -1372,6 +1379,7 @@ open class WebBrowserPaneViewController: NSViewController {
         }
         browserEngineHistoryDidChange(engine)
         announceTitleChange()
+        if isAgentPrivacyOn { refreshAgentPrivacyStatus() }
         loadPendingPage(of: tab)
         if let window = viewIfLoaded?.window {
             let responder = window.firstResponder
@@ -1679,6 +1687,9 @@ extension WebBrowserPaneViewController: BrowserEngineDelegate {
         // Every tab's console starts over with its page, front or not.
         engine.consoleLog.clear()
         guard isFront(engine) else { return }
+        // The front page's site decides which words apply, and so whether
+        // they can be (`conflicting`).
+        if isAgentPrivacyOn { refreshAgentPrivacyStatus() }
         rememberAddress()
         jarLabelGate.navigationDidCommit()
     }
@@ -1908,10 +1919,16 @@ extension WebBrowserPaneViewController: PaneAccessoryProviding {
 
     /// The Agent Privacy indicator beside the gear, while the switch is on:
     /// the one sign on the pane itself that models see it through the
-    /// privacy words. Nothing at all while it is off.
+    /// privacy words, or, when the words cannot be applied, that the pane is
+    /// closed to models instead. Nothing at all while it is off.
     public func makePaneAccessoryViews() -> [NSView] {
-        guard isAgentPrivacyOn else { return [] }
-        let title = "Agent Privacy is on: models see this pane through the privacy words"
+        let title: String
+        switch agentPrivacy() {
+        case .off: return []
+        case .enabled: title = "Agent Privacy is on: models see this pane through the privacy words"
+        case .unavailable: title = BrowserAgentPrivacy.unavailableRefusal
+        case .conflicting: title = BrowserAgentPrivacy.conflictingRefusal
+        }
         let image = NSImage(systemSymbolName: "eye.slash", accessibilityDescription: title) ?? NSImage()
         let indicator = NSImageView(
             image: image.withSymbolConfiguration(.init(pointSize: 12, weight: .regular)) ?? image)

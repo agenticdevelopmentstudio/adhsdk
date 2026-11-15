@@ -132,10 +132,10 @@ final class BrowserPaneToolbarTests: XCTestCase {
             secureSettingsProvider: InMemorySecureSettingsStorageProvider()
         )
         func item(_ title: String) -> BrowserPrivacyStatus.Item? {
-            BrowserPrivacyStatus.items(settings: settings, isPaused: false, isAgentPrivacyOn: false)
+            BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
                 .first { $0.title == title }
         }
-        let defaults = BrowserPrivacyStatus.items(settings: settings, isPaused: false, isAgentPrivacyOn: false)
+        let defaults = BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
         XCTAssertEqual(defaults.filter { !$0.isOn }.map(\.title), ["Privacy Words", "Hide Images"])
         XCTAssertEqual(item("Hide Images")?.text, "Hide Images: Off")
 
@@ -143,6 +143,41 @@ final class BrowserPaneToolbarTests: XCTestCase {
         settings.set(BrowserInputPolicy.block, for: UserSettings.browserPrivacyKeyboard)
         XCTAssertEqual(item("Hide Images")?.isOn, true, "images hidden: Hide Images is on")
         XCTAssertEqual(item("Keyboard")?.isOn, false, "keyboard withheld: Keyboard is off")
+    }
+
+    /// Privacy Words is on only while the words are applied: the switch on
+    /// with no words to apply (no vault, a keychain that would prompt) or
+    /// words that conflict leaves it off, saying why.
+    func test_privacyWordsIsOnOnlyWhileTheWordsAreApplied() {
+        let settings = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider()
+        )
+        func words(_ privacy: BrowserAgentPrivacy) -> BrowserPrivacyStatus.Item? {
+            BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: privacy)
+                .first { $0.title == "Privacy Words" }
+        }
+        XCTAssertEqual(words(.off)?.isOn, false)
+        XCTAssertEqual(words(.unavailable)?.isOn, false)
+        XCTAssertEqual(words(.unavailable)?.text, "Privacy Words: Unavailable")
+        XCTAssertEqual(words(.conflicting)?.isOn, false)
+        XCTAssertEqual(words(.conflicting)?.text, "Privacy Words: Conflicting")
+        let enabled = BrowserAgentPrivacy.checking(TextSubstitutionFilter(pairs: [.init(alias: "Bob", real: "Alice")]))
+        XCTAssertEqual(words(enabled)?.isOn, true)
+        XCTAssertEqual(words(enabled)?.text, "Privacy Words: On")
+    }
+
+    /// A pane with Agent Privacy on and no vault (the Safari-extensions
+    /// window) draws its page unconcealed, so its strip says so.
+    func test_paneWithoutAVaultShowsPrivacyWordsUnavailable() {
+        let pane = makePane(ownToolbar: false)
+        pane.settings.set(true, for: UserSettings.browserAgentPrivacy)
+        pane.refreshAddressRowControls()
+        let item = pane.privacyStrip.arrangedSubviews.first {
+            $0.accessibilityIdentifier() == "browser.privacy-strip.privacy words"
+        }
+        XCTAssertEqual(item?.accessibilityValue() as? String, "off")
+        XCTAssertEqual(item?.accessibilityLabel(), "Privacy Words: Unavailable")
     }
 
     func test_safariKeepsKitchenNavigation() {
