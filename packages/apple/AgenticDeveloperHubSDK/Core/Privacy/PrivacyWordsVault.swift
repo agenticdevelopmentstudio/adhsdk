@@ -26,7 +26,7 @@ public final class PrivacyWordsVault: ObservableObject {
 
     public let store: PrivacyWordStore
 
-    /// Every stored word, enabled or not, global or a pane's, or nil while
+    /// Every stored word, enabled or not, whatever its sites, or nil while
     /// they have not been read. What the editor shows and what a browser pane
     /// watches.
     @Published public private(set) var words: [PrivacyWord]?

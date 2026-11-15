@@ -93,7 +93,7 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
                 + "the page, its text, its console and screenshots but not click, type "
                 + "or navigate, and full control lets it drive. Agent while paused "
                 + "decides whether the agent keeps driving a pane you have paused from "
-                + "its gear menu. Both narrow what the master switches allow; the "
+                + "its browser menu. Both narrow what the master switches allow; the "
                 + "master switches themselves live in the Automation settings and "
                 + "apply to every pane."
         ),

@@ -3,7 +3,7 @@ import AppKit
 import AgenticDeveloperHubSDKCore
 @testable import AgenticDeveloperHubSDKMacOS
 
-/// The Browser pane's gear items and Pause Events (spec sections 7 and 11).
+/// The Browser pane's menu items (`makePaneMenuItems`: the gear in a project window, `browser.menu` in a browser window) and Pause Events (spec sections 7 and 11).
 @MainActor
 final class BrowserPaneMenuTests: XCTestCase {
 
