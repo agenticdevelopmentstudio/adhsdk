@@ -68,8 +68,9 @@ export interface AuthSettingsWire {
   login_enabled: boolean;
   password_enabled: boolean;
   allowed_providers: string[] | null;
-  /** null (or absent, from an older backend) = every customer; [] = nobody. */
-  login_allowed_customer_ids?: string[] | null;
+  /** The emails that may sign in, lowercase. null (or absent, from an older backend) = every
+   *  customer; [] = nobody. */
+  login_allowed_emails?: string[] | null;
 }
 
 /** `PATCH /registry/identifiers/{rdid}` body — renames an rdid in place. */

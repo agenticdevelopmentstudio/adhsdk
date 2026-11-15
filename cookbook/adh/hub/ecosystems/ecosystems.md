@@ -2,11 +2,11 @@
 id: 201572ee-2e0f-4839-94f5-252f8044c4bf
 title: "Ecosystems"
 type: ingredient
-version: 1.4.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-13
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -257,10 +257,10 @@ has no counterpart for it in these sources.
   settings MUST use their own dedicated route rather than the generic
   ecosystems create/read/update/delete base.
 - **auth-settings-login-allow-list-mapping**: Auth settings read from the
-  wire MUST carry `loginAllowedCustomerIds` from `login_allowed_customer_ids`,
+  wire MUST carry `loginAllowedEmails` from `login_allowed_emails`,
   reading an absent field as `null` (every customer may sign in) and keeping
   `[]` (no customer may) distinct from it. An auth-settings patch that sets the
-  field MUST send it as `login_allowed_customer_ids`, sending an explicit
+  field MUST send it as `login_allowed_emails`, sending an explicit
   `null` rather than omitting it.
 
 ### Child ecosystems
@@ -686,9 +686,11 @@ analytics or telemetry event.
   `slug`/`identifier`, `description`, `region`, primary domain, timestamps,
   and the caller's own `canManage` flag. None of these fields are personal
   data about an end user; they describe a product/ecosystem record, not a
-  person. Two identifiers do refer to people: the auth settings' `loginAllowedCustomerIds`
-  (customer ids) and the provisioner principal id on a provisioned feature row; both are
-  opaque ids, never names or contact details.
+  person. Two fields do refer to people: the auth settings' `loginAllowedEmails`, the
+  email addresses an owner lists as allowed to sign in, which are contact details; and the
+  provisioner principal id on a provisioned feature row, an opaque id. The emails are
+  carried only as the owner typed them (trimmed and lowercased) between the hub and the
+  backend, and nothing here stores them beyond the in-memory query cache.
 - **Storage**: One reference implementation holds no cache of its own —
   every call is a live round-trip to whatever data source the host
   supplies. The other holds results in a shared in-memory query-client
@@ -1082,8 +1084,9 @@ server's unique-address constraint and `id`-vs-leaf assertion are the
 real authority on both platforms, which this component deliberately
 relies on rather than duplicating. `data-minimization` **passed**: every
 field this component reads or writes is ecosystem/product metadata, apart from
-the `loginAllowedCustomerIds` customer ids and the provisioner principal id,
-which identify people and are carried only as opaque ids, never as names or contact details. `no-hardcoded-strings` **failed**: every
+the `loginAllowedEmails` email addresses, which are contact details the owner chose to
+list and are needed to decide who may sign in, and the provisioner principal id, an
+opaque id. `no-hardcoded-strings` **failed**: every
 user-facing string this ingredient documents (labels, warnings, validation
 messages) is fixed English with no lookup table or locale parameter on
 either platform (see Localization) — a plain, honestly-reported gap, not
@@ -1097,7 +1100,7 @@ nullable `ecosystemId` and send it unguarded (a known gap) (see #requirements/fe
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.4.0 | 2026-11-13 | Mike Fullerton | Auth settings carry the login allow-list (loginAllowedCustomerIds and login_allowed_customer_ids) |
+| 2.0.0 | 2026-11-15 | Mike Fullerton | Auth settings carry the login allow-list by email (loginAllowedEmails, login_allowed_emails); privacy and compliance treat the emails as contact details |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/ecosystems/. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

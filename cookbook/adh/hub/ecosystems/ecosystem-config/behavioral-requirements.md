@@ -51,21 +51,24 @@
   edits it, and the update shape has no field to write it back, so the Swift topic
   offers no way to view or change the allowed providers.
 - **auth-login-allow-list-wire**: the web data layer's `AuthSettings` (and so
-  `ClientAuthPolicy`) MUST carry `loginAllowedCustomerIds: string[] | null`, read
-  from the wire's `login_allowed_customer_ids`. `null` means every customer may
+  `ClientAuthPolicy`) MUST carry `loginAllowedEmails: string[] | null`, read
+  from the wire's `login_allowed_emails`. `null` means every customer may
   sign in and `[]` means nobody; a response that omits the field (an older
   backend) MUST read as `null`. A patch that sets it to `null` MUST send the
   explicit `null`, never drop it, so "every customer" can be restored.
 - **auth-login-allow-list-edit**: the web ecosystem client-auth pane MUST draw a
-  "Who can sign in" section with an "Only listed customers" switch. Off is `null`;
-  turning it on starts one blank customer-id row, which saves as `[]` (nobody)
-  if left blank. A save MUST send the list trimmed, with blank rows and
+  "Who can sign in" section with an "Only listed people" switch. Off is `null`;
+  turning it on starts one blank email row, which saves as `[]` (nobody) if left
+  blank. A save MUST send each email trimmed and lowercased, with blank rows and
   duplicates dropped and the first occurrence's order kept; a blank row added to
-  a saved list MUST NOT count as an edit.
+  a saved list, or an entry whose only change is letter case, MUST NOT count as
+  an edit.
 - **auth-login-allow-list-bounds**: Save MUST be blocked, with the reason shown,
-  when the cleaned list holds more than 500 ids or any id longer than 36
-  characters — the backend's own bounds, mirrored so the refusal comes before
-  the round trip. The backend stays authoritative.
+  when the cleaned list holds more than 500 emails, or any entry longer than 254
+  characters or not shaped as an email address (exactly one `@`, a non-empty
+  local part with no whitespace and no quote, and a domain of at least two
+  non-empty dot-separated labels) — the backend's own bounds, mirrored so the
+  refusal comes before the round trip. The backend stays authoritative.
 
 ### Sign-in Apps
 

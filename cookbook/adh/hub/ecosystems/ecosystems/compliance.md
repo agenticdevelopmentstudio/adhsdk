@@ -60,8 +60,9 @@ server's unique-address constraint and `id`-vs-leaf assertion are the
 real authority on both platforms, which this component deliberately
 relies on rather than duplicating. `data-minimization` **passed**: every
 field this component reads or writes is ecosystem/product metadata, apart from
-the `loginAllowedCustomerIds` customer ids and the provisioner principal id,
-which identify people and are carried only as opaque ids, never as names or contact details. `no-hardcoded-strings` **failed**: every
+the `loginAllowedEmails` email addresses, which are contact details the owner chose to
+list and are needed to decide who may sign in, and the provisioner principal id, an
+opaque id. `no-hardcoded-strings` **failed**: every
 user-facing string this ingredient documents (labels, warnings, validation
 messages) is fixed English with no lookup table or locale parameter on
 either platform (see Localization) — a plain, honestly-reported gap, not

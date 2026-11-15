@@ -122,9 +122,11 @@ export interface AuthSettings {
   passwordEnabled: boolean;
   /** null = all configured providers. */
   allowedProviders: string[] | null;
-  /** The customers who may sign in, by id. null = every customer; [] = nobody. Gates sign-in
-   *  only: an unlisted invitee still joins, and is refused with login_disabled until listed. */
-  loginAllowedCustomerIds: string[] | null;
+  /** The people who may sign in, by email. null = every customer; [] = nobody. A customer
+   *  matches only through an email they have proven (a provider-verified sign-in email or a
+   *  verified contact email). Gates sign-in only: an unlisted invitee still joins, and is
+   *  refused with login_disabled until listed. */
+  loginAllowedEmails: string[] | null;
 }
 
 const BASE = "/api/v1/ecosystems";
@@ -134,11 +136,11 @@ export const toAuthSettings = (w: AuthSettingsWire): AuthSettings => ({
   loginEnabled: w.login_enabled,
   passwordEnabled: w.password_enabled,
   allowedProviders: w.allowed_providers ?? null,
-  loginAllowedCustomerIds: w.login_allowed_customer_ids ?? null,
+  loginAllowedEmails: w.login_allowed_emails ?? null,
 });
 
 /** A partial {@link AuthSettings} patch as the wire's snake_case body; undefined keys are dropped and
- *  an explicit `allowedProviders: null` ("all providers") and `loginAllowedCustomerIds: null`
+ *  an explicit `allowedProviders: null` ("all providers") and `loginAllowedEmails: null`
  *  ("every customer") are kept. */
 export const authSettingsPatchToWire = (patch: Partial<AuthSettings>): Partial<AuthSettingsWire> =>
   compact({
@@ -146,7 +148,7 @@ export const authSettingsPatchToWire = (patch: Partial<AuthSettings>): Partial<A
     login_enabled: patch.loginEnabled,
     password_enabled: patch.passwordEnabled,
     allowed_providers: patch.allowedProviders,
-    login_allowed_customer_ids: patch.loginAllowedCustomerIds,
+    login_allowed_emails: patch.loginAllowedEmails,
   });
 
 export function toEcosystem(r: EcosystemRow): Ecosystem {

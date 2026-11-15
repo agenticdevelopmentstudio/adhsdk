@@ -33,18 +33,18 @@ const envelope = (settingsExtra: Record<string, unknown>) => ({
 describe("the login allow-list on the wire", () => {
   it("ecosystem-config-030: reads absent as null and [] as [], and sends a null patch rather than dropping the key", async () => {
     mockedJson.mockResolvedValueOnce(envelope({}));
-    expect((await clientAuthApi.ecosystem("eco-1")).settings.loginAllowedCustomerIds).toBeNull();
+    expect((await clientAuthApi.ecosystem("eco-1")).settings.loginAllowedEmails).toBeNull();
 
-    mockedJson.mockResolvedValueOnce(envelope({ login_allowed_customer_ids: [] }));
-    expect((await clientAuthApi.ecosystem("eco-1")).settings.loginAllowedCustomerIds).toEqual([]);
+    mockedJson.mockResolvedValueOnce(envelope({ login_allowed_emails: [] }));
+    expect((await clientAuthApi.ecosystem("eco-1")).settings.loginAllowedEmails).toEqual([]);
 
     mockedJson.mockResolvedValueOnce(envelope({}));
-    await clientAuthApi.updateEcosystem("eco-1", { settings: { loginAllowedCustomerIds: null } });
+    await clientAuthApi.updateEcosystem("eco-1", { settings: { loginAllowedEmails: null } });
     const [url, init] = mockedJson.mock.calls[2] as [string, RequestInit];
     expect(url).toBe("/api/v1/ecosystems/eco-1");
     const body = JSON.parse(String(init.body)) as {
       client_auth: { settings: Record<string, unknown> };
     };
-    expect(body.client_auth.settings).toHaveProperty("login_allowed_customer_ids", null);
+    expect(body.client_auth.settings).toHaveProperty("login_allowed_emails", null);
   });
 });

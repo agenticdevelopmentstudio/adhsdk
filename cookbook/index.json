@@ -3075,9 +3075,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:ca7c43fcbe1dd116bc2a6018769cbb75602e6afb81aded6a2343c1e715ca0559",
+            "hash": "sha256:f5f88890aa69e937c19cc6d89a55fb28e530c582f34b999cd4f248c9bd934fe1",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/",
           "platform": "web"
@@ -3156,9 +3156,9 @@
         },
         {
           "conformance": {
-            "hash": "sha256:283297188db05192e721c13c6d22a948cc35004eefed10d92f8248729879798c",
+            "hash": "sha256:807aeacaf271f00eea181cb91ee5e00bb8f7158a2008f23f4fe731506aa0f8c3",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/ecosystems.ts",
           "platform": "web"
@@ -3167,7 +3167,7 @@
           "conformance": {
             "hash": "sha256:240148568b4003d15196c3571af224ed0f7ea51c6ed7d44c8db9edd4634d4b21",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/identifiers.ts",
           "platform": "web"
@@ -3176,7 +3176,7 @@
           "conformance": {
             "hash": "sha256:0bf3a2404d4e1111f1af957405243bdb49714f4504756e6500046ff403150f42",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/use-workspace-default-ecosystem.ts",
           "platform": "web"
@@ -3185,7 +3185,7 @@
           "conformance": {
             "hash": "sha256:51525282113a06c2b1ab857a4868a6445578b20c09eb04b9770f96af67ec1be1",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/ecosystem-invitations.ts",
           "platform": "web"
@@ -3194,16 +3194,16 @@
           "conformance": {
             "hash": "sha256:966a21a8149bff3f82c909340d70c3f15f403c18c4750394d73875a9bb3a5280",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/ecosystem-features.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:fe65330fd3a3ae5597f6b22318c3fcac21ccea5b4bcbfd99635fefca1a984ad6",
+            "hash": "sha256:938fdb3b0209b2a63458bb1b7c8633d1a92f95ed192ef8a914c023245bcf566c",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/wire.ts",
           "platform": "web"
@@ -3212,7 +3212,7 @@
           "conformance": {
             "hash": "sha256:d6f1ec08b522724e8b32b050442d7d4a836980a8b4721951039ea59a9e6ad9c3",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/__tests__/ecosystems.test.ts",
           "platform": "web"
@@ -3221,7 +3221,7 @@
           "conformance": {
             "hash": "sha256:83a56e90f785850692395fbbc84855b896deb275fc4f0a08e710981ec224cc8d",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/__tests__/use-workspace-default-ecosystem.test.tsx",
           "platform": "web"
@@ -3230,7 +3230,7 @@
           "conformance": {
             "hash": "sha256:8b7582005080aabcc30b7d992378588ed67c5487950737d43a4ef38edb5da356",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystems/__tests__/ecosystem-features.test.tsx",
           "platform": "web"
@@ -11492,16 +11492,16 @@
           "conformance": {
             "hash": "sha256:89bb6769cde7cb4cebe142b580e01276c6ecffb35aa556b8a36dd138ffa9c68f",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystem-config/",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:009b39105e16bedd48a481a8bb6fd998485c1309c3713eb34b09a9c4e0c13ac6",
+            "hash": "sha256:445fd8c1878833e320ab31324244c970e99e0124d14b4afa2a6c442bdf0f7b56",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/",
           "platform": "web"
@@ -11510,7 +11510,7 @@
           "conformance": {
             "hash": "sha256:63ec0521d10beb1e3f0b52b1612a3f232cea81a896093d8dae3d5ca4b4854b7a",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystem-config/sync-tables.ts",
           "platform": "web"
@@ -11582,7 +11582,7 @@
           "conformance": {
             "hash": "sha256:f26314fa6fc402ca6fb74a93e604a671bb513247b3107ad89c77221453482da9",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystem-config/feature-flags.ts",
           "platform": "web"
@@ -11591,7 +11591,7 @@
           "conformance": {
             "hash": "sha256:05fb6d978f489fd4438033f886c1283acdf7066bc177b6c20bd56b0244a3c0c6",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystem-config/server-bags.ts",
           "platform": "web"
@@ -11600,7 +11600,7 @@
           "conformance": {
             "hash": "sha256:79cef9d81092fdd10fb6ad78f9fabbdca9e24a2a447f56afc7e25be8e5d69313",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystem-config/client-auth.ts",
           "platform": "web"
@@ -11609,7 +11609,7 @@
           "conformance": {
             "hash": "sha256:339354da18d61eb3677667705a0a23351d5e5820565fb461bfcb49bdb71c6cde",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystem-config/storage-tokens.ts",
           "platform": "web"
@@ -11618,7 +11618,7 @@
           "conformance": {
             "hash": "sha256:2767787448851a40356a23a96aeb99c2ddad818b2f374765f9ceb340e37eabfd",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/ecosystem-config/wire.ts",
           "platform": "web"
@@ -11708,7 +11708,7 @@
           "conformance": {
             "hash": "sha256:c93ca02d529381e66593bbf1355cd0f675edcae530fbf9397baac13d0b5fdb68",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/dialog-state/bag-dialog-state.ts",
           "platform": "web"
@@ -11717,7 +11717,7 @@
           "conformance": {
             "hash": "sha256:6d4a00616be3686d855be69bc044891245a42494d86264e1c7dbb356560b7471",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/dialog-state/flag-dialog-state.ts",
           "platform": "web"
@@ -11726,7 +11726,7 @@
           "conformance": {
             "hash": "sha256:09895f5a542ab4dd0fc69a35b9cb0b4f80247ed9c4b9b2f4fdd610e21009acec",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/ApplicationClientAuthSection.tsx",
           "platform": "web"
@@ -11735,7 +11735,7 @@
           "conformance": {
             "hash": "sha256:52a8685e138982e18c2d463ccdbb7472cad9177742c6c3335e8f5463043ccf62",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/SyncTablesPane.tsx",
           "platform": "web"
@@ -11744,25 +11744,25 @@
           "conformance": {
             "hash": "sha256:1a8701d74582cdd9f0a2c5b8a3677c91e21a2c4c2180d26cd360550c239c4cad",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/sync-tables-hooks.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:a1ae0fd9ae3a1cb646d1ed204d0b474067781760eb1c38fa1efcbbc90efecb31",
+            "hash": "sha256:a61ffcd60179ac9afe1b57cd96c1e0e68ce2f025e0feed8c62868380688e8c34",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/ClientAuthFields.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:bfb1a7f4fcd6e53050ebe03da75e5ad9af06d3cdbb97718833a6116d811342ee",
+            "hash": "sha256:da0a0c12dc72d668cc418613ff98a285317544d2dcf78506b3327fc540558ff9",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/client-auth-model.ts",
           "platform": "web"
@@ -11771,7 +11771,7 @@
           "conformance": {
             "hash": "sha256:22387492c4ac23278e76ad5fe30c8f9437ef789365f2c04aecc6735a1f5377db",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/features/ecosystem-config/src/ClientAuthSettingsPane.tsx",
           "platform": "web"
