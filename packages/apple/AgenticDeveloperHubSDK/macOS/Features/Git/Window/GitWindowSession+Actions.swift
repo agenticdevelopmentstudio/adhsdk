@@ -17,6 +17,8 @@ extension GitWindowSession {
         case diff(GitDiffIntent)
         /// The banner's continue, skip or abort of the operation in progress.
         case operation(GitOperationStep)
+        /// The merge view's save or cancel.
+        case merge(GitMergeIntent)
         /// The toolbar's verbs.
         case fetch, pull, push, newBranch, stash, popStash
     }
@@ -58,6 +60,7 @@ extension GitWindowSession {
         case .ref(let intent): await run(intent)
         case .diff(let intent): await run(intent)
         case .operation(let step): await runOperation(step)
+        case .merge(let intent): await run(intent)
         case .fetch: await execute(.fetch(remote: nil))
         case .pull: await execute(.pull)
         case .push: await pushHead()
@@ -77,11 +80,76 @@ extension GitWindowSession {
         case .stageAll: await execute(.stageAll)
         case .unstageAll: await execute(.unstageAll)
         case .discard(let paths): await discard(paths)
-        case .discardAll: await discard(model.unstaged.map(\.path))
+        case .discardAll: await discard(model.unstaged.map(\.path).filter { model.conflicts[$0] == nil })
         case let .commit(message, amend):
             if await execute(.commit(message: message, amend: amend)) { workingCopy.commitDidSucceed() }
         case .amendChanged(let amend):
             if amend { await fillAmendMessage() }
+        case let .resolve(paths, side): await resolve(paths, using: side)
+        case .markResolved(let paths): await execute(.stage(paths: paths))
+        case .openMerge(let path): await openMerge(path)
+        }
+    }
+
+    // MARK: - Conflicts
+
+    /// Confirms, then takes `side` whole for each path: a path whose chosen side has the
+    /// file checks that side out and stages it; one whose chosen side deleted it is
+    /// removed. The removal is skipped when the first step fails.
+    private func resolve(_ paths: [String], using side: GitConflictSide) async {
+        guard !paths.isEmpty, let presenter else { return }
+        let count = paths.count
+        let ours = side == .ours
+        let confirmation = GitConfirmation(
+            title: "Resolve \(count) \(count == 1 ? "file" : "files") using \(ours ? "ours" : "theirs")?",
+            message: "\(ours ? "Their" : "Our") changes to \(count == 1 ? "it" : "them") are lost.",
+            actionTitle: ours ? "Use Ours" : "Use Theirs", isDestructive: true)
+        guard await presenter.confirm(confirmation) else { return }
+        let kept = paths.filter { path in
+            guard let kind = model.conflicts[path] else { return true }
+            return ours ? kind.hasOurs : kind.hasTheirs
+        }
+        let removed = paths.filter { !kept.contains($0) }
+        if !kept.isEmpty {
+            guard await execute(.resolve(paths: kept, side: side)),
+                  await execute(.stage(paths: kept)) else { return }
+        }
+        if !removed.isEmpty { await execute(.removePaths(paths: removed)) }
+    }
+
+    /// Reads the working file and shows it in the merge view; a file that is not UTF-8 or
+    /// holds no conflict the parser accepts shows its diff instead.
+    private func openMerge(_ path: String) async {
+        let data: Data?
+        do {
+            data = try await whileGitRuns { try await model.contents(path: path, at: nil, maximumBytes: nil) }
+        } catch {
+            showFailure(title: "Open failed", error: error)
+            return
+        }
+        guard let data, let text = String(data: data, encoding: .utf8),
+              let document = GitConflictDocument.parse(text) else {
+            showDiff(target: .unstaged(paths: [path]), file: path)
+            return
+        }
+        merge.show(path: path, document: document)
+        bottom.show(merge)
+    }
+
+    /// Save writes the resolved text, stages it and returns to the diff; Cancel returns at once.
+    private func run(_ intent: GitMergeIntent) async {
+        switch intent {
+        case let .save(path, text):
+            do {
+                try await whileGitRuns { try await model.writeResolution(text, to: path) }
+            } catch {
+                showFailure(title: "Save failed", error: error)
+                return
+            }
+            guard await execute(.stage(paths: [path])) else { return }
+            showDiff(target: .staged(paths: [path]), file: path)
+        case .cancel:
+            bottom.show(diff)
         }
     }
 

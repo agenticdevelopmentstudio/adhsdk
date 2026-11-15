@@ -27,6 +27,8 @@ import AgenticDeveloperHubSDKCore
 @MainActor public protocol GitWorkingCopyDataSource: AnyObject {
     var staged: [GitFileChange] { get }
     var unstaged: [GitFileChange] { get }
+    /// The unmerged paths, each with how it is unmerged; each is also in `unstaged`.
+    var conflicts: [String: GitConflictKind] { get }
 }
 
 /// Content read on demand: diffs, a commit's file list, file bytes, blame and a file's history.

@@ -34,6 +34,7 @@ final class GitWindowSession {
     let diff: GitDiffViewController
     let blame: GitBlameViewController
     let fileHistory: GitFileHistoryViewController
+    let merge: GitMergeViewController
     /// The in-progress operation banner, above the overview pane's content.
     let banner = GitOperationBannerViewController()
 
@@ -88,6 +89,7 @@ final class GitWindowSession {
         diff = GitDiffViewController(source: model, coloring: coloring)
         blame = GitBlameViewController(source: model, coloring: coloring)
         fileHistory = GitFileHistoryViewController(source: model, coloring: coloring)
+        merge = GitMergeViewController(coloring: coloring)
         detailHost = GitWindowDetailHostViewController(detail: detail)
         right = GitWindowRightSplitViewController(
             top: detailHost, bottom: bottom, autosaveName: Self.autosaveName("git.window.right", root: model.root))
@@ -100,6 +102,7 @@ final class GitWindowSession {
         workingCopy.delegate = self
         detail.delegate = self
         diff.delegate = self
+        merge.delegate = self
         blame.delegate = self
         fileHistory.diffViewController.delegate = self
         banner.delegate = self
@@ -190,6 +193,7 @@ final class GitWindowSession {
         if workingCopyChanged { workingCopy.reload() }
         if workingCopyChanged || changes.contains(.refs) { workingCopy.canAmend = model.hasCommits }
         if !changes.isDisjoint(with: [.refs, .history]) { reapplyRefSelection() }
+        if workingCopyChanged { leaveResolvedMerge() }
 
         switch bottom.content {
         case let shown as GitDiffViewController where workingCopyChanged && shown.isShowingWorkingCopy:
@@ -214,6 +218,7 @@ final class GitWindowSession {
         workingCopy.reload()
         workingCopy.canAmend = model.hasCommits
         reapplyRefSelection()
+        leaveResolvedMerge()
         switch bottom.content {
         case let shown as GitDiffViewController: shown.reload()
         case let shown as GitBlameViewController: shown.reload()
@@ -292,9 +297,16 @@ final class GitWindowSession {
 
     // MARK: - Bottom pane
 
-    private func showDiff(target: GitDiffTarget, file: String) {
+    func showDiff(target: GitDiffTarget, file: String) {
         bottom.show(diff)
         diff.show(target: target, file: file)
+    }
+
+    /// Returns the bottom pane to the diff when the merge view shows a path that is no
+    /// longer conflicted (resolved, staged or removed some other way).
+    private func leaveResolvedMerge() {
+        guard bottom.content === merge, let path = merge.path, model.conflicts[path] == nil else { return }
+        bottom.show(diff)
     }
 
     private func clearDiff() {
@@ -692,5 +704,13 @@ final class GitWindowRightSplitViewController: ThemedSplitViewController {
         addSplitViewItem(bottomItem)
         splitView.accessibilityID("git.window.right")
         splitView.autosaveName = autosaveName
+    }
+}
+
+// MARK: - GitMergeViewDelegate
+
+extension GitWindowSession: GitMergeViewDelegate {
+    func mergeView(_ view: GitMergeViewController, didRequest intent: GitMergeIntent) {
+        perform(.merge(intent))
     }
 }

@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.7.0
+version: 1.8.0
 status: review
 language: en
 created: 2026-11-14
@@ -112,6 +112,8 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **banner-follows-model**: The banner's state MUST be the model's `operationState` at session start, on every change that touches `.operation` or the working copy, and on `reloadAll`, so an operation begun outside the window shows once the model reads it.
 - **ref-drop-on-history**: A ref dropped on the history list MUST pop up the sidebar's `dropMenu(forRefNamed:)` over the history table through the sidebar's `menuPresenter`; a ref with no drop menu is refused by the history's `refDropValidator` and pops up nothing.
 - **commit-actions**: Cherry-pick and Revert MUST pass `mainline: 1` for a commit with more than one parent. A soft or mixed reset MUST run at once; a hard one MUST confirm `Reset <branch> to <shortID>?` / `Uncommitted changes are lost.` (destructive) first, naming `HEAD` when detached, where a reset is allowed.
+- **conflicts-resolve**: Resolve Using Ours… and Resolve Using Theirs… MUST confirm `Resolve N file(s) using ours?` (or theirs) / `Their changes to it are lost.` (`Our changes`, `them` for several) with the destructive action `Use Ours` or `Use Theirs`; declined, nothing runs. Confirmed, a path whose chosen side exists (`GitConflictKind.hasOurs` / `hasTheirs`) runs `.resolve(paths:side:)` then `.stage(paths:)`; one whose chosen side is a deletion runs `.removePaths`. Mark Resolved MUST run `.stage(paths:)` at once. Discard All MUST leave conflicted paths out.
+- **merge-view**: `.openMerge(path)` MUST read the working file (`contents(path:at: nil, maximumBytes: nil)`), decode it as UTF-8 and parse it into a `GitConflictDocument`, then show it in the bottom pane's merge view; a file that does not decode or parse shows its unstaged diff instead, and a failed read fails under `Open failed`. The merge view's `.save(path:text:)` MUST write the text through the model's `writeResolution` (`Save failed` on error), then run `.stage([path])`, then return the bottom pane to the diff; `.cancel` returns it at once. Neither confirms. When a model change leaves the shown path no longer conflicted, the bottom pane MUST return to the diff.
 ## Appearance
 
 The project window's frame and unified toolbar: the six verbs, then the project window's search field (placeholder `Search History` while the history pane is the searchable one) and help. The title is `Git: <name> → <branch>`. Panes: the overview at least 230 points and about a fifth of the width, the history at least 260 and about half, the commit at least 240 (about 65 % of the right column's height when terminals sit under it); inside the commit pane the detail and the bottom pane are each at least 160 points high. The overview's title bar carries the busy spinner and Refresh (`arrow.clockwise`). Every pane is the git views' own, themed by them.
@@ -185,6 +187,12 @@ The window keeps the project window's identifiers. Its panes carry `git.window.o
 | git-window-053 | operation-steps | the same conflicting rebase; Abort declined, then confirmed | `Abort the rebase?` / `Abort`, destructive; still rebasing; then the banner hidden on `side`. |
 | git-window-054 | banner-follows-model | the same branches; `git cherry-pick main` run outside the window, then the model refreshes `.operation` | the banner shows `Cherry-picking <main's short sha>`. |
 | git-window-055 | ref-drop-on-history | HEAD `side`; drop `refs/heads/side`, then `refs/heads/main`, on the history | nothing, refused; then one menu `Merge into side`, `Rebase side onto main`, a separator, `Cancel`. |
+| git-window-056 | merge-view | a UU `f.txt` from merging `main` into `side`; open it, choose Ours for every conflict, Save | the merge view shown; nothing confirmed; the file equals `side:f.txt`; no conflicts; `f.txt` staged at stage 0, matching HEAD, so neither Staged nor Unstaged lists it; the diff back in the bottom pane |
+| git-window-057 | merge-view | the same conflict with its markers overwritten; open it | the diff shown, no failure |
+| git-window-058 | conflicts-resolve | Mark Resolved on a hand-merged UU file | nothing confirmed; no conflicts; the file staged |
+| git-window-059 | conflicts-resolve | Resolve Using Ours… declined, then confirmed | one destructive `Use Ours` confirmation and the conflict kept; then the file is ours, staged and listed nowhere |
+| git-window-060 | conflicts-resolve | a UD `f.txt` (modified on `side`, deleted on `main`); Resolve Using Theirs…, confirmed | `Use Theirs`; no failure; no conflicts; the file gone from the tree and the index |
+| git-window-061 | conflicts-resolve | Discard All over a UU `f.txt` and untracked `new.txt` | `Discard changes to 1 file?`; the conflict kept |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -248,7 +256,9 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.6.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.8.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession.swift` | confirmed (1.8.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/GitWindowSession+Actions.swift` | confirmed (1.8.0) |
 
 ## Design Decisions
 
@@ -303,6 +313,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.8.0 | 2026-11-15 | Mike Fullerton | Conflicts: Resolve Using Ours… and Theirs… confirmed, then resolved and staged or removed; Mark Resolved stages; Discard All skips conflicts; the merge view opened from the working copy, saved through the model and staged; vectors 056-061 |
 | 1.7.0 | 2026-11-15 | Mike Fullerton | Merge and rebase from the sidebar's menus and drop menus without a confirmation; the operation banner's Continue, Skip and confirmed Abort through the funnel; the banner follows the model; refs dropped on the history; vectors 051-055 |
 | 1.6.0 | 2026-11-15 | Mike Fullerton | Diff patches: diff intents through the funnel, staged and unstaged with `git apply --cached`, discarded with `git apply --reverse` after a confirmation; vectors 048-050 |
 | 1.5.0 | 2026-11-14 | Mike Fullerton | Review fixes: describes the composable-tabs panes, the project-window id and title; the not-in-a-repository alert; stashes found by sha; close cancels the action; Amend off on an orphan branch; vectors 042-047 |

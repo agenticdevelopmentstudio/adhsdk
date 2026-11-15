@@ -82,3 +82,8 @@
 | git-views-079 | banner-visibility | `.none`, a merge, a rebase, a cherry-pick, a revert, `.none`; a cherry-pick set before load | hidden; shown without Skip; shown with Skip three times; hidden; shown once loaded |
 | git-views-080 | banner-intents-only | press Continue, Skip and Abort | the delegate receives `.step(.continue)`, `.step(.skip)`, `.step(.abort)` |
 | git-views-081 | history-ref-drop | a validator refusing `refs/heads/no`; drop `refs/heads/dev`, then `refs/heads/no` | the first is valid and calls `onRefDrop` with `refs/heads/dev`; the second is refused and calls nothing |
+| git-views-082 | wc-conflicts-list | conflicts UU `both.txt`, DU `gone.txt`, AA `added.txt`, each also unstaged `.conflicted`, beside modified `b` and staged `s`; then none | the Conflicts pane shown, `Conflicts (3)`, `added.txt`, `both.txt`, `gone.txt`; Unstaged `b` only (`Unstaged (1)`); then the pane hidden |
+| git-views-083 | wc-conflict-menu | the menu of `both.txt` (UU); fire each item | `Open in Merge View`, a separator, `Resolve Using Ours…`, `Resolve Using Theirs…`, `Mark Resolved`; `.openMerge`, `.resolve(.ours)`, `.resolve(.theirs)`, `.markResolved` |
+| git-views-084 | wc-conflict-menu | the menu of `gone.txt` (DU) | `Resolve Using Ours…`, `Resolve Using Theirs…`, `Mark Resolved`, no Open |
+| git-views-085 | wc-conflict-menu | double-click `both.txt`, then `gone.txt` | `.openMerge("both.txt")` only |
+| git-views-086 | wc-conflicts-list | select `b`, then `both.txt`, then a staged row | `.unstaged([b])`, `.unstaged([both.txt])`; each selection clears the other lists |

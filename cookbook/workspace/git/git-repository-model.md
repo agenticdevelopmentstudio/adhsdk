@@ -2,7 +2,7 @@
 id: a2394ca0-3988-410b-9fc8-e0c9e253fc94
 title: "Git Repository Model"
 type: ingredient
-version: 1.2.0
+version: 1.3.0
 status: review
 language: en
 created: 2026-11-13
@@ -72,6 +72,8 @@ The one place a git window's views read a repository from. `GitRepositoryModel` 
 - **operation-state**: `operationState` MUST be `GitClient.operationState(in:)` for the model's root: none before it first loads, reloaded by `start()`, by a refresh that names `.operation` or `.workingCopy`, and so after every `perform(_:)`, which refreshes every kind.
 - **operation-state-failure**: A failed operation-state read MUST keep the last value and be logged, like any other part (`failures-keep-state`).
 - **operation-state-observed**: Observers MUST be told `.operation` when the operation state reloaded to a different value, even when the refresh did not name it (a `.workingCopy` refresh after a conflicting merge started outside the app); a refresh that names `.operation` reports it whenever the status or the operation state loaded.
+- **model-conflicts**: `conflicts` MUST be the status's unmerged paths with their kinds, reloaded with `staged` and `unstaged`; each is also `.conflicted` in `unstaged`.
+- **model-write-resolution**: `writeResolution(_:to:)` MUST refuse a path that leaves the root, then write the text as UTF-8 atomically off the main actor, keeping the file's POSIX permissions, and then refresh the working copy. It is the only file the model writes itself; every other change goes through `perform`.
 ## Appearance
 
 Not applicable: the model draws nothing; the git window's views do.
@@ -166,7 +168,9 @@ A failed load logs one line at error level naming the part (refs, history, statu
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/GitRepositoryModel.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Model/GitDataSources.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -208,6 +212,7 @@ A failed load logs one line at error level naming the part (refs, history, statu
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.3.0 | 2026-11-15 | Mike Fullerton | Conflicts: `conflicts` reloaded with the working copy; `writeResolution` writes a resolved file atomically off the main actor, inside the root, keeping its permissions |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Actions: perform refreshes every kind after any action and rethrows; isPerforming, headBranch, hasCommits; remotes and last commit message; operation state: loaded with the working copy, kept on failure, reported as `.operation` when it changes; the watcher classifies `REVERT_HEAD` and `sequencer` as operation |
 | 1.1.0 | 2026-11-14 | Mike Fullerton | Final review: refs, stashes, submodules and worktrees load independently; cancelled loads log at debug; contents pass a size cap; a capped file history is logged; the deferred watcher makes one watcher per latest start |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | fileHistory returns the client's entries, each commit with the file's path at that commit |

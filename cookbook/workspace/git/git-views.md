@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.9.0
+version: 1.10.0
 status: review
 language: en
 created: 2026-11-13
@@ -113,12 +113,14 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **wc-lists**: The working copy MUST show two changed-files lists, `Staged` (context `staged`) over the data source's `staged` files and `Unstaged` (context `unstaged`) over its `unstaged` files, in the data source's order, each item `GitFileListItem(change:)`, each under a header titled `Staged (<count>)` or `Unstaged (<count>)`.
 - **wc-selection**: Selecting a file MUST call the delegate's `workingCopy(_:didSelect:)` once with its diff target: a staged file `.staged(paths: [path])`, an untracked unstaged file `.untracked(path:)`, any other unstaged file `.unstaged(paths: [path])`. Selecting in one list MUST clear the other without a delegate call for the clearing. Clearing the selection calls the delegate once with nil.
 - **wc-reload**: `reload()` MUST re-read both lists from the data source. A selected file still in its list stays selected without a delegate call, unless its status changed, when the delegate is called once with its new target (an untracked file that becomes intent-to-add moves from `.untracked` to `.unstaged`); one that left its list is deselected and the delegate is called once with nil.
-- **wc-intents-only**: The working copy MUST NOT run git. Every action is one call of the delegate's `workingCopy(_:didRequest:)` with a `GitWorkingCopyIntent` (`stage([String])`, `unstage([String])`, `discard([String])`, `stageAll`, `unstageAll`, `discardAll`, `commit(message:amend:)`, `amendChanged(Bool)`); confirming a discard is the owner's.
+- **wc-intents-only**: The working copy MUST NOT run git. Every action is one call of the delegate's `workingCopy(_:didRequest:)` with a `GitWorkingCopyIntent` (`stage([String])`, `unstage([String])`, `discard([String])`, `stageAll`, `unstageAll`, `discardAll`, `commit(message:amend:)`, `amendChanged(Bool)`, `resolve([String], GitConflictSide)`, `markResolved([String])`, `openMerge(String)`); confirming a discard is the owner's.
 - **wc-stage-all**: A trailing borderless `Stage All` button beside the Unstaged header MUST send `.stageAll`, and `Unstage All` beside the Staged header `.unstageAll`.
 - **wc-menus**: A staged row's context menu MUST hold `Unstage` (`.unstage`); an unstaged row's `Stage` (`.stage([path])`), `Discard Changes…` (`.discard([path])`), a separator and `Discard All Changes…` (`.discardAll`). A staged item's paths are its `oldPath` (when it has one) and its `path`, so a staged rename unstages both. The changed-files list builds the menu for the clicked row through its `menuProvider` and has none for a click outside the rows.
 - **wc-double-click**: Double-clicking a staged row MUST send `.unstage` with its paths, an unstaged row `.stage([path])`, through the changed-files list's `onDoubleClick`.
 - **wc-commit-box**: Under the two lists, the commit box MUST offer a plain-text message, an `Amend` checkbox and a `Commit` button (⌘↩). Commit is enabled only when the message trimmed of whitespace and newlines is not empty and there are staged changes (the data source's `staged` is not empty) or Amend is on. Pressing it sends `.commit(message:amend:)` with the message exactly as typed.
 - **wc-amend**: Ticking or unticking Amend MUST send `.amendChanged(_:)` with its new state; the owner may then fill the message. `canAmend` (set by the owner, false until it is told otherwise) disables the checkbox and unticks it when false, without a delegate call. `commitDidSucceed()` empties the message and unticks Amend, without a delegate call.
+- **wc-conflicts-list**: While the data source's `conflicts` is not empty, a third list, `Conflicts` (context `conflicts`, view `git.fileList.conflicts`, header `Conflicts (<count>)`, no button), MUST sit above Staged, holding each conflicted path sorted, status `.conflicted`; with no conflicts its pane is hidden. A conflicted path MUST NOT also be listed under Unstaged, so the Unstaged header counts only the rest. Selecting a conflict calls `workingCopy(_:didSelect:)` with `.unstaged(paths: [path])`, and selecting in any of the three lists clears the other two.
+- **wc-conflict-menu**: A conflict row's context menu MUST hold `Open in Merge View` (`.openMerge(path)`) and a separator, both only when its kind `hasMarkers` (so not for DU, UD, AU, UA or DD), then `Resolve Using Ours…` (`.resolve([path], .ours)`), `Resolve Using Theirs…` (`.resolve([path], .theirs)`) and `Mark Resolved` (`.markResolved([path])`). Double-clicking a conflict with markers sends `.openMerge(path)`; one without sends nothing. Confirming is the owner's.
 - **wc-ui-thread**: The working copy MUST be used on the UI thread.
 
 ### Diff
@@ -261,7 +263,7 @@ The root view carries `git.detail`, the header's scroll view `git.detail.header`
 
 ### Working copy
 
-The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`; the header buttons `git.workingCopy.stageAll` and `git.workingCopy.unstageAll`; the menu items `git.workingCopy.menu.stage`, `git.workingCopy.menu.unstage`, `git.workingCopy.menu.discard` and `git.workingCopy.menu.discardAll`. The commit box carries `git.commitBox`, its header `git.commitBox.header`, the message `git.commitBox.message`, the checkbox `git.commitBox.amend` and the button `git.commitBox.commit`.
+The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader`, `git.workingCopy.conflictsHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`; the header buttons `git.workingCopy.stageAll` and `git.workingCopy.unstageAll`; the menu items `git.workingCopy.menu.stage`, `git.workingCopy.menu.unstage`, `git.workingCopy.menu.discard` and `git.workingCopy.menu.discardAll`. The commit box carries `git.commitBox`, its header `git.commitBox.header`, the message `git.commitBox.message`, the checkbox `git.commitBox.amend` and the button `git.commitBox.commit`.
 
 ### Diff
 
@@ -360,6 +362,11 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-079 | banner-visibility | `.none`, a merge, a rebase, a cherry-pick, a revert, `.none`; a cherry-pick set before load | hidden; shown without Skip; shown with Skip three times; hidden; shown once loaded |
 | git-views-080 | banner-intents-only | press Continue, Skip and Abort | the delegate receives `.step(.continue)`, `.step(.skip)`, `.step(.abort)` |
 | git-views-081 | history-ref-drop | a validator refusing `refs/heads/no`; drop `refs/heads/dev`, then `refs/heads/no` | the first is valid and calls `onRefDrop` with `refs/heads/dev`; the second is refused and calls nothing |
+| git-views-082 | wc-conflicts-list | conflicts UU `both.txt`, DU `gone.txt`, AA `added.txt`, each also unstaged `.conflicted`, beside modified `b` and staged `s`; then none | the Conflicts pane shown, `Conflicts (3)`, `added.txt`, `both.txt`, `gone.txt`; Unstaged `b` only (`Unstaged (1)`); then the pane hidden |
+| git-views-083 | wc-conflict-menu | the menu of `both.txt` (UU); fire each item | `Open in Merge View`, a separator, `Resolve Using Ours…`, `Resolve Using Theirs…`, `Mark Resolved`; `.openMerge`, `.resolve(.ours)`, `.resolve(.theirs)`, `.markResolved` |
+| git-views-084 | wc-conflict-menu | the menu of `gone.txt` (DU) | `Resolve Using Ours…`, `Resolve Using Theirs…`, `Mark Resolved`, no Open |
+| git-views-085 | wc-conflict-menu | double-click `both.txt`, then `gone.txt` | `.openMerge("both.txt")` only |
+| git-views-086 | wc-conflicts-list | select `b`, then `both.txt`, then a staged row | `.unstaged([b])`, `.unstaged([both.txt])`; each selection clears the other lists |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -471,16 +478,18 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.8.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.8.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.8.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.8.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.8.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.8.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.8.1) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.8.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.8.1) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.8.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.10.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.10.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.10.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.10.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.10.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.10.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.10.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.10.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.10.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.10.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitOperationBannerViewController.swift` | confirmed (1.10.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitWorkingCopyViewController.swift` | confirmed (1.10.0) |
 
 ## Design Decisions
 
@@ -584,3 +593,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.8.0 | 2026-11-15 | Mike Fullerton | Diff staging menu: line refs on each diff model; Stage, Unstage and Discard of the clicked hunk or the selected lines, each a GitDiffIntent sent to the delegate; no menu ignoring whitespace; vectors 069-072 |
 | 1.8.1 | 2026-11-15 | Mike Fullerton | Review fix: side by side, Lines reads only the clicked viewer's own side, so one half of a changed pair can be staged, unstaged or discarded alone; vector 073 |
 | 1.9.0 | 2026-11-15 | Mike Fullerton | Merge and rebase: the sidebar's Merge into and Rebase onto items, refs dragged and dropped on the checked-out branch for a drop menu, the in-progress operation banner, refs dropped on the history; vectors 074-081 |
+| 1.10.0 | 2026-11-15 | Mike Fullerton | Working copy conflicts: a Conflicts list above Staged while there are conflicts, its paths left out of Unstaged; Open in Merge View (markers only), Resolve Using Ours…, Resolve Using Theirs… and Mark Resolved, and double-click to open; vectors 082-086 |

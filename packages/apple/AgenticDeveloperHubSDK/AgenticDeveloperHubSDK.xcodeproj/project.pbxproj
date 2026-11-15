@@ -1692,6 +1692,7 @@
 		5B2E176DE6BA7DEC832C74C2 /* ClaudeSavedAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED9AAEC5BDF6AFACDB8BA31 /* ClaudeSavedAccount.swift */; };
 		5B35011D4DE2588CBCC600B0 /* GmailRESTClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90AB9E4B48B1FD028E456A8F /* GmailRESTClient.swift */; };
 		5B357D0535CEE32C6B78A145 /* SessionTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A268EDF60B5555447F2ACDB6 /* SessionTrigger.swift */; };
+		5B4D7B7FCB1A51A4C97DEB75 /* GitMergeLineModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E5C41A74CC999EF616CD1FA /* GitMergeLineModelsTests.swift */; };
 		5B652C779B9FD10735EB4D7B /* PermissionDecision.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12F11326499978F91C0A7BE /* PermissionDecision.swift */; };
 		5B689D5FD1AFA73B7E85E2D7 /* ThreePaneChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F063985DEF9FCF6DF8667F49 /* ThreePaneChatView.swift */; };
 		5B6F746631C7BFA7BCEE193D /* TextAreaEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9447BF77B38B6F4988C302D5 /* TextAreaEditView.swift */; };
@@ -1858,6 +1859,7 @@
 		65D19434E82A5BBA276CCDBD /* BillingAppRunsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC510BE599DD1B7ACEF01B08 /* BillingAppRunsTests.swift */; };
 		65D358F964A8BD41C82D502D /* AgenticDeveloperHubSDKPermissionsUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D96E0A72E663B3F1FAA14369 /* AgenticDeveloperHubSDKPermissionsUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		65DAAE32472BFFEA5241022D /* StatusLineTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37298521FFF09D03504971EA /* StatusLineTestSupport.swift */; };
+		65FB40E2F3813B13BED792DF /* GitMergeViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6619E611C713D480F973AFF /* GitMergeViewControllerTests.swift */; };
 		6639C780C479D35DA6DEBC67 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 6227E98A1E15BA99C725054F /* OpenAPIRuntime */; };
 		66465D98213729D9027D6920 /* SharedWindowLifecycleSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F813C52166AEFE7E3244F5 /* SharedWindowLifecycleSource.swift */; };
 		6652EDFF787B12DAC8F23085 /* HelpDrawerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A260DF772F48E5B72874C99 /* HelpDrawerController.swift */; };
@@ -2950,6 +2952,7 @@
 		AA558C8198AD6CCC369A4F87 /* ClientDetailPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF30F9818BB40D9B82DF1CCC /* ClientDetailPanel.swift */; };
 		AA5C936D2B4E3AD44D770F81 /* PermissionDecision.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12F11326499978F91C0A7BE /* PermissionDecision.swift */; };
 		AA99C866046DEE4A9C599EF4 /* SafariAppExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3E654D4E5230C0F0F4E5C9 /* SafariAppExtension.swift */; };
+		AAA8E38F8F6280C320E02426 /* GitMergeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D161E9B925F7101CB8D0B11D /* GitMergeViewController.swift */; };
 		AAAD79A2032C11C2C779944D /* BuiltInThemes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ABF0EC59B8456F8E4842672 /* BuiltInThemes.swift */; };
 		AAB1CB0504E181B269BE98E9 /* ThinkingPhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CCEB8DDC154A1077B8F3B1B /* ThinkingPhaseTests.swift */; };
 		AABB001CC301806CB78F52C6 /* ProcessEnv.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2281F2A13DC8E70F7754B6 /* ProcessEnv.swift */; };
@@ -3887,6 +3890,7 @@
 		E88841F0774805CBD4207FF6 /* ReplyOnceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAADF5DD31FB0D165BD2804A /* ReplyOnceTests.swift */; };
 		E8A3C90F81E7C1A643F4F0DE /* MailToolSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64205ACE673A2F2B08BE1478 /* MailToolSource.swift */; };
 		E8B5300AA49F5B3896F57DD4 /* InactivityThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72B891BB7F37B651405DA02 /* InactivityThreshold.swift */; };
+		E8C4C929661F47D852CE7895 /* GitMergeLineModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985FDEAFD0A4A364F091116B /* GitMergeLineModels.swift */; };
 		E8FFDF42EB8F12232D262717 /* ChatSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 626519360F0A645A3C6769DD /* ChatSessionState.swift */; };
 		E902F8EC5E9B004C8EDCF245 /* WebAuthnJSONTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 503A41E380C1F372FE1221F8 /* WebAuthnJSONTests.swift */; };
 		E93B6401B7A1315F02BBC75C /* MarkdownTextPaneConformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AA65A1056DF13A714E39AA /* MarkdownTextPaneConformanceTests.swift */; };
@@ -8394,6 +8398,7 @@
 		3DC39A54CDABBC0DEA42AF41 /* AILogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AILogViewController.swift; sourceTree = "<group>"; };
 		3DD671C85F671556C1BDE878 /* PrivacySitePatternTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySitePatternTests.swift; sourceTree = "<group>"; };
 		3E2F93D3CA60918C8663AF74 /* ThinkingPhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingPhase.swift; sourceTree = "<group>"; };
+		3E5C41A74CC999EF616CD1FA /* GitMergeLineModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitMergeLineModelsTests.swift; sourceTree = "<group>"; };
 		3E5E8202D5D65233C6BD4338 /* ParticipantKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticipantKind.swift; sourceTree = "<group>"; };
 		3E602385AF2B2C929A4B2F3E /* JITAvailabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JITAvailabilityTests.swift; sourceTree = "<group>"; };
 		3E74EBBA3F47E24A4FD0582D /* RGBAColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RGBAColor.swift; sourceTree = "<group>"; };
@@ -9493,6 +9498,7 @@
 		9832A76E7C4F758E62AB122B /* GeneralSettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsTab.swift; sourceTree = "<group>"; };
 		984F4720DF13108E22A40AF1 /* LanguageServersPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageServersPanelViewController.swift; sourceTree = "<group>"; };
 		985B8E841085D0CE968426B3 /* ProviderConformance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderConformance.swift; sourceTree = "<group>"; };
+		985FDEAFD0A4A364F091116B /* GitMergeLineModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitMergeLineModels.swift; sourceTree = "<group>"; };
 		98727B07DA88DC8D14E7593C /* DismissAfterChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DismissAfterChoice.swift; sourceTree = "<group>"; };
 		9893EF311D0E6844006DE5F7 /* ExtensionMessagePresenting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionMessagePresenting.swift; sourceTree = "<group>"; };
 		98BF0490457F055A703E342D /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
@@ -10142,6 +10148,7 @@
 		D1197883DC86EAF8885A66C7 /* GitSyntaxColoringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitSyntaxColoringTests.swift; sourceTree = "<group>"; };
 		D128A81ADD639AED1A63C0DF /* DynamicSchemaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicSchemaTests.swift; sourceTree = "<group>"; };
 		D12977661FC3A270DBCA4FE4 /* BillingProjectCutoffTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillingProjectCutoffTests.swift; sourceTree = "<group>"; };
+		D161E9B925F7101CB8D0B11D /* GitMergeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitMergeViewController.swift; sourceTree = "<group>"; };
 		D180D4C3C8E595DAC6A2962F /* AccountRegistryConformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountRegistryConformanceTests.swift; sourceTree = "<group>"; };
 		D183571E829D43DF18BD2A0F /* JSONLImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONLImporterTests.swift; sourceTree = "<group>"; };
 		D198CB6FAC85B9D34EF96347 /* PermissionChecking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionChecking.swift; sourceTree = "<group>"; };
@@ -10583,6 +10590,7 @@
 		F6144A9B90852A72478CAA34 /* CrawlModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrawlModelTests.swift; sourceTree = "<group>"; };
 		F626C436F54A810C8E8223FC /* GitBlameViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitBlameViewControllerTests.swift; sourceTree = "<group>"; };
 		F6527315B5A0DC2EE261B2CF /* NotificationItemsTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationItemsTable.swift; sourceTree = "<group>"; };
+		F6619E611C713D480F973AFF /* GitMergeViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitMergeViewControllerTests.swift; sourceTree = "<group>"; };
 		F676DA02F1452D13368FAF22 /* InlineChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineChatView.swift; sourceTree = "<group>"; };
 		F677A77D0F919FE44FBABC43 /* HubMailBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubMailBridgeTests.swift; sourceTree = "<group>"; };
 		F6CA94CE0F793658C33E0FDD /* InMemorySecureSettingsStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemorySecureSettingsStorageProvider.swift; sourceTree = "<group>"; };
@@ -12795,6 +12803,8 @@
 				9BC8F65C60BC5EF5D42500DA /* GitFileListViewController.swift */,
 				113361D27B625BD0B4BC99BB /* GitHistoryRowView.swift */,
 				1C81B7F7A7A05AF2DEC7ED1C /* GitHistoryViewController.swift */,
+				985FDEAFD0A4A364F091116B /* GitMergeLineModels.swift */,
+				D161E9B925F7101CB8D0B11D /* GitMergeViewController.swift */,
 				6B08962D7E1310EDB963F7E9 /* GitOperationBannerViewController.swift */,
 				C336895FBCD90446344FA0E4 /* GitRefsSidebarViewController.swift */,
 				C2D1A7855BB957635690E30C /* GitSyntaxColoring.swift */,
@@ -13948,6 +13958,8 @@
 				E3F27529C861DC8C0D19A9B8 /* GitFileListViewControllerTests.swift */,
 				A15EE11DE28DE3BDA17B5FFF /* GitGlobalConfigTableViewTests.swift */,
 				016A65E706FDB33928A2ED9E /* GitHistoryViewControllerTests.swift */,
+				3E5C41A74CC999EF616CD1FA /* GitMergeLineModelsTests.swift */,
+				F6619E611C713D480F973AFF /* GitMergeViewControllerTests.swift */,
 				06CC5F4C73BDCE2D4B045450 /* GitOperationBannerViewControllerTests.swift */,
 				AADCD69671F525F3E65FE5F4 /* GitProcessBottleneckTests.swift */,
 				57E80C07DA719AEF0A70436F /* GitRefsSidebarViewControllerTests.swift */,
@@ -22590,6 +22602,8 @@
 				543E2FCBAC4DD3EE888281FB /* GitFileListViewControllerTests.swift in Sources */,
 				CBC667A2025320F074E44679 /* GitGlobalConfigTableViewTests.swift in Sources */,
 				D141259F8544764287F7595A /* GitHistoryViewControllerTests.swift in Sources */,
+				5B4D7B7FCB1A51A4C97DEB75 /* GitMergeLineModelsTests.swift in Sources */,
+				65FB40E2F3813B13BED792DF /* GitMergeViewControllerTests.swift in Sources */,
 				73D9833000FB10E816A8C06E /* GitOperationBannerViewControllerTests.swift in Sources */,
 				3AFC2FA4A1E46ABF8BDD6EE1 /* GitProcessBottleneckTests.swift in Sources */,
 				D51F0701FD0E4A28F57ED00E /* GitRefsSidebarViewControllerTests.swift in Sources */,
@@ -24754,6 +24768,8 @@
 				F6A7C2F73F9749EDDAF66BC1 /* GitGlobalConfigTableView.swift in Sources */,
 				E06499320C3BC74F4CABB9B8 /* GitHistoryRowView.swift in Sources */,
 				D241668B101C7A279AF69FB9 /* GitHistoryViewController.swift in Sources */,
+				E8C4C929661F47D852CE7895 /* GitMergeLineModels.swift in Sources */,
+				AAA8E38F8F6280C320E02426 /* GitMergeViewController.swift in Sources */,
 				EA95490D1D9893A8ADC70EB1 /* GitOperationBannerViewController.swift in Sources */,
 				CE064ED8D7500B6C83D6DA50 /* GitRefsSidebarViewController.swift in Sources */,
 				F2D911526327D373352E8E97 /* GitRepo.swift in Sources */,

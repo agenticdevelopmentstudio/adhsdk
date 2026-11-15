@@ -1271,4 +1271,153 @@ struct GitWindowSessionActionTests {
         #expect(shown.count == 1)
         #expect(shown.first?.items.map(\.title) == ["Merge into side", "Rebase side onto main", "", "Cancel"])
     }
+
+    // MARK: Conflicts and the merge view
+
+    /// `f.txt` with two lines changed on `side` and on `main` from one base, HEAD on `side`
+    /// merging `main`: one UU conflict over the first line.
+    private func bothModifiedConflict(_ repository: GitTestRepository) async throws {
+        try await commitFile(repository, "f.txt", "one\ntwo\nthree\n", at: 100)
+        try await repository.run(["checkout", "--quiet", "-b", "side"])
+        try await commitFile(repository, "f.txt", "ONE side\ntwo\nthree\n", at: 200)
+        try await repository.run(["checkout", "--quiet", "main"])
+        try await commitFile(repository, "f.txt", "ONE main\ntwo\nthree\n", at: 300)
+        try await repository.run(["checkout", "--quiet", "side"])
+        _ = try? await repository.run(["merge", "--no-edit", "main"])
+    }
+
+    @Test("a UU conflict opened in the merge view, chosen ours throughout and saved, is resolved and staged")
+    func mergeViewResolvesBothModified() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await bothModifiedConflict(repository)
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        #expect(model.conflicts == ["f.txt": .bothModified])
+        #expect(session.workingCopy.conflictsList.files.map(\.path) == ["f.txt"])
+
+        await act(session, .workingCopy(.openMerge("f.txt")))
+        #expect(session.bottom.content === session.merge)
+        #expect(session.merge.path == "f.txt")
+        let total = try #require(session.merge.document?.conflictCount)
+        #expect(total >= 1)
+
+        session.merge.loadViewIfNeeded()
+        for index in 0..<total {
+            if index > 0 { session.merge.nextButton.performClick(nil) }
+            session.merge.oursButton.performClick(nil)
+        }
+        #expect(session.merge.saveButton.isEnabled)
+        session.merge.saveButton.performClick(nil)
+        await session.actionTask?.value
+
+        #expect(presenter.confirmations.isEmpty, "Save does not confirm")
+        #expect(presenter.failures.isEmpty)
+        let ours = try await repository.run(["show", "side:f.txt"])
+        let text = try String(contentsOf: repository.root.appendingPathComponent("f.txt"), encoding: .utf8)
+        #expect(text == ours)
+        #expect(text == "ONE side\ntwo\nthree\n")
+        #expect(model.conflicts.isEmpty)
+        #expect(model.staged.isEmpty, "ours is HEAD's version, so the staged file differs from nothing")
+        #expect(!model.unstaged.contains { $0.path == "f.txt" })
+        let stages = try await repository.run(["ls-files", "--stage", "--", "f.txt"])
+        #expect(stages.split(separator: "\n").count == 1 && stages.contains(" 0\tf.txt"), "staged at stage 0")
+        #expect(session.bottom.content === session.diff, "the bottom pane returns to the diff")
+    }
+
+    @Test("a conflict that does not parse opens as its diff instead")
+    func unparsableConflictShowsTheDiff() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await bothModifiedConflict(repository)
+        try repository.write("no markers left\n", to: "f.txt")
+        let presenter = StubPresenter()
+        let (_, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .workingCopy(.openMerge("f.txt")))
+        #expect(session.bottom.content === session.diff)
+        #expect(presenter.failures.isEmpty)
+    }
+
+    @Test("Mark Resolved stages the file as it stands, asking nothing")
+    func markResolvedStages() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await bothModifiedConflict(repository)
+        try repository.write("hand merged\n", to: "f.txt")
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .workingCopy(.markResolved(["f.txt"])))
+        #expect(presenter.confirmations.isEmpty)
+        #expect(model.conflicts.isEmpty)
+        #expect(model.staged.map(\.path) == ["f.txt"])
+    }
+
+    @Test("Resolve Using Ours… confirms destructively; declined, the conflict stays")
+    func resolveConfirms() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await bothModifiedConflict(repository)
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [false]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .workingCopy(.resolve(["f.txt"], .ours)))
+        #expect(presenter.confirmations.count == 1)
+        #expect(presenter.confirmations.first?.isDestructive == true)
+        #expect(presenter.confirmations.first?.actionTitle == "Use Ours")
+        #expect(model.conflicts == ["f.txt": .bothModified])
+
+        presenter.confirmAnswers = [true]
+        await act(session, .workingCopy(.resolve(["f.txt"], .ours)))
+        #expect(model.conflicts.isEmpty)
+        let text = try String(contentsOf: repository.root.appendingPathComponent("f.txt"), encoding: .utf8)
+        #expect(text == "ONE side\ntwo\nthree\n")
+        #expect(model.staged.isEmpty, "ours is HEAD's version, so the staged file differs from nothing")
+        #expect(!model.unstaged.contains { $0.path == "f.txt" })
+    }
+
+    @Test("a UD conflict resolved using theirs, confirmed, removes the file and the conflict")
+    func resolveDeletedByThemUsingTheirs() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "f.txt", "base\n", at: 100)
+        try await repository.run(["checkout", "--quiet", "-b", "side"])
+        try await commitFile(repository, "f.txt", "side\n", at: 200)
+        try await repository.run(["checkout", "--quiet", "main"])
+        try await repository.run(["rm", "--quiet", "--", "f.txt"])
+        try await repository.commit("delete f.txt", at: Self.epoch + 300)
+        try await repository.run(["checkout", "--quiet", "side"])
+        _ = try? await repository.run(["merge", "--no-edit", "main"])
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        #expect(model.conflicts == ["f.txt": .deletedByThem])
+
+        await act(session, .workingCopy(.resolve(["f.txt"], .theirs)))
+
+        #expect(presenter.confirmations.count == 1)
+        #expect(presenter.confirmations.first?.actionTitle == "Use Theirs")
+        #expect(presenter.failures.isEmpty)
+        #expect(model.conflicts.isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: repository.root.appendingPathComponent("f.txt").path))
+        let indexed = try await repository.run(["ls-files", "--", "f.txt"])
+        #expect(indexed.isEmpty)
+    }
+
+    @Test("Discard All Changes… leaves conflicted files alone")
+    func discardAllSkipsConflicts() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await bothModifiedConflict(repository)
+        try repository.write("scratch\n", to: "new.txt")
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .workingCopy(.discardAll))
+        #expect(presenter.confirmations.first?.title == "Discard changes to 1 file?")
+        #expect(model.conflicts == ["f.txt": .bothModified])
+    }
 }

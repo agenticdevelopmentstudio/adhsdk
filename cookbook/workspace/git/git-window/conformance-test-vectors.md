@@ -56,3 +56,9 @@
 | git-window-053 | operation-steps | the same conflicting rebase; Abort declined, then confirmed | `Abort the rebase?` / `Abort`, destructive; still rebasing; then the banner hidden on `side`. |
 | git-window-054 | banner-follows-model | the same branches; `git cherry-pick main` run outside the window, then the model refreshes `.operation` | the banner shows `Cherry-picking <main's short sha>`. |
 | git-window-055 | ref-drop-on-history | HEAD `side`; drop `refs/heads/side`, then `refs/heads/main`, on the history | nothing, refused; then one menu `Merge into side`, `Rebase side onto main`, a separator, `Cancel`. |
+| git-window-056 | merge-view | a UU `f.txt` from merging `main` into `side`; open it, choose Ours for every conflict, Save | the merge view shown; nothing confirmed; the file equals `side:f.txt`; no conflicts; `f.txt` staged at stage 0, matching HEAD, so neither Staged nor Unstaged lists it; the diff back in the bottom pane |
+| git-window-057 | merge-view | the same conflict with its markers overwritten; open it | the diff shown, no failure |
+| git-window-058 | conflicts-resolve | Mark Resolved on a hand-merged UU file | nothing confirmed; no conflicts; the file staged |
+| git-window-059 | conflicts-resolve | Resolve Using Ours… declined, then confirmed | one destructive `Use Ours` confirmation and the conflict kept; then the file is ours, staged and listed nowhere |
+| git-window-060 | conflicts-resolve | a UD `f.txt` (modified on `side`, deleted on `main`); Resolve Using Theirs…, confirmed | `Use Theirs`; no failure; no conflicts; the file gone from the tree and the index |
+| git-window-061 | conflicts-resolve | Discard All over a UU `f.txt` and untracked `new.txt` | `Discard changes to 1 file?`; the conflict kept |

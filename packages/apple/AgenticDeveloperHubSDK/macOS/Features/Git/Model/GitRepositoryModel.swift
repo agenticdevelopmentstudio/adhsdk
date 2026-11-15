@@ -29,6 +29,8 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
 
     public private(set) var staged: [GitFileChange] = []
     public private(set) var unstaged: [GitFileChange] = []
+    /// The unmerged paths, each with how it is unmerged; each is also `.conflicted` in `unstaged`.
+    public private(set) var conflicts: [String: GitConflictKind] = [:]
 
     /// The merge, rebase, cherry-pick or revert the working tree is in the middle of; none
     /// before it first loads. Reloaded with the working copy, so after every `perform`.
@@ -271,11 +273,39 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
             guard generation == statusGeneration else { return false }
             staged = GitFileChange.list(status.stagedFiles)
             unstaged = GitFileChange.list(status.unstagedFiles)
+            conflicts = status.conflicts
             return true
         } catch {
             logFailure("status", error)
             return false
         }
+    }
+
+    // MARK: Resolution
+
+    /// Writes `text` over `path`, relative to the root, as UTF-8 — the one file the window
+    /// writes itself, a merge view's result; every other change goes through `perform`.
+    /// The write is atomic and off the main actor, keeps the file's POSIX permissions, and
+    /// is followed by a working-copy refresh. A path that leaves the root is refused with
+    /// `GitClientError.invalidArgument` before anything is written. An atomic write
+    /// replaces a symbolic link with a regular file.
+    public func writeResolution(_ text: String, to path: String) async throws {
+        let base = root.standardizedFileURL
+        let url = base.appendingPathComponent(path).standardizedFileURL
+        guard !path.isEmpty, url.path.hasPrefix(base.path + "/") else {
+            let reason = "“\(path)” is not inside the repository."
+            throw GitClientError.invalidArgument(verb: "resolve", argument: reason)
+        }
+        let data = Data(text.utf8)
+        try await Task.detached(priority: .userInitiated) {
+            let manager = FileManager.default
+            let permissions = (try? manager.attributesOfItem(atPath: url.path))?[.posixPermissions]
+            try data.write(to: url, options: .atomic)
+            if let permissions {
+                try manager.setAttributes([.posixPermissions: permissions], ofItemAtPath: url.path)
+            }
+        }.value
+        await refresh([.workingCopy])
     }
 
     // MARK: Operation state

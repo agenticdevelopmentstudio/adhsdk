@@ -9,6 +9,7 @@ import Testing
 private final class FakeWorkingCopySource: GitWorkingCopyDataSource {
     var staged: [GitFileChange] = []
     var unstaged: [GitFileChange] = []
+    var conflicts: [String: GitConflictKind] = [:]
 }
 
 @MainActor
@@ -134,13 +135,103 @@ struct GitWorkingCopyViewControllerTests {
         #expect(delegate.events == [.untracked(path: "c"), .unstaged(paths: ["c"])])
     }
 
-    @Test("the split view and both panes carry identifiers")
+    @Test("the split view and every pane carry identifiers")
     func containerIdentifiers() {
         let workingCopy = GitWorkingCopyViewController(source: Self.source())
         workingCopy.loadViewIfNeeded()
         #expect(workingCopy.splitView.accessibilityIdentifier() == "git.workingCopy.split")
         #expect(workingCopy.splitView.arrangedSubviews.map { $0.accessibilityIdentifier() }
-                == ["git.workingCopy.stagedPane", "git.workingCopy.unstagedPane", "git.commitBox"])
+                == ["git.workingCopy.conflictsPane", "git.workingCopy.stagedPane", "git.workingCopy.unstagedPane",
+                    "git.commitBox"])
+    }
+
+    // MARK: - Conflicts
+
+    /// A UU `both.txt`, a DU `gone.txt` and an AA `added.txt`, each also an unstaged conflicted
+    /// change as status reports it, beside an ordinary modified `b` and a staged `s`.
+    private static func conflictSource() -> FakeWorkingCopySource {
+        let source = FakeWorkingCopySource()
+        source.conflicts = ["both.txt": .bothModified, "gone.txt": .deletedByUs, "added.txt": .bothAdded]
+        source.staged = [GitFileChange(path: "s", status: .modified)]
+        source.unstaged = [GitFileChange(path: "added.txt", status: .conflicted),
+                           GitFileChange(path: "b", status: .modified),
+                           GitFileChange(path: "both.txt", status: .conflicted),
+                           GitFileChange(path: "gone.txt", status: .conflicted)]
+        return source
+    }
+
+    @Test("the Conflicts list is shown only while there are conflicts, and holds them sorted")
+    func conflictsListShownOnlyWithConflicts() {
+        let source = Self.conflictSource()
+        let (workingCopy, _) = loaded(source)
+        let pane = workingCopy.splitView.arrangedSubviews[0]
+        #expect(!pane.isHidden)
+        #expect(workingCopy.conflictsHeader.stringValue == "Conflicts (3)")
+        #expect(workingCopy.conflictsHeader.accessibilityIdentifier() == "git.workingCopy.conflictsHeader")
+        #expect(workingCopy.conflictsList.view.accessibilityIdentifier() == "git.fileList.conflicts")
+        #expect(workingCopy.conflictsList.files.map(\.path) == ["added.txt", "both.txt", "gone.txt"])
+        #expect(workingCopy.conflictsList.files.allSatisfy { $0.status == .conflicted })
+
+        source.conflicts = [:]
+        source.unstaged = [GitFileChange(path: "b", status: .modified)]
+        workingCopy.reload()
+        #expect(pane.isHidden)
+        #expect(workingCopy.conflictsList.files.isEmpty)
+
+        let clean = GitWorkingCopyViewController(source: FakeWorkingCopySource())
+        clean.loadViewIfNeeded()
+        #expect(clean.splitView.arrangedSubviews[0].isHidden)
+    }
+
+    @Test("a conflicted path is listed under Conflicts and not under Unstaged")
+    func conflictedPathLeavesUnstaged() {
+        let (workingCopy, _) = loaded(Self.conflictSource())
+        #expect(workingCopy.unstagedList.files.map(\.path) == ["b"])
+        #expect(workingCopy.unstagedHeader.stringValue == "Unstaged (1)")
+    }
+
+    @Test("a conflict with markers offers Open in Merge View, a separator, Ours…, Theirs… and Mark Resolved")
+    func conflictMenuWithMarkers() throws {
+        let (workingCopy, delegate) = loaded(Self.conflictSource())
+        let menu = try #require(workingCopy.conflictsList.contextMenu(forRow: 1))
+        #expect(menu.items.map(\.title) == ["Open in Merge View", "", "Resolve Using Ours…",
+                                            "Resolve Using Theirs…", "Mark Resolved"])
+        #expect(menu.items[1].isSeparatorItem)
+        #expect(menu.items.map { $0.accessibilityIdentifier() } == [
+            "git.workingCopy.menu.openMerge", "", "git.workingCopy.menu.resolveOurs",
+            "git.workingCopy.menu.resolveTheirs", "git.workingCopy.menu.markResolved"
+        ])
+        for index in [0, 2, 3, 4] { fire(menu.items[index]) }
+        #expect(delegate.intents == [.openMerge("both.txt"), .resolve(["both.txt"], .ours),
+                                     .resolve(["both.txt"], .theirs), .markResolved(["both.txt"])])
+    }
+
+    @Test("a conflict without markers (deleted by us) has no Open in Merge View")
+    func conflictMenuWithoutMarkers() throws {
+        let (workingCopy, delegate) = loaded(Self.conflictSource())
+        let menu = try #require(workingCopy.conflictsList.contextMenu(forRow: 2))
+        #expect(menu.items.map(\.title) == ["Resolve Using Ours…", "Resolve Using Theirs…", "Mark Resolved"])
+        fire(menu.items[1])
+        #expect(delegate.intents == [.resolve(["gone.txt"], .theirs)])
+    }
+
+    @Test("double-clicking a conflict with markers opens it in the merge view; one without does nothing")
+    func conflictDoubleClick() {
+        let (workingCopy, delegate) = loaded(Self.conflictSource())
+        workingCopy.conflictsList.doubleClick(row: 1)
+        workingCopy.conflictsList.doubleClick(row: 2)
+        #expect(delegate.intents == [.openMerge("both.txt")])
+    }
+
+    @Test("selecting a conflict shows its unstaged diff and clears the other lists")
+    func conflictSelection() {
+        let (workingCopy, delegate) = loaded(Self.conflictSource())
+        select(workingCopy.unstagedList, row: 0)
+        select(workingCopy.conflictsList, row: 1)
+        #expect(delegate.events == [.unstaged(paths: ["b"]), .unstaged(paths: ["both.txt"])])
+        #expect(workingCopy.unstagedList.tableView.selectedRow == -1)
+        select(workingCopy.stagedList, row: 0)
+        #expect(workingCopy.conflictsList.tableView.selectedRow == -1)
     }
 
     // MARK: - Intents
