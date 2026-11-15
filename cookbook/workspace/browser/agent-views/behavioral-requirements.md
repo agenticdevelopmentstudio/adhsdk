@@ -1,0 +1,47 @@
+
+- **three-segment-control**: The view switch MUST be a single-selection
+  control of three icon segments in the privacy toolbar, in the order
+  Website, Agent preview, Agent source.
+- **segment-tooltips**: Each segment MUST carry a tooltip: "Website — the
+  page as it is", "Agent preview — what the agent can see, with privacy
+  filters applied", and "Agent source — the page the agent receives, as
+  source".
+- **default-website**: A tab MUST start in Website mode.
+- **per-tab-not-persisted**: The mode MUST belong to one tab: switching
+  tabs MUST show each tab's own mode in the control and its content, and
+  the mode MUST NOT be saved, so a tab that is reopened or restored starts
+  in Website mode.
+- **website-shows-live-page**: In Website mode the tab's content MUST be
+  the live page, unchanged by this component.
+- **views-show-gatekeeper-output-only**: Both agent views MUST obtain
+  their content only from the agent gatekeeper's single page entry point,
+  as its HTML rendering, and MUST NOT read the live page any other way.
+- **preview-replaces-content-read-only**: In Agent preview mode the tab's
+  content MUST be replaced by a read-only web view showing the
+  gatekeeper's HTML.
+- **preview-javascript-off**: The preview MUST load with page JavaScript
+  disabled.
+- **preview-blocks-network**: The preview MUST block every network load,
+  for every URL and resource type.
+- **preview-no-navigation**: The preview MUST cancel every navigation
+  other than the initial load of the gatekeeper's HTML, including link
+  clicks.
+- **preview-paints-under-quiet-presentation**: In development builds the
+  preview MUST keep painting while its window is reported occluded, so it
+  can be photographed under quiet presentation.
+- **source-same-html**: In Agent source mode the tab's content MUST be a
+  read-only text view whose text is exactly the gatekeeper's HTML.
+- **source-highlighted**: The source view MUST highlight tags, attribute
+  names, attribute values and text in distinct theme colors, in a
+  monospaced font.
+- **unavailable-shown-as-reason**: When the gatekeeper returns an
+  unavailable page, both agent views MUST show its reason and no page
+  content.
+- **refresh-triggers**: An agent view MUST rebuild after the tab finishes
+  a navigation, after any agent privacy setting for the pane changes,
+  after the privacy words change, and after the site's agent list changes.
+- **refresh-coalesced**: Triggers arriving within 250 milliseconds of one
+  another MUST produce a single rebuild.
+- **website-mode-restores-page**: Switching back to Website mode MUST show
+  the live page again, in the state it was in, without reloading it.
+

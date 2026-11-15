@@ -3308,6 +3308,27 @@
       "path": "foundation/partner/partner-step-template",
       "rdid": "adhsdk.ingredient.foundation.partner.partner-step-template"
     },
+    "213f008f-6e11-4d6d-ba91-dbcd7e9330cc": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/ExtensionURLPromptController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/SafariExtensionsTopicPanel.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/extensions-topic",
+      "rdid": "adhsdk.ingredient.workspace.browser.extensions-topic"
+    },
     "21455a0c-b7b3-4121-8726-c6918d7af5a8": {
       "implementations": [
         {
@@ -4534,6 +4555,27 @@
       "kind": "ingredient",
       "path": "agentic-developer-hub-sdk/sdk/sources-ui/macos/chrome/window-drawer",
       "rdid": "adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.macos.chrome.window-drawer"
+    },
+    "31c4c156-8f47-4ad1-9b40-e4ab2d7f4fb7": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItem.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStore.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/hidden-items-store",
+      "rdid": "adhsdk.ingredient.workspace.browser.hidden-items-store"
     },
     "31fe479f-e95e-4f03-b957-faa2314a03be": {
       "implementations": [
@@ -6234,6 +6276,34 @@
       "path": "adh/hub/content/docs-client",
       "rdid": "adhsdk.ingredient.adh.hub.content.docs-client"
     },
+    "497f5d5f-e95b-473e-8798-cbe62ebcc425": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryListModel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryPanelViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryWindowController.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/history-panel",
+      "rdid": "adhsdk.ingredient.workspace.browser.history-panel"
+    },
     "49a8f652-c8fa-4dc6-affb-fe834b1e7837": {
       "implementations": [
         {
@@ -6726,6 +6796,20 @@
       "kind": "ingredient",
       "path": "status/dashboard/logic/health",
       "rdid": "adhsdk.ingredient.status.dashboard.logic.health"
+    },
+    "4ef7f4f9-1fa0-4267-ad82-0f35ba92a7d1": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/BrowserHistoryTool.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/agent-history-tool",
+      "rdid": "adhsdk.ingredient.workspace.browser.agent-history-tool"
     },
     "4f066e76-2eca-4cd7-8b73-840178e4edf3": {
       "implementations": [
@@ -7569,6 +7653,41 @@
       "kind": "recipe",
       "path": "ui/blocks/editor-section",
       "rdid": "adhsdk.recipe.ui.blocks.editor-section"
+    },
+    "5a246e6c-2125-4427-a8ab-2f43f2fecba5": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserBehaviorPanel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserAppearancePanel.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSiteDataWindowController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Settings/BrowserSettingsPanelViewController.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/browser-settings",
+      "rdid": "adhsdk.ingredient.workspace.browser.browser-settings"
     },
     "5b0fea72-dbb8-4299-a54f-dc16486df1ae": {
       "implementations": [
@@ -8991,6 +9110,20 @@
       "kind": "ingredient",
       "path": "registry-profile",
       "rdid": "adhsdk.ingredient.registry-profile"
+    },
+    "6cb13be9-e38c-496b-8326-5d1fdccfe778": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHideFromAgentButton.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/hide-from-agent",
+      "rdid": "adhsdk.ingredient.workspace.browser.hide-from-agent"
     },
     "6d23735b-3334-43ed-8585-d4c7854a4ac5": {
       "implementations": [
@@ -12125,6 +12258,27 @@
       "path": "workspace/extensions/vscode-api/tree-views/main-thread-tree-views",
       "rdid": "adhsdk.ingredient.workspace.extensions.vscode-api.tree-views.main-thread-tree-views"
     },
+    "8a4aca5f-977b-4f4c-86f6-16f4150132ac": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserMenuCommands.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandMenuBridge.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/browser-menu",
+      "rdid": "adhsdk.ingredient.workspace.browser.browser-menu"
+    },
     "8a51a893-a170-4cfc-a620-37939ae6b27b": {
       "implementations": [
         {
@@ -12175,11 +12329,102 @@
       "path": "system/system-windows/window-explorer-view",
       "rdid": "adhsdk.ingredient.system.system-windows.window-explorer-view"
     },
+    "8b187d98-795b-4a9d-9441-e7b8629fefe4": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserElementPicker.js",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/vendor/finder.js",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserSelectingMode.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserPickDialogController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsPopover.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/element-picker",
+      "rdid": "adhsdk.ingredient.workspace.browser.element-picker"
+    },
     "8b79c521-04f3-4a43-90db-ae6e0bba9f84": {
       "implementations": [],
       "kind": "ingredient",
       "path": "auth",
       "rdid": "adhsdk.ingredient.auth"
+    },
+    "8bd94d87-6096-4fb1-82a7-d5f712c2958f": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPage.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageAllowlist.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageBuilder.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageWalker.js",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/Automation/AgentPage/AgentPageSource.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/agent-page-builder",
+      "rdid": "adhsdk.ingredient.workspace.browser.agent-page-builder"
     },
     "8bdba644-d7ad-45e4-a2f5-0156bfd40e15": {
       "implementations": [
@@ -14455,6 +14700,20 @@
       "kind": "ingredient",
       "path": "adh/hub/monitored-sites",
       "rdid": "adhsdk.ingredient.adh.hub.monitored-sites"
+    },
+    "a40e6f97-06c4-4675-9ed7-9619a7c3e707": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/HiddenItems/BrowserHiddenItemsStyle.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/hidden-items-rendering",
+      "rdid": "adhsdk.ingredient.workspace.browser.hidden-items-rendering"
     },
     "a41760b2-4ffd-413b-970f-c0373c9bd3b6": {
       "implementations": [
@@ -17827,6 +18086,34 @@
       "kind": "ingredient",
       "path": "status/dashboard/logic/auto-configure",
       "rdid": "adhsdk.ingredient.status.dashboard.logic.auto-configure"
+    },
+    "cd862ce2-d93d-4094-be20-0abab33e2fa7": {
+      "implementations": [
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentViewMode.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentPreviewViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "planned"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/AgentViews/BrowserAgentSourceViewController.swift",
+          "platform": "macos"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "workspace/browser/agent-views",
+      "rdid": "adhsdk.ingredient.workspace.browser.agent-views"
     },
     "cda40dcf-db06-4171-a8f0-fbddf584f196": {
       "implementations": [

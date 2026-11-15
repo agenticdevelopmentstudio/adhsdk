@@ -87,6 +87,12 @@
       ]
     },
     {
+      "path": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane",
+      "platform": "macos",
+      "kind": "ui",
+      "group": "workspace/browser"
+    },
+    {
       "path": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands",
       "platform": "macos",
       "kind": "ui",

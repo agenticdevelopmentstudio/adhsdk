@@ -1,7 +1,7 @@
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| multi-tabbed-001 | top-edge-enabled-by-default | Construct a new view | The top edge is enabled; the right, bottom, and left edges are disabled |
+| multi-tabbed-001 | global-default-edges | Construct a new view with `tabs.positions` at its default | The top edge is enabled; the right, bottom, and left edges are disabled |
 | multi-tabbed-002 | edge-toggle-updates-bar-visibility | View loaded; enable the bottom edge | The bottom edge's tab bar becomes visible (no longer hidden) in the view hierarchy; the edge layout is rebuilt |
 | multi-tabbed-003 | hidden-edge-retains-tabs | Add a tab on the bottom edge; disable the bottom edge; re-enable it | The bottom edge's tabs are unchanged throughout, and its button reappears once re-enabled |
 | multi-tabbed-004 | edge-state-change-triggers-fallback-activation | Active tab lives on the top edge; disable the top edge | Fallback activation runs; the active tab changes (to another tab or none) |
@@ -46,4 +46,10 @@
 | multi-tabbed-043 | Error states (Edge Cases) | Set a delegate, then let it deallocate (no strong reference remains); remove the last tab on an edge | The tab is removed from that edge's tabs (the mutation completes); no crash occurs even though the delegate reference is now empty |
 | multi-tabbed-044 | first-tab-on-enabled-edge-auto-activates | Edge has no tabs and is enabled; insert a tab at index 0 directly (not the append operation) | The inserted tab becomes active |
 | multi-tabbed-045 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| multi-tabbed-046 | global-default-edges | Set `tabs.positions` to the left edge; load a view | Left edge enabled; top, right and bottom disabled |
+| multi-tabbed-047 | edges-never-empty | Store an empty `tabs.positions`; read it | Reads as the top edge alone |
+| multi-tabbed-048 | edges-never-empty | `tabs.positions` is the left edge alone; disable the left edge in the setting | Refused; the setting is still the left edge alone |
+| multi-tabbed-049 | explicit-edges-stop-following-global | Load a view following the setting (left); enable the bottom edge explicitly; change the setting to right | View keeps left and bottom; after clearing the override it shows right alone |
+| multi-tabbed-050 | single-edge-hosts-use-primary-edge | Enabled edges right and bottom | Primary edge is right |
+| multi-tabbed-051 | single-edge-hosts-use-primary-edge | A single-edge host holds three tabs on top with the second selected; the enabled edges change to left | All three tabs are on the left in the same order, the second still selected |
+| multi-tabbed-052 | top-accessory-independent-of-edges | Set a top accessory; enable only the left edge | The accessory's bottom meets the content area's top; the accessory is not inside the left bar |

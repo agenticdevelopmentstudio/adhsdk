@@ -1,0 +1,129 @@
+
+- **single-gatekeeper**: The component MUST be the only source of page
+  content for every agent page read — the snapshot, text and find tools,
+  the references click, type, fill, select and hover resolve, and the text
+  a wait condition is checked against — for the in-app chats and the
+  external tool server alike; no agent-facing tool MUST read page content
+  by any other route except the raw-page tools in the situations
+  `raw-page-tools-refused-when-filtered` allows.
+- **always-runs**: The component MUST run for every agent page read
+  whatever the privacy settings are; there MUST be no branch on any
+  privacy setting that chooses whether to use it. With every privacy
+  feature off it MUST still enforce the allowlist and skip hidden content.
+- **built-up-not-trimmed**: The component MUST construct its result only
+  from nodes the walker emits and it has re-validated; it MUST NOT copy,
+  serialize or pass through any markup, script, style or attribute of the
+  live page that it did not itself construct.
+- **allowlist-defined-once**: The allowlist of node kinds and per-kind
+  attributes MUST be defined once, on the host side, and MUST be passed to
+  the walker as an argument of each walk; the walker MUST NOT carry its own
+  copy.
+- **walker-emits-allowlisted-only**: The walker MUST emit only nodes whose
+  kind is on the allowlist it was given and, on each node, only attributes
+  the allowlist permits for that kind, and MUST give every emitted node a
+  reference.
+- **walker-skips-hidden-nodes**: The walker MUST NOT visit a node, or any
+  node beneath it, whose computed display is none, whose computed
+  visibility is hidden, that carries the `hidden` attribute, or that
+  carries `aria-hidden="true"`.
+- **user-hidden-items-hidden-from-agent**: Because an item hidden by the
+  user's "hide distracting items" list is hidden by a display-none rule,
+  the walker MUST NOT visit it either; the agent list MUST be the only way
+  to hide something from the agent alone.
+- **walker-skips-agent-list**: The walker MUST NOT visit a node, or any
+  node beneath it, that matches any enabled agent-list selector for the
+  page's site.
+- **invalid-exclude-selector-isolated**: An agent-list selector the
+  document cannot evaluate MUST exclude nothing on its own, MUST be
+  reported in the walk's warnings, and MUST NOT stop any other selector
+  from excluding what it matches.
+- **scope-within-walk**: A scope argument on the snapshot or text tools
+  MUST select a subtree within the gatekeeper's own walk, with agent-list
+  exclusion still applied inside it; a scope whose element, or any of its
+  ancestors, matches an enabled agent-list selector MUST yield an empty
+  root.
+- **unknown-kind-dropped-with-subtree**: The component MUST drop a node
+  whose kind is not on the allowlist, or that it cannot classify, together
+  with its whole subtree.
+- **unlisted-attribute-dropped**: The component MUST drop every attribute
+  of a node that the allowlist does not permit for that node's kind.
+- **href-sanitized**: The component MUST keep a link's `href` only when it
+  is an absolute `http` or `https` address after a relative address is
+  resolved against the page's address; any other address (including
+  `javascript:`, `data:` and anything that does not parse) MUST be dropped.
+- **concealed-before-insertion**: The component MUST pass every string —
+  node text, value, page title, every attribute value and every `href` —
+  through the privacy concealment in force before the node holding it is
+  created, so no real privacy word reaches the result in any rendering.
+- **hide-images**: When the Hide Images setting is on, the component MUST
+  drop every image node; when it is off, an image MUST enter the result
+  only as its alternative text, never as an image source.
+- **value-kept-only-for-form-controls**: The component MUST keep a node's
+  value only for text fields, selects, checkboxes and radio buttons, and
+  MUST never keep the value of a password field.
+- **fail-closed-on-walker-failure**: When the walker throws, does not
+  finish within its timeout (1500 milliseconds by default), or returns a
+  payload that does not decode, the component MUST return an empty page —
+  no root — carrying a reason that begins `Agent view unavailable: `, and
+  MUST NOT return any page content.
+- **fail-closed-on-vault**: When the privacy concealment is unavailable
+  (the words cannot be read) or conflicting (a stand-in holds a real
+  word), the component MUST return an empty page carrying a reason that
+  begins `Agent view unavailable: ` before it reads the payload, even when
+  the payload is valid.
+- **no-partial-content-on-failure**: On any failure the component MUST
+  return the empty page alone and MUST NOT return any part of the page
+  built before the failure was found.
+- **one-value-three-renderings**: The component MUST produce one
+  immutable page value from which the snapshot tree, the text and the
+  HTML are all rendered; no rendering MUST read the page or the walker's
+  payload on its own.
+- **snapshot-tool-contract-unchanged**: The snapshot rendering MUST
+  reproduce today's tree format, line for line, for the equivalent tree,
+  and MUST honor the existing options — interactive only, depth, scope,
+  include URLs, delta — and generation-stamped references; existing tool
+  descriptions MUST remain true.
+- **refs-drive-actions**: Every reference in the result MUST be one that
+  click, type, fill, select and hover resolve to the same element.
+- **selector-recorded-per-node**: Each node MUST record a selector for its
+  element at build time, so a later pick on that node in the Agent preview
+  can be mapped back to the page.
+- **html-rendering-safe**: The HTML rendering MUST escape every string,
+  MUST emit only elements it maps from node kinds, MUST put the node's
+  reference on each element it emits as `data-adk-ref`, MUST emit no
+  `script` element and no `style` attribute, and MUST render an image as a
+  text placeholder holding its alternative text, never as an element with
+  a source.
+- **unavailable-page-renders-reason**: An unavailable page MUST render as
+  its reason alone — one paragraph in the HTML, the reason as the text and
+  as the tool result.
+- **unavailable-reason-is-the-result**: When the page is unavailable, the
+  snapshot, text and find tools MUST return its reason as their result,
+  not an error that could lead a caller to retry against the raw page.
+- **string-path**: The component's string path MUST return a string
+  unchanged when agent privacy is off, concealed with the privacy words
+  when it is on, and empty when the vault is unavailable or conflicting.
+- **raw-page-tools-refused-when-filtered**: The screenshot, click-at and
+  evaluate tools, which see the page without the gatekeeper, MUST be
+  refused when agent privacy is on or when the page's site has any enabled
+  agent-list entry; the agent-list refusal MUST say "This site has items
+  hidden from the agent, so tools that see the raw page are refused here."
+- **raw-page-tools-allowed-when-unfiltered**: With agent privacy off and no
+  enabled agent-list entry for the site, the screenshot, click-at and
+  evaluate tools MUST NOT be refused by this component.
+- **console-refused-under-privacy**: The console tool MUST be refused
+  while agent privacy is on, with the sentence "Agent Privacy is on for
+  this browser pane, so console output is not shared."
+- **wait-for-uses-agent-text**: A wait condition on text MUST be evaluated
+  against the result's text, never the live document, so text present only
+  in excluded or hidden content never satisfies it.
+- **find-uses-agent-page**: The find tool MUST search the result's text and
+  return references from the result.
+- **titles-dialogs-focus-through-string-path**: Page titles in the pane
+  list and in action replies, script dialog messages, and the
+  focused-element description in action replies MUST pass through the
+  string path; a focused element whose reference is not in the current
+  result MUST be omitted from the reply.
+- **history-through-string-path**: Every title and address the history
+  tool returns MUST pass through the string path.
+
