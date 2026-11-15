@@ -269,8 +269,9 @@ extension UserSettings {
     /// privacy button at its leading edge.
     public static let browserPrivacyShowToolbar = UserSetting<Bool>("browser.privacy.show_toolbar", default: false)
     /// Whether the page's images are drawn as a crossed-out eye instead
-    /// (Agent Privacy's Hide Images), so neither the person's screen nor a
-    /// model's screenshot shows them.
+    /// (Agent Privacy's Hide Images). A style sheet does it, so it covers
+    /// what `BrowserHiddenImages` lists and no more, and a model's screenshot
+    /// shows whatever it misses.
     public static let browserPrivacyHideImages = UserSetting<Bool>("browser.privacy.hide_images", default: false)
 
     // Developer

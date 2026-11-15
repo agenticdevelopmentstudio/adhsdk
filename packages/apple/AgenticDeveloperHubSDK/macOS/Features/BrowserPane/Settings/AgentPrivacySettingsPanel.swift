@@ -27,9 +27,16 @@ final class AgentPrivacySettingsGroup {
     static let helpTopics: [ComposableSettings.PanelHelp.Topic] = [
         .init(
             title: "Agent Privacy",
-            body: "Hide Images draws every image on the page as an eye with a line "
-                + "through it, on the page showing and every page after, so neither your "
-                + "screen nor an agent's screenshot shows them. "
+            body: "Hide Images draws the page's pictures as an eye with a line through "
+                + "it, in every frame, on the page showing and every page after: each "
+                + "image and image button becomes the eye; background images (gradients "
+                + "too), list bullet images and border images are removed; and videos, "
+                + "canvases and embedded objects are hidden. It is a style sheet, so what "
+                + "a style sheet cannot reach still shows: an image inside a component's "
+                + "closed shadow root, one a page draws as generated content, and anything "
+                + "on a page that rewrites itself until its next page. An agent's "
+                + "screenshot is what is on screen and has no protection of its own from "
+                + "Hide Images; Conceal privacy words from agents is what refuses it. "
                 + "Conceal privacy words from agents makes every model that reads or "
                 + "drives a browser see it through the privacy words: each real word in "
                 + "what a browser tool hands back — the page's text, its snapshot, its "
