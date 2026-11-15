@@ -444,3 +444,61 @@ struct GitClientLocaleTests {
         #expect(GitClient.baseEnvironment["LC_CTYPE"] == nil)
     }
 }
+
+/// `pushDestination(of:)` is git's own `<branch>@{push}`: it follows `push.default`, refuses
+/// what git refuses, and never hands git a dash-led branch.
+@Suite("GitClient push destination", .serialized)
+struct GitClientPushDestinationTests {
+    private let client = GitClient(configuration: GitClientConfiguration(
+        extraEnvironment: ["GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1"]
+    ))
+
+    @Test("a tracked branch resolves to its remote branch; push.default=upstream follows the upstream")
+    func resolves() async throws {
+        let remote = try await GitTestRepository.makeBare()
+        defer { remote.tearDown() }
+        let clone = try await GitTestRepository.clone(of: remote, prefix: "git-push-destination")
+        defer { clone.tearDown() }
+        try clone.write("a\n", to: "a.txt")
+        try await clone.run(["add", "a.txt"])
+        try await clone.run(["commit", "-q", "-m", "a"])
+        try await clone.run(["push", "--quiet", "-u", "origin", "main"])
+        try await clone.run(["push", "--quiet", "origin", "main:feature"])
+        try await clone.run(["branch", "--quiet", "--track", "feat", "origin/feature"])
+
+        #expect(try await client.pushDestination(of: "main", in: clone.root) == "origin/main")
+        let refused = try? await client.pushDestination(of: "feat", in: clone.root)
+        #expect(refused == nil)
+        try await clone.run(["config", "push.default", "upstream"])
+        #expect(try await client.pushDestination(of: "feat", in: clone.root) == "origin/feature")
+    }
+
+    @Test("a branch with no upstream has no destination")
+    func failsWithoutUpstream() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-push-destination")
+        defer { repository.tearDown() }
+        try repository.write("a\n", to: "a.txt")
+        try await repository.run(["add", "a.txt"])
+        try await repository.run(["commit", "-q", "-m", "a"])
+        do {
+            _ = try await client.pushDestination(of: "main", in: repository.root)
+            Issue.record("expected a failure")
+        } catch let GitClientError.commandFailed(verb, _, standardError) {
+            #expect(verb == "rev-parse")
+            #expect(standardError.contains("no upstream"))
+        }
+    }
+
+    @Test("a dash-led or empty branch is refused before git runs")
+    func dashLedRefused() async throws {
+        let directory = URL(fileURLWithPath: "/nonexistent-\(UUID().uuidString)")
+        for name in ["-q", "--all", ""] {
+            do {
+                _ = try await client.pushDestination(of: name, in: directory)
+                Issue.record("expected \(name) to be refused")
+            } catch let error as GitClientError {
+                #expect(error == .invalidArgument(verb: "rev-parse", argument: name))
+            }
+        }
+    }
+}

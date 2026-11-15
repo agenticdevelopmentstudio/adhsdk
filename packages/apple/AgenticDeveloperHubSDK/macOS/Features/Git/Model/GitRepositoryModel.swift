@@ -301,6 +301,11 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         try await client.lastCommitMessage(in: root, caller: caller)
     }
 
+    /// Where `git push` would send local `branch` (its `@{push}`, such as `origin/feature`).
+    public func pushDestination(of branch: String, caller: GitCaller = GitCaller()) async throws -> String {
+        try await client.pushDestination(of: branch, in: root, caller: caller)
+    }
+
     // MARK: Content
 
     public func diff(_ target: GitDiffTarget, options: GitDiffOptions) async throws -> GitDiff {

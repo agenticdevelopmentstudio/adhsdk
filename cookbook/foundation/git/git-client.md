@@ -294,6 +294,16 @@ picker) is a consumer of this contract, not part of it.
   <HEAD>`) with trailing whitespace and newlines trimmed, and MUST return
   nothing on an unborn HEAD, detected by HEAD failing to resolve to a
   commit before `log` runs, so it never throws for that case.
+- **push-destination**: The push-destination verb MUST return where `git push`
+  would send a local branch as git itself resolves it, `git rev-parse
+  --abbrev-ref --symbolic-full-name <branch>@{push}` through the execution
+  step (so `push.default`, `branch.<name>.pushRemote` and
+  `remote.pushDefault` apply), trimmed, such as `origin/feature`. When git
+  names no single destination (no upstream, `simple` with a name unlike the
+  upstream's, a local `.` upstream, or a destination whose remote-tracking
+  branch does not exist yet) it MUST fail as command-failed with git's
+  message. An empty or dash-led branch MUST be refused as invalid-argument
+  before anything is spawned.
 
 ### Execution, configuration and attribution
 
@@ -685,6 +695,8 @@ component.
 | git-client-055 | user-message | Command-failed with standard error `  fatal: nope` plus a newline; command-failed with only a newline; timed-out | `fatal: nope`; each error's user-facing description. |
 | git-client-056 | environment-messages-in-english | A script standing in for git that prints `$LC_MESSAGES|$LC_CTYPE` | `C|` followed by the parent's `LC_CTYPE`; the defaults set neither `LC_ALL` nor `LC_CTYPE`. |
 | git-client-057 | invalid-argument | `.pushToUpstream` with a remote `-q`, a branch `-f`, or an empty upstream branch | Refused before spawning, naming that operand. |
+| git-client-058 | push-destination | `main` tracking `origin/main`; `feat` tracking `origin/feature`, under `simple`, then under `push.default=upstream` | `origin/main`; `feat` fails, then `origin/feature`. |
+| git-client-059 | push-destination | A branch with no upstream; then the branches `-q`, `--all` and an empty name | Command-failed naming `rev-parse`, its message saying no upstream; each name refused as invalid-argument before spawning. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -1057,4 +1069,4 @@ one.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
-| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). |

@@ -58,3 +58,5 @@
 | git-client-055 | user-message | Command-failed with standard error `  fatal: nope` plus a newline; command-failed with only a newline; timed-out | `fatal: nope`; each error's user-facing description. |
 | git-client-056 | environment-messages-in-english | A script standing in for git that prints `$LC_MESSAGES|$LC_CTYPE` | `C|` followed by the parent's `LC_CTYPE`; the defaults set neither `LC_ALL` nor `LC_CTYPE`. |
 | git-client-057 | invalid-argument | `.pushToUpstream` with a remote `-q`, a branch `-f`, or an empty upstream branch | Refused before spawning, naming that operand. |
+| git-client-058 | push-destination | `main` tracking `origin/main`; `feat` tracking `origin/feature`, under `simple`, then under `push.default=upstream` | `origin/main`; `feat` fails, then `origin/feature`. |
+| git-client-059 | push-destination | A branch with no upstream; then the branches `-q`, `--all` and an empty name | Command-failed naming `rev-parse`, its message saying no upstream; each name refused as invalid-argument before spawning. |

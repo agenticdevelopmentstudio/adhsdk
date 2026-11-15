@@ -209,6 +209,16 @@
   <HEAD>`) with trailing whitespace and newlines trimmed, and MUST return
   nothing on an unborn HEAD, detected by HEAD failing to resolve to a
   commit before `log` runs, so it never throws for that case.
+- **push-destination**: The push-destination verb MUST return where `git push`
+  would send a local branch as git itself resolves it, `git rev-parse
+  --abbrev-ref --symbolic-full-name <branch>@{push}` through the execution
+  step (so `push.default`, `branch.<name>.pushRemote` and
+  `remote.pushDefault` apply), trimmed, such as `origin/feature`. When git
+  names no single destination (no upstream, `simple` with a name unlike the
+  upstream's, a local `.` upstream, or a destination whose remote-tracking
+  branch does not exist yet) it MUST fail as command-failed with git's
+  message. An empty or dash-led branch MUST be refused as invalid-argument
+  before anything is spawned.
 
 ### Execution, configuration and attribution
 

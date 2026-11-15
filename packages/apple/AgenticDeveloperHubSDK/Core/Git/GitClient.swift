@@ -607,6 +607,33 @@ public actor GitClient {
         return String(message)
     }
 
+    /// Where `git push` would send local `branch`, as git resolves it: `<branch>@{push}`
+    /// (`rev-parse --abbrev-ref --symbolic-full-name`), short, such as `origin/feature`.
+    /// It honours `push.default`, `branch.<name>.pushRemote` and `remote.pushDefault`.
+    ///
+    /// Throws `.commandFailed` with git's message when git cannot name one destination:
+    /// no upstream, `simple` with a name unlike the upstream's, a local (`.`) upstream, or
+    /// a destination whose remote-tracking branch does not exist yet. A `branch` that is
+    /// empty or begins with `-` throws `.invalidArgument` before anything is spawned.
+    public func pushDestination(of branch: String, in directory: URL, caller: GitCaller = GitCaller())
+        async throws -> String {
+        guard !branch.isEmpty, !branch.hasPrefix("-") else {
+            throw GitClientError.invalidArgument(verb: "rev-parse", argument: branch)
+        }
+        let output = try await execute(
+            verb: "rev-parse",
+            arguments: ["--abbrev-ref", "--symbolic-full-name", "\(branch)@{push}"],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        let destination = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !destination.isEmpty else {
+            throw GitClientError.commandFailed(verb: "rev-parse", exitStatus: 0, standardError: "")
+        }
+        return destination
+    }
+
     // MARK: - Global configuration
 
     /// Everything in the user's global git configuration.

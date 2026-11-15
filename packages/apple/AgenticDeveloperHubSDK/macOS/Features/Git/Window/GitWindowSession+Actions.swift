@@ -265,17 +265,44 @@ extension GitWindowSession {
         await push(head)
     }
 
-    /// A branch with an upstream pushes to that upstream, by name, leaving its tracking as
-    /// it is, so `feat` tracking `origin/feature` updates `origin/feature`. A branch with
-    /// none is pushed to the push remote under its own name, setting that as its upstream.
+    /// Pushes `branch` where git would. The checked-out branch with an upstream runs a
+    /// plain `git push`, so `push.default`, `pushRemote` and `remote.pushDefault` decide,
+    /// and a refusal is shown as git words it. Any other branch with an upstream goes to its
+    /// `@{push}`, by refspec, tracking untouched; when git names no destination, nothing is
+    /// pushed. Only a branch with no upstream is pushed under its own name, setting it.
     private func push(_ branch: GitRef) async {
-        guard let remotes = await listRemotes(failureTitle: "Push failed") else { return }
-        if let upstream = branch.upstream, let target = Self.split(upstream, among: remotes) {
-            await execute(.pushToUpstream(remote: target.remote, branch: branch.name, upstreamBranch: target.branch))
+        if branch.upstream != nil {
+            if branch.fullName == model.headBranch?.fullName {
+                await execute(.push)
+            } else {
+                await pushToDestination(branch)
+            }
             return
         }
+        guard let remotes = await listRemotes(failureTitle: "Push failed") else { return }
         guard let remote = pushRemote(among: remotes, failureTitle: "Push failed") else { return }
         await execute(.pushSettingUpstream(remote: remote, branch: branch.name))
+    }
+
+    /// Pushes a branch that is not checked out to its `@{push}`, or shows that it has none.
+    private func pushToDestination(_ branch: GitRef) async {
+        let destination: String
+        do {
+            destination = try await whileGitRuns { try await model.pushDestination(of: branch.name) }
+        } catch {
+            guard !(error is CancellationError) else { return }
+            Self.logger.error("Push failed: \(GitClientError.logDescription(of: error), privacy: .public)")
+            presenter?.showFailure(
+                title: "Push failed",
+                message: "\(branch.name) has no push destination. \(GitClientError.userMessage(of: error))")
+            return
+        }
+        guard let remotes = await listRemotes(failureTitle: "Push failed") else { return }
+        guard let target = Self.split(destination, among: remotes) else {
+            showFailure(title: "Push failed", message: "\(branch.name) has no push destination on a remote.")
+            return
+        }
+        await execute(.pushToUpstream(remote: target.remote, branch: branch.name, upstreamBranch: target.branch))
     }
 
     private func pushRemote(for branch: GitRef?, failureTitle: String) async -> String? {

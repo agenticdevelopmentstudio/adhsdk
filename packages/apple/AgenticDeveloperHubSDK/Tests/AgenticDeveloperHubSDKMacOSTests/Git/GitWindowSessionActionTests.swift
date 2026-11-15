@@ -374,10 +374,11 @@ struct GitWindowSessionActionTests {
         #expect(model.headBranch?.upstream == "origin/topic")
     }
 
-    @Test("a branch named unlike its upstream pushes to that upstream and keeps tracking it, from HEAD or not")
+    @Test("with push.default=upstream, a branch named unlike its upstream pushes there and keeps tracking it")
     func pushToADifferentlyNamedUpstream() async throws {
         let (remote, clone) = try await makeRemoteAndClone()
         defer { remote.tearDown(); clone.tearDown() }
+        try await clone.run(["config", "push.default", "upstream"])
         try await clone.run(["push", "--quiet", "origin", "main:feature"])
         try await clone.run(["fetch", "--quiet", "origin"])
         try await clone.run(["checkout", "--quiet", "-b", "feat", "--track", "origin/feature"])
@@ -402,6 +403,94 @@ struct GitWindowSessionActionTests {
         #expect(try await remote.sha("feature") == clone.sha("feat"))
         #expect(await !branchExists(remote, "feat"))
         #expect(try ref(model, "refs/heads/feat").upstream == "origin/feature")
+    }
+
+    @Test("a branch made from origin/main is never pushed onto main, from HEAD or from the menu")
+    func branchFromARemoteBranchIsNotPushedOntoIt() async throws {
+        let (remote, clone) = try await makeRemoteAndClone()
+        defer { remote.tearDown(); clone.tearDown() }
+        try await clone.run(["config", "push.default", "simple"])
+        try await clone.run(["config", "branch.autoSetupMerge", "true"])
+        let shared = try await remote.sha("main")
+        let presenter = StubPresenter()
+        presenter.textAnswers = [["topic"]]
+        let (model, session) = await makeSession(clone, presenter: presenter)
+
+        await act(session, .ref(.createBranch(from: try ref(model, "refs/remotes/origin/main"))))
+        #expect(try await headName(clone) == "topic")
+        #expect(model.headBranch?.upstream == "origin/main")
+        try await commitFile(clone, "two.txt", "two\n", at: 200)
+        await model.refresh([.refs, .workingCopy])
+
+        session.push()
+        await session.actionTask?.value
+        #expect(presenter.failures.count == 1)
+        #expect(presenter.failures.first?.hasPrefix("Push failed: ") == true)
+        #expect(try await remote.sha("main") == shared)
+        #expect(await !branchExists(remote, "topic"))
+
+        try await clone.run(["checkout", "--quiet", "main"])
+        await model.refresh([.refs, .workingCopy])
+        await act(session, .ref(.push(try ref(model, "refs/heads/topic"))))
+        #expect(presenter.failures.count == 2)
+        #expect(presenter.failures.last?.hasPrefix("Push failed: topic has no push destination.") == true)
+        #expect(try await remote.sha("main") == shared)
+        #expect(await !branchExists(remote, "topic"))
+        #expect(try ref(model, "refs/heads/topic").upstream == "origin/main")
+    }
+
+    @Test("a branch with a pushRemote is pushed from the menu to that remote, tracking untouched")
+    func menuPushGoesToThePushRemote() async throws {
+        let (remote, clone) = try await makeRemoteAndClone()
+        defer { remote.tearDown(); clone.tearDown() }
+        let fork = try await GitTestRepository.makeBare()
+        defer { fork.tearDown() }
+        try await clone.run(["remote", "add", "fork", fork.root.path])
+        try await clone.run(["config", "push.default", "current"])
+        try await clone.run(["push", "--quiet", "origin", "main:pr"])
+        try await clone.run(["push", "--quiet", "fork", "main:pr"])
+        try await clone.run(["fetch", "--quiet", "--all"])
+        try await clone.run(["branch", "--quiet", "--track", "pr", "origin/pr"])
+        try await clone.run(["config", "branch.pr.pushRemote", "fork"])
+        try await clone.run(["checkout", "--quiet", "pr"])
+        try await commitFile(clone, "two.txt", "two\n", at: 200)
+        try await clone.run(["checkout", "--quiet", "main"])
+        let origin = try await remote.sha("pr")
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(clone, presenter: presenter)
+
+        await act(session, .ref(.push(try ref(model, "refs/heads/pr"))))
+
+        #expect(presenter.failures.isEmpty)
+        #expect(try await fork.sha("pr") == clone.sha("pr"))
+        #expect(try await remote.sha("pr") == origin)
+        #expect(try ref(model, "refs/heads/pr").upstream == "origin/pr")
+    }
+
+    @Test("a branch tracking a local branch fails to push and keeps its upstream, from HEAD or the menu")
+    func localUpstreamFails() async throws {
+        let (remote, clone) = try await makeRemoteAndClone()
+        defer { remote.tearDown(); clone.tearDown() }
+        try await clone.run(["config", "push.default", "simple"])
+        try await clone.run(["checkout", "--quiet", "-b", "loc", "--track", "main"])
+        try await commitFile(clone, "two.txt", "two\n", at: 200)
+        let main = try await clone.sha("main")
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(clone, presenter: presenter)
+        #expect(model.headBranch?.upstream == "main")
+
+        session.push()
+        await session.actionTask?.value
+        #expect(presenter.failures.count == 1)
+
+        try await clone.run(["checkout", "--quiet", "main"])
+        await model.refresh([.refs, .workingCopy])
+        await act(session, .ref(.push(try ref(model, "refs/heads/loc"))))
+        #expect(presenter.failures.count == 2)
+        #expect(presenter.failures.last?.hasPrefix("Push failed: loc has no push destination.") == true)
+        #expect(try await clone.sha("main") == main)
+        #expect(await !branchExists(remote, "loc"))
+        #expect(try ref(model, "refs/heads/loc").upstream == "main")
     }
 
     @Test("the upstream splits at the longest remote name that prefixes it")
