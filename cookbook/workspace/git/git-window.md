@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.8.0
+version: 1.8.1
 status: review
 language: en
 created: 2026-11-14
@@ -112,7 +112,7 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **banner-follows-model**: The banner's state MUST be the model's `operationState` at session start, on every change that touches `.operation` or the working copy, and on `reloadAll`, so an operation begun outside the window shows once the model reads it.
 - **ref-drop-on-history**: A ref dropped on the history list MUST pop up the sidebar's `dropMenu(forRefNamed:)` over the history table through the sidebar's `menuPresenter`; a ref with no drop menu is refused by the history's `refDropValidator` and pops up nothing.
 - **commit-actions**: Cherry-pick and Revert MUST pass `mainline: 1` for a commit with more than one parent. A soft or mixed reset MUST run at once; a hard one MUST confirm `Reset <branch> to <shortID>?` / `Uncommitted changes are lost.` (destructive) first, naming `HEAD` when detached, where a reset is allowed.
-- **conflicts-resolve**: Resolve Using Ours… and Resolve Using Theirs… MUST confirm `Resolve N file(s) using ours?` (or theirs) / `Their changes to it are lost.` (`Our changes`, `them` for several) with the destructive action `Use Ours` or `Use Theirs`; declined, nothing runs. Confirmed, a path whose chosen side exists (`GitConflictKind.hasOurs` / `hasTheirs`) runs `.resolve(paths:side:)` then `.stage(paths:)`; one whose chosen side is a deletion runs `.removePaths`. Mark Resolved MUST run `.stage(paths:)` at once. Discard All MUST leave conflicted paths out.
+- **conflicts-resolve**: Resolve Using Ours… and Resolve Using Theirs… MUST confirm `Resolve N file(s) using ours?` (or theirs) / `Their changes to it are lost.` (`Our changes`, `them` for several) with the destructive action `Use Ours` or `Use Theirs`; declined, nothing runs. Confirmed, a path whose chosen side exists (`GitConflictKind.hasOurs` / `hasTheirs`) runs `.resolve(paths:side:)` then `.stage(paths:)`; one whose chosen side is a deletion runs `.removePaths`. Mark Resolved MUST run `.stage(paths:)` at once. Discard All MUST leave conflicted paths out. Stage All MUST stage only what the Unstaged list shows: with no conflicts `.stageAll`; with conflicts `.stage(paths:)` over the unstaged paths that are not conflicted (literal pathspecs), and nothing at all when none are left, so no conflict is marked resolved with its markers in it.
 - **merge-view**: `.openMerge(path)` MUST read the working file (`contents(path:at: nil, maximumBytes: nil)`), decode it as UTF-8 and parse it into a `GitConflictDocument`, then show it in the bottom pane's merge view; a file that does not decode or parse shows its unstaged diff instead, and a failed read fails under `Open failed`. The merge view's `.save(path:text:)` MUST write the text through the model's `writeResolution` (`Save failed` on error), then run `.stage([path])`, then return the bottom pane to the diff; `.cancel` returns it at once. Neither confirms. When a model change leaves the shown path no longer conflicted, the bottom pane MUST return to the diff.
 ## Appearance
 
@@ -193,6 +193,8 @@ The window keeps the project window's identifiers. Its panes carry `git.window.o
 | git-window-059 | conflicts-resolve | Resolve Using Ours… declined, then confirmed | one destructive `Use Ours` confirmation and the conflict kept; then the file is ours, staged and listed nowhere |
 | git-window-060 | conflicts-resolve | a UD `f.txt` (modified on `side`, deleted on `main`); Resolve Using Theirs…, confirmed | `Use Theirs`; no failure; no conflicts; the file gone from the tree and the index |
 | git-window-061 | conflicts-resolve | Discard All over a UU `f.txt` and untracked `new.txt` | `Discard changes to 1 file?`; the conflict kept |
+| git-window-062 | conflicts-resolve | Stage All over a UU `f.txt` and a modified tracked `other.txt` | nothing confirmed; `other.txt` staged; `f.txt` still unmerged and listed under Conflicts |
+| git-window-063 | conflicts-resolve | Stage All over a UU `f.txt` alone | nothing runs; no failure; the conflict kept |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -313,6 +315,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.8.1 | 2026-11-15 | Mike Fullerton | Stage All stages only the Unstaged list and leaves conflicts unmerged (git-window-062, 063) |
 | 1.8.0 | 2026-11-15 | Mike Fullerton | Conflicts: Resolve Using Ours… and Theirs… confirmed, then resolved and staged or removed; Mark Resolved stages; Discard All skips conflicts; the merge view opened from the working copy, saved through the model and staged; vectors 056-061 |
 | 1.7.0 | 2026-11-15 | Mike Fullerton | Merge and rebase from the sidebar's menus and drop menus without a confirmation; the operation banner's Continue, Skip and confirmed Abort through the funnel; the banner follows the model; refs dropped on the history; vectors 051-055 |
 | 1.6.0 | 2026-11-15 | Mike Fullerton | Diff patches: diff intents through the funnel, staged and unstaged with `git apply --cached`, discarded with `git apply --reverse` after a confirmation; vectors 048-050 |

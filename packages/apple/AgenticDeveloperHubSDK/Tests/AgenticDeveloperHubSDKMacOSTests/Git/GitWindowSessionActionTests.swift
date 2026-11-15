@@ -1420,4 +1420,41 @@ struct GitWindowSessionActionTests {
         #expect(presenter.confirmations.first?.title == "Discard changes to 1 file?")
         #expect(model.conflicts == ["f.txt": .bothModified])
     }
+
+    @Test("Stage All with a conflict stages only the listed files and leaves the conflict unmerged")
+    func stageAllSkipsConflicts() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "other.txt", "first\n", at: 50)
+        try await bothModifiedConflict(repository)
+        try repository.write("second\n", to: "other.txt")
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        #expect(model.conflicts == ["f.txt": .bothModified])
+
+        await act(session, .workingCopy(.stageAll))
+
+        #expect(presenter.confirmations.isEmpty)
+        #expect(presenter.failures.isEmpty)
+        #expect(model.conflicts == ["f.txt": .bothModified], "the conflict is still unmerged")
+        let unmerged = try await repository.run(["ls-files", "--unmerged", "--", "f.txt"])
+        #expect(!unmerged.isEmpty)
+        #expect(model.staged.map(\.path) == ["other.txt"])
+        #expect(session.workingCopy.conflictsList.files.map(\.path) == ["f.txt"])
+    }
+
+    @Test("Stage All with only conflicts left runs nothing")
+    func stageAllWithOnlyConflicts() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await bothModifiedConflict(repository)
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .workingCopy(.stageAll))
+
+        #expect(presenter.failures.isEmpty)
+        #expect(model.conflicts == ["f.txt": .bothModified])
+        #expect(model.staged.isEmpty)
+    }
 }

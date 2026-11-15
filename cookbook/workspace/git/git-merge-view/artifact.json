@@ -4,7 +4,7 @@
     "id": "deac5bd8-5e5f-43cf-bdfa-3a83b2298639",
     "title": "Git Merge View",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-15",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a3f99d67fcb93f13",
+  "synced": "f0ff3a6e020144f5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

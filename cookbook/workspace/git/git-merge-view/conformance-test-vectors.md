@@ -15,3 +15,4 @@ The fixture is `top`, a conflict `HEAD` (`ours one`, `ours two`) against `side` 
 | git-merge-view-010 | merge-save | Ours only; Save; then Next, Base, Save | disabled, nothing sent; then `.save(path: "f.txt", text: "top\nours one\nours two\nmiddle\ny\nbottom\n")` |
 | git-merge-view-011 | merge-show | choose and move, then `show` again | no choices, conflict 0, the new path |
 | git-merge-view-012 | merge-syntax | a Swift conflict with the TextMate fixture | both sides' rows carry coloured runs once the colouring lands |
+| git-merge-view-013 | merge-show | `show` the long fixture (first conflict at row 40) before the view is loaded, then load and lay it out at 900×600 | ours and theirs scrolled to `sideStarts[0] × rowHeight`, the result to `resultStarts[0] × rowHeight`; `1 of 2`; Previous disabled, Next enabled |

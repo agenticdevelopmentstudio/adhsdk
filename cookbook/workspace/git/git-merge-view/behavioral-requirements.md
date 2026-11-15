@@ -10,7 +10,7 @@
 
 ### Controls
 
-- **merge-show**: `show(path:document:)` MUST show the document with no choices made and the first conflict current, label the sides with the first conflict's marker labels (`Ours` and `Theirs` when a label is empty) and scroll to the first conflict.
+- **merge-show**: `show(path:document:)` MUST show the document with no choices made and the first conflict current, label the sides with the first conflict's marker labels (`Ours` and `Theirs` when a label is empty) and scroll to the first conflict. The scroll MUST happen whether `show` runs before or after the view is loaded: one the panes cannot take yet (no view, or no height) stays pending until the view is next laid out.
 - **merge-navigation**: `Previous` and `Next` MUST move `currentConflict` by one, never past the first or the last, and scroll ours (and theirs with it) to `sideStarts[current]` and the result to `resultStarts[current]`. Previous is enabled while there is an earlier conflict, Next while there is a later one. The position label reads `<n> of <total>` (1-based).
 - **merge-choose**: `Ours`, `Theirs` and `Both` MUST set the current conflict's choice to `.ours`, `.theirs` and `.oursThenTheirs`, and redraw all three panes. `Base` MUST set `.base` and is enabled only when the current conflict recorded a base.
 - **merge-save**: `Save` MUST be enabled exactly while `resolved(choices)` is non-nil, and send `.save(path:text:)` with that exact text. `Cancel` MUST send `.cancel`.

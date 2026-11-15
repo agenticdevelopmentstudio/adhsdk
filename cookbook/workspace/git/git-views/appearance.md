@@ -17,7 +17,7 @@ The header scrolls on its own above the changed-files list and takes at most hal
 
 ### Working copy
 
-Three panes in a horizontal-divider `ThemedSplitView`: staged, unstaged, then the commit box. Each list pane is a heading-weight caption header, with a trailing borderless small button (`Unstage All`, `Stage All`), over its changed-files list. The commit box is a `Commit Message` caption header over a scrolled native `NSTextView` (plain text, the theme's body font and primary text colour, no placeholder), then a row of the `Amend` checkbox and the `Commit` push button at the trailing edge.
+Four panes in a horizontal-divider `ThemedSplitView`: conflicts (hidden while there are none), staged, unstaged, then the commit box. Each list pane is a heading-weight caption header, with a trailing borderless small button on staged and unstaged (`Unstage All`, `Stage All`; the Conflicts header has none), over its changed-files list. The commit box is a `Commit Message` caption header over a scrolled native `NSTextView` (plain text, the theme's body font and primary text colour, no placeholder), then a row of the `Amend` checkbox and the `Commit` push button at the trailing edge.
 
 ### Diff
 

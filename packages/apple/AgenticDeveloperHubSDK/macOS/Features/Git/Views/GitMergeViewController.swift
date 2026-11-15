@@ -62,6 +62,8 @@ public final class GitMergeViewController: NSViewController {
     private(set) var layout: GitMergeLayout?
     private var colours: GitMergeColours?
     private var generation = 0
+    /// A scroll to the current conflict that `show` asked for and has not happened yet.
+    private var scrollPending = false
     private var scrollSync: LineViewerScrollSync?
     private let coloring: GitSyntaxColoring?
 
@@ -110,6 +112,14 @@ public final class GitMergeViewController: NSViewController {
         ])
         view = root
         render()
+        updateControls()
+    }
+
+    /// Finishes a scroll `show` asked for before the panes had a size: a `show` that runs
+    /// before the view is loaded, or before it is first laid out.
+    public override func viewDidLayout() {
+        super.viewDidLayout()
+        if scrollPending { scrollToCurrent() }
     }
 
     // MARK: - Showing a file
@@ -129,6 +139,7 @@ public final class GitMergeViewController: NSViewController {
         theirsLabel.stringValue = labels.theirs.isEmpty ? "Theirs" : labels.theirs
         render()
         updateControls()
+        scrollPending = true
         scrollToCurrent()
         loadColours()
     }
@@ -222,9 +233,14 @@ public final class GitMergeViewController: NSViewController {
         cancelButton.isEnabled = document != nil
     }
 
-    /// Scrolls ours (and theirs with it) and the result to the current conflict.
+    /// Scrolls ours (and theirs with it) and the result to the current conflict. Before
+    /// the panes have a height there is nothing to scroll, so the scroll stays pending
+    /// until `viewDidLayout`.
     private func scrollToCurrent() {
         guard isViewLoaded, let layout, layout.sideStarts.indices.contains(currentConflict) else { return }
+        let laidOut = [oursViewer, resultViewer].allSatisfy { $0.scrollView.contentView.bounds.height > 0 }
+        scrollPending = !laidOut
+        guard laidOut else { return }
         oursViewer.scrollToRow(layout.sideStarts[currentConflict])
         resultViewer.scrollToRow(layout.resultStarts[currentConflict])
     }

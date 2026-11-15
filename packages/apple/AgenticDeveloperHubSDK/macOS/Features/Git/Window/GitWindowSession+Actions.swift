@@ -77,7 +77,7 @@ extension GitWindowSession {
         switch intent {
         case .stage(let paths): await execute(.stage(paths: paths))
         case .unstage(let paths): await execute(.unstage(paths: paths))
-        case .stageAll: await execute(.stageAll)
+        case .stageAll: await stageAll()
         case .unstageAll: await execute(.unstageAll)
         case .discard(let paths): await discard(paths)
         case .discardAll: await discard(model.unstaged.map(\.path).filter { model.conflicts[$0] == nil })
@@ -89,6 +89,20 @@ extension GitWindowSession {
         case .markResolved(let paths): await execute(.stage(paths: paths))
         case .openMerge(let path): await openMerge(path)
         }
+    }
+
+    /// Stages what the Unstaged list shows. With no conflicts that is everything, `add -A`;
+    /// with conflicts it is the unstaged paths that are not conflicted, by literal
+    /// pathspec, so no conflict is marked resolved with its markers in it. Nothing left
+    /// to stage runs nothing.
+    private func stageAll() async {
+        guard !model.conflicts.isEmpty else {
+            await execute(.stageAll)
+            return
+        }
+        let paths = model.unstaged.map(\.path).filter { model.conflicts[$0] == nil }
+        guard !paths.isEmpty else { return }
+        await execute(.stage(paths: paths))
     }
 
     // MARK: - Conflicts

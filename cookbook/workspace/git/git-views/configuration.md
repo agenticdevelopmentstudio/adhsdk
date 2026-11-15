@@ -6,7 +6,7 @@
 | `source` (history) | `GitHistoryDataSource` | none | Where the history list reads commits, graph rows, the query and the refs at a commit, and asks for pages and queries. |
 | `delegate` (history) | `GitHistoryDelegate?` | nil | Told which commit is selected, or nil, and every `GitCommitIntent` with its commit. |
 | `pasteboard` (history) | `NSPasteboard` | `.general` | Where Copy SHA puts the sha. |
-| `identifier` (file list) | `String` | none | The list's context (`commit`, `staged`, `unstaged`); its root identifier is `git.fileList.<identifier>`. |
+| `identifier` (file list) | `String` | none | The list's context (`commit`, `conflicts`, `staged`, `unstaged`); its root identifier is `git.fileList.<identifier>`. |
 | `files` (file list) | `[GitFileListItem]` | `[]` | The rows. |
 | `delegate` (file list) | `GitFileListDelegate?` | nil | Told which item is selected, or nil. |
 | `source` (detail) | `GitContentSource` | none | Where the commit detail reads the commit's diff. |

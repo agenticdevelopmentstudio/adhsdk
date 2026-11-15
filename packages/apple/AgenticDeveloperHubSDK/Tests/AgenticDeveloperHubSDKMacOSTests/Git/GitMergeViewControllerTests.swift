@@ -101,6 +101,26 @@ struct GitMergeViewControllerTests {
         #expect(offset(controller.resultViewer) == CGFloat(layout.resultStarts[0]) * height)
     }
 
+    @Test("a file shown before the view loads is scrolled to its first conflict once the panes are laid out")
+    func showBeforeLoadScrollsToFirstConflict() throws {
+        let controller = GitMergeViewController(coloring: nil)
+        controller.show(path: "f.txt", document: try #require(GitConflictDocument.parse(Self.longText)))
+        #expect(!controller.isViewLoaded, "show must not load the view itself")
+
+        controller.view.frame = NSRect(x: 0, y: 0, width: 900, height: 600)
+        controller.view.layoutSubtreeIfNeeded()
+
+        let layout = try #require(controller.layout)
+        let height = controller.oursViewer.rowHeight
+        #expect(layout.sideStarts[0] == 40)
+        #expect(offset(controller.oursViewer) == CGFloat(layout.sideStarts[0]) * height)
+        #expect(offset(controller.theirsViewer) == offset(controller.oursViewer))
+        #expect(offset(controller.resultViewer) == CGFloat(layout.resultStarts[0]) * height)
+        #expect(controller.positionLabel.stringValue == "1 of 2")
+        #expect(!controller.previousButton.isEnabled)
+        #expect(controller.nextButton.isEnabled)
+    }
+
     @Test("Ours, Theirs and Both set the current conflict's choice and redraw")
     func sideButtons() throws {
         let (controller, _) = try loaded()

@@ -9,7 +9,7 @@ The root view carries `git.history`, its scroll view `git.history.scroll`, the t
 
 ### Changed-files list
 
-The root view carries `git.fileList.<context>` (`commit`, `staged`, `unstaged`), its scroll view `git.fileList.<context>.scroll` and its table `git.fileList.<context>.table`. Each row view carries `git.fileList.row`, each cell `git.fileList.file`, and within it `git.fileList.status`, `git.fileList.icon` and `git.fileList.title`. The status letter's accessibility label is the status's readable, localized name, `GitFileStatus.displayName` (`Modified`, `Added`, …), never its case name.
+The root view carries `git.fileList.<context>` (`commit`, `conflicts`, `staged`, `unstaged`), its scroll view `git.fileList.<context>.scroll` and its table `git.fileList.<context>.table`. Each row view carries `git.fileList.row`, each cell `git.fileList.file`, and within it `git.fileList.status`, `git.fileList.icon` and `git.fileList.title`. The status letter's accessibility label is the status's readable, localized name, `GitFileStatus.displayName` (`Modified`, `Added`, …), never its case name.
 
 ### Commit detail
 
@@ -17,7 +17,7 @@ The root view carries `git.detail`, the header's scroll view `git.detail.header`
 
 ### Working copy
 
-The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader`, `git.workingCopy.conflictsHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`; the header buttons `git.workingCopy.stageAll` and `git.workingCopy.unstageAll`; the menu items `git.workingCopy.menu.stage`, `git.workingCopy.menu.unstage`, `git.workingCopy.menu.discard` and `git.workingCopy.menu.discardAll`. The commit box carries `git.commitBox`, its header `git.commitBox.header`, the message `git.commitBox.message`, the checkbox `git.commitBox.amend` and the button `git.commitBox.commit`.
+The root view carries `git.workingCopy`, its split `git.workingCopy.split` and the panes `git.workingCopy.conflictsPane`, `git.workingCopy.stagedPane` and `git.workingCopy.unstagedPane`; the headers `git.workingCopy.conflictsHeader`, `git.workingCopy.stagedHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.conflicts`, `git.fileList.staged` and `git.fileList.unstaged`; the header buttons `git.workingCopy.stageAll` and `git.workingCopy.unstageAll`; the menu items `git.workingCopy.menu.stage`, `git.workingCopy.menu.unstage`, `git.workingCopy.menu.discard` and `git.workingCopy.menu.discardAll`, and on a conflict row `git.workingCopy.menu.openMerge`, `git.workingCopy.menu.resolveOurs`, `git.workingCopy.menu.resolveTheirs` and `git.workingCopy.menu.markResolved`. The commit box carries `git.commitBox`, its header `git.commitBox.header`, the message `git.commitBox.message`, the checkbox `git.commitBox.amend` and the button `git.commitBox.commit`.
 
 ### Diff
 

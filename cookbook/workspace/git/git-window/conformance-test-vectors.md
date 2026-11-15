@@ -62,3 +62,5 @@
 | git-window-059 | conflicts-resolve | Resolve Using Ours… declined, then confirmed | one destructive `Use Ours` confirmation and the conflict kept; then the file is ours, staged and listed nowhere |
 | git-window-060 | conflicts-resolve | a UD `f.txt` (modified on `side`, deleted on `main`); Resolve Using Theirs…, confirmed | `Use Theirs`; no failure; no conflicts; the file gone from the tree and the index |
 | git-window-061 | conflicts-resolve | Discard All over a UU `f.txt` and untracked `new.txt` | `Discard changes to 1 file?`; the conflict kept |
+| git-window-062 | conflicts-resolve | Stage All over a UU `f.txt` and a modified tracked `other.txt` | nothing confirmed; `other.txt` staged; `f.txt` still unmerged and listed under Conflicts |
+| git-window-063 | conflicts-resolve | Stage All over a UU `f.txt` alone | nothing runs; no failure; the conflict kept |

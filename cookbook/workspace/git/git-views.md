@@ -2,7 +2,7 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.10.0
+version: 1.10.1
 status: review
 language: en
 created: 2026-11-13
@@ -176,7 +176,7 @@ The header scrolls on its own above the changed-files list and takes at most hal
 
 ### Working copy
 
-Three panes in a horizontal-divider `ThemedSplitView`: staged, unstaged, then the commit box. Each list pane is a heading-weight caption header, with a trailing borderless small button (`Unstage All`, `Stage All`), over its changed-files list. The commit box is a `Commit Message` caption header over a scrolled native `NSTextView` (plain text, the theme's body font and primary text colour, no placeholder), then a row of the `Amend` checkbox and the `Commit` push button at the trailing edge.
+Four panes in a horizontal-divider `ThemedSplitView`: conflicts (hidden while there are none), staged, unstaged, then the commit box. Each list pane is a heading-weight caption header, with a trailing borderless small button on staged and unstaged (`Unstage All`, `Stage All`; the Conflicts header has none), over its changed-files list. The commit box is a `Commit Message` caption header over a scrolled native `NSTextView` (plain text, the theme's body font and primary text colour, no placeholder), then a row of the `Amend` checkbox and the `Commit` push button at the trailing edge.
 
 ### Diff
 
@@ -255,7 +255,7 @@ The root view carries `git.history`, its scroll view `git.history.scroll`, the t
 
 ### Changed-files list
 
-The root view carries `git.fileList.<context>` (`commit`, `staged`, `unstaged`), its scroll view `git.fileList.<context>.scroll` and its table `git.fileList.<context>.table`. Each row view carries `git.fileList.row`, each cell `git.fileList.file`, and within it `git.fileList.status`, `git.fileList.icon` and `git.fileList.title`. The status letter's accessibility label is the status's readable, localized name, `GitFileStatus.displayName` (`Modified`, `Added`, …), never its case name.
+The root view carries `git.fileList.<context>` (`commit`, `conflicts`, `staged`, `unstaged`), its scroll view `git.fileList.<context>.scroll` and its table `git.fileList.<context>.table`. Each row view carries `git.fileList.row`, each cell `git.fileList.file`, and within it `git.fileList.status`, `git.fileList.icon` and `git.fileList.title`. The status letter's accessibility label is the status's readable, localized name, `GitFileStatus.displayName` (`Modified`, `Added`, …), never its case name.
 
 ### Commit detail
 
@@ -263,7 +263,7 @@ The root view carries `git.detail`, the header's scroll view `git.detail.header`
 
 ### Working copy
 
-The root view carries `git.workingCopy`, the headers `git.workingCopy.stagedHeader`, `git.workingCopy.conflictsHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.staged` and `git.fileList.unstaged`; the header buttons `git.workingCopy.stageAll` and `git.workingCopy.unstageAll`; the menu items `git.workingCopy.menu.stage`, `git.workingCopy.menu.unstage`, `git.workingCopy.menu.discard` and `git.workingCopy.menu.discardAll`. The commit box carries `git.commitBox`, its header `git.commitBox.header`, the message `git.commitBox.message`, the checkbox `git.commitBox.amend` and the button `git.commitBox.commit`.
+The root view carries `git.workingCopy`, its split `git.workingCopy.split` and the panes `git.workingCopy.conflictsPane`, `git.workingCopy.stagedPane` and `git.workingCopy.unstagedPane`; the headers `git.workingCopy.conflictsHeader`, `git.workingCopy.stagedHeader` and `git.workingCopy.unstagedHeader`, and the lists `git.fileList.conflicts`, `git.fileList.staged` and `git.fileList.unstaged`; the header buttons `git.workingCopy.stageAll` and `git.workingCopy.unstageAll`; the menu items `git.workingCopy.menu.stage`, `git.workingCopy.menu.unstage`, `git.workingCopy.menu.discard` and `git.workingCopy.menu.discardAll`, and on a conflict row `git.workingCopy.menu.openMerge`, `git.workingCopy.menu.resolveOurs`, `git.workingCopy.menu.resolveTheirs` and `git.workingCopy.menu.markResolved`. The commit box carries `git.commitBox`, its header `git.commitBox.header`, the message `git.commitBox.message`, the checkbox `git.commitBox.amend` and the button `git.commitBox.commit`.
 
 ### Diff
 
@@ -418,7 +418,7 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | `source` (history) | `GitHistoryDataSource` | none | Where the history list reads commits, graph rows, the query and the refs at a commit, and asks for pages and queries. |
 | `delegate` (history) | `GitHistoryDelegate?` | nil | Told which commit is selected, or nil, and every `GitCommitIntent` with its commit. |
 | `pasteboard` (history) | `NSPasteboard` | `.general` | Where Copy SHA puts the sha. |
-| `identifier` (file list) | `String` | none | The list's context (`commit`, `staged`, `unstaged`); its root identifier is `git.fileList.<identifier>`. |
+| `identifier` (file list) | `String` | none | The list's context (`commit`, `conflicts`, `staged`, `unstaged`); its root identifier is `git.fileList.<identifier>`. |
 | `files` (file list) | `[GitFileListItem]` | `[]` | The rows. |
 | `delegate` (file list) | `GitFileListDelegate?` | nil | Told which item is selected, or nil. |
 | `source` (detail) | `GitContentSource` | none | Where the commit detail reads the commit's diff. |
@@ -594,3 +594,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.8.1 | 2026-11-15 | Mike Fullerton | Review fix: side by side, Lines reads only the clicked viewer's own side, so one half of a changed pair can be staged, unstaged or discarded alone; vector 073 |
 | 1.9.0 | 2026-11-15 | Mike Fullerton | Merge and rebase: the sidebar's Merge into and Rebase onto items, refs dragged and dropped on the checked-out branch for a drop menu, the in-progress operation banner, refs dropped on the history; vectors 074-081 |
 | 1.10.0 | 2026-11-15 | Mike Fullerton | Working copy conflicts: a Conflicts list above Staged while there are conflicts, its paths left out of Unstaged; Open in Merge View (markers only), Resolve Using Ours…, Resolve Using Theirs… and Mark Resolved, and double-click to open; vectors 082-086 |
+| 1.10.1 | 2026-11-15 | Mike Fullerton | the working copy's conflicts pane, list and menu identifiers in accessibility, appearance and configuration |

@@ -2,7 +2,7 @@
 id: deac5bd8-5e5f-43cf-bdfa-3a83b2298639
 title: "Git Merge View"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-15
@@ -50,7 +50,7 @@ The git window's 3-way merge view (`GitMergeViewController`): one conflicted fil
 
 ### Controls
 
-- **merge-show**: `show(path:document:)` MUST show the document with no choices made and the first conflict current, label the sides with the first conflict's marker labels (`Ours` and `Theirs` when a label is empty) and scroll to the first conflict.
+- **merge-show**: `show(path:document:)` MUST show the document with no choices made and the first conflict current, label the sides with the first conflict's marker labels (`Ours` and `Theirs` when a label is empty) and scroll to the first conflict. The scroll MUST happen whether `show` runs before or after the view is loaded: one the panes cannot take yet (no view, or no height) stays pending until the view is next laid out.
 - **merge-navigation**: `Previous` and `Next` MUST move `currentConflict` by one, never past the first or the last, and scroll ours (and theirs with it) to `sideStarts[current]` and the result to `resultStarts[current]`. Previous is enabled while there is an earlier conflict, Next while there is a later one. The position label reads `<n> of <total>` (1-based).
 - **merge-choose**: `Ours`, `Theirs` and `Both` MUST set the current conflict's choice to `.ours`, `.theirs` and `.oursThenTheirs`, and redraw all three panes. `Base` MUST set `.base` and is enabled only when the current conflict recorded a base.
 - **merge-save**: `Save` MUST be enabled exactly while `resolved(choices)` is non-nil, and send `.save(path:text:)` with that exact text. `Cancel` MUST send `.cancel`.
@@ -86,6 +86,7 @@ The fixture is `top`, a conflict `HEAD` (`ours one`, `ours two`) against `side` 
 | git-merge-view-010 | merge-save | Ours only; Save; then Next, Base, Save | disabled, nothing sent; then `.save(path: "f.txt", text: "top\nours one\nours two\nmiddle\ny\nbottom\n")` |
 | git-merge-view-011 | merge-show | choose and move, then `show` again | no choices, conflict 0, the new path |
 | git-merge-view-012 | merge-syntax | a Swift conflict with the TextMate fixture | both sides' rows carry coloured runs once the colouring lands |
+| git-merge-view-013 | merge-show | `show` the long fixture (first conflict at row 40) before the view is loaded, then load and lay it out at 900×600 | ours and theirs scrolled to `sideStarts[0] × rowHeight`, the result to `resultStarts[0] × rowHeight`; `1 of 2`; Previous disabled, Next enabled |
 ## Edge Cases
 
 - **Null / empty input**: A document with no conflicts never reaches the view (`parse` returns nil); the session shows the diff instead.
@@ -163,4 +164,5 @@ The view logs nothing; `GitSyntaxColoring` logs a highlighter error by its type.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-15 | Mike Fullerton | show scrolls to the first conflict whether it runs before or after the view loads (git-merge-view-013) |
 | 1.0.0 | 2026-11-15 | Mike Fullerton | Initial creation: ours and theirs aligned with fillers and scroll-locked over the result; Previous, Next, Ours, Theirs, Both, Base, Cancel and Save; vectors 001-012 |
