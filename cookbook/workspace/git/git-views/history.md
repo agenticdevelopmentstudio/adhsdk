@@ -15,3 +15,4 @@
 | 1.7.1 | 2026-11-14 | Mike Fullerton | Review fixes: the tag menu items carry tag.push and tag.delete |
 | 1.8.0 | 2026-11-15 | Mike Fullerton | Diff staging menu: line refs on each diff model; Stage, Unstage and Discard of the clicked hunk or the selected lines, each a GitDiffIntent sent to the delegate; no menu ignoring whitespace; vectors 069-072 |
 | 1.8.1 | 2026-11-15 | Mike Fullerton | Review fix: side by side, Lines reads only the clicked viewer's own side, so one half of a changed pair can be staged, unstaged or discarded alone; vector 073 |
+| 1.9.0 | 2026-11-15 | Mike Fullerton | Merge and rebase: the sidebar's Merge into and Rebase onto items, refs dragged and dropped on the checked-out branch for a drop menu, the in-progress operation banner, refs dropped on the history; vectors 074-081 |

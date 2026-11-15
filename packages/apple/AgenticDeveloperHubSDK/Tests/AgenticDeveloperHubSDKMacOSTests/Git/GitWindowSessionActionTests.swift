@@ -1124,4 +1124,151 @@ struct GitWindowSessionActionTests {
         #expect(presenter.failures.isEmpty)
         #expect(model.unstaged.map(\.path) == ["f.txt"])
     }
+
+    // MARK: Merge, rebase and the operation banner
+
+    /// `f.txt` changed on `side` and on `main` from one base, HEAD on `side`.
+    private func divergedBranches(_ repository: GitTestRepository) async throws {
+        try await commitFile(repository, "f.txt", "base\n", at: 100)
+        try await repository.run(["checkout", "--quiet", "-b", "side"])
+        try await commitFile(repository, "f.txt", "side\n", at: 200)
+        try await repository.run(["checkout", "--quiet", "main"])
+        try await commitFile(repository, "f.txt", "main\n", at: 300)
+        try await repository.run(["checkout", "--quiet", "side"])
+    }
+
+    private func isRebasing(_ state: GitOperationState) -> Bool {
+        if case .rebasing = state { return true }
+        return false
+    }
+
+    /// Presses one of the banner's buttons the way AppKit does, and waits for the action.
+    private func press(_ button: NSButton, in session: GitWindowSession) async throws {
+        let target = try #require(button.target as? NSObject)
+        target.perform(button.action, with: button)
+        await session.actionTask?.value
+    }
+
+    @Test("a merge from the menu fast-forwards the checked-out branch, asking nothing")
+    func mergeFastForwards() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "one.txt", "one\n", at: 100)
+        try await repository.run(["checkout", "--quiet", "-b", "topic"])
+        try await commitFile(repository, "two.txt", "two\n", at: 200)
+        try await repository.run(["checkout", "--quiet", "main"])
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+
+        await act(session, .ref(.merge(try ref(model, "refs/heads/topic"))))
+
+        #expect(presenter.confirmations.isEmpty)
+        #expect(presenter.failures.isEmpty)
+        let main = try await repository.run(["rev-parse", "main"])
+        let topic = try await repository.run(["rev-parse", "topic"])
+        #expect(main == topic)
+        #expect(session.banner.state == .none)
+        #expect(session.banner.view.isHidden)
+    }
+
+    @Test("a conflicting rebase shows the failure, the banner and the conflicted file; Continue unresolved keeps it")
+    func conflictingRebase() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await divergedBranches(repository)
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        #expect(session.banner.view.isHidden)
+
+        await act(session, .ref(.rebaseOnto(try ref(model, "refs/heads/main"))))
+
+        #expect(presenter.confirmations.isEmpty, "the menu was the confirmation")
+        #expect(presenter.failures.count == 1)
+        #expect(presenter.failures.first?.hasPrefix("Rebase failed: ") == true)
+        #expect(isRebasing(session.banner.state))
+        #expect(!session.banner.view.isHidden)
+        #expect(session.banner.statusLabel.stringValue == "Rebasing side (1/1)")
+        #expect(!session.banner.skipButton.isHidden)
+        #expect(model.unstaged.map(\.path).contains("f.txt"))
+
+        try await press(session.banner.continueButton, in: session)
+
+        #expect(presenter.failures.count == 2)
+        #expect(presenter.failures.last?.hasPrefix("Continue rebase failed: ") == true)
+        #expect(isRebasing(session.banner.state), "a failed Continue leaves the banner up")
+
+        try repository.write("resolved\n", to: "f.txt")
+        try await repository.run(["add", "--", "f.txt"])
+        try await press(session.banner.continueButton, in: session)
+
+        #expect(presenter.failures.count == 2)
+        #expect(session.banner.state == .none)
+        #expect(session.banner.view.isHidden)
+        let text = try String(contentsOf: repository.root.appendingPathComponent("f.txt"), encoding: .utf8)
+        #expect(text == "resolved\n")
+    }
+
+    @Test("Abort confirms destructively; declining keeps the operation, confirming clears the banner")
+    func abortConfirms() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await divergedBranches(repository)
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        await act(session, .ref(.rebaseOnto(try ref(model, "refs/heads/main"))))
+        #expect(isRebasing(session.banner.state))
+
+        presenter.confirmAnswers = [false]
+        try await press(session.banner.abortButton, in: session)
+        #expect(presenter.confirmations.count == 1)
+        #expect(presenter.confirmations.first?.title == "Abort the rebase?")
+        #expect(presenter.confirmations.first?.actionTitle == "Abort")
+        #expect(presenter.confirmations.first?.isDestructive == true)
+        #expect(isRebasing(session.banner.state), "declined, nothing ran")
+
+        presenter.confirmAnswers = [true]
+        try await press(session.banner.abortButton, in: session)
+        #expect(session.banner.state == .none)
+        #expect(session.banner.view.isHidden)
+        #expect(try await headName(repository) == "side")
+        #expect(presenter.failures.count == 1, "only the rebase's own failure")
+    }
+
+    @Test("an operation started outside the window shows the banner once the model reads it")
+    func outsideOperationShowsTheBanner() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await divergedBranches(repository)
+        let (model, session) = await makeSession(repository, presenter: StubPresenter())
+        #expect(session.banner.view.isHidden)
+
+        _ = try? await repository.run(["cherry-pick", "main"])
+        await model.refresh([.operation])
+
+        guard case .cherryPicking(let commit) = session.banner.state else {
+            Issue.record("the banner shows \(session.banner.state)")
+            return
+        }
+        let main = try await repository.run(["rev-parse", "main"]).trimmingCharacters(in: .whitespacesAndNewlines)
+        #expect(commit == main)
+        #expect(!session.banner.view.isHidden)
+        #expect(session.banner.statusLabel.stringValue == "Cherry-picking \(main.prefix(7))")
+    }
+
+    @Test("a ref dropped on the history pops up the sidebar's drop menu; a refused ref pops up nothing")
+    func historyDropPopsUpTheMenu() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await divergedBranches(repository)
+        let (_, session) = await makeSession(repository, presenter: StubPresenter())
+        var shown: [NSMenu] = []
+        session.sidebar.menuPresenter = { menu, _ in shown.append(menu) }
+
+        session.history.onRefDrop?("refs/heads/side")
+        #expect(shown.isEmpty, "HEAD onto itself")
+        #expect(session.history.refDropValidator?("refs/heads/side") == false)
+        session.history.onRefDrop?("refs/heads/main")
+        #expect(shown.count == 1)
+        #expect(shown.first?.items.map(\.title) == ["Merge into side", "Rebase side onto main", "", "Cancel"])
+    }
 }

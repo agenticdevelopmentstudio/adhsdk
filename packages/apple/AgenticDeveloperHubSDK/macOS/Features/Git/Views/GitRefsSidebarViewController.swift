@@ -11,6 +11,8 @@ public enum GitRefIntent: Equatable {
     case push(GitRef), pull, fetch(remote: String)
     case deleteTag(GitRef), pushTag(GitRef)
     case applyStash(GitStash), popStash(GitStash), dropStash(GitStash)
+    /// Merge the ref into the checked-out branch; rebase the checked-out branch onto the ref.
+    case merge(GitRef), rebaseOnto(GitRef)
 }
 
 /// What the refs sidebar tells its owner the user chose.
@@ -32,6 +34,9 @@ public enum GitRefIntent: Equatable {
 /// owner calls `reload()` when the refs change. A branch, tag or stash row and a
 /// remote's section header have context menus whose items, like a double-clicked
 /// branch, reach the delegate as `GitRefIntent`s; the sidebar runs no git.
+///
+/// Branch, remote branch and tag rows drag as their ref's full name; dropping one on
+/// the checked-out branch's row pops up a menu to merge it in or rebase onto it.
 @MainActor
 public final class GitRefsSidebarViewController: NSViewController {
 
@@ -64,6 +69,16 @@ public final class GitRefsSidebarViewController: NSViewController {
 
     private static let workingCopyID = "workspace.working-copy"
 
+    /// Shows a drop menu at the pointer in `view`. Tests replace it to capture the menu.
+    var menuPresenter: @MainActor (NSMenu, NSView) -> Void = { menu, view in
+        // After the drop returns: a menu tracked inside the drag session's callback
+        // would block it.
+        Task { @MainActor in
+            let point = view.window.map { view.convert($0.mouseLocationOutsideOfEventStream, from: nil) } ?? .zero
+            menu.popUp(positioning: nil, at: point, in: view)
+        }
+    }
+
     public init(source: GitRefsDataSource) {
         self.source = source
         super.init(nibName: nil, bundle: nil)
@@ -74,6 +89,14 @@ public final class GitRefsSidebarViewController: NSViewController {
         list.itemMenuProvider = { [weak self] item in self?.contextMenu(forItemID: item.id) }
         list.headerMenuProvider = { [weak self] title in self?.contextMenu(forSectionTitle: title) }
         list.onDoubleClick = { [weak self] item in self?.doubleClick(itemID: item.id) }
+        list.dragPayloadProvider = { [weak self] item in self?.dragPayload(forItemID: item.id) }
+        list.dropValidator = { [weak self] payload, target in
+            self?.canDrop(refNamed: payload, onItemID: target.id) ?? false
+        }
+        list.onDrop = { [weak self] payload, _ in
+            guard let self, let menu = self.dropMenu(forRefNamed: payload) else { return }
+            self.menuPresenter(menu, self.list.view)
+        }
         reload()
     }
 
@@ -234,7 +257,11 @@ public final class GitRefsSidebarViewController: NSViewController {
             case .localBranch: return localBranchMenu(ref)
             case .remoteBranch: return remoteBranchMenu(ref)
             case .tag:
-                return makeMenu([("Push", "tag.push", .pushTag(ref)), ("Delete…", "tag.delete", .deleteTag(ref))])
+                // A tag has no checkout group, so its merge group follows its own items.
+                let entries: [MenuEntry?] = [
+                    ("Push", "tag.push", .pushTag(ref)), ("Delete…", "tag.delete", .deleteTag(ref))
+                ]
+                return makeMenu(entries + mergeEntries(ref))
             }
         case .stash(let stash):
             return makeMenu([
@@ -267,6 +294,7 @@ public final class GitRefsSidebarViewController: NSViewController {
         entries.append(("New Branch…", "newBranch", .createBranch(from: ref)))
         entries.append(("Rename…", "rename", .rename(ref)))
         if !ref.isHead { entries.append(("Delete…", "delete", .delete(ref))) }
+        entries += mergeEntries(ref)
         entries.append(nil)
         entries.append(("Push", "push", .push(ref)))
         if ref.isHead { entries.append(("Pull", "pull", .pull)) }
@@ -278,12 +306,79 @@ public final class GitRefsSidebarViewController: NSViewController {
             ("Checkout", "checkout", .checkout(ref)), ("New Branch…", "newBranch", .createBranch(from: ref)),
             ("Delete…", "delete", .delete(ref))
         ]
+        entries += mergeEntries(ref)
         if let remote = ref.remote {
             entries.append(nil)
             entries.append(("Fetch \(remote)", "fetch", .fetch(remote: remote)))
         }
         return makeMenu(entries)
     }
+
+    // MARK: - Merge and rebase
+
+    /// The checked-out branch, when `ref` can be merged into it or it rebased onto `ref`:
+    /// HEAD is on a branch, `ref` is not that branch, and no operation is in progress.
+    private func mergeHead(for ref: GitRef) -> GitRef? {
+        guard !ref.isHead, source.operationState == .none,
+              let head = source.refs.first(where: { $0.kind == .localBranch && $0.isHead }),
+              head.fullName != ref.fullName else { return nil }
+        return head
+    }
+
+    /// A separator, `Merge into <head>` and `Rebase <head> onto <name>`, or nothing when
+    /// `mergeHead(for:)` says neither applies.
+    private func mergeEntries(_ ref: GitRef) -> [MenuEntry?] {
+        guard let head = mergeHead(for: ref) else { return [] }
+        return [
+            nil,
+            ("Merge into \(head.name)", "merge", .merge(ref)),
+            ("Rebase \(head.name) onto \(ref.name)", "rebase", .rebaseOnto(ref))
+        ]
+    }
+
+    /// The ref row `fullName` names, when it is a branch, remote branch or tag.
+    private func ref(named fullName: String) -> GitRef? {
+        guard case .ref(let ref) = targets[fullName] else { return nil }
+        return ref
+    }
+
+    /// A branch, remote branch or tag row drags as its ref's full name; nothing else drags.
+    func dragPayload(forItemID id: String) -> String? {
+        ref(named: id)?.fullName
+    }
+
+    /// Whether `payload` may be dropped on the row `id`: the checked-out branch's row, and
+    /// a ref the drop menu has items for.
+    func canDrop(refNamed payload: String, onItemID id: String) -> Bool {
+        guard let target = ref(named: id), target.kind == .localBranch, target.isHead else { return false }
+        return dropMenu(forRefNamed: payload) != nil
+    }
+
+    /// The menu a drop of the ref `fullName` pops up: merge it, rebase onto it, or cancel;
+    /// nil when the ref is unknown or HEAD, HEAD is detached, or an operation is in progress.
+    public func dropMenu(forRefNamed fullName: String) -> NSMenu? {
+        guard let ref = ref(named: fullName), let head = mergeHead(for: ref) else { return nil }
+        let menu = NSMenu()
+        for (title, name, intent) in [
+            ("Merge into \(head.name)", "merge", GitRefIntent.merge(ref)),
+            ("Rebase \(head.name) onto \(ref.name)", "rebase", GitRefIntent.rebaseOnto(ref))
+        ] {
+            let item = NSMenuItem(title: title, action: #selector(performMenuIntent(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = MenuPayload(intent)
+            item.accessibilityID("git.drop.menu.\(name)")
+            menu.addItem(item)
+        }
+        menu.addItem(.separator())
+        // A no-op target and action keep it enabled; choosing it just closes the menu.
+        let cancel = NSMenuItem(title: "Cancel", action: #selector(cancelDropMenu(_:)), keyEquivalent: "")
+        cancel.target = self
+        cancel.accessibilityID("git.drop.menu.cancel")
+        menu.addItem(cancel)
+        return menu
+    }
+
+    @objc private func cancelDropMenu(_ sender: NSMenuItem) {}
 
     /// A menu of `entries` in order, a nil entry being a separator.
     private func makeMenu(_ entries: [MenuEntry?]) -> NSMenu {

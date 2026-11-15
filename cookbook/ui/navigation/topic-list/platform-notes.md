@@ -104,3 +104,11 @@
   a synthesized row wrapper as the natural place to attach an identifier and
   a name.
 
+### Drag and drop (macOS)
+
+The item pasteboard type is `TopicListViewController.itemPasteboardType`
+(`com.agenticdeveloperhub.topic-list.item`), a string. The outline registers it in
+`loadView` and allows `.generic` and `.copy` for local drags. A drop is retargeted
+only by the validator's answer: `validateDrop` takes `NSOutlineViewDropOnItemIndex`
+drops alone and returns `.generic`. The providers are `dragPayloadProvider`,
+`dropValidator` and `onDrop`; the list knows nothing of what a payload means.

@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.6.0
+version: 1.7.0
 status: review
 language: en
 created: 2026-11-14
@@ -92,7 +92,7 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 
 ### Actions
 
-- **one-funnel**: Every intent a view sends (working copy, history, refs sidebar, diff) and every toolbar verb (`fetch`, `pull`, `push`, `newBranch`, `stash`, `popStash`) MUST go through the session's one `perform(_:)`, which runs git only through the model's `perform`; the model refreshes after every action, so the views show what it left.
+- **one-funnel**: Every intent a view sends (working copy, history, refs sidebar, diff, operation banner) and every toolbar verb (`fetch`, `pull`, `push`, `newBranch`, `stash`, `popStash`) MUST go through the session's one `perform(_:)`, which runs git only through the model's `perform`; the model refreshes after every action, so the views show what it left.
 - **one-at-a-time**: While an action runs, sheets included, a new request MUST be ignored. The overview's spinner (`git.window.busy`, before Refresh) MUST show and spin exactly while git runs, never while a confirmation or text sheet waits for an answer; `onBusyChange(true)` MUST be called as git starts and `onBusyChange(false)` as it returns.
 - **failure-shown**: A failed action MUST call `showFailure` with the action's title (`Push failed`, `Commit failed`, `Cherry-pick failed`, ...) and `GitClientError.userMessage(of:)`; a cancelled one shows nothing. The log line MUST carry the title and `logDescription`, never git's standard error.
 - **needs-presenter**: While `presenter` is nil, an action that needs the user (a confirmation or a text) MUST do nothing.
@@ -107,6 +107,10 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **rename-delete**: Rename MUST ask one field prefilled with the branch's name and run `.renameBranch` unless the name is unchanged. Deleting a local branch MUST confirm (destructive), run `.deleteBranch(force: false)` and, when git answers `not fully merged`, confirm again (`Delete unmerged branch?`, destructive) before `.deleteBranch(force: true)`; declining shows nothing. Deleting a remote branch MUST confirm (destructive), then run `.deleteRemoteBranch`.
 - **tags**: New Tag MUST ask `Name` (required) and `Message` (optional; empty makes a lightweight tag) and run `.createTag`; Delete Tag MUST confirm (destructive), then `.deleteTag`.
 - **stashes**: Stash MUST ask one optional `Message` and run `.stashSave`; the toolbar's Pop MUST run `.stashPop(0)` when there is a stash and nothing otherwise; the sidebar's Apply, Pop and Drop MUST act on the stash the menu named, found again by its sha in the current stash list just before git runs, so a stash pushed or dropped meanwhile by another tool never shifts the target; a stash that is gone MUST fail under the action's title with `That stash no longer exists.` and run nothing. Drop MUST confirm (destructive).
+- **merge-rebase**: The sidebar's `.merge(ref)` MUST run `.merge(ref: <full name>, fastForward: .allowed)` and `.rebaseOnto(ref)` `.rebase(onto: <full name>)`, at once: the menu or the drop menu the user chose from is the confirmation. A conflict fails under `Merge failed` or `Rebase failed` and leaves the operation in progress, which the refresh shows in the banner and the working copy.
+- **operation-steps**: A banner step MUST run `.operation(<kind>, <step>)` for the kind the model's `operationState` names, and nothing while it is `.none`. Abort MUST first confirm `Abort the <verb>?` / `The working tree and the branch go back to how they were before it started.` with the destructive action `Abort`, and needs the presenter; Continue and Skip run at once. A failed step is shown under its own title (`Continue rebase failed`, ...) and leaves the operation, and so the banner, in place.
+- **banner-follows-model**: The banner's state MUST be the model's `operationState` at session start, on every change that touches `.operation` or the working copy, and on `reloadAll`, so an operation begun outside the window shows once the model reads it.
+- **ref-drop-on-history**: A ref dropped on the history list MUST pop up the sidebar's `dropMenu(forRefNamed:)` over the history table through the sidebar's `menuPresenter`; a ref with no drop menu is refused by the history's `refDropValidator` and pops up nothing.
 - **commit-actions**: Cherry-pick and Revert MUST pass `mainline: 1` for a commit with more than one parent. A soft or mixed reset MUST run at once; a hard one MUST confirm `Reset <branch> to <shortID>?` / `Uncommitted changes are lost.` (destructive) first, naming `HEAD` when detached, where a reset is allowed.
 ## Appearance
 
@@ -176,6 +180,11 @@ The window keeps the project window's identifiers. Its panes carry `git.window.o
 | git-window-048 | diff-patches | a file of two changed regions, unstaged; Stage Hunk of the first | `staged` lists the file and its staged diff has only that hunk. |
 | git-window-049 | diff-patches | the same file wholly staged; Unstage Lines of the first hunk's lines | its staged diff has one hunk, the second. |
 | git-window-050 | diff-patches | an unstaged inserted line; Discard Lines of it declined, then confirmed; then Discard Lines naming only a context line | `Discard 1 selected line?` / `This cannot be undone.` / `Discard` asked twice; the file is unchanged, then back to its committed text; nothing asked or run. |
+| git-window-051 | merge-rebase | `main`, and `topic` one commit ahead; Merge into main of `topic` | nothing asked; `main` is `topic`; the banner is hidden. |
+| git-window-052 | merge-rebase, operation-steps | `side` and `main` changing `f.txt` from one base, HEAD `side`; Rebase side onto main; Continue unresolved; resolve, add, Continue | `Rebase failed: …`, the banner `Rebasing side (1/1)` with Skip, `f.txt` unstaged; `Continue rebase failed: …` and the banner stays; then no failure, the banner hidden, `f.txt` resolved. |
+| git-window-053 | operation-steps | the same conflicting rebase; Abort declined, then confirmed | `Abort the rebase?` / `Abort`, destructive; still rebasing; then the banner hidden on `side`. |
+| git-window-054 | banner-follows-model | the same branches; `git cherry-pick main` run outside the window, then the model refreshes `.operation` | the banner shows `Cherry-picking <main's short sha>`. |
+| git-window-055 | ref-drop-on-history | HEAD `side`; drop `refs/heads/side`, then `refs/heads/main`, on the history | nothing, refused; then one menu `Merge into side`, `Rebase side onto main`, a separator, `Cancel`. |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -294,6 +303,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.7.0 | 2026-11-15 | Mike Fullerton | Merge and rebase from the sidebar's menus and drop menus without a confirmation; the operation banner's Continue, Skip and confirmed Abort through the funnel; the banner follows the model; refs dropped on the history; vectors 051-055 |
 | 1.6.0 | 2026-11-15 | Mike Fullerton | Diff patches: diff intents through the funnel, staged and unstaged with `git apply --cached`, discarded with `git apply --reverse` after a confirmation; vectors 048-050 |
 | 1.5.0 | 2026-11-14 | Mike Fullerton | Review fixes: describes the composable-tabs panes, the project-window id and title; the not-in-a-repository alert; stashes found by sha; close cancels the action; Amend off on an orphan branch; vectors 042-047 |
 | 1.4.0 | 2026-11-14 | Mike Fullerton | Toolbar: Fetch, Pull, Push, Branch, Stash and Pop, aimed at the window's GitWindowToolbar and forwarded to the session's verbs; the toolbar kept beside the session and dropped on close |

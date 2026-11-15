@@ -130,5 +130,15 @@
 - **item-double-click**: Component MUST call the double-click callback
   with an item row's item when that row is double-clicked, and MUST NOT
   call it for a section header row or outside the rows.
+- **item-drag-payload**: Component MUST let an item row be dragged exactly when the
+  drag-payload provider returns a payload for its item, and MUST write that payload
+  as a string of the component's item pasteboard type; a section header row, an item
+  the provider declines, and every row while no provider is set MUST NOT drag.
+- **item-drop-validation**: Component MUST accept a drag carrying its item pasteboard
+  type only onto an item row, and only when the drop validator answers yes for the
+  dragged payload and that row's item; a drop between rows, onto a section header,
+  and every drop while no validator is set MUST be refused.
+- **item-drop-delivery**: An accepted drop MUST call the drop callback once with the
+  payload and the target row's item; a refused drop MUST NOT call it.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 

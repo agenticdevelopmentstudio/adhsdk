@@ -37,3 +37,6 @@
 | topic-list-033 | row-context-menu | The same sections with no providers set | No row has a menu |
 | topic-list-034 | item-double-click | Double-click each of the four rows and row 9 | The callback receives `main`, then `v1`, and nothing else |
 | topic-list-035 | row-context-menu, item-double-click | Inspect the list after it loads; open its menu with no row clicked | The list carries a menu and a double-click action; the opened menu is empty, so none is shown |
+| topic-list-036 | item-drag-payload | Sections `Branches` (`main`, `dev`); a payload provider returning the item's id for `dev` only; ask each row for its drag writer | `dev` writes `dev` as the item type; the header and `main` write nothing; with no provider nothing writes |
+| topic-list-037 | item-drop-validation, item-drop-delivery | The same list, a validator accepting only `dev` onto `main`; drop `dev` and then `x` onto `main`, `dev` onto the header and row 9 | Only `dev` onto `main` is valid, and the callback receives (`dev`, `main`) once |
+| topic-list-038 | item-drop-validation | Inspect the outline after it loads | It is registered for the item pasteboard type |

@@ -12,6 +12,7 @@ private final class FakeRefsSource: GitRefsDataSource {
     var stashes: [GitStash] = []
     var submodules: [GitSubmodule] = []
     var worktrees: [GitWorktree] = []
+    var operationState: GitOperationState = .none
 }
 
 /// Records every delegate call in order.
@@ -302,14 +303,20 @@ struct GitRefsSidebarViewControllerTests {
         let delegate = RecordingDelegate()
         sidebar.delegate = delegate
         let menu = rowMenu(sidebar, section: 1, row: 1)
-        #expect(menuTitles(menu) == ["Checkout", "New Branch…", "Rename…", "Delete…", "-", "Push"])
+        #expect(menuTitles(menu) == [
+            "Checkout", "New Branch…", "Rename…", "Delete…", "-",
+            "Merge into main", "Rebase main onto dev", "-", "Push"
+        ])
         #expect(menuIDs(menu) == [
             "git.sidebar.menu.checkout", "git.sidebar.menu.newBranch", "git.sidebar.menu.rename",
-            "git.sidebar.menu.delete", "git.sidebar.menu.push"
+            "git.sidebar.menu.delete", "git.sidebar.menu.merge", "git.sidebar.menu.rebase", "git.sidebar.menu.push"
         ])
         try fireAll(menu)
         let dev = Self.branch("dev")
-        #expect(delegate.intents == [.checkout(dev), .createBranch(from: dev), .rename(dev), .delete(dev), .push(dev)])
+        #expect(delegate.intents == [
+            .checkout(dev), .createBranch(from: dev), .rename(dev), .delete(dev), .merge(dev), .rebaseOnto(dev),
+            .push(dev)
+        ])
         #expect(delegate.events.isEmpty)
     }
 
@@ -332,14 +339,20 @@ struct GitRefsSidebarViewControllerTests {
         let delegate = RecordingDelegate()
         sidebar.delegate = delegate
         let menu = rowMenu(sidebar, section: 2, row: 1)
-        #expect(menuTitles(menu) == ["Checkout", "New Branch…", "Delete…", "-", "Fetch origin"])
+        #expect(menuTitles(menu) == [
+            "Checkout", "New Branch…", "Delete…", "-", "Merge into main", "Rebase main onto origin/dev", "-",
+            "Fetch origin"
+        ])
         #expect(menuIDs(menu) == [
             "git.sidebar.menu.checkout", "git.sidebar.menu.newBranch", "git.sidebar.menu.delete",
-            "git.sidebar.menu.fetch"
+            "git.sidebar.menu.merge", "git.sidebar.menu.rebase", "git.sidebar.menu.fetch"
         ])
         try fireAll(menu)
         let dev = Self.remote("origin/dev")
-        #expect(delegate.intents == [.checkout(dev), .createBranch(from: dev), .delete(dev), .fetch(remote: "origin")])
+        #expect(delegate.intents == [
+            .checkout(dev), .createBranch(from: dev), .delete(dev), .merge(dev), .rebaseOnto(dev),
+            .fetch(remote: "origin")
+        ])
     }
 
     @Test("a remote's section header fetches that remote; other headers have no menu")
@@ -363,8 +376,11 @@ struct GitRefsSidebarViewControllerTests {
         let delegate = RecordingDelegate()
         sidebar.delegate = delegate
         let tagMenu = rowMenu(sidebar, section: 4, row: 0)
-        #expect(menuTitles(tagMenu) == ["Push", "Delete…"])
-        #expect(menuIDs(tagMenu) == ["git.sidebar.menu.tag.push", "git.sidebar.menu.tag.delete"])
+        #expect(menuTitles(tagMenu) == ["Push", "Delete…", "-", "Merge into main", "Rebase main onto v1"])
+        #expect(menuIDs(tagMenu) == [
+            "git.sidebar.menu.tag.push", "git.sidebar.menu.tag.delete", "git.sidebar.menu.merge",
+            "git.sidebar.menu.rebase"
+        ])
         let stashMenu = rowMenu(sidebar, section: 5, row: 1)
         #expect(menuTitles(stashMenu) == ["Apply", "Pop", "Drop…"])
         #expect(menuIDs(stashMenu) == ["git.sidebar.menu.apply", "git.sidebar.menu.pop", "git.sidebar.menu.drop"])
@@ -373,7 +389,8 @@ struct GitRefsSidebarViewControllerTests {
         let tag = Self.tag("v1")
         let stash = Self.fullSource().stashes[1]
         #expect(delegate.intents == [
-            .pushTag(tag), .deleteTag(tag), .applyStash(stash), .popStash(stash), .dropStash(stash)
+            .pushTag(tag), .deleteTag(tag), .merge(tag), .rebaseOnto(tag), .applyStash(stash), .popStash(stash),
+            .dropStash(stash)
         ])
     }
 
@@ -399,5 +416,77 @@ struct GitRefsSidebarViewControllerTests {
         }
         #expect(delegate.intents == [.checkout(Self.branch("dev")), .checkout(Self.remote("origin/main"))])
         #expect(delegate.events.isEmpty)
+    }
+
+    // MARK: - Merge, rebase and drops
+
+    @Test("no merge or rebase items on a detached HEAD or while an operation is in progress")
+    func mergeItemsAbsent() {
+        let detached = Self.fullSource()
+        detached.refs = detached.refs.map { ref in
+            ref.kind == .localBranch && ref.isHead ? Self.branch(ref.name) : ref
+        }
+        let busy = Self.fullSource()
+        busy.operationState = .merging(head: "abc")
+        for source in [detached, busy] {
+            let sidebar = GitRefsSidebarViewController(source: source)
+            for (section, row) in [(1, 1), (2, 1), (4, 0)] {
+                let ids = menuIDs(rowMenu(sidebar, section: section, row: row))
+                #expect(!ids.contains("git.sidebar.menu.merge"))
+                #expect(!ids.contains("git.sidebar.menu.rebase"))
+            }
+            #expect(sidebar.dropMenu(forRefNamed: "refs/heads/dev") == nil)
+        }
+        let plain = GitRefsSidebarViewController(source: detached)
+        #expect(menuTitles(rowMenu(plain, section: 1, row: 1)).last == "Push", "no trailing separator either")
+    }
+
+    @Test("branch, remote branch and tag rows drag as their full name; other rows do not drag")
+    func dragPayloads() {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let provider = sidebar.list.dragPayloadProvider
+        #expect(provider?(item(sidebar, section: 1, row: 1)) == "refs/heads/dev")
+        #expect(provider?(item(sidebar, section: 1, row: 0)) == "refs/heads/main")
+        #expect(provider?(item(sidebar, section: 2, row: 0)) == "refs/remotes/origin/main")
+        #expect(provider?(item(sidebar, section: 4, row: 0)) == "refs/tags/v1")
+        for (section, row) in [(0, 0), (5, 0), (6, 0), (7, 0)] {
+            #expect(provider?(item(sidebar, section: section, row: row)) == nil)
+        }
+    }
+
+    @Test("only the checked-out branch's row takes a drop, and only of another ref")
+    func dropValidation() {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let validator = sidebar.list.dropValidator
+        let headRow = item(sidebar, section: 1, row: 0)
+        #expect(validator?("refs/heads/dev", headRow) == true)
+        #expect(validator?("refs/remotes/origin/dev", headRow) == true)
+        #expect(validator?("refs/tags/v1", headRow) == true)
+        #expect(validator?("refs/heads/main", headRow) == false, "HEAD onto itself")
+        #expect(validator?("refs/heads/nope", headRow) == false, "not a ref the sidebar shows")
+        #expect(validator?("refs/heads/dev", item(sidebar, section: 1, row: 1)) == false, "not HEAD's row")
+        #expect(validator?("refs/heads/dev", item(sidebar, section: 4, row: 0)) == false)
+
+        let busy = Self.fullSource()
+        busy.operationState = .rebasing(branch: "main", onto: nil, step: 1, total: 2, interactive: false)
+        let busySidebar = GitRefsSidebarViewController(source: busy)
+        #expect(busySidebar.list.dropValidator?("refs/heads/dev", item(busySidebar, section: 1, row: 0)) == false)
+    }
+
+    @Test("a drop pops up merge, rebase and Cancel; choosing one sends its intent, the drop alone nothing")
+    func dropMenu() throws {
+        let sidebar = GitRefsSidebarViewController(source: Self.fullSource())
+        let delegate = RecordingDelegate()
+        sidebar.delegate = delegate
+        var shown: [NSMenu] = []
+        sidebar.menuPresenter = { menu, _ in shown.append(menu) }
+        sidebar.list.onDrop?("refs/remotes/origin/dev", item(sidebar, section: 1, row: 0))
+        #expect(delegate.intents.isEmpty, "the drop alone does nothing")
+        let menu = try #require(shown.first)
+        #expect(menuTitles(menu) == ["Merge into main", "Rebase main onto origin/dev", "-", "Cancel"])
+        #expect(menuIDs(menu) == ["git.drop.menu.merge", "git.drop.menu.rebase", "git.drop.menu.cancel"])
+        try fireAll(menu)
+        let dev = Self.remote("origin/dev")
+        #expect(delegate.intents == [.merge(dev), .rebaseOnto(dev)], "Cancel sends nothing")
     }
 }

@@ -28,6 +28,14 @@ public final class GitHistoryViewController: NSViewController {
 
     public weak var delegate: GitHistoryDelegate?
 
+    /// Called with the full name of a ref dragged from the sidebar and dropped on any row
+    /// (`TopicListViewController.itemPasteboardType`). Unset, the table takes no drop.
+    public var onRefDrop: ((_ refFullName: String) -> Void)?
+
+    /// Whether a dragged ref may be dropped at all; unset, any ref may. The owner answers
+    /// it with the same rules its drop menu uses, so a drop it would refuse shows no cursor.
+    public var refDropValidator: ((_ refFullName: String) -> Bool)?
+
     let tableView = ThemedTableView()
     /// The table's menu, refilled for the clicked row each time it opens.
     private let rowMenu = NSMenu()
@@ -124,6 +132,7 @@ public final class GitHistoryViewController: NSViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.accessibilityID("git.history.table")
+        tableView.registerForDraggedTypes([TopicListViewController.itemPasteboardType])
         rowMenu.delegate = self
         tableView.menu = rowMenu
 
@@ -341,6 +350,40 @@ extension GitHistoryViewController: NSMenuDelegate {
 
 extension GitHistoryViewController: NSTableViewDataSource {
     public func numberOfRows(in tableView: NSTableView) -> Int { commits.count }
+
+    public func tableView(
+        _ tableView: NSTableView, validateDrop info: NSDraggingInfo, proposedRow row: Int,
+        proposedDropOperation dropOperation: NSTableView.DropOperation
+    ) -> NSDragOperation {
+        guard canAcceptRefDrop(pasteboard: info.draggingPasteboard) else { return [] }
+        // Any row will do: the drop names a ref, not a commit, so it is always "on".
+        tableView.setDropRow(max(0, min(row, commits.count - 1)), dropOperation: .on)
+        return .generic
+    }
+
+    public func tableView(
+        _ tableView: NSTableView, acceptDrop info: NSDraggingInfo, row: Int,
+        dropOperation: NSTableView.DropOperation
+    ) -> Bool {
+        acceptRefDrop(pasteboard: info.draggingPasteboard)
+    }
+
+    /// Whether `pasteboard` carries a ref the table would take.
+    func canAcceptRefDrop(pasteboard: NSPasteboard) -> Bool {
+        guard onRefDrop != nil,
+              let name = pasteboard.string(forType: TopicListViewController.itemPasteboardType) else { return false }
+        return refDropValidator?(name) ?? true
+    }
+
+    /// Hands `pasteboard`'s ref to `onRefDrop`; false, calling nothing, when the table
+    /// would not take it.
+    @discardableResult
+    func acceptRefDrop(pasteboard: NSPasteboard) -> Bool {
+        guard canAcceptRefDrop(pasteboard: pasteboard), let onRefDrop,
+              let name = pasteboard.string(forType: TopicListViewController.itemPasteboardType) else { return false }
+        onRefDrop(name)
+        return true
+    }
 }
 
 extension GitHistoryViewController: NSTableViewDelegate {

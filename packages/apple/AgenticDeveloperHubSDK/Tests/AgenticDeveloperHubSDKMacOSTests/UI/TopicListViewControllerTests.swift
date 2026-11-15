@@ -186,4 +186,59 @@ final class TopicListViewControllerTests: XCTestCase {
         controller.menuNeedsUpdate(menu)
         XCTAssertTrue(menu.items.isEmpty, "clickedRow is -1 outside a click")
     }
+
+    // MARK: - Drag and drop
+
+    private func pasteboard(with payload: String?) -> NSPasteboard {
+        let board = NSPasteboard(name: NSPasteboard.Name("topic-list-test-\(UUID().uuidString)"))
+        board.clearContents()
+        if let payload { board.setString(payload, forType: TopicListViewController.itemPasteboardType) }
+        return board
+    }
+
+    /// topic-list-036: an item row the provider gives a payload is dragged with it under
+    /// the list's pasteboard type; a declined item, a header and a row outside give none.
+    func testDragWritesThePayloadForDraggableItemsOnly() {
+        let controller = loadedWithSections()
+        XCTAssertNil(controller.pasteboardWriter(forRow: 1), "no provider, nothing is draggable")
+        controller.dragPayloadProvider = { $0.id == "b1" ? "payload-\($0.id)" : nil }
+
+        let writer = controller.pasteboardWriter(forRow: 1)
+        XCTAssertEqual(writer?.string(forType: TopicListViewController.itemPasteboardType), "payload-b1")
+        XCTAssertNil(controller.pasteboardWriter(forRow: 3), "the provider declined t1")
+        XCTAssertNil(controller.pasteboardWriter(forRow: 0), "a header row is never dragged")
+        XCTAssertNil(controller.pasteboardWriter(forRow: 7))
+    }
+
+    /// topic-list-037: a drop is offered only on an item row the validator accepts, and
+    /// delivering it hands onDrop the payload and the row's item.
+    func testDropIsValidatedAndDelivered() {
+        let controller = loadedWithSections()
+        let board = pasteboard(with: "refs/heads/x")
+        XCTAssertFalse(controller.canDrop(pasteboard: board, onRow: 1), "no validator, no drop")
+
+        var validated: [String] = []
+        controller.dropValidator = { payload, target in
+            validated.append("\(payload)>\(target.id)")
+            return target.id == "b1"
+        }
+        var dropped: [String] = []
+        controller.onDrop = { payload, target in dropped.append("\(payload)>\(target.id)") }
+
+        XCTAssertTrue(controller.canDrop(pasteboard: board, onRow: 1))
+        XCTAssertFalse(controller.canDrop(pasteboard: board, onRow: 3), "the validator refused t1")
+        XCTAssertFalse(controller.canDrop(pasteboard: board, onRow: 0), "a header takes no drop")
+        XCTAssertFalse(controller.canDrop(pasteboard: pasteboard(with: nil), onRow: 1), "no payload")
+        XCTAssertFalse(controller.drop(pasteboard: board, onRow: 3))
+        XCTAssertTrue(controller.drop(pasteboard: board, onRow: 1))
+        XCTAssertEqual(dropped, ["refs/heads/x>b1"])
+        XCTAssertTrue(validated.contains("refs/heads/x>t1"))
+    }
+
+    /// topic-list-038: the outline accepts the list's pasteboard type once loaded.
+    func testOutlineRegistersForTheItemType() throws {
+        let controller = loadedWithSections()
+        let outline = try XCTUnwrap(findOutline(in: controller.view))
+        XCTAssertTrue(outline.registeredDraggedTypes.contains(TopicListViewController.itemPasteboardType))
+    }
 }

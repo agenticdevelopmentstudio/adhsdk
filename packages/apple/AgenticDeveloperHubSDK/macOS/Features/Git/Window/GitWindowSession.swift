@@ -34,6 +34,8 @@ final class GitWindowSession {
     let diff: GitDiffViewController
     let blame: GitBlameViewController
     let fileHistory: GitFileHistoryViewController
+    /// The in-progress operation banner, above the overview pane's content.
+    let banner = GitOperationBannerViewController()
 
     /// The three panes, as the layout's factories hand them out.
     let overviewPane: GitWindowOverviewPaneViewController
@@ -89,7 +91,7 @@ final class GitWindowSession {
         detailHost = GitWindowDetailHostViewController(detail: detail)
         right = GitWindowRightSplitViewController(
             top: detailHost, bottom: bottom, autosaveName: Self.autosaveName("git.window.right", root: model.root))
-        overviewPane = GitWindowOverviewPaneViewController()
+        overviewPane = GitWindowOverviewPaneViewController(banner: banner)
         centre = GitWindowHistoryPaneViewController()
         overviewPane.onRefresh = { [weak self] in self?.refresh() }
         centre.onSearch = { [weak self] text in self?.search(text) }
@@ -100,6 +102,13 @@ final class GitWindowSession {
         diff.delegate = self
         blame.delegate = self
         fileHistory.diffViewController.delegate = self
+        banner.delegate = self
+        banner.state = model.operationState
+        history.refDropValidator = { [weak self] name in self?.sidebar.dropMenu(forRefNamed: name) != nil }
+        history.onRefDrop = { [weak self] name in
+            guard let self, let menu = self.sidebar.dropMenu(forRefNamed: name) else { return }
+            self.sidebar.menuPresenter(menu, self.history.tableView)
+        }
         sidebar.selectWorkingCopy()
         overviewPane.show(sidebar)
         centre.show(workingCopy)
@@ -172,6 +181,7 @@ final class GitWindowSession {
     /// working file on a working-copy change, a file's history on a history change.
     func modelDidChange(_ changes: Set<GitRepositoryChange>) {
         let workingCopyChanged = !changes.isDisjoint(with: [.workingCopy, .operation])
+        banner.state = model.operationState
         if changes.contains(.refs) {
             sidebar.reload()
             onRefsChange?()
@@ -198,6 +208,7 @@ final class GitWindowSession {
     /// again, whether or not the refresh reported a change. A commit picked in the
     /// history after the ref stays picked while the ref has not moved.
     func reloadAll() {
+        banner.state = model.operationState
         sidebar.reload()
         history.reload()
         workingCopy.reload()
@@ -340,6 +351,14 @@ extension GitWindowSession: GitRefsSidebarDelegate {
 
 // MARK: - GitHistoryDelegate
 
+extension GitWindowSession: GitOperationBannerDelegate {
+    func banner(_ banner: GitOperationBannerViewController, didRequest intent: GitOperationIntent) {
+        switch intent {
+        case .step(let step): perform(.operation(step))
+        }
+    }
+}
+
 extension GitWindowSession: GitHistoryDelegate {
     func history(_ history: GitHistoryViewController, didSelect commit: GitCommit?) {
         loadGeneration += 1
@@ -424,6 +443,10 @@ extension GitWindowSession: Loggable {
 class GitWindowContainerViewController: NSViewController, PaneTitleProviding {
     private(set) var content: NSViewController?
     private let identifierString: String
+    /// A child shown above the content, at its own height, and collapsing when hidden.
+    private let header: NSViewController?
+    /// Where the content goes: the root, or the area below the header.
+    private let contentHost = NSView()
 
     /// What the pane's title bar says.
     var paneTitle: String {
@@ -431,9 +454,10 @@ class GitWindowContainerViewController: NSViewController, PaneTitleProviding {
     }
     var onPaneTitleChange: (() -> Void)?
 
-    init(identifier: String, paneTitle: String) {
+    init(identifier: String, paneTitle: String, header: NSViewController? = nil) {
         identifierString = identifier
         self.paneTitle = paneTitle
+        self.header = header
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -443,6 +467,31 @@ class GitWindowContainerViewController: NSViewController, PaneTitleProviding {
     override func loadView() {
         let root = NSView()
         root.accessibilityID(identifierString)
+        var views: [NSView] = [contentHost]
+        if let header {
+            addChild(header)
+            views.insert(header.view, at: 0)
+        }
+        let stack = NSStackView(views: views)
+        stack.orientation = .vertical
+        stack.spacing = 0
+        stack.distribution = .fill
+        // A hidden header gives its row back to the content.
+        stack.detachesHiddenViews = true
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        root.addSubview(stack)
+        var constraints = [
+            stack.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            stack.topAnchor.constraint(equalTo: root.topAnchor),
+            stack.bottomAnchor.constraint(equalTo: root.bottomAnchor)
+        ]
+        for view in views {
+            constraints.append(view.widthAnchor.constraint(equalTo: stack.widthAnchor))
+        }
+        header?.view.setContentHuggingPriority(.required, for: .vertical)
+        contentHost.setContentHuggingPriority(.defaultLow, for: .vertical)
+        NSLayoutConstraint.activate(constraints)
         view = root
         if let content { install(content) }
     }
@@ -466,18 +515,19 @@ class GitWindowContainerViewController: NSViewController, PaneTitleProviding {
         addChild(controller)
         let child = controller.view
         child.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(child)
+        contentHost.addSubview(child)
         NSLayoutConstraint.activate([
-            child.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            child.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            child.topAnchor.constraint(equalTo: view.topAnchor),
-            child.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            child.leadingAnchor.constraint(equalTo: contentHost.leadingAnchor),
+            child.trailingAnchor.constraint(equalTo: contentHost.trailingAnchor),
+            child.topAnchor.constraint(equalTo: contentHost.topAnchor),
+            child.bottomAnchor.constraint(equalTo: contentHost.bottomAnchor)
         ])
     }
 }
 
-/// The overview pane: the refs sidebar, with a spinner shown while an action runs and
-/// the Refresh button in the pane's title bar (`PaneAccessoryProviding`).
+/// The overview pane: the refs sidebar under the in-progress operation banner, with a
+/// spinner shown while an action runs and the Refresh button in the pane's title bar
+/// (`PaneAccessoryProviding`).
 @MainActor
 final class GitWindowOverviewPaneViewController: GitWindowContainerViewController, PaneAccessoryProviding {
     /// What the Refresh button does.
@@ -488,8 +538,8 @@ final class GitWindowOverviewPaneViewController: GitWindowContainerViewControlle
     /// Whether the spinner is showing.
     private(set) var isBusy = false
 
-    init() {
-        super.init(identifier: "git.window.overview", paneTitle: "Overview")
+    init(banner: NSViewController) {
+        super.init(identifier: "git.window.overview", paneTitle: "Overview", header: banner)
         busyIndicator.style = .spinning
         busyIndicator.controlSize = .small
         busyIndicator.isIndeterminate = true

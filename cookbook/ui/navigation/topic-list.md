@@ -2,11 +2,11 @@
 id: ce223be3-818a-4310-b136-9e1e84e9af54
 title: "Topic List"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-13
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -187,6 +187,16 @@ component always disables. A section's optional title renders as a
 - **item-double-click**: Component MUST call the double-click callback
   with an item row's item when that row is double-clicked, and MUST NOT
   call it for a section header row or outside the rows.
+- **item-drag-payload**: Component MUST let an item row be dragged exactly when the
+  drag-payload provider returns a payload for its item, and MUST write that payload
+  as a string of the component's item pasteboard type; a section header row, an item
+  the provider declines, and every row while no provider is set MUST NOT drag.
+- **item-drop-validation**: Component MUST accept a drag carrying its item pasteboard
+  type only onto an item row, and only when the drop validator answers yes for the
+  dragged payload and that row's item; a drop between rows, onto a section header,
+  and every drop while no validator is set MUST be refused.
+- **item-drop-delivery**: An accepted drop MUST call the drop callback once with the
+  payload and the target row's item; a refused drop MUST NOT call it.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -309,6 +319,9 @@ component always disables. A section's optional title renders as a
 | topic-list-033 | row-context-menu | The same sections with no providers set | No row has a menu |
 | topic-list-034 | item-double-click | Double-click each of the four rows and row 9 | The callback receives `main`, then `v1`, and nothing else |
 | topic-list-035 | row-context-menu, item-double-click | Inspect the list after it loads; open its menu with no row clicked | The list carries a menu and a double-click action; the opened menu is empty, so none is shown |
+| topic-list-036 | item-drag-payload | Sections `Branches` (`main`, `dev`); a payload provider returning the item's id for `dev` only; ask each row for its drag writer | `dev` writes `dev` as the item type; the header and `main` write nothing; with no provider nothing writes |
+| topic-list-037 | item-drop-validation, item-drop-delivery | The same list, a validator accepting only `dev` onto `main`; drop `dev` and then `x` onto `main`, `dev` onto the header and row 9 | Only `dev` onto `main` is valid, and the callback receives (`dev`, `main`) once |
+| topic-list-038 | item-drop-validation | Inspect the outline after it loads | It is registered for the item pasteboard type |
 ## Edge Cases
 
 - Null/empty input (MUST): An empty grouped setter call yields an empty
@@ -545,6 +558,14 @@ component.
   a synthesized row wrapper as the natural place to attach an identifier and
   a name.
 
+### Drag and drop (macOS)
+
+The item pasteboard type is `TopicListViewController.itemPasteboardType`
+(`com.agenticdeveloperhub.topic-list.item`), a string. The outline registers it in
+`loadView` and allows `.generic` and `.copy` for local drags. A drop is retargeted
+only by the validator's answer: `validateDrop` takes `NSOutlineViewDropOnItemIndex`
+drops alone and returns `.generic`. The providers are `dragPayloadProvider`,
+`dropValidator` and `onDrop`; the list knows nothing of what a payload means.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
@@ -671,3 +692,4 @@ Separation-of-concerns is passed: `TopicListViewController` renders sections and
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.3.0 | 2026-11-13 | Mike Fullerton | Items can carry a trailing badge and be emphasized (bold); the preferred width measures both. Item and section header context menus from client providers, and a double-click callback for item rows (vectors 032-035). |
+| 1.4.0 | 2026-11-15 | Mike Fullerton | Drag and drop: items drag a client payload of the item pasteboard type, drops onto an item row are validated and delivered to the client (vectors 036-038). |

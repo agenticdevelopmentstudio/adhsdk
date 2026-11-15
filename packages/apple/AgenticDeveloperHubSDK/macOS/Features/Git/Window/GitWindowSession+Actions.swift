@@ -15,6 +15,8 @@ extension GitWindowSession {
         case ref(GitRefIntent)
         /// A diff row menu's stage, unstage or discard of some lines.
         case diff(GitDiffIntent)
+        /// The banner's continue, skip or abort of the operation in progress.
+        case operation(GitOperationStep)
         /// The toolbar's verbs.
         case fetch, pull, push, newBranch, stash, popStash
     }
@@ -55,6 +57,7 @@ extension GitWindowSession {
         case let .commit(intent, commit): await run(intent, on: commit)
         case .ref(let intent): await run(intent)
         case .diff(let intent): await run(intent)
+        case .operation(let step): await runOperation(step)
         case .fetch: await execute(.fetch(remote: nil))
         case .pull: await execute(.pull)
         case .push: await pushHead()
@@ -200,7 +203,28 @@ extension GitWindowSession {
         case .popStash(let stash):
             await run(on: stash, failureTitle: "Pop stash failed") { .stashPop(index: $0) }
         case .dropStash(let stash): await drop(stash)
+        // The menu or the drop menu the user chose from is the confirmation.
+        case .merge(let ref): await execute(.merge(ref: ref.fullName, fastForward: .allowed))
+        case .rebaseOnto(let ref): await execute(.rebase(onto: ref.fullName))
         }
+    }
+
+    // MARK: - Operation in progress
+
+    /// Continues, skips or aborts the operation the model says is in progress; nothing
+    /// when there is none. Abort confirms first. A failure shows git's message and leaves
+    /// the operation, and so the banner, in place.
+    private func runOperation(_ step: GitOperationStep) async {
+        guard let kind = model.operationState.kind else { return }
+        if step == .abort {
+            guard let presenter else { return }
+            let confirmation = GitConfirmation(
+                title: "Abort the \(kind.verb)?",
+                message: "The working tree and the branch go back to how they were before it started.",
+                actionTitle: "Abort", isDestructive: true)
+            guard await presenter.confirm(confirmation) else { return }
+        }
+        await execute(.operation(kind, step))
     }
 
     /// A local branch by name; a remote branch as the local branch that already tracks

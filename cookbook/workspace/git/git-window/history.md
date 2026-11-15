@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.7.0 | 2026-11-15 | Mike Fullerton | Merge and rebase from the sidebar's menus and drop menus without a confirmation; the operation banner's Continue, Skip and confirmed Abort through the funnel; the banner follows the model; refs dropped on the history; vectors 051-055 |
 | 1.6.0 | 2026-11-15 | Mike Fullerton | Diff patches: diff intents through the funnel, staged and unstaged with `git apply --cached`, discarded with `git apply --reverse` after a confirmation; vectors 048-050 |
 | 1.5.0 | 2026-11-14 | Mike Fullerton | Review fixes: describes the composable-tabs panes, the project-window id and title; the not-in-a-repository alert; stashes found by sha; close cancels the action; Amend off on an orphan branch; vectors 042-047 |
 | 1.4.0 | 2026-11-14 | Mike Fullerton | Toolbar: Fetch, Pull, Push, Branch, Stash and Pop, aimed at the window's GitWindowToolbar and forwarded to the session's verbs; the toolbar kept beside the session and dropped on close |

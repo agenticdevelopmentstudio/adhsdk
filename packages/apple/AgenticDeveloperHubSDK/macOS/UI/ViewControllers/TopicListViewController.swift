@@ -74,6 +74,21 @@ open class TopicListViewController: NSViewController {
     /// Called with a double-clicked item row's item. A header row calls nothing.
     public var onDoubleClick: (((any TopicListItemProtocol)) -> Void)?
 
+    /// The pasteboard type an item row is dragged as; its string is what
+    /// `dragPayloadProvider` returned for the item.
+    public static let itemPasteboardType = NSPasteboard.PasteboardType("com.agenticdeveloperhub.topic-list.item")
+
+    /// The string an item row is dragged with; nil (or an unset provider) makes the row
+    /// not draggable. Header rows are never draggable.
+    public var dragPayloadProvider: (((any TopicListItemProtocol)) -> String?)?
+
+    /// Whether a dragged payload may be dropped on the item row `target`; unset, nothing
+    /// can be dropped. Only a drop onto an item row is ever offered, never between rows.
+    public var dropValidator: ((_ payload: String, _ target: any TopicListItemProtocol) -> Bool)?
+
+    /// Called with a payload dropped on an item row `dropValidator` accepted.
+    public var onDrop: ((_ payload: String, _ target: any TopicListItemProtocol) -> Void)?
+
     /// The outline's menu, refilled from the providers each time it opens.
     private let rowMenu = NSMenu()
 
@@ -151,6 +166,8 @@ open class TopicListViewController: NSViewController {
         outlineView.delegate = self
         outlineView.target = self
         outlineView.doubleAction = #selector(outlineDoubleClicked(_:))
+        outlineView.registerForDraggedTypes([Self.itemPasteboardType])
+        outlineView.setDraggingSourceOperationMask([.generic, .copy], forLocal: true)
         rowMenu.delegate = self
         outlineView.menu = rowMenu
         // `setItems`/`setSections` can run before the view ever loads — a
@@ -526,6 +543,41 @@ open class TopicListViewController: NSViewController {
         onDoubleClick?(item)
     }
 
+    // MARK: - Drag and drop
+
+    /// The pasteboard writer for `row`'s item: its drag payload under
+    /// `itemPasteboardType`; nil for a header row, a row outside the list, or an item
+    /// the provider gives no payload.
+    func pasteboardWriter(forRow row: Int) -> NSPasteboardItem? {
+        guard rootNodes.indices.contains(row), case .item(let item) = rootNodes[row].kind,
+              let payload = dragPayloadProvider?(item) else { return nil }
+        let pasteboardItem = NSPasteboardItem()
+        pasteboardItem.setString(payload, forType: Self.itemPasteboardType)
+        return pasteboardItem
+    }
+
+    /// Whether `pasteboard`'s payload may be dropped on `row`: an item row
+    /// `dropValidator` accepts it for.
+    func canDrop(pasteboard: NSPasteboard, onRow row: Int) -> Bool {
+        dropTarget(pasteboard: pasteboard, row: row) != nil
+    }
+
+    /// Delivers `pasteboard`'s payload to `onDrop` for `row`; false, delivering
+    /// nothing, when the drop is not one `canDrop` allows.
+    @discardableResult
+    func drop(pasteboard: NSPasteboard, onRow row: Int) -> Bool {
+        guard let (payload, item) = dropTarget(pasteboard: pasteboard, row: row) else { return false }
+        onDrop?(payload, item)
+        return true
+    }
+
+    private func dropTarget(pasteboard: NSPasteboard, row: Int) -> (String, any TopicListItemProtocol)? {
+        guard rootNodes.indices.contains(row), case .item(let item) = rootNodes[row].kind,
+              let payload = pasteboard.string(forType: Self.itemPasteboardType),
+              let dropValidator, dropValidator(payload, item) else { return nil }
+        return (payload, item)
+    }
+
     @objc private func outlineDoubleClicked(_ sender: Any?) {
         doubleClick(row: outlineView.clickedRow)
     }
@@ -676,6 +728,26 @@ extension TopicListViewController: NSOutlineViewDataSource {
 
     public func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
         false
+    }
+
+    public func outlineView(_ outlineView: NSOutlineView, pasteboardWriterForItem item: Any) -> NSPasteboardWriting? {
+        pasteboardWriter(forRow: outlineView.row(forItem: item))
+    }
+
+    public func outlineView(
+        _ outlineView: NSOutlineView, validateDrop info: NSDraggingInfo, proposedItem item: Any?,
+        proposedChildIndex index: Int
+    ) -> NSDragOperation {
+        guard let item, index == NSOutlineViewDropOnItemIndex,
+              canDrop(pasteboard: info.draggingPasteboard, onRow: outlineView.row(forItem: item)) else { return [] }
+        return .generic
+    }
+
+    public func outlineView(
+        _ outlineView: NSOutlineView, acceptDrop info: NSDraggingInfo, item: Any?, childIndex index: Int
+    ) -> Bool {
+        guard let item, index == NSOutlineViewDropOnItemIndex else { return false }
+        return drop(pasteboard: info.draggingPasteboard, onRow: outlineView.row(forItem: item))
     }
 }
 

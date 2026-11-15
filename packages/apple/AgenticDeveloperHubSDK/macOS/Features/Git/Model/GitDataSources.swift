@@ -9,6 +9,8 @@ import AgenticDeveloperHubSDKCore
     var stashes: [GitStash] { get }
     var submodules: [GitSubmodule] { get }
     var worktrees: [GitWorktree] { get }
+    /// The operation in progress; while there is one, nothing offers to merge or rebase.
+    var operationState: GitOperationState { get }
 }
 
 /// The commit list, its graph rows, and the query that selects it.

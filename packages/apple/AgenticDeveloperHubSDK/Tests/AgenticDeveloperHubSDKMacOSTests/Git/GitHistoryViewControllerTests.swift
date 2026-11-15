@@ -623,4 +623,30 @@ struct GitHistoryViewControllerTests {
         if let tableMenu { history.menuNeedsUpdate(tableMenu) }
         #expect(tableMenu?.items.isEmpty == true)
     }
+
+    @Test("a ref dropped on the table reaches onRefDrop, and only a ref the validator allows")
+    func refDrop() {
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("git.history.drop.\(UUID().uuidString)"))
+        defer { pasteboard.releaseGlobally() }
+        pasteboard.clearContents()
+        pasteboard.setString("refs/heads/topic", forType: TopicListViewController.itemPasteboardType)
+        let history = GitHistoryViewController(source: Self.source(count: 2))
+        history.loadViewIfNeeded()
+        #expect(history.tableView.registeredDraggedTypes.contains(TopicListViewController.itemPasteboardType))
+        #expect(!history.acceptRefDrop(pasteboard: pasteboard), "no handler, no drop")
+
+        var dropped: [String] = []
+        history.onRefDrop = { dropped.append($0) }
+        #expect(history.acceptRefDrop(pasteboard: pasteboard))
+        #expect(dropped == ["refs/heads/topic"])
+
+        history.refDropValidator = { $0 != "refs/heads/topic" }
+        #expect(!history.canAcceptRefDrop(pasteboard: pasteboard))
+        #expect(!history.acceptRefDrop(pasteboard: pasteboard))
+        pasteboard.clearContents()
+        pasteboard.setString("plain text", forType: .string)
+        history.refDropValidator = nil
+        #expect(!history.acceptRefDrop(pasteboard: pasteboard), "a drag that is not a ref")
+        #expect(dropped == ["refs/heads/topic"])
+    }
 }
