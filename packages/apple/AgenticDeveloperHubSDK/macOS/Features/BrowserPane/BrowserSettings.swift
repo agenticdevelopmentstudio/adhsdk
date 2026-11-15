@@ -269,7 +269,8 @@ extension UserSettings {
     /// privacy button at its leading edge.
     public static let browserPrivacyShowToolbar = UserSetting<Bool>("browser.privacy.show_toolbar", default: false)
     /// Whether the page's images are drawn as a crossed-out eye instead
-    /// (Agent Privacy's Hide Images). A style sheet does it, so it covers
+    /// (Agent Privacy's Hide Images). Kept by a global reset, like Agent
+    /// Privacy: see `BrowserSettings.keptByResetNames`. A style sheet does it, so it covers
     /// what `BrowserHiddenImages` lists and no more, and a model's screenshot
     /// shows whatever it misses.
     public static let browserPrivacyHideImages = UserSetting<Bool>("browser.privacy.hide_images", default: false)
@@ -393,14 +394,17 @@ public enum BrowserSettings {
     /// Browser keys a reset leaves as they are, for the automation switches'
     /// reason: agent access and agent-while-paused would hand a pane the
     /// user hid or made read only back to the model, Agent Privacy would
-    /// hand the privacy words back to models, and the storage jar
-    /// would move panes off their worktree jar, which the reconciler then
-    /// deletes — site data the reset promises not to touch.
+    /// hand the privacy words back to models, Hide Images (the other half of
+    /// the Agent Privacy group) would draw the images again on screen and in
+    /// a model's screenshot, and the storage jar would move panes off their
+    /// worktree jar, which the reconciler then deletes — site data the reset
+    /// promises not to touch.
     public static let keptByResetNames: Set<String> = [
         UserSettings.browserPrivacyAgentAccess.name,
         UserSettings.browserPrivacyAgentWhilePaused.name,
         UserSettings.browserPrivacyStorageJar.name,
-        UserSettings.browserAgentPrivacy.name
+        UserSettings.browserAgentPrivacy.name,
+        UserSettings.browserPrivacyHideImages.name
     ]
 
     /// Puts every browser setting but `keptByResetNames` back to its default

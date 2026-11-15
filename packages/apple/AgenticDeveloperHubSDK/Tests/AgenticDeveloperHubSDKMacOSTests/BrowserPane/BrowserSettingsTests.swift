@@ -21,7 +21,7 @@ final class BrowserSettingsTests: XCTestCase {
 
     func testEveryBrowserKeyIsNamedUnderTheBrowserPrefix() {
         let names = BrowserSettings.allKeyNames
-        XCTAssertEqual(names.count, 34)
+        XCTAssertEqual(names.count, 36)
         XCTAssertEqual(Set(names).count, names.count, "no two settings share a key")
         for name in names {
             XCTAssertTrue(name.hasPrefix("browser."), "\(name) is not a browser key")
@@ -62,6 +62,32 @@ final class BrowserSettingsTests: XCTestCase {
         XCTAssertEqual(store.get(UserSettings.browserPrivacyAgentAccess), .hidden)
         XCTAssertEqual(store.get(UserSettings.browserPrivacyAgentWhilePaused), .paused)
         XCTAssertEqual(store.get(UserSettings.browserPrivacyStorageJar), .worktree)
+    }
+
+    /// What a reset keeps, named here so adding a key to the Agent Privacy
+    /// group (or dropping one) has to be a decision this test records.
+    func testResetKeepsExactlyAgentAccessThePauseRuleTheJarAgentPrivacyAndHideImages() {
+        XCTAssertEqual(BrowserSettings.keptByResetNames, [
+            UserSettings.browserPrivacyAgentAccess.name,
+            UserSettings.browserPrivacyAgentWhilePaused.name,
+            UserSettings.browserPrivacyStorageJar.name,
+            UserSettings.browserAgentPrivacy.name,
+            UserSettings.browserPrivacyHideImages.name
+        ])
+        XCTAssertTrue(BrowserSettings.keptByResetNames.isSubset(of: Set(BrowserSettings.allKeyNames)))
+    }
+
+    /// Reset must not hand the privacy words, or the page's images, back to
+    /// the screen and to a model's screenshot.
+    func testResetLeavesAgentPrivacyAndHideImagesAlone() {
+        let store = makeStore()
+        store.set(true, for: UserSettings.browserAgentPrivacy)
+        store.set(true, for: UserSettings.browserPrivacyHideImages)
+        store.set(true, for: UserSettings.browserPrivacyShowToolbar)
+        BrowserSettings.reset(in: store)
+        XCTAssertTrue(store.get(UserSettings.browserAgentPrivacy))
+        XCTAssertTrue(store.get(UserSettings.browserPrivacyHideImages))
+        XCTAssertFalse(store.get(UserSettings.browserPrivacyShowToolbar), "the toolbar is a preference, reset")
     }
 
     // MARK: - Reset

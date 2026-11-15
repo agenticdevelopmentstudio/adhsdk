@@ -1241,8 +1241,9 @@ private final class BrowserResetPanel: BrowserTopicPanel {
                         + "topics. Open browser panes pick up the defaults the same way they "
                         + "pick up any other change; a pane's own overrides are kept. Agent "
                         + "access, Agent while paused, the cookie and storage jar and Agent "
-                        + "Privacy are kept as they are, so a reset never hands a page or the "
-                        + "privacy words back to models, nor deletes site data."
+                        + "Privacy, Hide Images included, are kept as they are, so a reset never "
+                        + "hands a page, its images or the privacy words back to models, nor "
+                        + "deletes site data."
                 )
         ])
     }
@@ -1288,7 +1289,8 @@ private final class BrowserResetPanel: BrowserTopicPanel {
     private func confirmReset() {
         ComposableSettings.Alerts.confirmDestructive(
             "Reset all Browser settings?",
-            detail: "Every Browser setting returns to its default, except agent access, Agent Privacy and storage. "
+            detail: "Every Browser setting returns to its default, except agent access, "
+                + "Agent Privacy (Hide Images included) and storage. "
                 + "History and site data are not affected.",
             actionTitle: "Reset",
             on: view.window
