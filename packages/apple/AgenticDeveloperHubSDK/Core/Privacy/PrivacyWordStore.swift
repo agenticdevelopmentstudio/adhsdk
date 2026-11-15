@@ -7,7 +7,10 @@ import Security
 ///
 /// - `isEnabled`: off keeps the word in the list but applies it nowhere.
 /// - `sites`: the site patterns it applies on (``PrivacySitePattern``); `*`
-///   is everywhere, private terminals included.
+///   is everywhere, private terminals included. Never empty: a word with no
+///   sites would be concealed nowhere while it still reads as enabled, so no
+///   sites at all (an emptied editor cell, a stored `[]`) becomes `*`
+///   (``PrivacySitePattern/normalized(_:)``).
 ///
 /// **The JSON is load-bearing**: it is what the keychain item already holds,
 /// and other apps signed by the team read it. Words saved before `sites`
@@ -34,7 +37,9 @@ public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
     /// What the program is given and prints.
     public var real: String
     public var isEnabled: Bool
-    public var sites: [String]
+    public var sites: [String] {
+        didSet { sites = PrivacySitePattern.normalized(sites) }
+    }
 
     public init(
         alias: String, real: String, isEnabled: Bool = true, sites: [String] = [PrivacySitePattern.everywhere]
@@ -42,7 +47,7 @@ public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
         self.alias = alias
         self.real = real
         self.isEnabled = isEnabled
-        self.sites = sites
+        self.sites = PrivacySitePattern.normalized(sites)
     }
 
     /// The word as a substitution pair.
@@ -69,8 +74,10 @@ public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
         alias = try container.decode(String.self, forKey: .alias)
         real = try container.decode(String.self, forKey: .real)
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
-        // Before `sites`, global and pane words alike become `*`.
-        sites = try container.decodeIfPresent([String].self, forKey: .sites) ?? [PrivacySitePattern.everywhere]
+        // Before `sites`, global and pane words alike become `*`; so does a
+        // stored `[]`, which an earlier editor could save.
+        sites = PrivacySitePattern.normalized(
+            try container.decodeIfPresent([String].self, forKey: .sites) ?? [PrivacySitePattern.everywhere])
     }
 
     public func encode(to encoder: Encoder) throws {

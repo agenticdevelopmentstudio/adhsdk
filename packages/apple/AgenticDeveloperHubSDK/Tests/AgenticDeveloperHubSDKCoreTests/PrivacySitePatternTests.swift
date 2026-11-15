@@ -50,6 +50,24 @@ struct PrivacySitePatternTests {
         #expect(PrivacySitePattern.format(["*", "a.com"]) == "*, a.com")
     }
 
+    @Test("a word never has no sites: none at all is *")
+    func emptySitesAreEverywhere() throws {
+        #expect(PrivacySitePattern.normalized([]) == ["*"])
+        #expect(PrivacySitePattern.normalized([" ", ""]) == ["*"])
+        #expect(PrivacySitePattern.normalized([" a.com ", ""]) == ["a.com"])
+
+        // An emptied Sites cell: what the editor sets from parse("").
+        var word = PrivacyWord(alias: "A", real: "a", sites: ["a.com"])
+        word.sites = PrivacySitePattern.parse(" , ")
+        #expect(word.sites == ["*"])
+        #expect(word.applies(at: nil))
+        #expect(PrivacyWord(alias: "A", real: "a", sites: []).sites == ["*"])
+
+        // A `[]` an earlier editor saved.
+        let stored = Data(#"[{"alias":"A","real":"a","enabled":true,"global":false,"sites":[]}]"#.utf8)
+        #expect(try JSONDecoder().decode([PrivacyWord].self, from: stored).first?.sites == ["*"])
+    }
+
     @Test("a new word's default pattern is the page's host")
     func defaultPattern() {
         #expect(PrivacySitePattern.defaultPattern(for: url("https://WWW.Google.com/search")) == "www.google.com/*")

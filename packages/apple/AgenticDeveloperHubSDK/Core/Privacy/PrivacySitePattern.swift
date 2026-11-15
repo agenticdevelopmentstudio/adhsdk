@@ -22,6 +22,16 @@ public enum PrivacySitePattern {
             .filter { !$0.isEmpty }
     }
 
+    /// `patterns` trimmed, empties dropped, and `*` when none is left: a word
+    /// with no sites would apply nowhere, and concealing more is the safe
+    /// direction.
+    public static func normalized(_ patterns: [String]) -> [String] {
+        let kept = patterns
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return kept.isEmpty ? [everywhere] : kept
+    }
+
     /// The patterns as the editor shows them.
     public static func format(_ patterns: [String]) -> String {
         patterns.joined(separator: ", ")

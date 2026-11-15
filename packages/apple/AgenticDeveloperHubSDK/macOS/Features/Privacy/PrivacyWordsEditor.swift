@@ -83,7 +83,8 @@ public final class PrivacyWordsEditor: NSObject {
                 .init(id: Column.sites, title: "Sites", width: 200, kind: .text(editable: true),
                       headerToolTip: "Where the word applies, comma-separated: * is everywhere, "
                         + "private terminals included; google.com/* every page on google.com; "
-                        + "foo.com/hi/* the pages under foo.com/hi; *.google.com any subdomain.")
+                        + "foo.com/hi/* the pages under foo.com/hi; *.google.com any subdomain. "
+                        + "Left empty, it is *.")
             ],
             emptyMessage: "No privacy words yet — add one with +.",
             visibleRows: 8,
@@ -185,9 +186,11 @@ public final class PrivacyWordsEditor: NSObject {
                     Column.alias: .text(row.word.alias),
                     Column.sites: .text(PrivacySitePattern.format(row.word.sites))
                 ],
-                // Half a pair is dropped on save, and a word with no sites
-                // applies nowhere; the tint says so before then.
-                isFlagged: row.word.alias.isEmpty != row.word.real.isEmpty || row.word.sites.isEmpty)
+                // Half a pair is dropped on save; the tint says so before
+                // then. An emptied Sites cell needs no tint: the word takes
+                // `*` (`PrivacyWord.sites` is never empty), and the cell
+                // shows it at once.
+                isFlagged: row.word.alias.isEmpty != row.word.real.isEmpty)
         })
     }
 
