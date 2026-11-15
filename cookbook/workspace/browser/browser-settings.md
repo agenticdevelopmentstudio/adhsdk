@@ -2,7 +2,7 @@
 id: 5a246e6c-2125-4427-a8ab-2f43f2fecba5
 title: "Web Browser Settings Topics"
 type: ingredient
-version: 0.1.0
+version: 0.1.1
 status: draft
 language: en
 created: 2026-11-15
@@ -173,6 +173,7 @@ because each topic's search keywords move with its controls.
 |-------|------------------|
 | Settings window scope | Every topic shows every row it holds, including "Open sites in tabs" and "Keep visits for". |
 | Pane scope | "Open sites in tabs" and "Keep visits for" are absent; pane-overridable rows show the override marker when the pane overrides them. |
+| Chrome pane scope | General leaves out its Media and Web Inspector groups, which only WebKit honours, as the Safari topic they came from was left out of a Chrome pane's sheet. |
 | Overridden (pane scope) | The row shows the override marker and "Use Global Setting", which removes the pane's value. |
 | Site Data window open | The window is modal to the app; the settings window behind it does not take input until Done closes it. |
 | Site Data loading | Refresh re-reads the store; the table keeps its rows until the new answer arrives. |
@@ -444,4 +445,5 @@ Notes: no compliance checks have been run; the code does not exist yet.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-15 | Mike Fullerton | A Chrome pane's sheet leaves General's Media and Web Inspector groups out. |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

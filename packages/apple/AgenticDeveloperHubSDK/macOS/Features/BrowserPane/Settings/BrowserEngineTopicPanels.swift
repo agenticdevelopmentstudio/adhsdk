@@ -45,6 +45,9 @@ public protocol BrowserEngineMaintenance: AnyObject {
 
 // MARK: - Safari
 
+/// What only WebKit offers and has not found another topic: Protection and
+/// the site data table. AirPlay and Web Inspector moved to General with their
+/// keys; the rest goes to Privacy and Security, and then this topic goes.
 @MainActor
 final class SafariBrowserTopicPanel: BrowserTopicPanel {
 
@@ -68,7 +71,8 @@ final class SafariBrowserTopicPanel: BrowserTopicPanel {
             .init(
                 title: "Safari",
                 body: "Settings only Safari Web Browser panes have, because only WebKit "
-                    + "offers them. Chrome panes ignore everything here."
+                    + "offers them. Chrome panes ignore everything here. AirPlay and Web "
+                    + "Inspector, Safari's too, are in General."
             ),
             .init(
                 title: "Protection",
@@ -81,21 +85,6 @@ final class SafariBrowserTopicPanel: BrowserTopicPanel {
                     + "web technologies, fonts and media formats are refused, which "
                     + "breaks some sites in exchange for a smaller attack surface. It "
                     + "applies to the next page each pane loads."
-            ),
-            .init(
-                title: "Media",
-                body: "Allow AirPlay lets a page's video offer the AirPlay control. It is "
-                    + "fixed when a Safari pane's web view is made: in the Settings window "
-                    + "it applies to panes opened after the change, and in a pane's "
-                    + "settings when the sheet closes."
-            ),
-            .init(
-                title: "Web Inspector",
-                body: "Safari's Web Inspector, attached to a Safari pane's page. With it "
-                    + "on, right-click a page and choose Inspect Element, or open Safari's "
-                    + "Develop menu and find this app under your Mac's name. Off is the "
-                    + "default because an inspectable page is one any process with "
-                    + "Safari's privileges can read."
             ),
             .init(
                 title: "Site Data",
@@ -127,7 +116,7 @@ final class SafariBrowserTopicPanel: BrowserTopicPanel {
 
     static let keywords: [String] = [
         "safari", "webkit", "privacy", "security", "fraud", "phishing", "https", "lockdown mode", "tracking",
-        "airplay", "web inspector", "inspect element", "site data", "local storage", "cache"
+        "site data", "local storage", "cache"
     ]
 
     override var searchKeywords: [String] { Self.keywords }
@@ -135,8 +124,6 @@ final class SafariBrowserTopicPanel: BrowserTopicPanel {
     override func viewDidLoad() {
         super.viewDidLoad()
         settingsView.addGroup(makeProtectionGroup())
-        settingsView.addGroup(makeMediaGroup())
-        settingsView.addGroup(makeInspectorGroup())
         let table = makeTable()
         self.table = table
         settingsView.addGroup(table)
@@ -145,15 +132,6 @@ final class SafariBrowserTopicPanel: BrowserTopicPanel {
     override func viewWillAppear() {
         super.viewWillAppear()
         reload()
-    }
-
-    /// When a setting WebKit fixes at construction takes effect: in a pane's
-    /// sheet the binding says; in the Settings window, Safari panes opened
-    /// after the change.
-    private func constructionNote(for key: String) -> String {
-        binding.isPaneScope
-            ? binding.constructionNote(for: key)
-            : "Applies to Safari panes opened after the change."
     }
 
     private func makeProtectionGroup() -> ComposableSettings.GroupView {
@@ -166,7 +144,7 @@ final class SafariBrowserTopicPanel: BrowserTopicPanel {
 
         let https = binding.model(
             "Upgrade known sites to HTTPS", UserSettings.browserUpgradesToHTTPS,
-            explanation: constructionNote(for: UserSettings.browserUpgradesToHTTPS.name)
+            explanation: binding.safariConstructionNote(for: UserSettings.browserUpgradesToHTTPS.name)
         )
         let httpsView = ComposableSettings.CheckboxView(with: https)
         _ = httpsView.toggle.accessibilityID("settings.browser.safari.upgrade-https")
@@ -181,30 +159,6 @@ final class SafariBrowserTopicPanel: BrowserTopicPanel {
         _ = lockdownView.toggle.accessibilityID("settings.browser.safari.lockdown")
         binding.add(lockdownView, model: lockdown, key: UserSettings.browserLockdownMode, to: group)
 
-        return group
-    }
-
-    private func makeMediaGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Media")
-        let airPlay = binding.model(
-            "Allow AirPlay", UserSettings.browserAllowsAirPlay,
-            explanation: constructionNote(for: UserSettings.browserAllowsAirPlay.name)
-        )
-        let airPlayView = ComposableSettings.CheckboxView(with: airPlay)
-        _ = airPlayView.toggle.accessibilityID("settings.browser.safari.airplay")
-        binding.add(airPlayView, model: airPlay, key: UserSettings.browserAllowsAirPlay, to: group)
-        return group
-    }
-
-    private func makeInspectorGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Web Inspector")
-        let inspector = binding.model(
-            "Allow Web Inspector", UserSettings.browserWebInspectorEnabled,
-            explanation: "Right-click a page and choose Inspect Element."
-        )
-        let inspectorView = ComposableSettings.CheckboxView(with: inspector)
-        _ = inspectorView.toggle.accessibilityID("settings.browser.safari.inspector")
-        binding.add(inspectorView, model: inspector, key: UserSettings.browserWebInspectorEnabled, to: group)
         return group
     }
 

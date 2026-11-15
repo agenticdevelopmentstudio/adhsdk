@@ -21,11 +21,12 @@ public enum BrowserSettingsScope {
 }
 
 /// Settings panel for the browser panes: a topic list on the left — General,
-/// History, Cookies, Privacy, Media and Permissions, Downloads,
-/// Safari, Chrome, Reset — and the chosen topic's controls on the right, the
-/// shape the Language Servers panel has. Safari and Chrome hold what only that
-/// engine has; every other topic applies to both. In a pane's sheet only the
-/// pane's own engine topic is listed.
+/// Behavior, Appearance, History, Cookies, Privacy, Media and Permissions,
+/// Downloads, Safari, Chrome, Reset — and the chosen topic's controls on the
+/// right, the shape the Language Servers panel has. Safari and Chrome hold
+/// what only that engine has; every other topic applies to both. In a pane's
+/// sheet only the pane's own engine topic is listed. A control that moves
+/// between topics keeps its setting key (`keys-never-change`).
 ///
 /// **One panel definition serves both scopes** (`dry`). Every row reads and
 /// writes through `ViewModel(title:get:set:)` over the scope's store — the
@@ -106,7 +107,8 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
                         + "drawn by WebKit or by Chromium. These topics decide how their pages "
                         + "load, what they remember about where you have been, what sites may "
                         + "keep and do, and where downloads land. Safari and Chrome hold what "
-                        + "only that browser has; every other topic applies to both. Pick a "
+                        + "only that browser has, and General's AirPlay and Web Inspector are "
+                        + "Safari's alone; every other setting applies to both. Pick a "
                         + "topic on the left."
             )
         ]
@@ -156,7 +158,8 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     /// terms are listed here as well, from the same declarations the topics
     /// use (`dry`).
     public override var searchKeywords: [String] {
-        BrowserGeneralPanel.keywords + BrowserHistoryPanel.keywords + BrowserCookiesPanel.keywords
+        BrowserGeneralPanel.keywords + BrowserBehaviorPanel.keywords + BrowserAppearancePanel.keywords
+            + BrowserHistoryPanel.keywords + BrowserCookiesPanel.keywords
             + BrowserPrivacySettingsPanel.keywords + BrowserMediaPanel.keywords
             + BrowserDownloadsPanel.keywords
             + (showsSafariTopic ? SafariBrowserTopicPanel.keywords : [])
@@ -174,6 +177,8 @@ public final class BrowserSettingsPanelViewController: ComposableSettings.Settin
     public override func viewDidLoad() {
         super.viewDidLoad()
         addPanel(BrowserGeneralPanel(binding: binding))
+        addPanel(BrowserBehaviorPanel(binding: binding))
+        addPanel(BrowserAppearancePanel(binding: binding))
         addPanel(BrowserHistoryPanel(history: history, binding: binding))
         addPanel(BrowserCookiesPanel(title: cookiesTitle, binding: binding))
         addPanel(BrowserPrivacySettingsPanel(binding: binding))
@@ -409,6 +414,12 @@ final class BrowserSettingsBinding {
         return "Applies to browser panes opened after the change."
     }
 
+    /// The same for a setting only WebKit has: in the Settings window it
+    /// applies to Safari panes opened after the change, not every pane.
+    func safariConstructionNote(for name: String) -> String {
+        isPaneScope ? constructionNote(for: name) : "Applies to Safari panes opened after the change."
+    }
+
     // MARK: View models
 
     /// Reads and writes for `key`. A locked row reads the global value and
@@ -612,6 +623,10 @@ class BrowserTopicPanel: ComposableSettings.SettingsPanelViewController {
 
 // MARK: - General
 
+/// What is the browser's own rather than a page's: the name it gives sites,
+/// and the two WebKit-only switches that were the Safari topic's — AirPlay
+/// and Web Inspector. A Chrome pane's sheet leaves those two out, since
+/// Chromium honours neither (`principle-of-least-astonishment`).
 @MainActor
 private final class BrowserGeneralPanel: BrowserTopicPanel {
 
@@ -619,40 +634,13 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
         super.init(title: "General", symbol: "gearshape", binding: binding)
     }
 
+    /// False only in a Chrome pane's sheet.
+    private var showsSafariOnlyGroups: Bool {
+        binding.pane?.engineKind != .chrome
+    }
+
     override var helpContent: ComposableSettings.PanelHelp? {
-        ComposableSettings.PanelHelp(topics: [
-            .init(
-                title: "“New” Opens Tabs",
-                body: "File ▸ New (⌘N) over a web browser window normally opens another web "
-                    + "browser window. With this on, it opens a new tab in the window in front "
-                    + "instead, as File ▸ New Tab does."
-            ),
-            .init(
-                title: "Tab Position",
-                body: "In a pane's settings: which edges of this pane show its tab bar. "
-                    + "Without an override the pane follows the app's own tab position, "
-                    + "set in System ▸ General or View ▸ Tab Position; changing a switch "
-                    + "here gives the pane its own, and Use Global Setting in the row's "
-                    + "menu goes back. At least one edge stays on."
-            ),
-            .init(
-                title: "Home Page",
-                body: "What a new browser pane opens on when it has no page to go back to. "
-                    + "Blank opens an empty page, with the address bar ready. A bare host "
-                    + "such as example.com gets https:// in front, exactly as it would in "
-                    + "the address bar. A pane that was closed on a page reopens on that "
-                    + "page, not the home page."
-            ),
-            .init(
-                title: "Page",
-                body: "Zoom scales every page, from half size to three times, and applies "
-                    + "to open panes at once. Minimum font size stops a page using text "
-                    + "smaller than this many points; zero lets the page decide. "
-                    + "JavaScript off applies to the next page each pane loads, and most "
-                    + "of the web stops working without it; in a Chrome pane it applies at once. "
-                    + "Block pop-up windows refuses a window a page opens on its own; a link that opens a new window "
-                    + "still loads, in the same pane."
-            ),
+        var topics: [ComposableSettings.PanelHelp.Topic] = [
             .init(
                 title: "User Agent",
                 body: "The name the browser gives sites. Blank uses each engine's own: "
@@ -662,108 +650,42 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
                     + "serve a different page to a browser they do not recognise, which "
                     + "is the reason to change it and the reason to leave it alone."
             )
-        ])
+        ]
+        guard showsSafariOnlyGroups else { return ComposableSettings.PanelHelp(topics: topics) }
+        topics.append(.init(
+            title: "Media",
+            body: "Allow AirPlay lets a page's video offer the AirPlay control, in Safari "
+                + "panes only. It is fixed when a Safari pane's web view is made: in the "
+                + "Settings window it applies to panes opened after the change, and in a "
+                + "pane's settings when the sheet closes."
+        ))
+        topics.append(.init(
+            title: "Web Inspector",
+            body: "Safari's Web Inspector, attached to a Safari pane's page. With it "
+                + "on, right-click a page and choose Inspect Element, or open Safari's "
+                + "Develop menu and find this app under your Mac's name. Off is the "
+                + "default because an inspectable page is one any process with "
+                + "Safari's privileges can read. Chrome panes have their own developer "
+                + "tools."
+        ))
+        return ComposableSettings.PanelHelp(topics: topics)
     }
 
+    /// Every control's title, then the other words someone might search by.
     static let keywords: [String] = [
-        "new opens tabs", "new tab", "home page", "start page", "zoom", "font size",
-        "javascript", "pop-up", "popup", "user agent", "tab position", "tabs"
+        "Custom user agent", "Allow AirPlay", "Allow Web Inspector",
+        "user agent", "airplay", "Web Inspector", "inspect element", "develop"
     ]
 
     override var searchKeywords: [String] { Self.keywords }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // A window's New, not a pane's: shown only in the app's Settings.
-        if !binding.isPaneScope {
-            settingsView.addGroup(makeWindowsGroup())
-        }
-        // A pane's own tab positions: in the app's Settings there is no pane
-        // to override for, and the app-wide value is System ▸ General's.
-        if binding.isPaneScope {
-            settingsView.addGroup(makeTabsGroup())
-        }
-        settingsView.addGroup(makeHomeGroup())
-        settingsView.addGroup(makePageGroup())
         settingsView.addGroup(makeUserAgentGroup())
-    }
-
-    private func makeWindowsGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Windows")
-        let checkbox = ComposableSettings.CheckboxView(with: ComposableSettings.ViewModel<Bool>(
-            title: "“New” opens tabs",
-            setting: UserSettings.browserNewOpensTabs
-        ))
-        _ = checkbox.accessibilityID("settings.browser.general.new-opens-tabs")
-        group.addSettingSubview(checkbox)
-        return group
-    }
-
-    private func makeTabsGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Tabs")
-        let key = UserSettings.browserTabsPositions
-        let store = binding.store
-        let row = TabPositionsSettingView(
-            get: { BrowserSettings.tabPositions(in: store) },
-            set: { store.set($0, for: key) },
-            identifierPrefix: "settings.browser.general.tab-position"
-        )
-        let layered = binding.layered
-        binding.add(row, name: key.name, model: nil, to: group, refresh: { [weak row] in
-            row?.refresh()
-        }, hasOverride: {
-            layered?.hasOverride(key) ?? false
-        }, revert: { [weak row] in
-            layered?.removeOverride(key)
-            row?.refresh()
-        })
-        return group
-    }
-
-    private func makeHomeGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Home Page")
-        let home = binding.model(
-            "Address", UserSettings.browserHomePage,
-            explanation: "Blank opens an empty page. A host without a scheme gets https:// in front."
-        )
-        let field = ComposableSettings.TextEditView(with: home)
-        field.textField.placeholderString = "example.com"
-        _ = field.textField.accessibilityID("settings.browser.general.home-page")
-        binding.add(field, model: home, key: UserSettings.browserHomePage, to: group)
-        return group
-    }
-
-    private func makePageGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Page")
-
-        let zoom = binding.range("Zoom", UserSettings.browserPageZoom, bounds: BrowserSettings.pageZoomRange)
-        let zoomView = ComposableSettings.CaptionedSliderView(viewModel: zoom) { "\(Int(($0 * 100).rounded()))%" }
-        _ = zoomView.slider.accessibilityID("settings.browser.general.zoom")
-        binding.add(zoomView, model: zoom, key: UserSettings.browserPageZoom, to: group)
-
-        let fontSize = binding.range(
-            "Minimum font size", UserSettings.browserMinimumFontSize,
-            bounds: BrowserSettings.minimumFontSizeRange,
-            explanation: "In points. Zero lets each page choose its own."
-        )
-        let fontView = ComposableSettings.IntegerFieldView(viewModel: fontSize)
-        _ = fontView.textField.accessibilityID("settings.browser.general.minimum-font-size")
-        binding.add(fontView, model: fontSize, key: UserSettings.browserMinimumFontSize, to: group)
-
-        let javaScript = binding.model(
-            "Enable JavaScript", UserSettings.browserJavaScriptEnabled,
-            explanation: "Applies to the next page each pane loads."
-        )
-        let javaScriptView = ComposableSettings.CheckboxView(with: javaScript)
-        _ = javaScriptView.toggle.accessibilityID("settings.browser.general.javascript")
-        binding.add(javaScriptView, model: javaScript, key: UserSettings.browserJavaScriptEnabled, to: group)
-
-        let popups = binding.model("Block pop-up windows", UserSettings.browserBlocksPopups)
-        let popupsView = ComposableSettings.CheckboxView(with: popups)
-        _ = popupsView.toggle.accessibilityID("settings.browser.general.block-popups")
-        binding.add(popupsView, model: popups, key: UserSettings.browserBlocksPopups, to: group)
-
-        return group
+        if showsSafariOnlyGroups {
+            settingsView.addGroup(makeMediaGroup())
+            settingsView.addGroup(makeInspectorGroup())
+        }
     }
 
     private func makeUserAgentGroup() -> ComposableSettings.GroupView {
@@ -776,6 +698,30 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
         field.textField.placeholderString = "Default"
         _ = field.textField.accessibilityID("settings.browser.general.user-agent")
         binding.add(field, model: agent, key: UserSettings.browserCustomUserAgent, to: group)
+        return group
+    }
+
+    private func makeMediaGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Media")
+        let airPlay = binding.model(
+            "Allow AirPlay", UserSettings.browserAllowsAirPlay,
+            explanation: binding.safariConstructionNote(for: UserSettings.browserAllowsAirPlay.name)
+        )
+        let airPlayView = ComposableSettings.CheckboxView(with: airPlay)
+        _ = airPlayView.toggle.accessibilityID("settings.browser.safari.airplay")
+        binding.add(airPlayView, model: airPlay, key: UserSettings.browserAllowsAirPlay, to: group)
+        return group
+    }
+
+    private func makeInspectorGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Web Inspector")
+        let inspector = binding.model(
+            "Allow Web Inspector", UserSettings.browserWebInspectorEnabled,
+            explanation: "Right-click a page and choose Inspect Element."
+        )
+        let inspectorView = ComposableSettings.CheckboxView(with: inspector)
+        _ = inspectorView.toggle.accessibilityID("settings.browser.safari.inspector")
+        binding.add(inspectorView, model: inspector, key: UserSettings.browserWebInspectorEnabled, to: group)
         return group
     }
 }
@@ -1065,6 +1011,9 @@ private final class BrowserCookiesPanel: BrowserTopicPanel {
 
 // MARK: - Media and permissions
 
+/// What a page may ask of the Mac's camera and microphone. Playback moved to
+/// Behavior and keeps its key; this topic goes when Privacy and Security
+/// takes its group.
 @MainActor
 private final class BrowserMediaPanel: BrowserTopicPanel {
 
@@ -1075,68 +1024,26 @@ private final class BrowserMediaPanel: BrowserTopicPanel {
     override var helpContent: ComposableSettings.PanelHelp? {
         ComposableSettings.PanelHelp(topics: [
             .init(
-                title: "Playback",
-                body: "Autoplay decides whether a page may start video or audio without a "
-                    + "click: allowed, only without sound (the usual browser default — a "
-                    + "muted video plays, one with sound waits), or never. A Safari pane "
-                    + "fixes it when the pane is created: in the Settings window it applies "
-                    + "to Safari panes opened after the change, and in a Safari pane's "
-                    + "settings when the sheet closes. Chromium reads it once when it "
-                    + "starts, so Chrome panes follow it the next time the app opens. Never "
-                    + "in a Chrome pane still lets a muted video play: Chromium has no "
-                    + "policy that stops one. AirPlay is Safari's alone and is in the "
-                    + "Safari topic."
-            ),
-            .init(
                 title: "Camera and Microphone",
                 body: "What happens when a page asks for the camera or microphone. Ask "
                     + "each time shows a sheet on the pane's window naming the site and "
                     + "the device, and the answer holds for that page. Always allow grants "
                     + "every request without asking; never allow refuses them all. macOS "
-                    + "still asks once, the first time the app itself uses either device."
+                    + "still asks once, the first time the app itself uses either device. "
+                    + "Autoplay is in Behavior."
             )
         ])
     }
 
     static let keywords: [String] = [
-        "autoplay", "video", "audio", "camera", "microphone", "permissions", "webcam"
+        "When a page asks", "camera", "microphone", "permissions", "webcam"
     ]
 
     override var searchKeywords: [String] { Self.keywords }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        settingsView.addGroup(makePlaybackGroup())
         settingsView.addGroup(makeCaptureGroup())
-    }
-
-    private func makePlaybackGroup() -> ComposableSettings.GroupView {
-        let group = ComposableSettings.GroupView(withTitle: "Playback")
-
-        let autoplay = binding.choice(
-            "Autoplay", UserSettings.browserAutoplay,
-            choices: BrowserAutoplayPolicy.allCases.map { .init(label: $0.label, value: $0) },
-            explanation: autoplayNote
-        )
-        let autoplayView = ComposableSettings.PopupMenuChoiceView(viewModel: autoplay)
-        _ = autoplayView.popUpButton.accessibilityID("settings.browser.media.autoplay")
-        binding.add(autoplayView, model: autoplay, key: UserSettings.browserAutoplay, to: group)
-
-        return group
-    }
-
-    /// When autoplay takes effect differs by engine: a Safari pane fixes it
-    /// when its page is made, Chromium once when it starts.
-    private var autoplayNote: String {
-        guard let pane = binding.pane else {
-            return "Applies to Safari panes opened after the change, and to Chrome "
-                + "panes the next time the app opens."
-        }
-        switch pane.engineKind {
-        case .safari: return binding.constructionNote(for: UserSettings.browserAutoplay.name)
-        case .chrome: return "Chrome panes all follow the Settings window's value, "
-            + "from the next time the app opens."
-        }
     }
 
     private func makeCaptureGroup() -> ComposableSettings.GroupView {
