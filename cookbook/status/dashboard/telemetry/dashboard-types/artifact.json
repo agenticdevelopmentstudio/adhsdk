@@ -4,7 +4,7 @@
     "id": "e8f3cd4d-e208-49db-a500-24d6f7b978f9",
     "title": "Dashboard Wire Types",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1803656ebc1035f6",
+  "synced": "1a123612b66626cc",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

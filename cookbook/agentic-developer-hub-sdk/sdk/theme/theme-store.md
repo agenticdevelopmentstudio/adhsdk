@@ -2,7 +2,7 @@
 id: d15bba09-4574-4fd1-93a0-f7d2cccd04f2
 title: "ThemeStore"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -229,7 +229,7 @@ Not applicable: `ThemeStore.swift` makes no log call; failures are thrown to the
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeStore.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeStore.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -270,11 +270,12 @@ Not applicable: `ThemeStore.swift` makes no log call; failures are thrown to the
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | security |
 
-The store does one job, cataloguing themes over an injected storage, and leaves palette parsing, the theme value, persistence and the active selection to `ITermColorsParser`, `ColorTheme`, `ThemeStorage` and `ThemeManager`, so separation of concerns passes. Unit-test coverage is partial: `ThemeStoreTests` covers add, update, delete, duplicate, add-new, both import routes, content sniffing, validation failures and name disambiguation, but the Source-derived vectors (007, 009, 018, 019 and 025 through 031) have no test; they are the tests still to write. Explicit error handling passes: import and export failures are thrown typed or propagated, and the store cannot see a storage write failure (`write-failure-silent`), which is a documented property of the non-throwing `ThemeStorage` setters rather than a defect in the store. Input sanitization passes for the import boundary, which assigns a fresh id, forces the lock flags, validates the palette and clamps the scale, while the unvalidated `add(_:)` is a documented caller responsibility.
+The store does one job, cataloguing themes over an injected storage, and leaves palette parsing, the theme value, persistence and the active selection to `ITermColorsParser`, `ColorTheme`, `ThemeStorage` and `ThemeManager`, so separation of concerns passes. Unit-test coverage is partial: `ThemeStoreTests` covers add, update, delete, duplicate, add-new, both import routes, content sniffing, validation failures and name disambiguation, and the Source-derived vectors (007, 009, 018, 019 and 025 through 031) now have tests in the same file (the `v0NN` tests); only vector 032 is skipped, because it is a structural guarantee (`init(storage:)`, `@MainActor`, no suspension) checked by compilation and inspection with no runtime behavior to assert. Explicit error handling passes: import and export failures are thrown typed or propagated, and the store cannot see a storage write failure (`write-failure-silent`), which is a documented property of the non-throwing `ThemeStorage` setters rather than a defect in the store. Input sanitization passes for the import boundary, which assigns a fresh id, forces the lock flags, validates the palette and clamps the scale, while the unvalidated `add(_:)` is a documented caller responsibility.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (ThemeStoreTests.swift, 31 of 32 vectors); unit-test-coverage stays partial (032 structural, skipped). |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Merged the duplicate delete no-op requirements, re-evaluated explicit error handling as passed, relabelled vector 008 as test-traced, marked vector 032 structural, aligned the test gap list with the Source-derived vectors, fixed the persistence prose and added depends-on, related and in-text links. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Non-finite size scale becomes 1.0; a delete that matches nothing skips the write; claims verified against source |

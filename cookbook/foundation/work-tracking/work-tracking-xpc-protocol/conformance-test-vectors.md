@@ -1,5 +1,5 @@
 
-Vectors 001, 005, 007, 008 and 009 are backed by named tests; the others are derived from the source and have no test yet.
+Vectors 001, 005, 007, 008 and 009 are backed by tests in `WorkTrackingXPCClientTests`; 002, 006, 011, 012, 013 and 014 by `WorkTrackingXPCProtocolConformanceTests`. Vectors 003, 004 and 010 (daemon-side replies) and 015 (a static property) are spec-only.
 
 Derived from the protocol's doc comments and from `WorkTrackingXPCClientTests`, whose `RecordingProxy` conforms to the protocol and captures the set-preferences body, and whose literals show the reply shapes.
 
@@ -16,7 +16,7 @@ Derived from the protocol's doc comments and from `WorkTrackingXPCClientTests`, 
 | work-tracking-xpc-protocol-009 | spans-empty-is-none | No spans match | empty array (same test) |
 | work-tracking-xpc-protocol-010 | spans-since | `since` nil | spans from any start are included |
 | work-tracking-xpc-protocol-011 | spans-failure-row | Inspect `WorkTrackingWire.readFailedRow` | the bytes are `{"work_tracking_read_failed":true}` and `readFailedKey` is `work_tracking_read_failed` |
-| work-tracking-xpc-protocol-012 | selectors-stable | List the protocol's selector names | exactly `workTrackingSetPreferences:reply:`, `workTrackingStatus:`, `workTrackingRecheckPermissions:`, `workTrackingSpans:limit:reply:` (spec-only) |
+| work-tracking-xpc-protocol-012 | selectors-stable | List the protocol's selector names | exactly `workTrackingSetPreferences:reply:`, `workTrackingStatusWithReply:`, `workTrackingRecheckPermissionsWithReply:`, `workTrackingSpansSince:limit:reply:` |
 | work-tracking-xpc-protocol-013 | objc-protocol | Build an `NSXPCInterface(with: WorkTrackingXPCProtocol.self)` (spec-only) | it builds without a runtime error |
 | work-tracking-xpc-protocol-014 | reply-once-async | Daemon stub calls the `reply` of `workTrackingStatus` after the selector returned (spec-only) | the caller still receives the reply |
 | work-tracking-xpc-protocol-015 | no-error-channel | Inspect each selector's parameter and reply types (spec-only) | none carries an `Error` or a reason string; replies are `Data` or `[Data]` |

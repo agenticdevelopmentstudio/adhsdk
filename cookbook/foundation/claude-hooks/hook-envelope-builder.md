@@ -2,7 +2,7 @@
 id: 9e4aba28-ae2b-4733-b6a5-62e9ad5c7a19
 title: "Hook Envelope Builder"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -37,7 +37,7 @@ approved-date: ""
 
 `HookEnvelopeBuilder` is the daemon-side counterpart of the hook capture command. A daemon that listens for hooks receives them in one of two forms: over its Unix socket, as the wire format a hook script sends (event, `ppid`, `KEY=value` environment lines, a `---` line, then the payload), or over an `http` hook, which carries only the payload JSON. The builder turns either into a `ParsedEvent` ready for ingestion, with the same context shape the capture command writes into a drop file, so events that arrive over the socket and through drop files are queryable identically.
 
-The file holds two types. `HookEnvelopeBuilder` has two `build` overloads (the payload-only http form and the full socket form), `buildContext`, `parseWire` and the stored `daemonWorkingDirectory`; it builds on [HookCaptureCommand](cookbook:826153e3-cae8-4917-a1d3-c298a54ab558), [ProcessEnv](cookbook:fa0fce58-5e17-41da-b3eb-0d2de9e89b46), [ProcessLiveness](cookbook:8ec76506-7cb3-4aca-a9a0-07f014500e7e) and [RawSetting](cookbook:a8bfcd0b-0759-4801-aaf6-a14d7aa3fe49). `HookEnvCache` is a lock-guarded memo, with a three-second time to live, for the two expensive lookups the http form needs: which `claude` process owns a working directory, and what that process's environment is. The account lookups are injected closures because the toolkit core has no account store; both default to the empty string, the "no answer" value.
+The file holds two types. `HookEnvelopeBuilder` has two `build` overloads (the payload-only http form and the full socket form), `buildContext`, `parseWire` and the stored `daemonWorkingDirectory`; it builds on HookCaptureCommand ([adhsdk.ingredient.foundation.claude-hooks.hook-capture-command](cookbook:826153e3-cae8-4917-a1d3-c298a54ab558)), ProcessEnv ([adhsdk.ingredient.foundation.process.process-env](cookbook:fa0fce58-5e17-41da-b3eb-0d2de9e89b46)), ProcessLiveness ([adhsdk.ingredient.foundation.process.process-liveness](cookbook:8ec76506-7cb3-4aca-a9a0-07f014500e7e)) and RawSetting ([adhsdk.ingredient.foundation.raw-setting](cookbook:a8bfcd0b-0759-4801-aaf6-a14d7aa3fe49)). `HookEnvCache` is a lock-guarded memo, with a three-second time to live, for the two expensive lookups the http form needs: which `claude` process owns a working directory, and what that process's environment is. The account lookups are injected closures because the toolkit core has no account store; both default to the empty string, the "no answer" value.
 
 The system fields (`hostname`, `os`, `arch`, `uid`, `euid`, `gid`) are computed in the calling process. The doc comment on `HookEnvelopeBuilder` states that a daemon runs as the same user as the hook-firing process, so they match.
 
@@ -230,7 +230,7 @@ Not applicable: the builder makes no log call; a rejected event is signalled by 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookEnvelopeBuilder.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookEnvelopeBuilder.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -281,18 +281,19 @@ Not applicable: the builder makes no log call; a rejected event is signalled by 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | performance |
 | [adc.check.performance.resource-efficiency](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d5fe7b8e-1051-5581-b2c5-1adae8fdd5fc) | passed | performance |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | security |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | passed | security |
 
-Separation of concerns is partial: one file holds the event builder, the context builder, the wire parser and the cache, though each is a distinct type or function with its own comment. Unit-test coverage is failed because no test in the repository calls `HookEnvelopeBuilder` or `HookEnvCache`; the source says tests inject resolvers, but none were found. The caching strategy and resource efficiency are passed: the cache bounds a process-table scan to once per three seconds per key and is size-checked. Graceful degradation is passed because every lookup failure leaves a built event with fields absent rather than an error. Input sanitization is partial because the wire parser is lenient but the unchecked `ppid` conversion is the open question on `ppid-range`. Token lifecycle is passed because the token is recovered per event, used only for the account lookup and never stored in the event.
+Separation of concerns is partial: one file holds the event builder, the context builder, the wire parser and the cache, though each is a distinct type or function with its own comment. Unit-test coverage is partial: `HookEnvelopeBuilderConformanceTests.swift` covers 31 of 35 vectors. builder-027, builder-028, builder-029 and builder-030 are skipped because `HookEnvCache` has no injectable resolver and keeps its maps private, so resolution counts and eviction cannot be observed (builder-030 also needs more than three real seconds). builder-031 is tested for no-crash only. The caching strategy and resource efficiency are passed: the cache bounds a process-table scan to once per three seconds per key and is size-checked. Graceful degradation is passed because every lookup failure leaves a built event with fields absent rather than an error. Input sanitization is partial because the wire parser is lenient but the unchecked `ppid` conversion is the open question on `ppid-range`. Token lifecycle is passed because the token is recovered per event, used only for the account lookup and never stored in the event.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (HookEnvelopeBuilderConformanceTests.swift, 31 of 35 vectors); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the source path out of references, linked its dependencies, turned context-event-unused into a pending decision, dropped http-payload-parsed-once, split and corrected vectors, and corrected the retention wording. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

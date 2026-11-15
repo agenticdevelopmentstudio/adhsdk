@@ -2,7 +2,7 @@
 id: a105b6cf-307d-4156-8b73-468f627f3c9b
 title: "Checkbox"
 type: ingredient
-version: 1.4.3
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-22
@@ -51,7 +51,7 @@ This ingredient covers two source files that together make up "Checkbox": the fo
 - **custom-classname**: In the Wrapper and the Primitive, the component MUST accept a `className` prop and apply it to its root container — the wrapper's outer `<div>` (`Checkbox.tsx`, `cls` array joined with `.filter(Boolean).join(' ')`) and, independently, the primitive's `CheckboxPrimitive.Root` (`checkbox.tsx`, `className={cn(..., className)}`).
 - **custom-id**: In the Wrapper, the component MUST accept an `id` prop that is passed to the input element for label association (`Checkbox.tsx`, `id` prop; `fieldId = id ?? generatedId`).
 - **controlled-and-uncontrolled**: In the Primitive, it MUST accept `checked` and `onCheckedChange` props for controlled mode, or `defaultChecked` for uncontrolled mode, per the `@base-ui/react/checkbox` `Checkbox.Root` API that `CheckboxPrimitive.Root` forwards (`checkbox.tsx`, `React.ComponentProps<typeof CheckboxPrimitive.Root>`). The wrapper exposes only the controlled `value`/`onChange` pair and does not forward `defaultChecked`; see the Design Decision on required `value` and `onChange`.
-- **hint-description-association**: In the Wrapper, the component SHOULD associate the hint text with the input via `aria-describedby` (or the platform equivalent, e.g. WinUI's `AutomationProperties.DescribedBy`) so assistive technology announces the hint when the input receives focus. Neither source file wires this association today (see the Design Decision on relying on `htmlFor` and the native `disabled` attribute); implementations SHOULD add it.
+- **hint-description-association**: In the Wrapper, when a hint is given, the component MUST give the hint element the id `<field id>-hint` and set the input's `aria-describedby` to that id (or the platform equivalent, e.g. WinUI's `AutomationProperties.DescribedBy`), so assistive technology announces the hint when the input receives focus. With no hint, the input carries no `aria-describedby`.
 
 ## Appearance
 
@@ -195,8 +195,8 @@ Not applicable: No logging or debugging output is present in the component sourc
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/Checkbox.tsx` | confirmed (1.4.3) |
-| web | `packages/web/packages/ui/src/components/checkbox.tsx` | confirmed (1.4.3) |
+| web | `packages/web/packages/controls/src/user-settings/components/Checkbox.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/ui/src/components/checkbox.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -212,8 +212,8 @@ Not applicable: No logging or debugging output is present in the component sourc
 **Rationale**: Enforces controlled-only usage at the form-field layer and prevents accidental uncontrolled use. The underlying primitive (`@base-ui/react/checkbox`'s `Checkbox.Root`) separately supports both controlled and uncontrolled modes, which is why `controlled-and-uncontrolled` (see Behavioral Requirements) is scoped to the primitive only.
 **Approved**: pending
 
-4. **Decision**: Rely on `htmlFor` label association and the native `disabled` attribute for accessibility; the source applies no `aria-label` or `aria-describedby`.
-**Rationale**: These two source-visible mechanisms cover role and disabled-state announcement for free; the hint-to-input link (`aria-describedby`) is not automatic, which is why it is captured separately as the `hint-description-association` SHOULD requirement rather than assumed here.
+4. **Decision**: Rely on `htmlFor` label association and the native `disabled` attribute for accessibility, and add only an `aria-describedby` link from the input to the hint; the source applies no `aria-label`.
+**Rationale**: These two source-visible mechanisms cover role and disabled-state announcement for free; the hint-to-input link (`aria-describedby`) is not automatic, so the Wrapper sets it explicitly, as the `hint-description-association` requirement says.
 **Approved**: pending
 
 5. **Decision**: Size the checkmark glyph at 12px (`size-3`) with a 3px stroke inside the 16px container.
@@ -232,21 +232,20 @@ Not applicable: No logging or debugging output is present in the component sourc
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | partial | Accessibility |
+| [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`semantic-markup` passes on the Wrapper's native `<input type="checkbox">` with `role`/`htmlFor` semantics and the Primitive's `role="checkbox"` span supplied by Base UI. `screen-reader-support` is partial because the hint-to-input link is not wired (see **hint-description-association**). `keyboard-navigable` is partial because the Wrapper's native input is keyboard-operable but the Primitive's `<span role="checkbox">` gets its keyboard behavior from Base UI and no test confirms it. The `contrast-ratio` and `touch-target-size` partial statuses reflect that the `apt-*` token contrast values and the effective click-target size (label padding/line-height) are defined in an external stylesheet not present in either source file. The Wrapper's own logic — id generation, conditional label/hint rendering, and appearance-driven role selection — is kept out of the Primitive, which delegates all checked/disabled behavior to Base UI and limits its own file to `apt-*` styling (separation-of-concerns). `components.test.tsx`'s `Checkbox` suite exercises the Wrapper's toggle callback and the switch/check role switch. `unit-test-coverage` is partial because no test exercises the Primitive, so vectors checkbox-014, checkbox-015, checkbox-016, checkbox-019, checkbox-020, checkbox-022, and checkbox-023 have no test.
-
+`semantic-markup` passes on the Wrapper's native `<input type="checkbox">` with `role`/`htmlFor` semantics and the Primitive's `role="checkbox"` span supplied by Base UI. `screen-reader-support` relies on the Wrapper linking its hint to the input through `aria-describedby` (see **hint-description-association**). `keyboard-navigable` is partial because the Wrapper's native input is keyboard-operable but the Primitive's `<span role="checkbox">` gets its keyboard behavior from Base UI and no test confirms it. The `contrast-ratio` and `touch-target-size` partial statuses reflect that the `apt-*` token contrast values and the effective click-target size (label padding/line-height) are defined in an external stylesheet not present in either source file. The Wrapper's own logic — id generation, conditional label/hint rendering, and appearance-driven role selection — is kept out of the Primitive, which delegates all checked/disabled behavior to Base UI and limits its own file to `apt-*` styling (separation-of-concerns). `checkbox.test.tsx` (controls `user-settings/__tests__` for the Wrapper, ui `__tests__` for the Primitive) covers all 23 vectors with passing tests, so `unit-test-coverage` passes.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.4.3 | 2026-11-14 | Mike Fullerton | Restated disabled-state to match the Primitive's data-[disabled] dimming, downgraded screen-reader, keyboard and unit-test compliance to partial, corrected the native-input claim, moved layer tags into requirement text, added Primitive configuration rows, fixed vectors 001 and 002, and merged the duplicate touch-target bullet. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | The Wrapper links its hint to the input through aria-describedby; checkbox-021 passes. |
 | 1.4.2 | 2026-09-25 | Mike Fullerton | Corrected disabled-state: Primitive dims via no CSS, only aria-disabled span; added compliance rows. |
 | 1.4.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.4.0 | 2026-09-22 | Mike Fullerton | Lint pass: tag every requirement, appearance note, configuration option, and test vector with the layer (wrapper vs. primitive) it describes instead of merging the two components; scope `controlled-and-uncontrolled` to the primitive; rename requirements to subject-only kebab-case and update every citation to package path + symbol/prop name instead of invented line numbers; add the `hint-description-association` SHOULD requirement and its test vector; restate the disabled-opacity, focus-ring, and switch/check-mode rules as intents with React/Web notes so they no longer contradict the Platform Notes or the test vectors; fix the Compose note's role selection and inner-control double-fire gap; correct the `checked` prop's controlled/uncontrolled labeling, the `id` default, and the checkmark-color description; rewrite Design Decisions in the three-line Decision/Rationale/Approved form; rebuild Compliance as a linked table scoped to the Accessibility checks that apply; fix WinUI 3 terminology ("recipe" → "ingredient"), link the `switch` ingredient under `related`, retag `disabled-state` to cover the primitive's own dimming, and add test vectors for `controlled-and-uncontrolled` and the primitive's disabled-opacity behavior. |

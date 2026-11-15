@@ -13,11 +13,11 @@
 `separation-of-concerns` passes: `profile.ts`/`usage.ts`/`wire.ts` contain zero UI or presentation
 code — all three files are, per `index.ts`'s own comment, the public surface of a data domain
 consumed by a separate presentation layer (the Settings > Profile editor and the public UserCard).
-`unit-test-coverage` is `partial`: `profile.test.ts` exercises `listSocialLinks`, `listAddresses`
-(list and encoding only), `createSocialLink`, `updateSocialLink`, and `deleteSocialLink` with six
-assertions, but `createAddress`, `updateAddress`, `deleteAddress`, `getPrivacyGrants`,
-`setPrivacyGrant`, `resolvePrivacyLevel`, and every export in `usage.ts` have no dedicated test
-anywhere in this checkout. `explicit-error-handling` passes: nothing in these three files swallows
+`unit-test-coverage` is `partial`: `profile.test.ts` and `conformance-vectors.test.ts` together
+cover every runtime operation in `profile.ts` and `usage.ts` (26 of the 34 vectors pass). Eight
+vectors are skipped because they assert a doc comment, a type-level constraint, or the absence of
+something across the source, which a runtime assertion cannot exercise: 025, 026, 028, 029, 030,
+031, 033, and 034. `explicit-error-handling` passes: nothing in these three files swallows
 an error — every failure either propagates from `authedJson`/`authedRequest` unmodified or is a
 compile-time-only constraint (the wire types); per `violation-handling-inherited`, no `try`/`catch`
 anywhere in `profile.ts`/`usage.ts` intercepts a rejection. `secure-storage` passes: this module

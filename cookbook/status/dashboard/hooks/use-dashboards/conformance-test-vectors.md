@@ -1,5 +1,5 @@
 
-No test file exists for this module: `ErrorsView.dom.test.tsx` replaces the errors-dashboard read with a stub, and `client.test.ts` covers only the message-extraction helper this module calls. Vectors 001–008 and 012–020 are derived from the source; vectors 009–011 reuse the `errorMessage` assertions in `client.test.ts`. Run the reads under a shared cache provider with retries disabled and an overriding client with a stubbed transport.
+`use-dashboards.dom.test.tsx` covers all 20 vectors, one test per vector id, against stub transports under a shared cache provider with retries disabled; the poll-pace vectors run under fake timers.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

@@ -175,6 +175,28 @@ final class BillingXPCClientTests: XCTestCase {
         XCTAssertNil(none)
     }
 
+    /// billing-xpc-client-002: a list read whose transport throws is nil, not empty.
+    func testV2_aListReadWhoseTransportThrowsIsNil() async {
+        transport.rows = [wire(BillingClientDTO(id: "c1", name: "Acme"))]
+        transport.unreachable = true
+        let clients = await client.billingClients()
+        XCTAssertNil(clients)
+    }
+
+    /// billing-xpc-client-010: a zero count is "nothing to do", not a failure.
+    func testV10_aZeroCountIsZeroNotNil() async {
+        transport.count = 0
+        let moved = await client.billingAssignSegments(ids: ["s1"], projectId: "p1")
+        XCTAssertEqual(moved, 0)
+    }
+
+    /// billing-xpc-client-004: the store's sentence comes through verbatim.
+    func testV4_aRefusalSentenceIsTheFailureMessage() async {
+        transport.refusableData = .failure(Refusal(reason: "A name is required."))
+        let result = await client.billingSaveClient(BillingClientDTO(id: "", name: ""))
+        XCTAssertEqual(result.failure?.message, "A name is required.")
+    }
+
     func testANegativeCountIsAFailedWrite() async {
         transport.count = 3
         let moved = await client.billingAssignSegments(ids: ["s1"], projectId: "p1")

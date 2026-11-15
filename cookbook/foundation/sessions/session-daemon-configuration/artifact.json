@@ -4,7 +4,7 @@
     "id": "706313bb-1a26-4477-9250-62ad50aff110",
     "title": "Session Daemon Configuration",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component parses Claude Code hook events and settings; the host's name, events and paths are its subject.",
-  "synced": "8ccc4c834cb3a6ee",
+  "synced": "57f37866430c6a87",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

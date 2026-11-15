@@ -2,11 +2,11 @@
 id: 08bfb299-851b-4b01-a84a-6a2a13e07c12
 title: "Composable Tabs Active Pane"
 type: ingredient
-version: 2.0.0
+version: 2.0.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-15
+modified: 2026-11-16
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -538,7 +538,7 @@ this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift` | confirmed (2.0.1) |
 
 ## Design Decisions
 
@@ -641,7 +641,7 @@ the actual color values behind `projectPaneBackdrop`, `projectPaneOutline`,
 and `projectActivePaneOutline` are chosen per theme, outside this file, per
 the contrast requirement and its pending decision.
 
-`separation-of-concerns` passes because `ComposableTabsActivePane` only tracks which pane is active and draws the pane backdrop and outline from theme roles; what a pane contains and what activation means to the content belong to the panes and the controller. `unit-test-coverage` is `partial`: no test file references `ComposableTabsActivePane`, so activation, event routing and the focus walk are unpinned, but `ComposableTabs/ComposableTabsPaneChromeTests.swift` tests the pane backdrop that file also defines, `ComposableTabsPaneBackgroundView` (`testTheContainerIsStillTheBackgroundThatDrawsTheFocusOutline`, `testTheTrackAroundAPaneIsTheWorkspaceBackdrop`, `testThePaneItselfIsFilledInsideThatTrack`), which pins the backdrop color, the 2-point fill inset and the fill being the first subview; nothing tests the outline colors.
+`separation-of-concerns` passes because `ComposableTabsActivePane` only tracks which pane is active and draws the pane backdrop and outline from theme roles; what a pane contains and what activation means to the content belong to the panes and the controller. `unit-test-coverage` is `partial`: `ComposableTabs/ComposableTabsActivePaneConformanceTests.swift` covers 51 of the 54 vectors, driving the tracker and the pane backdrop through real windows and pointer events sent with `NSApp.sendEvent`. Skipped: CTA-39 (the highlight override lives on the active theme, which a test cannot swap per pane), CTA-50 (a window belonging to another application cannot be created from inside the test process) and CTA-54 (main-actor isolation, enforced at build time). Tests that need a key window, a window held apart from the key one, or a sheet that takes key skip themselves where the environment cannot provide one. CTA-52 is checked in a closed window, the one place a window can have panes and no active id, so it shows the unclaimed outline colour without a focused window. `ComposableTabs/ComposableTabsPaneChromeTests.swift` also pins the backdrop colour, the 2-point fill inset and the fill being the first subview.
 
 ## Change History
 
@@ -655,3 +655,4 @@ the contrast requirement and its pending decision.
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the contrast NEEDS REVIEW marker as current behavior (no contrast check) with a vector and a pending decision; added separation-of-concerns (passed) and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. Corrected unit-test-coverage to partial: the pane backdrop's fill and backdrop color are tested in ComposableTabsPaneChromeTests. |
 | 2.0.0 | 2026-11-15 | Mike Fullerton | The outline can be switched off for a single-pane window (the-backdrop-outline-is-optional); every-pane-is-always-outlined, CTA-33 and the constant-width Decision now hold only while it is on, and CTA-55 covers it switched off. |
+| 2.0.1 | 2026-11-16 | Mike Fullerton | Conformance tests added (ComposableTabsActivePaneConformanceTests.swift, 51 of 54 vectors); unit-test-coverage stays partial (039, 050, 054 skipped). |

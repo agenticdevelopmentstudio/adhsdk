@@ -2,7 +2,7 @@
 id: d431934e-d64c-4dcf-bdab-b7c3465ee71b
 title: "Radio Group"
 type: ingredient
-version: 1.1.2
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-22
@@ -44,7 +44,7 @@ A radio group component presents a set of mutually exclusive options; native rad
 - **reflect-value**: The component MUST render the choice whose value strictly equals (`===`) `value` as checked. The component is controlled and holds no selection state of its own.
 - **handle-value-change**: The component MUST invoke the `onChange` callback with the new value when the user selects a different choice.
 - **fieldset-root**: The component MUST render a `<fieldset>` element as the root container.
-- **legend-label**: When a label prop is provided, the component MUST render it inside a `<legend>` element as the first child of the fieldset.
+- **legend-label**: When a label prop is provided, the component MUST render it inside a `<legend>` element as the first child of the fieldset. A label of `0` counts as provided and renders a legend reading `0`; only `null`, `undefined`, `false` and the empty string render no legend.
 - **radiogroup-role**: The component MUST render a container element with `role="radiogroup"` that contains all radio button inputs.
 - **choice-labels**: The component MUST display a label for each choice; the label MUST be associated with its corresponding radio input.
 - **choice-hints**: When a choice has a hint property, the component MUST render that hint adjacent to the choice label.
@@ -185,7 +185,7 @@ Not applicable: The component does not emit any log messages.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/RadioGroup.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/controls/src/user-settings/components/RadioGroup.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -222,9 +222,9 @@ Not applicable: The component does not emit any log messages.
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-The `passed` statuses rest on the native `fieldset`/`legend`/`label` semantics and the keyboard-operable `<input type="radio">` visible in the source. The `screen-reader-support` status is `partial` because the `role="radiogroup"` container carries no `aria-labelledby` of its own (see Accessibility). The `contrast-ratio` and `touch-target-size` statuses are `partial` because the `aws-*` token values and the effective click-target size (label padding/line-height) are defined in an external stylesheet not present in this source file. `separation-of-concerns` passes because `RadioGroup` only renders the `choices` it is given and reports selection via `onChange`, with no logic for how `value`/`choices` are produced. `unit-test-coverage` is `partial`: the `RadioGroup` suite in `components.test.tsx` has one test, which clicks a choice's label and asserts `onChange` is called with that value; it covers radio-group-003 only, and the other vectors have no test.
+The `passed` statuses rest on the native `fieldset`/`legend`/`label` semantics and the keyboard-operable `<input type="radio">` visible in the source. The `screen-reader-support` status is `partial` because the `role="radiogroup"` container carries no `aria-labelledby` of its own (see Accessibility). The `contrast-ratio` and `touch-target-size` statuses are `partial` because the `aws-*` token values and the effective click-target size (label padding/line-height) are defined in an external stylesheet not present in this source file. `separation-of-concerns` passes because `RadioGroup` only renders the `choices` it is given and reports selection via `onChange`, with no logic for how `value`/`choices` are produced. `unit-test-coverage` passes: `RadioGroup.test.tsx` passes for all 26 vectors.
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -232,4 +232,4 @@ The `passed` statuses rest on the native `fieldset`/`legend`/`label` semantics a
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from web source (`packages/web/packages/controls/src/user-settings/components/RadioGroup.tsx`) |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case and update every citation; reconcile the exactly-one-selected vs. unmatched-value contradiction across Overview/Configuration/Edge Cases; correct the Enter/Space keyboard claim and cite WCAG 2.5.5 by name; rebuild Compliance as a linked, honestly-scoped table instead of blanket `passed`; replace the SwiftUI/Compose/WinUI platform notes' non-native suggestions with the real native radio-group APIs and state the AppKit mutual-exclusivity mechanism explicitly; reformat Design Decisions into Decision/Rationale/Approved form; fix test vector 003's undefined choice and vector 013's implementation-detail assertion, and add vectors for every untested edge case; fill `related` with the sibling form-control recipes and `references` with the cited WCAG/HTML sources; state the Border appearance entry as caller-owned instead of "may". |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Wrapped Choice<T>[] in code span; added best-practices Compliance rows. |
-| 1.1.2 | 2026-11-14 | Mike Fullerton | Renamed maintain-selection-state to reflect-value, added css-class-hooks, fixed the disabled-state description and vector, added falsy-label and duplicate-value edge cases, downgraded unit-test-coverage to partial, and corrected the AppKit/UIKit and WinUI notes. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | A label of 0 now renders a legend; radio-group-024 passes. |

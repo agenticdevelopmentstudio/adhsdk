@@ -4,7 +4,7 @@
     "id": "932449c9-b57f-4e2c-992a-1e27584742b6",
     "title": "ColorTheme",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2774764047b3142c",
+  "synced": "7cfd8e43294355b8",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

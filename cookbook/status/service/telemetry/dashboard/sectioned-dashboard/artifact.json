@@ -4,7 +4,7 @@
     "id": "af0bacb9-bc1f-4773-85f5-35e33ae590ab",
     "title": "Sectioned Dashboard",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "78f5e92a26c3d1dd",
+  "synced": "25663bcd4d977a1c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

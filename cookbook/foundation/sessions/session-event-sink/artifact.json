@@ -4,7 +4,7 @@
     "id": "6a37e531-b5ae-4eea-b4f0-d28866776ddc",
     "title": "Session Event Sink",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6c8ccb7d2e7848ce",
+  "synced": "381e5319596a6ef1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

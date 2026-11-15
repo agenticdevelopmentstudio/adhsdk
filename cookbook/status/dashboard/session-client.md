@@ -2,11 +2,11 @@
 id: 5935b39d-9451-48c1-8b99-bd510d66d1a0
 title: "Session Client"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -246,8 +246,8 @@ Not applicable: neither piece of this logic calls a console or logging API; the 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/header-auth.ts` | confirmed (1.2.0) |
-| web | `packages/web/packages/status-web/src/types.ts` | confirmed (1.2.0) |
+| web | `packages/web/packages/status-web/src/header-auth.ts` | confirmed (1.2.1) |
+| web | `packages/web/packages/status-web/src/types.ts` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -288,7 +288,7 @@ Not applicable: neither piece of this logic calls a console or logging API; the 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 | [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | passed | Access Patterns |
@@ -299,12 +299,13 @@ Not applicable: neither piece of this logic calls a console or logging API; the 
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | Internationalization |
 
-`separation-of-concerns` passes: the session fetch is a pure async function over an injected client and transport, the caching policy lives in one hook, the header projection in another, and the DTOs are a type-only module; neither file renders anything. `unit-test-coverage` is `partial`: `header-auth.test.ts` covers `fetchStatusUser`'s four outcomes (user, signed-out, 5xx, network failure), but `useStatusUser`, `useStatusHeaderAuth` and `onLogout` have no tests. `explicit-error-handling` is `partial`: non-OK `/auth/me` responses become an explicit `Error`, but `useStatusUser` drops the query's error state, so a cold-load failure reads as signed-out (the open question on first-load-failure-projection), and a rejected logout POST escapes as an unhandled rejection. `error-response-handling` passes: every non-OK `/auth/me` status is treated uniformly as a failure carrying the status code, never misread as sign-out. `retry-with-backoff` passes: the session query retries 3 times with React Query's default exponential backoff. `timeout-configuration` fails: neither request sets a timeout or abort signal. `graceful-degradation` is `partial`: a cached session survives backend blips unchanged, but a failure on the first load degrades to a signed-out header with no error indication. `secure-storage` passes: the credential is an httpOnly cookie the client never reads or stores. `secure-data-storage` passes: the user record lives only in in-memory cache, never in persistent storage. `data-minimization` passes: the header seam receives only a display name, not the role or (unless it is the fallback) the email. `no-hardcoded-strings` is `partial`: the thrown error message is English-only, though this module never displays it.
+`separation-of-concerns` passes: the session fetch is a pure async function over an injected client and transport, the caching policy lives in one hook, the header projection in another, and the DTOs are a type-only module; neither file renders anything. `unit-test-coverage` passes: `header-auth.test.ts` covers `fetchStatusUser` and the query key, and `header-auth.dom.test.tsx` covers `useStatusUser`, `useStatusHeaderAuth` and `onLogout`, one test per conformance vector (status-web-src-001 to 020). `explicit-error-handling` is `partial`: non-OK `/auth/me` responses become an explicit `Error`, but `useStatusUser` drops the query's error state, so a cold-load failure reads as signed-out (the open question on first-load-failure-projection), and a rejected logout POST escapes as an unhandled rejection. `error-response-handling` passes: every non-OK `/auth/me` status is treated uniformly as a failure carrying the status code, never misread as sign-out. `retry-with-backoff` passes: the session query retries 3 times with React Query's default exponential backoff. `timeout-configuration` fails: neither request sets a timeout or abort signal. `graceful-degradation` is `partial`: a cached session survives backend blips unchanged, but a failure on the first load degrades to a signed-out header with no error indication. `secure-storage` passes: the credential is an httpOnly cookie the client never reads or stores. `secure-data-storage` passes: the user record lives only in in-memory cache, never in persistent storage. `data-minimization` passes: the header seam receives only a display name, not the role or (unless it is the fallback) the email. `no-hardcoded-strings` is `partial`: the thrown error message is English-only, though this module never displays it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (header-auth.test.ts, header-auth.dom.test.tsx, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved first-load-failure-projection marker as current behavior plus pending decision |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

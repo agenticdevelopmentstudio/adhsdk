@@ -226,6 +226,40 @@ final class PreferencesServiceTests: XCTestCase {
         XCTAssertEqual(try service.setTracking(enabled: false).outcome, "not_installed")
     }
 
+    func testV007_writeEchoesTheRequestWhileTheMarkerIsPresent() throws {
+        let installer = try makeInstaller()
+        try installer.setTrackingDisabled(true)
+        let service = PreferencesService(
+            database: db, secretStore: secrets, hookInstaller: installer, summariesDefaultEnabled: true
+        )
+        let response = try service.setTracking(enabled: true)
+        XCTAssertTrue(response.enabled)
+        XCTAssertTrue(response.disabledMarkerPresent)
+    }
+
+    func testV010_failedInstallThrowsAndProducesNoResponse() throws {
+        let dispatcher = tmpDir.appendingPathComponent("dispatch.sh")
+        let script = "#!/bin/sh\n# claudehelpers-statusline-dispatch 1\n"
+        try script.write(to: dispatcher, atomically: true, encoding: .utf8)
+        let configuration = ClaudeHookConfiguration(
+            name: "prefs-test",
+            marker: "# prefs-test-hook",
+            hookBinaryPath: tmpDir.appendingPathComponent("helper").path,
+            dropDirectory: tmpDir.appendingPathComponent("drop").path,
+            settingsURL: tmpDir.appendingPathComponent("settings.json"),
+            bundledDispatcher: dispatcher
+        )
+        let installer = ClaudeHookInstaller(configuration: configuration, helperIsExecutable: { _ in false })
+        let service = PreferencesService(
+            database: db, secretStore: secrets, hookInstaller: installer, summariesDefaultEnabled: true
+        )
+        XCTAssertThrowsError(try service.setTracking(enabled: true)) { error in
+            guard case PreferencesService.PreferencesError.hookInstallFailed = error else {
+                return XCTFail("expected hookInstallFailed, got \(error)")
+            }
+        }
+    }
+
     func testCurrentTrackingFollowsTheDisabledMarker() throws {
         let installer = try makeInstaller()
         let service = PreferencesService(

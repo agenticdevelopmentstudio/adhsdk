@@ -4,7 +4,7 @@
     "id": "7fd507a8-73a6-48f0-83c8-36789f3c9be4",
     "title": "Daemon Health Report",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "74d4c6d9ef3a09f0",
+  "synced": "b39dad6e9c736a8c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

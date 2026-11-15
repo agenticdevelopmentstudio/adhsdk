@@ -12,7 +12,7 @@
 **Approved**: pending
 
 **Decision**: The event text is fixed English prose with ids inserted as given.
-**Rationale**: The text is the partner's input, and the partner's guidelines and base prompt ([Partner Base Prompt](cookbook:1abdd016-954c-4058-8db3-224c52712365)) refer to the events by these phrases. The text is not validated or escaped, so the partner reads exactly what the app knows.
+**Rationale**: The text is the partner's input, and the partner's guidelines and base prompt (Partner Base Prompt ([adhsdk.ingredient.foundation.partner.partner-base-prompt](cookbook:1abdd016-954c-4058-8db3-224c52712365))) refer to the events by these phrases. The text is not validated or escaped, so the partner reads exactly what the app knows.
 **Approved**: pending
 
 **Decision**: The text of a tick uses UTC ISO 8601 for the previous tick.

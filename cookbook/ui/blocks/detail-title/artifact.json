@@ -4,7 +4,7 @@
     "id": "fd3575ab-c4a4-480d-84ff-317a282bc359",
     "title": "Detail Title",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "80bf8b7c11ed1778",
+  "synced": "d2714b4c12d378af",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

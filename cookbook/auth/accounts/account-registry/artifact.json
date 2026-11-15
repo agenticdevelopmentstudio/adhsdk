@@ -4,7 +4,7 @@
     "id": "98226063-be5d-4fa8-a980-02227df3418b",
     "title": "Account Registry",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f2deba45e2ecec11",
+  "synced": "07c1073d7eb66fa0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -4,11 +4,11 @@
     "id": "77dbd38e-9acd-4053-ba54-738b45101f6b",
     "title": "Window Matching Heuristics",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -39,7 +39,7 @@
     "approved-date": ""
   },
   "names_hosts": "A test vector uses a real window title containing `Claude` as input to the Warp heuristic.",
-  "synced": "958e4d5963302184",
+  "synced": "c53f097c19f38d15",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

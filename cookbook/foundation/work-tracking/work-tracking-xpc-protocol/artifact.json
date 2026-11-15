@@ -4,7 +4,7 @@
     "id": "02cfb457-46da-4814-a1de-8962533ad78e",
     "title": "Work Tracking XPC Protocol",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9af03abdbd78638e",
+  "synced": "c0380a08ca411c8d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

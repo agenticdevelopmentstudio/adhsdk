@@ -2,7 +2,7 @@
 id: b71b349b-5c60-41f4-b664-49085ac5d988
 title: "Terminal Chat Control"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -212,7 +212,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalChatControl.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalChatControl.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -256,13 +256,14 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
-separation-of-concerns passes: the enum holds the wire shapes, shared numbers, the resolver, the socket helpers and the client call; answering requests lives in `TerminalChatControlServer`, running commands in `TerminalChatSession`, and the socket transport in `UnixSocketLineClient`. unit-test-coverage fails: no test touches `resolve`, `Defaults`, the socket directory helpers, `runningHosts` or `send`; only the session behind the protocol has tests, so every vector above rests on the source alone. data-minimization passes: the protocol carries only the fields each action needs, and the listing conceals the project and directory as the terminal does.
+separation-of-concerns passes: the enum holds the wire shapes, shared numbers, the resolver, the socket helpers and the client call; answering requests lives in `TerminalChatControlServer`, running commands in `TerminalChatSession`, and the socket transport in `UnixSocketLineClient`. unit-test-coverage is partial: 24 of 25 vectors are covered by `TerminalChatControlConformanceTests.swift` (`Tests/AgenticDeveloperHubSDKCoreTests/Terminal/`); vector 019 (the send wait margin) is skipped because it needs a host that answers after 40 real seconds. data-minimization passes: the protocol carries only the fields each action needs, and the listing conceals the project and directory as the terminal does.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (TerminalChatControlConformanceTests.swift, 24 of 25 vectors; 019 skipped, needs 40 real seconds); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Pinned the newline-delimited wire framing, the still-running marker, host fields, Response init defaults and exact error strings; added five vectors, related links, a tag swap and corrected Windows and Android notes. |

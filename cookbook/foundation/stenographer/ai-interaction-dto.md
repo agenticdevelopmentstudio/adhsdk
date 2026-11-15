@@ -2,7 +2,7 @@
 id: 7a776b77-a7b2-4ed5-a26f-94795434d675
 title: "AI Interaction DTO"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -87,13 +87,13 @@ Not applicable — this is a data transfer type, not a visual component.
 | ai-interaction-dto-002 | is-failure, failure-reason | `outcome` is `guard_blocked`, `response` empty, `error` a block-threshold message. | `isFailure` is true; the AI Log result column shows a warning glyph and the reason (test: testGuardBlockedRowShowsReasonWithWarningGlyph). |
 | ai-interaction-dto-003 | is-failure, failure-reason | `outcome` is `guard_deferred`, `response` empty, `error` a memory-pressure message. | `isFailure` is true; the result column shows the warning glyph and the reason (test: testGuardDeferredRowShowsReason). |
 | ai-interaction-dto-004 | is-failure | `outcome` is `error`. | `isFailure` is true (derived from the source; the AI Log result column's failure path). |
-| ai-interaction-dto-005 | is-failure | `outcome` is `surprise`, outside the documented vocabulary. | `isFailure` is true (derived from the source expression; no test). |
-| ai-interaction-dto-006 | is-failure-case-sensitive | `outcome` is `OK`. | `isFailure` is true (derived from the source expression; no test). |
-| ai-interaction-dto-007 | codable-keys, field-set | Encode a DTO and decode the result. | The decoded value equals the original (derived from the synthesized conformance; no test of the DTO round trip). |
-| ai-interaction-dto-008 | decode-all-required | Decode JSON that lacks `truncated`. | Decoding throws `keyNotFound` (derived from the synthesized conformance; no test). |
+| ai-interaction-dto-005 | is-failure | `outcome` is `surprise`, outside the documented vocabulary. | `isFailure` is true (test: testV5_anOutcomeOutsideTheVocabularyIsAFailure). |
+| ai-interaction-dto-006 | is-failure-case-sensitive | `outcome` is `OK`. | `isFailure` is true (test: testV6_theOutcomeComparisonIsCaseSensitive). |
+| ai-interaction-dto-007 | codable-keys, field-set | Encode a DTO and decode the result. | The decoded value equals the original (test: testV7_encodingThenDecodingGivesTheOriginal). |
+| ai-interaction-dto-008 | decode-all-required | Decode JSON that lacks `truncated`. | Decoding throws `keyNotFound` (test: testV8_decodingWithoutTruncatedThrowsKeyNotFound). |
 | ai-interaction-dto-009 | truncated-list | List read of a row whose `userPrompt` is longer than the truncation length (default 300 characters, in the daemon's store). | `truncated` is true; each field longer than the limit is cut to it and each shorter field comes back unchanged (source: the daemon's `fetchAIInteractions`; test: testListTruncatesLongTextAndFlagsIt, which asserts a 400-character `userPrompt` reads back as 300 characters with `truncated` true). |
 | ai-interaction-dto-010 | truncated-detail | By-id read of the same row. | Full text with `truncated` false (source: the daemon's `fetchAIInteraction`; test: testListTruncatesLongTextAndFlagsIt, which asserts the by-id text equals the original and `truncated` is false). |
-| ai-interaction-dto-011 | truncated-list | List read of a row whose longest text field is exactly 300 characters, at the default truncation length. | `truncated` is false and the text is unchanged, because the store's check is a strict length greater than the limit (derived from the source; no test). |
+| ai-interaction-dto-011 | truncated-list | List read of a row whose longest text field is exactly 300 characters, at the default truncation length. | `truncated` is false and the text is unchanged, because the store's check is a strict length greater than the limit (test: testV11_aFieldExactlyAtTheTruncationLengthIsNotCut). |
 ## Edge Cases
 
 - **Null / empty input**: The DTO has no optionals; absent values are carried as empty strings (`sessionId` when not session-scoped, `configName` on the CLI path, `error` on success, `response` on failure); see `decoder-empty-string-present`.
@@ -153,7 +153,7 @@ Not applicable: the type calls no logging API; recording an interaction is the d
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIInteractionDTO.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIInteractionDTO.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -181,13 +181,14 @@ Not applicable: the type calls no logging API; recording an interaction is the d
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | partial | Privacy and Data |
 
-`separation-of-concerns` passes because the type only carries a record and folds the outcome into one flag; storage, truncation and rendering stay in the daemon store and the window. `unit-test-coverage` is partial because no test targets the DTO directly: `AILogGuardOutcomeTests` exercises `isFailure` only through the AI Log result column, `AIInteractionLogTests` covers the list truncation and by-id read that fill the DTO through the daemon store, and the encode/decode round trip and missing-key failure have no test. `no-pii-in-logs` is partial because the type itself logs nothing but carries prompts and responses verbatim, with no redaction, for the AI Log window to display.
+`separation-of-concerns` passes because the type only carries a record and folds the outcome into one flag; storage, truncation and rendering stay in the daemon store and the window. `unit-test-coverage` passes: `AIInteractionDTOConformanceTests` (`AIInteractionDTOConformanceTests.swift`) covers `isFailure` for every outcome and the encode/decode round trip and missing-key failure; `AIInteractionLogTests` (`AIInteractionLogTests.swift`) covers the list truncation, the by-id read and the exact-length boundary through the daemon store. `AILogGuardOutcomeTests` exercises `isFailure` only through the AI Log result column, `AIInteractionLogTests` covers the list truncation and by-id read that fill the DTO through the daemon store, and the encode/decode round trip and missing-key failure have no test. `no-pii-in-logs` is partial because the type itself logs nothing but carries prompts and responses verbatim, with no redaction, for the AI Log window to display.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (AIInteractionDTOConformanceTests.swift, AIInteractionLogTests.swift, 11 of 11 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Recast truncation as the producer-reported truncated flag, grouped producer and consumer duties in their own subsections, made the decoder rule and no-default rule explicit, renamed no-secrets-handling to verbatim-no-redaction, added a boundary vector, shared OUTCOME_OK in ports, fixed the platform notes, and linked Conversation Entry DTO. |

@@ -2,7 +2,7 @@
 id: dccad63a-f56e-4c97-b182-8cdeb7c1a983
 title: "Status Server Storage Thread"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -96,7 +96,7 @@ Not applicable — this is a thread-management module, not a visual component.
 
 ## Conformance Test Vectors
 
-The module has no unit test of its own. `storage-thread.int.test.ts` › "migrates, serves two ports, and carries driver errors intact" runs it under bare node through `storage-thread-driver.mjs` (start, a store call on `storage`, a second port from `connect()`, a duplicate-insert error, a monitor cycle, and an empty `exits` list); vectors 001, 009, 010, 011 and 013 are covered by it, and the rest are derived from the source.
+Every vector is covered by `test/storage-thread.test.ts`, which runs the module against a fake Worker that serves attached ports through the real Storage Remote server. `storage-thread.int.test.ts` › "migrates, serves two ports, and carries driver errors intact" also runs the real built thread under bare node (start, a store call, a second port, a duplicate-insert error, a monitor cycle, an empty `exits` list).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -177,7 +177,7 @@ The module does not log. Failures reach the host as a rejection (a failed start)
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/libsql/storage-thread.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/libsql/storage-thread.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -221,12 +221,12 @@ The module does not log. Failures reach the host as a rejection (a failed start)
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | privacy-and-data |
 
 **Separation of Concerns**: The module only spawns the worker, waits for ready and attaches ports. The queue and wire protocol are in the Storage Remote module, and the database work is in the worker, so each has one reason to change.
 
-**Unit Test Coverage**: The module has no unit test of its own. `storage-thread.int.test.ts` starts the built thread under bare node and covers the successful start, a second port, error fidelity and a monitor cycle, but no test exercises a failed start, an early worker error, the `onExit` callback or a call after the thread has died.
+**Unit Test Coverage**: `test/storage-thread.test.ts` covers vectors 001 to 014 against a fake Worker that serves ports through the real Storage Remote server: the start and its failures, `onExit` for crash and exit, `connect()`, the shared queue, a call after the thread dies, error fidelity, and the package-resolved entry. `storage-thread.int.test.ts` still runs the real built thread under bare node.
 
 **No PII in Logs**: The module logs nothing; its failure reasons contain thread error text and no user data.
 
@@ -234,5 +234,6 @@ The module does not log. Failures reach the host as a rejection (a failed start)
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (storage-thread.test.ts, 14 of 14 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Replaced the three restated port requirements with one dependency on Storage Remote, linked Storage Remote, Storage Worker and the monitor worker client, moved the slow-call log to Storage Worker, recorded two Design Decisions (rejected start, second start), stated the privacy rule, and set tags and platforms. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial recipe extracted from `storage-thread.ts` |

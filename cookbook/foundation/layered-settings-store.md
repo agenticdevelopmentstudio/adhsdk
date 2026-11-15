@@ -2,7 +2,7 @@
 id: 846ec786-5b96-4ee0-b7db-d6ae4bd6e333
 title: "Layered Settings Store"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -172,7 +172,7 @@ Not applicable: The source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/LayeredSettingsStore.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/LayeredSettingsStore.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -215,11 +215,12 @@ Not applicable: The source calls no logging API.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | passed | Privacy and Data |
 
-`separation-of-concerns` passes because the class only layers reads, routes writes and filters change notifications; persistence belongs to the injected overrides provider and the fallback store. `unit-test-coverage` is partial: vectors 009 through 016 have no dedicated test. `AgenticDeveloperHubSDKCoreTests/LayeredSettingsStoreTests.swift` covers fallback reads, override precedence, override removal, change publication with and without an override, prefix removal and the secure-key routing on set, but nothing directly covers `contains` for secure keys, `remove` on a secure key, `keys(withPrefix:)`, or the removed-provider path of the change filter. `secure-data-storage` passes because a secure key is never written to the overrides provider and is held only by the fallback's secure provider.
+`separation-of-concerns` passes because the class only layers reads, routes writes and filters change notifications; persistence belongs to the injected overrides provider and the fallback store. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/LayeredSettingsStoreTests.swift` has a test for each of the sixteen vectors: the reads, the overrides, prefix removal, secure-key routing for `contains` and `remove`, `keys(withPrefix:)`, and every path of the change filter, including the released-store path. `secure-data-storage` passes because a secure key is never written to the overrides provider and is held only by the fallback's secure provider.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (LayeredSettingsStoreTests.swift, 16 of 16 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Restated the wiring, main-actor, by-name and probe requirements as observable behavior, added the released-store and secure-name-filter requirements with vectors, marked vectors 009-016 as untested, recorded removeOverride on a secure key as a known defect with real rationales, made the text consumer-neutral, and added the settings-storage dependency with links. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

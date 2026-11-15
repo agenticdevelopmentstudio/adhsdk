@@ -2,7 +2,7 @@
 id: e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d
 title: "Remote Storage over a MessagePort"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -74,7 +74,7 @@ Not applicable — this is a storage transport, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 006 are traced to `storage-remote.test.ts`; 007 to 018 follow the source and have no test.
+Vectors 001 to 018 are traced to `storage-remote.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -95,7 +95,7 @@ Vectors 001 to 006 are traced to `storage-remote.test.ts`; 007 to 018 follow the
 | storage-remote-015 | connect-failure | The port closes before the shape message | `connectStorage` rejects with `storage connection closed` |
 | storage-remote-016 | error-flatten, error-rebuild | A method throws an error with a `cause` chain of seven errors in all | The caller's rejection has five errors in its chain (the error and four causes); the deeper causes are dropped |
 | storage-remote-017 | error-flatten | A method throws an error with the numeric `code` 5 | The caller's rejection has `code` `'5'`, a string |
-| storage-remote-018 | driver-agnostic | The module's imports | Only the `Storage` type from `./ports` and `node:worker_threads` types are imported; no database driver is imported or named |
+| storage-remote-018 | driver-agnostic | The module's imports | Only the `Storage` type from `./ports` and `node:worker_threads` types are imported; no database driver is imported or named in code (comments aside) |
 ## Edge Cases
 
 - A hung call blocks the queue for every port; there is no per-call timeout and no cancellation. The only signal is the slow-call warning, which is logged after the call finishes.
@@ -161,7 +161,7 @@ Logging is a single `console.warn` on the server for a slow call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/storage/remote.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/storage/remote.ts` | confirmed (1.0.3) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -189,16 +189,17 @@ Logging is a single `console.warn` on the server for a slow call.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | failed | Access Patterns |
 
-The transport is driver-agnostic and separate from any store, and a six-case test file plus a thread-level integration test cover vectors 001 to 006; vectors 007 to 018 follow the source and have no test, so unit-test coverage is partial. Errors are flattened and rebuilt with code and cause, and every failure path rejects its caller. There is no per-call timeout, so a hung store method blocks the shared queue; the slow-call warning is the only mitigation.
+The transport is driver-agnostic and separate from any store, and `storage-remote.test.ts` has a test for every vector, 001 to 018, so unit-test coverage passes. Errors are flattened and rebuilt with code and cause, and every failure path rejects its caller. There is no per-call timeout, so a hung store method blocks the shared queue; the slow-call warning is the only mitigation.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (storage-remote.test.ts, 18 of 18 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Marked "No timeout" as known debt with a revisit condition, set unit-test-coverage to partial, made the Overview general and moved the 2026-10-22 outage into a rationale, moved the Storage port to depends-on, fixed the blank lines in Design Decisions, added vectors 010 to 018, pinned the slow-call path and ms format, named the close event, defined the unclonable-result reply, and stated the cause cap once. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

@@ -4,11 +4,11 @@
     "id": "d457c4d4-005c-4fcb-a3a6-3e1680bcb561",
     "title": "Claude Credential Kind",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-10-04",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-date": ""
   },
   "names_hosts": "The subject is Claude account credentials; the product name is the thing being modelled.",
-  "synced": "fb3cab6aaadf19f0",
+  "synced": "339eb867aff28696",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

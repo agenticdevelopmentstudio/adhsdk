@@ -2,7 +2,7 @@
 id: a6b177ee-dc1e-441d-9844-eee2ef48ed8d
 title: "TrackedApp"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -127,7 +127,7 @@ Not applicable — this is a data model and lookup table, not a visual component
 | tracked-app-012 | tracked-app-identity | `TrackedApp(bundleId: "x.y", name: "N", resolver: .none)` | `id` is `"x.y"` |
 | tracked-app-013 | construct-from-preferences | Empty `defaults` and `.default` preferences | `apps` is empty; `isAllowed("com.apple.dt.Xcode")` and `isAllowed("")` are both `false` |
 
-Vector 001 is covered by `AppAllowlistTests.testDefaultsAreAllowedAndOthersAreNot`, vectors 002 and 003 by `AppAllowlistTests.testRemovedDefaultIsNotAllowedAndAddedAppIs`, vector 004 by `AppAllowlistTests.testSublimeMergeIsAGitClientWithNoPath` and vector 005 by `AppAllowlistTests.testDefaultBundleIdsAreUnique`. Vectors 006 to 013 are derived from the source and have no test beside them; those four tests cover vectors 001 to 005.
+Vector 001 is covered by `AppAllowlistTests.testDefaultsAreAllowedAndOthersAreNot`, vectors 002 and 003 by `AppAllowlistTests.testRemovedDefaultIsNotAllowedAndAddedAppIs`, vector 004 by `AppAllowlistTests.testSublimeMergeIsAGitClientWithNoPath` and vector 005 by `AppAllowlistTests.testDefaultBundleIdsAreUnique`. Vectors 006 to 013 are covered by `AppAllowlistTests.testV006_removedBeatsAdded` through `testV013_emptyDefaultsAllowNothing`, one test per vector.
 
 ## Edge Cases
 
@@ -194,7 +194,7 @@ Not applicable: the code calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/TrackedApp.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/TrackedApp.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -222,13 +222,14 @@ Not applicable: the code calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
-The type separates the data model and lookup from recording, persistence and display, which live in the recorder, the preferences and the settings panel. Four tests cover default membership, removal, addition, a default resolver and default uniqueness, but none asserts sort order, removed-beats-added, an added id that is already a default, or duplicate injected defaults, so coverage is partial. The allowlist limits recording to a named set of apps and holds no user content.
+The type separates the data model and lookup from recording, persistence and display, which live in the recorder, the preferences and the settings panel. `AppAllowlistTests` (`Tests/AgenticDeveloperHubSDKCoreTests/WorkTracking/AppAllowlistTests.swift`) covers every vector, including sort order, removed-beats-added, an added id that is already a default, and duplicate injected defaults, so coverage passes. The allowlist limits recording to a named set of apps and holds no user content.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (AppAllowlistTests.swift extended, 13 of 13 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added a table of the 32 default apps with resolvers, fixed the sort order to NFC Unicode scalar order across platform notes, recorded empty-id handling as a requirement, renamed the conformance requirement to include Identifiable, moved the recorder behavior to prose, made vector inputs concrete and platform-neutral, added depends-on for the preferences, and removed the source path. |

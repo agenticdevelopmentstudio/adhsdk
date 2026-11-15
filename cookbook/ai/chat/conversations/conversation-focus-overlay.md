@@ -2,11 +2,11 @@
 id: 08448e7e-b673-49b3-97d4-d83136d108d6
 title: "Conversation Focus Overlay"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -274,7 +274,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -322,26 +322,15 @@ partial because the source sets an accessibility identifier but no label and
 posts no notification when the overlay appears or disappears.
 
 `unit-test-coverage` is `partial`. `Chat/ConversationFocusTests.swift` drives
-the overlay through the Conversations feed: `testDoubleClickingARowOpensAnOverlayHoldingThatSessionAlone`
-(single-session-read), `testTheOverlayCoversTheWholeFeed` and
-`testTheOverlayIsDrawnBeforeItStartsToFadeIn` (fills-host and the seeded
-first frame), `testALineTypedBeforeTheFirstReadKeepsTheTranscriptItWasSeededWith`
-(seed-survives-early-send), `testTheOverlayShowsAMessageWhole`
-(line-limit), `testAnOverlayWithNowhereToWriteKeepsItsComposerOff` and
-`testAnOverlayTheHostCanWriteToOffersItsComposer` (composer-follows-sendability),
-`testTheOverlayHasNoRowSelection` and `testTheOverlayOffersNoJumpOnItsRows`
-(no-row-actions), `testTheOverlayTakesTheKeysForItsComposer` and
-`testAnOverlayWithNowhereToWriteLeavesTheKeysAlone` (focus-composer-on-present),
-and `testEscapeDismissesTheOverlay`, `testReturnDismissesTheOverlay`,
-`testAnOrdinaryKeyLeavesTheOverlayUp`, `testAPressThatNoControlTookDismissesTheOverlay`
-and `testClickingABubbleInsideTheOverlayDoesNotDismissIt` (dismissal-gestures
-with the composer unfocused). No test covers periodic-refresh,
-on-demand-refresh, stop-reading-before-fade, return-belongs-to-composer,
-escape-always-dismisses with the composer focused, terminal-bubble-style,
-composer-prompt, transparent-transcript or the accessibility identifier.
-
+the overlay through the Conversations feed, and
+`ConversationsWindow/ConversationFocusOverlayConformanceTests.swift` builds the
+overlay directly and covers every vector (001 to 018) by id. Skipped:
+conversation-focus-019 (confines-to-ui-thread), because the overlay is
+`@MainActor` and a use from another thread is rejected at build time, so there
+is no runtime behavior to observe.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (ConversationFocusOverlayConformanceTests.swift, 18 of 19 vectors); unit-test-coverage now partial. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial spec for the conversation focus overlay, split out of the mock chat session spec where it was misattributed. |

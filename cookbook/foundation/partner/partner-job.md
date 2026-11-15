@@ -2,7 +2,7 @@
 id: 79810488-c613-4f9b-af2a-4ba9d8ee1c26
 title: "Partner Job"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -168,7 +168,7 @@ Not applicable: the source makes no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerJob.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerJob.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -200,14 +200,15 @@ Not applicable: the source makes no log call.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 
-The types are inert data with no persistence, scheduling or UI code, so separation of concerns passes. No test targets the types' coding contract directly: the existing tests read them through the defaults and the editor model, and nothing asserts the key names, the unknown-environment failure or the missing-key failure, so coverage is partial. Data integrity is partial because the types accept any contents and rely on each caller to guard ids and intervals.
+The types are inert data with no persistence, scheduling or UI code, so separation of concerns passes. `PartnerJobConformanceTests` (Core/Partner) covers all 13 vectors, including the key names, the unknown-environment failure and the missing-key failure, so unit-test coverage passes. Data integrity is partial because the types accept any contents and rely on each caller to guard ids and intervals.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerJobConformanceTests.swift, 13 of 13 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved timer-arming rules out of the type, made vectors self-contained, added a new-field decoding rule and tightened the summary, environment, determinism and WinUI 3 wording. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

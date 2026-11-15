@@ -2,7 +2,7 @@
 id: d1036253-b5c6-4ce5-a285-b91bae4b9f2f
 title: "Landing Page Blocks"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -245,7 +245,7 @@ Not applicable: the module writes no log output.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/landing/src/page/blocks.tsx` | confirmed (1.0.0) |
+| web | `packages/web/packages/landing/src/page/blocks.tsx` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -285,14 +285,15 @@ Not applicable: the module writes no log output.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | accessibility |
 
-The module separates concerns cleanly: it only maps data to kit components, and styling, behavior and copy live in the components and the page data. Unit-test coverage is partial because the module has no test beside it; its behavior is exercised through the adh deck and flow tests and the `heroSlots` tests in the landing package. Error handling is partial because the unhandled-kind case is guarded at compile time only, and at runtime the block is returned unrendered. Semantic markup passes because bodies are real paragraphs and the Shot image carries its caption as `alt` text.
+The module separates concerns cleanly: it only maps data to kit components, and styling, behavior and copy live in the components and the page data. Unit-test coverage passes: `page-blocks.test.tsx` covers blocks-001 to blocks-016. Error handling is partial because the unhandled-kind case is guarded at compile time only, and at runtime the block is returned unrendered. Semantic markup passes because bodies are real paragraphs and the Shot image carries its caption as `alt` text.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (page-blocks.test.tsx, 16 of 16 vectors); unit-test-coverage now passed. |
 | 1.0.0 | 2026-11-14 | mfullerton | Initial creation |

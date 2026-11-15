@@ -4,7 +4,7 @@
     "id": "96f73261-cf32-42cc-92f3-f8b58542382a",
     "title": "Stenographer Daemon Service",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -42,7 +42,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6527bd803e268718",
+  "synced": "ff35f4d7d180eb94",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

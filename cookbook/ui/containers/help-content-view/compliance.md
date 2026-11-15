@@ -25,5 +25,5 @@ and every topic string being rendered as caller-supplied `NSTextField`/
 `ExplanationView` text with no special-casing of its contents
 (unicode-support).
 
-`separation-of-concerns` passes because the view only renders a `HelpContent` value it is handed through `setHelp(_:)` and re-themes from the palette; it does no lookup, navigation or persistence, and the drawer controller owns when help changes. `unit-test-coverage` is `partial`: `Help/HelpContentTests.swift` covers topic order, equality, the empty state (`testEmptyContentRendersTheHonestEmptyStateRatherThanBlank`) and one group per topic (`testSetHelpRendersOneGroupPerTopic`), but nothing tests the fixed heading, scroll reset, wholesale replacement or live theme change.
+`separation-of-concerns` passes because the view only renders a `HelpContent` value it is handed through `setHelp(_:)` and re-themes from the palette; it does no lookup, navigation or persistence, and the drawer controller owns when help changes. `unit-test-coverage` is `partial`: `Help/HelpContentTests.swift` covers help-content-view-001 through -009 and -011; -010 (the archived-construction refusal calls `fatalError` and cannot be caught) and -012 (`@MainActor` isolation is enforced at build time, so no test can express it) are skipped.
 

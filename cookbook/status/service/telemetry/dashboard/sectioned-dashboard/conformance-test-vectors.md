@@ -1,5 +1,5 @@
 
-The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 10,000, `retryMs` 1,000, sections `a` and `b`, a fake clock starting at 1,000,000. Vectors 001 to 014 are backed by tests in that file; vectors 015 to 020 follow the source and have no test yet.
+The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 10,000, `retryMs` 1,000, sections `a` and `b`, a fake clock starting at 1,000,000. Every vector is backed by a test in that file.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

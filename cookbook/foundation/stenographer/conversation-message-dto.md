@@ -2,7 +2,7 @@
 id: f7338580-0738-46d8-a0c3-528794c045be
 title: "Conversation Message DTOs"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -106,7 +106,7 @@ The shapes have no test beside them. The vectors come from the source's own logi
 
 - **Empty conversation**: a session with no lines yields an empty `messages`, `isComplete` true and `nextAfterId` nil. The page MUST say so, per `testAnEmptyConversationIsCompleteAndEmpty`.
 - **Cursor at the newest message**: asking after the newest id yields an empty page that is complete, with `nextAfterId` echoing the cursor asked with. This MUST hold so a follower can poll with the same id.
-- **Unknown cursor id**: an `afterId` or `throughId` that names no message of the session is refused with `unknownMessageId`; it MUST NOT return an empty page. The daemon checks the transcript line the id falls in (the id divided by the block stride of 1000, per **row-identity** in [Conversation Entry DTO](cookbook:08d59319-de4b-438a-a144-dcf3912aa2e5): id = line id × 1000 + block index), not the block index, so only an id whose line is absent from the session is refused.
+- **Unknown cursor id**: an `afterId` or `throughId` that names no message of the session is refused with `unknownMessageId`; it MUST NOT return an empty page. The daemon checks the transcript line the id falls in (the id divided by the block stride of 1000, per **row-identity** in Conversation Entry DTO ([adhsdk.ingredient.foundation.stenographer.conversation-entry-dto](cookbook:08d59319-de4b-438a-a144-dcf3912aa2e5)): id = line id × 1000 + block index), not the block index, so only an id whose line is absent from the session is refused.
 - **Unknown kind**: a `kind` string the fold does not know maps to `model`, never to an error. This is the fold's default branch.
 - **Shared timestamp**: two transcript entries with one timestamp are told apart by id, so paging stays exact; `testWalkingPageByPageGivesTheWholeConversation` walks across a shared second.
 - **Cursor ordering**: ids are not ordered across a resumed session's files, so a reader MUST NOT compare ids as a measure of age or count.
@@ -167,7 +167,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationMessageDTO.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationMessageDTO.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -202,10 +202,11 @@ Not applicable: this code makes no log calls.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | passed | Access Patterns |
 
-separation-of-concerns passes: the file holds shapes, one pure fold and one error; reading the transcript is the daemon's `ConversationStore`. unit-test-coverage is partial: `ConversationMessagesTests` exercises the page, cursor and error shapes through the store, but no test calls `init(entry:)` or `type(forKind:)` directly (the store calls `type(forKind:)` and the tests assert the `user` and `model` types it yields) and none decodes a payload without `agentId`, so vectors 002, 004, 005, 014 and 015 rest on the source alone. pagination-support passes: the page carries `nextAfterId` and `isComplete`, and the cursor is exact across shared timestamps.
+separation-of-concerns passes: the file holds shapes, one pure fold and one error; reading the transcript is the daemon's `ConversationStore`. unit-test-coverage is partial: `ConversationMessageDTOConformanceTests` (`AgenticDeveloperHubSDKCoreTests/Stenographer/ConversationMessageDTOConformanceTests.swift`) tests vectors 001 to 006, 014 and 015; vectors 007 to 013 are skipped there because they need the daemon's `ConversationStore` and are covered by `ConversationMessagesTests`. pagination-support passes: the page carries `nextAfterId` and `isComplete`, and the cursor is exact across shared timestamps.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ConversationMessageDTOConformanceTests.swift, 8 of 15 vectors tested, 7 skipped); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Stated the id encoding, loosened kind to known values, gave real rationales plus a no-validation decision, fixed cursor wording, shortened the summary and linked the entry DTO. |

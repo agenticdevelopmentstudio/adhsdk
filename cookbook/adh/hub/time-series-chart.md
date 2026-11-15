@@ -2,11 +2,11 @@
 id: f571e2ee-ce27-4405-9e79-f69f601f9e1f
 title: "Time Series Chart"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -222,7 +222,10 @@ Not applicable: the component contains no logging calls.
   `--color-apt-border`, `--color-apt-surface-2`, `--color-apt-text`,
   `--color-apt-text-muted`, `--color-apt-bg`), each series colour with a
   literal fallback. Lines use monotone interpolation with null gaps not
-  connected.
+  connected. The tooltip is a custom `content` renderer that reads every
+  series from the hovered point itself, because recharts leaves a series whose
+  value is `null` out of its tooltip payload; that keeps one row per series and
+  lets a gap show its em dash.
 - **SwiftUI**: Use Swift Charts: a `Chart` containing one `LineMark` per point
   per series, with `.foregroundStyle(by:)` bound to the series label for the
   automatic legend, `.interpolationMethod(.monotone)`, and `chartYAxis` with an
@@ -256,7 +259,7 @@ Not applicable: the component contains no logging calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-ui/src/components/time-series-chart.tsx` | unverified |
+| web | `packages/web/packages/adh-ui/src/components/time-series-chart.tsx` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -304,7 +307,7 @@ Not applicable: the component contains no logging calls.
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | partial | Internationalization |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy & Data |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `screen-reader-support` is `partial`: the component adds no accessible name,
 text alternative, or table alternative for the plot; only the chart library's
@@ -316,14 +319,11 @@ tooltip's em dash, and every other string comes from the caller.
 `data-minimization` passes: the component only draws what it is given and keeps
 nothing. `separation-of-concerns` passes: `time-series-chart.tsx` only
 presents points and series supplied by the caller, holding no data fetching,
-aggregation, or state. `unit-test-coverage` is `partial`: `timeSeriesChart.test.tsx`
-covers one line per series with a legend naming each, colouring by position,
-no legend for a single series, formatting y-axis ticks, and refusing a fifth
-series; the null gap, the tooltip placeholder, and the default height are not
-yet asserted by a test.
-
+aggregation, or state. `unit-test-coverage` passes: `timeSeriesChart.test.tsx` covers vectors
+T1 through T10 with passing tests.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (timeSeriesChart.test.tsx, 10 of 10 vectors); the tooltip now reads every series from the hovered point, so a null value shows an em dash (T7); unit-test-coverage now passed. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial spec extracted from `time-series-chart.tsx`; accessibility and compliance statuses reflect the chart library's default keyboard layer. |

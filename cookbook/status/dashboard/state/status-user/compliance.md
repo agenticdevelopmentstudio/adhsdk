@@ -11,7 +11,7 @@
 
 **separation-of-concerns** passes. The adapter only reshapes the result, and fetch and cache semantics live in one query function in `header-auth.ts`.
 
-**unit-test-coverage** is partial. `header-auth.test.ts` covers `fetchStatusUser` for 200 with a user, 200 with null, 500 and a network failure. Nothing tests the adapter itself or the query options (retry, stale time, keeping cached data).
+**unit-test-coverage** is partial. `header-auth.test.ts` covers `fetchStatusUser` for 200 with a user, 200 with null, 500 and a network failure. `use-status-user.dom.test.tsx` covers use-status-user-001 to 013, including the adapter and the query options (retry, stale time, keeping cached data). Coverage is partial because use-status-user-014 (client-only module) is skipped: jsdom cannot host a server component boundary.
 
 **explicit-error-handling** passes. Non-OK responses throw with the HTTP status, and network errors propagate instead of turning into a sign-out. The adapter's choice not to expose the error is a documented projection, not a swallowed failure.
 

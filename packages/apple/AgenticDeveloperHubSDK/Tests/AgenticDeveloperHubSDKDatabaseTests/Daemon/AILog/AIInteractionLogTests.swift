@@ -76,6 +76,14 @@ final class AIInteractionLogTests: XCTestCase {
         XCTAssertFalse(full.truncated)
     }
 
+    func testV11_aFieldExactlyAtTheTruncationLengthIsNotCut() throws {
+        let exact = String(repeating: "y", count: 300)
+        try insertRow(userPrompt: exact)
+        let rows = try database.fetchAIInteractions()
+        XCTAssertEqual(rows[0].userPrompt, exact)
+        XCTAssertFalse(rows[0].truncated)
+    }
+
     func testFetchByIdNilWhenAbsent() throws {
         XCTAssertNil(try database.fetchAIInteraction(id: 12345))
     }

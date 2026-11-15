@@ -4,7 +4,7 @@
     "id": "d8ff2f23-db7f-49a9-8200-6328fa00033f",
     "title": "Favicon",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0d8f6175dadc315f",
+  "synced": "316c59ac43ea2916",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

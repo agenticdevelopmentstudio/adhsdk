@@ -4,7 +4,7 @@
     "id": "25b6559b-69c1-450f-85b3-fc026d55f469",
     "title": "Session DTOs",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -35,7 +35,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "8aed172c6c6311c0",
+  "synced": "5093083882da3e32",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

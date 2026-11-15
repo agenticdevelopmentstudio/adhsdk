@@ -2,11 +2,11 @@
 id: ab36ce5f-4624-4097-bb66-a339dfecc4c9
 title: "Status Server Paths"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -213,7 +213,7 @@ Subsystem: n/a (status backend) | Category: n/a
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/openapi/paths/` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/openapi/paths/` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -232,7 +232,7 @@ Subsystem: n/a (status backend) | Category: n/a
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | passed | Access Patterns |
 | [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
@@ -242,13 +242,14 @@ Subsystem: n/a (status backend) | Category: n/a
 document; no module handles a real request, touches storage, or enforces auth —
 those live one layer up in `src/routes/*`, `src/storage/*`, and `src/middleware/*`,
 documented in the sibling recipes this one's `related` field points at.
-`unit-test-coverage` is partial: `test/openapi.test.ts` exercises the ASSEMBLED
-behavior with meaningful, specific assertions (the drift guard's two set
-differences, the security-scheme shape, and the committed-`openapi.json`
-snapshot), but no test targets `shared.ts`'s individual helpers directly —
-`errors()` called with zero arguments, `zodJson`'s catch-fallback branch, and
-`pathParam`/`queryParam`'s fixed shapes have no dedicated unit test of their own,
-only indirect coverage through whichever operations happen to call them.
+`unit-test-coverage` is passed: all 12 conformance vectors have a passing test.
+`test/openapi.test.ts` covers the assembled behavior (vectors 001-004: the drift
+guard's two set differences, the security-scheme shape, and the committed-`openapi.json`
+snapshot) and `test/openapi-paths.test.ts` reads the hand-written modules directly
+(vectors 005-012: the activity cursor pair, the provider webhooks, `PeerRow`
+redaction, the one-time token value, the SVG badge, the `/live/check` 503, the
+reconcile 403 and the single owner of `ActivityRow`). The `shared.ts` helpers are
+covered by the sibling `status/service/openapi` recipe's vectors.
 `explicit-error-handling` passes: the one place this component could swallow an
 error, `zodJson`'s `try`/`catch`, converts the exception into an explicit,
 documented fallback value instead of ignoring it or leaving it `undefined`.
@@ -271,6 +272,7 @@ one-time `201` create response for a minted token includes the raw value at all.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (openapi-paths.test.ts, openapi.test.ts, 12 of 12 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

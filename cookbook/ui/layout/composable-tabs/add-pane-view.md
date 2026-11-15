@@ -2,11 +2,11 @@
 id: aea5e7b2-00d2-4f23-bfc5-8dc64e8d0d2a
 title: "Composable Tabs Add Pane Sheet"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -393,7 +393,7 @@ this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -455,7 +455,7 @@ not need to reproduce a "what if Right is missing" branch.
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
 Keyboard-navigable passes because Cancel/OK carry the Escape/Return key
 equivalents and every other control is a stock, natively keyboard-accessible
@@ -473,7 +473,7 @@ in this file ("Add:",
 "Where:", "Left", "Right", "Above", "Below", "Cancel", "OK") is a hardcoded
 English literal with no localization key.
 
-`separation-of-concerns` passes because `ComposableTabsAddPaneViewController` only presents the choice of view to add and reports the selection; creating the pane and placing it belong to the arranging controller. `unit-test-coverage` is `failed`: no test file in the Apple test targets references `ComposableTabsAddPaneViewController`.
+`separation-of-concerns` passes because `ComposableTabsAddPaneViewController` only presents the choice of view to add and reports the selection; creating the pane and placing it belong to the arranging controller. `unit-test-coverage` is `partial`: `AddPaneViewControllerConformanceTests.swift` tests every vector except `composable-tabs-add-pane-026`, which is skipped because the `@MainActor` confinement is enforced at build time and has no runtime check to exercise.
 
 ## Change History
 
@@ -486,3 +486,4 @@ English literal with no localization key.
 | 1.1.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.2.2 | 2026-11-15 | Mike Fullerton | Conformance tests added (AddPaneViewControllerConformanceTests.swift; 026 skipped); unit-test-coverage now partial. |

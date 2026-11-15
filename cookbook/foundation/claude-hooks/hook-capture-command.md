@@ -2,7 +2,7 @@
 id: 826153e3-cae8-4917-a1d3-c298a54ab558
 title: "Hook Capture Command"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -36,9 +36,9 @@ approved-date: ""
 
 `HookCaptureCommand` is what a hook helper executable runs when Claude Code fires a registered hook. The registered command line has the shape `<helper> hook --event <Type> [--ppid <int>]`. The command reads the hook payload that Claude Code piped to standard input, wraps it in an envelope together with a snapshot of the process context, and writes the envelope as a drop file that a daemon scans in later. It is the fallback transport: it writes the file whether or not a daemon is listening.
 
-The contract of a hook is "never fail, never produce stdout". The entry point `run` therefore returns exit status 0 whatever goes wrong, so a broken hook never blocks Claude Code. Everything specific to one daemon (the drop directory and its override variable) comes from a `ClaudeHookConfiguration` ([ClaudeHookConfiguration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871)); the account lookups are injected closures because the toolkit core has no account store.
+The contract of a hook is "never fail, never produce stdout". The entry point `run` therefore returns exit status 0 whatever goes wrong, so a broken hook never blocks Claude Code. Everything specific to one daemon (the drop directory and its override variable) comes from a `ClaudeHookConfiguration` (ClaudeHookConfiguration ([adhsdk.ingredient.foundation.sessions.claude-hook-configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871))); the account lookups are injected closures because the toolkit core has no account store.
 
-The type is a caseless enum with two public static entry points, `run` and `buildEnvelope`, plus an internal `systemInfo` and `iso8601UTC` that `HookEnvelopeBuilder` reuses. The directory and file mechanics live in the drop-writer component ([HookDropWriter](cookbook:f3326f3a-cccd-4ac5-8dc1-84d660ed4581)); the socket-path twin of the envelope lives in the envelope-builder component ([HookEnvelopeBuilder](cookbook:9e4aba28-ae2b-4733-b6a5-62e9ad5c7a19)); the status-line command that reuses `buildEnvelope` lives in the status-line-capture component ([StatusLineCapture](cookbook:704d4ae9-e344-44d4-b19c-eadfec082077)).
+The type is a caseless enum with two public static entry points, `run` and `buildEnvelope`, plus an internal `systemInfo` and `iso8601UTC` that `HookEnvelopeBuilder` reuses. The directory and file mechanics live in the drop-writer component (HookDropWriter ([adhsdk.ingredient.foundation.claude-hooks.hook-drop-writer](cookbook:f3326f3a-cccd-4ac5-8dc1-84d660ed4581))); the socket-path twin of the envelope lives in the envelope-builder component (HookEnvelopeBuilder ([adhsdk.ingredient.foundation.claude-hooks.hook-envelope-builder](cookbook:9e4aba28-ae2b-4733-b6a5-62e9ad5c7a19))); the status-line command that reuses `buildEnvelope` lives in the status-line-capture component (StatusLineCapture ([adhsdk.ingredient.foundation.claude-hooks.status-line-capture](cookbook:704d4ae9-e344-44d4-b19c-eadfec082077))).
 
 ## Behavioral Requirements
 
@@ -196,11 +196,11 @@ Not applicable: the command makes no log call and writes nothing to stderr by de
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookCaptureCommand.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookCaptureCommand.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookCaptureTests.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookCaptureTests.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -244,7 +244,7 @@ Not applicable: the command makes no log call and writes nothing to stderr by de
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | reliability |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
@@ -252,11 +252,12 @@ Not applicable: the command makes no log call and writes nothing to stderr by de
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | privacy-and-data |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | passed | security |
 
-The component separates concerns: argument parsing, envelope building, context capture and file writing are distinct functions, and the file mechanics sit in `HookDropWriter`. Unit-test coverage is partial: `HookCaptureTests` covers the entry point, headless suppression, pid resolution, account injection and the drop file, but the live-process `context` groups and the token walk have no direct assertion, so vectors capture-014, capture-015 and capture-019 to capture-021 have no test yet. Explicit error handling is partial: failures are deliberately swallowed per the hook contract, so the code never reports them. Fault tolerance is passed because no failure can change the exit status. Data integrity is passed because the file is written through the drop writer's temporary-then-rename sequence. Data minimization is partial because the snapshot captures `PATH`, `HOME`, `argv` and other host details without a filter. No-PII-in-logs is passed because the command logs nothing. Token lifecycle is passed because the token is recovered per invocation, used only for the account lookup and never written to the envelope.
+The component separates concerns: argument parsing, envelope building, context capture and file writing are distinct functions, and the file mechanics sit in `HookDropWriter`. Unit-test coverage passes: `HookCaptureTests` and `HookCaptureCommandConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookCaptureCommandConformanceTests.swift`) cover every vector, capture-001 to capture-022; the two token-recovery tests (capture-019, capture-020) skip themselves only when an ancestor of the test runner carries a real OAuth token. Explicit error handling is partial: failures are deliberately swallowed per the hook contract, so the code never reports them. Fault tolerance is passed because no failure can change the exit status. Data integrity is passed because the file is written through the drop writer's temporary-then-rename sequence. Data minimization is partial because the snapshot captures `PATH`, `HOME`, `argv` and other host details without a filter. No-PII-in-logs is passed because the command logs nothing. Token lifecycle is passed because the token is recovered per invocation, used only for the account lookup and never written to the envelope.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (HookCaptureCommandConformanceTests.swift, 22 of 22 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved source paths out of references, linked sibling recipes in depends-on and related, added a duplicate-flag requirement and four vectors, downgraded unit-test coverage to partial, and corrected the WinUI File.Move claim. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

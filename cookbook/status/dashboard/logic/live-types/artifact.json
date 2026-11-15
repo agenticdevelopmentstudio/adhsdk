@@ -4,11 +4,11 @@
     "id": "41f840c1-ea34-489d-9b9f-a61dec2a9402",
     "title": "Live Snapshot Wire Types",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ac8d90ef54bc90dc",
+  "synced": "cac678bece184e99",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

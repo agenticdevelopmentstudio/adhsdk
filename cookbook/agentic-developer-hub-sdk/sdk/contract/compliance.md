@@ -15,7 +15,11 @@
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | reliability |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
-`unit-test-coverage` is `partial`: most types here are pure protocols/interfaces
+`unit-test-coverage` is `partial`: the web conformance tests
+(`packages/web/packages/chat/src/runtime/__tests__/contractConformance.test.ts`) cover 16 of the 22 vectors, chat-contract-013 across a refill included,
+through `DefaultOrchestrator`, `ScriptedBackend` and `ShuffleBag`. Skipped: chat-contract-001, 002, 004, 005, 011
+and 017 are apple-only (the web `ScriptedBackend` has no script/start timing, and web has no `statusChanged` or
+`ChatStatusKind`). On apple, most types here are pure protocols/interfaces
 with nothing to unit-test directly; only `ScriptedBackend`, the one concrete
 conformer specified here, has direct tests (`ScriptedBackendTests`, `SDK/Tests/AgenticDeveloperHubSDKTests/Chat/ScriptedBackendTests.swift`), while
 several of the contract's other invariants (draft replace, status

@@ -2,11 +2,11 @@
 id: 37dfdd98-266a-4253-8f0a-42987017844a
 title: "Billing Activity Cache"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -123,7 +123,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingActivityCache.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingActivityCache.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -136,12 +136,13 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: the cache owns only history merging and cursor bookkeeping; eviction and locking are delegated to the shared LRU cache and the read to the persistence protocol. unit-test-coverage fails: a search of the Tests directories finds no test that references the cache or `merging`.
+separation-of-concerns passes: the cache owns only history merging and cursor bookkeeping; eviction and locking are delegated to the shared LRU cache and the read to the persistence protocol. unit-test-coverage passes: `Tests/AgenticDeveloperHubSDKCoreTests/Billing/BillingActivityCacheConformanceTests.swift` covers all eight vectors (the merge rules, cursor advance, `forget` and the capacity bound).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingActivityCacheConformanceTests.swift, 8 of 8 vectors); unit-test-coverage now passed. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

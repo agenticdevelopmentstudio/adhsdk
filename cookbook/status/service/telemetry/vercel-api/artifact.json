@@ -4,7 +4,7 @@
     "id": "60ff967b-b041-4723-913e-016fba7bae6d",
     "title": "Vercel API Client",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c333d3d1f62b85ed",
+  "synced": "58c8bc2719aa18a6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

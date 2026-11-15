@@ -2,7 +2,7 @@
 id: 02cfb457-46da-4814-a1de-8962533ad78e
 title: "Work Tracking XPC Protocol"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -68,7 +68,7 @@ Not applicable — this is a wire protocol declaration, not a visual component. 
 
 ## Conformance Test Vectors
 
-Vectors 001, 005, 007, 008 and 009 are backed by named tests; the others are derived from the source and have no test yet.
+Vectors 001, 005, 007, 008 and 009 are backed by tests in `WorkTrackingXPCClientTests`; 002, 006, 011, 012, 013 and 014 by `WorkTrackingXPCProtocolConformanceTests`. Vectors 003, 004 and 010 (daemon-side replies) and 015 (a static property) are spec-only.
 
 Derived from the protocol's doc comments and from `WorkTrackingXPCClientTests`, whose `RecordingProxy` conforms to the protocol and captures the set-preferences body, and whose literals show the reply shapes.
 
@@ -85,7 +85,7 @@ Derived from the protocol's doc comments and from `WorkTrackingXPCClientTests`, 
 | work-tracking-xpc-protocol-009 | spans-empty-is-none | No spans match | empty array (same test) |
 | work-tracking-xpc-protocol-010 | spans-since | `since` nil | spans from any start are included |
 | work-tracking-xpc-protocol-011 | spans-failure-row | Inspect `WorkTrackingWire.readFailedRow` | the bytes are `{"work_tracking_read_failed":true}` and `readFailedKey` is `work_tracking_read_failed` |
-| work-tracking-xpc-protocol-012 | selectors-stable | List the protocol's selector names | exactly `workTrackingSetPreferences:reply:`, `workTrackingStatus:`, `workTrackingRecheckPermissions:`, `workTrackingSpans:limit:reply:` (spec-only) |
+| work-tracking-xpc-protocol-012 | selectors-stable | List the protocol's selector names | exactly `workTrackingSetPreferences:reply:`, `workTrackingStatusWithReply:`, `workTrackingRecheckPermissionsWithReply:`, `workTrackingSpansSince:limit:reply:` |
 | work-tracking-xpc-protocol-013 | objc-protocol | Build an `NSXPCInterface(with: WorkTrackingXPCProtocol.self)` (spec-only) | it builds without a runtime error |
 | work-tracking-xpc-protocol-014 | reply-once-async | Daemon stub calls the `reply` of `workTrackingStatus` after the selector returned (spec-only) | the caller still receives the reply |
 | work-tracking-xpc-protocol-015 | no-error-channel | Inspect each selector's parameter and reply types (spec-only) | none carries an `Error` or a reason string; replies are `Data` or `[Data]` |
@@ -154,7 +154,7 @@ Not applicable: this code makes no log calls; it declares no calls at all, only 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingXPCProtocol.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingXPCProtocol.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -188,10 +188,11 @@ Not applicable: this code makes no log calls; it declares no calls at all, only 
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | access-patterns |
 
-Separation of concerns passes: the file declares selectors and nothing else, with the value types and the sentinel in `WorkTrackingModels.swift` and the calling logic in the client. Unit coverage is partial: `WorkTrackingXPCClientTests` conforms a recording proxy to the protocol and exercises the set-preferences body, status and span replies and the failure row, but there is no daemon-side test in this repo, so the empty-data replies of the daemon are not asserted here. Error response handling is partial: failure is signaled, but without a reason, so the caller cannot tell an unreachable daemon from a refusal or an unreadable reply.
+Separation of concerns passes: the file declares selectors and nothing else, with the value types and the sentinel in `WorkTrackingModels.swift` and the calling logic in the client. Unit coverage is partial: `WorkTrackingXPCClientTests` and `WorkTrackingXPCProtocolConformanceTests` (`WorkTracking/WorkTrackingXPCProtocolConformanceTests.swift`) cover every vector except 003, 004 and 010 (daemon-side replies; no daemon implementation of the protocol exists in this repo) and 015 (a static property of the declarations that no runtime check can see). Error response handling is partial: failure is signaled, but without a reason, so the caller cannot tell an unreachable daemon from a refusal or an unreadable reply.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (WorkTrackingXPCProtocolConformanceTests.swift, 11 of 15 vectors with the 5 already covered); unit-test-coverage now partial (003, 004, 010 daemon-side; 015 static). Vector 012 selector text corrected. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added a no-reason Design Decision, replaced bare cross-references with links, listed the four selectors in the Overview, made recheck-explicit testable, dropped readFailedKey from Configuration, added vectors and concrete reply literals. |

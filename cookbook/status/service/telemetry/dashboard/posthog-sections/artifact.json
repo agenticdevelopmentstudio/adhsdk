@@ -4,7 +4,7 @@
     "id": "4dc15a9e-c129-412a-9f14-e35146563d8d",
     "title": "PostHog Dashboard Sections",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8ac8262034003fdd",
+  "synced": "ca7f5fd68bedc2fe",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

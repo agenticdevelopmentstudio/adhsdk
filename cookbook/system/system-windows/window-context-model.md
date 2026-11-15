@@ -2,11 +2,11 @@
 id: d4b4359e-e9c8-439c-abcf-309fcc419348
 title: "Window Context Model"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -272,11 +272,11 @@ Not applicable: none of the five types performs logging; the only related log li
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/MatchStrategy.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowContext.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowFingerprint.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowInfo.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowSnapshot.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/MatchStrategy.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowContext.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowFingerprint.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowInfo.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowSnapshot.swift` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -313,12 +313,13 @@ Not applicable: none of the five types performs logging; the only related log li
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
-`separation-of-concerns` passes because the five files hold only data shapes and in-memory collection edits, while fingerprinting and scoring live in `SystemWindowMatcher`, cross-context rules in `SystemWindowContextManager` and file persistence in `SystemWindowContextStore`. `unit-test-coverage` is partial: `SystemWindowMatcherTests` constructs `SystemWindowInfo`, `SystemWindowFingerprint` and `SystemWindowSnapshot` and exercises every `MatchStrategy` through the matcher, and `SystemWindowContextManagerTests` exercises contexts through the manager, but no test targets `SystemWindowContext`'s add, remove, update and focus-clearing operations, `withTitle(_:)`, `displayName` or the `Codable` round trip directly. `no-hardcoded-strings` fails because `displayName` returns English literals meant for a picker. `data-integrity` is partial because decoding is strict (a missing key or unknown strategy throws rather than silently defaulting), but the context accepts duplicate `windowID`s, a stale `lastFocusedWindowID` and an unparsed `color` string, leaving those invariants to the managing layer.
+`separation-of-concerns` passes because the five files hold only data shapes and in-memory collection edits, while fingerprinting and scoring live in `SystemWindowMatcher`, cross-context rules in `SystemWindowContextManager` and file persistence in `SystemWindowContextStore`. `unit-test-coverage` is partial: 31 of 32 vectors have tests in `SystemWindowModelConformanceTests.swift` (under `Tests/AgenticDeveloperHubSDKCoreTests/SystemWindows/`), plus the matcher and manager tests already there. Vector wmcsw-032 (no file, network, log or process activity) is skipped because a unit test cannot observe the absence of side effects, and wmcsw-007 asserts only the score of 0, because the logged compile error it also expects is not observable from a unit test. `no-hardcoded-strings` fails because `displayName` returns English literals meant for a picker. `data-integrity` is partial because decoding is strict (a missing key or unknown strategy throws rather than silently defaulting), but the context accepts duplicate `windowID`s, a stale `lastFocusedWindowID` and an unparsed `color` string, leaving those invariants to the managing layer.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (SystemWindowModelConformanceTests.swift, 31 of 32 vectors; wmcsw-032 skipped, wmcsw-007 asserts the score but not the logged error); unit-test-coverage now partial. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

@@ -4,7 +4,7 @@
     "id": "488a7fef-19c2-4526-8882-3d0529dda3e3",
     "title": "Errors Dashboard Sections",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "40c41be36f571dd4",
+  "synced": "af6235b5e870e99c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

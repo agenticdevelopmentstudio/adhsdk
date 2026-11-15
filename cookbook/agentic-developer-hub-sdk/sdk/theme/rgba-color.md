@@ -2,7 +2,7 @@
 id: ad5bae6b-0172-4cd4-a4b7-297eb58eb28d
 title: "RGBAColor"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -194,7 +194,7 @@ Not applicable: the source makes no log calls; parse failure is reported as nil 
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -223,16 +223,17 @@ Not applicable: the source makes no log calls; parse failure is reported as nil 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 
-Separation of concerns passes because the file holds only the value, its hex form and its `Codable` conformance, and leaves platform-color bridges and luminance math to other files. Unit-test coverage is partial: the source has no test file of its own, and only indirect use through the theme tests exercises `init?(hexString:)`; the clamp, the encode and decode paths and the error case have no direct assertions. Explicit error handling passes because failure is a nil return or a thrown `DecodingError`, never silent. Data integrity passes because both the initializer and `hexString` clamp. The no-hardcoded-strings check does not apply: the only literal is the decode error's `debugDescription`, a developer diagnostic that is never shown to a person or localized.
+Separation of concerns passes because the file holds only the value, its hex form and its `Codable` conformance, and leaves platform-color bridges and luminance math to other files. Unit-test coverage passes: `RGBAColorConformanceTests` (`packages/apple/AgenticDeveloperHubSDK/SDK/Tests/AgenticDeveloperHubSDKTests/Theme/RGBAColorTests.swift`) asserts all 23 vectors directly, covering the clamp, hex parsing, the encode and decode paths and the error case. Explicit error handling passes because failure is a nil return or a thrown `DecodingError`, never silent. Data integrity passes because both the initializer and `hexString` clamp. The no-hardcoded-strings check does not apply: the only literal is the decode error's `debugDescription`, a developer diagnostic that is never shown to a person or localized.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (RGBAColorTests.swift, 23 of 23 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Downgraded hex-sign-leniency to a MAY with a pending Design Decision, moved clamp-reason into Design Decisions, marked hex-clamp-again defensive, retagged vector 013, added vectors for 4 and 7 digit forms, a negative sign and 8-bit quantization, linked related ingredients, and dropped the no-hardcoded-strings row. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

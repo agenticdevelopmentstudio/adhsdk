@@ -2,7 +2,7 @@
 id: e75d7d1e-2a25-452d-9c26-ea5f7cd7fa6d
 title: "Git Context Fingerprint"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -160,7 +160,7 @@ Not applicable: this code uses no OSLog; a failed sample yields nil or unchanged
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/GitContextFingerprint.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/GitContextFingerprint.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -212,13 +212,13 @@ Not applicable: this code uses no OSLog; a failed sample yields nil or unchanged
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: running commands lives in `ReadOnlyGit`, and this type decides what is sampled, hashes it and splices the result. unit-test-coverage is partial: `GitContextFingerprintTests` covers sampling, hash movement, the untrimmed status, nesting, byte preservation and every fallback, but nothing exercises a failing status or log command after the branch resolved, and vectors 013 to 017 (entry count, `sampled_at` form, the five-commit limit, the empty object and the directory scope) have no test yet.
-
+separation-of-concerns passes: running commands lives in `ReadOnlyGit`, and this type decides what is sampled, hashes it and splices the result. unit-test-coverage passes: `GitContextFingerprintTests` (`Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/GitContextFingerprintTests.swift`) has a test for every vector, 001 to 017 (013 to 017 are the `testV013` to `testV017` tests). The failing-status-or-log case is `NEEDS REVIEW` in the source and has no vector.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (GitContextFingerprintTests.swift, 17 of 17 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Pinned field types and the sampled_at format, dropped the splice-reason requirement and duplicated rationale, fixed the recentCommitCount and WinUI notes, added five test vectors and a pending decision on subcommand failure. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

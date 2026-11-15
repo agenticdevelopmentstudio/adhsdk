@@ -4,7 +4,7 @@
     "id": "e79dbcca-1d0e-41bd-a757-e0db8e5a5e8d",
     "title": "Remote Storage over a MessagePort",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "220c0297fd05ff29",
+  "synced": "19b827448fb5f84e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

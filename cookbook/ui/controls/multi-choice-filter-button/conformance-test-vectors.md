@@ -1,7 +1,7 @@
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| multi-choice-filter-button-001 | builds-fixed-menu-structure | Construct with `label: "Good for"`, `choices: [a, b]` | Menu has exactly 4 items in order: `label` (no action), "Any", a separator, then items titled `a.title` and `b.title` |
+| multi-choice-filter-button-001 | builds-fixed-menu-structure | Construct with `label: "Good for"`, `choices: [a, b]` | Menu has exactly 4 items in order: the title slot (no action; its title is the summary title `"Good for: Any"`, since the summary is written into it), "Any", a separator, then items titled `a.title` and `b.title` |
 | multi-choice-filter-button-002 | sets-choice-tooltip | Choice `a` has `detail: "Runs code"`; choice `b` has `detail: ""` | `a`'s menu item has tooltip "Runs code"; `b`'s menu item has no tooltip set |
 | multi-choice-filter-button-003 | clears-selection-on-any | `selection == ["a"]`; invoke the "Any" item's action | `selection == []` |
 | multi-choice-filter-button-004 | toggles-choice-on-select | `selection == []`; invoke choice `a`'s item action | `selection == ["a"]` |

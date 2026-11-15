@@ -4,7 +4,7 @@
     "id": "8a51a893-a170-4cfc-a620-37939ae6b27b",
     "title": "Privacy Word Store",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "42286e3af0c91bfe",
+  "synced": "a40156ac43aedca7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,7 +2,7 @@
 id: 294285ac-403a-44fe-9840-8ad9f3cf1eba
 title: "Partner Job Defaults"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -33,7 +33,7 @@ approved-date: ""
 
 ## Overview
 
-`PartnerJobDefaults` is a case-less enumeration that holds the built-in partner jobs. Today there is one: the code-reviews job, a loop in which the app crawls repositories and queues commits before each timer tick, and the partner starts reviews, drives each review session through three steps (open a session, run a review, fix the findings) and judges what each session's screen says. The enumeration supplies the job's ids, its guidelines text, its steps and its default timer, and exposes the list of all built-in jobs (`all`) that the app seeds into the store when a built-in job is missing. It also keeps the id of the retired "general" job, only so the guidelines installer can remove what that job left behind. The jobs are `PartnerJob` values; their shape is specified by [Partner Job](cookbook:79810488-c613-4f9b-af2a-4ba9d8ee1c26), and the placeholders in their commands are filled by [Partner Step Template](cookbook:211ef664-01fc-45d5-996b-1a0a4167a748).
+`PartnerJobDefaults` is a case-less enumeration that holds the built-in partner jobs. Today there is one: the code-reviews job, a loop in which the app crawls repositories and queues commits before each timer tick, and the partner starts reviews, drives each review session through three steps (open a session, run a review, fix the findings) and judges what each session's screen says. The enumeration supplies the job's ids, its guidelines text, its steps and its default timer, and exposes the list of all built-in jobs (`all`) that the app seeds into the store when a built-in job is missing. It also keeps the id of the retired "general" job, only so the guidelines installer can remove what that job left behind. The jobs are `PartnerJob` values; their shape is specified by Partner Job ([adhsdk.ingredient.foundation.partner.partner-job](cookbook:79810488-c613-4f9b-af2a-4ba9d8ee1c26)), and the placeholders in their commands are filled by Partner Step Template ([adhsdk.ingredient.foundation.partner.partner-step-template](cookbook:211ef664-01fc-45d5-996b-1a0a4167a748)).
 
 ## Behavioral Requirements
 
@@ -150,9 +150,9 @@ Vectors 001 to 004 are asserted in `PartnerModelsTests` (001), `CodeReviewsSched
 - **Store read fails**: The controller falls back to `all` and logs the failure; the defaults are therefore always available without storage (`pure-constants`). That fallback belongs to the controller.
 - **Retired job left behind**: An install that once had the general job keeps its row, file and skill until the coordinator calls the installer's removal with `retiredGeneralID`; `all` never re-creates it (`all-contents`).
 - **Reset to default**: Replacing a job's steps or guidelines with `codeReviews()` values restores the original text exactly, because the values are reproducible (`defaults-reproducible`).
-- **Placeholders left unfilled**: These constants hold placeholders unresolved. `PartnerStepTemplate.fill` (see [Partner Step Template](cookbook:211ef664-01fc-45d5-996b-1a0a4167a748)) leaves an unknown placeholder as written, so a value the review service does not supply is typed literally.
-- **Empty reviewer model and no superseding commits**: `ReviewService.fill` drops the `--model {model}` option from every step when the reviewer-model setting is empty, so the terminal step then reads `claude --dangerously-skip-permissions`; and `{superseded}` is filled with `none` when no later commit touched the files (a fact of the review service, specified in [Partner Review](cookbook:2a298bb0-d8af-40aa-8fec-42dd3b1d8f43) and not by this type).
-- **Command placeholders vs terminal quoting**: Values filled into the terminal step are shell-quoted and values filled into Claude steps are not (a fact of `PartnerStepTemplate`, specified in [Partner Step Template](cookbook:211ef664-01fc-45d5-996b-1a0a4167a748) and not by this type).
+- **Placeholders left unfilled**: These constants hold placeholders unresolved. `PartnerStepTemplate.fill` (see Partner Step Template ([adhsdk.ingredient.foundation.partner.partner-step-template](cookbook:211ef664-01fc-45d5-996b-1a0a4167a748))) leaves an unknown placeholder as written, so a value the review service does not supply is typed literally.
+- **Empty reviewer model and no superseding commits**: `ReviewService.fill` drops the `--model {model}` option from every step when the reviewer-model setting is empty, so the terminal step then reads `claude --dangerously-skip-permissions`; and `{superseded}` is filled with `none` when no later commit touched the files (a fact of the review service, specified in Partner Review ([adhsdk.ingredient.foundation.partner.partner-review](cookbook:2a298bb0-d8af-40aa-8fec-42dd3b1d8f43)) and not by this type).
+- **Command placeholders vs terminal quoting**: Values filled into the terminal step are shell-quoted and values filled into Claude steps are not (a fact of `PartnerStepTemplate`, specified in Partner Step Template ([adhsdk.ingredient.foundation.partner.partner-step-template](cookbook:211ef664-01fc-45d5-996b-1a0a4167a748)) and not by this type).
 - **Concurrent access**: Not applicable — every member is a constant or builds a new value, so there is nothing shared to race on.
 - **Network, timeouts, offline, boundary values**: Not applicable — the namespace performs no I/O; the 1800-second interval is the one numeric default.
 
@@ -208,7 +208,7 @@ Not applicable: the source makes no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerJobDefaults.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerJobDefaults.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -244,14 +244,15 @@ Not applicable: the source makes no log call.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | partial | user-safety |
 
-The namespace holds data and builds values; seeding, scheduling and storage live in the controller, coordinator and store, so separation of concerns passes. Tests assert the id list, the step names, the fix step's commit and no-push wording, the guidelines' tool names and range fallback, and the reset to default, but not the other step fields, the 1800-second timer or the disabled default, so coverage is partial. Known debt: the test `defaultsHaveTheTwoBuiltInJobs` asserts one job; its name is stale from before the general job was retired, and vector 001 follows its assertion. Safe defaults are partial: the job is disabled and the fix step never pushes, but the terminal step skips permission prompts by design.
+The namespace holds data and builds values; seeding, scheduling and storage live in the controller, coordinator and store, so separation of concerns passes. Tests assert the id list, the step names, the fix step's commit and no-push wording, the guidelines' tool names and range fallback, and the reset to default, and `PartnerJobDefaultsConformanceTests` (Core/Partner) covers all 17 vectors, including the other step fields, the 1800-second timer, the disabled default and the exact texts, so unit-test coverage passes. Known debt: the test `defaultsHaveTheTwoBuiltInJobs` asserts one job; its name is stale from before the general job was retired, and vector 001 follows its assertion. Safe defaults are partial: the job is disabled and the fix step never pushes, but the terminal step skips permission prompts by design.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerJobDefaultsConformanceTests.swift, 17 of 17 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Quoted the exact guidelines and fix command, rewrote the permission-skip rationale as advisory with accepted residual risk, added a prompt-injection decision, folded step-skip-permissions into step-open-session, trimmed Configuration to editable defaults, linked partner-job, partner-step-template and partner-review, and reworded other types' behavior in edge cases as facts. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

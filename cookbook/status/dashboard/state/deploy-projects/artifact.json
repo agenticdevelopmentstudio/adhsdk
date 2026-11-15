@@ -4,11 +4,11 @@
     "id": "b14c03d8-1b93-41e0-9f92-76a81171cee9",
     "title": "Deploy Projects State",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "93c9e80e5399f6a0",
+  "synced": "5c318164fde0826d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

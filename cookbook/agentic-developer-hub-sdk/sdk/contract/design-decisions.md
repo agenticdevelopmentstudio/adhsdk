@@ -43,15 +43,17 @@ fit a command's start/complete lifecycle.
 
 **Decision**: apple's `ShuffleBag` returns `nil` on an empty source and
 never repeats an element back-to-back, even across a refill; web's
-`ShuffleBag` throws on empty and can repeat once across the seam between
-refills.
+`ShuffleBag` throws on empty, and since 2026-11-14 also never repeats across
+the seam between refills.
 **Rationale**: Each platform's own source states its own choice
 independently rather than one being a bug relative to the other — apple's
 own documentation frames the stronger no-repeat guarantee as intentional
 ("closing that seam is the whole point at a [status] cadence"), and returning
 `nil` instead of throwing on empty reflects that a toolkit should not trap a
-host that configured no vocabulary, while web's looser guarantee and
-throw-on-empty behavior is its own considered choice, not left to chance.
+host that configured no vocabulary, while web's throw-on-empty behavior is its
+own considered choice. Web once allowed one repeat across a refill; a
+conformance test caught it and web now closes the seam the same way apple
+does.
 **Approved**: pending
 
 **Decision**: `CommandActivity` (apple) keeps every entry in place

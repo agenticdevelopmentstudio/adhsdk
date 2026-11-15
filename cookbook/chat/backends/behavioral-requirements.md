@@ -105,6 +105,10 @@
 - **shufflebag-reshuffle-on-empty**: When the internal draw pile is empty,
   `next()` MUST refill it with a fresh Fisher-Yates shuffle of the full item
   set before drawing.
+- **shufflebag-no-back-to-back**: When a bag of more than one item refills,
+  `next()` MUST NOT return the item it returned last: if the fresh shuffle's
+  next draw (its last element) equals the previous draw, that element MUST be
+  swapped with index `0` before drawing. A one-item bag is exempt.
 - **shufflebag-fisher-yates-order**: The reshuffle MUST walk the index range
   from `length - 1` down to `1`, swapping index `i` with a `j` drawn as
   `Math.floor(Math.random() * (i + 1))`, and `next()` MUST draw by popping

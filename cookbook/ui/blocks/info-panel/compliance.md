@@ -17,8 +17,7 @@ real `overflow-y-auto` container, but the source adds no `tabIndex` to it, so
 keyboard reachability depends on focusable content the host renders inside.
 `separation-of-concerns` is `passed`: the component is pure presentation over
 its header/body slot props, with only the trivial `aria-label` precedence
-computed inline. `unit-test-coverage` is `partial`: `infoPanel.test.tsx`
-exercises only the host-attribute passthrough and the `aria-label` precedence
-chain, with no test covering the icon, count, center, actions, or scroll-mode
-rendering.
-
+computed inline. `unit-test-coverage` is `partial`: `infoPanel.test.tsx` has a test for every
+conformance vector except **T6** (shared-header-height alignment) and **T8**
+(fill-and-scroll-on-scroll), which are skipped because jsdom has no real layout
+or scrolling; both need Playwright/E2E.

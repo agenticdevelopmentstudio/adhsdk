@@ -2,7 +2,7 @@
 id: 98226063-be5d-4fa8-a980-02227df3418b
 title: "Account Registry"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -31,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-`AccountRegistry` is the list of accounts an app offers, kept in display order. An accounts UI renders one entry per account in `accounts` and observes the registry through a single `onChange` closure. Each entry is an `Account` ([Account](cookbook:9cf9784d-48c9-4b29-b553-c72ffdfce7b9)): a reference-type protocol (`AnyObject`) with a stable `id`. The registry is a plain `@MainActor` class in the Foundation-only SDK tier. It does no I/O and never calls an account's own methods. `add` and `remove` let a caller change the list of accounts without any change to `Account`.
+`AccountRegistry` is the list of accounts an app offers, kept in display order. An accounts UI renders one entry per account in `accounts` and observes the registry through a single `onChange` closure. Each entry is an `Account` (Account ([adhsdk.ingredient.auth.accounts.account](cookbook:9cf9784d-48c9-4b29-b553-c72ffdfce7b9))): a reference-type protocol (`AnyObject`) with a stable `id`. The registry is a plain `@MainActor` class in the Foundation-only SDK tier. It does no I/O and never calls an account's own methods. `add` and `remove` let a caller change the list of accounts without any change to `Account`.
 
 ## Behavioral Requirements
 
@@ -88,7 +88,7 @@ Not applicable — this is a model that holds a list, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 005 are the cases asserted in `AccountRegistryTests` (`AccountsTests.swift`, suite "AccountRegistry"); vectors 006 to 013 have no test behind them yet and follow the source directly.
+Vectors 001 to 005 are asserted in `AccountRegistryTests` (`AccountsTests.swift`, suite "AccountRegistry"); vectors 006 to 013 are asserted in `AccountRegistryConformanceTests` (`AccountRegistryConformanceTests.swift`).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -168,7 +168,7 @@ Not applicable: `AccountRegistry` makes no log calls, and a duplicate add or unk
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountRegistry.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountRegistry.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -200,15 +200,16 @@ Not applicable: `AccountRegistry` makes no log calls, and a duplicate add or unk
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | reliability |
 | [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | performance |
 
-The registry does one job, holding an ordered list, and leaves sign-in, rendering and storage to `Account` and the UI (separation-of-concerns). The unit tests in `AccountsTests.swift` cover order, add, duplicate add, remove and unknown remove, but not the initializer duplicates or re-entrant `onChange`, so coverage is partial (unit-test-coverage). A duplicate add is idempotent by design (idempotent-operations). Neither operation does blocking work, so the main actor is not held (main-thread-freedom). Error handling is partial: duplicate and unknown ids are deliberate silent no-ops that the caller cannot tell from success except through `onChange`, and nothing is logged.
+The registry does one job, holding an ordered list, and leaves sign-in, rendering and storage to `Account` and the UI (separation-of-concerns). All 13 vectors are covered by tests in `AccountsTests.swift` and `AccountRegistryConformanceTests.swift` (unit-test-coverage). A duplicate add is idempotent by design (idempotent-operations). Neither operation does blocking work, so the main actor is not held (main-thread-freedom). Error handling is partial: duplicate and unknown ids are deliberate silent no-ops that the caller cannot tell from success except through `onChange`, and nothing is logged.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (AccountRegistryConformanceTests.swift, 8 new vectors; AccountsTests.swift names now carry V1-V5; 13 of 13 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Corrected spec claims against AccountRegistry source and tightened requirements and vectors. |

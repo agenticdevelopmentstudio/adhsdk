@@ -43,7 +43,7 @@ Titles below write the em dash as "—" (U+2014) and the en dash as "–"
 | wmh-037 | xcode-identity, warp-identity, brave-identity, vscode-identity, terminal-identity | Read the name and app-names list of each built-in heuristic | "Xcode"/`["Xcode"]`; "Warp"/`["Warp"]`; "Brave Browser"/`["Brave Browser"]`; "VS Code"/`["Code", "Visual Studio Code", "Cursor"]`; "Terminal"/`["Terminal"]` |
 | wmh-038 | heuristic-pure, heuristic-concurrency-safety | The pattern-extraction operation called on one shared heuristic instance from many concurrent tasks with the same title | Every call returns the same value; no data race is reported under strict concurrency checking |
 
-Vectors wmh-001, wmh-002, wmh-011, wmh-012, wmh-022, and a handful of others
-noted individually above are asserted by the reference test suite; the rest
-are traced to each heuristic's own logic and documented examples.
+Vectors wmh-001, wmh-002, wmh-011, wmh-012 and wmh-022 are asserted by
+`HeuristicTests`; every other vector is asserted by
+`TitleHeuristicConformanceTests`.
 

@@ -2,7 +2,7 @@
 id: e7262e09-e6f7-4152-acff-7fa09c242088
 title: "ADH Sync API Client"
 type: ingredient
-version: 1.0.1
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-23
@@ -45,9 +45,12 @@ sync engine ([adhsdk.ingredient.data.sync.offline-sync-client](cookbook:d3a0b65f
 ### Initialization
 
 - **default-base-url**: `ADHSyncAPI.init` MUST default `baseURL` to
-  `DaemonContract.backendURL` when the caller supplies none. The other two
-  initializer defaults, `session` and the required `credentials`, are listed in
-  Configuration.
+  `DaemonContract.backendURL` when the caller supplies none.
+- **default-session**: `ADHSyncAPI.init` MUST default `session` to
+  `URLSession.shared` when the caller supplies none.
+- **credentials-conformer-required**: `ADHSyncAPI.init` MUST require a
+  `CredentialProvider` conformer for `credentials`; this parameter has no
+  default value.
 - **sendable-value-type**: `ADHSyncAPI` MUST be declared `Sendable`. It is a
   `struct` with three `let` stored properties (`baseURL: URL`,
   `credentials: any CredentialProvider`, `session: URLSession`), so an
@@ -479,5 +482,5 @@ cite an existing test).
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.1 | 2026-11-14 | Mike Fullerton | Retitled to ADH Sync API Client, restated requirements as observable pull/push behavior, downgraded accidental MUSTs to current behavior, added a cancellation Design Decision, merged the signature-only requirements into Configuration, fixed the failure-excludes-credential wording, marked fault-tolerance and timeout-handling partial, rewrote vectors 001/003/016 as inspection checks, linked offline-sync-client and removed process-residue wording. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Restore requirements lost in the lint pass: default-session, credentials-conformer-required |
 | 1.0.0 | 2026-09-23 | Claude Sonnet 5 | Initial creation |

@@ -1,5 +1,5 @@
 
-Vectors come from `ConversationSummaryDTOTests` (Core test target) and the source's own logic.
+Vectors come from `ConversationSummaryDTOTests` (Core test target) and the source's own logic; vectors 022 to 031 are the `testV022_` to `testV031_` tests in the same file.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

@@ -54,7 +54,7 @@ describe("the text control", () => {
     await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: "Renamed" }))
   })
 
-  it("shows the error in place of the hint, and marks itself invalid", () => {
+  it("content-editing-057 shows the error in place of the hint, and marks itself invalid", () => {
     render(
       <EditingHostProvider host={{ UnsavedChangesGuard: () => null, Alert: () => null }}>
         <EditingContainer
@@ -73,7 +73,7 @@ describe("the text control", () => {
 })
 
 describe("the rdid control", () => {
-  it("lowercases as the user types, so the shift key is not a decision", async () => {
+  it("content-editing-055 lowercases as the user types, so the shift key is not a decision", async () => {
     const onSave = vi.fn(async () => {})
     render(
       <EditingHostProvider host={{ UnsavedChangesGuard: () => null, Alert: () => null }}>
@@ -94,7 +94,7 @@ describe("the rdid control", () => {
 })
 
 describe("the textarea control", () => {
-  it("renders as a textarea at the declared height and carries its value", async () => {
+  it("content-editing-066 renders as a textarea at the declared height and carries its value", async () => {
     const onSave = vi.fn(async () => {})
     render(
       <EditingHostProvider host={{ UnsavedChangesGuard: () => null, Alert: () => null }}>
@@ -151,7 +151,7 @@ describe("the select control", () => {
     await waitFor(() => expect(onSave).toHaveBeenCalledWith({ visibility: "public" }))
   })
 
-  it("gives back a number, not the DOM's string", async () => {
+  it("content-editing-053 gives back a number, not the DOM's string", async () => {
     // The DOM only has strings. A numeric select that saved "3" would put a
     // string into a numeric column, and nothing between here and the database
     // would notice.
@@ -181,7 +181,7 @@ describe("the select control", () => {
     await waitFor(() => expect(onSave).toHaveBeenCalledWith({ retries: 3 }))
   })
 
-  it("shows a stored value the options do not contain, instead of the first option", () => {
+  it("content-editing-054 shows a stored value the options do not contain, instead of the first option", () => {
     // The silent overwrite. A bare <select> whose value matches no <option>
     // displays the FIRST one, so a row holding a retired choice would read as
     // "Private" — a value the row does not hold — and the next Save would write
@@ -222,7 +222,7 @@ describe("the select control", () => {
     expect(screen.getByText('"retired" is not one of the available choices.')).toBeInTheDocument()
   })
 
-  it("adds no such option when the stored value IS on the list", () => {
+  it("content-editing-067 adds no such option when the stored value IS on the list", () => {
     // The control case for the one above: an extra option on every select would
     // duplicate the current choice on every pane in the fleet.
     render(
@@ -252,7 +252,7 @@ describe("the checkbox control", () => {
   const fields = { archived: checkbox({ label: "Archived", hint: "Hidden from lists." }) }
   const sections = [section("Danger", ["archived"])]
 
-  it("labels itself beside the box and toggles both ways", async () => {
+  it("content-editing-065 labels itself beside the box and toggles both ways", async () => {
     const onSave = vi.fn(async () => {})
     render(
       <EditingHostProvider host={{ UnsavedChangesGuard: () => null, Alert: () => null }}>
@@ -294,7 +294,7 @@ describe("the checkbox control", () => {
 })
 
 describe("a field the surface has locked", () => {
-  it("is disabled on its own, without locking the rest of the pane", () => {
+  it("content-editing-056 is disabled on its own, without locking the rest of the pane", () => {
     render(
       <EditingHostProvider host={{ UnsavedChangesGuard: () => null, Alert: () => null }}>
         <EditingContainer
@@ -314,7 +314,7 @@ describe("a field the surface has locked", () => {
 })
 
 describe("every control", () => {
-  it("is locked while a save is in flight", async () => {
+  it("content-editing-068 is locked while a save is in flight", async () => {
     let release: (() => void) | undefined
     const onSave = vi.fn(
       () =>

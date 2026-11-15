@@ -87,7 +87,7 @@ Concrete Tailwind classes and `apt-*` design tokens for this layout are given in
 | header-004 | title-fallback, title-attribute | hit.title = undefined | h3 text displays "Untitled"; h3 has no title attribute |
 | header-005 | title-fallback | hit.title = "   " (whitespace only) | h3 text displays "   " literally — not "Untitled", since the fallback is a falsy check, not a trim |
 | header-006 | title-attribute | hit.title = "Long Paper Title Here" | h3 title attribute = "Long Paper Title Here" |
-| header-007 | kind-badge | hit.kind = "research", kindRendererFor returns {badge: {variant: "research", label: "Research"}} | Badge renders with variant "research" and label text "Research" |
+| header-007 | kind-badge | hit.kind = "research", kindRendererFor returns {badge: {variant: "blue", label: "Research"}} | Badge renders with variant "blue" and label text "Research" |
 | header-008 | author-attribution | hit.author = {displayName: "Alice Smith", slug: "alice"} | Text shows "by Alice Smith" |
 | header-009 | author-attribution | hit.author = {displayName: "  ", slug: "bob"} | Text shows "by @bob" |
 | header-010 | author-attribution | hit.author = {displayName: null, slug: "charlie"} | Text shows "by @charlie" |
@@ -224,9 +224,9 @@ Not applicable: This component performs no async operations, external calls, or 
 | [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | partial | Internationalization |
 | [adc.check.internationalization.text-expansion-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8007859b-a974-5b8a-88f7-162624b0c056) | partial | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best-practices |
 
-Passed/failed statuses rest on the source's native semantic elements (`h3`, `<a>`, `<p>`) and design-token-based colors for accessibility, and on the hardcoded `en-US` locale in the shared `formatDate` helper plus literal English strings in the JSX ("Untitled", "by", "Summary: ", "View full paper") for internationalization; contrast, dynamic-type, RTL, and text-expansion statuses are partial because the token values and layout behavior aren't verifiable from this component's source alone. `separation-of-concerns` passes: this component only formats and lays out an already-fetched `hit`, delegating the kind badge to `Badge`, per-kind extra content to `kindRendererFor`'s registry, and date formatting to the shared `formatDate` helper. `unit-test-coverage` fails: no test file in `packages/web/packages/search` references `MarkdownPreviewHeader`.
+Passed/failed statuses rest on the source's native semantic elements (`h3`, `<a>`, `<p>`) and design-token-based colors for accessibility, and on the hardcoded `en-US` locale in the shared `formatDate` helper plus literal English strings in the JSX ("Untitled", "by", "Summary: ", "View full paper") for internationalization; contrast, dynamic-type, RTL, and text-expansion statuses are partial because the token values and layout behavior aren't verifiable from this component's source alone. `separation-of-concerns` passes: this component only formats and lays out an already-fetched `hit`, delegating the kind badge to `Badge`, per-kind extra content to `kindRendererFor`'s registry, and date formatting to the shared `formatDate` helper. `unit-test-coverage` passes: `MarkdownPreviewHeader.test.tsx` covers all twenty-nine conformance vectors (header-001 to header-029).
 
 ## Change History
 

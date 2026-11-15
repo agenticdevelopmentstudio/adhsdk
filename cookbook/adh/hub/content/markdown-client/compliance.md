@@ -2,7 +2,7 @@
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | reliability |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
@@ -20,10 +20,11 @@ point, `markdownApi.createCategory` posting to the markdown surface instead
 of the generic taxonomy door, is deliberate and documented in taxonomy.ts's
 own header comment.
 
-**unit-test-coverage**: partial. markdown.test.ts covers the three pure
-fallback helpers (`withTags`, `categoryNodes`, `tagNodes`) and two cases of
-`markdownApi.routeAvailable`, but none of `markdownApi`'s other eleven
-operations, and schemas.ts and taxonomy.ts have no test file at all.
+**unit-test-coverage**: passed. All 18 conformance vectors (HDM-001 to
+HDM-018) have a test whose title leads with the vector id: markdown.test.ts
+(fallback helpers, `routeAvailable`, conflict mapping, the `list` query),
+schemas.test.ts (duplicate table names, rollback, `get` swallowing errors,
+`list` scoping) and taxonomy.test.ts (`removeCategoryParent`).
 
 **explicit-error-handling**: partial. `markdownApi.publish` and
 `.createCategory` each catch a 409 and rethrow a friendly message, and

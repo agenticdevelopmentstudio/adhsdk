@@ -1,0 +1,24 @@
+
+- **render-input-field**: The component MUST render a text input field that accepts character input from the user.
+- **accept-placeholder**: The component MUST accept and display a placeholder string when the input is empty. The default placeholder MUST be "Type a message...".
+- **accept-custom-placeholder**: The component MUST allow the placeholder text to be customized via a configuration option.
+- **disable-on-empty**: The send button MUST be disabled when the input contains only whitespace or is empty.
+- **enable-on-text**: The send button MUST be enabled when the input contains at least one non-whitespace character.
+- **send-on-enter**: The component MUST send the message when the user presses Enter (without Shift). On AppKit, Shift+Enter MUST NOT send: the field's delegate only maps the unshifted `insertNewline(_:)` command to a send, so Shift+Enter never reaches it. On web, Shift+Enter is not actually intercepted — `onKeyDown` only calls `preventDefault`/send for `!e.shiftKey` — so with the send button enabled the keystroke falls through to the surrounding `<form>`'s implicit submission and the message is sent and the field cleared, the same as an unshifted Enter; see the Shift+Enter edge case.
+- **trim-whitespace**: The component MUST trim leading and trailing whitespace from the message text before sending.
+- **clear-on-send**: The component MUST clear the input field after a message is sent.
+- **invoke-callback**: The component MUST invoke the `onSend` callback with the trimmed message text when a send action occurs.
+- **reject-empty-send**: The component MUST NOT invoke `onSend` if the trimmed message text is empty.
+- **support-disabled-state**: The component MUST support a disabled state that prevents typing and sending.
+- **show-send-button**: The component MUST render a send button that is visually associated with the input field.
+- **receive-autofocus**: The component MUST support an autoFocus option to automatically focus the input field on mount.
+- **opt-out-password-manager**: On web, the component MUST set autofill opt-out attributes to prevent password managers from injecting autofill metadata into the input field and form. This is a web-only requirement: native platforms (AppKit, UIKit, WinUI 3) render no DOM for a password manager to scan, so it does not apply there.
+- **opt-out-ios-autofill**: On web, the component MUST use a form container with no `name` or `autocomplete` attributes, and MUST set `data-form-type="other"`, to prevent iOS Safari from offering contact autofill. This is a web-only requirement, specific to the DOM-based Safari contact-autofill heuristic described in the React/Web platform note; it does not apply to native AppKit, UIKit, or WinUI 3 controls.
+- **provide-accessible-label**: The component MUST provide an accessible label for the input field. On web, the source hardcodes this label as "Message" (`aria-label="Message"`); it is not yet caller-configurable. On macOS, `ChatInputField`/`InlineChatView` set no accessibility label on the input at all — VoiceOver falls back to whatever placeholder text is set, if any — so this requirement is currently unmet on AppKit. See **provide-send-button-label** for the send button's own label, which AppKit does set (`accessibilityDescription: "Send"`).
+- **provide-send-button-label**: The send button MUST provide an accessible label ("Send") via `aria-label` (web) or the equivalent native mechanism.
+- **provide-input-name**: On web, the input element MUST carry `name="message"` for form submission context; this is separate from — and not one of — the autocomplete/name opt-outs the surrounding `<form>` itself applies under **opt-out-ios-autofill**.
+- **support-external-ref**: The component MUST allow the caller to provide an external ref to access the input element directly.
+- **retain-text-on-blur**: The component MUST retain the text a user has typed when the input loses focus without a send; nothing in the input clears the field except a completed send.
+- **update-theme-while-focused**: On macOS, when the active theme palette changes while the field is focused, the component MUST push the new text color, font, and insertion point color to the live field editor immediately, not only on the next focus change.
+- **clamp-block-caret-to-bounds**: On macOS, when `usesBlockCaret` is enabled and the text overflows the field, the block caret MUST stay within the field's clipping bounds rather than being drawn outside it.
+

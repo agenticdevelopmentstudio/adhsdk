@@ -2,7 +2,7 @@
 id: 08d59319-de4b-438a-a144-dcf3912aa2e5
 title: "Conversation Entry DTO"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -151,7 +151,7 @@ Not applicable: the type calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationEntryDTO.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationEntryDTO.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -194,10 +194,11 @@ Not applicable: the type calls no logging API.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
-`separation-of-concerns` passes because the type only carries a row and folds `kind` into two derived flags; extraction, filtering, paging and rendering stay in the daemon and the window. `unit-test-coverage` is partial because `ConversationFeedTests` exercises the daemon store that builds the entries, including id uniqueness and stability, but no test targets the DTO's own decode, `isFromUser`, `isWorkOutput` or the tolerant `termProgram` fallback. `graceful-degradation` passes because a missing `termProgram` from an older daemon decodes to the empty string instead of failing the feed.
+`separation-of-concerns` passes because the type only carries a row and folds `kind` into two derived flags; extraction, filtering, paging and rendering stay in the daemon and the window. `unit-test-coverage` is partial because `ConversationEntryDTOConformanceTests` (`AgenticDeveloperHubSDKCoreTests/Stenographer/ConversationEntryDTOConformanceTests.swift`) tests vectors 001 to 008 and 011; vector 009 is skipped there (the daemon builds the ids; covered by `ConversationFeedTests`) and vector 010 is skipped (`ConversationExtractor` lives in the daemon target, not Core). `graceful-degradation` passes because a missing `termProgram` from an older daemon decodes to the empty string instead of failing the feed.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ConversationEntryDTOConformanceTests.swift, 9 of 11 vectors tested, 2 skipped); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Softened unmeasured claims, named the source symbols in rationales, added empty-not-missing, fixed the WinUI null and Compose notes, and set Configuration to not applicable. |

@@ -47,7 +47,7 @@ Tabs component provides a tabbed interface for organizing related content into l
 - **aria-tab-roles**: Component MUST expose `role="tablist"` on the tab container, `role="tab"` with `aria-selected` on each tab, and `role="tabpanel"` on each panel. Each tab MUST reference its panel's id with `aria-controls`, each panel MUST reference its tab's id with `aria-labelledby`, and a disabled tab MUST carry `aria-disabled="true"`.
 - **visible-label**: Each tab MUST contain visible text that describes its panel's content; an `aria-label` is added only when that text is insufficient.
 - **hover-emphasis**: Component tabs SHOULD change text color on hover to indicate interactivity (from muted to full contrast).
-- **focus-visible-state**: Component tabs MUST show a visible keyboard-focus indicator that is distinct from the hover state (a ring or an underline). The current web source does not meet this: its treatment is a text-color change identical to the hover state, with `outline-none` and no ring (see the known non-conformance in **Edge Cases**).
+- **focus-visible-state**: Component tabs MUST show a visible keyboard-focus indicator that is distinct from the hover state (a ring or an underline). The web source shows it on keyboard focus only (`focus-visible:`): full-contrast text, a rounded corner and a 2px `apt-gold/40` ring, on top of `outline-none`; hover has no ring.
 - **touch-target**: On touch platforms each tab SHOULD be at least 44px tall. The current web padding (`py-2`) yields about 33px, a known gap; touch implementations SHOULD increase vertical padding or add touch-specific sizing.
 - **class-name**: Component MUST accept a customization hook for additional styling on the root container and on each subcomponent (on web, a `className` prop; see Platform Notes).
 
@@ -75,7 +75,7 @@ Tabs component provides a tabbed interface for organizing related content into l
 | Default | Text muted gray, no underline (transparent 2px border), bottom border on list visible |
 | Active | Text full contrast, gold 2px bottom border, border overrides list border |
 | Hover | Text full contrast, no change to border (border state unchanged) |
-| Focused | Intended: a visible indicator distinct from hover. Current source: text full contrast (via `focus-visible`), no distinct focus ring — visually identical to hover; see **focus-visible-state** |
+| Focused | Text full contrast, rounded corner and a 2px `apt-gold/40` ring via `focus-visible:`, distinct from hover; see **focus-visible-state** |
 | Disabled | Intended: dimmed to 50% opacity, no hover response; click-activation blocked, keyboard focus still lands on the tab. Current source: no visual change (see **disabled-tabs**) |
 
 ## Accessibility
@@ -100,7 +100,7 @@ Tabs component provides a tabbed interface for organizing related content into l
 | tabs-007 | click-selection | Click a non-disabled tab | Active state changes to that tab; associated panel content displays |
 | tabs-008 | aria-tab-roles | Inspect rendered DOM | `role="tablist"` on `TabsList`; `role="tab"` with `aria-selected` on each `TabsTab`; `role="tabpanel"` on each `TabsPanel`; each tab's `aria-controls` equals its panel's id, each panel's `aria-labelledby` equals its tab's id, and a disabled tab has `aria-disabled="true"` |
 | tabs-009 | hover-emphasis | Hover over an inactive tab | Text color changes from `apt-text-muted` to `apt-text`; border unchanged |
-| tabs-010 | focus-visible-state | Tab to a tab via keyboard | Tab receives focus and shows an indicator distinct from the hover state (the current web source shows only the hover-identical color change, a known non-conformance) |
+| tabs-010 | focus-visible-state | Tab to a tab via keyboard | Tab receives focus and shows an indicator distinct from the hover state: `focus-visible:ring-2 focus-visible:ring-apt-gold/40` (plus `focus-visible:text-apt-text` and `focus-visible:rounded-sm`), which hover does not apply |
 | tabs-011 | class-name | Pass `className="custom-class"` to Tabs/TabsList/TabsTab/TabsPanel | Custom class appended to element via `cn()` utility (Tailwind class merging) |
 | tabs-012 | keyboard-tab-navigation | Focus a tab, press Right arrow | Focus moves to the next tab (including a disabled one); selection does not change, since `TabsList`'s `activateOnFocus` defaults to `false` |
 | tabs-013 | keyboard-tab-navigation | Focus any tab, press End | Focus moves to the last tab, whether or not it is disabled |
@@ -108,7 +108,7 @@ Tabs component provides a tabbed interface for organizing related content into l
 | tabs-015 | default-value | Render `<Tabs>` with no `defaultValue`/`value` and tabs "a", "b" | The tab at index `0` ("a") is active, regardless of tab `value` strings |
 | tabs-016 | keyboard-tab-navigation | Focus any tab, press Home | Focus moves to the first tab |
 | tabs-017 | keyboard-tab-navigation | Focus is outside the tablist; press Tab, then Tab again | The first Tab lands on the active tab (one stop for the whole list); the second leaves the tablist |
-| tabs-018 | keyboard-tab-navigation | `dir="rtl"`; focus a tab and press Left | Focus moves to the next tab; Right moves to the previous |
+| tabs-018 | keyboard-tab-navigation | Direction rtl (supplied through Base UI's `DirectionProvider`; the `dir` attribute alone is not read); focus a tab and press Left | Focus moves to the next tab; Right moves to the previous |
 | tabs-019 | visible-label | Render `<TabsTab value="a">Label A</TabsTab>` | The tab's accessible name is its visible text "Label A" |
 | tabs-020 | disabled-tabs | Every `TabsTab` is `disabled`, `defaultValue="b"` | Tab "b" stays selected and its panel displays; clicking another tab changes nothing |
 | tabs-021 | render-tab-list | Render `<TabsList />` with no tabs | The list renders, empty; no panel is selected |
@@ -126,7 +126,6 @@ Tabs component provides a tabbed interface for organizing related content into l
 - **Right-to-left arrow keys**: In a `dir="rtl"` context Left moves to the next tab and Right to the previous, per **keyboard-tab-navigation**.
 - **Vertical orientation**: Not supported. `orientation="vertical"` reaches Base UI, but the underline styling is horizontal-only.
 - **Known non-conformance (disabled appearance)**: **disabled-tabs** requires a dimmed disabled tab, but the web source's `disabled:` classes never match, because Base UI sets `aria-disabled`/`data-disabled` and not the native `disabled` attribute. Keying the classes off `data-disabled` closes the gap.
-- **Known non-conformance (focus indicator)**: **focus-visible-state** requires a focus indicator distinct from hover; the web source has only the hover-identical color change with `outline-none`.
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -221,9 +220,9 @@ Not applicable: Component performs no internal logging.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.accessibility.screen-reader-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0720ed85-3747-546a-b2ed-6a909f44dd43) | passed | Accessibility |
-| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | Accessibility |
+| [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
-| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | partial | Accessibility |
+| [adc.check.accessibility.focus-management](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/eec52703-a32a-5dee-b763-59a3bac826ea) | passed | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | passed | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | failed | Accessibility |
@@ -233,9 +232,9 @@ Not applicable: Component performs no internal logging.
 | [adc.check.internationalization.text-expansion-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8007859b-a974-5b8a-88f7-162624b0c056) | failed | Internationalization |
 | [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | partial | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on: the source's delegation to Base UI for ARIA roles, keyboard handling, and focus order (screen-reader-support, semantic-markup — passed); the missing focus indicator distinct from hover (keyboard-navigable, focus-management — partial, until **focus-visible-state** is met); the `rem`-based sizing (`text-[0.8rem]`, `py-2`), which scales with the user's root font size (dynamic-type-support — passed); the `apt-*` color tokens whose actual values aren't visible in this source file (contrast-ratio — partial); the ~33px computed tab height and the `transition-colors` utility with no `motion-reduce:` variant (touch-target-size, reduced-motion — failed); and the absence of any word-wrap/truncation handling for user-provided tab-label text plus the unverified RTL mirroring of the plain flex layout (text-expansion-tolerance — failed, rtl-layout-support — partial); the four exports are thin themed wrappers around Base UI's `Tabs` primitives with no logic of their own (separation-of-concerns passed), and no test file in the web workspace imports `Tabs`/`TabsList`/`TabsTab`/`TabsPanel` from this source — the candidate tests matched by name test unrelated markdown/window-drawer/split-view surfaces (unit-test-coverage failed).
+Statuses rest on: the source's delegation to Base UI for ARIA roles, keyboard handling, and focus order (screen-reader-support, semantic-markup — passed); the focus indicator distinct from hover (`tabItemClass` adds `focus-visible:text-apt-text focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-apt-gold/40`; keyboard-navigable, focus-management — passed); the `rem`-based sizing (`text-[0.8rem]`, `py-2`), which scales with the user's root font size (dynamic-type-support — passed); the `apt-*` color tokens whose actual values aren't visible in this source file (contrast-ratio — partial); the ~33px computed tab height and the `transition-colors` utility with no `motion-reduce:` variant (touch-target-size, reduced-motion — failed); and the absence of any word-wrap/truncation handling for user-provided tab-label text plus the unverified RTL mirroring of the plain flex layout (text-expansion-tolerance — failed, rtl-layout-support — partial); the four exports are thin themed wrappers around Base UI's `Tabs` primitives with no logic of their own (separation-of-concerns passed), and no test file in the web workspace imports `Tabs`/`TabsList`/`TabsTab`/`TabsPanel` from this source — the candidate tests matched by name test unrelated markdown/window-drawer/split-view surfaces (unit-test-coverage was failed; it is now passed: `tabs.test.tsx` covers every vector tabs-001 through tabs-023 with no skips).
 
 ## Change History
 

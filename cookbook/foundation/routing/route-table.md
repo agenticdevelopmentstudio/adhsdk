@@ -2,7 +2,7 @@
 id: e8911288-108d-4050-aec5-663690bd5751
 title: "Route Table"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -140,7 +140,7 @@ Not applicable: `RouteTable` calls no logging API; an unclaimed request is retur
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/RouteTable.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/RouteTable.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -168,14 +168,15 @@ Not applicable: `RouteTable` calls no logging API; an unclaimed request is retur
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | passed | Access Patterns |
 
-`separation-of-concerns` passes because the table only orders and dispatches handlers; the HTTP transport, the handlers' business logic and what to do with an unclaimed request belong to the daemon and its routes. `unit-test-coverage` is partial: `RouteTableTests` covers first-claim-wins, an unclaimed request, merge order and fall-through, and the exact handler's method, path, extra-segment and empty-path cases, but vectors 009 to 013 (method case-sensitivity, empty-segment matching, non-mutating merge, later handlers skipped, sequential await) are derived and have no test. `api-design-conventions` passes because dispatch is one deterministic rule, ordered first-claim-wins, over a transport-free request.
+`separation-of-concerns` passes because the table only orders and dispatches handlers; the HTTP transport, the handlers' business logic and what to do with an unclaimed request belong to the daemon and its routes. `unit-test-coverage` passes: every vector (001 to 013) has a test in `RouteTableTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Routing/RouteTableTests.swift`). `api-design-conventions` passes because dispatch is one deterministic rule, ordered first-claim-wins, over a transport-free request.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (RouteTableTests.swift, 13 of 13 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Set unit-test-coverage to partial, added the exact signature, a sequential-await vector, depends-on links, reasoned rationales and a table-is-immutable requirement. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

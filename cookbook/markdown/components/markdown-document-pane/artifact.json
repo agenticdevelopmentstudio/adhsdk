@@ -4,7 +4,7 @@
     "id": "46a9c075-098d-46bd-9b62-e3afeb9bd577",
     "title": "Markdown Document Pane",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1d881f3417a32e76",
+  "synced": "152d57e5983f125a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

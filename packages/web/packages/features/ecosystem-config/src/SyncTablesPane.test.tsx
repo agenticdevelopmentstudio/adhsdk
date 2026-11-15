@@ -23,6 +23,7 @@ vi.mock("@adh-sdk/data/ecosystem-config", () => ({
 }));
 
 import { SyncTablesEditor } from "./SyncTablesPane";
+import { syncTablesKey } from "./sync-tables-hooks";
 
 const row = (resource: string, enabled: boolean, overridden = false) => ({
   resource,
@@ -47,10 +48,12 @@ beforeEach(() => {
   clearOverride.mockResolvedValue(CATALOG);
 });
 
-function renderEditor(props: { family?: "admin" | "ecosystem" } = {}) {
-  const qc = new QueryClient({
+function renderEditor(
+  props: { family?: "admin" | "ecosystem" } = {},
+  qc: QueryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
+  }),
+) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
@@ -61,6 +64,53 @@ const tick = async (name: string) =>
   fireEvent.click(await screen.findByRole("checkbox", { name: `Select ${name}` }));
 
 describe("SyncTablesEditor", () => {
+  it("ecosystem-config-034: defaults to the ecosystem family, and each family keeps its own cached catalog per ecosystem", async () => {
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const adminCatalog = [row("admin.only", true)];
+    get.mockResolvedValueOnce(CATALOG).mockResolvedValueOnce(adminCatalog);
+    const first = renderEditor({}, qc);
+    await screen.findByText("content.notes");
+    expect(families.every((f) => f === "ecosystem")).toBe(true);
+    first.unmount();
+    renderEditor({ family: "admin" }, qc);
+    await screen.findByText("admin.only");
+    expect(qc.getQueryData(syncTablesKey("ecosystem", "eco-1"))).toEqual(CATALOG);
+    expect(qc.getQueryData(syncTablesKey("admin", "eco-1"))).toEqual(adminCatalog);
+    expect(syncTablesKey("ecosystem", "eco-1")).not.toEqual(syncTablesKey("admin", "eco-1"));
+    expect(syncTablesKey("ecosystem", "eco-1")).not.toEqual(syncTablesKey("ecosystem", "eco-2"));
+  });
+
+  it("ecosystem-config-035: saves one table at a time, halting at a failure until the user continues", async () => {
+    get.mockResolvedValue([row("a.one", false), row("b.two", false), row("c.three", false)]);
+    let landFirst: () => void = () => undefined;
+    setOverride
+      .mockImplementationOnce(() => new Promise((resolve) => (landFirst = () => resolve([]))))
+      .mockRejectedValueOnce(new Error("HTTP 500"))
+      .mockResolvedValueOnce([]);
+    renderEditor();
+    await tick("a.one");
+    await tick("b.two");
+    await tick("c.three");
+    fireEvent.click(screen.getByRole("button", { name: "Sync" }));
+    await waitFor(() => expect(setOverride).toHaveBeenCalledTimes(1));
+    // The first write is still in flight, so the second has not started.
+    expect(setOverride).toHaveBeenCalledTimes(1);
+    landFirst();
+    await waitFor(() => expect(setOverride).toHaveBeenCalledTimes(2));
+    // The run is halted on the second write's failure and asks what to do.
+    const cont = await screen.findByRole("button", { name: "Continue" });
+    expect(setOverride).toHaveBeenCalledTimes(2);
+    expect(setOverride).toHaveBeenNthCalledWith(1, "eco-1", "a.one", true);
+    expect(setOverride).toHaveBeenNthCalledWith(2, "eco-1", "b.two", true);
+    // The first save stays: nothing was undone.
+    expect(clearOverride).not.toHaveBeenCalled();
+    fireEvent.click(cont);
+    await waitFor(() => expect(setOverride).toHaveBeenCalledTimes(3));
+    expect(setOverride).toHaveBeenNthCalledWith(3, "eco-1", "c.three", true);
+  });
+
   it("reads through the ecosystem family by default", async () => {
     renderEditor();
     expect(await screen.findByText("content.notes")).toBeTruthy();
@@ -74,7 +124,7 @@ describe("SyncTablesEditor", () => {
     expect(families.every((f) => f === "admin")).toBe(true);
   });
 
-  it("Sync writes only the selected rows not already synced", async () => {
+  it("ecosystem-config-029: Sync writes only the selected rows not already synced", async () => {
     renderEditor();
     await tick("content.feed");
     await tick("content.notes");

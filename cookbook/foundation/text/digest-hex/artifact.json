@@ -4,7 +4,7 @@
     "id": "81fb66c5-e31d-4817-ba36-5ccace191e8f",
     "title": "Digest Hex",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1dd9cf24258607d5",
+  "synced": "549e892231f827f5",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

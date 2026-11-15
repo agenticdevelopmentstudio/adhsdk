@@ -2,7 +2,7 @@
 id: aa775836-5679-4a22-9ff3-b2bdcb09cc20
 title: "Work Tracking Models"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -95,7 +95,7 @@ Not applicable — this is a set of data models, not a visual component.
 | work-tracking-models-013 | settings-keys | `WorkTrackingSettingsKeys.retentionDays` and `.accessibilitySigner` | `activity_retention_days` and `activity_ax_signer` |
 | work-tracking-models-014 | status-defaults | `WorkTrackingStatus()` | enabled false, accessibility `.unknown`, currentSpan nil, writeFailures 0, lastError nil |
 
-Vectors 010 to 014 are derived from the source and name no test; an implementer should add tests for them, including one that pins the exact bytes of `WorkTrackingWire.readFailedRow` for vector 012.
+Vectors 010 to 014 are derived from the source and are tested in `WorkTrackingModelsTests` (`testV10_` to `testV14_`), including one that pins the exact bytes of `WorkTrackingWire.readFailedRow` for vector 012.
 ## Edge Cases
 
 - **Empty id lists** (MUST): `normalized()` on empty `addedBundleIds` and `removedBundleIds` returns them empty.
@@ -165,7 +165,7 @@ Not applicable: the file makes no log call. `WorkTrackingStatus.lastError` and `
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingModels.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingModels.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -193,14 +193,15 @@ Not applicable: the file makes no log call. `WorkTrackingStatus.lastError` and `
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | reliability |
 
-The file holds only data shapes and pure functions, and transport, storage and recording sit in sibling types, so separation of concerns passes. `WorkTrackingModelsTests` covers normalization, the session id mapping, degraded status and the snake-case round trip, but not the default value, the wire row or the settings key strings, so unit-test coverage is partial: vectors 010 to 014 have no test. `degradedNotice` is a hardcoded English sentence, which is why the strings check fails. The wire row gives a failed list read a defined, machine-readable reply, so the error-recovery check passes.
+The file holds only data shapes and pure functions, and transport, storage and recording sit in sibling types, so separation of concerns passes. `WorkTrackingModelsTests` covers normalization, the session id mapping, degraded status and the snake-case round trip, and the same file now covers the default value, the constructor, the wire row bytes, the settings key strings and the status defaults, so unit-test coverage passes: all 14 vectors have a test. `degradedNotice` is a hardcoded English sentence, which is why the strings check fails. The wire row gives a failed list read a defined, machine-readable reply, so the error-recovery check passes.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (WorkTrackingModelsTests.swift, 14 of 14 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Marked unit-test coverage partial, mapped each settings key member to its string, relabeled the clamp dependency, restated Design Decision rationales without doc-comment citations, dropped RFC keywords from not-applicable edge cases, rewrote the web ordering note, moved the source path out of Platform Notes, and added depends-on and related links. |

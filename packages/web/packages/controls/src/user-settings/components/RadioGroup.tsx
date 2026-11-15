@@ -30,7 +30,7 @@ export function RadioGroup<T extends string | number = string>({
 
   return (
     <fieldset className={cls} disabled={disabled}>
-      {label && <legend className="aws-field__label">{label}</legend>}
+      {label != null && label !== '' && label !== false && <legend className="aws-field__label">{label}</legend>}
       <div className="aws-radio-group" role="radiogroup">
         {choices.map((choice) => {
           const checked = choice.value === value

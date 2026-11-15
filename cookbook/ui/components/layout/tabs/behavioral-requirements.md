@@ -11,7 +11,7 @@
 - **aria-tab-roles**: Component MUST expose `role="tablist"` on the tab container, `role="tab"` with `aria-selected` on each tab, and `role="tabpanel"` on each panel. Each tab MUST reference its panel's id with `aria-controls`, each panel MUST reference its tab's id with `aria-labelledby`, and a disabled tab MUST carry `aria-disabled="true"`.
 - **visible-label**: Each tab MUST contain visible text that describes its panel's content; an `aria-label` is added only when that text is insufficient.
 - **hover-emphasis**: Component tabs SHOULD change text color on hover to indicate interactivity (from muted to full contrast).
-- **focus-visible-state**: Component tabs MUST show a visible keyboard-focus indicator that is distinct from the hover state (a ring or an underline). The current web source does not meet this: its treatment is a text-color change identical to the hover state, with `outline-none` and no ring (see the known non-conformance in **Edge Cases**).
+- **focus-visible-state**: Component tabs MUST show a visible keyboard-focus indicator that is distinct from the hover state (a ring or an underline). The web source shows it on keyboard focus only (`focus-visible:`): full-contrast text, a rounded corner and a 2px `apt-gold/40` ring, on top of `outline-none`; hover has no ring.
 - **touch-target**: On touch platforms each tab SHOULD be at least 44px tall. The current web padding (`py-2`) yields about 33px, a known gap; touch implementations SHOULD increase vertical padding or add touch-specific sizing.
 - **class-name**: Component MUST accept a customization hook for additional styling on the root container and on each subcomponent (on web, a `className` prop; see Platform Notes).
 

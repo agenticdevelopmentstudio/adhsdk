@@ -4,7 +4,7 @@
     "id": "2affdc87-3c3b-4f7d-819d-f54ba947f2f1",
     "title": "HostMCPServer Stdio",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6da2c4db5531ee44",
+  "synced": "8c4a1dcacecc7333",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

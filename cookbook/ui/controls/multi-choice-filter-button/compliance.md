@@ -8,7 +8,7 @@
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
 Native-controls-preference and platform-design-language pass because the
 component is a stock pull-down/menu control with no custom drawing.
@@ -24,5 +24,5 @@ String-externalization is failed because the "Any" and "{n} selected"
 strings are hardcoded English literals with no localization key (see
 Localization).
 
-`separation-of-concerns` passes because the control owns only the menu, the title summary and the checkmarks, takes its choices as caller-supplied id/title/detail values and reports changes through `onChange`, leaving the meaning of an id to the caller. `unit-test-coverage` is `failed`: a search of the Apple test targets finds no test file for `MultiChoiceFilterButton`, so vectors 001 through 026 are unpinned by automated tests.
+`separation-of-concerns` passes because the control owns only the menu, the title summary and the checkmarks, takes its choices as caller-supplied id/title/detail values and reports changes through `onChange`, leaving the meaning of an id to the caller. `unit-test-coverage` is `partial`: `MultiChoiceFilterButtonConformanceTests.swift` (Tests/AgenticDeveloperHubSDKMacOSTests/UI/Controls) covers every vector except 016 (compile-time `private(set)`), 023 (a `fatalError` that cannot be caught) and 024 (main-actor isolation enforced at build time), which are skipped as unexercisable by a unit test.
 

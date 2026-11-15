@@ -4,7 +4,7 @@
     "id": "e8911288-108d-4050-aec5-663690bd5751",
     "title": "Route Table",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5fccaceba369d161",
+  "synced": "a11ff33024a8345e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

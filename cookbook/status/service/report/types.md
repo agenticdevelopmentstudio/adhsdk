@@ -2,7 +2,7 @@
 id: e2b50620-c7b1-4268-a56e-e039fea3349f
 title: "Status Report Wire Types"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -80,7 +80,7 @@ Not applicable — this is a wire-type module, not a visual component.
 
 ## Conformance Test Vectors
 
-The type module has no test of its own; vectors 001 to 013 are traced to the producers' tests (`report-rules.test.ts`, `report-gather.test.ts`, `report.int.test.ts`). Vectors 014 to 025 are read from the contract and the producers' source and have no test.
+The type module is declarations only; every vector is covered by a test in `report-types.test.ts` that drives the producers (`buildReport`, `gatherReport`, `parseReportParams`), and the route-level 400 body is also asserted by `report.int.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -167,7 +167,7 @@ Not applicable: the module declares types and constants and makes no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/report/types.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/report/types.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -195,14 +195,15 @@ Not applicable: the module declares types and constants and makes no log call.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | Access Patterns |
 
-The module is declarations only, with validation and judgement in separate modules, so separation of concerns is met. The types file has no test of its own; its invariants are exercised through the rules, gather and route tests, so unit-test coverage is partial. The 400 body for a rejected param is stated in the contract and asserted by the route test.
+The module is declarations only, with validation and judgement in separate modules, so separation of concerns is met. Every conformance vector has a passing test in `test/report-types.test.ts`, which pins the contract through the rules and gather modules, so unit-test coverage is passed. The 400 body for a rejected param is stated in the contract and asserted by the route test.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (report-types.test.ts, 25 of 25 vectors); unit-test coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added the 400 body to params-rejection, split logs into the parsed boolean and params-logs-forms, named the Design Decisions with fuller rationales, said "ingredient" in the overview, stated the 40-line log cap and how Finding.source relates to report sources, and added vectors 014 to 025 for every previously uncovered requirement. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

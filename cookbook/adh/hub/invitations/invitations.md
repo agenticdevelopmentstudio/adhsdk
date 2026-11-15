@@ -2,11 +2,11 @@
 id: 7e0508b5-cf96-42da-9902-51fbe31b432f
 title: "Hub Domain: Invitations"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -382,9 +382,9 @@ a shared notes sub-rail, and a web HTTP client, not a visual component.
 | invitations-019 | invite-channel-title-derivation | `Invite.channel == "push"` | `channelTitle` returns the raw string `"push"` unchanged (traced to `Invite.channelTitle`'s default case; no test covers an unrecognized channel) |
 | invitations-020 | preview-is-anonymous-and-folds-failure | `preview(token)` where the backend responds non-2xx | Promise resolves to `{ state: "invalid", ecosystemName: null, maskedDestination: null }`, does not reject (traced to `invitations.ts`; no test file exists for this component) |
 | invitations-021 | preview-network-failure-rejects | `preview(token)` where the underlying `fetch` call itself rejects (e.g. offline) | Promise rejects with the network error rather than resolving to `{ state: "invalid", ... }` — the gap this recipe records (traced to `invitations.ts`) |
-| invitations-022 | verify-is-anonymous-and-throws-status-code | `verify(token, code)` where the backend responds `410` | Throws `Error("410")` (traced to `invitations.ts`) |
-| invitations-023 | register-with-invite-extracts-message | `registerWithInvite(token, input)` where the backend responds `403` with a body containing no recognizable `error`/`message`/`detail` field | Throws `Error("Registration failed (403)")` (traced to `invitations.ts`) |
-| invitations-024 | register-with-invite-extracts-message | `registerWithInvite(token, input)` where the backend responds `409` with body `{ "error": "Email already registered" }` | Throws `Error("Email already registered")` (traced to `extractErrorMessage` in `client.ts`, applied by `invitations.ts`) |
+| invitations-022 | verify-is-anonymous-and-throws-status-code | `verify(code)` where the backend responds `410` | Throws `Error("410")` (traced to `invitations.ts`) |
+| invitations-023 | register-with-invite-extracts-message | `registerWithInvite(input)` (the invite token travels in `input.invite`) where the backend responds `403` with a body containing no recognizable `error`/`message`/`detail` field | Throws `Error("Registration failed (403)")` (traced to `invitations.ts`) |
+| invitations-024 | register-with-invite-extracts-message | `registerWithInvite(input)` (the invite token travels in `input.invite`) where the backend responds `409` with body `{ "error": "Email already registered" }` | Throws `Error("Email already registered")` (traced to `extractErrorMessage` (from `@adh-sdk/auth/client`), applied by `invitations.ts`) |
 
 ## Edge Cases
 
@@ -608,8 +608,8 @@ Not applicable: none of the seven given sources contains a logging,
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/` | unverified |
-| web | `packages/web/packages/data/src/invitations/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/` | confirmed (1.1.2) |
+| web | `packages/web/packages/data/src/invitations/` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -669,7 +669,7 @@ product/API decision outside the scope of describing the code as it is.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | passed | security |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | partial | security |
@@ -682,12 +682,7 @@ shared notes sub-rail, and three thin per-collection topic providers that
 each only render/dispatch and delegate persistence to the injected
 `InvitationsDataSource`), and the web side splits wire types from the
 request-shaping client the same way — **separation-of-concerns** passes.
-**unit-test-coverage** is partial: `InvitationsTopicsTests.swift` exercises
-all three Apple topics and the shared notes rail with twelve test methods,
-but no test file exists anywhere in this repo for `invitations.ts`/`wire.ts`,
-and grepping the repo turns up no consumer of `invitationsApi` either — its
-own consumer, and any tests for it, live outside this repo.
-**explicit-error-handling** is partial: the Apple side wraps every error
+**unit-test-coverage** passes: `InvitationsTopicsTests.swift` exercises all three Apple topics and the shared notes rail (vectors 001-019), and `packages/web/packages/data/src/invitations/__tests__/invitations.test.ts` covers the web client (vectors 020-024) with a stubbed `fetch`. **explicit-error-handling** is partial: the Apple side wraps every error
 uniformly through `HubError.wrap`, and three of the web side's four methods
 handle their own failure path explicitly, but `preview`'s bare `fetch` call
 is not guarded against a network-level failure despite the source's own
@@ -716,6 +711,7 @@ four methods.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (invitations.test.ts, 5 of 5 web vectors 020-024; 001-019 are covered by the existing Apple tests; vector text for 022-024 corrected to the real signatures); unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Resolve open-question markers against the code; restate unimplemented behavior as current behavior with pending Decisions; make normative text platform-neutral. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |

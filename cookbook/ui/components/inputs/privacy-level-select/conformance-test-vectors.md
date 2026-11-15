@@ -32,7 +32,7 @@
 | privacy-030 | support-custom-class-name | className="custom-class" prop passed | Trigger element includes custom-class in its className |
 | privacy-031 | prevent-default-on-trigger-keys | Trigger focused, user presses ArrowDown to open | Browser default behavior is prevented; page does not scroll |
 | privacy-032 | prevent-default-on-navigation-keys | Popover open, user presses ArrowUp | Browser default behavior is prevented; page does not scroll |
-| privacy-033 | use-unique-option-ids | Two instances rendered on one page, both opened | Every option `id` is unique across the page (each of the form `<useId>-opt-only_me`, `-opt-hub`, `-opt-public`); each listbox's `aria-activedescendant` resolves to an option inside that same listbox |
+| privacy-033 | use-unique-option-ids | Two instances rendered on one page, each opened in turn (opening one dismisses the other) | Every option `id` is unique across the page (each of the form `<useId>-opt-only_me`, `-opt-hub`, `-opt-public`); each listbox's `aria-activedescendant` resolves to an option inside that same listbox |
 | privacy-034 | truncate-trigger-text | Trigger width constrained, long label text | Label text truncates with an ellipsis; the icon does not shrink and remains fully visible |
 | privacy-035 | read-value-prop | popover open with cursor on "only-me" (value "only-me"), then ArrowDown to "hub", then `value` changes externally to "public" | Trigger shows "Public" and the check moves to "Public"; `aria-activedescendant` still points to the "hub" option (cursor not moved) |
 | privacy-036 | prevent-default-on-navigation-keys | Popover open, user presses Escape | The keydown's default is prevented; popover closes; no `onChange` call |

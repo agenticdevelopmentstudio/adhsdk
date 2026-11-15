@@ -2,7 +2,7 @@
 id: 998864ec-d852-4e92-aa2c-3177130ff21d
 title: "Text Substitution Filter"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -90,16 +90,16 @@ Not applicable — this is a text-transformation value type, not a visual compon
 | text-substitution-filter-008 | whole-words | Filter parsed from `Robin = Mike`; `revealing` with `wholeWords: true` on `robinhood.com`, on `https://x.test/Robin/q?robin`, on `robin2 Robin.`; and without `wholeWords` on `robinhood.com` (test: revealsWholeWords). | `robinhood.com`; `https://x.test/Mike/q?Mike`; `robin2 Mike.`; `Mikehood.com`. |
 | text-substitution-filter-009 | casing-rule | `casing("Ab", like: "42")` and `casing("ab", like: "X")` (test: casingWithoutLetters). | `Ab` (no letters, as given) and `AB` (one capital letter). |
 | text-substitution-filter-010 | identity, early-exit | `TextSubstitutionFilter.identity.concealing("mike")` (test: identity). | `mike`. |
-| text-substitution-filter-011 | init-drops-empty | `TextSubstitutionFilter(pairs: [Pair(alias: "", real: "x"), Pair(alias: "y", real: ""), Pair(alias: "a", real: "b")]).pairs` (derived from the source; no test). | One pair, alias `a` and real `b`. |
-| text-substitution-filter-012 | parse-pair | `init(parsing: "k = v = w")` (derived from the source; no test). | One pair, alias `k` and real `v = w`. |
-| text-substitution-filter-013 | literal-patterns | Filter parsed from `a.c = X`; `revealing("abc a.c")` (derived from the source; no test). | `abc X`: the dot matches only a literal dot. |
-| text-substitution-filter-014 | early-exit | `TextSubstitutionFilter(parsing: "a = b").revealing("")` (derived from the source; no test). | The empty string. |
-| text-substitution-filter-015 | concealing, no whole-words | Filter parsed from `Robin = Mike`; `concealing("Mikehood")` (derived from the source; no test). | `Robinhood`: concealing replaces inside a longer word. |
-| text-substitution-filter-016 | whole-words-underscore | Filter parsed from `robin = Mike`; `revealing("robin_x", wholeWords: true)` (derived from the source; no test). | `Mike_x`: an underscore does not block replacement. |
-| text-substitution-filter-017 | tie-order | Filter from `[Pair(alias: "a", real: "X"), Pair(alias: "A", real: "Y")]`; `revealing("a")` (derived from the source; no test). | `X`: the first pair in declaration order wins. |
-| text-substitution-filter-018 | unmatched-text-kept, case-insensitive | Filter parsed from `café = X`; `revealing("un café noir")` (derived from the source; no test). | `un X noir`. |
-| text-substitution-filter-019 | revealing, matching-case, whole-words | Filter parsed from `Robin = Mike`; `revealing("ROBIN robinhood", matchingCase: true, wholeWords: true)` (derived from the source; no test). | `MIKE robinhood`. |
-| text-substitution-filter-020 | pair-shape | Encode `Pair(alias: "a", real: "b")` as JSON and decode it again (derived from the source; no test). | JSON with the fields `alias` and `real`; the decoded pair equals the original. |
+| text-substitution-filter-011 | init-drops-empty | `TextSubstitutionFilter(pairs: [Pair(alias: "", real: "x"), Pair(alias: "y", real: ""), Pair(alias: "a", real: "b")]).pairs` (test: see TextSubstitutionFilterTests). | One pair, alias `a` and real `b`. |
+| text-substitution-filter-012 | parse-pair | `init(parsing: "k = v = w")` (test: see TextSubstitutionFilterTests). | One pair, alias `k` and real `v = w`. |
+| text-substitution-filter-013 | literal-patterns | Filter parsed from `a.c = X`; `revealing("abc a.c")` (test: see TextSubstitutionFilterTests). | `abc X`: the dot matches only a literal dot. |
+| text-substitution-filter-014 | early-exit | `TextSubstitutionFilter(parsing: "a = b").revealing("")` (test: see TextSubstitutionFilterTests). | The empty string. |
+| text-substitution-filter-015 | concealing, no whole-words | Filter parsed from `Robin = Mike`; `concealing("Mikehood")` (test: see TextSubstitutionFilterTests). | `Robinhood`: concealing replaces inside a longer word. |
+| text-substitution-filter-016 | whole-words-underscore | Filter parsed from `robin = Mike`; `revealing("robin_x", wholeWords: true)` (test: see TextSubstitutionFilterTests). | `Mike_x`: an underscore does not block replacement. |
+| text-substitution-filter-017 | tie-order | Filter from `[Pair(alias: "a", real: "X"), Pair(alias: "A", real: "Y")]`; `revealing("a")` (test: see TextSubstitutionFilterTests). | `X`: the first pair in declaration order wins. |
+| text-substitution-filter-018 | unmatched-text-kept, case-insensitive | Filter parsed from `café = X`; `revealing("un café noir")` (test: see TextSubstitutionFilterTests). | `un X noir`. |
+| text-substitution-filter-019 | revealing, matching-case, whole-words | Filter parsed from `Robin = Mike`; `revealing("ROBIN robinhood", matchingCase: true, wholeWords: true)` (test: see TextSubstitutionFilterTests). | `MIKE robinhood`. |
+| text-substitution-filter-020 | pair-shape | Encode `Pair(alias: "a", real: "b")` as JSON and decode it again (test: see TextSubstitutionFilterTests). | JSON with the fields `alias` and `real`; the decoded pair equals the original. |
 ## Edge Cases
 
 - **Null / empty input**: Empty text, or a filter with no pairs, returns the text unchanged (MUST). Pairs with an empty side never enter the filter (MUST). An empty or all-separator text parses to `identity`-equivalent pairs (MUST).
@@ -168,7 +168,7 @@ Not applicable: The source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/TextSubstitutionFilter.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/TextSubstitutionFilter.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -212,16 +212,17 @@ Not applicable: The source calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | passed | Security |
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
 
-separation-of-concerns passes: the type only parses, serialises and substitutes; where pairs are stored, and which streams are filtered, belong to its callers. unit-test-coverage is partial: `TextSubstitutionFilterTests` covers both directions, single pass, longest match, forgiving parsing, round trip, case matching, whole words, `casing` and identity, but nothing asserts empty-side dropping in `init(pairs:)`, duplicate patterns, literal treatment of metacharacters, Unicode text, or `Pair` coding. explicit-error-handling is partial: parse errors are skipped by design, but a regular-expression compile failure is swallowed with `try?` and the input returned with no signal. input-sanitization passes: every pattern goes through `NSRegularExpression.escapedPattern(for:)` before it joins the expression. unicode-support passes: matching works over UTF-16 ranges with Unicode letter and number classes for whole words and case-insensitive matching.
+separation-of-concerns passes: the type only parses, serialises and substitutes; where pairs are stored, and which streams are filtered, belong to its callers. unit-test-coverage passes: `AgenticDeveloperHubSDKCoreTests/TextSubstitutionFilterTests.swift` covers all twenty vectors, including empty-side dropping in `init(pairs:)`, duplicate patterns, literal metacharacters, Unicode text and `Pair` coding. explicit-error-handling is partial: parse errors are skipped by design, but a regular-expression compile failure is swallowed with `try?` and the input returned with no signal. input-sanitization passes: every pattern goes through `NSRegularExpression.escapedPattern(for:)` before it joins the expression. unicode-support passes: matching works over UTF-16 ranges with Unicode letter and number classes for whole words and case-insensitive matching.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (TextSubstitutionFilterTests.swift, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the regex-failure marker out of Behavioral Requirements, stated declaration-order ties, allowed internal caching, rewrote requirements against the public API, trimmed SwiftUI note paths, fixed the configuration table and added five test vectors. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

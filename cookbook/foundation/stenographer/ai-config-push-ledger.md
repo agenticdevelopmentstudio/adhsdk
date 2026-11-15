@@ -2,7 +2,7 @@
 id: 1a0b943c-35f4-4568-9d92-033acce97afb
 title: "AI Config Push Ledger"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -78,11 +78,11 @@ Not applicable — this is a persisted id ledger, not a visual component.
 | ai-config-push-ledger-004 | record-landed-keeps-unresolved | Record a sync of only first, with empty `removedConfigIds`, after second was recorded. | `lastPushed()` is first and second (test: testAConfiguredButUnresolvedConfigurationIsNeitherRemovedNorForgotten). |
 | ai-config-push-ledger-005 | record-landed-removals | Record first and second; then record a sync of first with `removedConfigIds` of second. | `lastPushed()` is first only (test: testARemovalDropsTheIdFromTheLedger). |
 | ai-config-push-ledger-006 | key-namespace | Record under key `http`; call `removed(configured: [])` on a ledger with key `xpc` over the same store. | `[]` (test: testTwoLedgersWithDifferentKeysAreIndependent). |
-| ai-config-push-ledger-007 | last-pushed-skips-malformed | Store the strings `not-a-uuid` and a valid UUID under the key. | `lastPushed()` holds only the valid UUID (derived from the source; no test). |
-| ai-config-push-ledger-008 | removed-order | Ledger holds three ids; none configured. | The result is in ascending `uuidString` order (derived from the source; no test). |
-| ai-config-push-ledger-009 | record-landed-removals | Record a sync with nil `removedConfigIds` and one config over a ledger holding another id. | The other id stays in the ledger with the new one (derived from the source; no test). |
-| ai-config-push-ledger-010 | record-landed-format | Record two configs, then read the raw entry. | An array of two UUID strings sorted ascending (derived from the source; no test). |
-| ai-config-push-ledger-011 | record-landed-configs-win | Record a sync whose `configs` holds first and whose `removedConfigIds` also names first. | `lastPushed()` holds first (derived from the source; no test). |
+| ai-config-push-ledger-007 | last-pushed-skips-malformed | Store the strings `not-a-uuid` and a valid UUID under the key. | `lastPushed()` holds only the valid UUID (test: testV7_malformedStoredIdsAreSkipped). |
+| ai-config-push-ledger-008 | removed-order | Ledger holds three ids; none configured. | The result is in ascending `uuidString` order (test: testV8_removedIdsComeBackInAscendingUUIDStringOrder). |
+| ai-config-push-ledger-009 | record-landed-removals | Record a sync with nil `removedConfigIds` and one config over a ledger holding another id. | The other id stays in the ledger with the new one (test: testV9_aNilRemovalListKeepsTheExistingIdsBesideTheNewOne). |
+| ai-config-push-ledger-010 | record-landed-format | Record two configs, then read the raw entry. | An array of two UUID strings sorted ascending (test: testV10_theStoredEntryIsASortedArrayOfUUIDStrings). |
+| ai-config-push-ledger-011 | record-landed-configs-win | Record a sync whose `configs` holds first and whose `removedConfigIds` also names first. | `lastPushed()` holds first (test: testV11_aConfigThatIsAlsoListedAsRemovedStaysInTheLedger). |
 ## Edge Cases
 
 - **Null / empty input**: An unset key, or an empty `configured` list over an empty ledger, yields empty results. A nil `removedConfigIds` removes nothing from the ledger.
@@ -145,7 +145,7 @@ Not applicable: the type calls no logging API; a malformed stored id is skipped 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIConfigPushLedger.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIConfigPushLedger.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -180,13 +180,14 @@ Not applicable: the type calls no logging API; a malformed stored id is skipped 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 
-`separation-of-concerns` passes because the type only records and diffs ids; sending the push and deciding when it landed stay with the host. `unit-test-coverage` is partial: `AIConfigPushLedgerTests` covers the first push, a dropped configuration, an unresolved configuration, a removal and key independence; malformed-id skipping, ordering, the stored format and a nil `removedConfigIds` have no test. `idempotent-operations` passes because recording the same landed sync twice leaves the same stored set.
+`separation-of-concerns` passes because the type only records and diffs ids; sending the push and deciding when it landed stay with the host. `unit-test-coverage` passes: `AIConfigPushLedgerTests` (`AIConfigPushLedgerTests.swift`) covers the first push, a dropped configuration, an unresolved configuration, a removal, key independence, malformed-id skipping, ordering, the stored format, a nil `removedConfigIds` and configs winning over removals. `AIConfigPushLedgerTests` covers the first push, a dropped configuration, an unresolved configuration, a removal and key independence; malformed-id skipping, ordering, the stored format and a nil `removedConfigIds` have no test. `idempotent-operations` passes because recording the same landed sync twice leaves the same stored set.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (AIConfigPushLedgerTests.swift, 11 of 11 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Downgraded unit-test-coverage to partial, specified that an id in both configs and removedConfigIds is kept, recorded the corrupt-entry consequence as an edge case and Design Decision, moved caller facts out of MUSTs, and fixed the WinUI, Compose, Web and SwiftUI platform notes. |

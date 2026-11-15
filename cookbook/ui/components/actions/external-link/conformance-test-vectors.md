@@ -10,4 +10,4 @@
 | T7 | safe-attrs-not-overridable | `<ExternalLink href="https://example.com" target="_self" rel="">PostHog</ExternalLink>` | anchor `target` equals `_blank` and `rel` equals `noopener noreferrer` (the passed-in `target`/`rel` do not win) |
 | T8 | focus-ring | same as T1 | className contains `focus-visible:ring-2` and `focus-visible:ring-apt-gold/40` (web classes) |
 | T9 | default-deep-link-skin | same as T1 | className contains `whitespace-nowrap` and `no-underline` |
-| T10 | mirrors-glyph-rtl | same as T1, rendered under `dir="rtl"` | the trailing glyph is mirrored or replaced by a start-pointing arrow (fails today; see Compliance) |
+| T10 | mirrors-glyph-rtl | same as T1, rendered under `dir="rtl"` | the trailing glyph is mirrored or replaced by a start-pointing arrow |

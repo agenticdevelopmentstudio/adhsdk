@@ -13,5 +13,5 @@
 | pane-010 | body-slot, body-export | Render `MarkdownDocumentPaneBody` with a child | A `data-slot="markdown-document-pane-body"` element wraps the child; no bar or editor is rendered |
 | pane-011 | bar-noun, bar-messages | `noun` omitted, then `noun` "note" with a `messages` override | The bar's notices use "document" by default, then "note", and the override text replaces the default wording |
 
-Vectors pane-006 through pane-011 are derived from the source's behavior rather than existing tests; the test file covers pane-001 to pane-005.
+`markdownDocumentPane.test.tsx` covers pane-001 to pane-011.
 

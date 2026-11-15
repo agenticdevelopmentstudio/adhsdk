@@ -2,7 +2,7 @@
 id: c77c4cfb-e9be-4339-b40d-3f7abc6a4543
 title: "Partner Process Configuration"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -141,7 +141,7 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcessConfiguration.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcessConfiguration.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -168,12 +168,13 @@ Not applicable: the source calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only describes a launch and builds the argument list; spawning the process belongs to `PartnerProcess` and the channel beneath it. `unit-test-coverage` is partial: `PartnerProcessConfigurationTests` asserts the session and resume flags, the optional model, and the full exact ordering, but no test covers an empty `permissionMode`, `workingDirectory` being left out of `arguments`, the empty `allowedTools` case or the `--verbose` position.
+`separation-of-concerns` passes because the type only describes a launch and builds the argument list; spawning the process belongs to `PartnerProcess` and the channel beneath it. `unit-test-coverage` passes: `PartnerProcessConfigurationTests` covers all nine vectors (001-004 by its existing tests, 005-009 by the `V5`-`V9` tests added in `Tests/AgenticDeveloperHubSDKCoreTests/Partner/PartnerProcessConfigurationTests.swift`).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerProcessConfigurationTests.swift, 9 of 9 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Marked test coverage partial, pinned the required argument order, added odd-tool and empty-permission-mode decisions, new vectors, an argv privacy note, a PartnerProcess link and a shorter summary. |

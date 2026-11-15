@@ -2,7 +2,7 @@
 id: 706313bb-1a26-4477-9250-62ad50aff110
 title: "Session Daemon Configuration"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -31,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-`SessionDaemonConfiguration` is everything that makes one session daemon's runtime its own: names, paths, intervals and the Claude Code hook registration it installs ([Claude Hook Configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871)). The runtime and the retention service read it; their own behavior is not specified here. A daemon builds one and hands it to the session runtime (`SessionDaemonRuntime`); nothing in the shared code spells a daemon's name or directory itself.
+`SessionDaemonConfiguration` is everything that makes one session daemon's runtime its own: names, paths, intervals and the Claude Code hook registration it installs (Claude Hook Configuration ([adhsdk.ingredient.foundation.sessions.claude-hook-configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871))). The runtime and the retention service read it; their own behavior is not specified here. A daemon builds one and hands it to the session runtime (`SessionDaemonRuntime`); nothing in the shared code spells a daemon's name or directory itself.
 
 It is a `Sendable` struct of `var` fields with one initializer that derives several defaults from other arguments, and one static factory, `test(port:root:)`, that roots every path and the hook's `settings.json` under a directory so a test never touches the real Claude Code settings.
 
@@ -40,7 +40,7 @@ It is a `Sendable` struct of `var` fields with one initializer that derives seve
 **Shape**
 
 - **config-value-type**: `SessionDaemonConfiguration` MUST be a `Sendable` struct whose stored properties are `var`s, so a caller can copy it and change a field, as the runtime test does with `hook`.
-- **config-fields**: The struct MUST carry `label` (String), `subsystem` (String), `daemonVersion` (String), `httpPort` (UInt16), `supportDirectory` (URL), `databasePath` (String), `spoolPath` (String), `socketPath` (String), `dropDirectory` (URL), `errorsDirectory` (URL), `hook` (`ClaudeHookConfiguration`, [Claude Hook Configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871)), `retentionDays` (Int), `livenessCheckInterval` (TimeInterval), `retentionCheckInterval` (TimeInterval), `claudeJSONPath` (String?), `pluginSearchPaths` ([URL]) and `summariesDefaultEnabled` (Bool).
+- **config-fields**: The struct MUST carry `label` (String), `subsystem` (String), `daemonVersion` (String), `httpPort` (UInt16), `supportDirectory` (URL), `databasePath` (String), `spoolPath` (String), `socketPath` (String), `dropDirectory` (URL), `errorsDirectory` (URL), `hook` (`ClaudeHookConfiguration`, Claude Hook Configuration ([adhsdk.ingredient.foundation.sessions.claude-hook-configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871))), `retentionDays` (Int), `livenessCheckInterval` (TimeInterval), `retentionCheckInterval` (TimeInterval), `claudeJSONPath` (String?), `pluginSearchPaths` ([URL]) and `summariesDefaultEnabled` (Bool).
 - **label-meaning**: Callers SHOULD pass a reverse-DNS `label`, which serves as the log subsystem and the launchd identity; the struct does not check it (see no-validation).
 - **summaries-no-default**: `summariesDefaultEnabled` MUST have no default value in the initializer, so every daemon states its own.
 
@@ -190,11 +190,11 @@ Not applicable: the struct makes no log calls; `subsystem` is the name other cod
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionDaemonConfiguration.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionDaemonConfiguration.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Core/SessionDaemonRuntimeTests.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Core/SessionDaemonRuntimeTests.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -227,13 +227,14 @@ Not applicable: the struct makes no log calls; `subsystem` is the name other cod
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | passed | privacy-and-data |
 
-Separation of concerns passes: the struct only holds values and derives defaults, and the runtime, hook installer and services read it. Unit-test coverage is partial: `SessionDaemonRuntimeTests` builds the struct through `test(port:root:)` and checks that the database and spool files appear, but no test asserts the initializer defaults, the derived paths or the explicit overrides. Vectors 001-012 and 014 should be added as a new `SessionDaemonConfigurationTests` test class beside `SessionDaemonRuntimeTests.swift` in the Database test target, one test per vector. Secure data storage passes because the struct stores no secrets; it only names paths.
+Separation of concerns passes: the struct only holds values and derives defaults, and the runtime, hook installer and services read it. Unit-test coverage passes: `SessionDaemonConfigurationTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Sessions/SessionDaemonConfigurationTests.swift`) tests vectors 001-012 and 014 directly, one test per vector, and `SessionDaemonRuntimeTests` covers vector 013. Secure data storage passes because the struct stores no secrets; it only names paths.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (SessionDaemonConfigurationTests.swift, 13 of 14 vectors; 013 already covered by SessionDaemonRuntimeTests); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Reworded label-meaning as a caller obligation and host-read-fields as a design fact, replaced edge-case MUSTs with references to no-validation and the default requirements, fixed the WinUI and SwiftUI notes, added retentionCheckInterval and root-not-created checks to vectors 011 and 012, named the test class for the untested vectors, linked ClaudeHookConfiguration and emptied references. |

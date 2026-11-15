@@ -2,7 +2,7 @@
 id: 995da39d-685d-4e28-a572-e6425eace958
 title: "ProfileInfoButton"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -119,8 +119,7 @@ Inputs:
 | profile-info-button-013 | host-placement | Render the button inside `.persona-chat` (`overflow: hidden`) | The upper half of the circle is clipped, which is the failure the host must avoid. |
 | profile-info-button-014 | link-destination | Render with `profileUrl=""` | An anchor is rendered with an empty `href`; the component does not hide itself (the host guard is what omits it). |
 
-Only 001 to 004 are asserted by the existing test; 005 to 014 are derived from the source and stylesheet. `highlight-transition`, `no-decoration` and `stacking` have no vector because they are visual-only rules checked by inspection of the stylesheet.
-
+Vectors 001 to 007, 012 and 014 are asserted in `ProfileInfoButton.test.tsx`; 008 to 011 and 013 are `it.skip` there because jsdom cannot exercise stylesheet layout, `var()` fallbacks, `:hover`/`:focus-visible` or overflow clipping. `highlight-transition`, `no-decoration` and `stacking` have no vector because they are visual-only rules checked by inspection of the stylesheet.
 ## Edge Cases
 
 - **Null and empty input**: An empty `profileUrl` renders an anchor with an empty `href`; the component has no guard, so it MUST NOT be relied on to hide itself. The host decides: `BitbagChat` renders the button only when `profileUrl` is truthy. An empty `label` renders an empty accessible name and tooltip, which the component does not prevent.
@@ -194,7 +193,7 @@ Not applicable: the component writes no log output.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/chat/src/components/ProfileInfoButton.tsx` | confirmed (1.0.0) |
+| web | `packages/web/packages/chat/src/components/ProfileInfoButton.tsx` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -236,10 +235,10 @@ Not applicable: the component writes no log output.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-`screen-reader-support`, `keyboard-navigable` and `semantic-markup` pass because the root is a native anchor with an `href`, an `aria-label`, and an `aria-hidden` glyph. `touch-target-size` is partial because the visible circle is 22px by default and the source adds no larger hit area. `separation-of-concerns` passes because the component holds only markup and a class name, and all styling lives in a separate opt-in stylesheet. `unit-test-coverage` is partial because `ProfileInfoButton.test.tsx` covers the link attributes, class and glyph but not `className` composition, the hidden glyph, memoization or any stylesheet behavior.
-
+`screen-reader-support`, `keyboard-navigable` and `semantic-markup` pass because the root is a native anchor with an `href`, an `aria-label`, and an `aria-hidden` glyph. `touch-target-size` is partial because the visible circle is 22px by default and the source adds no larger hit area. `separation-of-concerns` passes because the component holds only markup and a class name, and all styling lives in a separate opt-in stylesheet. `unit-test-coverage` is partial because `ProfileInfoButton.test.tsx` covers vectors 001 to 007, 012 and 014, while 008 to 011 (placement, size, theme tokens, hover and focus highlight) and 013 (overflow clipping) are skipped: they depend on real layout, `var()` resolution and pseudo-class styling that jsdom does not provide.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (ProfileInfoButton.test.tsx, 14 of 14 vectors, 5 skipped for jsdom limits); unit-test-coverage now partial. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

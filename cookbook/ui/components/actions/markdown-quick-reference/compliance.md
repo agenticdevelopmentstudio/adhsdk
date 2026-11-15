@@ -7,7 +7,7 @@
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 The trigger's `aria-label="Markdown quick reference"` and the semantic `<dl>`
 come from `SyntaxQuickReference`; the shared `Popover` primitive supplies the
@@ -19,8 +19,4 @@ no override or localization path from this component. `separation-of-concerns`
 passes because `MarkdownQuickReference` only supplies the markdown-specific
 `MARKDOWN_SYNTAX` entries and props to the shared `SyntaxQuickReference` shell,
 with no popover, dismissal, or rendering logic of its own. `unit-test-coverage`
-is `partial` because `markdownQuickReference.test.tsx` exercises only the
-collapsed default, opening/listing the syntax entries, Escape dismissal, and
-the default and custom trigger labels. Nothing yet covers outside-click
-dismissal (T5), keyboard activation (T6) or `side`/`align` forwarding (T7).
-
+is `passed` because `markdownQuickReference.test.tsx` has a passing test for each of T1 to T7: the collapsed default, the open list, Escape and outside-click dismissal with focus restore, the custom trigger label, keyboard activation and `side`/`align` forwarding.

@@ -4,7 +4,7 @@
     "id": "f3326f3a-cccd-4ac5-8dc1-84d660ed4581",
     "title": "Hook Drop Writer",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "1357c1095969585d",
+  "synced": "b846d3e771d4086f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

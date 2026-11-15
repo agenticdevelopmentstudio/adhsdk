@@ -1,5 +1,5 @@
 
-Vectors 001 to 010 are traced to the `errors sections` tests in `telemetry-dashboard-sections.test.ts`; 011 and 012 follow the source, as do the vectors from 013 on.
+Vectors 001 to 018 are traced to the `errors sections: conformance vectors` tests in `telemetry-dashboard-sections.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

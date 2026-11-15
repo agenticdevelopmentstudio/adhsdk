@@ -4,11 +4,11 @@
     "id": "a076f315-885d-45df-998d-68703a319ec8",
     "title": "Build Progress",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -26,7 +26,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ca736d2d981c6b09",
+  "synced": "24770e145d15665a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

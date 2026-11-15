@@ -2,7 +2,7 @@
 id: 29db699c-56f4-40da-a8f7-b96a0cf820b0
 title: "Partner Chat Session"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`PartnerChatSession` is the `ChatSession` implementation that fronts the partner process (a long-running Claude Code process driven over its stream-json output). It does not own that process. The partner controller feeds it each decoded `ClaudeStreamMessage` (see [Claude Stream JSON](cookbook:f333f036-2c23-4a87-8496-bd3616b44786)) through `apply`, feeds it the owner's own lines through `noteUserMessage`, and sets its lifecycle state through `setState`. The session turns those inputs into a single stream of `ChatEvent` values for a chat UI and returns, from `apply`, the assistant `ChatMessage` values the caller should persist. User turns typed into the chat go out through an injected send closure; interruption goes out through an injected interrupt closure. The type holds an in-memory transcript and nothing else about the conversation.
+`PartnerChatSession` is the `ChatSession` implementation that fronts the partner process (a long-running Claude Code process driven over its stream-json output). It does not own that process. The partner controller feeds it each decoded `ClaudeStreamMessage` (see Claude Stream JSON ([adhsdk.ingredient.foundation.partner.claude-stream-json](cookbook:f333f036-2c23-4a87-8496-bd3616b44786))) through `apply`, feeds it the owner's own lines through `noteUserMessage`, and sets its lifecycle state through `setState`. The session turns those inputs into a single stream of `ChatEvent` values for a chat UI and returns, from `apply`, the assistant `ChatMessage` values the caller should persist. User turns typed into the chat go out through an injected send closure; interruption goes out through an injected interrupt closure. The type holds an in-memory transcript and nothing else about the conversation.
 
 ## Behavioral Requirements
 
@@ -104,7 +104,7 @@ Not applicable — this is a headless session object, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 005 are the cases asserted in `PartnerChatSessionTests` (named in the Input column); the rest are derived from the `PartnerChatSession` source.
+Vectors 001 to 005 are the cases asserted in `PartnerChatSessionTests` (named in the Input column); vectors 006 onward are derived from the `PartnerChatSession` source and are asserted by tests whose display names carry the vector id, except 022, which needs a Thread Sanitizer run.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -203,7 +203,7 @@ Not applicable: the source makes no log call. A failed turn is reported as a `.t
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerChatSession.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerChatSession.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -251,11 +251,12 @@ Not applicable: the source makes no log call. A failed turn is reported as a `.t
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 
-The session separates concerns well: it owns no process, no persistence and no view, and takes its outbound behavior as closures. `PartnerChatSessionTests` covers assistant text, the tool started and completed pair, the error result, the transcript replay and the owner echo, but not `close()`, the second subscriber, the unknown-tool fallback, the minted id or the empty-text skip, so coverage is partial. A failed turn is surfaced as `.turnFailed`, so error handling is explicit. The fallback strings `tool` and `error` are hardcoded English that can reach the UI, which fails the hardcoded-strings check.
+The session separates concerns well: it owns no process, no persistence and no view, and takes its outbound behavior as closures. `unit-test-coverage` is partial: `AgenticDeveloperHubSDKCoreTests/Partner/PartnerChatSessionTests.swift` covers vectors 001 to 021 and 023 to 025, and skips vector 022, which needs a Thread Sanitizer run that a unit test cannot detect. A failed turn is surfaced as `.turnFailed`, so error handling is explicit. The fallback strings `tool` and `error` are hardcoded English that can reach the UI, which fails the hardcoded-strings check.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerChatSessionTests.swift, 24 of 25 vectors; 022 skipped, needs Thread Sanitizer); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the lossy errors rule out of the requirements, added event payloads and use-after-close, renamed the close requirement, linked claude-stream-json and partner-process, accepted registry growth and the hardcoded fallbacks as decisions, and made the Compose note and event-order wording single-answer. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

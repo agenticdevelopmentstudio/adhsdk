@@ -12,12 +12,7 @@ one concern (Codable-field exclusion, Keychain access, logger
 construction, a math clamp, version parsing, text folding) with one
 coupling: the secret store conforms to the logger factory contract, and no other file in this ingredient imports another.
 
-`unit-test-coverage` is `partial`: `KeychainHelper`, `SemanticVersion`,
-`TextFolding`, and `MathUtils`'s `CGFloat.clamped(to:)` each have a
-dedicated test file with meaningful assertions (`KeychainHelperTests
-.swift`, `SemanticVersionTests.swift`, `TextFoldingTests.swift`,
-`CGFloatClampedTests.swift`), but `CodableIgnored` and `Loggable` have no
-test file anywhere in the repository; vectors fc-001, fc-002, fc-014, fc-016 and fc-017 are traced to source, not tested.
+`unit-test-coverage` is `partial`: 31 of 39 vectors have a test. `KeychainHelperTests.swift` and `LoggableConformanceTests.swift` (SDK tests), `SemanticVersionTests.swift`, `TextFoldingTests.swift`, `CGFloatClampedTests.swift` and `CodableIgnoredConformanceTests.swift` (Core tests) cover them. Skipped with a reason: fc-004 (the test host always has a bundle identifier), fc-014 (needs the keychain-access-groups entitlement), fc-017 (the unified log is not observable), fc-018 and fc-021 (source-review vectors), fc-031 (the process locale cannot be switched), fc-036 (`Logger` has no equality) and fc-042 (the off-macOS half cannot run on macOS).
 
 `explicit-error-handling` passes because every fallible operation reports
 its outcome through its return value — `KeychainHelper.set`/`.delete`

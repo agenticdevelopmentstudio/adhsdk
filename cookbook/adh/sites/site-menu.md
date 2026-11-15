@@ -2,11 +2,11 @@
 id: f2d56415-ac36-4a27-bee5-b447c4186513
 title: "SiteMenu"
 type: recipe
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-07-05
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -173,12 +173,12 @@ LOGGED OUT (marketing)               LOGGED IN (/home + workspace)
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | shared-core-both-menus, reference-group-removed | render marketing vs workspace menu | identical Hub section; no "Reference" group in either |
-| T2 | top-section-logged-out | unauthenticated | Login + Sign up above Hub; no Home/Recents |
-| T3 | top-section-logged-in, in-hub-rows-authed-only | authenticated | Home/Workspaces/Recents present; News/Ecosystems/Personas/Organizations/Research visible; hidden when logged out |
-| T4 | inline-subitem-kind, hub-subitems-inventory | render Hub | sub-items rendered indented, in the specified order |
-| T5 | row-icon-label-description, icon-reuse-existing | render any row | icon precedes label; Community shows `Users`, Narratives shows `ScrollText` |
-| T6 | workspaces-flyout | open Workspaces with 3 workspaces | flyout lists all 3, labelled + navigating to each home |
+| T1 | shared-core-both-menus, reference-group-removed | render the marketing and the workspace menu | both are the one `SiteMenu` base over their own config tree, each with a Bitbag row and a Hub row; no "Reference" row in either |
+| T2 | top-section-logged-out | unauthenticated, with login and sign-up hrefs | Login + Sign up are the first two rows, above the tree; no Home/Recents |
+| T3 | top-section-logged-in, in-hub-rows-authed-only | authenticated, with workspaces and a recorded recent | Home, Workspaces and Recents present, and absent when logged out; the family tree rows are the same signed in and signed out (the shipped trees carry no auth-gated destination rows) |
+| T4 | inline-subitem-kind, hub-subitems-inventory | a config with a leaf row followed by an `inline` row | the inline row renders indented, directly under its parent, always visible (no flyout); the shipped trees nest the Hub's pages in a flyout instead |
+| T5 | row-icon-label-description, icon-reuse-existing | render any row; resolve the `community` and `narratives` icon keys | icon precedes label; Community resolves to `Users`, Narratives to `ScrollText` |
+| T6 | workspaces-flyout | open Workspaces with 3 workspaces | flyout lists all 3, labelled, each linking to its workspace home |
 | T7 | recents-flyout, recents-empty-hidden | 0 recents / 3 recents | entry hidden at 0; lists 3 most-recent-first otherwise |
 | T8 | recents-settle-only | drill list→detail→leaf within the settle window, stop at leaf | only the leaf is recorded |
 | T9 | recents-dedupe-cap | record 11 distinct, then re-record #1 | 10 kept, oldest evicted; #1 moves to front |
@@ -228,12 +228,12 @@ LOGGED OUT (marketing)               LOGGED IN (/home + workspace)
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh/src/header/SiteMenu.tsx` | unverified |
-| web | `packages/web/packages/adh/src/header/SiteMenuSwitcher.tsx` | unverified |
-| web | `packages/web/packages/adh/src/header/MarketingSiteMenu.tsx` | unverified |
-| web | `packages/web/packages/adh/src/header/WorkspaceSiteMenu.tsx` | unverified |
-| web | `packages/web/packages/adh/src/header/menu-icons.ts` | unverified |
-| web | `packages/web/packages/adh/src/header/recents.ts` | unverified |
+| web | `packages/web/packages/adh/src/header/SiteMenu.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/adh/src/header/SiteMenuSwitcher.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/adh/src/header/MarketingSiteMenu.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/adh/src/header/WorkspaceSiteMenu.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/adh/src/header/menu-icons.ts` | confirmed (1.1.2) |
+| web | `packages/web/packages/adh/src/header/recents.ts` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -285,7 +285,7 @@ LOGGED OUT (marketing)               LOGGED IN (/home + workspace)
 | [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | passed | Privacy and Data |
 | [adc.check.performance.progress-indication](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6ba6685b-9d35-5eb2-96e7-afbccd1e5848) | passed | Performance |
 
-Notes: separation-of-concerns passes because the recipe composes a generic, registry-free `NavigationPopover` with an ADH-specific `MenuGroup[]` config, keeping the reusable chrome and the ADH vocabulary (`SiteMenu`, `menu-icons`) apart. unit-test-coverage is partial: `siteMenu.test.tsx` covers the Workspaces flyout (listed once loaded, absent while loading, absent on failure or empty), `recents.test.ts`, `navigationPopover.test.tsx`, and `useSiteMenu.test.tsx` cover the recents store, the keyboard/flyout mechanics, and row resolution, `useSiteMenu.test.tsx` also pins the `menu-icons` resolution, but no test file targets `MarketingSiteMenu.tsx` or `WorkspaceSiteMenu.tsx` directly (`siteMenuSwitcher.dispatch.test.tsx` mocks them), so the auth-conditional top section and the Hub inline-subitem inventory are only partly exercised. explicit-error-handling passes because the recorder's localStorage access is documented as try/catch-swallowed (recents-persist-local) and a Recents entry pointing at a deleted entity is routed to the destination feature's own not-found state rather than thrown. test-pyramid is partial because the Integration Test Vectors (T1-T12) are defined exclusively at the rendering/integration level — full-menu composition, flyouts, keyboard flows — with no unit-level vectors for isolated pieces like the icon resolver or the settle-debounce timer. screen-reader-support and semantic-markup pass because keyboard-accessible requires retaining `NavigationPopover`'s full keyboard/ARIA model, including menu roles, unchanged. keyboard-navigable passes because the enhanced menu is required to retain arrow navigation, flyout entry/exit, and Escape-to-close (T12). focus-management passes because keyboard-accessible and T12 both require focus to return to the trigger once the menu or a flyout closes. string-externalization and no-hardcoded-strings fail because every visible label (Login, Sign up, Home, Workspaces, Recents, Hub, BitBag, Community, and the rest of the Hub inventory) appears as a literal string in this recipe with no localization resource, key, or i18n library named anywhere in Overview, Ingredients, or Platform Notes. rtl-layout-support fails because nothing in the recipe addresses right-to-left mirroring for the menu's flyouts or row layout. text-expansion-tolerance fails because Edge Cases states long labels and descriptions truncate via ellipsis rather than accommodating expansion. platform-design-language and native-controls-preference pass because the menu reuses the existing `NavigationPopover` chrome rather than a bespoke implementation, per the "One shared core, two configs" Design Decision. deep-linking-support is partial because recents-deep-link requires linking to the recorded view's deep URL, but Edge Cases notes a not-yet-URL-addressable view falls back to its feature route — an explicitly open gap ("As deep-linking lands, the same place records a precise URL"). graceful-degradation passes because a localStorage failure leaves Recents empty and hidden rather than crashing, and a loading or empty Workspaces flyout shows a Spinner or EmptyState instead of blocking. data-integrity and idempotent-operations pass because recents-dedupe-cap requires re-recording an existing place to move it to the front rather than duplicate it, with the store capped at exactly 10 and oldest-eviction on overflow. state-recovery passes because recents-persist-local requires recents to survive a reload (T11). fault-tolerance passes because a recent referencing a deleted entity still navigates and lets the destination feature render its own not-found state rather than erroring. data-minimization and data-retention-policy pass because Recents is scoped to place labels and URLs only, with a fixed cap of 10 and oldest-eviction as its retention rule. progress-indication passes because the Workspaces flyout is required to show a Spinner while its data loads.
+Notes: separation-of-concerns passes because the recipe composes a generic, registry-free `NavigationPopover` with an ADH-specific `MenuGroup[]` config, keeping the reusable chrome and the ADH vocabulary (`SiteMenu`, `menu-icons`) apart. unit-test-coverage is partial: `siteMenuVectors.test.tsx` and `recents.test.ts` cover vectors T1 through T7, T9, T10, T11 and T12 with passing tests, and `siteMenu.test.tsx`, `marketingSiteMenu.test.tsx`, `navigationPopover.test.tsx` and `useSiteMenu.test.tsx` add the flyout, tree and row-resolution cases. T8 (recents-settle-only) is skipped: the settle-debounced recorder belongs to the hub app, and this package holds only the store it writes to, so the debounce window cannot be driven here. explicit-error-handling passes because the recorder's localStorage access is documented as try/catch-swallowed (recents-persist-local) and a Recents entry pointing at a deleted entity is routed to the destination feature's own not-found state rather than thrown. test-pyramid is partial because the Integration Test Vectors (T1-T12) are defined exclusively at the rendering/integration level — full-menu composition, flyouts, keyboard flows — with no unit-level vectors for isolated pieces like the icon resolver or the settle-debounce timer. screen-reader-support and semantic-markup pass because keyboard-accessible requires retaining `NavigationPopover`'s full keyboard/ARIA model, including menu roles, unchanged. keyboard-navigable passes because the enhanced menu is required to retain arrow navigation, flyout entry/exit, and Escape-to-close (T12). focus-management passes because keyboard-accessible and T12 both require focus to return to the trigger once the menu or a flyout closes. string-externalization and no-hardcoded-strings fail because every visible label (Login, Sign up, Home, Workspaces, Recents, Hub, BitBag, Community, and the rest of the Hub inventory) appears as a literal string in this recipe with no localization resource, key, or i18n library named anywhere in Overview, Ingredients, or Platform Notes. rtl-layout-support fails because nothing in the recipe addresses right-to-left mirroring for the menu's flyouts or row layout. text-expansion-tolerance fails because Edge Cases states long labels and descriptions truncate via ellipsis rather than accommodating expansion. platform-design-language and native-controls-preference pass because the menu reuses the existing `NavigationPopover` chrome rather than a bespoke implementation, per the "One shared core, two configs" Design Decision. deep-linking-support is partial because recents-deep-link requires linking to the recorded view's deep URL, but Edge Cases notes a not-yet-URL-addressable view falls back to its feature route — an explicitly open gap ("As deep-linking lands, the same place records a precise URL"). graceful-degradation passes because a localStorage failure leaves Recents empty and hidden rather than crashing, and a loading or empty Workspaces flyout shows a Spinner or EmptyState instead of blocking. data-integrity and idempotent-operations pass because recents-dedupe-cap requires re-recording an existing place to move it to the front rather than duplicate it, with the store capped at exactly 10 and oldest-eviction on overflow. state-recovery passes because recents-persist-local requires recents to survive a reload (T11). fault-tolerance passes because a recent referencing a deleted entity still navigates and lets the destination feature render its own not-found state rather than erroring. data-minimization and data-retention-policy pass because Recents is scoped to place labels and URLs only, with a fixed cap of 10 and oldest-eviction as its retention rule. progress-indication passes because the Workspaces flyout is required to show a Spinner while its data loads.
 
 ## Change History
 
@@ -297,3 +297,4 @@ Notes: separation-of-concerns passes because the recipe composes a generic, regi
 | 1.0.3 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Status review; Design Decisions in triple form; WinUI 3 guidance; Reference Implementations filled; unit-test-coverage note updated for siteMenu.test.tsx. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (siteMenuVectors.test.tsx, recents.test.ts, 11 of 12 vectors); unit-test-coverage now partial. Vectors T1, T3, T4, T5 and T6 rewritten to match the shipped trees. |

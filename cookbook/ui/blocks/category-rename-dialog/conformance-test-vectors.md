@@ -4,10 +4,10 @@
 | rename-001 | display-when-open | `open={true}`, `node={categoryNode}` | Dialog is visible |
 | rename-002 | render-nothing-before-first-node | `open={false}`, `node={null}`, never previously non-null | Component renders nothing |
 | rename-003 | prefill-current-name | `open={true}`, `node={categoryNode}` where `node.name="Inventory"` | Input field displays "Inventory" |
-| rename-004 | require-non-empty-name | User leaves input empty, clicks Confirm | Error message: "A category needs a name." |
+| rename-004 | require-non-empty-name | User clears the input and presses Enter (Confirm is disabled while empty) | Error message: "A category needs a name." |
 | rename-005 | reject-unchanged-name | Input shows original name "Inventory", user clicks Confirm | Dialog closes without calling `onRename` |
-| rename-006 | validate-duplicate-names | Input: "Armory", `nodes` includes node with `name="Armory"` (different id) | Error: "There is already a category called "Armory"." |
-| rename-007 | validate-extra-names | Input: "Taken", `extraNames=["Taken"]` | Error: "There is already a category called "Taken"." |
+| rename-006 | validate-duplicate-names | Input: "Armory", `nodes` includes node with `name="Armory"` (different id) | Error: `There is already a category called “Armory”.` (curly quotes) |
+| rename-007 | validate-extra-names | Input: "Taken", `extraNames=["Taken"]` | Error: `There is already a category called “Taken”.` (curly quotes) |
 | rename-008 | accept-enter-key | Input focused with text "NewName", user presses Enter | `onRename` is called (validation passes) |
 | rename-009 | show-loading-state | `onRename` is async and pending | Input is disabled; Cancel and Confirm are replaced by a `role="status"` loading indicator |
 | rename-010 | clear-error-on-input | Error displayed, user types in input | Error message is cleared |
@@ -18,7 +18,7 @@
 | rename-015 | prevent-close-while-busy | User presses Escape while `busy={true}` | Dialog remains open |
 | rename-016 | disable-confirm-when-empty | Input value is "" (`node.name=""`, or the user cleared the field) | Confirm button is disabled |
 | rename-017 | show-error-text | Validation fails | Error text component displays error message |
-| rename-018 | require-non-empty-name | Input is whitespace only ("   "), user clicks Confirm | Trimmed to ""; error message: "A category needs a name." |
+| rename-018 | require-non-empty-name | Input is whitespace only ("   "), user presses Enter | Trimmed to ""; error message: "A category needs a name." |
 | rename-019 | handle-async-rename | `onRename` rejects with a non-`Error` value (e.g., a plain string) | Error message: "Could not rename the category."; dialog remains open |
 | rename-020 | prevent-close-while-busy | `busy={true}` | `DialogActions` renders only a loading spinner; Cancel and Confirm buttons are not present to click |
 | rename-021 | prevent-close-while-busy | User clicks the dialog backdrop, both while `busy={false}` and while `busy={true}` | `onOpenChange` never fires from the backdrop press in either case (pointer-based outside dismissal is disabled unconditionally); `onClose()` is not called; dialog remains open |

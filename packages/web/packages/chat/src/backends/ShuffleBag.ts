@@ -13,12 +13,16 @@ function shuffled<T>(items: readonly T[]): T[] {
 
 /**
  * A shuffle bag: each item is drawn exactly once before any repeats. When the
- * bag empties it reshuffles for a fresh pass. Use it for canned persona replies
- * so a short session never repeats itself.
+ * bag empties it reshuffles for a fresh pass, and a fresh pass never opens with
+ * the item just drawn, so no two consecutive draws are equal (a one-item bag is
+ * exempt). Use it for canned persona replies so a short session never repeats
+ * itself.
  */
 export class ShuffleBag<T> {
   readonly #items: readonly T[]
   #bag: T[] = []
+  #hasLast = false
+  #last: T | undefined
 
   constructor(items: readonly T[]) {
     if (items.length === 0) throw new Error('ShuffleBag requires at least one item')
@@ -26,8 +30,19 @@ export class ShuffleBag<T> {
   }
 
   next(): T {
-    if (this.#bag.length === 0) this.#bag = shuffled(this.#items)
-    return this.#bag.pop() ?? this.#items[0]!
+    if (this.#bag.length === 0) {
+      const bag = shuffled(this.#items)
+      // The next draw is bag's last element; move the previous draw out of that slot.
+      const top = bag.length - 1
+      if (this.#hasLast && top > 0 && bag[top] === this.#last) {
+        ;[bag[0], bag[top]] = [bag[top]!, bag[0]!]
+      }
+      this.#bag = bag
+    }
+    const item = this.#bag.pop() ?? this.#items[0]!
+    this.#last = item
+    this.#hasLast = true
+    return item
   }
 }
 

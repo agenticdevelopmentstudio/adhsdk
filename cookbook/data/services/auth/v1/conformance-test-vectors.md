@@ -1,5 +1,5 @@
 
-Vectors that cite a test are assertions in `packages/web/packages/auth/src/__tests__/v1.test.ts`.
+Every vector is asserted in `packages/web/packages/auth/src/__tests__/v1.test.ts`, and each test title starts with its vector id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

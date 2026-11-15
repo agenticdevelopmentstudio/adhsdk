@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { sectionedDashboard } from "../src/telemetry/dashboard/sectioned-dashboard";
+import { emptySections, sectionedDashboard } from "../src/telemetry/dashboard/sectioned-dashboard";
 
 interface Sections {
   a: number;
@@ -41,7 +41,7 @@ function setup(loaders: { a: () => Promise<number>; b: () => Promise<string> }) 
 }
 
 describe("sectionedDashboard", () => {
-  it("a cold read answers immediately and starts a refresh", () => {
+  it("sectioned-001: a cold read answers immediately and starts a refresh", () => {
     const { dash, built } = setup({ a: () => new Promise(() => undefined), b: () => new Promise(() => undefined) });
     const r = dash.read("k1");
     expect(r.refreshing).toBe(true);
@@ -49,7 +49,7 @@ describe("sectionedDashboard", () => {
     expect(built).toHaveBeenCalledTimes(1);
   });
 
-  it("publishes each section as it finishes, in order, one at a time", async () => {
+  it("sectioned-002: publishes each section as it finishes, in order, one at a time", async () => {
     const a = deferred<number>();
     const b = vi.fn(async () => "two");
     const { dash } = setup({ a: () => a.promise, b });
@@ -65,7 +65,7 @@ describe("sectionedDashboard", () => {
     expect(done.sections.b.data).toBe("two");
   });
 
-  it("reads during a refresh never start another", async () => {
+  it("sectioned-003: reads during a refresh never start another", async () => {
     const a = deferred<number>();
     const { dash, built } = setup({ a: () => a.promise, b: async () => "x" });
     dash.read("k1");
@@ -76,7 +76,7 @@ describe("sectionedDashboard", () => {
     await flush();
   });
 
-  it("does not refresh again inside the TTL, and does after it", async () => {
+  it("sectioned-004: does not refresh again inside the TTL, and does after it", async () => {
     const { dash, clock, built } = setup({ a: async () => 1, b: async () => "x" });
     dash.read("k1");
     await flush();
@@ -89,7 +89,7 @@ describe("sectionedDashboard", () => {
     await flush();
   });
 
-  it("a failed section keeps its last good data, reports why, and the rest still load", async () => {
+  it("sectioned-005: a failed section keeps its last good data, reports why, and the rest still load", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     let fail = false;
     const { dash, clock } = setup({
@@ -110,7 +110,7 @@ describe("sectionedDashboard", () => {
     expect(r.sections.b).toMatchObject({ data: "x", error: null });
   });
 
-  it("retries sooner after a failure than after a success", async () => {
+  it("sectioned-006: retries sooner after a failure than after a success", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const { dash, clock, built } = setup({ a: async () => Promise.reject(new Error("x")), b: async () => "x" });
     dash.read("k1");
@@ -124,7 +124,7 @@ describe("sectionedDashboard", () => {
     await flush();
   });
 
-  it("retries only the failing section, backing off with each failure in a row", async () => {
+  it("sectioned-007: retries only the failing section, backing off with each failure in a row", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const a = vi.fn(async () => Promise.reject(new Error("x")));
     const b = vi.fn(async () => "x");
@@ -144,7 +144,7 @@ describe("sectionedDashboard", () => {
     expect([a.mock.calls.length, b.mock.calls.length]).toEqual([3, 1]);
   });
 
-  it("an answer known to be short is shown as a success but retried like a failure", async () => {
+  it("sectioned-008: an answer known to be short is shown as a success but retried like a failure", async () => {
     const clock = { t: 1_000_000 };
     const built = vi.fn();
     const dash = sectionedDashboard<"k1", Sections>({
@@ -167,7 +167,7 @@ describe("sectionedDashboard", () => {
     await flush();
   });
 
-  it("keeps keys separate", async () => {
+  it("sectioned-009: keeps keys separate", async () => {
     const { dash, built } = setup({ a: async () => 1, b: async () => "x" });
     dash.read("k1");
     dash.read("k2");
@@ -175,7 +175,7 @@ describe("sectionedDashboard", () => {
     await flush();
   });
 
-  it("a loaders() builder that throws cannot wedge the key refreshing forever", async () => {
+  it("sectioned-010: a loaders() builder that throws cannot wedge the key refreshing forever", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const dash = sectionedDashboard<"k", Sections>({
       ttlMs: 10_000,
@@ -190,13 +190,13 @@ describe("sectionedDashboard", () => {
   });
 
   describe("settle", () => {
-    it("resolves true at once when nothing was ever read, and never starts a refresh", async () => {
+    it("sectioned-011: resolves true at once when nothing was ever read, and never starts a refresh", async () => {
       const { dash, built } = setup({ a: async () => 1, b: async () => "x" });
       await expect(dash.settle("k1", 1_000)).resolves.toBe(true);
       expect(built).not.toHaveBeenCalled();
     });
 
-    it("waits for the refresh in flight, then a second read has the data", async () => {
+    it("sectioned-012: waits for the refresh in flight, then a second read has the data", async () => {
       const a = deferred<number>();
       const { dash } = setup({ a: () => a.promise, b: async () => "two" });
       expect(dash.read("k1").refreshing).toBe(true);
@@ -209,7 +209,7 @@ describe("sectionedDashboard", () => {
       expect(r.sections.b.data).toBe("two");
     });
 
-    it("gives up at the deadline and reports the key still refreshing", async () => {
+    it("sectioned-013: gives up at the deadline and reports the key still refreshing", async () => {
       vi.useFakeTimers();
       try {
         const { dash } = setup({ a: () => new Promise(() => undefined), b: async () => "x" });
@@ -223,11 +223,121 @@ describe("sectionedDashboard", () => {
       }
     });
 
-    it("resolves true once the refresh has finished, without waiting", async () => {
+    it("sectioned-014: resolves true once the refresh has finished, without waiting", async () => {
       const { dash } = setup({ a: async () => 1, b: async () => "x" });
       dash.read("k1");
       await flush();
       await expect(dash.settle("k1", 60_000)).resolves.toBe(true);
     });
+  });
+
+  it("sectioned-015: emptySections gives every named section its nothing-yet state", () => {
+    expect(emptySections<Sections>(["a", "b"])).toEqual({
+      a: { data: null, error: null, updatedAt: null },
+      b: { data: null, error: null, updatedAt: null },
+    });
+  });
+
+  it("sectioned-016: a read result is a copy, unchanged by a later publish", async () => {
+    const a = deferred<number>();
+    const { dash } = setup({ a: () => a.promise, b: async () => "x" });
+    const first = dash.read("k1");
+    a.resolve(1);
+    await flush();
+    expect(first.sections.a).toEqual({ data: null, error: null, updatedAt: null });
+    expect(dash.read("k1").sections.a.data).toBe(1);
+  });
+
+  it("sectioned-017: retryMs is clamped to ttlMs", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const clock = { t: 1_000_000 };
+    const built = vi.fn();
+    const dash = sectionedDashboard<"k", Sections>({
+      ttlMs: 500,
+      retryMs: 1_000,
+      sections: ["a", "b"],
+      now: () => clock.t,
+      loaders: () => {
+        built();
+        return { a: async (): Promise<number> => Promise.reject(new Error("x")), b: async () => "x" };
+      },
+    });
+    dash.read("k");
+    await flush();
+    clock.t += 499;
+    dash.read("k");
+    expect(built).toHaveBeenCalledTimes(1);
+    clock.t += 1;
+    dash.read("k");
+    expect(built).toHaveBeenCalledTimes(2);
+    await flush();
+  });
+
+  it("sectioned-018: a failure keeps old data and updatedAt, and a later success clears the error", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    let mode: "ok" | "fail" = "ok";
+    let value = 1;
+    const { dash, clock } = setup({
+      a: async () => {
+        if (mode === "fail") throw new Error("down");
+        return value;
+      },
+      b: async () => "x",
+    });
+    dash.read("k1");
+    await flush();
+    const good = dash.read("k1").sections.a;
+    expect(good.updatedAt).toBe(new Date(1_000_000).toISOString());
+
+    mode = "fail";
+    clock.t += 10_000;
+    dash.read("k1");
+    await flush();
+    const failed = dash.read("k1").sections.a;
+    expect(failed).toEqual({ data: 1, error: "down", updatedAt: good.updatedAt });
+
+    mode = "ok";
+    value = 2;
+    clock.t += 1_000;
+    dash.read("k1");
+    await flush();
+    expect(dash.read("k1").sections.a).toEqual({ data: 2, error: null, updatedAt: new Date(clock.t).toISOString() });
+  });
+
+  it("sectioned-019: concurrency 2 starts two loaders at once and the third when one finishes", async () => {
+    interface Three {
+      a: number;
+      b: number;
+      c: number;
+    }
+    const gates = { a: deferred<number>(), b: deferred<number>(), c: deferred<number>() };
+    const started: string[] = [];
+    const dash = sectionedDashboard<"k", Three>({
+      ttlMs: 10_000,
+      concurrency: 2,
+      sections: ["a", "b", "c"],
+      loaders: () => ({
+        a: () => (started.push("a"), gates.a.promise),
+        b: () => (started.push("b"), gates.b.promise),
+        c: () => (started.push("c"), gates.c.promise),
+      }),
+    });
+    dash.read("k");
+    await flush();
+    expect(started).toEqual(["a", "b"]);
+    gates.a.resolve(1);
+    await flush();
+    expect(started).toEqual(["a", "b", "c"]);
+    gates.b.resolve(2);
+    gates.c.resolve(3);
+    await flush();
+  });
+
+  it("sectioned-020: a non-Error rejection is reported as its string", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { dash } = setup({ a: async (): Promise<number> => Promise.reject("boom"), b: async () => "x" });
+    dash.read("k1");
+    await flush();
+    expect(dash.read("k1").sections.a).toMatchObject({ data: null, error: "boom" });
   });
 });

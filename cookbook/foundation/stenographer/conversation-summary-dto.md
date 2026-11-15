@@ -2,7 +2,7 @@
 id: e74bbbe4-cc41-40dc-a063-e262522c2301
 title: "Conversation Summary DTOs"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -31,7 +31,7 @@ approved-date: ""
 
 ## Overview
 
-A conversation is a live terminal session in which a person is talking to an agent. These types present the daemon's `SessionDTO` (see [Session DTOs](cookbook:25b6559b-69c1-450f-85b3-fc026d55f469)) in the shape a conversation reader needs: `ConversationAgent` (the agent name), `ConversationStatus` (busy, idle, waiting, ended), `ConversationSummaryDTO` (one row of `steno conversations list`), `ConversationInfoDTO` (the row plus the rest of what the daemon knows, for `steno conversation info`) and `ConversationSendability` (the one answer `steno conversation send` acts on and `info`'s `canSend` reports). The session is the conversation; these types add no storage. Every session the daemon records is a Claude Code session, so the agent is stated as a field (`claude`) so that a second agent is a new value and not a new shape.
+A conversation is a live terminal session in which a person is talking to an agent. These types present the daemon's `SessionDTO` (see Session DTOs ([adhsdk.ingredient.foundation.stenographer.session-dt-os](cookbook:25b6559b-69c1-450f-85b3-fc026d55f469))) in the shape a conversation reader needs: `ConversationAgent` (the agent name), `ConversationStatus` (busy, idle, waiting, ended), `ConversationSummaryDTO` (one row of `steno conversations list`), `ConversationInfoDTO` (the row plus the rest of what the daemon knows, for `steno conversation info`) and `ConversationSendability` (the one answer `steno conversation send` acts on and `info`'s `canSend` reports). The session is the conversation; these types add no storage. Every session the daemon records is a Claude Code session, so the agent is stated as a field (`claude`) so that a second agent is a new value and not a new shape.
 
 ## Behavioral Requirements
 
@@ -103,7 +103,7 @@ Not applicable — this is a set of data shapes and a pure decision rule, not a 
 
 ## Conformance Test Vectors
 
-Vectors come from `ConversationSummaryDTOTests` (Core test target) and the source's own logic.
+Vectors come from `ConversationSummaryDTOTests` (Core test target) and the source's own logic; vectors 022 to 031 are the `testV022_` to `testV031_` tests in the same file.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -206,7 +206,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationSummaryDTO.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationSummaryDTO.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -242,13 +242,14 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | partial | User Safety |
 
-separation-of-concerns passes: the file maps a session to a conversation reading and decides send eligibility; storage, transport and the terminal injection itself are other types. unit-test-coverage is partial: `ConversationSummaryDTOTests` covers status, home-relative paths, summary fields, app matching, work in progress and the send refusals, but no test covers `ConversationInfoDTO`'s raw fields, `terminalName`, the unsupported-terminal sentence or the unparsable-timestamp fallback, so vectors 022, 023 and 024 to 031 rest on the source alone. safe-defaults is partial: an ended, waiting, unsupported-terminal, detached or pane-sharing session refuses a send, and a sharer whose process cannot be read blocks, but a session whose own process cannot be read (the probe returns nil) is not refused for that reason.
+separation-of-concerns passes: the file maps a session to a conversation reading and decides send eligibility; storage, transport and the terminal injection itself are other types. unit-test-coverage passes: `ConversationSummaryDTOTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/ConversationSummaryDTOTests.swift`) covers every vector, 001 to 031. safe-defaults is partial: an ended, waiting, unsupported-terminal, detached or pane-sharing session refuses a send, and a sharer whose process cannot be read blocks, but a session whose own process cannot be read (the probe returns nil) is not refused for that reason.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ConversationSummaryDTOTests.swift, 31 of 31 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Gave full refusal sentences, rewrote RFC 2119 wording, folded empty-string rules into named requirements, added eight vectors and a localization decision, and made safe-defaults partial. |

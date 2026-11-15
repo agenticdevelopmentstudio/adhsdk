@@ -2,7 +2,7 @@
 id: af0bacb9-bc1f-4773-85f5-35e33ae590ab
 title: "Sectioned Dashboard"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -119,7 +119,7 @@ Not applicable — this is a cache and scheduler, not a visual component.
 
 ## Conformance Test Vectors
 
-The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 10,000, `retryMs` 1,000, sections `a` and `b`, a fake clock starting at 1,000,000. Vectors 001 to 014 are backed by tests in that file; vectors 015 to 020 follow the source and have no test yet.
+The vectors use the test file `telemetry-sectioned-dashboard.test.ts`: `ttlMs` 10,000, `retryMs` 1,000, sections `a` and `b`, a fake clock starting at 1,000,000. Every vector is backed by a test in that file.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -224,12 +224,12 @@ The module logs failures with `console.warn` and nothing at other levels.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/dashboard/sectioned-dashboard.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/telemetry/dashboard/sectioned-dashboard.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/status-server/test/telemetry-sectioned-dashboard.test.ts` | confirmed (1.0.1) |
-| web | `packages/web/packages/deploy-platform/src/util/map-limit.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/test/telemetry-sectioned-dashboard.test.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/deploy-platform/src/util/map-limit.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -278,16 +278,17 @@ The module logs failures with `console.warn` and nothing at other levels.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | passed | access-patterns |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 | [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | performance |
 
-Separation of concerns passes: the file owns scheduling, caching and publishing, and every provider call is a loader supplied from outside. Unit-test coverage is partial: `telemetry-sectioned-dashboard.test.ts` covers the cold read, per-section publishing, the TTL, failure with kept data, backoff, the incomplete answer, key separation, a throwing builder and all four `settle` cases. Vectors 015 to 020 have no test. Not covered by a test are `concurrency` above 1, `retryMs` clamping, `emptySections` and non-`Error` rejections. Retry with backoff passes: failures double the wait from `retryMs` up to `ttlMs` and a success resets it. Graceful degradation passes: a failed section keeps its stale data and the other sections load. Timeout handling is partial: `settle` has a deadline, but a loader that never settles has no timeout in this module and holds its key refreshing; loaders own their own deadlines. Caching strategy passes: stale-while-revalidate with a per-section TTL and read-driven refresh.
+Separation of concerns passes: the file owns scheduling, caching and publishing, and every provider call is a loader supplied from outside. Unit-test coverage passes: `telemetry-sectioned-dashboard.test.ts` covers the cold read, per-section publishing, the TTL, failure with kept data, backoff, the incomplete answer, key separation, a throwing builder and all four `settle` cases. Vectors 015 to 020 cover `emptySections`, read copies, `retryMs` clamping, `concurrency` above 1 and non-`Error` rejections. Retry with backoff passes: failures double the wait from `retryMs` up to `ttlMs` and a success resets it. Graceful degradation passes: a failed section keeps its stale data and the other sections load. Timeout handling is partial: `settle` has a deadline, but a loader that never settles has no timeout in this module and holds its key refreshing; loaders own their own deadlines. Caching strategy passes: stale-while-revalidate with a per-section TTL and read-driven refresh.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (telemetry-sectioned-dashboard.test.ts, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved the mapLimit detail to the React/Web note, narrowed wedge-guard and section-publish-on-finish to what the source does, remapped vector 020, marked unit-test-coverage partial with vectors 015 to 020 flagged untested, dropped bare MUST tags from edge cases, clarified the SwiftUI clock note and emptied references. |

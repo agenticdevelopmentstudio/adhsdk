@@ -15,4 +15,4 @@ catchable errors, but `Prng.pick` on Swift fails via an uncatchable
 `preconditionFailure` rather than a catchable error for the same misuse the
 web's `pick` throws for — see Design Decisions.
 
-`unit-test-coverage` is `partial`: no test vector pins `prng-zero-state-avoidance` (seed `0`) or `ease-table-built-once`, and `mat-non-finite-input` is unresolved (see Edge Cases). The platform-divergent cases of `hex-input-normalization` and `pick` on an empty array are pinned by platform-scoped vectors 023-025 and each is exercised on only one platform's tests.
+`unit-test-coverage` is `partial`: no test vector pins `prng-zero-state-avoidance` (seed `0`) or `ease-table-built-once`, and `mat-non-finite-input` is unresolved (see Edge Cases). The platform-divergent cases of `hex-input-normalization` and `pick` on an empty array are pinned by platform-scoped vectors 023-025 and each is exercised on only one platform's tests. The web suite (`conformance.test.ts`, one test per vector) passes 27 of 28 vectors; vector avatar-engine-math-023 is skipped because it is Swift-only and the web accepts both inputs.

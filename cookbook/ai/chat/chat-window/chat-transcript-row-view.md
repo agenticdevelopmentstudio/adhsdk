@@ -2,11 +2,11 @@
 id: 2f1d9160-a055-4aca-8dff-86d39cc0b76a
 title: "Chat Transcript Row View"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -232,7 +232,7 @@ Not applicable: the component contains no logging calls (no `os_log`, `Logger`, 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatTranscriptRowView.swift` | confirmed (1.3.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatTranscriptRowView.swift` | confirmed (1.3.2) |
 
 ## Design Decisions
 
@@ -284,8 +284,7 @@ Not applicable: the component contains no logging calls (no `os_log`, `Logger`, 
 
 `touch-target-size` is omitted: this is a pointer-driven macOS surface with no touch input, so the check's 44×44pt-touch/48×48dp-touch grounds do not transfer directly; the 28×28pt app icon's click-target size is instead recorded as **minimum-tap-target** under Accessibility above and in its Design Decision, not a pass/fail against a touch default. `passed` rows rest on the source directly: the row emits no logging at all, so none can leak PII; and the view holds only the caller-supplied `message`/`attribution` in memory purely to render them, collecting and storing nothing further. `partial` rows reflect what this file alone can't settle, or shares with something else: the header and (wired) icon carry real accessibility labels, but the row's own selection state has no accessibility exposure — `isSelected` posts no `NSAccessibility` notification and sets no accessibility "selected" trait (see Accessibility above) — so screen-reader-support is partial rather than passed; `keyboard-navigable` is partial because this file itself has no keyboard path of its own, but `ChatView.swift`, the container that owns row selection, does supply a Return-to-open and Shift-Return-to-jump equivalent when it wires `isRowSelectionEnabled` (see the keyboard-path note under Accessibility above) — a guarantee that holds only when hosted by that container; `reduced-motion` is partial because this view animates nothing of its own, but it is the one that decides to call `startAnimating()` on the embedded `TypingIndicatorView`, whose own reduced-motion compliance is `failed` (see [adhsdk.ingredient.ai.chat.chat-window.typing-indicator-view](cookbook:653874b6-86c4-41cb-9350-5f61bb5fca85)); text sizing and color contrast are both delegated entirely to the active `SemanticPalette`, which this file neither reads for scaling nor independently verifies.
 
-`separation-of-concerns` passes because `ChatTranscriptRowView` composes the header, icon, bubble and typing indicator for one row from a caller-supplied message and attribution; row selection, scrolling and message grouping stay in `ChatView`, and bubble drawing stays in `AIChatBubbleView`. `unit-test-coverage` is partial: `ConversationFocusTests.swift` constructs the row directly and checks `maxBubbleWidth(forRowWidth:)` and `hitTest(_:)`, and `BubbleTruncationTests.swift` and `ConversationsStatusLineTests.swift` inspect rows built by a chat view, but there is no `ChatTranscriptRowView` test file of its own and header/icon wiring, selection styling and theme repaint are not asserted.
-
+`separation-of-concerns` passes because `ChatTranscriptRowView` composes the header, icon, bubble and typing indicator for one row from a caller-supplied message and attribution; row selection, scrolling and message grouping stay in `ChatView`, and bubble drawing stays in `AIChatBubbleView`. `unit-test-coverage` is partial: `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/Chat/ChatTranscriptRowViewConformanceTests.swift` covers 42 of the 45 conformance vectors (header and icon wiring, alignment, presses, hit-testing, hover, selection, delivery marks, expansion, theme repaint). Not covered: V29 and V30 (cursor rects are write-only in AppKit and cannot be read back) and V42 (the archival initializer is a `fatalError`, not catchable in a test).
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -298,3 +297,4 @@ Not applicable: the component contains no logging calls (no `os_log`, `Logger`, 
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/chat-window/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-tap-target NEEDS REVIEW marker as current behavior plus a pending Design Decision; added separation-of-concerns and unit-test-coverage compliance. |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
+| 1.3.2 | 2026-11-15 | Mike Fullerton | Conformance tests added (ChatTranscriptRowViewConformanceTests.swift, 42 of 45 vectors); unit-test-coverage now partial. |

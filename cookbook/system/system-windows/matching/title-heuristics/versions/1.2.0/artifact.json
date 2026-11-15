@@ -1,0 +1,65 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "77dbd38e-9acd-4053-ba54-738b45101f6b",
+    "title": "Window Matching Heuristics",
+    "type": "ingredient",
+    "version": "1.2.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-24",
+    "modified": "2026-10-04",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Built-in per-app window-title parsers (Xcode, Warp, Brave, VS Code, Terminal) that extract a stable identifying pattern for window fingerprints.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "system-windows",
+      "window-matching",
+      "heuristics"
+    ],
+    "depends-on": [],
+    "related": [],
+    "references": [
+      "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/XcodeHeuristic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/WarpHeuristic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/BraveHeuristic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/VSCodeHeuristic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/TerminalHeuristic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/AppHeuristic.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/MatchStrategy.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/HeuristicRegistry.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/SystemWindows/HeuristicTests.swift (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "names_hosts": "A test vector uses a real window title containing `Claude` as input to the Warp heuristic.",
+  "synced": "958e4d5963302184",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

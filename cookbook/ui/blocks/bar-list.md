@@ -2,7 +2,7 @@
 id: d2534210-3131-48d5-a6f2-d5fa85bb5347
 title: "BarList"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -106,8 +106,7 @@ The list is plain text by default. When the host passes `onSelect`, every row be
 - **contrast-ratio**: NEEDS REVIEW: Not implemented in source. Text and bar colors are theme tokens (`text-apt-text-muted`, `text-apt-text`, `text-apt-text-dim`, `--color-apt-cat-blue`) and the dimmed state lowers a row to 55% opacity; whether any theme meets 4.5:1 for 10px and 11px text, and 3:1 for the bar, needs measured token values per theme.
 
 ## Conformance Test Vectors
-
-Vectors bl-001 to bl-005 are derived from the `BarList` block in `trendChart.test.tsx`, which uses items US 100, SG 50, CN 10.
+All 24 vectors are tested in the `BarList` block of `src/__tests__/trendChart.test.tsx`, one `it` per vector with the vector id at the start of its title; the items US 100, SG 50, CN 10 are the shared fixture. jsdom computes no layout or Tailwind styles, so the opacity vectors check the `opacity-55` class and the bar vectors check the inline `width` and `min-width` styles.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -219,7 +218,7 @@ Not applicable: the source performs no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/bar-list.tsx` | confirmed (1.0.0) |
+| web | `packages/web/packages/ui/src/blocks/bar-list.tsx` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -259,11 +258,12 @@ Not applicable: the source performs no logging.
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.internationalization.locale-aware-formatting](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c87ff1f1-9d77-5167-b0c4-f13f2aae5acb) | partial | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Screen-reader, keyboard and semantic-markup pass because the component uses a labelled list, native buttons, `aria-pressed`, `aria-expanded` and an `aria-hidden` bar. Touch-target-size and contrast-ratio are partial because the source sets no minimum target and the token values live in the theme; the open questions on `touch-target-size` and `contrast-ratio` record what would settle them. The two string checks fail because "Show all N", "Show fewer" and the default empty label are English literals with no override for the buttons, and locale-aware-formatting is partial because the default formatter fixes the English locale though `formatValue` can replace it. Separation-of-concerns passes because data, ordering, selection and formatting all belong to the host. Unit-test-coverage is partial: the `BarList` tests in `trendChart.test.tsx` cover the expand and collapse cycle, the no-button case, name wrapping, the plain list and the pressed state, but no test asserts bar widths, the `detail` override, the empty state or the dimming.
+Screen-reader, keyboard and semantic-markup pass because the component uses a labelled list, native buttons, `aria-pressed`, `aria-expanded` and an `aria-hidden` bar. Touch-target-size and contrast-ratio are partial because the source sets no minimum target and the token values live in the theme; the open questions on `touch-target-size` and `contrast-ratio` record what would settle them. The two string checks fail because "Show all N", "Show fewer" and the default empty label are English literals with no override for the buttons, and locale-aware-formatting is partial because the default formatter fixes the English locale though `formatValue` can replace it. Separation-of-concerns passes because data, ordering, selection and formatting all belong to the host. Unit-test-coverage passes: the `BarList` tests in `trendChart.test.tsx` cover all 24 vectors, including bar widths, the `detail` override, the empty state, the dimming and the expand state.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (trendChart.test.tsx, 24 of 24 vectors); unit-test-coverage now passed. |

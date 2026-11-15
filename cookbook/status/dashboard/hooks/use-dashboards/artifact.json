@@ -4,7 +4,7 @@
     "id": "033e89fb-48b3-424d-984d-e4f29e9a6708",
     "title": "Dashboard Queries",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4da0d3dbdec0afb7",
+  "synced": "b30af63ac0b10a35",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

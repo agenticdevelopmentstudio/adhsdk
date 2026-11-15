@@ -13,7 +13,7 @@
 | select-010 | label-association | Render with `label="Choose an option"` | A `<label>` element is rendered with `htmlFor` matching the select's ID |
 | select-011 | wrapper-classname | Render with `className="custom-class"` | The wrapper div includes the class `custom-class` |
 | select-012 | hint-display | Render with `hint="Select one item"` | A `<p>` element is rendered below the select displaying the hint text |
-| select-013 | chevron-indicator | Render component | A chevron-down icon is displayed at the trailing edge of the select |
+| select-013 | chevron-indicator | Render the styled-select primitive (`ui/components/select.tsx`; the `aws-field` Select draws no chevron) | A chevron-down icon is displayed at the trailing edge of the select |
 | select-014 | focus-style | Focus the select element via keyboard | Border changes to the accent color role, ring is visible, focus-visible styles are applied |
 | select-015 | label-association | Render without a `label` prop | No `<label>` element is rendered; the select has no accessible name supplied by the component |
 | select-016 | choice-rendering | Render with `choices=[]` | No `<option>` elements are rendered; the select has no selectable options |

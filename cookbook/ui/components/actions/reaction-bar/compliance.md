@@ -17,7 +17,6 @@ composes only the shared `Button`/`Popover` primitives (no bespoke controls); it
 it builds its accessible-name and count text as hardcoded English template literals with no
 `Intl.NumberFormat` call, which is what fails the three internationalization checks. The component
 is explicitly presentational — the caller fetches tallies and performs the toggle, never the bar
-itself (separation-of-concerns passed); `reactionBar.test.tsx` directly exercises chip labeling,
-pressed state, toggle/take-back, the palette, busy inertness, and the disabled/empty-reactions
-cases. T11 is a Playwright vector and no Playwright spec exists for it in the repo, so unit-test-coverage is partial.
+itself (separation-of-concerns passed); `reactionBar.test.tsx` covers vectors T1 to T10, T12 and T13 with passing tests.
+T11 is a Playwright vector and no Playwright spec exists for it in the repo (skipped), so unit-test-coverage is partial.
 

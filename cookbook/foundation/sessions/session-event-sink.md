@@ -2,7 +2,7 @@
 id: 6a37e531-b5ae-4eea-b4f0-d28866776ddc
 title: "Session Event Sink"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -43,7 +43,7 @@ approved-date: ""
 
 - **sink-sendable**: `SessionEventSink` MUST be a `Sendable` protocol, so one sink can be shared across the daemon's queues and tasks.
 - **sink-broadcast-signature**: A sink MUST implement `broadcast(eventType: String, payload: Data, sessionId: String?)`, which returns nothing and does not throw.
-- **sink-status-signature**: A sink MUST implement `broadcastSessionStatus(sessionId: String, status: SessionStatus)` ([Session Status](cookbook:787b5da6-2f20-4f3e-8104-1763959a735f)), which returns nothing and does not throw.
+- **sink-status-signature**: A sink MUST implement `broadcastSessionStatus(sessionId: String, status: SessionStatus)` (Session Status ([adhsdk.ingredient.foundation.sessions.session-status](cookbook:787b5da6-2f20-4f3e-8104-1763959a735f))), which returns nothing and does not throw.
 - **broadcast-payload-prebuilt**: The `payload` given to `broadcast` MUST be the already-encoded wire JSON of the event; a sink MUST NOT re-encode it.
 - **broadcast-session-filter**: `sessionId` MUST be passed so a transport can filter subscribers to one session; it is optional and `nil` means the event is not tied to one session.
 - **status-payload-shape**: A transport publishing a session status change MUST publish the payload `{"session_id": ..., "status": ...}` produced by `SessionEventEncoding.encodeSessionStatus(sessionId:status:)`.
@@ -156,11 +156,11 @@ Not applicable: the source makes no log calls. The only related log line is writ
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionEventSink.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionEventSink.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Support/RecordingSink.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Support/RecordingSink.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -192,10 +192,11 @@ Not applicable: the source makes no log calls. The only related log line is writ
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 
-Separation of concerns passes: the file splits publishing (the protocol) from encoding (`SessionEventEncoding`), and leaves transport choice to conforming types. Unit-test coverage is partial: `RecordingSink` supports ingestion tests that assert what was published, but no test sits beside the file and none asserts the encoder's key, date or ordering rules or the `nil` result. Explicit error handling is partial: `encode` discards the encoding error and the protocol methods give no delivery signal, though the one caller logs an encode failure.
+Separation of concerns passes: the file splits publishing (the protocol) from encoding (`SessionEventEncoding`), and leaves transport choice to conforming types. Unit-test coverage is partial: `SessionEventEncodingConformanceTests` (Core) covers vectors 001-008 and 014, `SessionEventSinkConformanceTests` (Database) covers 010-012 and `IngestionPipelineTests` covers 009. Vector 013 is skipped: `IngestedEvent` holds only `Int64` and `String` fields, so no ingested event can make `encode` return `nil` in a unit test. Explicit error handling is partial: `encode` discards the encoding error and the protocol methods give no delivery signal, though the one caller logs an encode failure.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (SessionEventEncodingConformanceTests.swift, SessionEventSinkConformanceTests.swift, IngestionPipelineTests.swift extended, 13 of 14 vectors); unit-test-coverage now partial (013 skipped: IngestedEvent cannot fail to encode). |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added a slash-escaping requirement and a caller obligation for encode failure, restated the encoder statelessness requirement, added RFC 2119 wording to sink-no-delivery-signal, cited EventIngestor, drove the sink vectors through EventIngestor, trimmed Configuration, filled depends-on and related, and emptied references. |

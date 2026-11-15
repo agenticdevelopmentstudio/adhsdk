@@ -124,4 +124,100 @@ final class ProcessLivenessTests: XCTestCase {
         XCTAssertEqual(found, 41)
         XCTAssertEqual(asked, [41])
     }
+
+    // MARK: - Session file, headless, canonical path and identity (vectors 8-17)
+
+    private func sessionJSON(_ fields: [String: Any]) throws -> Data {
+        try JSONSerialization.data(withJSONObject: fields)
+    }
+
+    func testV008_sessionFileIsReadOnlyForItsOwnPid() throws {
+        let data = try sessionJSON(["pid": 4242, "sessionId": "abc"])
+        XCTAssertEqual(ProcessLiveness.sessionId(fromSessionFile: data, pid: 4242), "abc")
+        XCTAssertNil(ProcessLiveness.sessionId(fromSessionFile: data, pid: 4243))
+        let empty = try sessionJSON(["pid": 4242, "sessionId": ""])
+        XCTAssertNil(ProcessLiveness.sessionId(fromSessionFile: empty, pid: 4242))
+        XCTAssertNil(ProcessLiveness.sessionId(fromSessionFile: Data("not json".utf8), pid: 4242))
+    }
+
+    func testV009_sessionFileIsFoundUnderTheConfigDirectory() throws {
+        let sessions = dir.appendingPathComponent("sessions")
+        try FileManager.default.createDirectory(at: sessions, withIntermediateDirectories: true)
+        try sessionJSON(["pid": 777, "sessionId": "from-config-dir"])
+            .write(to: sessions.appendingPathComponent("777.json"))
+        let found = ProcessLiveness.currentSessionId(ofPid: 777, environment: ["CLAUDE_CONFIG_DIR": dir.path])
+        XCTAssertEqual(found, "from-config-dir")
+    }
+
+    func testV010_sessionFileEntrypointDecidesHeadlessAndOutranksArguments() throws {
+        let sdk = try sessionJSON(["entrypoint": "sdk-cli"])
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["claude"], sessionFile: sdk))
+        let terminal = try sessionJSON(["entrypoint": "cli"])
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude", "-p", "x"], sessionFile: terminal))
+    }
+
+    func testV011_printSwitchInArgumentsIsHeadlessWithoutASessionFile() {
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["claude", "-p", "ping"], sessionFile: nil))
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["node", "cli.js", "--print", "ping"], sessionFile: nil))
+    }
+
+    func testV012_switchAfterSeparatorAndDefaultsAreNotHeadless() {
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude", "--", "-p"], sessionFile: nil))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude"], sessionFile: nil))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: nil, sessionFile: nil))
+    }
+
+    func testV013_terminalAttachmentIsUnknownForAProcessThatIsNotClaude() {
+        XCTAssertNil(ProcessLiveness.terminalAttachment(ofPid: 0))
+        XCTAssertNil(ProcessLiveness.terminalAttachment(ofPid: ProcessInfo.processInfo.processIdentifier))
+    }
+
+    func testV014_liveClaudeProcessesIsNilOrAnArrayOfWellFormedEntries() {
+        guard let live = ProcessLiveness.liveClaudeProcesses() else { return }
+        for entry in live {
+            XCTAssertGreaterThan(entry.pid, 0)
+            XCTAssertTrue(entry.sessionId != nil || !entry.cwd.isEmpty,
+                          "an entry with neither a session nor a directory must be dropped")
+        }
+    }
+
+    func testV015_canonicalPathFallsBackToTheInputWhenThePathDoesNotExist() {
+        XCTAssertEqual(ProcessLiveness.canonicalPath("/no/such/path"), "/no/such/path")
+    }
+
+    /// Starts a copy of `/bin/sleep` launched from `relativePath` under its own
+    /// root, with its own working directory, and returns that directory.
+    private func startCopy(at relativePath: String, root: String) throws -> URL {
+        let base = dir.appendingPathComponent(root)
+        let exe = base.appendingPathComponent(relativePath)
+        try FileManager.default.createDirectory(
+            at: exe.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: URL(fileURLWithPath: "/bin/sleep"), to: exe)
+        let cwd = base.appendingPathComponent("cwd")
+        try FileManager.default.createDirectory(at: cwd, withIntermediateDirectories: true)
+        let child = Process()
+        child.executableURL = exe
+        child.arguments = ["30"]
+        child.currentDirectoryURL = cwd
+        try child.run()
+        children.append(child)
+        return cwd
+    }
+
+    func testV016_identityFollowsTheLaunchPathAndIsCaseSensitive() throws {
+        let desktop = try startCopy(at: "Claude.app/Contents/MacOS/Claude", root: "desktop")
+        let capitalised = try startCopy(at: "bin/Claude", root: "capital")
+        let component = try startCopy(at: "claude/bin/tool", root: "component")
+        let launcher = try startCopy(at: "bin/claude", root: "launcher")
+        XCTAssertNotNil(pid(in: component), "a /claude/ path component counts as Claude")
+        XCTAssertNotNil(pid(in: launcher), "a last component of exactly claude counts as Claude")
+        XCTAssertNil(ProcessLiveness.claudePid(inCwd: desktop.path), "the desktop app is not the CLI")
+        XCTAssertNil(ProcessLiveness.claudePid(inCwd: capitalised.path), "the match is case-sensitive")
+    }
+
+    func testV017_printSwitchMatchesWholeTokensBeforeTheSeparator() {
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude", "--print=x"], sessionFile: nil))
+        XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude", "-pv"], sessionFile: nil))
+        XCTAssertTrue(ProcessLiveness.isHeadless(argv: ["claude", "--model", "-p"], sessionFile: nil))
+    }
 }

@@ -1,5 +1,5 @@
 
-The test beside the source is `DocumentLoadScript.test.tsx` in the themes package `__tests__` folder; vectors 001 to 003 derive from its three tests by name. Vectors 004 to 009 derive from the source and its doc comment and have no test yet.
+The test beside the source is `DocumentLoadScript.test.tsx` in the themes package `__tests__` folder; vectors 001 to 003 derive from its three tests by name. Vectors 004 to 009 derive from the source and its doc comment and are tested in the same file.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

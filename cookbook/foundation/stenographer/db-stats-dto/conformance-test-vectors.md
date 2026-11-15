@@ -1,5 +1,5 @@
 
-No test beside the source references `DBStatsDTO`; the vectors are derived from the declarations.
+`DBStatsDTOConformanceTests` (Core test target) covers every vector, derived from the declarations.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

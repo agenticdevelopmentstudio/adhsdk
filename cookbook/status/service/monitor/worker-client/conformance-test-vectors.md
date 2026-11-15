@@ -1,5 +1,5 @@
 
-No test exercises the worker client directly (see Compliance); every vector below is traced to the component's own specified behavior, except where an integration test is cited.
+`test/worker-client.test.ts` exercises the worker client against a scripted fake worker; vector 011's real-thread round trip is covered by the integration test it cites.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

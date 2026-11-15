@@ -4,7 +4,7 @@
     "id": "0f721fc3-0e8f-4a1b-b895-1b1bad370bd0",
     "title": "Appearance",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b621cb568df455a3",
+  "synced": "b6a10336e0c94402",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

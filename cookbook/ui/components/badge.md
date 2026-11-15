@@ -2,7 +2,7 @@
 id: 1c49339e-0b46-449d-86de-eb4a4166d6a5
 title: "Badge"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -173,7 +173,7 @@ Not applicable: Badge has no logic that could fail or branch, and the source log
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/badge.tsx` | confirmed (1.0.0) |
+| web | `packages/web/packages/ui/src/components/badge.tsx` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -198,11 +198,12 @@ Not applicable: Badge has no logic that could fail or branch, and the source log
 |---|---|---|
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`semantic-markup` passes because the badge is a plain `span` that exposes its text to assistive technology and adds no misleading role. `separation-of-concerns` passes: `Badge` only maps a variant to classes through `cva` and renders a `span`, with class merging delegated to `cn()` from `../lib/utils`. `unit-test-coverage` fails: no test file for the Badge component exists in the `ui` package, so none of the variant behavior is asserted.
+`semantic-markup` passes because the badge is a plain `span` that exposes its text to assistive technology and adds no misleading role. `separation-of-concerns` passes: `Badge` only maps a variant to classes through `cva` and renders a `span`, with class merging delegated to `cn()` from `../lib/utils`. `unit-test-coverage` passes: `badge.test.tsx` covers every vector, badge-001 through badge-012.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (badge.test.tsx, 12 of 12 vectors); unit-test-coverage now passed. |

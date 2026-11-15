@@ -4,7 +4,7 @@
     "id": "1c49339e-0b46-449d-86de-eb4a4166d6a5",
     "title": "Badge",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f8a625050de8a05e",
+  "synced": "aac949b53d6df42f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

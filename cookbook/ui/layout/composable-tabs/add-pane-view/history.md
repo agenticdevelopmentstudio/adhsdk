@@ -8,3 +8,4 @@
 | 1.1.3 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.2.2 | 2026-11-15 | Mike Fullerton | Conformance tests added (AddPaneViewControllerConformanceTests.swift; 026 skipped); unit-test-coverage now partial. |

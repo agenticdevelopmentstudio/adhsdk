@@ -12,7 +12,7 @@
 | radio-009 | color-transitions | RadioGroupItem state change from unchecked to checked | Computed `transition-property` includes `color`/`border-color`/`background-color` and `transition-duration` is greater than 0 |
 | radio-010 | no-initial-selection | RadioGroup rendered with neither `value` nor `defaultValue` set | No RadioGroupItem in the group renders its selected indicator |
 | radio-011 | value-matches-no-item | RadioGroup's `value` does not match any item's `value` | No RadioGroupItem displays as checked |
-| radio-012 | all-items-disabled | Every RadioGroupItem in the group has `disabled` set | No item can be selected via pointer or keyboard; none render dimmed, but each carries `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"` |
-| radio-013 | disabled-item-already-checked | A RadioGroupItem is both checked and disabled | Item shows the selected indicator combined with the disabled item's `aria-disabled`/`data-disabled`/`tabindex="-1"` state, without visual dimming |
+| radio-012 | all-items-disabled | Every RadioGroupItem in the group has `disabled` set | No item can be selected via pointer or keyboard; each carries the native `disabled` attribute, `aria-disabled="true"` and `data-disabled`, and renders dimmed through the `disabled:` utilities |
+| radio-013 | disabled-item-already-checked | A RadioGroupItem is both checked and disabled | Item shows the selected indicator combined with the disabled item's native `disabled`, `aria-disabled` and `data-disabled` state, dimmed through the `disabled:` utilities |
 | radio-014 | boundary-values | RadioGroupItem rendered inside a shrinking flex container | Item stays fixed at 16×16px (`shrink-0` prevents resizing) |
 

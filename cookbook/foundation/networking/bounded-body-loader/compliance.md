@@ -8,11 +8,7 @@
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | Reliability |
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
 
-`unit-test-coverage` is **partial**: no test file in the module targets
-`BoundedBodyLoader` directly; its ceiling and cancellation behavior is
-exercised only indirectly, through `OpenVSXClientLimitsTests.swift`'s
-assertions against `OpenVSXClient.data(at:)` and `.search(_:)`, which call
-`loader.body(at:limit:)` underneath. `separation-of-concerns` **passed**:
+`unit-test-coverage` is **partial**: `AgenticDeveloperHubSDKCoreTests/Networking/BoundedBodyLoaderConformanceTests.swift` covers networking-001 through networking-008 against a stubbed session. networking-009 (a stale callback for a removed transfer) is skipped: the shared state and the session delegate are file-private, so a test cannot inject a callback. `OpenVSXClientLimitsTests.swift` also exercises the ceilings indirectly. `separation-of-concerns` **passed**:
 the loader does exactly one thing — bound and deliver a response body — and
 leaves status validation, URL-scheme checks, and JSON decoding entirely to
 its caller (see `status-agnosticism`). `explicit-error-handling`

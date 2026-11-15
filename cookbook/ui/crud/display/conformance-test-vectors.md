@@ -1,6 +1,6 @@
 
-Vectors 1 through 3 are asserted by `display.test.ts` (the `columnDisplayValue`
-suite); the rest are derived from the source.
+Every vector is asserted by `display.test.ts` (the `columnDisplayValue` suite and the
+`display conformance vectors` suite).
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|

@@ -4,7 +4,7 @@
     "id": "591d0b87-ce71-4b11-8642-149fc405cce9",
     "title": "RGBAColor Theme Extension",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6dca519108bcca85",
+  "synced": "51a49fd1e69c7e11",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

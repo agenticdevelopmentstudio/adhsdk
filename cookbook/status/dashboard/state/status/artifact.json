@@ -4,11 +4,11 @@
     "id": "acf8decd-8427-4547-a9ec-49c0a35b0b3a",
     "title": "Status State",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c2d0b044b2ce8a84",
+  "synced": "a6ef5d222e531f0e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

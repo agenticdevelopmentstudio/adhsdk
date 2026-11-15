@@ -2,11 +2,11 @@
 id: d5812249-f235-43df-9cd7-504220da1a7d
 title: "Scripting Support"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -182,7 +182,7 @@ Not applicable: none of the three given primitives call a logger or any other di
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -242,11 +242,14 @@ structures the outcome, `MainActorScriptCommand` only bridges Cocoa
 Scripting's dispatch onto the main actor, and `applicationElementSpecifier`
 only builds one kind of `NSScriptObjectSpecifier` — with no UI, persistence,
 or networking code mixed into any of them. `unit-test-coverage` is
-**partial**: `AppleScriptRunner` and `MainActorScriptCommand` each have a
-dedicated `Tests/.../Scripting/*Tests.swift` suite with meaningful
-assertions (see Conformance Test Vectors), but `applicationElementSpecifier`
-has no test file among the given sources or found elsewhere in the
-repository. `explicit-error-handling` **passed**: `AppleScriptRunner.run(_:)`
+**partial**: `AppleScriptRunnerTests.swift`, `MainActorScriptCommandTests.swift`
+and `ApplicationElementSpecifierTests.swift` (all under `Tests/.../Scripting/`)
+cover every vector except these skipped ones: scripting-005 (the fallback
+branch needs an error dictionary with no message or number, which NSAppleScript
+never supplies), scripting-006 (`NSAppleScript(source:)` never returns nil),
+scripting-009 (main-thread marshaling is the caller's job and unobservable)
+and scripting-017 (NSApp's class description always resolves in a running
+application). `explicit-error-handling` **passed**: `AppleScriptRunner.run(_:)`
 never drops a compile or runtime failure — every failure path returns a
 distinct, inspectable `Result` case; nothing is caught and discarded.
 `main-thread-freedom` is **partial**: `AppleScriptRunner.run(_:)` executes
@@ -266,5 +269,6 @@ deliberate fail-fast choice (see Design Decisions) that satisfies
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (AppleScriptRunnerTests.swift extended, ApplicationElementSpecifierTests.swift, 12 of 16 vectors); unit-test-coverage now partial. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

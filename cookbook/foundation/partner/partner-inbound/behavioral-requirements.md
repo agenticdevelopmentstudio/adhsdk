@@ -28,7 +28,7 @@ Coalescing (`coalescingKey`)
 - **key-distinct-kinds**: An idle event and an exited event for the same session MUST have different keys, so one never replaces the other.
 - **key-none-owner-lifecycle**: For `owner` and every `lifecycle` case, `coalescingKey` MUST be nil, so those events never collapse.
 - **key-ignores-payload**: A key MUST depend only on the case and its id, never on the title, name, summary or previous-tick date, so that an event with the same key as an earlier one can stand in for it in a queue.
-- **queue-honors-key**: The key is the only coalescing input this type provides. What a queue does with equal keys (replace in place, append, `enqueueFirst`) is specified by [Partner Turn Queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150), not here.
+- **queue-honors-key**: The key is the only coalescing input this type provides. What a queue does with equal keys (replace in place, append, `enqueueFirst`) is specified by Partner Turn Queue ([adhsdk.ingredient.foundation.partner.partner-turn-queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150)), not here.
 
 Attribution
 

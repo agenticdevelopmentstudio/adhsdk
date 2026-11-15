@@ -64,7 +64,7 @@ directive.
 - **suppresses-glyph-when-false**: Given `glyph={false}`, the component MUST NOT render the `↗` glyph (so a leading icon can carry the affordance).
 - **default-deep-link-skin**: The component MUST default to the deep-link grammar — inline layout, a small monospace size that scales with the user's text-size setting, the info-blue token color, no underline, and no line wrapping between the label and glyph. The web class list is in the React/Web Platform Note.
 - **focus-ring**: The component MUST show a visible focus ring, in the accent token color, on keyboard focus only.
-- **mirrors-glyph-rtl**: In a right-to-left layout the component SHOULD mirror the trailing `↗` glyph (or swap it for a start-pointing equivalent). The web implementation does not do this yet (see Compliance).
+- **mirrors-glyph-rtl**: In a right-to-left layout the component SHOULD mirror the trailing `↗` glyph (or swap it for a start-pointing equivalent).
 - **merges-classname**: The component MUST merge any `className` after the base classes via `cn()`, so a consumer MAY restyle it (font, color, gap) without losing the new-tab/rel behavior.
 - **forwards-anchor-props**: The component MUST forward native anchor props (`href`, `onClick`, `title`, `data-*`, …) onto the underlying `<a>`.
 - **safe-attrs-not-overridable**: The component MUST apply `target="_blank"` and `rel="noopener noreferrer"` after spreading `...props`, so a caller-supplied `target` or `rel` prop cannot override the safe new-tab contract.
@@ -81,7 +81,8 @@ glyph={false}      ⤴ GitHub           (leading lucide icon; no trailing arrow;
   color, no underline, and a keyboard-only focus ring in the accent token
   color. The literal web class list is in the React/Web Platform Note.
 - Trailing glyph: a `<span aria-hidden="true">↗</span>` rendered only when
-  `glyph` is truthy (default).
+  `glyph` is truthy (default), mirrored horizontally under a right-to-left
+  layout (**mirrors-glyph-rtl**).
 - Restyle path: `className` is `cn()`-merged last, so a consumer can override
   font (`font-sans`), size, color, and gap — e.g. UserCard's social links use
   `gap-1.5 font-sans text-sm text-apt-text-muted hover:text-apt-text`.
@@ -125,7 +126,7 @@ glyph={false}      ⤴ GitHub           (leading lucide icon; no trailing arrow;
 | T7 | safe-attrs-not-overridable | `<ExternalLink href="https://example.com" target="_self" rel="">PostHog</ExternalLink>` | anchor `target` equals `_blank` and `rel` equals `noopener noreferrer` (the passed-in `target`/`rel` do not win) |
 | T8 | focus-ring | same as T1 | className contains `focus-visible:ring-2` and `focus-visible:ring-apt-gold/40` (web classes) |
 | T9 | default-deep-link-skin | same as T1 | className contains `whitespace-nowrap` and `no-underline` |
-| T10 | mirrors-glyph-rtl | same as T1, rendered under `dir="rtl"` | the trailing glyph is mirrored or replaced by a start-pointing arrow (fails today; see Compliance) |
+| T10 | mirrors-glyph-rtl | same as T1, rendered under `dir="rtl"` | the trailing glyph is mirrored or replaced by a start-pointing arrow |
 ## Edge Cases
 
 - **Missing `href`.** `href` is a forwarded native prop, not required by the
@@ -198,7 +199,7 @@ Not applicable: ExternalLink is a presentational anchor with no lifecycle events
 
 ## Platform Notes
 
-- **React/Web**: File `packages/web/packages/ui/src/components/external-link.tsx`. No `"use client"` directive — it is a stateless anchor that renders in server components. Uses `cn()` utility for class merging and Tailwind tokens for styling. The base classes are `inline-flex items-center gap-1 rounded-sm font-mono text-[11px] whitespace-nowrap text-apt-blue no-underline outline-none focus-visible:ring-2 focus-visible:ring-apt-gold/40`; the fixed `text-[11px]` should become a `rem` size to meet **default-deep-link-skin**. Focus state is `:focus-visible` to avoid persistent outline on mouse click. Consumed by `blocks/user-card.tsx` (social links with `glyph={false}` + lucide icon) and `blocks/stat-card.tsx` (header actions deep link with default skin).
+- **React/Web**: File `packages/web/packages/ui/src/components/external-link.tsx`. No `"use client"` directive — it is a stateless anchor that renders in server components. Uses `cn()` utility for class merging and Tailwind tokens for styling. The base classes are `inline-flex items-center gap-1 rounded-sm font-mono text-[11px] whitespace-nowrap text-apt-blue no-underline outline-none focus-visible:ring-2 focus-visible:ring-apt-gold/40`; the fixed `text-[11px]` should become a `rem` size to meet **default-deep-link-skin**. The glyph span carries `inline-block rtl:-scale-x-100`, so Tailwind v4's `rtl:` variant mirrors it under any `dir="rtl"` ancestor (**mirrors-glyph-rtl**); `inline-block` is needed because a transform does not apply to an inline box. Focus state is `:focus-visible` to avoid persistent outline on mouse click. Consumed by `blocks/user-card.tsx` (social links with `glyph={false}` + lucide icon) and `blocks/stat-card.tsx` (header actions deep link with default skin).
 - **SwiftUI**: Use `Link(destination: URL)` wrapping a `Text` and custom affordance (trailing ↗ glyph). Wrap in an `HStack` to layout the text and glyph side-by-side with consistent spacing. `Link` opens the URL through the `openURL` environment action (`@Environment(\.openURL) var openURL`), which SwiftUI resolves to the platform's default-browser handler rather than the view calling `UIApplication`/`NSWorkspace` directly. Apply the same small-mono info-blue styling (font size 11pt, monospaced font design, `.foregroundStyle` matching the info-blue token). Mark the glyph `.accessibilityHidden(true)` so the accessible name remains just the label text.
 - **Compose**: Use `Text` with `withLink(LinkAnnotation.Url(url))` (or `LocalUriHandler` to open the URL explicitly) so the element carries a proper link role and opens the URL in the default browser, rather than a plain `clickable` modifier with a manual `Intent`. Layout text and trailing ↗ glyph in a `Row` with consistent spacing and apply the small mono info-blue styling (fontSize = 11.sp, fontFamily = FontFamily.Monospace, color matching the info-blue token). Hide the glyph from assistive tech with `Modifier.clearAndSetSemantics {}` (the deprecated `invisibleToUser()` SHOULD NOT be used).
 - **AppKit / UIKit**: On macOS, use `NSButton` with a hyperlink style or `NSTextView` with a clickable `NSAttributedString.Link` attribute; set the link's URL and add a custom trailing ↗ glyph by appending a decorative `NSAttributedString` segment (via `NSAttributedString.Key.foregroundColor` and font traits). On iOS, use `UIButton` with an attributed title containing the label and a trailing glyph, wired to a tap handler that calls `UIApplication.shared.open(url)` in the default browser. `isAccessibilityElement` cannot be set on just one run of an attributed title, so set the button's own `accessibilityLabel` to the label text alone (excluding the glyph) instead. Apply the small-mono info-blue styling (font size 11pt, system mono font, color matching the info-blue token) and ensure keyboard focus shows a visible ring.
@@ -251,10 +252,10 @@ Not applicable: ExternalLink is a presentational anchor with no lifecycle events
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | failed | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
-| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | failed | Internationalization |
+| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | passed | Internationalization |
 | [adc.check.user-safety.safe-defaults](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dd43bec7-e292-559a-81e3-c0cf59156abe) | passed | User Safety |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 The source shows a native `<a>` with an `aria-hidden` decorative glyph and an
 accessible name from `children` (screen-reader-support, semantic-markup); a
@@ -264,12 +265,11 @@ the safest-configuration case `safe-defaults` describes; the fixed
 `text-[11px]` does not scale with the user's text-size setting
 (dynamic-type-support); the `apt-blue`/`apt-gold` token values aren't visible
 from this source so the contrast ratio can't be confirmed (contrast-ratio);
-and nothing in the source mirrors the trailing glyph for RTL layouts
-(rtl-layout-support). `separation-of-concerns` passes: `external-link.tsx`
+and the glyph span's `rtl:-scale-x-100` class mirrors the trailing glyph
+under a `dir="rtl"` ancestor (rtl-layout-support). `separation-of-concerns` passes: `external-link.tsx`
 does nothing but forward props/classes onto a native `<a>` and enforce the
 safe-new-tab attributes, with no logic of its own to entangle with anything
-else. `unit-test-coverage` fails — no test file in the `ui` package exercises
-`ExternalLink`.
+else. `unit-test-coverage` passes: `externalLink.test.tsx` covers T1-T10.
 
 ## Change History
 

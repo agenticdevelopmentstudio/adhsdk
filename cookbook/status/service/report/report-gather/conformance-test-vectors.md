@@ -1,5 +1,5 @@
 
-Vectors are derived from `report-gather.test.ts` in the status-server `test` directory, by test name, plus direct readings of the source where the tests are silent. Vectors 007 and 019 to 027 have no test: they are read from the source and are untested.
+Every vector is covered by a test in `report-gather.test.ts` in the status-server `test` directory; each test title starts with its vector id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

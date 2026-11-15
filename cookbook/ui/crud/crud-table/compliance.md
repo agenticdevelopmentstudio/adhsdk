@@ -8,7 +8,7 @@
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | passed | Accessibility |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `semantic-markup`, `screen-reader-support`, and `keyboard-navigable` rest on the real
 `<table>`/`<thead>`/`<tbody>`/`<th>` markup, the `aria-label="Row actions"` header, and
@@ -22,5 +22,5 @@ is failed because `New`, `Edit`, `Delete`, `Loading…`, `No rows yet.`, and the
 row-count text ("N row"/"N rows") are all literal, unwrapped English strings in
 `CrudTable.tsx`.
 
-`separation-of-concerns` passes because `CrudTable` is presentational: `rows`, `loading`, `error`, `canWrite` and every action callback are props, and fetching, confirmation and permission decisions live in `useCrudResource` and the caller. `unit-test-coverage` is `partial` because `packages/web/packages/crud/src/__tests__/CrudTable.test.tsx` covers `displayColumns`, `cellText`, the loading, empty and error states, the New/Edit/Delete callbacks, and the read-only mode (`drops New and Delete and turns Edit into View when the viewer may not write`), but no test passes `readOnlyNote` or asserts the default note text, and none pins that colors are the theme's token values.
+`separation-of-concerns` passes because `CrudTable` is presentational: `rows`, `loading`, `error`, `canWrite` and every action callback are props, and fetching, confirmation and permission decisions live in `useCrudResource` and the caller. `unit-test-coverage` passes because `packages/web/packages/crud/src/__tests__/CrudTable.test.tsx` has one test per conformance vector (T1-T26), including `readOnlyNote`, the default note, and the token-class check for text colors.
 

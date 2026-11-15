@@ -2,7 +2,7 @@
 id: 1f80f43d-5aa4-42cf-bc3e-fb742662b615
 title: "SemanticPalette"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -219,7 +219,7 @@ Not applicable: the source makes no log calls; every failure mode is a documente
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/SemanticPalette.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/SemanticPalette.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -260,7 +260,7 @@ Not applicable: the source makes no log calls; every failure mode is a documente
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 | [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | performance |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
@@ -272,6 +272,7 @@ Separation of concerns is partial: the file keeps color math in `RGBAColor+Theme
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (SemanticPaletteVectorTests.swift, the 8 untested vectors; 21 of 21 covered with existing suites); unit-test-coverage now passed. Type check not run (NOMODULE). |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Set author and copyright, added depends-on, related and WCAG reference, marked chains-use-derived-parents and uncapped compounding as pending open questions, anchored rationales to declarations, rewrote three requirements as testable, added the accessibility contrast check, marked untested vectors, and split vector 014. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

@@ -107,7 +107,7 @@ A single export ships from `@adh-sdk/ui/components/removable-chip`: the
 | T2 | renders-remove-button, remove-button-named | same as T1 | a `<button type="button">` with `aria-label="Remove x"` |
 | T3 | invokes-onremove-on-click | click the remove button | `onRemove` called once |
 | T4 | stateless-removal | after T3 without consumer re-render | the chip is still in the DOM (removal is the consumer's job) |
-| T5 | applies-badge-variant | `variant="success"` | the `Badge` element carries the same classes as `badgeVariants({ variant: "success" })`, so the test follows Badge's styling instead of copying its class names |
+| T5 | applies-badge-variant | `variant="success"` | the `Badge` element carries the same classes as `badgeVariants({ variant: "success" })` except `inline-flex`, which the chip's own `flex` class replaces, so the test follows Badge's styling instead of copying its class names |
 | T6 | disabled-blocks-remove | `disabled` then click the ✕ | button is `disabled`; `onRemove` NOT called |
 | T7 | remove-icon-decorative | inspect the `X` glyph | the icon carries `aria-hidden` |
 | T8 | remove-button-named, keyboard-operable (Playwright) | query by role `button` name "Remove x", then press Enter/Space while it has focus | the ✕ is found by its accessible name and `onRemove` fires on Enter/Space |
@@ -219,7 +219,7 @@ telemetry belong to the consumer's `onRemove` handler, not the chip.
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 The source names the remove button with `aria-label={removeLabel}` and renders it as a
 native `<button>`, so screen-reader-support and keyboard-navigable pass; both `children`
@@ -227,7 +227,7 @@ and `removeLabel` are caller-supplied props rather than literals, so no-hardcode
 passes. `contrast-ratio` and `dynamic-type-support` are `partial` because the source
 sets only design-token classes (e.g. `text-apt-text-muted`, the badge tone tokens) —
 whether those tokens resolve to WCAG AA contrast or scale with system font size is
-determined outside this file. `RemovableChip` is a `Badge` composed with a remove button, entirely presentation over props with no business logic (separation-of-concerns passed); no test file exercises it (unit-test-coverage failed).
+determined outside this file. `RemovableChip` is a `Badge` composed with a remove button, entirely presentation over props with no business logic (separation-of-concerns passed); `removableChip.test.tsx` covers every vector (unit-test-coverage passed).
 
 ## Change History
 

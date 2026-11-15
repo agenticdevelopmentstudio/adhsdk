@@ -4,7 +4,7 @@
     "id": "9e4aba28-ae2b-4733-b6a5-62e9ad5c7a19",
     "title": "Hook Envelope Builder",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "b910cdb85d180c70",
+  "synced": "a6969b6784a60d09",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

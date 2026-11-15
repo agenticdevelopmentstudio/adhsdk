@@ -4,7 +4,7 @@
     "id": "84c313c7-5204-4955-bca7-46f6c6cd63a8",
     "title": "Tool JSON Schema",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -27,7 +27,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cee0a6ad1ee2d085",
+  "synced": "53b64842f4eb959c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

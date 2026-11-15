@@ -2,7 +2,7 @@
 id: 6e81fe86-b97d-4af9-a45b-0ace8784fbed
 title: "Terminal Output Tracker"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -160,7 +160,7 @@ Not applicable: this code makes no log calls, so command output never reaches a 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalOutputTracker.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalOutputTracker.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -207,12 +207,13 @@ Not applicable: this code makes no log calls, so command output never reaches a 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 
-separation-of-concerns passes: the file holds a snapshot value and a pure position-tracking function; the terminal, its snapshots and the chat transcript live in `TerminalSession` and `TerminalChatSession` in the macOS target. unit-test-coverage is partial: six tests cover the cursor start, the echo, the shown prompt, trimming, the alternate screen and a clear, but none covers `init(fromTopOf:)`, an echo that does not match, a blank first row, a trimmed resume row, a cursor beyond the last line or the whitespace-only send, so vectors 007 to 018 rest on the source alone.
+separation-of-concerns passes: the file holds a snapshot value and a pure position-tracking function; the terminal, its snapshots and the chat transcript live in `TerminalSession` and `TerminalChatSession` in the macOS target. unit-test-coverage passes: `TerminalOutputTrackerTests` (`Tests/AgenticDeveloperHubSDKCoreTests/TerminalOutputTrackerTests.swift`) has a test for each of the twenty vectors.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (TerminalOutputTrackerTests.swift, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Wrote vectors 009 to 018 with concrete snapshots, added vectors 019 and 020, named the whitespace sets, stated that state advances on every non-early read with the clamped row, recorded two limitations as decisions and made the Compose and Web notes value-semantic. |

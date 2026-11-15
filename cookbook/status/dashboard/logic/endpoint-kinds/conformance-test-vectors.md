@@ -1,5 +1,5 @@
 
-No test file sits next to `endpoint-kinds.ts`. Vectors 001 to 009 are traced to the declarations in `endpoint-kinds.ts`. Vectors 010 and 011 are traced to the declaration of `NON_DEPLOY_KINDS` in `deploy-platform/src/engine/classify.ts` and to the assertions in `classify.test.ts` ("deploy-backed kinds need wiring" and "infra kinds do not").
+`endpoint-kinds.test.ts` sits next to `endpoint-kinds.ts` and tests vectors 001 to 007 and 010 to 012; 008 and 009 are compile-time type errors that vitest does not check, so they are skipped. Vectors 001 to 009 are traced to the declarations in `endpoint-kinds.ts`. Vectors 010 and 011 are traced to the declaration of `NON_DEPLOY_KINDS` in `deploy-platform/src/engine/classify.ts` and to the assertions in `classify.test.ts` ("deploy-backed kinds need wiring" and "infra kinds do not").
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

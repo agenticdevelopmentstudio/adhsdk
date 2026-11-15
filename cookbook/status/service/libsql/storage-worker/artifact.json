@@ -4,7 +4,7 @@
     "id": "020cc0f0-04e9-4d03-8796-76027fb1131f",
     "title": "Status Server Storage Worker",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d963106353b040c7",
+  "synced": "5ce1c3a5e3494ead",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

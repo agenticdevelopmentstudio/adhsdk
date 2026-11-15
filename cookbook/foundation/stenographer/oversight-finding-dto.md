@@ -2,7 +2,7 @@
 id: 7d2280c6-ae67-4ecc-9aae-dbee574b1eab
 title: "Oversight Finding DTO"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -154,7 +154,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/OversightFindingDTO.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/OversightFindingDTO.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -178,13 +178,14 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | passed | Privacy and Data |
 
-separation-of-concerns passes: the file declares the value and nothing else; storage, the lifecycle writes, ordering and transport all live in the daemon database, its routes and the HTTP client. unit-test-coverage is partial: `OversightFindingsListSourceTests` constructs the type and asserts the cell mapping, and `StenographerHTTPClientTests` exercises the act reply decode (including the body that does not decode), but no test encodes or decodes a finding directly, so vectors 005, 006, 008 and 010 follow from the synthesized coding and have no test of their own. secure-data-storage passes because the type stores nothing and its transport is XPC or the loopback address.
+separation-of-concerns passes: the file declares the value and nothing else; storage, the lifecycle writes, ordering and transport all live in the daemon database, its routes and the HTTP client. unit-test-coverage passes: `OversightFindingDTOConformanceTests` has one test for each of vectors 001 to 012, including the direct encode and decode ones. secure-data-storage passes because the type stores nothing and its transport is XPC or the loopback address.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (OversightFindingDTOConformanceTests.swift, 12 of 12 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Producer-only rules restated as daemon obligations, delivery routes moved to a link to the daemon spec, vectors 011 (null key) and 012 (full act reply) added, stale DatabaseManager decision and source path dropped, depends-on and related linked. |

@@ -4,7 +4,7 @@
     "id": "d15bba09-4574-4fd1-93a0-f7d2cccd04f2",
     "title": "ThemeStore",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cf19f16d3284604b",
+  "synced": "b2ed4ed9f7af32cb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

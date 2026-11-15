@@ -1,10 +1,10 @@
 
-The only test beside the source that exercises the provider is `AppearanceModeToggle.test.tsx` in the controls package, which wraps a toggle in `ColorModeProvider`; vectors 001 and 002 derive from its behavior and the rest from the source.
+`packages/web/packages/themes/src/__tests__/colorMode.test.tsx` covers every vector below, color-mode-001 to color-mode-019. Vectors 001 and 002 also describe the behavior `AppearanceModeToggle.test.tsx` in the controls package relies on, since it wraps a toggle in `ColorModeProvider`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | color-mode-001 | initial-mode-default, cycle-order | `AppearanceModeToggle.test.tsx` "exposes an aria-label that changes after a click": empty storage, system light, default props; the toggle calls `cycle()` once | `mode` goes `auto` to `dark`; the consumer's rendered label differs before and after |
-| color-mode-002 | context-value-shape, hook-requires-provider | `AppearanceModeToggle.test.tsx` "renders a button with the awt-appearance-mode-toggle class" (the toggle renders inside `ColorModeProvider`); the same consumer rendered with no provider (derived from the source, not tested) | inside: `useColorMode` returns the context value; outside: throws `useColorMode must be used within a <ColorModeProvider>` |
+| color-mode-002 | context-value-shape, hook-requires-provider | `AppearanceModeToggle.test.tsx` "renders a button with the awt-appearance-mode-toggle class" (the toggle renders inside `ColorModeProvider`); the same consumer rendered with no provider | inside: `useColorMode` returns the context value; outside: throws `useColorMode must be used within a <ColorModeProvider>` |
 | color-mode-003 | initial-mode-from-storage, invalid-stored-value-ignored | `localStorage['adh-sdk:color-mode']` is `dark`, then is `purple` | first render mode is `dark`; with `purple` the mode is `auto` |
 | color-mode-004 | initial-mode-from-legacy-key, legacy-key-only-for-default, legacy-key-not-cleaned | only `localStorage['agentic-toolkit:color-mode']` is `light`; once with the default key and once with `storageKey="x"` | default key: mode `light` and `adh-sdk:color-mode` becomes `light`, legacy key untouched; custom key: mode `auto` |
 | color-mode-005 | resolve-auto-from-system, dark-class | mode `auto`, `matchMedia('(prefers-color-scheme: dark)').matches` is true | `resolved` is `dark`, `document.documentElement` has class `dark`, `data-appearance-mode` is `auto` |

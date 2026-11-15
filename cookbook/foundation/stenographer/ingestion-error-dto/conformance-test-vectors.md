@@ -1,5 +1,5 @@
 
-`IngestionErrorLogTests` (database test target) exercises `IngestionErrorLogDTO` through `DaemonDatabase`; no test references `IngestionErrorDTO` or `RetryProgressDTO`, so their vectors are derived from the declarations and doc comments.
+`IngestionErrorLogTests` (database test target) exercises `IngestionErrorLogDTO` through `DaemonDatabase`; `IngestionErrorDTOConformanceTests` (Core test target) exercises `IngestionErrorDTO`, `RetryProgressDTO` and the log row's shape; vector 010 is a compile-time check and is skipped.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -9,7 +9,7 @@
 | ingestion-error-dto-004 | log-status-lost, log-resolved-at | a row with `status: "lost"`, `retryCount: 0`, `lastRetriedAt: nil`, `sqliteCode: nil` | `lastRetriedAt` nil, `sqliteCode` nil, `retryCount` 0 |
 | ingestion-error-dto-005 | log-no-exhausted-flag | encode an `IngestionErrorLogDTO` | JSON has no `exhausted` key |
 | ingestion-error-dto-006 | progress-fields | `RetryProgressDTO(running: true, total: 10, processed: 4, recovered: 3, stillFailing: 1)` | each field reads back |
-| ingestion-error-dto-007 | progress-polling | a progress value with `running` false, `total` 10, `processed` 10 | the poller stops |
+| ingestion-error-dto-007 | progress-polling | a progress value with `running` false, `total` 10, `processed` 10, encoded then decoded | `running` reads false and `processed` equals `total`: the stop signal a poller reads (the poller is UI code, not tested here) |
 | ingestion-error-dto-008 | error-last-retried | encode an `IngestionErrorDTO` with `lastRetriedAt` nil | the synthesized encoding omits the key; decode gives nil |
 | ingestion-error-dto-009 | no-validation | `IngestionErrorLogDTO` with `status: "mystery"` | constructs; `status` reads `mystery` |
 | ingestion-error-dto-010 | log-no-defaults | construct an `IngestionErrorLogDTO` | every argument must be written, nil included (a compile-time check, not a runtime vector) |

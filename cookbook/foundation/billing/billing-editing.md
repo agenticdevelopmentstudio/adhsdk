@@ -2,11 +2,11 @@
 id: 359a896f-ecc0-45d7-991a-b4fbc24c9511
 title: "Billing Editing"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -122,7 +122,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingEditing.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingEditing.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -135,12 +135,13 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: edits, repricing and titles are pure helpers; money arithmetic and rate parsing are the shared money utilities and the daemon owns the stamps. unit-test-coverage is partial: `BillingDTOEditingTests` covers `replacing`, clearing, `repriced` and the record titles and labels, but no test asserts the rate-text parsing range.
+separation-of-concerns passes: edits, repricing and titles are pure helpers; money arithmetic and rate parsing are the shared money utilities and the daemon owns the stamps. unit-test-coverage passes: `BillingDTOEditingTests` covers `replacing`, clearing, `repriced`, the record titles and labels, and (vectors 005 to 007) the rate-text parsing range.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingDTOEditingTests.swift, 9 of 9 vectors; rate-parse 005-007 new); unit-test-coverage now passed. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

@@ -16,5 +16,4 @@
 | profile-info-button-013 | host-placement | Render the button inside `.persona-chat` (`overflow: hidden`) | The upper half of the circle is clipped, which is the failure the host must avoid. |
 | profile-info-button-014 | link-destination | Render with `profileUrl=""` | An anchor is rendered with an empty `href`; the component does not hide itself (the host guard is what omits it). |
 
-Only 001 to 004 are asserted by the existing test; 005 to 014 are derived from the source and stylesheet. `highlight-transition`, `no-decoration` and `stacking` have no vector because they are visual-only rules checked by inspection of the stylesheet.
-
+Vectors 001 to 007, 012 and 014 are asserted in `ProfileInfoButton.test.tsx`; 008 to 011 and 013 are `it.skip` there because jsdom cannot exercise stylesheet layout, `var()` fallbacks, `:hover`/`:focus-visible` or overflow clipping. `highlight-transition`, `no-decoration` and `stacking` have no vector because they are visual-only rules checked by inspection of the stylesheet.

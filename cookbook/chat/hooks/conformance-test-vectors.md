@@ -84,8 +84,4 @@ to `useCaretGaze.test.ts`; 032–034 to `useMouseGaze.test.ts`; 035–036 to
 file's `useTransientEcho` block; 050–051 to `useScrollToBottom.test.tsx`;
 052–059 to `useChatSizing.test.ts`; 060–064 to
 `useInputFocusReclaim.test.ts`; 065–070 to `useConnectRitual.test.ts`.
-Vectors 071–072 have no backing test file — `useAllImagesLoaded` is the one
-hook among these thirteen without one — so they are derived directly from
-reading `useAllImagesLoaded.ts` itself, per **images-loaded-empty-set** and
-**images-loaded-tracking**/**images-loaded-return-value** above.
-
+Vectors 071–072 are traced to `useAllImagesLoaded.test.ts` and 073 to `useInputFocusReclaim.test.ts`.

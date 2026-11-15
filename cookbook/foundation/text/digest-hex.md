@@ -2,7 +2,7 @@
 id: 81fb66c5-e31d-4817-ba36-5ccace191e8f
 title: "Digest Hex"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -122,7 +122,7 @@ Not applicable: The source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Text/DigestHex.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Text/DigestHex.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -146,13 +146,14 @@ Not applicable: The source calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: the extension only renders bytes as text; hashing and storing the string belong to its callers. unit-test-coverage is partial: `DigestHexTests` asserts the SHA-256 of `abc`, which exercises lowercase letters and the byte order, but nothing asserts the leading zero of a byte below 0x10, the empty-data digest, or a digest type other than SHA-256.
+separation-of-concerns passes: the extension only renders bytes as text; hashing and storing the string belong to its callers. unit-test-coverage passes: `DigestHexTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Text/DigestHexTests.swift`) has a test for each of the seven vectors, covering the leading zero, the empty digest, SHA-1, MD5 and SHA-512.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (DigestHexTests.swift, 7 of 7 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Described the guarantee generally instead of naming one consumer, gave real rationales, moved empty-digest to Edge Cases, dropped the String(format:) mechanism and the caller-side requirement, replaced vector 005 with SHA-512 of abc and merged the Apple notes. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

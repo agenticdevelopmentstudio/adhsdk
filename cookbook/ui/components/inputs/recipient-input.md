@@ -2,7 +2,7 @@
 id: d9ad192e-a642-46a2-8b25-b8aac9d9f441
 title: "RecipientInput"
 type: ingredient
-version: 1.3.2
+version: 2.0.0
 status: review
 language: en
 created: 2026-06-26
@@ -213,7 +213,7 @@ Not applicable: RecipientInput is a presentational component that does not emit 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/recipient-input.tsx` | confirmed (1.3.2) |
+| web | `packages/web/packages/ui/src/components/recipient-input.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -261,15 +261,15 @@ Not applicable: RecipientInput is a presentational component that does not emit 
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
 | [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | partial | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on `recipient-input.tsx`: `role="group"`/`aria-label`/`aria-invalid` plus native `<button>` remove controls (keyboard-navigable and semantic-markup passed; screen-reader-support partial because no live region announces a chip being added, rejected or removed); color-only semantic tokens whose resolved contrast isn't visible from this file, and a remove button with no explicit hit-area sizing (contrast-ratio, touch-target-size partial); regex format validation with no injection-specific handling beyond React's default text escaping (input-sanitization partial); a fully consumer-controlled `value` prop with no internal persistence or logging (data-minimization, no-pii-in-logs passed); five strings (`Remove {value}` and the four placeholder/empty-state strings) hardcoded directly in the component (string-externalization, no-hardcoded-strings failed); an unfiltered native `<input>` accepting any Unicode text (unicode-support passed); and default flexbox wrapping with no explicit RTL handling or testing (rtl-layout-support partial). The `EMAIL_RE`/`PHONE_RE` validation, comma-tokenizing, and case-insensitive dedup logic all live inline in the component body rather than a separate module (separation-of-concerns partial); `recipientInput.test.tsx` directly exercises tokenizing on Enter and comma, dedup, Backspace removal, per-chip removal, and invalid-email flagging (unit-test-coverage partial: no test covers paste batching, phone validation, text kind, `inputMode`, separate mode, `readOnly` or `disabled`).
+Statuses rest on `recipient-input.tsx`: `role="group"`/`aria-label`/`aria-invalid` plus native `<button>` remove controls (keyboard-navigable and semantic-markup passed; screen-reader-support partial because no live region announces a chip being added, rejected or removed); color-only semantic tokens whose resolved contrast isn't visible from this file, and a remove button with no explicit hit-area sizing (contrast-ratio, touch-target-size partial); regex format validation with no injection-specific handling beyond React's default text escaping (input-sanitization partial); a fully consumer-controlled `value` prop with no internal persistence or logging (data-minimization, no-pii-in-logs passed); five strings (`Remove {value}` and the four placeholder/empty-state strings) hardcoded directly in the component (string-externalization, no-hardcoded-strings failed); an unfiltered native `<input>` accepting any Unicode text (unicode-support passed); and default flexbox wrapping with no explicit RTL handling or testing (rtl-layout-support partial). The `EMAIL_RE`/`PHONE_RE` validation, comma-tokenizing, and case-insensitive dedup logic all live inline in the component body rather than a separate module (separation-of-concerns partial); `recipientInput.test.tsx` covers T1 to T28 with passing tests, T28 in both fused and separate mode (`unit-test-coverage` passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.3.2 | 2026-11-14 | Mike Fullerton | Aligned disabled and onChange wording with the source, added depends-on, a phone-pattern decision, bare localization keys, exact T2/T22 vectors and five new vectors, and downgraded unit-test-coverage and screen-reader-support to partial. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Fused mode now defaults its placeholder from kind, as configuration and T28 say; T28 tested in both modes and unit-test-coverage passes. |
 | 1.3.1 | 2026-09-25 | Mike Fullerton | Fixed locale note: source uses invariant lowercase; ports must match it, not go locale-aware. Added best-practices compliance rows (separation-of-concerns: partial, unit-test-coverage: passed). |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename all requirements to subject-only kebab-case and fix "MUST not" to "MUST NOT"; lead Platform Notes native bullets with each platform's real token control and cut each bullet to one real layout choice; clarify that separate-mode chips stay removable unless `readOnly` is set and that inline-input rules apply to the separate `Input`; add paste/duplicate-batch, input-mode-text, valid-email, readOnly/disabled onChange, duplicate-chip-removal, and keyboard-removal test vectors; document the phone-validation punctuation-only looseness, the disabled-state keyboard-removal caveat, and that a rejected duplicate still clears the input; rewrite Localization as linked `#localization/<key>` entries and Accessibility Options to state the real Differentiate Without Color gap instead of "not applicable"; reformat Design Decisions into Decision/Rationale/Approved triples, note the locale-sensitivity of the email dedup casing transform, and point both layout modes at the shared `fieldShellClass` token instead of duplicated class strings; rewrite Appearance/States as semantic tokens with the Tailwind classes moved into the React/Web platform note; rewrite Compliance as linked checks under canonical categories. |
 | 1.2.0 | 2026-09-22 | Mike Fullerton | Remove "Not applicable" phrasing from Platform Notes non-web bullets; sharpen native platform guidance; relabel Windows bullet to `**WinUI 3**`. |

@@ -2,7 +2,7 @@
 id: 704d4ae9-e344-44d4-b19c-eadfec082077
 title: "Status Line Capture"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -39,7 +39,7 @@ approved-date: ""
 
 The render returns as soon as its line is printed; the feed is handed to a detached copy of the helper run with `--capture-only`. The source comment gives the reason: the claudehelpers dispatcher kills a renderer still running after 3 seconds, a feed can take up to 17 (three `git` watchdogs and the post), and waiting for it threw the line away and killed the post with it. A detached feed is out of the dispatcher's reach and bounded by its own 20 second deadline.
 
-The toolkit core links no daemon client, so the transport is injected: `post` sends one hook event and says whether the daemon accepted it. It collaborates with [DetachedProcess](cookbook:866770e9-cc76-452f-8216-ee98a8fa1390) (and its `FeedLock`), [GitContextFingerprint](cookbook:e75d7d1e-2a25-452d-9c26-ea5f7cd7fa6d), `ProcessEnv`, [HookCaptureCommand](cookbook:826153e3-cae8-4917-a1d3-c298a54ab558), [HookDropWriter](cookbook:f3326f3a-cccd-4ac5-8dc1-84d660ed4581) and [ClaudeHookConfiguration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871).
+The toolkit core links no daemon client, so the transport is injected: `post` sends one hook event and says whether the daemon accepted it. It collaborates with DetachedProcess ([adhsdk.ingredient.foundation.claude-hooks.detached-process](cookbook:866770e9-cc76-452f-8216-ee98a8fa1390)) (and its `FeedLock`), GitContextFingerprint ([adhsdk.ingredient.foundation.claude-hooks.git-context-fingerprint](cookbook:e75d7d1e-2a25-452d-9c26-ea5f7cd7fa6d)), `ProcessEnv`, HookCaptureCommand ([adhsdk.ingredient.foundation.claude-hooks.hook-capture-command](cookbook:826153e3-cae8-4917-a1d3-c298a54ab558)), HookDropWriter ([adhsdk.ingredient.foundation.claude-hooks.hook-drop-writer](cookbook:f3326f3a-cccd-4ac5-8dc1-84d660ed4581)) and ClaudeHookConfiguration ([adhsdk.ingredient.foundation.sessions.claude-hook-configuration](cookbook:9eb46f78-0ceb-455f-9584-b6b43ddf0871)).
 
 ## Behavioral Requirements
 
@@ -235,11 +235,11 @@ Not applicable: the routine makes no log call; its failure paths are silent by d
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/StatusLineCapture.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/StatusLineCapture.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/DetachedProcessTests.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/DetachedProcessTests.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -302,11 +302,12 @@ Not applicable: the routine makes no log call; its failure paths are silent by d
 | [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | performance |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | partial | security |
 
-Separation of concerns is passed: transport, account lookups and rendering are injected, and the process spawning and locking sit in their own types. Unit-test coverage is partial: tests cover `feed`, `run` in both modes, `parentPID`, `FeedLock` and `DetachedProcess`, but none calls `feedOnce`, `detachFeed` or `injected`, so vectors `capture-022` to `capture-031` have no test yet. Graceful degradation is passed because a refused post becomes a drop file, a missing lock file becomes a no-op, a failed detach becomes an in-process feed and `--capture-only` always exits 0. Timeout handling is passed because the whole feed is bounded by a 20 second deadline and each step has its own. Main-thread freedom is passed because the feed runs on a global queue and the render returns before a detached feed starts. Token lifecycle is partial: the token is recovered per invocation and never written to a file, but it travels through the detached feed's environment, and the source states no limit on how long that process lives beyond the 20 second deadline.
+Separation of concerns is passed: transport, account lookups and rendering are injected, and the process spawning and locking sit in their own types. Unit-test coverage is partial: `HookCaptureTests`, `DetachedProcessTests` and `StatusLineCaptureConformanceTests.swift` cover 26 of 31 vectors. Skipped: capture-018 and capture-028 (need more than the 20 second `feedDeadline` of real time), capture-025 (the detach-succeeds branch needs the test process to be the configured helper binary) and capture-029 (needs a live 17-deep process chain and a count of process-table reads) and capture-022 (the test runner cannot read the environment of a child it spawned, so a walked token cannot be planted; the test skips itself at run time). Vectors that depend on the token reaching the account lookup skip themselves when the test process's own ancestry already holds an OAuth token. Graceful degradation is passed because a refused post becomes a drop file, a missing lock file becomes a no-op, a failed detach becomes an in-process feed and `--capture-only` always exits 0. Timeout handling is passed because the whole feed is bounded by a 20 second deadline and each step has its own. Main-thread freedom is passed because the feed runs on a global queue and the render returns before a detached feed starts. Token lifecycle is partial: the token is recovered per invocation and never written to a file, but it travels through the detached feed's environment, and the source states no limit on how long that process lives beyond the 20 second deadline.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (StatusLineCaptureConformanceTests.swift, 27 of 31 vectors); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved source paths out of references, linked dependencies, moved the deadline rationale to Design Decisions, stated the accepted lock overlap, added ten vectors and split capture-017, tabled the tunables, and removed drafting residue and the WinUI mixed mechanism. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

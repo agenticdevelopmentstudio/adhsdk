@@ -181,7 +181,7 @@ value = 100      █████████████████████
 | T7 | indicator-class-tints-fill | UI: `value={100} indicatorClassName="bg-apt-green"` | fill element carries `bg-apt-green` and NOT `bg-apt-gold` (`cn()` runs `tailwind-merge`, which drops the conflicting `bg-*` utility) |
 | T8 | forwards-track-props, requires-accessible-name | UI: `aria-label="Sync" id="p1"` | track element carries `aria-label="Sync"` and `id="p1"` |
 | T9 | honors-shared-reduce-motion | UI: render `<Progress value={35} />` under `html[data-reduce-motion="on"]` | computed `transition-duration` on the indicator resolves to the reduce-motion override duration from `accessibility.css`, superseding the nominal `calc(300ms*var(--apt-anim-scale,1))` duration |
-| T10 | clamps-below-zero, clamps-above-hundred (documents a known defect: `NaN` escapes both; see **non-finite-value-handling** under Edge Cases) | UI: `value={NaN}` | `aria-valuenow="NaN"`; transform `translateX(-NaN%)` — `Math.min`/`Math.max` return `NaN` when either operand is `NaN`, so this one non-finite value passes through unclamped |
+| T10 | clamps-below-zero, clamps-above-hundred (documents a known defect: `NaN` escapes both; see **non-finite-value-handling** under Edge Cases) | UI: `value={NaN}` | `aria-valuenow="NaN"`; the `translateX(-NaN%)` transform is an invalid declaration and is not applied (inline `transform` stays empty), leaving the fill unshifted at full width — `Math.min`/`Math.max` return `NaN` when either operand is `NaN`, so this one non-finite value passes through unclamped |
 | T11 | pairs-tint-with-text-status | UI: `value={100} indicatorClassName="bg-apt-green" aria-valuetext="Complete"` | fill element carries `bg-apt-green`; track element carries `aria-valuetext="Complete"`, conveying the status alongside the color tint rather than through color alone |
 | T12 | clamps-above-hundred (see **non-finite-value-handling** under Edge Cases) | UI: `value={Infinity}` | `aria-valuenow="100"`; transform `translateX(-0%)` — identical to T5; `Math.min`/`Math.max` treat `Infinity` as an ordinary large number |
 | T13 | clamps-below-zero (see **non-finite-value-handling** under Edge Cases) | UI: `value={-Infinity}` | `aria-valuenow="0"`; transform `translateX(-100%)` — identical to T4 |
@@ -348,11 +348,7 @@ without a variant explosion.
 `separation-of-concerns` passes for both components: `progress.tsx` (UI) and
 `Progress.tsx` (Controls) each take only display props (`value`/`max` or
 `indeterminate`) and render markup, with no data fetching or business logic.
-`unit-test-coverage` is `partial`: the Controls `Progress` is exercised
-directly (`user-settings`'s component test suite renders it determinate and
-indeterminate), but no test in the `ui` package renders `progress.tsx`
-directly — the only test importing from `blocks/progress-modal` exercises a
-different component (`ProgressModal`), not this one.
+`unit-test-coverage` is `partial`: both components are now rendered directly (`progress.test.tsx` in `ui` covers T1-T8 and T10-T13; `Progress.test.tsx` in `controls` covers T14-T20), 19 of 20 vectors. T9 is skipped: the reduce-motion override comes from `accessibility.css`'s cascade, which jsdom does not load or resolve.
 
 `semantic-markup` is `partial`: the UI bar passes, but the Controls bar's `label` is not associated with its `progressbar` and a consumer cannot name it. `semantic-markup` and `reduced-motion` rest on `progress.tsx` (UI): the
 `role="progressbar"` + `aria-valuemin`/`aria-valuemax`/`aria-valuenow` attributes, and

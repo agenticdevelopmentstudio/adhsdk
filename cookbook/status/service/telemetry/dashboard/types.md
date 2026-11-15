@@ -2,7 +2,7 @@
 id: f06a7f7a-1b36-4dfc-a17d-71d20d576155
 title: "Dashboard Wire Types"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -145,7 +145,7 @@ Not applicable — this is a set of data type declarations, not a visual compone
 | dash-types-014 | no-behavior, export-range-constant, export-view-constants | List the runtime (value) exports of the module | Exactly `ANALYTICS_RANGES`, `DIMENSIONS`, `VERCEL_BREAKDOWNS` and `VITALS`; nothing else exists at runtime |
 | dash-types-015 | series-length | A `TrafficSection` for `"24h"` with traffic in only one hour | `buckets` has 25 entries; `pageviews`, `sessions` and each `sites[].series` have 25 values, the quiet hours being 0 |
 | dash-types-016 | vercel-project-incomplete | A project whose `paths` breakdown call fails while its pageview count succeeds | `incomplete` true; `pageviews` still the whole count; `paths` short or empty |
-| dash-types-017 | vercel-failed-count | Two enabled projects, one of whose counts cannot be read | `failed` is 1; `totals` and the roster cover only the readable project |
+| dash-types-017 | vercel-failed-count | Two enabled projects, one of whose counts cannot be read | `failed` is 1; `totals` cover only the readable project, and the unreadable project's roster entry has `pageviews` and `visitors` null |
 | dash-types-018 | error-issue-active | Issues at levels `error`, `warning` and `null`, all seen 1 hour ago, then one `error` issue last seen 48 hours ago | Only the first `error` issue is `active`; with the error feed frozen, the 48-hour-old `error` issue is `active` too |
 | dash-types-019 | issues-by-type | Three unresolved issues: two of type `TypeError` (4 and 6 events), one of type `SyntaxError` (1 event) | `summary.byType` holds `{ name: "TypeError", issues: 2, events: 10 }` and `{ name: "SyntaxError", issues: 1, events: 1 }` |
 | dash-types-020 | site-error-detail-truncated | More error rows than the row cap | `truncated` true; the rarest rows are absent |
@@ -209,11 +209,11 @@ Not applicable: the source makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/dashboard/types.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/telemetry/dashboard/types.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/status-web/src/telemetry/dashboard-types-parity.test.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-web/src/telemetry/dashboard-types-parity.test.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -246,14 +246,15 @@ Not applicable: the source makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | partial | access-patterns |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | internationalization |
 
-Separation of concerns passes: the file declares shapes and re-exports and holds no logic, with building in `dashboard-set.ts` and derivation in `views.ts`. Unit-test coverage is partial: `dashboard-types-parity.test.ts` checks the constants and the type agreement of five response types, but no test asserts the runtime shape of a built response field by field. API design conventions are partial: the endpoints share one section envelope and ISO strings for times, but the file records no version field and relies on the hand-kept client mirror to track changes. No user-facing strings exist; the identifiers are machine names.
+Separation of concerns passes: the file declares shapes and re-exports and holds no logic, with building in `dashboard-set.ts` and derivation in `views.ts`. Unit-test coverage passes: `dashboard-types-parity.test.ts` checks the constants, the type agreement of five response types and the runtime exports, and `telemetry-dashboard-types.test.ts` builds the responses and sections and checks their shapes (vectors 004 to 021). API design conventions are partial: the endpoints share one section envelope and ISO strings for times, but the file records no version field and relies on the hand-kept client mirror to track changes. No user-facing strings exist; the identifiers are machine names.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (dashboard-types-parity.test.ts, telemetry-dashboard-types.test.ts, 21 of 21 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Corrected the value re-export count to four, added series-length and vectors for the untested requirements, pinned numeric types and timestamp formats in platform notes, rewrote design rationales as reasons, and linked the sectioned-dashboard recipe. |

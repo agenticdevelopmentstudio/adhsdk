@@ -2,7 +2,7 @@
 id: 7fd507a8-73a6-48f0-83c8-36789f3c9be4
 title: "Daemon Health Report"
 type: ingredient
-version: 1.0.1
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -120,13 +120,13 @@ Not applicable — this is a data model and a network probe, not a visual compon
 | daemon-health-report-023 | strategy-memberwise-default | `DaemonStrategyReport(name: "t", kind: "timing", workUnits: [])` | `children == []` |
 | daemon-health-report-024 | children-recursive | A composite strategy with one child that itself has one child; a leaf strategy | The composite's `children` holds the child, whose `children` holds the grandchild; the leaf's `children` is empty |
 | daemon-health-report-025 | status-opaque | A well-formed body whose `status` is `"degraded"` | Decodes; `status == "degraded"` |
-| daemon-health-report-026 | decode-iso8601, decode-nil-on-mismatch | A well-formed body whose `nextActivation` is `"2026-01-01T00:00:00.500Z"` | `decode` returns `nil` for the whole report |
+| daemon-health-report-026 | decode-iso8601, decode-nil-on-mismatch | A well-formed body whose `nextActivation` is the number `1767225600` rather than an ISO-8601 string | `decode` returns `nil` for the whole report |
 | daemon-health-report-027 | probe-url | `baseURL` `http://127.0.0.1:9000/` and, separately, `http://127.0.0.1:9000/api` | The requests are GETs to `http://127.0.0.1:9000/health` and `http://127.0.0.1:9000/api/health` |
 ## Edge Cases
 
 - **Null and empty input**: An empty `Data` passed to `decode` MUST return `nil`. An empty `workUnits` array is valid and decodes as an empty array. A null `nextActivation` or `lastMessage` decodes as `nil`.
 - **Malformed input**: Any JSON that does not match the schema, including a missing required key, a wrong type, or an unknown `state` value, MUST yield `nil` from `decode`; the decoder never returns a partially filled report.
-- **Date format**: A `nextActivation` that is not an ISO-8601 date string (for example one with fractional seconds, which the `.iso8601` strategy does not parse, or a numeric timestamp) fails decoding of the whole report, so `decode` returns `nil`.
+- **Date format**: A `nextActivation` that is not an ISO-8601 date string (for example a numeric timestamp; whether fractional seconds parse is up to the OS release's `.iso8601` strategy, and macOS 26 accepts them) fails decoding of the whole report, so `decode` returns `nil`.
 - **Boundary values**: `uptimeSeconds` and `consecutiveFailures` are not range-checked; negative or very large values pass through unchanged.
 - **Deep or wide trees**: `first(ofKind:)` recurses without a depth limit, and a tree is bounded only by what the daemon sends.
 - **Unreachable server**: A refused connection, DNS failure or lost connectivity MUST make the probe closure return `nil`; the closure does not distinguish those causes from one another or from a non-200 status.
@@ -190,7 +190,7 @@ Not applicable: The source calls no logging API; failures are returned as `nil` 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/DaemonHealth/DaemonHealthReport.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/DaemonHealth/DaemonHealthReport.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -234,11 +234,13 @@ Not applicable: The source calls no logging API; failures are returned as `nil` 
 | [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
-`separation-of-concerns` passes because the file only models, decodes and fetches the health body; it holds no polling schedule, rendering or alerting, which belong to the menu bar app. `unit-test-coverage` is partial: the `DaemonHealthReportTests` suite in `AgenticDeveloperHubSDKMenuBarTests/MenuSectionTests.swift` covers decoding a full wire body and a body in another schema, and the menu section tests build the types, but `DaemonHealthProbe.http`, the unknown-state failure, the missing-key failures and `first(ofKind:)` ordering have no direct test. `timeout-configuration` passes because the probe takes a `timeout` parameter with a 2 second default and applies it to the request. `graceful-degradation` passes because every probe failure and every decode mismatch returns `nil` rather than throwing, so a client keeps running when the daemon is down or answers in another shape.
+`separation-of-concerns` passes because the file only models, decodes and fetches the health body; it holds no polling schedule, rendering or alerting, which belong to the menu bar app. `unit-test-coverage` is partial: 25 of 27 vectors have a test. `DaemonHealthReportConformanceTests.swift` (Core tests) covers every vector except 001 and 002, which the `DaemonHealthReportTests` suite in `AgenticDeveloperHubSDKMenuBarTests/MenuSectionTests.swift` covers. It runs the probe against a loopback HTTP responder. Skipped: daemon-health-report-015 (the 2 second idle timeout needs a real wait) and daemon-health-report-021 (a body trickled for several real seconds). `timeout-configuration` passes because the probe takes a `timeout` parameter with a 2 second default and applies it to the request. `graceful-degradation` passes because every probe failure and every decode mismatch returns `nil` rather than throwing, so a client keeps running when the daemon is down or answers in another shape.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Vectors no longer depend on Foundation accepting or rejecting a trailing comma or fractional-second dates |
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (DaemonHealthReportConformanceTests.swift, 25 of 27 vectors); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Restated the probe timeout as an idle timeout with a slow-server vector, added the stenographer-http-client link and related entry, merged the optional-field requirement into workunit-fields, added vectors for the uncovered requirements and trailing-slash base URLs, and corrected the timeout and response handling in the Compose, React and WinUI notes. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

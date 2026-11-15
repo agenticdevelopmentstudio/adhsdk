@@ -1,5 +1,5 @@
 
-Vectors 1 to 13 are assertions of `runtime-errors.test.ts` (test names in brackets); 14 to 26 are read from the source and have no test yet. Constant NOW is 2026-11-06T12:00:00Z; PROJECTS maps `prj_site` to name `site-production`, domain `site.example.com`.
+Every vector is a test in `runtime-errors.test.ts`; the one named `runtime-errors-NNN ...` in the final `conformance vectors` block covers it, and vectors 1 to 13 also name the older test that asserts the same thing (in brackets). Constant NOW is 2026-11-06T12:00:00Z; PROJECTS maps `prj_site` to name `site-production`, domain `site.example.com`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

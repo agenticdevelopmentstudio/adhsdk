@@ -21,7 +21,8 @@ const entryA = entry('1', 'alice', 'approved', '2026-01-02')
 const entryB = entry('2', 'bob', 'rejected', '2026-02-03')
 
 function sections(container: HTMLElement) {
-  const [notesSec, historySec] = Array.from(container.querySelectorAll('section')) as HTMLElement[]
+  const [notesSec, historySec] = Array.from(container.querySelectorAll('section'))
+  if (!notesSec || !historySec) throw new Error('expected a notes section and a history section')
   return { notesSec, historySec }
 }
 
@@ -73,10 +74,10 @@ describe('NotesAndHistory conformance', () => {
     const { notesSec } = sections(container)
     const items = within(notesSec).getAllByRole('listitem')
     expect(items).toHaveLength(2)
-    expect(items[0].children[0].textContent).toBe('First note')
-    expect(items[0].children[1].textContent).toBe('alice · 2026-01-02')
-    expect(items[1].children[0].textContent).toBe('Second note')
-    expect(items[1].children[1].textContent).toBe('bob · 2026-02-03')
+    expect(items[0]!.children[0]!.textContent).toBe('First note')
+    expect(items[0]!.children[1]!.textContent).toBe('alice · 2026-01-02')
+    expect(items[1]!.children[0]!.textContent).toBe('Second note')
+    expect(items[1]!.children[1]!.textContent).toBe('bob · 2026-02-03')
   })
 
   it('notes-and-history-007: history renders in source order as "timestamp — actor action"', () => {
@@ -84,8 +85,8 @@ describe('NotesAndHistory conformance', () => {
     const { historySec } = sections(container)
     const items = within(historySec).getAllByRole('listitem')
     expect(items).toHaveLength(2)
-    expect(items[0].textContent).toBe('2026-01-02 — alice approved')
-    expect(items[1].textContent).toBe('2026-02-03 — bob rejected')
+    expect(items[0]!.textContent).toBe('2026-01-02 — alice approved')
+    expect(items[1]!.textContent).toBe('2026-02-03 — bob rejected')
   })
 
   it('notes-and-history-008: never touches network primitives on render or re-render', () => {

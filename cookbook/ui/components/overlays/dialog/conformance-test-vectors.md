@@ -1,7 +1,7 @@
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | centered-modal | Open the dialog with `<DialogTrigger>` | Popup carries `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2` and the backdrop carries `fixed inset-0 bg-black/30 backdrop-blur-sm`; the popup's bounding box is centered in the viewport |
+| T1 | centered-modal | Open the dialog with `<DialogTrigger>` | Popup carries `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2` and the backdrop carries `fixed inset-0 bg-black/30 backdrop-blur-sm` (the classes center the popup; jsdom does no layout, so the bounding box is not measured) |
 | T2 | backdrop-dismissal-disabled (default) | Click the backdrop area while dialog is open | Dialog remains open |
 | T3 | escape-closes (default) | Press Escape key while dialog is open and focused | Dialog closes |
 | T4 | close-affordance (default) | Render `<DialogContent>` without `showClose` prop | Close button (×) is rendered in top-right corner |

@@ -2,7 +2,7 @@
 id: 703b9227-1bed-46ae-91f8-353c5908883d
 title: "Summarize Reply DTO"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -136,7 +136,7 @@ Not applicable: the type calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummarizeReplyDTO.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummarizeReplyDTO.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -164,13 +164,13 @@ Not applicable: the type calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only holds a reply; building it, sending it and displaying it belong to other types. `unit-test-coverage` fails because no test references `SummarizeReplyDTO`; `SummarizeReplyMappingTests` covers `StenographerSummarizing`'s mapping of `SummarizeDaemonFailure`, not this type's fields, initializer defaults or coding.
-
+`separation-of-concerns` passes because the type only holds a reply; building it, sending it and displaying it belong to other types. `unit-test-coverage` passes: `SummarizeReplyDTOTests` covers all nine vectors (initializer shapes, equality, default and wire coding, decoding).
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (SummarizeReplyDTOTests.swift, 9 of 9 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Moved consumer rules out of the requirements into Overview guidance, recorded the both-nil and both-set tolerance as a decision, added a wire-coders requirement, linked the wire and HTTP client specs, and shortened the summary. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |

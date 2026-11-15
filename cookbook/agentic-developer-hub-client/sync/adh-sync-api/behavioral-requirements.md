@@ -2,9 +2,12 @@
 ### Initialization
 
 - **default-base-url**: `ADHSyncAPI.init` MUST default `baseURL` to
-  `DaemonContract.backendURL` when the caller supplies none. The other two
-  initializer defaults, `session` and the required `credentials`, are listed in
-  Configuration.
+  `DaemonContract.backendURL` when the caller supplies none.
+- **default-session**: `ADHSyncAPI.init` MUST default `session` to
+  `URLSession.shared` when the caller supplies none.
+- **credentials-conformer-required**: `ADHSyncAPI.init` MUST require a
+  `CredentialProvider` conformer for `credentials`; this parameter has no
+  default value.
 - **sendable-value-type**: `ADHSyncAPI` MUST be declared `Sendable`. It is a
   `struct` with three `let` stored properties (`baseURL: URL`,
   `credentials: any CredentialProvider`, `session: URLSession`), so an

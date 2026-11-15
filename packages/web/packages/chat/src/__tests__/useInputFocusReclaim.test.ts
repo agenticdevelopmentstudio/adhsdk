@@ -157,4 +157,13 @@ describe('useInputFocusReclaim', () => {
     })
     expect(document.activeElement).not.toBe(input)
   })
+
+  it('chat-coordinator-hooks-073 focuses nothing and does not throw when no element matches the selector', () => {
+    const { ref } = mount()
+    const before = document.activeElement
+    expect(() => {
+      renderHook(() => useInputFocusReclaim(ref, true, '.no-such-input'))
+    }).not.toThrow()
+    expect(document.activeElement).toBe(before)
+  })
 })

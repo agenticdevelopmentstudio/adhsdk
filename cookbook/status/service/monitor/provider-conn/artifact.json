@@ -4,11 +4,11 @@
     "id": "4aad9d0a-4984-4021-ad1f-d8aa6a15b066",
     "title": "Status Server Monitor Provider Connection",
     "type": "ingredient",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -46,7 +46,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "40b76cc642c518ea",
+  "synced": "51b22bd2bfee18b2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

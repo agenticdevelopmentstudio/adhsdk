@@ -1,5 +1,5 @@
 
-Vectors 001 to 005 are the cases asserted in `PartnerChatSessionTests` (named in the Input column); the rest are derived from the `PartnerChatSession` source.
+Vectors 001 to 005 are the cases asserted in `PartnerChatSessionTests` (named in the Input column); vectors 006 onward are derived from the `PartnerChatSession` source and are asserted by tests whose display names carry the vector id, except 022, which needs a Thread Sanitizer run.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

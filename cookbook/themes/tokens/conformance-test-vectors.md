@@ -1,5 +1,5 @@
 
-No test sits beside `tokens.ts`. The themes package tests (`appearanceScope.test.ts`, `AppearanceScope.test.tsx`, `buildScopedCss.test.ts`, `clearAppearance.test.ts`, `darkAlwaysThemes.test.ts`, `DocumentLoadScript.test.tsx`, `rescued-themes.test.ts`, `ThemeStyle.test.tsx`) do not target these functions, so the vectors below are derived from the regular expressions in the source and are the tests a port should write.
+`packages/web/packages/themes/src/__tests__/tokens.test.ts` covers every vector below, tokens-001 to tokens-022, against the regular expressions in `tokens.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

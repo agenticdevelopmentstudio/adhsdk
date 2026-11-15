@@ -314,11 +314,9 @@ rendered. Its one accessibility-relevant behavior, honoring
 rather than here.
 
 ## Conformance Test Vectors
-
-Vectors 001–011 are traced to `color.test.ts`; vectors 012–021 to `lens.test.ts`.
-Vectors 022–024 are derived directly from the `apply` arithmetic in `lens.ts`
-and have no dedicated assertion in `color.test.ts` or `lens.test.ts`. Vectors
-025 and 026 are read from `useTextLens.ts`, which has no test file.
+Vectors 001–011 are traced to `color.test.ts`; vectors 012–024 to `lens.test.ts`;
+vectors 025 and 026 to `useTextLens.test.tsx`. Each test title starts with its
+vector id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -343,9 +341,9 @@ and have no dedicated assertion in `color.test.ts` or `lens.test.ts`. Vectors
 | text-lens-019 | destroy-tears-down-and-stops | `lens.destroy(); element.dispatchEvent(new Event('pointerenter')); lens.start();` | `requestAnimationFrame` called exactly once for the post-destroy `start()` — the pointer event after `destroy()` has no bound listener left to affect it (`stops pausing on hover once destroyed`) |
 | text-lens-020 | colour-ramp-pairing | `createLens([el], { fromColor: '#8a8a9a' }).start()` (no `toColor`) | throws matching `/fromColor and toColor/` (`refuses one end of the colour ramp without the other`) |
 | text-lens-021 | colour-ramp-pairing, ramp-resolved-against-first-glyph | `document.body` has `--from`/`--to` custom properties set; `createLens([el], { fromColor: '--from', toColor: '--to' }).start()` | does not throw (`reads both ends of the ramp from custom properties`) |
-| text-lens-022 | radius-cutoff, smoothstep-easing, scale-formula | sweep centre exactly `radius` px from a glyph's centre (`distance === radius`) | `linear = 0`, `t = 0`; `transform` is `scale(1.000)` (no growth), `filter` is cleared (no dedicated test — derived from `apply`'s formula) |
-| text-lens-023 | blur-floor | default `blur: 0.35`, glyph at the sweep centre (`distance = 0`, `t = 1`) | computed `blur = 0.35`; since `0.35 > 0.03`, `filter` is set to `blur(0.35px)` (no dedicated test — derived from `apply`'s formula) |
-| text-lens-024 | leg-direction-alternation, cubic-ease-in-out | `elapsed === duration` exactly (leg boundary) | `leg = 1` (odd), `progress = 0`, `eased = 0`; the sweep centre is exactly `rightEdge` at that instant, having just switched to the return leg (no dedicated test — derived from `apply`/`step`'s formula) |
+| text-lens-022 | radius-cutoff, smoothstep-easing, scale-formula | sweep centre exactly `radius` px from a glyph's centre (`distance === radius`) | `linear = 0`, `t = 0`; `transform` is `scale(1.000)` (no growth), `filter` is cleared |
+| text-lens-023 | blur-floor | default `blur: 0.35`, glyph at the sweep centre (`distance = 0`, `t = 1`) | computed `blur = 0.35`; since `0.35 > 0.03`, `filter` is set to `blur(0.35px)` |
+| text-lens-024 | leg-direction-alternation, cubic-ease-in-out | `elapsed === duration` exactly (leg boundary) | `leg = 1` (odd), `progress = 0`, `eased = 0`; the sweep centre is exactly `rightEdge` at that instant, having just switched to the return leg |
 | text-lens-025 | resweep-is-immediate-after-the-first, deferred-first-sweep | `useTextLens` with `startDelay: 500`, fake timers; the hook runs, 500 ms pass, `enabled` goes `false`, then `true` again | the first run starts the lens after 500 ms; the second run starts it after 0 ms (no delay) |
 | text-lens-026 | cleanup-clears-the-pending-timer-and-destroys | `useTextLens` with `startDelay: 500`; unmount at 100 ms, then advance fake timers past 500 ms | `start()` is never called; `destroy()` is called once |
 ## Edge Cases
@@ -576,7 +574,7 @@ only diagnostic output is the two thrown `Error` messages described above.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | passed | Accessibility |
 | [adc.check.performance.animation-frame-rate](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9eb9b4fc-2e44-5391-9445-d6e78caa874e) | passed | Performance |
@@ -586,11 +584,9 @@ only diagnostic output is the two thrown `Error` messages described above.
 the DOM/animation engine (`lens.ts`), and the React binding
 (`useTextLens.ts`) are three separate modules with a one-directional import
 graph (`useTextLens.ts` → `lens.ts` → `color.ts`) and no circular
-dependency. `unit-test-coverage` is partial: `color.test.ts` and
-`lens.test.ts` cover `parseColor`, `resolveColor`, and `createLens`'s
-splitting, idempotency, reduced-motion gating, start-idempotency, teardown,
-and colour-ramp validation, but the package has no test file for
-`useTextLens.ts`, its React entry point. `explicit-error-handling` is
+dependency. `unit-test-coverage` is passed: every conformance vector (text-lens-001 to
+026) has a passing test across `color.test.ts`, `lens.test.ts` and
+`useTextLens.test.tsx`. `explicit-error-handling` is
 passed: `resolveColor` and `resolveRamp` both throw descriptive, traceable
 `Error` messages naming the offending value rather than silently falling
 back or swallowing bad input. `reduced-motion` is passed:

@@ -4,11 +4,11 @@
     "id": "aea5e7b2-00d2-4f23-bfc5-8dc64e8d0d2a",
     "title": "Composable Tabs Add Pane Sheet",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "36b70a287c79d00e",
+  "synced": "4b42b3f42f3a9a8c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,7 +2,7 @@
 id: c861465b-50c8-49d1-93cc-00d9e062ad5f
 title: "Dashboard Formatting"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -200,7 +200,7 @@ Not applicable: no function in the module logs.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/dashboard-format.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-web/src/lib/dashboard-format.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -240,14 +240,14 @@ Not applicable: no function in the module logs.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | best-practices |
 | [adc.check.internationalization.locale-aware-formatting](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c87ff1f1-9d77-5167-b0c4-f13f2aae5acb) | partial | internationalization |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | internationalization |
 
 **Separation of Concerns**: The functions only word values; the derivation lives in the status server and the rendering in the pages and charts, so the module has one reason to change.
 
-**Unit Test Coverage**: `dashboard-format.test.ts` covers each exported function with small independent cases, including the inherited-name guard for the report lookup and the absent-views path. The 1000 boundary, the rounding-to-1000 case, invalid timestamps, an unknown range and the whole-list re-sort have no test.
+**Unit Test Coverage**: `dashboard-format.test.ts` has a test for each of vectors dfmt-001 to dfmt-022, covering every exported function, the 1000 boundary, rounding to 1000, invalid timestamps, an unknown range, the whole-list re-sort, the inherited-name guard and the absent-views path.
 
 **Good Test Properties**: The tests are deterministic, use fixed timestamps and one table-driven case, and do not depend on the viewer's zone because the code and the expected values are both UTC.
 
@@ -259,5 +259,6 @@ Not applicable: no function in the module logs.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (dashboard-format.test.ts, 22 of 22 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added tags and an intro sentence, recorded the 999.6 debt and a fixed-English decision, softened incidental MUSTs, corrected the WinUI and React rounding notes, moved function signatures into an Overview API section, and added vectors dfmt-019 to dfmt-022. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial recipe extracted from `dashboard-format.ts` |

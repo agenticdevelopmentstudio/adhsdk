@@ -4,11 +4,11 @@
     "id": "24199c9b-53ce-41a7-9cce-3b914f0a424a",
     "title": "Chat Bubble View",
     "type": "ingredient",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a92ddb50f86b89e0",
+  "synced": "0902f64756d89d63",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: 143b0352-49d4-46a9-a922-bb45c4cc0e7e
 title: "Conversations Key Commands"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -203,7 +203,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -230,18 +230,18 @@ wrong way round: the panel is where you go to find out what the app can do."
 `separation-of-concerns` passes because the component only declares commands;
 the registry performs them and the window decides ownership.
 `no-hardcoded-strings` fails because the titles are English literals with no
-localization. `unit-test-coverage` is `partial`: in
-`KeyCommands/KeyCommandsPanelHierarchyTests.swift`,
-`testTheConversationsWindowListsItsSingleModeCommandsUnderTheMode` installs
-the section with a resolver returning `nil` and checks the panel outline
-(section title, the toggle command, the "Single Conversation Mode" heading and
-the two selection commands in order), which covers section-identity,
-toggle-shelf-command and single-mode-feature and uses the identifier
-constants. No test checks default shortcuts, what each command passes to the
-controller, run-time resolution, or the declined-key behavior.
-
+localization. `unit-test-coverage` is `partial`:
+`KeyCommands/KeyCommandsPanelHierarchyTests.swift` covers the panel outline,
+and `ConversationsWindow/ConversationsKeyCommandsConformanceTests.swift`
+covers every vector by id. Skipped: conversations-key-commands-009
+(confines-to-ui-thread), because the component is `@MainActor` and a use from
+another thread is rejected at build time. The run-for-real halves of
+conversations-key-commands-005 (the selection moves by -1 and +1) and
+conversations-key-commands-008 (a controller that accepts reports taken) need
+a key window and skip themselves where the test runner cannot make one.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (ConversationsKeyCommandsConformanceTests.swift, 8 of 9 vectors); unit-test-coverage now partial. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial spec for the Conversations window key commands, split out of the mock chat session spec where it was misattributed. |

@@ -14,7 +14,7 @@ describe('theme registry', () => {
 
     // Fallback must use DEFAULT_THEME_ID by id, not by array position, so
     // reordering VIEWER_THEMES doesn't silently change the fallback.
-    it('falls back to DEFAULT_THEME_ID for an unknown id', () => {
+    it('mdc-030: falls back to DEFAULT_THEME_ID for an unknown id', () => {
       expect(getThemeById('does-not-exist').id).toBe(DEFAULT_THEME_ID)
     })
   })
@@ -28,7 +28,7 @@ describe('theme registry', () => {
       expect(isValidThemeId('nope')).toBe(false)
     })
 
-    it('returns false for null', () => {
+    it('mdc-031: returns false for null', () => {
       expect(isValidThemeId(null)).toBe(false)
     })
   })

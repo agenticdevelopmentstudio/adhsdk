@@ -1,0 +1,56 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "96bc198e-c726-476a-bc4a-ddc1d5c0c2f8",
+    "title": "Delete Entity Section",
+    "type": "recipe",
+    "version": "1.4.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-07-03",
+    "modified": "2026-10-04",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The Danger-zone disclosure for an entity's settings pane — neutral until disclosed, red once open, and a two-phase (acknowledge then type-to-confirm) delete.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "forms",
+      "destructive",
+      "confirmation",
+      "disclosure",
+      "settings"
+    ],
+    "ingredients": [
+      "c99e2822-f5a9-4e84-8740-9341880bb82a",
+      "f3c25236-d72f-4a7b-839a-b7f335b3acd0",
+      "972be0d0-a9f5-45cd-a23b-c8329410b3d1"
+    ],
+    "depends-on": [],
+    "related": [
+      "781740e8-c83f-40a1-8215-43abfb8d8f56",
+      "7f122a27-5b49-4f03-9439-1152249bc08f"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "d34a6ed061b0c078",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "ingredients", "heading": "Ingredients"},
+    {"part": "integration-requirements", "heading": "Integration Requirements"},
+    {"part": "layout", "heading": "Layout"},
+    {"part": "shared-state", "heading": "Shared State"},
+    {"part": "integration-test-vectors", "heading": "Integration Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

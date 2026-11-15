@@ -4,7 +4,7 @@
     "id": "7d2280c6-ae67-4ecc-9aae-dbee574b1eab",
     "title": "Oversight Finding DTO",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -35,7 +35,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "f92aac139726b2f4",
+  "synced": "28547c00b757b52f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

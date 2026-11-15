@@ -1,7 +1,7 @@
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
@@ -10,7 +10,7 @@
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 | [adc.check.performance.resource-efficiency](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d5fe7b8e-1051-5581-b2c5-1adae8fdd5fc) | passed | performance |
 
-**Unit Test Coverage**: The tests cover `isSameSnapshot`, stream open and snapshot ingestion, the schedule frame, the manual-check spinner and its long backstop, the absence of an immediate re-read after a started check, and the `CLOSED` versus `CONNECTING` reconnect paths. Nothing asserts `liveError`, `offline`, `disconnected`, `blind`, overlapping checks, or two-client isolation.
+**Unit Test Coverage**: Every conformance vector (use-live-snapshot-001 to 021) has a test in `use-live-snapshot.test.ts` and `use-live-snapshot.dom.test.tsx`: `isSameSnapshot`, stream open and snapshot ingestion, the schedule frame, the manual-check spinner and its long backstop, the not-ran re-read, `liveError`, `offline`, `disconnected` and `blind`, malformed frames, once-only ingestion, the ref-counted stream, the client estimate and the client-only marker. Overlapping checks and two-client isolation have no vector and no test.
 
 **Separation of Concerns**: Transport sits behind `StatusApiClient`, caching behind React Query, and board derivation in `useBoard`. This module only moves snapshots and connection state.
 

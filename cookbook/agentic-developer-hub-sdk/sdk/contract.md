@@ -51,8 +51,8 @@ concrete conformer this ingredient specifies; it is the toolkit's own scripted/m
 so a consumer can exercise the contract with no live endpoint configured. The
 contract carries no message history and no credentials: `Backend.send`
 receives only the new message and its attachments, never a transcript.
-[persona-chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b) builds a real, network-backed `Backend` on top of this same
-contract; [chat-input-field](cookbook:0ae70642-28e7-436a-b934-0b445652ac09) and [chat-window-controller](cookbook:91114bf5-ad41-4cbd-b91b-c49bba9625d5) are UI components a host
+persona-chat ([adhsdk.ingredient.chat.modes.persona-chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b)) builds a real, network-backed `Backend` on top of this same
+contract; chat-input-field ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.macos.chat.chat-input-field](cookbook:0ae70642-28e7-436a-b934-0b445652ac09)) and chat-window-controller ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.sources-ui.macos.chat.chat-window-controller](cookbook:91114bf5-ad41-4cbd-b91b-c49bba9625d5)) are UI components a host
 assembles around a `ChatViewModel` this contract defines.
 
 ## Behavioral Requirements
@@ -376,7 +376,7 @@ Not applicable — this is a chat protocol contract, not a visual component.
 | chat-contract-013 | shufflebag-no-back-to-back | `ShuffleBag(["a","b","c","d"])`, `next()` called repeatedly across a full refill | No two consecutive draws are equal, even across the boundary where the bag reshuffles — `ChatStatusTests` (`SDK/Tests/AgenticDeveloperHubSDKTests/Chat/ChatStatusTests.swift`) "the shuffle bag never repeats back to back, including across a refill" |
 | chat-contract-014 | shufflebag-exhaust-before-repeat | `ShuffleBag(["a","b","c","d"])`, `next()` called 4 times | All 4 elements are drawn exactly once before any repeats — `ChatStatusTests` "the shuffle bag exhausts every element before repeating one" |
 | chat-contract-015 | shufflebag-single-element | `ShuffleBag(["only"])`, `next()` called twice in a row | Both calls return `"only"` — the single-element case is exempt from the no-repeat rule, matching `guard source.count > 1 else { return source[0] }` |
-| chat-contract-016 | shufflebag-empty-returns-nil, shufflebag-empty-behavior-divergence | `ShuffleBag<String>([])`, `next()` called | Returns `nil`; does not trap |
+| chat-contract-016 | shufflebag-empty-returns-nil, shufflebag-empty-behavior-divergence | `ShuffleBag<String>([])`, `next()` called | apple: returns `nil`; does not trap. web: `new ShuffleBag([])` throws `ShuffleBag requires at least one item` at construction, so `next()` is never reached on an empty bag |
 | chat-contract-017 | chat-status-kind-mapping | `ChatStatusKind(TurnStatus.thinking)`, `.responding`, `.retrying` | Map exhaustively to `.think`, `.respond`, `.retry` respectively, per the switch in `ChatStatusKind.init(_:)` |
 | chat-contract-018 | command-activity-lifecycle-divergence | The same `CommandActivity`/`ActiveCommand` entry, long after its `result` is filled, on each platform | apple: the entry remains in `commandActivity` indefinitely. web: the entry is removed from `activeCommands` once the participant's turn ends |
 | chat-contract-019 | scripted-backend-typing-and-widget-recording-only | `setLocalTyping(true)` on a fixed-script `ScriptedBackend` in `.onFirstSend` mode, before any `send` | `typingCalls == [true]`; the script does not begin replaying |
@@ -632,15 +632,17 @@ fit a command's start/complete lifecycle.
 
 **Decision**: apple's `ShuffleBag` returns `nil` on an empty source and
 never repeats an element back-to-back, even across a refill; web's
-`ShuffleBag` throws on empty and can repeat once across the seam between
-refills.
+`ShuffleBag` throws on empty, and since 2026-11-14 also never repeats across
+the seam between refills.
 **Rationale**: Each platform's own source states its own choice
 independently rather than one being a bug relative to the other — apple's
 own documentation frames the stronger no-repeat guarantee as intentional
 ("closing that seam is the whole point at a [status] cadence"), and returning
 `nil` instead of throwing on empty reflects that a toolkit should not trap a
-host that configured no vocabulary, while web's looser guarantee and
-throw-on-empty behavior is its own considered choice, not left to chance.
+host that configured no vocabulary, while web's throw-on-empty behavior is its
+own considered choice. Web once allowed one repeat across a refill; a
+conformance test caught it and web now closes the seam the same way apple
+does.
 **Approved**: pending
 
 **Decision**: `CommandActivity` (apple) keeps every entry in place
@@ -683,7 +685,11 @@ context, matching how a view's own layout and action handlers run.
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | reliability |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
-`unit-test-coverage` is `partial`: most types here are pure protocols/interfaces
+`unit-test-coverage` is `partial`: the web conformance tests
+(`packages/web/packages/chat/src/runtime/__tests__/contractConformance.test.ts`) cover 16 of the 22 vectors, chat-contract-013 across a refill included,
+through `DefaultOrchestrator`, `ScriptedBackend` and `ShuffleBag`. Skipped: chat-contract-001, 002, 004, 005, 011
+and 017 are apple-only (the web `ScriptedBackend` has no script/start timing, and web has no `statusChanged` or
+`ChatStatusKind`). On apple, most types here are pure protocols/interfaces
 with nothing to unit-test directly; only `ScriptedBackend`, the one concrete
 conformer specified here, has direct tests (`ScriptedBackendTests`, `SDK/Tests/AgenticDeveloperHubSDKTests/Chat/ScriptedBackendTests.swift`), while
 several of the contract's other invariants (draft replace, status

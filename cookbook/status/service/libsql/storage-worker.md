@@ -2,7 +2,7 @@
 id: 020cc0f0-04e9-4d03-8796-76027fb1131f
 title: "Status Server Storage Worker"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -162,7 +162,7 @@ Subsystem: none | Category: `storage`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/libsql/storage-worker.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/libsql/storage-worker.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -195,10 +195,11 @@ Subsystem: none | Category: `storage`
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 | [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
 
-`separation-of-concerns` passes: the file only wires an existing connection helper, migration helper, storage factory and queue server together, leaving the queue to `storage/remote.ts`, spawning to `storage-thread.ts` and SQL to `libsql/index.ts`. `unit-test-coverage` is partial: `storage-thread.int.test.ts` runs the built worker under bare node and covers migration, two-port serving, error fidelity and a monitor cycle, but no test exercises the precondition throws or the startup failure reply. `fault-tolerance` is partial: startup failures are reported to the host, but a malformed attach message or a post-startup throw ends the worker with no recovery inside it. `data-integrity` passes: one connection plus a FIFO queue means no two calls interleave statements, and migrations are applied idempotently before the port is served. `main-thread-freedom` passes: the blocking lock wait of an embedded connection is confined to this thread, so the API thread only awaits replies.
+`separation-of-concerns` passes: the file only wires an existing connection helper, migration helper, storage factory and queue server together, leaving the queue to `storage/remote.ts`, spawning to `storage-thread.ts` and SQL to `libsql/index.ts`. `unit-test-coverage` is partial: `test/storage-worker.test.ts` covers vectors 001, 002 and 004 to 009 by importing the module in-process with a stand-in `parentPort`, but vector 003 (a monitor cycle through the worker) is skipped there because it needs the built dist worker under bare node; `storage-thread.int.test.ts` covers it. `fault-tolerance` is partial: startup failures are reported to the host, but a malformed attach message or a post-startup throw ends the worker with no recovery inside it. `data-integrity` passes: one connection plus a FIFO queue means no two calls interleave statements, and migrations are applied idempotently before the port is served. `main-thread-freedom` passes: the blocking lock wait of an embedded connection is confined to this thread, so the API thread only awaits replies.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (storage-worker.test.ts, 8 of 9 vectors, 003 skipped: needs built dist worker, covered by the int test); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Restated three MUST NOT rules as current behavior, replaced the queue, hello, error and slow-call requirements with one dependency on Storage Remote, dropped the client.ts vectors, added a FIFO vector, added depends-on, related and tags, and clarified the startup and offline wording. |

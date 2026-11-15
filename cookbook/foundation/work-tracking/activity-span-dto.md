@@ -2,7 +2,7 @@
 id: 92a9546a-eec1-47ed-8420-7db51e8d0261
 title: "Activity Span DTO"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -160,7 +160,7 @@ Not applicable: the type contains no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/ActivitySpanDTO.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/ActivitySpanDTO.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -199,13 +199,14 @@ Not applicable: the type contains no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 
-The type is a pure data carrier with no I/O, so separation of concerns passes. Unit coverage is partial: the only direct test is the snake_case round trip inside `WorkTrackingModelsTests`; the defaults, `isOpen` and mutability have no dedicated assertions. Data integrity is partial because the type accepts any string for every field and leaves timestamp format and ordering to callers.
+The type is a pure data carrier with no I/O, so separation of concerns passes. Unit coverage passes: `ActivitySpanDTOConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/WorkTracking/ActivitySpanDTOConformanceTests.swift`) covers every vector, beside the snake_case round trip in `WorkTrackingModelsTests`. Data integrity is partial because the type accepts any string for every field and leaves timestamp format and ordering to callers.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ActivitySpanDTOConformanceTests.swift, 14 of 14 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Stated that the wire key format belongs to the caller, made the startedAt format a caller precondition, added a tz format requirement, strict-decode and key-format Design Decisions, an all-strings vector, a related link, and fixed the Overview wording and the WinUI and wire-format notes. |

@@ -4,11 +4,11 @@
     "id": "e322fd0c-1552-4bd9-b129-3c809af3a972",
     "title": "Uptime State",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9737841281cc9e2e",
+  "synced": "563a2ba1ed8d3718",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

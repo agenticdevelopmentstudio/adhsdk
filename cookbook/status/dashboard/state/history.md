@@ -2,11 +2,11 @@
 id: 3bb63ddd-6c9a-41c1-a906-6c8542cb4e5c
 title: "Health Check History"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -70,7 +70,7 @@ Not applicable — this is a data-fetching concept, not a visual component.
 
 ## Conformance Test Vectors
 
-No test file exists for the source directly; these vectors are derived from the source. They assume a shared cache with retries disabled and a stubbed transport.
+`use-history.dom.test.tsx` tests these vectors, which are derived from the source. They assume a shared cache with retries disabled and a stubbed transport.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -154,7 +154,7 @@ Not applicable: History makes no log calls; failures reach the caller only throu
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-history.ts` | confirmed (1.1.1) |
+| web | `packages/web/packages/status-web/src/hooks/use-history.ts` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -185,13 +185,13 @@ Not applicable: History makes no log calls; failures reach the caller only throu
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 
 **Separation of Concerns**: The hook contains no presentation. The base path and transport live in `StatusApiClient`, the caching and state machine in React Query, and the rendering in `DetailPanel`.
 
-**Unit Test Coverage**: There is no `use-history.test.ts` or `use-history.dom.test.tsx` beside the hook. It is exercised only indirectly, through components that render `DetailPanel`.
+**Unit Test Coverage**: `use-history.dom.test.tsx` beside the hook covers every conformance vector (use-history-001 to 011).
 
 **Explicit Error Handling**: A non-ok status, a network rejection, and a JSON parse failure all reject the query function. Each one surfaces through the query's `error`, so none is swallowed. The server's error-body detail is not read.
 
@@ -201,6 +201,7 @@ Not applicable: History makes no log calls; failures reach the caller only throu
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-history.dom.test.tsx, 11 of 11 vectors); unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | One client-only requirement, worded the same across the dashboard state specs, with a test vector; the web module's "use client" directive is noted in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/state/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

@@ -4,11 +4,11 @@
     "id": "b1fa768d-a088-4507-92f6-6296f93bee2c",
     "title": "Hub Domain Markdown Client",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -43,7 +43,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "82bf86d433d7e195",
+  "synced": "490ef37ba85c39f7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

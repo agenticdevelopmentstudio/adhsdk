@@ -87,21 +87,21 @@ function guardArmed(): boolean {
 afterEach(cleanup)
 
 describe("a container inside a container", () => {
-  it("publishes exactly one navigation guard for the page", () => {
+  it("content-editing-048 publishes exactly one navigation guard for the page", () => {
     render(<Nested />)
     expect(containers()).toHaveLength(2)
     // Two guards would be two prompts for one decision.
     expect(screen.getAllByTestId("nav-guard")).toHaveLength(1)
   })
 
-  it("arms the page guard from a row the outer pane knows nothing about", () => {
+  it("content-editing-049 arms the page guard from a row the outer pane knows nothing about", () => {
     render(<Nested />)
     expect(guardArmed()).toBe(false)
     type("title", "Welcome, edited")
     expect(guardArmed()).toBe(true)
   })
 
-  it("marks the enclosing container dirty even though its own fields are untouched", () => {
+  it("content-editing-069 marks the enclosing container dirty even though its own fields are untouched", () => {
     render(<Nested />)
     expect(outer()).not.toHaveAttribute("data-editing-dirty")
     type("title", "Welcome, edited")
@@ -117,7 +117,7 @@ describe("a container inside a container", () => {
     expect(saveIn(outer())).toBeDisabled()
   })
 
-  it("saves the row on its own and disarms the page guard", async () => {
+  it("content-editing-050 saves the row on its own and disarms the page guard", async () => {
     const onInnerSave = vi.fn(async () => {})
     const onOuterSave = vi.fn()
     render(<Nested onInnerSave={onInnerSave} onOuterSave={onOuterSave} />)
@@ -139,7 +139,7 @@ describe("a container inside a container", () => {
     expect(guardArmed()).toBe(true)
   })
 
-  it("stops speaking for a row that is dismissed mid-edit", async () => {
+  it("content-editing-051 stops speaking for a row that is dismissed mid-edit", async () => {
     const { rerender } = render(<Nested />)
     type("title", "Welcome, edited")
     expect(guardArmed()).toBe(true)
@@ -190,7 +190,7 @@ describe("a container inside a container", () => {
     await waitFor(() => expect(guardArmed()).toBe(true))
   })
 
-  it("rolls dirtiness up through more than one level", () => {
+  it("content-editing-070 rolls dirtiness up through more than one level", () => {
     render(
       <EditingHostProvider host={testHost}>
         <EditingContainer
@@ -224,7 +224,7 @@ describe("a container inside a container", () => {
     expect(outer()).toHaveAttribute("data-editing-dirty")
   })
 
-  it("still guards an editable row inside a read-only pane", () => {
+  it("content-editing-052 still guards an editable row inside a read-only pane", () => {
     // The pane cannot be saved, so it publishes no dirtiness of its own — but it
     // is still the root, and the row's unsaved work is still the user's.
     render(

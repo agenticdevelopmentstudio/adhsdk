@@ -4,11 +4,11 @@
     "id": "ed610aa4-2717-4242-a8b9-c4616377dbd9",
     "title": "Billing DTOs",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-10-04",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9e5b5190a7cf9cca",
+  "synced": "1fef20bed2efb587",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

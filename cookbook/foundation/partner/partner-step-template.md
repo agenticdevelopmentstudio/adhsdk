@@ -2,7 +2,7 @@
 id: 211ef664-01fc-45d5-996b-1a0a4167a748
 title: "Partner Step Template"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -71,14 +71,14 @@ Not applicable — this is a pure text-substitution helper, not a visual compone
 | partner-step-template-004 | plain-word-unquoted, terminal-quoting | The same terminal step with `model` = `claude-opus-5-5`. | `claude --model claude-opus-5-5`, unquoted (test: aTerminalStepQuotesItsValuesAndAClaudeStepDoesNot). |
 | partner-step-template-005 | otherwise-single-quoted | `shellQuoted` of the value `it's`. | `'it'\''s'` (test: aTerminalStepQuotesItsValuesAndAClaudeStepDoesNot, line `shellQuoted("it's")`). |
 | partner-step-template-006 | no-equals-no-tilde | `shellQuoted` of the value `=ls`. | `'=ls'` (test: aTerminalStepQuotesItsValuesAndAClaudeStepDoesNot). |
-| partner-step-template-007 | empty-is-quoted | `shellQuoted` of the empty string. | `''` (no test yet). |
-| partner-step-template-008 | placeholder-syntax | Command `{} {a b} {c}`, values `c` = `x`. | `{} {a b} x` (no test yet). |
-| partner-step-template-009 | steps-keep-fields | One terminal step with `name` `open`, `condition` `when-idle` and command `echo {x}`, values `x` = `1`. | One step with `name` `open`, environment `terminal`, `condition` `when-idle` and command `echo 1` (no test yet). |
-| partner-step-template-010 | text-between-preserved | Command `a {x} b {x} c`, values `x` = `1`. | `a 1 b 1 c` (no test yet). |
-| partner-step-template-011 | placeholder-syntax | Command `{café}`, values `café` = `x`. | `x` (no test yet). |
-| partner-step-template-012 | no-equals-no-tilde | `shellQuoted` of `~/x`. | `'~/x'` (no test yet). |
-| partner-step-template-013 | terminal-quoting, claude-unquoted | One terminal step `echo {v}` and one Claude step `say {v}` in the same list, values `v` = `a b`. | Commands `echo 'a b'` and `say a b` (no test yet). |
-| partner-step-template-014 | empty-values-unchanged | Command `x {a} {b}`, empty `values`. | `x {a} {b}` (no test yet). |
+| partner-step-template-007 | empty-is-quoted | `shellQuoted` of the empty string. | `''` (test: PartnerStepTemplateConformanceTests). |
+| partner-step-template-008 | placeholder-syntax | Command `{} {a b} {c}`, values `c` = `x`. | `{} {a b} x` (test: PartnerStepTemplateConformanceTests). |
+| partner-step-template-009 | steps-keep-fields | One terminal step with `name` `open`, `condition` `when-idle` and command `echo {x}`, values `x` = `1`. | One step with `name` `open`, environment `terminal`, `condition` `when-idle` and command `echo 1` (test: PartnerStepTemplateConformanceTests). |
+| partner-step-template-010 | text-between-preserved | Command `a {x} b {x} c`, values `x` = `1`. | `a 1 b 1 c` (test: PartnerStepTemplateConformanceTests). |
+| partner-step-template-011 | placeholder-syntax | Command `{café}`, values `café` = `x`. | `x` (test: PartnerStepTemplateConformanceTests). |
+| partner-step-template-012 | no-equals-no-tilde | `shellQuoted` of `~/x`. | `'~/x'` (test: PartnerStepTemplateConformanceTests). |
+| partner-step-template-013 | terminal-quoting, claude-unquoted | One terminal step `echo {v}` and one Claude step `say {v}` in the same list, values `v` = `a b`. | Commands `echo 'a b'` and `say a b` (test: PartnerStepTemplateConformanceTests). |
+| partner-step-template-014 | empty-values-unchanged | Command `x {a} {b}`, empty `values`. | `x {a} {b}` (test: PartnerStepTemplateConformanceTests). |
 ## Edge Cases
 
 - **Null / empty input**: An empty command returns an empty string; an empty `values` leaves every placeholder as written (see `#requirements/empty-values-unchanged`); an empty step list returns an empty list; an empty value fills as nothing in a Claude step and as two single quotes in a terminal step.
@@ -136,7 +136,7 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerStepTemplate.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerStepTemplate.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -164,13 +164,14 @@ Not applicable: the source calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 
-`separation-of-concerns` passes because the type only substitutes and quotes text; deciding what values to supply and running the command belong to the callers. `unit-test-coverage` is partial: `PartnerModelsTests` covers known and unknown keys, one-pass substitution, terminal versus Claude quoting and the two quoting cases `it's` and `=ls` (vectors 001-006), but no test covers vectors 007-014. `input-sanitization` is partial: values reach a terminal step as one quoted word, but a Claude-step prompt receives them as written by design, and the type is not a general sanitizer.
+`separation-of-concerns` passes because the type only substitutes and quotes text; deciding what values to supply and running the command belong to the callers. `unit-test-coverage` passes: `PartnerModelsTests` covers vectors 001-006 and `PartnerStepTemplateConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Partner/PartnerStepTemplateConformanceTests.swift`) covers 007-014. `input-sanitization` is partial: values reach a terminal step as one quoted word, but a Claude-step prompt receives them as written by design, and the type is not a general sanitizer.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerStepTemplateConformanceTests.swift, 14 of 14 vectors; 001-006 already in PartnerModelsTests); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Spelled out both fill signatures, pinned the placeholder character class, made hostile-values and empty-values named requirements, gave literal vector outputs, added four vectors, downgraded unit-test-coverage to partial, and depends-on partner-job. |

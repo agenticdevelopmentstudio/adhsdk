@@ -4,11 +4,11 @@
     "id": "a7c2b9e1-5d4f-4a2c-9e6f-8b3a1c5d7e2f",
     "title": "Status Server Telemetry",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,7 +24,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cf3621ac18f24a05",
+  "synced": "87bfb7c5a8cad953",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

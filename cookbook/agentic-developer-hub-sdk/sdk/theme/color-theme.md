@@ -2,7 +2,7 @@
 id: 932449c9-b57f-4e2c-992a-1e27584742b6
 title: "ColorTheme"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -117,17 +117,17 @@ Not applicable — this is a data model, not a visual component.
 | color-theme-006 | ansi-color-lookup | Test `ansiColor(at:) returns the color in range and nil out of range`: indexes 0, 15, 16, -1 on a built-in | `ansi[0]`, `ansi[15]`, nil, nil |
 | color-theme-007 | has-valid-palette, ansi-color-count, init-no-validation | Test `hasValidPalette requires exactly 16 ANSI colors`: a built-in, and a theme constructed with 3 ANSI colors | Built-in true; the 3-color theme constructs and reports false |
 | color-theme-008 | color-encoding | Test (exercises `RGBAColor`, the owner of clamping) `RGBAColor clamps out-of-range and non-finite components to [0, 1]`: components 1.5, -0.2, 2.0, 9 and NaN, 0.5, +infinity, -infinity | 1, 0, 1, 1 and 0, 0.5, 1, 0 |
-| color-theme-009 | decode-required-keys | JSON with every key except `ansi` (no test yet) | Decoding throws |
-| color-theme-010 | decode-role-overrides-default, decode-typography-default, decode-feature-options-absent | The JSON from color-theme-003 (no test yet) | `roleOverrides` is empty; `typography == .system`; `terminal` and `project` are nil |
-| color-theme-011 | init-defaults, init-required | Initializer with only the required arguments, called twice (no test yet) | Both `id` values are UUID strings and differ; `isBuiltIn`, `isImported` false; `attribution` nil; `roleOverrides` empty |
-| color-theme-012 | appearance-cases, appearance-identifier, appearance-enumerable | `ThemeAppearance.allCases` and `.auto.id` (no test yet) | Three cases `dark`, `light`, `auto`; id "auto" |
-| color-theme-013 | decode-no-palette-validation | JSON with 3 ANSI colors (no test yet) | Decodes; `hasValidPalette` is false |
-| color-theme-014 | color-encoding | JSON whose `foreground` is "not-a-color" (no test yet) | Decoding throws a data-corrupted error |
-| color-theme-015 | is-editable, is-deletable, is-locked | A theme with `isBuiltIn = true` and `isImported = true` (no test yet) | `isEditable` false; `isLocked` true; `isDeletable` false |
-| color-theme-016 | decode-no-palette-validation, ansi-color-lookup | JSON with 17 ANSI colors; then `ansiColor(at: 16)` (no test yet) | Decodes; `hasValidPalette` false; `ansiColor(at: 16)` returns the 17th color |
-| color-theme-017 | decode-required-keys | The JSON from color-theme-003 plus an unknown key `"extra": 1` (no test yet) | Decodes; the theme equals the one decoded without the key |
-| color-theme-018 | appearance-cases | JSON whose `appearance` is "sepia" (no test yet) | Decoding throws |
-| color-theme-019 | encode-omits-nil | Encode a theme with `attribution`, `terminal` and `project` nil (no test yet) | The JSON object has no `attribution`, `terminal` or `project` key |
+| color-theme-009 | decode-required-keys | JSON with every key except `ansi` | Decoding throws |
+| color-theme-010 | decode-role-overrides-default, decode-typography-default, decode-feature-options-absent | The JSON from color-theme-003 | `roleOverrides` is empty; `typography == .system`; `terminal` and `project` are nil |
+| color-theme-011 | init-defaults, init-required | Initializer with only the required arguments, called twice | Both `id` values are UUID strings and differ; `isBuiltIn`, `isImported` false; `attribution` nil; `roleOverrides` empty |
+| color-theme-012 | appearance-cases, appearance-identifier, appearance-enumerable | `ThemeAppearance.allCases` and `.auto.id` | Three cases `dark`, `light`, `auto`; id "auto" |
+| color-theme-013 | decode-no-palette-validation | JSON with 3 ANSI colors | Decodes; `hasValidPalette` is false |
+| color-theme-014 | color-encoding | JSON whose `foreground` is "not-a-color" | Decoding throws a data-corrupted error |
+| color-theme-015 | is-editable, is-deletable, is-locked | A theme with `isBuiltIn = true` and `isImported = true` | `isEditable` false; `isLocked` true; `isDeletable` false |
+| color-theme-016 | decode-no-palette-validation, ansi-color-lookup | JSON with 17 ANSI colors; then `ansiColor(at: 16)` | Decodes; `hasValidPalette` false; `ansiColor(at: 16)` returns the 17th color |
+| color-theme-017 | decode-required-keys | The JSON from color-theme-003 plus an unknown key `"extra": 1` | Decodes; the theme equals the one decoded without the key |
+| color-theme-018 | appearance-cases | JSON whose `appearance` is "sepia" | Decoding throws |
+| color-theme-019 | encode-omits-nil | Encode a theme with `attribution`, `terminal` and `project` nil | The JSON object has no `attribution`, `terminal` or `project` key |
 ## Edge Cases
 
 - **Empty ansi array** (see `decode-no-palette-validation`): decoding and construction MUST succeed; `hasValidPalette` is false and `ansiColor(at: 0)` is nil.
@@ -202,7 +202,7 @@ Not applicable: the source of `ColorTheme` makes no log call.
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ColorTheme.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ColorTheme.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -231,15 +231,16 @@ Not applicable: the source of `ColorTheme` makes no log call.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
-`ColorTheme` is a Foundation-only value type; persistence, parsing, derivation and the catalog sit in sibling types, so separation of concerns passes. `ColorThemeTests` covers round trips, legacy decoding, editability, ANSI indexing and palette validity, but nothing asserts the decode defaults for `roleOverrides`, `typography`, `terminal` and `project`, a missing required key, or a malformed color string, so unit-test coverage is partial. Data integrity is partial because the decoder and initializer accept any number of ANSI colors and rely on callers to check `hasValidPalette`. The type holds only colors, names and an optional credit string, which passes data minimization.
+`ColorTheme` is a Foundation-only value type; persistence, parsing, derivation and the catalog sit in sibling types, so separation of concerns passes. `ColorThemeTests` (`packages/apple/AgenticDeveloperHubSDK/SDK/Tests/AgenticDeveloperHubSDKTests/Theme/ColorThemeTests.swift`) covers all 19 vectors: round trips, legacy decoding, editability, ANSI indexing, palette validity, the decode defaults, a missing required key and a malformed color string, so unit-test coverage passes. Data integrity is partial because the decoder and initializer accept any number of ANSI colors and rely on callers to check `hasValidPalette`. The type holds only colors, names and an optional credit string, which passes data minimization.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ColorThemeTests.swift, 19 of 19 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Linked RGBAColor, typography, options and sibling ingredients in depends-on and the text, set the author, moved clamping to RGBAColor, added encode-omits-nil and five vectors, marked untested vectors, and corrected the SwiftUI, Compose and WinUI notes. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

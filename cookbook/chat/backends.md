@@ -176,6 +176,10 @@ the rest of the package deals with is, in the end, a `Backend`.
 - **shufflebag-reshuffle-on-empty**: When the internal draw pile is empty,
   `next()` MUST refill it with a fresh Fisher-Yates shuffle of the full item
   set before drawing.
+- **shufflebag-no-back-to-back**: When a bag of more than one item refills,
+  `next()` MUST NOT return the item it returned last: if the fresh shuffle's
+  next draw (its last element) equals the previous draw, that element MUST be
+  swapped with index `0` before drawing. A one-item bag is exempt.
 - **shufflebag-fisher-yates-order**: The reshuffle MUST walk the index range
   from `length - 1` down to `1`, swapping index `i` with a `j` drawn as
   `Math.floor(Math.random() * (i + 1))`, and `next()` MUST draw by popping
@@ -445,6 +449,7 @@ exposes no interactive control.
 | ccb-014 | shufflebag-reshuffle-on-empty | `new ShuffleBag(['a','b'])`, call `next()` four times | `'a'` appears exactly twice and `'b'` appears exactly twice. (`__tests__/ShuffleBag.test.ts`, "refills after exhaustion") |
 | ccb-015 | shufflebag-exhaust-before-repeat | `new ShuffleBag(['only'])`, call `next()` twice | Returns `['only', 'only']`. (`__tests__/ShuffleBag.test.ts`, "repeats the sole item of a one-item bag") |
 | ccb-016 | shufflebag-nonempty-construction | `new ShuffleBag([])` | Throws `Error('ShuffleBag requires at least one item')`. (`__tests__/ShuffleBag.test.ts`, "rejects an empty bag at construction") |
+| ccb-046 | shufflebag-no-back-to-back | `Math.random` stubbed to return `0.999` for the first shuffle (draws `d,c,b,a`) and `0` after (a second shuffle of `[b,c,d,a]`, whose next draw is `'a'`); `new ShuffleBag(['a','b','c','d'])`, call `next()` eight times | No two consecutive results are equal: the refill swaps `'a'` out of the draw slot, so draw 5 is not `'a'`. (`runtime/__tests__/contractConformance.test.ts`, chat-contract-013b) |
 | ccb-017 | shufflebag-fisher-yates-order | `Math.random` stubbed to always return `0`; `new ShuffleBag(['a','b','c','d'])`, call `next()` four times | Returns exactly `['a','d','c','b']`. (`__tests__/ShuffleBag.test.ts`, "draws in Fisher-Yates order for a stubbed Math.random") |
 | ccb-018 | streamtokens-tokenization, streamtokens-terminal-done | `streamTokens('hi there', { minMs: 0, jitterMs: 0 })`, collect all events | `[{type:'token',text:'hi'},{type:'token',text:' '},{type:'token',text:'there'},{type:'done'}]`. (`__tests__/ShuffleBag.test.ts`, "emits every token then a done event, preserving whitespace") |
 | ccb-019 | streamtokens-terminal-done | `streamTokens('', { minMs: 0, jitterMs: 0 })` | `[{type:'done'}]`. (`__tests__/ShuffleBag.test.ts`, "emits just done for empty text") |
@@ -472,8 +477,8 @@ exposes no interactive control.
 | ccb-041 | persona-transport-vs-message-failure | `authorize` for the `/conversations` path resolves with a `500` | A `messageFailed` carrying the `localID` from `send`. (personaChatConformance.test.ts, "ci-transport-vs-message") |
 | ccb-042 | persona-send-rejects-attachments | `send('hi', [{ id: 'a', ... } as Attachment])` | Rejects matching `/attachment/i`. (personaChatConformance.test.ts, "ci-attachments") |
 | ccb-043 | persona-status-cleared-on-every-exit | A successful turn and a turn that ends in an `error` event, both drained fully | `onStatus`'s last call in both cases is `null`. (personaChatConformance.test.ts, "status clears when a turn ends, on success and on failure") |
-| ccb-044 | adapter-error-event-commits-partial | `ChatBackendAdapter` wrapping a `ChatBackend` whose `sendMessageStream` yields `{type:'token',text:'partial'}` then `{type:'error',message:'boom'}`; drain events | A `messageReceived` commits with `text: 'partial'` (the accumulated text, not `'boom'`), followed by `draftCleared`; traced to `ChatBackendAdapter.ts`'s `case 'error': this.commit(turn.text \|\| event.message, turn.display())` — no dedicated test file exists for `ChatBackendAdapter`, so this vector is traced to source rather than to an existing test. |
-| ccb-045 | adapter-turn-throw-commits-generic-apology | `ChatBackendAdapter` wrapping a `ChatBackend` whose `sendMessage` rejects | A `messageReceived` commits with `text: "Sorry, something went wrong. Let's try again."`; traced to `ChatBackendAdapter.ts`'s `runTurn` catch block — no dedicated test file exists for `ChatBackendAdapter`, so this vector is traced to source rather than to an existing test. |
+| ccb-044 | adapter-error-event-commits-partial | `ChatBackendAdapter` wrapping a `ChatBackend` whose `sendMessageStream` yields `{type:'token',text:'partial'}` then `{type:'error',message:'boom'}`; drain events | A `messageReceived` commits with `text: 'partial'` (the accumulated text, not `'boom'`), followed by `draftCleared`; traced to `ChatBackendAdapter.ts`'s `case 'error': this.commit(turn.text \|\| event.message, turn.display())` (`backends/__tests__/ChatBackendAdapter.test.ts`, "ccb-0NN"). |
+| ccb-045 | adapter-turn-throw-commits-generic-apology | `ChatBackendAdapter` wrapping a `ChatBackend` whose `sendMessage` rejects | A `messageReceived` commits with `text: "Sorry, something went wrong. Let's try again."`; traced to `ChatBackendAdapter.ts`'s `runTurn` catch block (`backends/__tests__/ChatBackendAdapter.test.ts`, "ccb-0NN"). |
 
 ## Edge Cases
 
@@ -854,17 +859,11 @@ which `InboundEvent` kinds are "really" status.
 | [adc.check.artifact-formatting.ingredient-formatting.if-platform-notes](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/90c2d8c2-cf79-5465-bffd-54f9fb1453bc) | passed | Artifact Formatting |
 | [adc.check.artifact-formatting.ingredient-formatting.if-design-decisions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f5b5cbe6-22e8-5954-a18d-0362ee387941) | passed | Artifact Formatting |
 | [adc.check.artifact-formatting.ingredient-formatting.if-change-history](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/14bf2d1d-875b-5e58-b43d-be492c9f941a) | passed | Artifact Formatting |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 
-`unit-test-coverage` is `partial`: `FetchBackend`, `MockBackend`, `ShuffleBag`/`streamTokens`,
-and `PersonaChatBackend` each have direct test coverage (`__tests__/FetchBackend.test.ts`,
-`__tests__/MockBackend.test.ts`, `__tests__/ShuffleBag.test.ts`,
-`backends/__tests__/personaChatConformance.test.ts`), but `ChatBackendAdapter` and `EventQueue`
-have no dedicated test file of their own — `ChatBackendAdapter` is exercised only indirectly
-through `__tests__/useChatSession.test.ts`, and `EventQueue` only as the queue underneath every
-`Backend`'s `inboundEvents`. `explicit-error-handling` is `partial`: `FetchBackend`'s reused,
+`unit-test-coverage` is `passed`: every conformance vector ccb-001 to ccb-045 has a test whose title starts with its id, in `__tests__/FetchBackend.test.ts`, `__tests__/MockBackend.test.ts`, `__tests__/ShuffleBag.test.ts`, `backends/__tests__/personaChatConformance.test.ts` and `backends/__tests__/ChatBackendAdapter.test.ts` (the last covers the adapter's error and thrown-turn paths; `EventQueue` is exercised underneath every adapter test). `explicit-error-handling` is `partial`: `FetchBackend`'s reused,
 single-field `AbortController` (**fetchbackend-single-controller-field**) leaves the
 concurrent-direct-use case under Edge Cases unresolved by the source rather than explicitly
 handled.

@@ -2,7 +2,7 @@
 id: 591d0b87-ce71-4b11-8642-149fc405cce9
 title: "RGBAColor Theme Extension"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -35,7 +35,7 @@ approved-date: ""
 
 `RGBAColor+Theme.swift` is an `extension RGBAColor` that adds the color math the theme layer needs to derive a whole palette from a few base colors. It measures a color (`relativeLuminance`, `isDark`, `contrastRatio(against:)`), writes it out (`hexStringRGB`), and builds new colors from it (`blended(withFraction:of:)`, `composited(over:)`, `bestTextColor(black:white:)`, `dimmed(towards:by:minContrast:)`, `desaturated(by:)`). It also adds two constants, `opaqueBlack` and `opaqueWhite`.
 
-Every member is a pure computation over the four `Double` components of `RGBAColor` (see the [RGBAColor](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d) ingredient for the value type and its clamping). Nothing here reads or writes files, the network, defaults or logs. Theme derivation and import code are the example consumers, for instance palette role derivation and the iTerm color importer; the list of callers is not part of this contract.
+Every member is a pure computation over the four `Double` components of `RGBAColor` (see the RGBAColor ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d)) ingredient for the value type and its clamping). Nothing here reads or writes files, the network, defaults or logs. Theme derivation and import code are the example consumers, for instance palette role derivation and the iTerm color importer; the list of callers is not part of this contract.
 
 ## Behavioral Requirements
 
@@ -53,7 +53,7 @@ Hex output
 - **hex-rgb-format**: `hexStringRGB` MUST return `"#"` followed by six lower-case hexadecimal digits in the order red, green, blue, each zero-padded to two digits; it is always 7 characters long.
 - **hex-rgb-no-alpha**: `hexStringRGB` MUST omit alpha; colors that differ only in alpha produce the same string.
 - **hex-rgb-rounding**: Each channel MUST be clamped to 0 to 1, multiplied by 255 and rounded to the nearest integer, with halves rounded away from zero.
-- **hex-rgb-purpose**: The format MUST match the terminal palette's color string: lower-case, six digits, no alpha. The [RGBAColor](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d) ingredient's `hexString` differs: it is upper-case and carries alpha.
+- **hex-rgb-purpose**: The format MUST match the terminal palette's color string: lower-case, six digits, no alpha. The RGBAColor ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d)) ingredient's `hexString` differs: it is upper-case and carries alpha.
 
 Blending and compositing
 
@@ -222,7 +222,7 @@ Not applicable: the source makes no log calls; `dimmed` returns `self` without a
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor+Theme.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor+Theme.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -251,7 +251,7 @@ Not applicable: the source makes no log calls; `dimmed` returns `self` without a
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 
@@ -261,6 +261,7 @@ Separation of concerns passes because the file holds only pure color math on `RG
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (RGBAColorThemeVectorTests.swift, 34 of 34 vectors with the existing RGBAColorThemeTests/IdleStatusInkTests/SemanticPaletteRolesTests); unit-test-coverage now passed. Type check not run (NOMODULE). |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Moved RGBAColor to depends-on with links, dropped the caller list, merged composite-purpose into contrast-opaque-precondition, fixed RFC 2119 wording, made vectors 017 and 022 precise, marked vector 005 provisional, split indirect test coverage, and set explicit-error-handling to partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

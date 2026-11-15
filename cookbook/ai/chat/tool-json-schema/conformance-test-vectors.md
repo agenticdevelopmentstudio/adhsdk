@@ -10,5 +10,5 @@
 | tool-json-schema-007 | fragment-description-verbatim | `string("")` | `description` is the empty string, key still present |
 | tool-json-schema-008 | object-shape | `object(properties: ["u": string("a url")], required: ["u"])` | Top-level keys are exactly `properties`, `required`, `type`; `required` is `["u"]` |
 
-The schema is exercised indirectly as a fixture by `CompositeChatToolSourceTests`, `HostMCPServerTests`, `HostMCPServerDrainTests`, `LocalChatSessionTests`, `MCPHTTPEndpointTests` and `PersonaTerminalChatToolsTests`; no test asserts its output bytes directly.
+The schema is exercised indirectly as a fixture by `CompositeChatToolSourceTests`, `HostMCPServerTests`, `HostMCPServerDrainTests`, `LocalChatSessionTests`, `MCPHTTPEndpointTests` and `PersonaTerminalChatToolsTests`; `ToolJSONSchemaConformanceTests` asserts its output bytes directly, one test per vector.
 

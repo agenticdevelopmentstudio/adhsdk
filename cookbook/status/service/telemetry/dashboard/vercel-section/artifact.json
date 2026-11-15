@@ -4,7 +4,7 @@
     "id": "55ffb81c-6a7d-4837-9180-0b5d3fe952ec",
     "title": "Vercel Traffic Section",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d9ecc9605aab8aad",
+  "synced": "7ef7dda3867346c6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

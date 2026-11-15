@@ -2,11 +2,11 @@
 id: 62c755ed-eeba-4ada-a907-4a0f802e0466
 title: "Window Matching Shortcuts"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -205,7 +205,7 @@ No other event is logged: individual key-downs, out-of-range index no-ops and ig
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/Shortcuts/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/Shortcuts/` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -243,12 +243,13 @@ No other event is logged: individual key-downs, out-of-range index no-ops and ig
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 
-Separation of concerns passes: the names file holds only the scheme data, the manager only maps key-downs to model calls, and all context logic stays in `SystemWindowContextsModel`. Unit-test coverage is partial: `SystemWindowShortcutNamesTests` covers the name list, ordering, uniqueness and defaults, but nothing tests the manager's dispatch, the out-of-range no-op or the registry reservation. Explicit error handling is partial: the manager discards the `Bool` results of add/remove and relies on the model's `lastError`, which is a reported path rather than a swallowed one. The reservation owner `"window contexts"` is a hardcoded English literal that reaches the user in the Settings conflict message. Keyboard navigation passes in the sense that every window-context action has a keyboard path, which is this component's whole purpose.
+Separation of concerns passes: the names file holds only the scheme data, the manager only maps key-downs to model calls, and all context logic stays in `SystemWindowContextsModel`. Unit-test coverage is partial: `SystemWindowShortcutNamesTests` covers wms-001 to wms-009 (name list, ordering, uniqueness, defaults) and `ShortcutManagerConformanceTests` covers wms-019 (registry reservation). The rest are skipped with reasons: wms-010 to wms-018 and wms-021 because `KeyboardShortcuts` offers no public way to fire a key-down (it needs a real Carbon hotkey event); wms-020 because customizing a shortcut writes `UserDefaults.standard`, which tests must not touch; wms-022 because the unified log cannot be read back reliably in a unit test process. Explicit error handling is partial: the manager discards the `Bool` results of add/remove and relies on the model's `lastError`, which is a reported path rather than a swallowed one. The reservation owner `"window contexts"` is a hardcoded English literal that reaches the user in the Settings conflict message. Keyboard navigation passes in the sense that every window-context action has a keyboard path, which is this component's whole purpose.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (SystemWindowShortcutNamesTests.swift, ShortcutManagerConformanceTests.swift, 10 of 22 vectors tested, 12 skipped with reasons); unit-test-coverage stays partial. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from SystemWindowShortcutManager.swift and SystemWindowShortcutNames.swift |

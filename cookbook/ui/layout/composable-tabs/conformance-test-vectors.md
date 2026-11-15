@@ -29,7 +29,7 @@
 | composable-tabs-027 | capture-skips-rail-split | One split's visible item is pinned to a fixed rail thickness; thicknesses are captured on it | No item in that split has its thickness fraction written |
 | composable-tabs-028 | capture-only-uncollapsed-items | One item in a split is collapsed; thicknesses are captured | The collapsed item's child does not have its thickness fraction overwritten |
 | composable-tabs-029 | capture-recurses-into-children | A rail split contains a nested split with its own children | Capturing thicknesses still descends into and updates the nested split's own children |
-| composable-tabs-030 | apply-sizes-matches-existing-shape | Live tree has 1 child; template layout node is a 2-child split | Applying sizes leaves the live tree's single child untouched |
+| composable-tabs-030 | apply-sizes-matches-existing-shape | Live tree has 2 children; template layout node is a single leaf | Applying sizes leaves both children's thickness fractions untouched |
 | composable-tabs-031 | apply-sizes-forces-relayout | Sizes are applied from a template on a loaded view | The one-shot thickness guard is reset and dividers move to the new fractions before the next natural layout pass |
 | composable-tabs-032 | debounce-thickness-persist | Two resize notifications arrive 100ms apart | Only one layout-change callback happens, timed 300ms after the second notification |
 | composable-tabs-033 | dedupe-unchanged-persist | A pending persist's rounded thickness signature matches the signature already delivered to the layout-change callback | The layout-change callback is not invoked |

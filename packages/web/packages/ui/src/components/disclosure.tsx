@@ -36,6 +36,7 @@ export function Disclosure({
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen);
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp : internalOpen;
+  const bodyId = React.useId();
 
   function toggle() {
     const next = !open;
@@ -50,12 +51,15 @@ export function Disclosure({
           type="button"
           onClick={toggle}
           aria-expanded={open}
+          aria-controls={open ? bodyId : undefined}
           className="flex min-w-0 flex-1 items-center gap-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-apt-gold/40 rounded"
         >
           <ChevronRight
             className={cn(
-              "size-4 shrink-0 text-apt-text-muted transition-transform",
-              open && "rotate-90",
+              "size-4 shrink-0 text-apt-text-muted transition-transform motion-reduce:transition-none",
+              // Collapsed, the chevron points toward the inline end: right in LTR,
+              // left under dir="rtl". Open, it points down in both directions.
+              open ? "rotate-90" : "rtl:rotate-180",
             )}
           />
           <span className="flex min-w-0 flex-col">
@@ -67,7 +71,7 @@ export function Disclosure({
         </button>
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </div>
-      {open && <div className="border-t border-apt-border px-3 py-3">{children}</div>}
+      {open && <div id={bodyId} className="border-t border-apt-border px-3 py-3">{children}</div>}
     </div>
   );
 }

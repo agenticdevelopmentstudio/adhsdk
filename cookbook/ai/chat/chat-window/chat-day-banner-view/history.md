@@ -8,3 +8,4 @@
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/chat-window/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the rule-width-priority NEEDS REVIEW marker as current behavior plus a pending Design Decision; added separation-of-concerns and unit-test-coverage compliance. |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.3.2 | 2026-11-15 | Mike Fullerton | Conformance tests added (ChatDayBannerConformanceTests.swift, 14 of 16 vectors); unit-test-coverage now partial. |

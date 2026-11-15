@@ -2,11 +2,11 @@
 id: f1167221-f233-4b5d-822c-ae26de4634db
 title: "Endpoint Kinds"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -88,7 +88,7 @@ Not applicable — this is a constant vocabulary and type-guard module, not a vi
 
 ## Conformance Test Vectors
 
-No test file sits next to `endpoint-kinds.ts`. Vectors 001 to 009 are traced to the declarations in `endpoint-kinds.ts`. Vectors 010 and 011 are traced to the declaration of `NON_DEPLOY_KINDS` in `deploy-platform/src/engine/classify.ts` and to the assertions in `classify.test.ts` ("deploy-backed kinds need wiring" and "infra kinds do not").
+`endpoint-kinds.test.ts` sits next to `endpoint-kinds.ts` and tests vectors 001 to 007 and 010 to 012; 008 and 009 are compile-time type errors that vitest does not check, so they are skipped. Vectors 001 to 009 are traced to the declarations in `endpoint-kinds.ts`. Vectors 010 and 011 are traced to the declaration of `NON_DEPLOY_KINDS` in `deploy-platform/src/engine/classify.ts` and to the assertions in `classify.test.ts` ("deploy-backed kinds need wiring" and "infra kinds do not").
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -167,7 +167,7 @@ Not applicable: the module makes no log calls, and `isEndpointKind` reports its 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/endpoint-kinds.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-web/src/lib/endpoint-kinds.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -198,7 +198,7 @@ Not applicable: the module makes no log calls, and `isEndpointKind` reports its 
 
 **Separation of concerns.** The module owns only the vocabulary. Classification of deploy-backed kinds stays with the engine, and it re-exports rather than restating the engine's set.
 
-**Unit test coverage.** No test file exercises `ENDPOINT_KINDS` or `isEndpointKind` in status-web. The re-exported `NON_DEPLOY_KINDS` is covered indirectly by the engine's `classify.test.ts`, which asserts `endpointNeedsWiring` for all six kinds.
+**Unit test coverage.** `endpoint-kinds.test.ts` covers vectors 001 to 007 and 010 to 012. Vectors endpoint-kinds-008 and endpoint-kinds-009 are skipped: they assert type errors (a readonly tuple has no `push`; `"tcp"` is not an `EndpointKind`), which vitest does not check.
 
 **Explicit error handling.** The guard returns `false` for any non-member rather than throwing, and the result is typed as a predicate so callers must branch on it.
 
@@ -208,6 +208,7 @@ Not applicable: the module makes no log calls, and `isEndpointKind` reports its 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (endpoint-kinds.test.ts, 10 of 12 vectors; 008 and 009 are compile-time type errors, skipped); unit-test-coverage now partial. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from source |

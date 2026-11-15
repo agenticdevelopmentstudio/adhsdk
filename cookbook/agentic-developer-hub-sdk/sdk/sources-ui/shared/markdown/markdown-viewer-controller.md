@@ -2,11 +2,11 @@
 id: 8f2e1c9d-7a4b-4c2e-9d8e-5f6c7d8e9f0a
 title: "Markdown Viewer"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -201,8 +201,8 @@ Not applicable: No logging instrumented in source. Host app can log component li
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Markdown/MarkdownViewerController.swift` | unverified |
-| web | `packages/web/packages/markdown/src/components/MarkdownViewer.tsx` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Markdown/MarkdownViewerController.swift` | confirmed (1.1.2) |
+| web | `packages/web/packages/markdown/src/components/MarkdownViewer.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -247,7 +247,7 @@ Not applicable: No logging instrumented in source. Host app can log component li
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-`screen-reader-support`/`keyboard-navigable`/`semantic-markup` rest on the `aria-live`/`aria-busy`/`role="alert"` markup and the native `<select>` theme switcher shown in `MarkdownViewer.tsx`; `dynamic-type-support`, `contrast-ratio`, and `touch-target-size` are `partial` because the requirement is stated but not measured or enforced in the given source; `input-sanitization` and `content-security-policy` rest on the `rehype-sanitize` allowlist and the bootstrap script's `nonce` support in `process-markdown.ts`/`MarkdownViewer.tsx`; `secure-transport` is `partial` because the fetcher calls a relative API path with no TLS enforcement visible from this source; `data-minimization` rests on the Privacy section above; the internationalization checks rest on the Localization key table above; and the platform-compliance checks rest on the APT design tokens and the theme registry/palette system. `separation-of-concerns` is passed on both platform sources: the web `MarkdownViewer.tsx` delegates fetching to `useMarkdownDocument`, rendering to `MarkdownRenderer`, and theme data to `themes/registry`+`palettes`, keeping only fetch-state/theme-persistence wiring and chrome layout in the component itself; the Apple `MarkdownViewerController.swift` delegates markdown rendering to `MarkdownDocumentRenderer` and text display to `MarkdownTextPane`, keeping only palette/content wiring in the controller. `unit-test-coverage` is partial across the two platform entries: no test in this repo imports or renders the web `MarkdownViewer.tsx` (`MarkdownViewerControllerTests.swift` is a name-matched false positive — it tests the unrelated Apple controller), while `MarkdownViewerControllerTests.swift` does genuinely exercise `MarkdownViewerController.swift`, asserting rendered text, non-editability, and re-render-on-content-change through a loaded viewer.
+`screen-reader-support`/`keyboard-navigable`/`semantic-markup` rest on the `aria-live`/`aria-busy`/`role="alert"` markup and the native `<select>` theme switcher shown in `MarkdownViewer.tsx`; `dynamic-type-support`, `contrast-ratio`, and `touch-target-size` are `partial` because the requirement is stated but not measured or enforced in the given source; `input-sanitization` and `content-security-policy` rest on the `rehype-sanitize` allowlist and the bootstrap script's `nonce` support in `process-markdown.ts`/`MarkdownViewer.tsx`; `secure-transport` is `partial` because the fetcher calls a relative API path with no TLS enforcement visible from this source; `data-minimization` rests on the Privacy section above; the internationalization checks rest on the Localization key table above; and the platform-compliance checks rest on the APT design tokens and the theme registry/palette system. `separation-of-concerns` is passed on both platform sources: the web `MarkdownViewer.tsx` delegates fetching to `useMarkdownDocument`, rendering to `MarkdownRenderer`, and theme data to `themes/registry`+`palettes`, keeping only fetch-state/theme-persistence wiring and chrome layout in the component itself; the Apple `MarkdownViewerController.swift` delegates markdown rendering to `MarkdownDocumentRenderer` and text display to `MarkdownTextPane`, keeping only palette/content wiring in the controller. `unit-test-coverage` is partial: the web `MarkdownViewer.tsx` is covered by `markdownViewer.test.tsx` for every vector except `mdv-015` (the 44×44pt/48×48dp touch-target size is an iOS/Android measurement and jsdom has no layout), and `MarkdownViewerControllerTests.swift` does genuinely exercise `MarkdownViewerController.swift`, asserting rendered text, non-editability, and re-render-on-content-change through a loaded viewer.
 
 ## Change History
 
@@ -256,3 +256,4 @@ Not applicable: No logging instrumented in source. Host app can log component li
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation from web (React/TypeScript) and Apple (Swift) sources. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename requirements to subject-only kebab-case everywhere they're cited; add a types note (fetcher signature, document shape, theme registry) and a concrete sanitization allowlist; split Apple theme ownership from web's (host-injected `palette` vs. component-owned `localStorage`) across Requirements, Privacy, and Platform Notes, and fix "Preferences" to `UserDefaults`; move the mislabeled SwiftUI bullet to AppKit/UIKit and write a real SwiftUI note; rebuild Compliance as itemized per-check rows instead of one unverifiable `wcag-2.1-aa` line; reformat Design Decisions to Decision/Rationale/Approved and resolve the storage-errors logging contradiction in favor of the source (no logging); make Localization concrete with string keys; add `abort-on-id-change` and `theme-switcher-touch-target` requirements with vectors, plus sanitizer vectors for `javascript:` links and `onerror`; fix the Appearance padding contradiction and move Tailwind classes to the React/Web note; fix the States idle/empty contradiction and note the Error state has no retry; mark `id`/`fetcher`/`timeoutMs` Web-only for platform symmetry; name the fetcher's default endpoint; add discoverability tags and `depends-on`/`related` links to the composed markdown ingredients. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | fetch-timeout/abort-on-id-change qualified: depend on fetcher honoring AbortSignal; mdv-003/mdv-016/edge case/fetcher contract corrected. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (markdownViewer.test.tsx, 18 of 18 vectors; mdv-015 skipped as an iOS/Android measurement); unit-test-coverage stays partial (Apple platform entry). |

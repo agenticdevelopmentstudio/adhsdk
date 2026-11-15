@@ -13,11 +13,14 @@ structures the outcome, `MainActorScriptCommand` only bridges Cocoa
 Scripting's dispatch onto the main actor, and `applicationElementSpecifier`
 only builds one kind of `NSScriptObjectSpecifier` — with no UI, persistence,
 or networking code mixed into any of them. `unit-test-coverage` is
-**partial**: `AppleScriptRunner` and `MainActorScriptCommand` each have a
-dedicated `Tests/.../Scripting/*Tests.swift` suite with meaningful
-assertions (see Conformance Test Vectors), but `applicationElementSpecifier`
-has no test file among the given sources or found elsewhere in the
-repository. `explicit-error-handling` **passed**: `AppleScriptRunner.run(_:)`
+**partial**: `AppleScriptRunnerTests.swift`, `MainActorScriptCommandTests.swift`
+and `ApplicationElementSpecifierTests.swift` (all under `Tests/.../Scripting/`)
+cover every vector except these skipped ones: scripting-005 (the fallback
+branch needs an error dictionary with no message or number, which NSAppleScript
+never supplies), scripting-006 (`NSAppleScript(source:)` never returns nil),
+scripting-009 (main-thread marshaling is the caller's job and unobservable)
+and scripting-017 (NSApp's class description always resolves in a running
+application). `explicit-error-handling` **passed**: `AppleScriptRunner.run(_:)`
 never drops a compile or runtime failure — every failure path returns a
 distinct, inspectable `Result` case; nothing is caught and discarded.
 `main-thread-freedom` is **partial**: `AppleScriptRunner.run(_:)` executes

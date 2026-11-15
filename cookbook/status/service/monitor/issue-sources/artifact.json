@@ -4,11 +4,11 @@
     "id": "86e7936a-c295-4e1f-8f7a-7278b4849008",
     "title": "Status Server Monitor Issue Sources",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -44,7 +44,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ec983ddfdd996eaa",
+  "synced": "49b4f614682be380",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

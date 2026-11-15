@@ -32,7 +32,7 @@ beforeEach(() => {
 });
 
 describe("schemaOf (ecosystem-config-028)", () => {
-  it("reads the schema off the prefix before the first dot", () => {
+  it("ecosystem-config-028: reads the schema off the prefix before the first dot", () => {
     expect(schemaOf({ resource: "content.feed" })).toBe("content");
     expect(schemaOf({ resource: "persona_memory.links" })).toBe("persona_memory");
     expect(schemaOf({ resource: "content.feed.items" })).toBe("content");
@@ -40,7 +40,7 @@ describe("schemaOf (ecosystem-config-028)", () => {
 });
 
 describe("reading the catalog (ecosystem-config-026)", () => {
-  it("drains the list and maps snake_case to camelCase", async () => {
+  it("ecosystem-config-026: drains the list and maps snake_case to camelCase", async () => {
     listAllV1.mockResolvedValueOnce([
       wire({ resource: "content.feed", push_mode: "route", default_enabled: false }),
     ]);
@@ -71,7 +71,7 @@ describe("reading the catalog (ecosystem-config-026)", () => {
 });
 
 describe("setting an override (ecosystem-config-024, -025)", () => {
-  it("the ecosystem family POSTs to /ecosystems/{id}/sync_tables/{resource}", async () => {
+  it("ecosystem-config-024: the ecosystem family POSTs to /ecosystems/{id}/sync_tables/{resource}", async () => {
     authedJson.mockResolvedValueOnce({
       tables: [wire({ resource: "content.notes", enabled: true, overridden: true })],
     });
@@ -83,7 +83,7 @@ describe("setting an override (ecosystem-config-024, -025)", () => {
     expect(tables[0]).toMatchObject({ enabled: true, overridden: true, defaultEnabled: true });
   });
 
-  it("the admin family POSTs to /sync/tables/{id}/resources/{resource}", async () => {
+  it("ecosystem-config-025: the admin family POSTs to /sync/tables/{id}/resources/{resource}", async () => {
     authedJson.mockResolvedValueOnce({ tables: [] });
     await syncTablesApi("admin").setOverride("eco-1", "content.notes", false);
     expect(authedJson).toHaveBeenCalledWith("/api/v1/sync/tables/eco-1/resources/content.notes", {
@@ -93,8 +93,23 @@ describe("setting an override (ecosystem-config-024, -025)", () => {
   });
 });
 
+describe("the refreshed catalog a write returns (ecosystem-config-033)", () => {
+  it("ecosystem-config-033: setOverride returns the whole catalog mapped from `tables`, not one row", async () => {
+    authedJson.mockResolvedValueOnce({
+      tables: [
+        wire({ resource: "content.notes", enabled: true, overridden: true }),
+        wire({ resource: "content.feed", enabled: false, overridden: true, default_enabled: true }),
+        wire({ resource: "mail.threads" }),
+      ],
+    });
+    const tables = await syncTablesApi("ecosystem").setOverride("eco-1", "content.notes", true);
+    expect(tables.map((t) => t.resource)).toEqual(["content.notes", "content.feed", "mail.threads"]);
+    expect(tables[1]).toMatchObject({ pushMode: "generic", defaultEnabled: true, enabled: false });
+  });
+});
+
 describe("clearing an override (ecosystem-config-027)", () => {
-  it("DELETEs, then re-reads the catalog because /v1 answers a tombstone", async () => {
+  it("ecosystem-config-027: DELETEs, then re-reads the catalog because /v1 answers a tombstone", async () => {
     authedJson.mockResolvedValueOnce({ id: "content.notes", object: "resource", deleted: true });
     listAllV1.mockResolvedValueOnce([wire({ resource: "content.notes" })]);
     const tables = await syncTablesApi("ecosystem").clearOverride("eco-1", "content.notes");

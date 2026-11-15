@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { glitchtipFetcher, mapIssues, MAX_PAGES, PAGE_LIMIT } from "../src/telemetry/fetchers/glitchtip";
+import { fetchGlitchtipIssues, glitchtipFetcher, mapIssues, MAX_PAGES, PAGE_LIMIT } from "../src/telemetry/fetchers/glitchtip";
 
 // The fetcher's CONTRACT with `errorsStore`, which is the only thing that makes the store's
 // sweep safe. The store reads "absent from this set" as "resolved upstream", so it depends
@@ -274,5 +274,194 @@ describe("mapIssues", () => {
       { id: "1", title: "t", count: "42", firstSeen: "not-a-date", lastSeen: "2026-08-18T00:00:00Z" },
     ]);
     expect(i).toMatchObject({ count: 42, firstSeen: null, lastSeen: "2026-08-18T00:00:00.000Z" });
+  });
+});
+
+// One test per row of the recipe's conformance-test-vectors.md (status/service/telemetry/fetchers).
+describe("conformance vectors — glitchtip", () => {
+  const warn = () => vi.spyOn(console, "warn").mockImplementation(() => {});
+
+  it("status-server-fetchers-001 unconfigured makes no request", async () => {
+    const calls = stubFetch([]);
+    expect(await glitchtipFetcher({}).fetch()).toEqual({ ok: true, items: [] });
+    expect(await glitchtipFetcher({ ...ENV, GLITCHTIP_ORG: undefined }).fetch()).toEqual({ ok: true, items: [] });
+    expect(calls).toEqual([]);
+  });
+
+  it("status-server-fetchers-002 first request URL and bearer header", async () => {
+    const seen: { url: string; headers: Record<string, string> }[] = [];
+    vi.stubGlobal("fetch", async (url: string, init: { headers: Record<string, string> }) => {
+      seen.push({ url, headers: init.headers });
+      return { ok: true, status: 200, headers: new Headers(), json: async () => [] };
+    });
+    await glitchtipFetcher(ENV).fetch();
+    expect(seen).toHaveLength(1);
+    expect(seen[0]!.url).toBe("https://glitchtip.example/api/0/organizations/adh/issues/?query=is:unresolved&limit=100");
+    expect(seen[0]!.headers).toEqual({ Authorization: "Bearer tok" });
+  });
+
+  it("status-server-fetchers-003 short page is complete", async () => {
+    stubFetch([issue("a"), issue("b")]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r.ok).toBe(true);
+    expect(r.complete).toBe(true);
+    expect(r.items.map((i) => i.issueKey)).toEqual(["a", "b"]);
+  });
+
+  it("status-server-fetchers-004 full page without a Link header is incomplete", async () => {
+    stubFetch(fullPage("f"));
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r.ok).toBe(true);
+    expect(r.complete).toBe(false);
+  });
+
+  it("status-server-fetchers-005 non-array 200 body fails the poll", async () => {
+    const w = warn();
+    stubFetch({ detail: "Authentication credentials were not provided." });
+    expect(await glitchtipFetcher(ENV).fetch()).toEqual({ ok: false, items: [] });
+    expect(w).toHaveBeenCalledWith(expect.stringContaining("non-array body"));
+  });
+
+  it("status-server-fetchers-006 HTTP error fails the poll and logs the status", async () => {
+    const w = warn();
+    stubFetch([], { ok: false, status: 502 });
+    expect(await glitchtipFetcher(ENV).fetch()).toEqual({ ok: false, items: [] });
+    expect(w).toHaveBeenCalledWith(expect.stringContaining("HTTP 502"));
+  });
+
+  it("status-server-fetchers-007 thrown fetch fails the poll after exactly one attempt", async () => {
+    const w = warn();
+    let n = 0;
+    vi.stubGlobal("fetch", async () => {
+      n += 1;
+      throw new Error("ECONNREFUSED");
+    });
+    expect(await glitchtipFetcher(ENV).fetch()).toEqual({ ok: false, items: [] });
+    expect(n).toBe(1);
+    expect(w).toHaveBeenCalledWith(expect.stringContaining("ECONNREFUSED"));
+  });
+
+  it("status-server-fetchers-008 project falls back slug, name, unknown", () => {
+    const out = mapIssues([
+      { id: "1", title: "t", project: { slug: "adh", name: "ADH" } },
+      { id: "2", title: "t", project: { name: "Some Team's App" } },
+      { id: "3", title: "t", project: null },
+    ]);
+    expect(out.map((i) => i.project)).toEqual(["adh", "Some Team's App", "unknown"]);
+  });
+
+  it("status-server-fetchers-009 count, timestamps and field defaults", () => {
+    const [i] = mapIssues([{ id: "1", title: "t", count: "42", firstSeen: "not-a-date", lastSeen: "2026-08-18T00:00:00Z" }]);
+    expect(i).toEqual({
+      id: "1",
+      issueKey: "1",
+      project: "unknown",
+      title: "t",
+      culprit: null,
+      level: null,
+      count: 42,
+      userCount: 0,
+      firstSeen: null,
+      lastSeen: "2026-08-18T00:00:00.000Z",
+      permalink: null,
+    });
+  });
+
+  it("status-server-fetchers-019 the walk is aborted after 12,000ms", async () => {
+    vi.useFakeTimers();
+    try {
+      const w = warn();
+      let signal: AbortSignal | undefined;
+      vi.stubGlobal("fetch", (_url: string, init: { signal: AbortSignal }) => {
+        signal = init.signal;
+        return new Promise((_resolve, reject) => {
+          init.signal.addEventListener("abort", () =>
+            reject(Object.assign(new Error("aborted"), { name: "AbortError" })),
+          );
+        });
+      });
+      const pending = glitchtipFetcher(ENV).fetch();
+      await vi.advanceTimersByTimeAsync(11_999);
+      expect(signal!.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(signal!.aborted).toBe(true);
+      expect(await pending).toEqual({ ok: false, items: [] });
+      expect(w).toHaveBeenCalledWith(expect.stringContaining("timed out after 12000ms"));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("status-server-fetchers-020 follows the cursor, re-reads page 1, reports complete", async () => {
+    const calls = stubPages([
+      { issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true }) },
+      { issues: [issue("last")], link: linkHeader({ cursor: "c2", results: false }) },
+      { issues: fullPage("a") },
+    ]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r).toMatchObject({ ok: true, complete: true });
+    expect(r.items).toHaveLength(PAGE_LIMIT + 1);
+    expect(calls).toHaveLength(3);
+    expect(calls[1]).toBe(`${calls[0]}&cursor=c1`);
+    expect(calls[2]).toBe(calls[0]);
+  });
+
+  it("status-server-fetchers-021 a failing later page keeps the pages read, incomplete", async () => {
+    warn();
+    stubPages([{ issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true }) }, { status: 502 }]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r).toMatchObject({ ok: true, complete: false });
+    expect(r.items).toHaveLength(PAGE_LIMIT);
+  });
+
+  it("status-server-fetchers-022 a repeated cursor or the page cap ends the walk incomplete", async () => {
+    stubPages([{ issues: fullPage("a"), link: linkHeader({ cursor: "same", results: true }) }]);
+    expect(await glitchtipFetcher(ENV).fetch()).toMatchObject({ ok: true, complete: false });
+    let n = 0;
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      calls.push(url);
+      n += 1;
+      const page = n;
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ Link: linkHeader({ cursor: `c${page}`, results: true }) }),
+        json: async () => fullPage(`p${page}-`),
+      };
+    });
+    expect(await glitchtipFetcher(ENV).fetch()).toMatchObject({ ok: true, complete: false });
+    expect(calls).toHaveLength(MAX_PAGES);
+  });
+
+  it("status-server-fetchers-023 the next URL is rebuilt from the configured base, never the Link origin", async () => {
+    const calls = stubPages([
+      { issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true, origin: "https://evil.example" }) },
+      { issues: [] },
+    ]);
+    await glitchtipFetcher(ENV).fetch();
+    expect(calls).toHaveLength(2);
+    expect(calls.every((u) => u.startsWith("https://glitchtip.example/"))).toBe(true);
+  });
+
+  it("status-server-fetchers-024 an explicit results=false on a full page is complete", async () => {
+    const calls = stubPages([{ issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: false }) }]);
+    const r = await glitchtipFetcher(ENV).fetch();
+    expect(r.complete).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("status-server-fetchers-028 fetchGlitchtipIssues takes the query and marks a later-page failure interrupted", async () => {
+    warn();
+    const calls = stubPages([{ issues: fullPage("a"), link: linkHeader({ cursor: "c1", results: true }) }, { status: 502 }]);
+    const r = await fetchGlitchtipIssues(ENV, "is:resolved");
+    expect(r).toMatchObject({ ok: true, complete: false, interrupted: true });
+    expect(r.issues).toHaveLength(PAGE_LIMIT);
+    expect(calls[0]).toContain("?query=is:resolved&limit=100");
+    // A repeated cursor is incomplete but is not an interruption.
+    stubPages([{ issues: fullPage("a"), link: linkHeader({ cursor: "same", results: true }) }]);
+    const again = await fetchGlitchtipIssues(ENV, "is:unresolved");
+    expect(again.complete).toBe(false);
+    expect(again.interrupted).toBeUndefined();
   });
 });

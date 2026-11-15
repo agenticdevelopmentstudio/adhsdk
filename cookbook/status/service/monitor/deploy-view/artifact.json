@@ -4,11 +4,11 @@
     "id": "9b95bde8-c47e-40a4-a21c-4a84c23ddbf1",
     "title": "Status Server Monitor Deploy View",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cb32a18b410b93d1",
+  "synced": "696f514a45fa835a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

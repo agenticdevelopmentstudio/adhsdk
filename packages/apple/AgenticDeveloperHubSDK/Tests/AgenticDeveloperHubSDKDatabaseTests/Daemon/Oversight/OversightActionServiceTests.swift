@@ -209,6 +209,13 @@ final class OversightActionServiceTests: XCTestCase {
         XCTAssertEqual(result.status, "acted")
     }
 
+    func testV012_resultForFailedHasEmptyStatusAndTheMessage() {
+        let result = OversightActionService.result(for: .failed("boom"), findingId: 7)
+        XCTAssertFalse(result.succeeded)
+        XCTAssertEqual(result.status, "")
+        XCTAssertEqual(result.reason, "boom")
+    }
+
     func testResultForNotFoundIsNotOK() {
         let result = OversightActionService.result(for: .notFound, findingId: 7)
         XCTAssertFalse(result.succeeded)

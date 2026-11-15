@@ -1,5 +1,5 @@
 
-Vectors are derived from `report-rules.test.ts` (test names in parentheses); vectors 033 to 040 are read directly from the source because the tests do not pin them, so they have no test.
+Every vector is covered by a test in `report-rules.test.ts`, whose titles start with the vector id (test names in parentheses are the original descriptions).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

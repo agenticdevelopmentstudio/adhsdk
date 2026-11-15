@@ -4,11 +4,11 @@
     "id": "143b0352-49d4-46a9-a922-bb45c4cc0e7e",
     "title": "Conversations Key Commands",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-10-04",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "aa14d341897c9a48",
+  "synced": "02fe4aa8b5cf85d2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

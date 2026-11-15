@@ -2,8 +2,7 @@
 MCP Plumbing is the connection-lifecycle and reconciliation layer for the
 Model Context Protocol: it turns a stored server configuration into a live,
 tool-capable connection, keeps that connection's lifecycle safe under
-concurrent connect/disconnect requests, and lets the host application itself
-act as an in-process MCP server. It spans six files:
+concurrent connect/disconnect requests. It spans five files:
 
 - `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift` — the client, its
   client-protocol surface, its connection-state type, and its error type. One
@@ -24,8 +23,3 @@ act as an in-process MCP server. It spans six files:
   subprocess transport, an implementation of MCP's own transport contract
   built on this codebase's shared subprocess-channel abstraction, used for
   every `.stdio` server instead of the MCP SDK's own stock stdio transport.
-- `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/HostMCPServer.swift` — a
-  self-contained in-process MCP server that exposes host
-  application info and a "open a chat window" tool over an in-memory
-  transport pair, with no subprocess and no registry integration.
-

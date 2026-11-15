@@ -67,6 +67,20 @@ Split is a stateless layout container with no interactive states.
 Split is a generic container with no interactive semantics. Child elements retain their own accessibility properties. The component itself requires no special accessibility attributes — semantic meaning is determined by its children. Per **preserves-reading-order**, the root carries no ARIA role, and DOM order matches visual order (WCAG 1.3.2, Meaningful Sequence) in both the stacked and two-column layouts.
 
 ## Conformance Test Vectors
+
+| ID | Requirement | Input | Expected |
+|----|-------------|-------|----------|
+| split-001 | renders-children | `children: <p>Copy</p>` and `<p>Shot</p>` | Both `<p>` elements are rendered inside the root element, in the order given |
+| split-002 | root-class | Any props | Root element is a `<div>` with `lp-split` in its class list |
+| split-003 | merges-classname | `className: 'custom'` | Root element's class attribute is exactly `lp-split custom` |
+| split-004 | responsive-breakpoint, viewport-resize | The `.lp-split` rules in `packages/web/packages/landing/src/css/base.css` | The base rule declares `display: grid` and no `grid-template-columns` (single column); a `@media (min-width: 62rem)` rule declares `grid-template-columns: minmax(0, 5fr) minmax(0, 6fr)` and `gap: 3rem`; the base gap is `2rem`. jsdom does not apply stylesheets or media queries, so check it by parsing `base.css`; actually resizing the viewport needs a real browser |
+| split-005 | preserves-reading-order | Any props | Root element has no `role` attribute, and no `.lp-split` rule in `base.css` declares `order` or `row-reverse` |
+| split-006 | responsive-breakpoint | Component rendered under an ancestor `dir="rtl"` at or above `62rem` | The first child sits in the right-hand column and the second in the left-hand column. Needs real layout, which jsdom does not compute; run it in a browser |
+| split-007 | merges-classname | `className: undefined` or `className: ''` | Root element's class attribute is exactly `lp-split`, with no empty token or trailing whitespace |
+| split-008 | renders-children | No children | Root element is an empty `lp-split` container with no child nodes; no error is thrown |
+| split-009 | renders-children | One child `<p>Only</p>` | The `<p>` is rendered inside the root element, which has no other children |
+| split-010 | responsive-breakpoint | The `.lp-split` rules in `base.css` | No rule for `.lp-split` declares `max-width` or `width`; the column tracks are `fr`-based. Check it by parsing `base.css` |
+| split-011 | responsive-breakpoint | The `.lp-split` rules in `base.css` | No rule for `.lp-split` declares `min-width`, and the only `grid-template-columns` sits inside the `62rem` media query, so below it the grid is a single column. Check it by parsing `base.css` |
 ## Edge Cases
 
 - **empty-children**: When no children are provided, the component renders an empty `lp-split` container; this is not an error state. See split-008.
@@ -143,9 +157,9 @@ Not applicable: Split is a presentation component with no runtime state changes 
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | Accessibility |
 | [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | partial | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Statuses rest on `Split.tsx` rendering a bare `<div>` with no ARIA role or attributes (semantic-markup), and on `css/base.css` defining the two-column grid with no explicit `direction` override, which gives native RTL mirroring but is covered by vector split-006, which is defined but not yet implemented (rtl-layout-support). `separation-of-concerns` passes because `Split.tsx` is pure presentation, with all layout values living in CSS rather than the component. `unit-test-coverage` fails because no test in the repository renders `Split` — the landing package's `deck.test.tsx` covers `Screen` and `Deck` but not `Split`.
+Statuses rest on `Split.tsx` rendering a bare `<div>` with no ARIA role or attributes (semantic-markup), and on `css/base.css` defining the two-column grid with no explicit `direction` override, which gives native RTL mirroring but is covered by vector split-006, which is defined but not yet implemented (rtl-layout-support). `separation-of-concerns` passes because `Split.tsx` is pure presentation, with all layout values living in CSS rather than the component. `unit-test-coverage` is partial because `split.test.tsx` in the landing package covers split-001 to split-011 except split-006 (RTL column mirroring), which is skipped because it needs real layout that jsdom does not compute.
 
 ## Change History
 

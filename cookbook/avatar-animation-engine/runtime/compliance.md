@@ -18,8 +18,7 @@ it fails hard. `fault-tolerance` is partial because the Scheduler's
 1000-iteration catch-up guard protects both platforms equally, but the
 one-shot stale-time clamp that bounds a long-stopped reflex chain's replay
 exists only on Apple (see the corresponding Design Decision). `unit-test-coverage`
-is partial because `Channels`/`createChannels` has no dedicated test file on
-either platform (`ChannelsTests.swift` and `channels.test.ts` do not exist);
-it is exercised only indirectly through `TweenTests.swift`/`tween.test.ts`
-and the higher-level `EngineTests.swift`.
+is partial: the web suite (`conformance.test.ts`, one test per vector, covering
+`Channels` too) passes 31 of 32 vectors; aer-032 (`ChannelValue` JSON codec) is
+Apple-only and skipped on the web.
 

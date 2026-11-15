@@ -19,3 +19,6 @@
 **Rationale**: The `Exact` type comment in `dashboard-types-parity.test.ts`: a renamed field, a nullability change or a union member stops the check being true. It catches drift that a transpile-only test run would not.
 **Approved**: pending
 
+**Decision**: Client reading rules over server data were removed from this recipe; this module only declares types and four constants.
+**Rationale**: An earlier version of this recipe described 18 rules such as keeping stale section data after a failure, reading a null count as unknown, treating a request `status` of 0 as no response, treating `truncated` and `incomplete` as short results, and tolerating a response with no `views`. None of them runs in `dashboard-types.ts`. They are implemented in the status-web components instead: `DashboardPanel` and `viewsMissing` in `DashboardParts.tsx`, the truncation notes in `AnalyticsView.tsx` and `ErrorsSitePage.tsx`, the "No response" label in `ErrorsSitePage.tsx`, and `failureRateHigh` and the failure lists in the site pages. The server produces the rest (series length, sessions sum, runtime group message, path and key, the active-issue rule, the `views` joins), so they are not client code anywhere in status-web.
+**Approved**: pending

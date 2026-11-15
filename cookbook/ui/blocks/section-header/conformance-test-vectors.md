@@ -23,5 +23,5 @@
 | section-header-020 | title-fallback-inline | `paneTitle title="Providers"` outside any stack | The h2 "Providers" is drawn inline |
 | section-header-021 | last-pane-title-wins | Two `paneTitle` headers registered in one stack | The last to register is in the strip; the other draws its h2 in place |
 
-The tests beside the source are in `detailTitle.test.tsx`, which covers only the `paneTitle` behavior. Tested: vector 016, and the leave-in-place half of 017. Derived from the source, with no test: vectors 001 to 015 and 018 to 021. No test renders the help popover, eyebrow or actions.
+The tests are in `sectionHeader.test.tsx`, one per vector (001 to 021). `detailTitle.test.tsx` also covers the `paneTitle` case of vector 016.
 

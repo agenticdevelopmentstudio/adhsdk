@@ -2,11 +2,11 @@
 id: 7add8e4b-922e-4518-aa45-79bf56cdf8bc
 title: "API Toolkit"
 type: ingredient
-version: 1.1.2
+version: 1.1.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -283,10 +283,10 @@ readiness.
 - **mutation-relist**: create, update, and remove MUST re-issue the list call
   after their underlying mutation succeeds; the raw create/update/remove
   mutators they call MUST NOT re-list on their own.
-- **delete-uses-authed-request**: row removal MUST call the
-  response-body-discarding authenticated request helper, not the
-  JSON-parsing authenticated request helper, because the delete endpoint
-  answers `204 No Content` and the JSON-parsing helper throws on a `204`.
+- **delete-uses-authed-request**: row removal MUST call the JSON-parsing
+  authenticated request helper with the `DELETE` method, because the delete
+  endpoint answers `200` with a `{id, object, deleted: true}` tombstone; the
+  tombstone is not read.
 - **mutation-error-not-hook-state**: a failure from create, update, or remove
   MUST propagate to the caller as a rejected promise, and MUST NOT be written
   into the state's own error field.
@@ -344,9 +344,9 @@ schema-derivation, and generic-CRUD logic, not a visual component.
 | 4 | The write-allowlist check applied to a catalog-exposure table for a non-admin viewer | False (catalog is readable but not writable by a non-admin) | Table visibility gate's test coverage |
 | 5 | The column editability check applied to a relational column with an override set for that column's name, in edit mode | False — an override cannot force a relational column editable outside create mode | Column editability's test coverage |
 | 6 | Dirty detection applied with no edits, then applied with an edit typed back to the baseline value | False in both cases — no edits, and an edit typed back to the baseline value | Row edit tracking's test coverage |
-| 7 | Row removal against an endpoint that answers `204 No Content` | Resolves via the response-body-discarding request helper; using the JSON-parsing helper on the same response would throw | CRUD resource state's test coverage, corroborated by the JSON helper's documented 204 behavior in the auth client recipe |
+| 7 | Row removal against an endpoint that answers `200` with a `{id, object, deleted: true}` tombstone | Issues a `DELETE` through the JSON-parsing authenticated request helper, resolves without reading the tombstone, then re-lists | CRUD resource state's test coverage |
 | 8 | Two list calls issued in quick succession where the first (older sequence number) resolves after the second (newer sequence number) | Only the newer response's rows are written to state; the stale, later-arriving response is discarded | CRUD resource state's test coverage |
-| 9 | Slug projection applied to the endpoint `GET /users/{id}` | `'users-id-get'` — braces stripped, method lower-cased and appended | Endpoint slugging (no dedicated test coverage found) |
+| 9 | Slug projection applied to the endpoint `GET /users/{id}` | The segment array `['users', 'id', 'get']` (joined with `/` as `users/id/get`) — braces stripped, method lower-cased and appended as the last segment | Endpoint slugging (no dedicated test coverage found) |
 | 10 | The request builder invoked with no bearer token, versus the same call with a token supplied | No authorization header in the first case; an authorization header carrying the token is present in the second | Request building and execution (no dedicated test coverage found) |
 
 ## Edge Cases
@@ -532,23 +532,23 @@ diagnostic output.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/api-explorer/src/lib/buildRequest.ts` | unverified |
-| web | `packages/web/packages/api-explorer/src/lib/getEndpoint.ts` | unverified |
-| web | `packages/web/packages/api-explorer/src/lib/highlight.ts` | unverified |
-| web | `packages/web/packages/api-explorer/src/lib/schema.ts` | unverified |
-| web | `packages/web/packages/api-explorer/src/lib/slug.ts` | unverified |
-| web | `packages/web/packages/api-explorer/src/lib/snippets.ts` | unverified |
-| web | `packages/web/packages/api-explorer/src/lib/tone.ts` | unverified |
-| web | `packages/web/packages/api-explorer/src/server.ts` | unverified |
-| web | `packages/web/packages/api-explorer/src/types.ts` | unverified |
-| web | `packages/web/packages/crud/src/editability.ts` | unverified |
-| web | `packages/web/packages/crud/src/edits.ts` | unverified |
-| web | `packages/web/packages/crud/src/exposure.ts` | unverified |
-| web | `packages/web/packages/crud/src/schemas.ts` | unverified |
-| web | `packages/web/packages/crud/src/types.ts` | unverified |
-| web | `packages/web/packages/crud/src/useCrudResource.ts` | unverified |
-| web | `packages/web/packages/crud/src/useExitGuardChannel.ts` | unverified |
-| web | `packages/web/packages/crud/src/viewer.ts` | unverified |
+| web | `packages/web/packages/api-explorer/src/lib/buildRequest.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/api-explorer/src/lib/getEndpoint.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/api-explorer/src/lib/highlight.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/api-explorer/src/lib/schema.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/api-explorer/src/lib/slug.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/api-explorer/src/lib/snippets.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/api-explorer/src/lib/tone.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/api-explorer/src/server.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/api-explorer/src/types.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/crud/src/editability.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/crud/src/edits.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/crud/src/exposure.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/crud/src/schemas.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/crud/src/types.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/crud/src/useCrudResource.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/crud/src/useExitGuardChannel.ts` | confirmed (1.1.3) |
+| web | `packages/web/packages/crud/src/viewer.ts` | confirmed (1.1.3) |
 
 ## Design Decisions
 
@@ -630,7 +630,7 @@ credential leak vector, so the source trades away snippet convenience
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | No retry logic exists anywhere in `buildRequest.ts`/`executeRequest`; the one retry-on-401 that exists in this codebase lives in the auth package's `authedFetch`, outside this recipe's given sources. |
 | [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | passed | `executeRequest` normalizes every HTTP status into a uniform `ApiResult`; `tone.ts` gives a documented, tested status/method-to-tone mapping; `useCrudResource` propagates a mutation failure to its caller rather than swallowing it. |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | `useCrudResource`'s `listSeq` guard rejects a stale, out-of-order list response; `slug.ts` throws loudly on a genuine slug collision rather than silently aliasing two endpoints. |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | `tone.ts`, `exposure.ts`, `editability.ts`, `edits.ts`, `useCrudResource.ts`, and `useExitGuardChannel.ts` each have a sibling `__tests__` file with meaningful assertions; `buildRequest.ts`, `getEndpoint.ts`, `highlight.ts`, `schema.ts`, `slug.ts`, `snippets.ts`, and `types.ts` have no test file found in the repository. |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | All ten conformance vectors are covered by passing tests: `conformanceVectors.test.ts` in api-explorer (vectors 1, 2, 9, 10) and `conformanceVectors.test.tsx` in crud (vectors 3 to 8), beside the existing `tone`, `exposure`, `editability`, `edits`, `useCrudResource` and `useExitGuardChannel` test files. |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Most paths handle errors explicitly (`executeRequest`'s status normalization, `useCrudResource`'s `error` state, `exposure.ts`'s fail-closed default); `executeRequest`'s unguarded `fetch()` call is the one path where a network failure is not handled at all. |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | All seventeen given files are pure logic or headless hooks with no JSX and no DOM access; the `server.ts`/`index.ts` split further separates server-only from client-only concerns. |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | `snippets.ts`'s `TOKEN_PLACEHOLDER` and `slug.ts`'s collision message are hardcoded, English-only strings never externalized to a localization resource — see Localization. |
@@ -639,6 +639,7 @@ credential leak vector, so the source trades away snippet convenience
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformanceVectors.test.ts, conformanceVectors.test.tsx, 10 of 10 vectors); vectors 7 and 9 text corrected to match source; unit-test-coverage now passed. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/. |

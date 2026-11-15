@@ -4,7 +4,7 @@
     "id": "967a7c54-93e4-4181-bd8e-67bbeb26693d",
     "title": "Errors Summary",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "db673ac46f365b89",
+  "synced": "93e834a7f91f09ea",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

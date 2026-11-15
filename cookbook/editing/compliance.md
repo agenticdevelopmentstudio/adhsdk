@@ -3,7 +3,7 @@
 |-------|--------|----------|
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
@@ -19,13 +19,14 @@ concerns` passes: the container owns draft state, validation, layout
 coverage and the repair decision, but delegates persistence to the caller's
 `onSave`/`onRepair`, control rendering to `@adh-sdk/ui`, and
 the navigation guard/alert chrome to an injected `EditingHost`.
-`unit-test-coverage` is partial: the package's own nine test files exercise
+`unit-test-coverage` passes: every conformance vector is asserted, and the package's own test files exercise
 validation, sections, the repair plan, the container's save/cancel/re-
 seeding/layout-fault paths, nesting/rollup, every control kind, the guard
 integration and the full repair UX flow in detail, plus a dedicated
-compile-time suite for the generic contract — but `useDirtyDraft`'s own
+compile-time suite for the generic contract, which `type-enforcement.test.ts` now runs
+through the real TypeScript compiler so vitest asserts it too. `useDirtyDraft`'s own
 equality semantics are tested in the `ui` package rather than duplicated
-here. The recipe specifies no behaviour for two containers editing the same record, so that case is not a reason for the partial. `graceful-degradation` passes: a layout
+here. `graceful-degradation` passes: a layout
 fault renders as a visible alert and the pane continues rendering rather
 than throwing; an unlisted `select` value is shown rather than crashing or
 silently substituting the first option. `fault-tolerance` passes: a

@@ -2,7 +2,7 @@
 id: fba584ed-a87c-4223-a4a9-de9c6dd342d3
 title: "Select"
 type: ingredient
-version: 1.3.3
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-22
@@ -106,7 +106,7 @@ Two implementations exist in source: the generic (`aws-field`) implementation de
 | select-010 | label-association | Render with `label="Choose an option"` | A `<label>` element is rendered with `htmlFor` matching the select's ID |
 | select-011 | wrapper-classname | Render with `className="custom-class"` | The wrapper div includes the class `custom-class` |
 | select-012 | hint-display | Render with `hint="Select one item"` | A `<p>` element is rendered below the select displaying the hint text |
-| select-013 | chevron-indicator | Render component | A chevron-down icon is displayed at the trailing edge of the select |
+| select-013 | chevron-indicator | Render the styled-select primitive (`ui/components/select.tsx`; the `aws-field` Select draws no chevron) | A chevron-down icon is displayed at the trailing edge of the select |
 | select-014 | focus-style | Focus the select element via keyboard | Border changes to the accent color role, ring is visible, focus-visible styles are applied |
 | select-015 | label-association | Render without a `label` prop | No `<label>` element is rendered; the select has no accessible name supplied by the component |
 | select-016 | choice-rendering | Render with `choices=[]` | No `<option>` elements are rendered; the select has no selectable options |
@@ -180,8 +180,8 @@ Not applicable: The component does not emit logs. Debugging or activity logging 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/controls/src/user-settings/components/Select.tsx` | confirmed (1.3.3) |
-| web | `packages/web/packages/ui/src/components/select.tsx` | confirmed (1.3.3) |
+| web | `packages/web/packages/controls/src/user-settings/components/Select.tsx` | confirmed (2.0.0) |
+| web | `packages/web/packages/ui/src/components/select.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -217,13 +217,12 @@ Not applicable: The component does not emit logs. Debugging or activity logging 
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-Statuses rest on the native `<select>`/`<option>` markup and native `disabled` semantics in both source files, the `htmlFor`/`id` label association with no `aria-label` fallback, the `h-9` (36px) control height against the 44px minimum, the `apt-text`/`apt-gold` design tokens used without stated contrast values, the rem-based `text-sm` utility whose scaling depends on a Tailwind config not visible in this source, the fully caller-supplied `label`/`hint`/`choice.label` strings, and the physical `right-3`/`pr-9` positioning of the chevron and padding that does not flip for right-to-left locales. `separation-of-concerns` passes because both `Select.tsx` files are pure presentation over props with no business logic. The select does not yet set `aria-describedby` to the hint (the **hint-described-by** SHOULD is unmet in source), which is one reason `screen-reader-support` is partial. `unit-test-coverage` is partial: `user-settings/components/Select.tsx` is exercised directly and meaningfully in `components.test.tsx`, but `ui/components/select.tsx` has no test of its own — it is only exercised indirectly through `SearchFilterBar`'s combobox assertions in `searchFilterBar.test.tsx`.
-
+Statuses rest on the native `<select>`/`<option>` markup and native `disabled` semantics in both source files, the `htmlFor`/`id` label association with no `aria-label` fallback, the `h-9` (36px) control height against the 44px minimum, the `apt-text`/`apt-gold` design tokens used without stated contrast values, the rem-based `text-sm` utility whose scaling depends on a Tailwind config not visible in this source, the fully caller-supplied `label`/`hint`/`choice.label` strings, and the physical `right-3`/`pr-9` positioning of the chevron and padding that does not flip for right-to-left locales. `separation-of-concerns` passes because both `Select.tsx` files are pure presentation over props with no business logic. The controls select links its hint through `aria-describedby` (the **hint-described-by** SHOULD is met); `screen-reader-support` stays partial because there is no `aria-label` fallback when no `label` is given. `unit-test-coverage` is partial: `controls/.../Select.tsx` is covered by `Select.test.tsx` and the styled primitive by `ui/__tests__/select.test.tsx` (16 and 4 passing tests), but select-014 and select-018 are skipped because jsdom evaluates neither `:focus-visible` styling nor native disabled-option selection.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.3.3 | 2026-11-14 | Mike Fullerton | Reworded generated-id and wrapper-classname to be implementation-neutral, moved useId and the className divergence to Platform Notes, fixed vectors 008, 013 and 017, corrected touch-target units, AppKit hint and Compose menuAnchor guidance, and added related links to search-filter-bar and input. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Controls Select links its hint through aria-describedby; select-017 now tested |
 | 1.3.2 | 2026-09-25 | Mike Fullerton | Scoped wrapper-classname/select-011/Configuration className row and Platform Notes to the aws-field vs apt-token divergence. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
 | 1.3.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |
 | 1.3.0 | 2026-09-22 | Mike Fullerton | Lint pass: rename Behavioral Requirements to subject-only kebab-case and update every citation; add hint-described-by requirement and remove the deferred Design Decision it replaced; reformat Design Decisions to the Decision/Rationale/Approved form; rebuild Compliance as a catalog-linked table with lowercase statuses and merge the label/accessible-name contradiction into one partial row; correct AppKit/UIKit, Compose, and WinUI 3 Platform Notes to real APIs and drop the irrelevant SwiftUI multiselect aside; rewrite Appearance in px sizes and color roles instead of raw Tailwind classes and tokens; state the 36px touch target falls short instead of claiming it meets the minimum; align the label-optional contract across Accessibility, Configuration, and Edge Cases; correct `value`/`onChange` typing to match the source's generic `T`; sharpen the value-mismatch edge case with the concrete browser fallback; replace the invented Localization table with "not applicable"; correct the Role bullet to name `combobox` directly; add missing conformance test vectors for a missing label, empty choices, the hint/aria-describedby gap, and disabled-option unselectability; cite specific WCAG success criteria and the WHATWG select-element anchor in place of the whole WCAG21 document and the obsolete HTML 5.2 spec; correct the disabled-while-focused edge case to blur-to-body instead of an unverified "next focusable element"; note that the focus ring/border differentiation still relies partly on hue pending measured contrast; drop the SwiftUI segmented-style aside since it doesn't match a collapsed dropdown; name the `aws-*` namespace as the AgenticWebStack design system; and make test vectors select-001, select-002, and select-008 concrete instead of vague or mismatched with their requirement's wording |

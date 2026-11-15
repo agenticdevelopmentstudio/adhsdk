@@ -12,12 +12,7 @@ addresses exactly one concern — turning JSONC bytes/text into strict JSON —
 with no theme, snippet, extension-manifest, or presentation logic of its
 own; it was extracted from a color-theme importer specifically to keep that
 concern from being duplicated across readers. `unit-test-coverage` is
-partial: the strip operation and the parse-to-object operation are
-exercised directly and thoroughly (comments, string-awareness, trailing
-commas, all encoding paths, byte-order-mark handling, pass-through, and
-both failure cases), but the normalize-to-strict-JSON operation has no
-dedicated test anywhere in the repository, even though production code
-calls it. `explicit-error-handling` passes because every failure path
+partial: 21 of 23 vectors have a test, all in `JSONCPreprocessorTests.swift`. The strip, parse-to-object and normalize-to-strict-JSON operations are covered (comments, string-awareness, trailing commas, encodings, byte-order-mark handling, pass-through, re-encoding, both failure cases and concurrent calls). Skipped: foundation-json-022 (the absence of side effects cannot be observed from a unit test) and foundation-json-023 (a compile-time property: a call site passing an encoding list does not build). `explicit-error-handling` passes because every failure path
 rethrows the underlying JSON-parsing error unchanged, with no
 swallow-and-continue anywhere the final result is concerned — internal
 attempts exist only to test a candidate before committing to it, and each

@@ -3,7 +3,7 @@
 
 - **sink-sendable**: `SessionEventSink` MUST be a `Sendable` protocol, so one sink can be shared across the daemon's queues and tasks.
 - **sink-broadcast-signature**: A sink MUST implement `broadcast(eventType: String, payload: Data, sessionId: String?)`, which returns nothing and does not throw.
-- **sink-status-signature**: A sink MUST implement `broadcastSessionStatus(sessionId: String, status: SessionStatus)` ([Session Status](cookbook:787b5da6-2f20-4f3e-8104-1763959a735f)), which returns nothing and does not throw.
+- **sink-status-signature**: A sink MUST implement `broadcastSessionStatus(sessionId: String, status: SessionStatus)` (Session Status ([adhsdk.ingredient.foundation.sessions.session-status](cookbook:787b5da6-2f20-4f3e-8104-1763959a735f))), which returns nothing and does not throw.
 - **broadcast-payload-prebuilt**: The `payload` given to `broadcast` MUST be the already-encoded wire JSON of the event; a sink MUST NOT re-encode it.
 - **broadcast-session-filter**: `sessionId` MUST be passed so a transport can filter subscribers to one session; it is optional and `nil` means the event is not tied to one session.
 - **status-payload-shape**: A transport publishing a session status change MUST publish the payload `{"session_id": ..., "status": ...}` produced by `SessionEventEncoding.encodeSessionStatus(sessionId:status:)`.

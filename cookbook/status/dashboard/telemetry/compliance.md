@@ -10,7 +10,7 @@
 
 **Separation of concerns.** The DTOs have no runtime dependencies, the ports are pure interfaces, the adapters each own one backend, and the composition root is the only place that picks adapters.
 
-**Unit test coverage.** Partial: `local-cache.test.ts` covers `parseSnapshot` for round-trip, empty, malformed JSON and wrong-shape inputs. No test covers `liveSource`, `tursoSource`, the `localCache` I/O wrapper or the composition root.
+**Unit test coverage.** Partial: `telemetry.test.ts` covers 14 of the 15 vectors (`emptySnapshot`, `parseSnapshot`, the `localCache` guards, both sources and the composition root). `telemetry-015` is skipped: the `Fetcher` and `Store` ports are server-side only, and no status-web module consumes a `FetchResult`, so there is nothing to run.
 
 **Explicit error handling.** Partial: the sources turn non-2xx responses into named `Error`s, and the cache turns every failure into `null` or a no-op. However, `localCache.save` drops write failures with no signal, which the source documents as intended.
 

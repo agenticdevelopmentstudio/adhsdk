@@ -4,7 +4,7 @@
     "id": "ae6b1991-6aed-4d8b-83e1-5d5e02470150",
     "title": "Partner Turn Queue",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d11ef358a68c01f0",
+  "synced": "e8b8e3468680e3c1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -174,10 +174,10 @@ component.
 | query-cache-005 | provider-nesting-is-idempotent | Render one instance of the cache provider component nested inside another, each with its own client-capturing probe | The inner probe's client is the identical instance as the outer probe's client |
 | query-cache-006 | provider-siblings-share-client | Render two separate, non-nested trees each rendering the cache provider component, each with its own probe | Both probes resolve to the identical client instance |
 | query-cache-007 | hook-ignores-ancestor-context | Mount a host's own cache-provider wrapper around a distinct cache client (staleness window 30,000 ms, retry count 3) wrapping the cache provider component and a probe | The probe's client is not the host's client, and its resolved staleness window is 300,000 ms, not 30,000 ms |
-| query-cache-008 | query-defaults-stale-and-retry | Inspect a freshly constructed client's resolved default query options | Staleness window is 300,000 ms and retry count is `1` (the staleness half is also exercised indirectly by vector 007) |
+| query-cache-008 | query-defaults-stale-and-retry | Inspect a freshly constructed client's resolved default query options | Staleness window is 300,000 ms and retry count is `1` |
 | query-cache-009 | resource-gc-time-constant | Read the exported resource-cache retention constant | `1,800,000` (30 minutes) |
-| query-cache-010 | resource-key-gc-time-pinned | Inspect the resolved defaults for a key beginning with each configured long-retention prefix (by default `['resource-list', ...]` and `['resource-item', ...]`) on a freshly constructed client | Both resolve their retention time to the resource-cache retention constant; a key under none of the configured prefixes resolves the client's unpinned default instead (exercised indirectly through the resource-item/resource-list recipes' own coverage — see the resource-data recipe) |
-| query-cache-011 | browser-client-lazy-construction | Call the singleton cache accessor a first time in the browser, then a second time | The cache-client factory and the session-watch guard each run exactly once, on the first call only (no dedicated test in this package exercises this directly) |
+| query-cache-010 | resource-key-gc-time-pinned | Inspect the resolved defaults for a key beginning with each configured long-retention prefix (by default `['resource-list', ...]` and `['resource-item', ...]`) on a freshly constructed client | Both resolve their retention time to the resource-cache retention constant; a key under none of the configured prefixes resolves the client's unpinned default instead |
+| query-cache-011 | browser-client-lazy-construction | Call the singleton cache accessor a first time in the browser, then a second time | The cache-client factory and the session-watch guard each run exactly once, on the first call only |
 | query-cache-012 | session-watch-initial-subject | With a valid access token for subject `'user-1'` already stored, trigger the first browser call to the singleton cache accessor | The internal last-seen subject is initialized to `'user-1'` |
 | query-cache-013 | session-change-clears-on-subject-change | With the singleton already constructed for subject `'user-1'`, change the stored token to subject `'user-2'` and invoke the session-change notification | The browser singleton's cache is cleared and the last-seen subject becomes `'user-2'` |
 | query-cache-014 | session-refresh-does-not-clear | With the singleton already constructed for subject `'user-1'`, refresh the token for the SAME subject `'user-1'` and invoke the session-change notification | The cache is NOT cleared |
@@ -188,7 +188,7 @@ component.
 | query-cache-019 | batch-empty-is-no-run | Run zero items | State stays idle |
 | query-cache-020 | batch-single-flight | Start a second run while the first is halted | The second run is ignored |
 | query-cache-021 | batch-halt-on-failure | The second of three items fails, then the caller continues | The third item is performed; results are ok, failed, ok; `done` is 2; the run ends |
-| query-cache-022 | batch-release-on-reset | The second of three items fails, the run is halted, then `reset()` is called (or the owner unmounts) | The halted run is released as if stopped: the third item is never performed, the run reaches its end, and the invalidation key is invalidated; after `reset()` the state is idle |
+| query-cache-022 | batch-release-on-reset | The second of three items fails, the run is halted, then `reset()` is called (or the owner unmounts) | The halted run is released as if stopped: the third item is never performed, the run reaches its end, and the invalidation key is invalidated; after `reset()` the run's results and error are cleared and the state is not running |
 | query-cache-023 | batch-invalidate-at-end | The second of three items fails, then the caller stops, with an invalidation key | The key is invalidated once after the stop, even though the run did not complete |
 ## Edge Cases
 
@@ -451,22 +451,16 @@ expect server-fetched data to "already be there" on first paint.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | Performance |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
-| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
-| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | partial | Privacy and Data |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
+| [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 
 `separation-of-concerns` **passed**: this file is pure data-layer
 infrastructure — a cache client, a provider, and a subscription guard — with
 no presentation code and no domain-specific fetch logic of its own; every
-concrete query lives in a sibling file (see [adhsdk.ingredient.data.services.resource-data](cookbook:ec6e6ca5-8780-4ce2-8b3a-087adc50ed35) and the other data components that consume this client). `unit-test-coverage` is **partial**: the
-singleton, per-call-server, provider-nesting, and context-independence
-behaviors are all directly asserted by `query-client.test.tsx` and
-`toolkit-query-provider.test.tsx`, but `watchSession`'s entire
-session-change contract — the initial subject capture, the compare-then-clear
-guard, and the cross-tab `'storage'` listener — has no test exercising it
-anywhere in this package (vectors 012-015 have no test).
+concrete query lives in a sibling file (see [adhsdk.ingredient.data.services.resource-data](cookbook:ec6e6ca5-8780-4ce2-8b3a-087adc50ed35) and the other data components that consume this client). `unit-test-coverage` is **passed**: `query-client.test.tsx`, `toolkit-query-provider.test.tsx` and `use-batch-run.test.tsx` assert all 23 conformance vectors, including `watchSession`'s initial subject capture, compare-then-clear guard and cross-tab `'storage'` listener (vectors 012-015) and the batch runner (vectors 017-023).
 `caching-strategy` **passed**: this file is the single place that defines
 the shared invalidation policy (5-minute `staleTime`, single retry, a
 30-minute `gcTime` pinned by key prefix so a prefetch or a post-write
@@ -478,16 +472,16 @@ every unpredictable-state shape its own tests exercise — server vs. browser
 execution, a provider nested inside another, sibling providers, no provider
 at all, and a host's own differently-configured `QueryClientProvider` —
 without ever throwing or adopting the wrong client. `data-integrity`
-**partial**: `watchSession`'s whole-cache clear on a principal change is
+**passed**: `watchSession`'s whole-cache clear on a principal change is
 exactly a corrupt-data guard — it exists specifically to stop a second
 signed-in principal from reading data cached under the first, and it is a
 second, independent layer against that on top of the tenant-keyed cache
-segments the resource-data ingredient describes. `data-minimization` **partial**: the
+segments the resource-data ingredient describes. `data-minimization` **passed**: the
 only identity value this file reads, `readTokenSubject()`'s `sub` claim, is
 held only in an in-memory comparison variable and is never persisted,
 transmitted, or exposed beyond that comparison.
 
-`data-integrity` and `data-minimization` are **partial** rather than passed because both rest on `watchSession`, whose behavior (vectors 012-015) has no test; they move to passed once those vectors are tested.
+`data-integrity` and `data-minimization` are **passed** because both rest on `watchSession`, whose behavior (vectors 012-015) is now tested.
 ## Change History
 
 | Version | Date | Author | Summary |

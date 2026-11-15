@@ -110,7 +110,8 @@ const sanitizeSchema = {
     ins: ['dateTime', 'cite'],
     li: ['className'],
     ol: ['reversed', 'start', 'type'],
-    pre: ['className', 'style', 'tabIndex'],
+    // shiki emits the hast property `class` (not `className`); allow it so `pre.shiki` survives.
+    pre: ['className', 'class', 'style', 'tabIndex'],
     q: ['cite'],
     span: ['className', 'style'],
     table: ['align', 'cellPadding', 'cellSpacing'],

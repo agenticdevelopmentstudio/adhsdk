@@ -157,11 +157,21 @@ describe('ClientAuthSettingsPane: who can sign in', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
   })
 
-  it('refuses an id too long to be a customer id, before the round trip', async () => {
+  it('ecosystem-config-032: refuses an id too long to be a customer id, before the round trip', async () => {
     await renderPane(config())
     fireEvent.click(sw('Only listed customers'))
     fireEvent.change(idInputs()[0]!, { target: { value: 'x'.repeat(37) } })
     expect(screen.getByText(/is not a customer id/)).toBeInTheDocument()
+    save()
+    expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
+  })
+
+  it('ecosystem-config-032: refuses a 501st customer id, and Save stays blocked', async () => {
+    const many = Array.from({ length: 500 }, (_, i) => `cus_${i}`)
+    await renderPane(config({ loginAllowedCustomerIds: many }))
+    addCustomer()
+    fireEvent.change(idInputs()[500]!, { target: { value: 'cus_extra' } })
+    expect(screen.getByText('At most 500 customers can be listed.')).toBeInTheDocument()
     save()
     expect(clientAuthApi.updateEcosystem).not.toHaveBeenCalled()
   })

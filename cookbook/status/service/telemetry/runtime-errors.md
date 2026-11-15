@@ -2,7 +2,7 @@
 id: c116715f-2986-4554-a779-97e99d875c54
 title: "Runtime Errors"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -104,7 +104,7 @@ Not applicable — this is shared logic with no visual surface or interaction.
 
 ## Conformance Test Vectors
 
-Vectors 1 to 13 are assertions of `runtime-errors.test.ts` (test names in brackets); 14 to 26 are read from the source and have no test yet. Constant NOW is 2026-11-06T12:00:00Z; PROJECTS maps `prj_site` to name `site-production`, domain `site.example.com`.
+Every vector is a test in `runtime-errors.test.ts`; the one named `runtime-errors-NNN ...` in the final `conformance vectors` block covers it, and vectors 1 to 13 also name the older test that asserts the same thing (in brackets). Constant NOW is 2026-11-06T12:00:00Z; PROJECTS maps `prj_site` to name `site-production`, domain `site.example.com`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -210,11 +210,11 @@ Not applicable: the source contains no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/runtime-errors.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/telemetry/runtime-errors.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/status-server/test/runtime-errors.test.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/test/runtime-errors.test.ts` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -251,14 +251,15 @@ Not applicable: the source contains no log call.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | passed | Privacy and Data |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
-`separation-of-concerns` passes because the rules take no network or SQL. `unit-test-coverage` is partial: `runtime-errors.test.ts` covers entry building, grouping, shape, ordering, the cap and the stale-read dating; vectors 14 to 16 and 17 to 26 are read from the source and have no test behind them. `data-retention-policy` passes because each save replaces the snapshot, so only the last 24-hour window persists. `data-integrity` is partial: the loader reads groups and the last read in two calls while the store saves them in one transaction, which is the open question on `report-load-consistency`.
+`separation-of-concerns` passes because the rules take no network or SQL. `unit-test-coverage` passes: `runtime-errors.test.ts` covers entry building, grouping, shape, ordering, the cap and the stale-read dating, and every vector 1 to 26 has its own test titled with its id. `data-retention-policy` passes because each save replaces the snapshot, so only the last 24-hour window persists. `data-integrity` is partial: the loader reads groups and the last read in two calls while the store saves them in one transaction, which is the open question on `report-load-consistency`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (runtime-errors.test.ts, 26 of 26 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Stated the id-token, case, line-break, hash-input and ordinal-comparison rules in the requirements, moved the report-load-consistency open question out of the requirements list into Edge Cases, added ten vectors for the uncovered requirements, marked unit-test coverage partial, clarified retention as bounded by the last successful read, and linked the fetchers recipe. |

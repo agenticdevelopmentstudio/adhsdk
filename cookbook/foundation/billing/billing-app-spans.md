@@ -2,7 +2,7 @@
 id: 090a0676-4c12-4a0d-ae5a-019cdcc3cb6d
 title: "Billing App Spans"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -129,7 +129,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingAppSpans.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingAppSpans.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -153,13 +153,14 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: the file holds only data shapes and delegates the session id format to `ActivitySpanSession`. unit-test-coverage is partial: `BillingAppRunsTests` asserts the session id (`testSpanRowSessionIdMatchesActivitySpanSession`) and exercises both types through derivation, but no test targets the initializers or equality directly.
+separation-of-concerns passes: the file holds only data shapes and delegates the session id format to `ActivitySpanSession`. unit-test-coverage passes: `Tests/AgenticDeveloperHubSDKCoreTests/Billing/BillingAppSpansTests.swift` covers all seven vectors (session id, open `endedAt` and `idleUntil`, equality, no validation, empty path and root).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingAppSpansTests.swift, 7 of 7 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Linked work-tracking-models as a dependency, reworded the sentinel and format requirements as producer and consumer contracts, added unspecified-fields, narrowed vectors 003, 004 and 006 to stored values, and fixed the swiftlint and platform notes. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

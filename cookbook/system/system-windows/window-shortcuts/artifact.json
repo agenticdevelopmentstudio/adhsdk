@@ -4,11 +4,11 @@
     "id": "62c755ed-eeba-4ada-a907-4a0f802e0466",
     "title": "Window Matching Shortcuts",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "67377439ae952294",
+  "synced": "e57b5b2c47644061",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

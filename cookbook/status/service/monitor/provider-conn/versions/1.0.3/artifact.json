@@ -1,0 +1,72 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "4aad9d0a-4984-4021-ad1f-d8aa6a15b066",
+    "title": "Status Server Monitor Provider Connection",
+    "type": "ingredient",
+    "version": "1.0.3",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-24",
+    "modified": "2026-10-04",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Assembles a ProviderConn from active storage integrations and StatusConfig secrets, then enumerates deploy projects from it — the storage/config-port replacement for deploy-platform's DB-based helpers.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "monitor",
+      "deploy",
+      "secrets",
+      "server"
+    ],
+    "depends-on": [
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/926dff1a-dc12-46a4-b8c1-bdedbc142afd"
+    ],
+    "related": [
+      "31fe479f-e95e-4f03-b957-faa2314a03be",
+      "e029def6-7d5d-4e52-b565-e2a6612179bb",
+      "4b16f67f-3877-47d3-97eb-af99581a5b11"
+    ],
+    "references": [
+      "packages/web/packages/status-server/src/monitor/provider-conn.ts (adhsdk)",
+      "packages/web/packages/status-server/src/config/port.ts (adhsdk)",
+      "packages/web/packages/status-server/src/storage/ports.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/conn/index.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/enumerate/index.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/sync.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/refresh-project-meta.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/reads.ts (adhsdk)",
+      "packages/web/packages/status-server/src/routes/deploy-logs.ts (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "40b76cc642c518ea",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

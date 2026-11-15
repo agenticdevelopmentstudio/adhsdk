@@ -184,4 +184,113 @@ final class TerminalTextInjectorTests: XCTestCase {
         let returnKey = TerminalTextInjector.returnScript(for: .iTermTTY(tty: "ttys003"))
         XCTAssertTrue(returnKey.contains(#"tty of s is "/dev/ttys003""#), returnKey)
     }
+
+    // MARK: - Derived vectors (V22 to V35)
+
+    private func failure(_ result: Result<Void, TerminalTextInjector.InjectionError>)
+        -> TerminalTextInjector.InjectionError? {
+        if case .failure(let error) = result { return error }
+        return nil
+    }
+
+    func testV22_itermSessionIdSplit() {
+        XCTAssertEqual(
+            TerminalTextInjector.resolveTarget(termProgram: "iTerm.app", termSessionId: "ABC", pid: 0),
+            .iTermSession(uuid: "ABC"))
+        XCTAssertEqual(
+            TerminalTextInjector.resolveTarget(termProgram: "iTerm.app", termSessionId: "w0t0p0:", pid: 0),
+            .iTermSession(uuid: "w0t0p0"))
+    }
+
+    @MainActor
+    func testV23_injectUnsupportedTerminal() async {
+        let result = await TerminalTextInjector.inject("x", termProgram: "", termSessionId: "", pid: 1)
+        XCTAssertEqual(failure(result), .unsupportedTerminal("an unknown terminal"))
+    }
+
+    @MainActor
+    func testV24_injectUnresolvablePane() async {
+        let result = await TerminalTextInjector.inject(
+            "x", termProgram: "Apple_Terminal", termSessionId: "", pid: 0)
+        XCTAssertEqual(failure(result), .paneUnresolvable)
+    }
+
+    @MainActor
+    func testV25_runNotFound() {
+        let result = TerminalTextInjector.run(script: "return \"not_found\"", target: .terminalTTY(tty: "ttys004"))
+        XCTAssertEqual(failure(result), .paneNotFound)
+    }
+
+    @MainActor
+    func testV26_permissionDetectionAndPayload() {
+        let target = TerminalTextInjector.Target.terminalTTY(tty: "ttys004")
+        let message = "Automation permission is required to control Terminal."
+            + " Grant it in System Settings ▸ Privacy & Security ▸ Automation."
+        let expected = TerminalTextInjector.InjectionError.permissionDenied(
+            message, targetBundleID: "com.apple.Terminal")
+        XCTAssertEqual(
+            failure(TerminalTextInjector.run(script: "error \"denied\" number -1743", target: target)), expected)
+        XCTAssertEqual(
+            failure(TerminalTextInjector.run(
+                script: "error \"Privilege Violation occurred\" number -1", target: target)),
+            expected)
+    }
+
+    func testV27_unsupportedTerminalDescription() {
+        XCTAssertEqual(
+            TerminalTextInjector.InjectionError.unsupportedTerminal("WarpTerminal").errorDescription,
+            "Injecting text isn't supported for WarpTerminal yet — only iTerm2 and Terminal.app.")
+    }
+
+    func testV28_ttyForPidNilForInvalidPids() {
+        XCTAssertNil(TerminalTextInjector.ttyForPid(0))
+        XCTAssertNil(TerminalTextInjector.ttyForPid(-5))
+    }
+
+    func testV29_supportKeptInStepWithResolve() {
+        XCTAssertEqual(
+            TerminalTextInjector.resolveTarget(termProgram: "iTerm.app", termSessionId: "x:ABC", pid: 0),
+            .iTermSession(uuid: "ABC"))
+        XCTAssertNil(TerminalTextInjector.resolveTarget(termProgram: "Apple_Terminal", termSessionId: "", pid: 0))
+        XCTAssertTrue(TerminalTextInjector.isSupported(termProgram: "iTerm.app"))
+        XCTAssertTrue(TerminalTextInjector.isSupported(termProgram: "Apple_Terminal"))
+    }
+
+    @MainActor
+    func testV30_permissionDetectionByNumberAndMessage() {
+        let target = TerminalTextInjector.Target.terminalTTY(tty: "ttys004")
+        for source in ["error \"denied\" number -1744",
+                       "error \"Not authorized to send Apple events\" number -1"] {
+            guard case .failure(.permissionDenied) = TerminalTextInjector.run(script: source, target: target) else {
+                return XCTFail("expected permissionDenied for \(source)")
+            }
+        }
+    }
+
+    @MainActor
+    func testV31_runErrorMessage() {
+        let result = TerminalTextInjector.run(script: "error \"boom\"", target: .terminalTTY(tty: "ttys004"))
+        XCTAssertEqual(failure(result), .scriptFailed("boom"))
+    }
+
+    func testV32_injectStopsOnFirstFailure() throws {
+        throw XCTSkip("needs a live iTerm2 or Terminal.app pane to answer the typing script with not_found")
+    }
+
+    func testV33_injectFreshLookupPerHalf() throws {
+        throw XCTSkip("needs a live terminal pane closed between the typing and Return scripts")
+    }
+
+    func testV34_errorDescriptions() {
+        typealias Failure = TerminalTextInjector.InjectionError
+        XCTAssertEqual(Failure.paneUnresolvable.errorDescription, "Couldn't identify the session's terminal pane.")
+        XCTAssertEqual(
+            Failure.paneNotFound.errorDescription,
+            "The session's terminal pane wasn't found — it may have been closed.")
+        XCTAssertEqual(Failure.scriptFailed("boom").errorDescription, "Terminal automation failed: boom")
+    }
+
+    func testV35_injectOrderWithEmptyText() throws {
+        throw XCTSkip("needs a live terminal pane to run the typing script then the Return script")
+    }
 }

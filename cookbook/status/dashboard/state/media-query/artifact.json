@@ -4,11 +4,11 @@
     "id": "6b796310-ff12-4d38-a1a9-1d3af3f1e87f",
     "title": "Media Query",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,7 +24,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6c03f2222578b88b",
+  "synced": "853174705ddf3b68",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

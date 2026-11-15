@@ -4,7 +4,7 @@
     "id": "d431934e-d64c-4dcf-bdab-b7c3465ee71b",
     "title": "Radio Group",
     "type": "ingredient",
-    "version": "1.1.2",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0c60892aa7184e66",
+  "synced": "4e655c08880079d4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

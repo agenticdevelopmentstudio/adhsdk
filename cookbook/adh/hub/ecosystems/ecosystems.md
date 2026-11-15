@@ -1044,15 +1044,16 @@ separate from the UI-facing `Ecosystem` type. `explicit-error-handling`
 (`HubError.notFound`→`.empty`, `HubError.conflict`→`.validation`,
 `isNotFound`→`null`, a 409→`rethrowConflict`) or wraps/rethrows
 unconditionally (`HubError.wrap`) — no path silently swallows a failure.
-`unit-test-coverage` **partial**: `EcosystemsModuleTests.swift` exercises
-every public path this ingredient documents (root listing, manageability
-gate, topic dispatch, settings save/delete, child-ecosystem recursion,
-create-form validation and prefix resolution), and `ecosystems.test.ts`
-does the same for the web client's mapper, create/update body shapes, and
-`ecosystemIdForSlug`'s ownership-first resolution; `ecosystem-features.test.tsx`
-pins `remove`'s 404-as-success and rethrow paths and `useApplyFeatureChange`'s
-all-settled removal and failed-key message (the catalog, list and provision
-calls and their hooks' cache writes have no direct test). `error-response-handling`
+`unit-test-coverage` **partial**: 33 of the 51 conformance vectors
+(`ecosystems-019` through `-051`) are covered by passing web tests in
+`ecosystems.test.ts`, `ecosystem-features.test.tsx` and
+`use-workspace-default-ecosystem.test.tsx`, one test per vector. Vectors
+`ecosystems-001` through `-018` describe the Apple `EcosystemsModule` and
+`Ecosystem` type, which the web client has no equivalent of; they are
+exercised by `EcosystemsModuleTests.swift` (root listing, manageability gate,
+topic dispatch, settings save/delete, child-ecosystem recursion, create-form
+validation and prefix resolution) and are `it.skip` placeholders in the web
+suite, so no web test counts them. `error-response-handling`
 **passed**: `isNotFound`/`isConflict` and `HubError.notFound`/`.conflict`
 consistently distinguish "missing" from "already exists" from every other
 failure on both platforms, and `ecosystemIdForSlug` explicitly rethrows a

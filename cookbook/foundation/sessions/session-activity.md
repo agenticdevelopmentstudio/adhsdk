@@ -2,7 +2,7 @@
 id: bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4
 title: "Session Activity"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -154,11 +154,11 @@ Not applicable: the source makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionActivity.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionActivity.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/SessionWatcher/SessionWatcherSessionActivityTests.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/SessionWatcher/SessionWatcherSessionActivityTests.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -187,13 +187,14 @@ Not applicable: the source makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | internationalization |
 
-Separation of concerns passes: the file holds only the derivation, with no storage, transport or drawing, and the macOS icon view consumes the resolved case. Unit-test coverage is partial: every branch of `derive` and `turnActivity` is asserted, but only through `SessionWatcherSession.activity` in the macOS test target, and no test sits beside the Core file or calls the two static functions directly. The `"stop"` and `" Stop"` cases in session-activity-009 and the unknown event in session-activity-008 have no test. No hardcoded user-facing strings exist: the only literals are hook event names and raw values.
+Separation of concerns passes: the file holds only the derivation, with no storage, transport or drawing, and the macOS icon view consumes the resolved case. Unit-test coverage passes: `SessionActivityConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Sessions/SessionActivityConformanceTests.swift`) calls `derive` and `turnActivity` directly, one test per vector 001-014, including the unknown, case-variant and padded event types. No hardcoded user-facing strings exist: the only literals are hook event names and raw values.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (SessionActivityConformanceTests.swift, 14 of 14 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Folded the Interrupted and StopFailure requirements into turn-idle-events, restated activity-derived-not-stored, cited source doc comments, moved the macOS wiring and notification-scope to Overview and Platform Notes, marked Configuration not applicable, added vectors for derive-total, subagent-with-working and SessionEnd, and emptied references. |

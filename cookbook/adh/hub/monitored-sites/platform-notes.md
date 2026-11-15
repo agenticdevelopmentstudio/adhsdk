@@ -2,8 +2,9 @@
 - **React/Web** (source platform): `packages/web/packages/data/src/monitored-sites/monitored-sites.ts`
   and `wire.ts` hold the client, re-exported by `index.ts` as `@adh-sdk/data/monitored-sites`;
   every function is built on `authedJson`/`authedRequest` (from `../http`, re-exporting
-  `@adh-sdk/auth/client`) and `compact`/`enc`/`sortByText`/`workspaceQuery` (from
-  `../client-helpers`). The Dashboards feature (`packages/web/packages/features/dashboards/src/*`) is the
+  `@adh-sdk/auth/client`) and `compact`/`enc`/`sortByText` (from
+  `../client-helpers`), with `listAllV1`, `withV1Query` and `unixToIso` from the auth package's `v1.ts`
+  paging and query helpers. The Dashboards feature (`packages/web/packages/features/dashboards/src/*`) is the
   one current consumer.
 - **SwiftUI**: model `SiteGroupView`/`SiteView`/`EndpointView` (and the create/update body shapes) as
   `Codable, Hashable, Sendable` structs, mirroring the sibling Hub domain recipes' models pattern, and the

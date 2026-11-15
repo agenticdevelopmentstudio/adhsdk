@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (peer-base-url.test.ts, peers-fetch.int.test.ts, fleet.int.test.ts, 19 of 19 vectors); unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Resolved peer-snapshot-payload-unvalidated marker as current behavior plus pending decision |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |

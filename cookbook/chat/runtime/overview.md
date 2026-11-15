@@ -3,7 +3,7 @@ The chat coordinator runtime is the headless reference implementation of the
 cross-platform chat contract's `Orchestrator`/`ChatViewModel` surface. It has
 no rendered UI of its own — a host layer (`useChatSession` or a similar hook,
 outside the scope of this ingredient) constructs it and lets UI components read
-its state and call its methods. It is three cooperating pieces, in `packages/web/packages/chat/src/runtime/`; later sections say "this runtime" for all three. It implements the contract that the [persona chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b) and [backends](cookbook:91891cc2-3511-4d00-888a-1ff7585c0b64) recipes build on:
+its state and call its methods. It is three cooperating pieces, in `packages/web/packages/chat/src/runtime/`; later sections say "this runtime" for all three. It implements the contract that the persona chat ([adhsdk.ingredient.chat.modes.persona-chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b)) and backends ([adhsdk.ingredient.chat.backends](cookbook:91891cc2-3511-4d00-888a-1ff7585c0b64)) recipes build on:
 
 - **`DefaultOrchestrator`** (`DefaultOrchestrator.ts`) — the reference
   `Orchestrator` implementation. It consumes an injected `Backend`'s

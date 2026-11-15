@@ -7,8 +7,8 @@
 **Rationale**: "The server has already decided what is a problem, what happened, and when — these builders only spell the row." A removed client-side `displayStatus` step that demoted aged rows to "last seen building" was unreachable and could only disagree with the server's own expiry (`rowToStatusRowProps` doc comment and the C3 regression tests).
 **Approved**: pending
 
-**Decision**: The only client freshness clock judges raw `DeploymentDTO`s, scaled to five times the probe interval with a 10-minute floor, and fails closed.
-**Rationale**: The panels that render DTOs directly are "the last place the client still holds a phase the server has not already ruled on"; scaling mirrors `snapshotStaleMs` so a slower poller does not false-demote, and an unreadable date must not assert live progress.
+**Decision**: This logic holds no freshness clock; the server decides when a phase is unconfirmed.
+**Rationale**: A client clock in `row-model.ts` (an unconfirmed-window function and a deploy-unconfirmed function, five times the probe interval with a 10-minute floor, failing closed) was removed. The server now supplies each deploy's `unconfirmedAt` deadline (read in `deploy-view.ts`) and states an unconfirmed activity phase as verb `"unknown"`, tone `"stale"`, so the client has no window of its own to disagree with the server's.
 **Approved**: pending
 
 **Decision**: A commit sha is shown only when it links to GitHub.

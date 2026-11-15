@@ -2,11 +2,11 @@
 id: 8055f7c9-d336-4b71-9f95-1bf4bdef7b92
 title: "Billing XPC Client"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -134,7 +134,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingXPCClient.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingXPCClient.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -147,12 +147,13 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: the client only translates the service interface to transport calls and wire coding; rules are the daemon's and the transport is injected. unit-test-coverage is partial: `BillingXPCClientTests` covers the write bound and no-retry, stored values, refusal sentences, unreachable and unreadable, read-failed rows, negative counts, the preferences push and the reply decoder. No test covers a failing list read (vector 002), a zero count (vector 010), a successful delete, `billingOverview`, the entry filters, the 5-second preferences timeout or the default preferences push.
+separation-of-concerns passes: the client only translates the service interface to transport calls and wire coding; rules are the daemon's and the transport is injected. unit-test-coverage passes: `BillingXPCClientTests` covers every vector (001 to 013), including the failing list read (002), the zero count (010) and the exact refusal sentence (004).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingXPCClientTests.swift, 3 new methods; 13 of 13 vectors); unit-test-coverage now passed. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

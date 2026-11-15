@@ -2,7 +2,7 @@
 id: fa0fce58-5e17-41da-b3eb-0d2de9e89b46
 title: "Process Env"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -100,7 +100,7 @@ Not applicable — this is a process-inspection utility, not a visual component.
 | process-env-015 | cache-test-seam | After reset, `cachedTokenCountForTesting` (no source test) | 0 |
 | process-env-016 | claude-pid-shell-orphan, claude-pid-seams | Fake table: 600 is `sh` with no parent; `claudePid(aboveHookParent: 600)` (no source test) | nil |
 
-Vectors 012 to 016 are derived from the source and no source test checks them. The requirements `token-memory-only`, `env-duplicate-key`, `argv-count`, `utf8-lossy`, `token-empty-value`, `token-cache-ttl`, `token-cache-thread-safe` and the real-token branch of `token-walk` have no vector: the parser is private and the source has no test that builds a launch-data buffer, and the 30-second clock cannot be advanced from outside. The source's own comments state each behavior and a port should add a parser test with a handcrafted buffer.
+Vectors 012 to 016 are derived from the source and are covered by `ProcessEnvTests.swift` and `ProcessEnvCacheTests.swift`. The requirements `token-memory-only`, `env-duplicate-key`, `argv-count`, `utf8-lossy`, `token-empty-value`, `token-cache-ttl`, `token-cache-thread-safe` and the real-token branch of `token-walk` have no vector: the parser is private and the source has no test that builds a launch-data buffer, and the 30-second clock cannot be advanced from outside. The source's own comments state each behavior and a port should add a parser test with a handcrafted buffer.
 
 ## Edge Cases
 
@@ -168,7 +168,7 @@ Not applicable: this component contains no log call, so a recovered token cannot
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessEnv.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessEnv.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -211,16 +211,17 @@ Not applicable: this component contains no log call, so a recovered token cannot
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | partial | privacy-and-data |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | privacy-and-data |
 | [adc.check.security.token-lifecycle](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/61edfc73-f26a-5cfa-8c09-d1011eb8b7cd) | partial | security |
 | [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | performance |
 
-`separation-of-concerns` passes: the type only reads process data and holds one bounded cache; what a token is used for belongs to its callers. `unit-test-coverage` is partial: the cache bound, the `claudePid` rules and the live reads are tested, while the launch-data parser, the token-bearing walk and the 30-second expiry are not. `secure-data-storage` is partial: the token stays in memory and is never written or logged, but it is held as a plain string for up to 30 seconds and a cache entry can outlive that when the cache is under its ceiling. `no-pii-in-logs` passes because the type has no log call. `token-lifecycle` is partial: lifetime in the cache is specified, but the token's own lifetime, refresh and revocation belong to the `claude` process and are not handled here. `caching-strategy` passes through the time limit and the hard ceiling.
+`separation-of-concerns` passes: the type only reads process data and holds one bounded cache; what a token is used for belongs to its callers. `unit-test-coverage` passes: `ProcessEnvTests.swift` and `ProcessEnvCacheTests.swift` cover all 16 vectors. The launch-data parser, the token-bearing walk and the 30-second expiry have no vector and no test. `secure-data-storage` is partial: the token stays in memory and is never written or logged, but it is held as a plain string for up to 30 seconds and a cache entry can outlive that when the cache is under its ceiling. `no-pii-in-logs` passes because the type has no log call. `token-lifecycle` is partial: lifetime in the cache is specified, but the token's own lifetime, refresh and revocation belong to the `claude` process and are not handled here. `caching-strategy` passes through the time limit and the hard ceiling.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ProcessEnvTests.swift, ProcessEnvCacheTests.swift, 16 of 16 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Tagged untested vectors, added a pid-reuse Design Decision, cited doc comments, fixed the stale-data and maxHops wording, added an orphan-shell vector, and cleaned the platform notes and summary. |

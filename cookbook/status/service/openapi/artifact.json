@@ -4,11 +4,11 @@
     "id": "0679e232-f536-4d02-b3f0-592d52d44582",
     "title": "Status Server OpenAPI",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -41,7 +41,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "97b131334a7e7557",
+  "synced": "587b08d93587ce7d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

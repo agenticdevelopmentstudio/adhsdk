@@ -4,7 +4,7 @@
     "id": "edd40452-1ef7-42ba-b3e9-066a5a2ca1f6",
     "title": "UserDefaultsThemeStorage",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a02cacdb763cbe37",
+  "synced": "c7811d11799b25ad",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

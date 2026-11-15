@@ -4,11 +4,11 @@
     "id": "77a6910a-090c-464a-b3f2-4a7af36aa212",
     "title": "Telemetry Sources",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5696f2d9a4810d1a",
+  "synced": "d004c61c031ecebb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: e029def6-7d5d-4e52-b565-e2a6612179bb
 title: "Status Server Monitor Enrich Deploy Errors"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -190,7 +190,7 @@ No log line is emitted on a successful enrichment, an empty candidate set, or a 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -214,7 +214,7 @@ No log line is emitted on a successful enrichment, an empty candidate set, or a 
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
@@ -223,12 +223,13 @@ No log line is emitted on a successful enrichment, an empty candidate set, or a 
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
-`unit-test-coverage` is `failed` for this file specifically: `deploy-error-shaping.test.ts` exercises only the network-free shaping helpers `enrichDeployErrors` calls into indirectly (`composeVercelDeployError`, `buildLogTail`, `buildLogFull`, `fetchRailwayBuildLogTail`'s GraphQL-error branches) — no test in the given sources imports or invokes `enrichDeployErrors` itself, so its own candidate-selection, cooldown filter, dispatch, concurrency cap, and fail-soft catches are untested at this file's level. `separation-of-concerns` passes: this file owns exactly one concern — selecting candidates and dispatching/persisting their error text — delegating the actual provider fetch logic to `fetch-vercel.ts`/`fetch-railway.ts`, the cooldown check to `deploy-platform/cooldown`, the bounded fan-out to `deploy-platform/util`'s `mapLimit`, and every storage read/write to the `Storage` port, never touching a database directly. `explicit-error-handling` passes: every failure path this file can hit — the candidate query rejecting, and a per-row fetch or store rejecting — is caught explicitly and logged with a distinguishing `[enrich]`-prefixed message; nothing is silently swallowed without a signal. `timeout-configuration` passes: every per-row fetch carries an explicit 8,000ms deadline via `AbortController`/`setTimeout`, cleared in a `finally`. `retry-with-backoff` is `partial`: a failed row is never retried within the same call, and there is no backoff of any kind — but because the row remains a candidate (its `error_text` stays null) and `enrichDeployErrors` runs again on the very next full cycle, a failed fetch is naturally retried across cycles, just without exponential backoff or a retry cap other than the 14-day recency window; this is a real, if unconventional, retry mechanism, which is why the check is `partial` rather than `failed`. `rate-limit-handling` passes: the shared cooldown (`rateLimitedUntil`) is consulted before the candidate query is even built, so a throttled provider's rows wait for a later cycle instead of spending requests that would extend the throttle. `idempotent-operations` passes: `setErrorText` writes `error_text` once, and `listFailedWithoutError`'s own `isNull(errorText)` predicate then permanently excludes that row from future candidate sets — re-running the identical logic against an already-enriched row is a no-op by construction. `graceful-degradation` passes: no token, both providers cooling down, an empty candidate set, a query failure, or a per-row fetch failure all degrade to a skip/no-op for the affected scope rather than throwing, matching the caller's own "best-effort and fail-soft" framing in `sync.ts`.
+`unit-test-coverage` passes: `status-server/test/enrich-deploy-errors.test.ts` carries one test per conformance vector (001-010) against `enrichDeployErrors` itself. Previously `deploy-error-shaping.test.ts` exercised only the network-free shaping helpers `enrichDeployErrors` calls into indirectly (`composeVercelDeployError`, `buildLogTail`, `buildLogFull`, `fetchRailwayBuildLogTail`'s GraphQL-error branches) — no test in the given sources imports or invokes `enrichDeployErrors` itself, so its own candidate-selection, cooldown filter, dispatch, concurrency cap, and fail-soft catches are untested at this file's level. `separation-of-concerns` passes: this file owns exactly one concern — selecting candidates and dispatching/persisting their error text — delegating the actual provider fetch logic to `fetch-vercel.ts`/`fetch-railway.ts`, the cooldown check to `deploy-platform/cooldown`, the bounded fan-out to `deploy-platform/util`'s `mapLimit`, and every storage read/write to the `Storage` port, never touching a database directly. `explicit-error-handling` passes: every failure path this file can hit — the candidate query rejecting, and a per-row fetch or store rejecting — is caught explicitly and logged with a distinguishing `[enrich]`-prefixed message; nothing is silently swallowed without a signal. `timeout-configuration` passes: every per-row fetch carries an explicit 8,000ms deadline via `AbortController`/`setTimeout`, cleared in a `finally`. `retry-with-backoff` is `partial`: a failed row is never retried within the same call, and there is no backoff of any kind — but because the row remains a candidate (its `error_text` stays null) and `enrichDeployErrors` runs again on the very next full cycle, a failed fetch is naturally retried across cycles, just without exponential backoff or a retry cap other than the 14-day recency window; this is a real, if unconventional, retry mechanism, which is why the check is `partial` rather than `failed`. `rate-limit-handling` passes: the shared cooldown (`rateLimitedUntil`) is consulted before the candidate query is even built, so a throttled provider's rows wait for a later cycle instead of spending requests that would extend the throttle. `idempotent-operations` passes: `setErrorText` writes `error_text` once, and `listFailedWithoutError`'s own `isNull(errorText)` predicate then permanently excludes that row from future candidate sets — re-running the identical logic against an already-enriched row is a no-op by construction. `graceful-degradation` passes: no token, both providers cooling down, an empty candidate set, a query failure, or a per-row fetch failure all degrade to a skip/no-op for the affected scope rather than throwing, matching the caller's own "best-effort and fail-soft" framing in `sync.ts`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (enrich-deploy-errors.test.ts, 10 of 10 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

@@ -4,11 +4,11 @@
     "id": "691f84ba-242a-40bc-a164-c95e535bb387",
     "title": "Deploy Display",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -26,7 +26,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "111c2b091835b4f1",
+  "synced": "0e466f7042f40904",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -4,11 +4,11 @@
     "id": "ca7205d2-31c0-424a-95a2-a356bed30187",
     "title": "Live Snapshot",
     "type": "ingredient",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,7 +27,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3ad7fbaa630aa51e",
+  "synced": "c4f802b23f849b2c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

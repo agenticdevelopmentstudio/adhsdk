@@ -48,24 +48,23 @@ a section's own danger-zone action).
 - **mount-children-only-when-open**: Children MUST be mounted only when open (and unmounted when closed), not merely visually hidden.
 - **expose-expanded-state**: The toggle button MUST carry `aria-expanded` reflecting the current open state.
 - **on-open-change-uncontrolled**: In uncontrolled mode the component MUST call `onOpenChange` with the next open value on every toggle, as well as managing its own state.
-- **link-toggle-to-body**: The toggle button SHOULD carry `aria-controls` referencing the id of the body it shows and hides. Known gap: the source sets none.
+- **link-toggle-to-body**: The toggle button SHOULD carry `aria-controls` referencing the id of the body it shows and hides; the source sets it, from `React.useId()`, while the body is open (a closed disclosure has no body to reference).
 - **title-in-heading**: For a section-style disclosure, the title SHOULD sit inside a heading element so it appears in the heading outline. Known gap: the source renders the title in a plain `span`.
-- **respect-reduced-motion**: The chevron rotation MUST NOT animate when the user prefers reduced motion. Known gap: the source has no `motion-reduce:` variant (see Compliance, reduced-motion failed).
+- **respect-reduced-motion**: The chevron rotation MUST NOT animate when the user prefers reduced motion; the source applies `motion-reduce:transition-none` to the chevron.
 - **keep-truncated-text-available**: A truncated title or subtitle MUST stay fully available to assistive technology and SHOULD stay fully available to sighted users (for example through a tooltip). Known gap: the full text is in the DOM, but sighted users cannot read the truncated part.
-- **rtl-chevron**: In a right-to-left layout the collapsed chevron MUST point toward the inline-start edge, and the open chevron MUST point down, so the rotation stays logical. Known gap: the source does not mirror the chevron.
+- **rtl-chevron**: In a right-to-left layout the collapsed chevron MUST point toward the inline-start edge, and the open chevron MUST point down, so the rotation stays logical; the source applies `rtl:rotate-180` to the collapsed chevron and `rotate-90` to the open one.
 ## Appearance
 
 Token roles: a bordered, rounded container on the design system's surface background; a single-row header with small padding and a gap between the chevron, text and actions; a medium-weight primary title in the text color and a smaller subtitle in the muted text color, both truncating; a muted chevron; a divider line between header and open body; a gold focus ring at reduced opacity. On web these map to the Tailwind classes below.
 
 Container: `rounded-lg border border-apt-border bg-apt-surface`. Header:
 `flex items-center gap-2 px-3 py-2`; the toggle is a `<button>` showing a
-`ChevronRight` that gains `rotate-90` when open, a `text-sm font-medium
+`ChevronRight` that gains `rotate-90` when open (collapsed, it carries `rtl:rotate-180`, so it points inline-start-to-end under RTL), a `text-sm font-medium
 text-apt-text` title and an optional `text-xs text-apt-text-muted` subtitle (both
 truncate). `actions` are pinned to the right. The open body is separated by
 `border-t border-apt-border px-3 py-3`. Focus ring `apt-gold/40`. No raw hex; no
 `!important`. The chevron's rotation is animated with the `transition-transform`
-class; no `motion-reduce:` variant is applied, so the rotation does not defer to
-the reduced-motion preference (see Compliance).
+class, and `motion-reduce:transition-none` drops the animation when the user prefers reduced motion.
 
 ## States
 
@@ -78,7 +77,7 @@ the reduced-motion preference (see Compliance).
 ## Accessibility
 
 The pattern follows the [WAI-ARIA APG Disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/). The header toggle is a real `<button>` carrying `aria-expanded` that reflects the
-open state (**expose-expanded-state**), with a visible `focus-visible` ring. As a
+open state (**expose-expanded-state**), with a visible `focus-visible` ring. While the disclosure is open the button also carries `aria-controls` pointing at the body's `id` (**link-toggle-to-body**). As a
 native `<button>`, the toggle is reachable via Tab and activatable via Enter or
 Space without extra wiring (**toggle-on-header-click**). The `actions` slot sits
 outside the toggle button, so its controls are independently reachable and do not
@@ -99,9 +98,9 @@ trigger the toggle.
 | T9 | support-uncontrolled | `defaultOpen={true}` | children are mounted on first render and `aria-expanded` is `"true"` |
 | T10 | support-controlled | `open={true}` with an `onOpenChange` that ignores the call | children are mounted and `aria-expanded` is `"true"` |
 | T11 | on-open-change-uncontrolled | uncontrolled with an `onOpenChange` spy; click the header twice | spy is called with `true`, then `false`; children follow |
-| T12 | link-toggle-to-body | open the disclosure | the toggle's `aria-controls` equals the body's `id` (fails on the current source) |
-| T13 | rtl-chevron | render under `dir="rtl"`, collapsed | the chevron points left; open, it points down (fails on the current source) |
-| T14 | respect-reduced-motion | emulate `prefers-reduced-motion: reduce`, toggle | the chevron's computed `transition-duration` is `0s` (fails on the current source) |
+| T12 | link-toggle-to-body | open the disclosure | the toggle's `aria-controls` equals the body's `id` |
+| T13 | rtl-chevron | render under `dir="rtl"`, collapsed | the chevron points left (it carries `rtl:rotate-180`); open, it points down (it carries `rotate-90`) |
+| T14 | respect-reduced-motion | toggle the disclosure and inspect the chevron's classes (jsdom evaluates no media query) | the chevron carries `motion-reduce:transition-none`, so its transition is dropped under reduced motion |
 ## Edge Cases
 
 - In controlled mode the component never writes internal state — the caller owns `open`.
@@ -202,16 +201,16 @@ None — a presentational primitive. Callers own any open/close telemetry.
 | [adc.check.accessibility.dynamic-type-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f3dbcab7-ac3d-5043-9379-0da07ceaa32b) | partial | Accessibility |
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | Accessibility |
 | [adc.check.accessibility.touch-target-size](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5b4e41dc-8362-5dad-aa80-f1b5500ed1f2) | partial | Accessibility |
-| [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | failed | Accessibility |
+| [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | passed | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | partial | Accessibility |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | passed | Internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
 | [adc.check.internationalization.text-expansion-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8007859b-a974-5b8a-88f7-162624b0c056) | failed | Internationalization |
-| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | partial | Internationalization |
+| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on `packages/web/packages/ui/src/components/disclosure.tsx`. Passed: screen-reader-support and keyboard-navigable, because the toggle is a real `<button>` with `aria-expanded` and native keyboard semantics. Partial: dynamic-type-support, because the `text-sm`/`text-xs` sizes scale but the header is a single truncating row; contrast-ratio, because the `apt-*` token values are not defined here; touch-target-size, because the toggle button's height comes from its text line only (the `py-2` padding is on the header row, not the button); semantic-markup, because there is no `aria-controls` linking toggle to body and the title is not in a heading element; rtl-layout-support, because the leading chevron is not mirrored. Failed: reduced-motion, because the unconditional `transition-transform` has no `motion-reduce:` variant; text-expansion-tolerance, because `truncate` clips long titles and subtitles with no way for sighted users to read the rest. The passed internationalization checks rest on the consumer-supplied `title`/`subtitle`/`children` props. `separation-of-concerns` passes because a local `useState` with a toggle handler is the expected shape for a single-component primitive. `unit-test-coverage` fails because the only name-matching test, `viewSourceDisclosure.test.tsx`, exercises a different component (`ViewSourceDisclosure`, [adhsdk.ingredient.ui.blocks.view-source-disclosure](cookbook:16e99364-8af3-40cb-beaf-d5a66a2fa2c0)), so no test exercises `disclosure.tsx`.
+Statuses rest on `packages/web/packages/ui/src/components/disclosure.tsx`. Passed: screen-reader-support and keyboard-navigable, because the toggle is a real `<button>` with `aria-expanded` and native keyboard semantics; reduced-motion, because the chevron carries `motion-reduce:transition-none`; rtl-layout-support, because the collapsed chevron carries `rtl:rotate-180`. Partial: dynamic-type-support, because the `text-sm`/`text-xs` sizes scale but the header is a single truncating row; contrast-ratio, because the `apt-*` token values are not defined here; touch-target-size, because the toggle button's height comes from its text line only (the `py-2` padding is on the header row, not the button); semantic-markup, because the title is not in a heading element (the toggle does carry `aria-controls` while open). Failed: text-expansion-tolerance, because `truncate` clips long titles and subtitles with no way for sighted users to read the rest. The passed internationalization checks rest on the consumer-supplied `title`/`subtitle`/`children` props. `separation-of-concerns` passes because a local `useState` with a toggle handler is the expected shape for a single-component primitive. `unit-test-coverage` passes: `disclosure.test.tsx` covers T1-T14 with no skips (T14 asserts the reduced-motion utility class, since jsdom evaluates no media query). Before, it failed because the only name-matching test, `viewSourceDisclosure.test.tsx`, exercises a different component (`ViewSourceDisclosure`, [adhsdk.ingredient.ui.blocks.view-source-disclosure](cookbook:16e99364-8af3-40cb-beaf-d5a66a2fa2c0)), so no test exercises `disclosure.tsx`.
 ## Change History
 
 | Version | Date | Author | Summary |

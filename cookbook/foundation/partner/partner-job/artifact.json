@@ -4,7 +4,7 @@
     "id": "79810488-c613-4f9b-af2a-4ba9d8ee1c26",
     "title": "Partner Job",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "174458498a02cfe8",
+  "synced": "c4c0ac8637c7932a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

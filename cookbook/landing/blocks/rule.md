@@ -175,7 +175,7 @@ Not applicable: Rule performs no logging or debug output.
 - dynamic-type-support partial: the web CSS (`packages/web/packages/landing/src/css/blocks.css`) sizes `dt`/`dd` in `rem` units, which scale with the root font size. The Platform Notes now give native text-scaling guidance, but no native port exists to verify it.
 - no-hardcoded-strings passed: `term` and `detail` are supplied entirely by the caller, with no string literals in `Rule.tsx`.
 - separation-of-concerns passed: `Rule.tsx` is a trivial pure-presentation mapping of `steps` to `dt`/`dd` pairs with no logic of its own.
-- unit-test-coverage partial: one test in `packages/web/packages/landing/src/__tests__/blocks-argument.test.tsx` ("is a definition list, one dt/dd pair per step, in order") covers rule-001, rule-003 and rule-004. Vectors rule-002 and rule-005 through rule-010 have no test.
+- unit-test-coverage partial: `packages/web/packages/landing/src/__tests__/blocks-argument.test.tsx` covers rule-001 to rule-009 with passing tests. rule-010 is skipped because it describes a missing `steps` value, which the typed web source cannot receive.
 ## Change History
 
 | Version | Date | Author | Summary |

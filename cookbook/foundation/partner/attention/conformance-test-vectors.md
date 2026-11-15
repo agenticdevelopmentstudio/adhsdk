@@ -1,5 +1,5 @@
 
-The source has no tests beside it; the vectors are derived from the initializers, the declared conformances and the standard `Codable` rules for the declared shapes.
+The vectors are derived from the initializers, the declared conformances and the standard `Codable` rules for the declared shapes.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

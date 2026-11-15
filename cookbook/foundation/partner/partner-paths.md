@@ -2,7 +2,7 @@
 id: 0a3f46c1-aa22-4af3-91f0-6631c9fdddfd
 title: "Partner Paths"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -131,7 +131,7 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerPaths.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerPaths.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -154,13 +154,14 @@ Not applicable: the source calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 
-`separation-of-concerns` passes because the type only computes locations; creating, reading and removing files is left to callers such as the guidelines installer. `input-sanitization` is partial: `token` and `jobID` are joined as written, so a path separator in either changes the result, and the type leaves the check to the caller (see no-validation). `unit-test-coverage` is partial: `PartnerProcessConfigurationTests` covers `pathsDeriveFromHomeAndToken` for the MCP config and skill file locations, and other suites use the type as a fixture, but no test asserts the system prompt, jobs, reviews or skills directory locations.
+`separation-of-concerns` passes because the type only computes locations; creating, reading and removing files is left to callers such as the guidelines installer. `input-sanitization` is partial: `token` and `jobID` are joined as written, so a path separator in either changes the result, and the type leaves the check to the caller (see no-validation). `unit-test-coverage` passes: `PartnerPathsConformanceTests` covers all 8 vectors, including the system prompt, jobs, reviews and skills directory locations, equality, the absence of file access and the unvalidated job id.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerPathsConformanceTests.swift, 8 of 8 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Pinned the empty-token and traversal results, recorded the raw-string and fixed-prefix decisions, added an input-sanitization compliance row and removed the duplicated Equatable and installer text. |

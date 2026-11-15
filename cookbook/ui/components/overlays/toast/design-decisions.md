@@ -1,5 +1,5 @@
 
-**Decision**: Position the toast viewport at the bottom-right corner rather than top-center or full-width.
+**Decision**: Position the toast viewport at the bottom inline-end corner (bottom-right in left-to-right locales, via `end-4`) rather than top-center or full-width.
 **Rationale**: Avoids blocking critical interface elements and keeps toasts out of the visual center; bottom-right is a common placement for transient system notifications in desktop web applications, distinct from primary content and navigation regions.
 **Approved**: pending
 

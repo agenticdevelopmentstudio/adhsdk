@@ -2,11 +2,11 @@
 id: a9222936-8474-4073-8581-d314a258bf0a
 title: "Invitation Panes"
 type: ingredient
-version: 1.2.2
+version: 1.2.3
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -495,7 +495,7 @@ logged (see Design Decisions).
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/adh-ui/src/blocks/invitation-panes.tsx` | unverified |
+| web | `packages/web/packages/adh-ui/src/blocks/invitation-panes.tsx` | confirmed (1.2.3) |
 
 ## Design Decisions
 
@@ -549,7 +549,7 @@ rather than idealized away.
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | failed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 Statuses rest on this file's own sections: Accessibility documents that
 `passes-required-aria-label` is this file's one direct, forced contribution
@@ -562,8 +562,7 @@ presentation (passed); and Edge Cases/Design Decisions show the `onSend`
 rejection reason is discarded via `() => undefined` with no log or rethrow
 (failed, see `reports-send-rejection-reason`).
 
-`unit-test-coverage` is `partial`: no test file for `invitation-panes.tsx` exists under the `adh-ui` test targets (`packages/web/packages/adh-ui/src/__tests__/` holds tests for other blocks only); the only coverage is indirect, through `packages/web/packages/features/ecosystems/src/EcosystemInvitationPanes.test.tsx`, which renders the three panes via their ecosystem wrappers and pins the header placement above the scrollable grid, so the `onSend` rejection handling and the `aria-label` values are untested.
-
+`unit-test-coverage` is `passed`: `packages/web/packages/adh-ui/src/__tests__/invitationPanes.test.tsx` covers all 34 conformance vectors (invitation-panes-001 through -034) with passing tests, mocking the list-with-details layout and the two modals to inspect what the panes hand them.
 ## Change History
 
 | Version | Date | Author | Summary |
@@ -574,3 +573,4 @@ rejection reason is discarded via `() => undefined` with no log or rethrow
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/invitations/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Add separation-of-concerns and unit-test-coverage compliance. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
+| 1.2.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (invitationPanes.test.tsx, 34 of 34 vectors); unit-test-coverage now passed. |

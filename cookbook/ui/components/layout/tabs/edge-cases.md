@@ -9,4 +9,3 @@
 - **Right-to-left arrow keys**: In a `dir="rtl"` context Left moves to the next tab and Right to the previous, per **keyboard-tab-navigation**.
 - **Vertical orientation**: Not supported. `orientation="vertical"` reaches Base UI, but the underline styling is horizontal-only.
 - **Known non-conformance (disabled appearance)**: **disabled-tabs** requires a dimmed disabled tab, but the web source's `disabled:` classes never match, because Base UI sets `aria-disabled`/`data-disabled` and not the native `disabled` attribute. Keying the classes off `data-disabled` closes the gap.
-- **Known non-conformance (focus indicator)**: **focus-visible-state** requires a focus indicator distinct from hover; the web source has only the hover-identical color change with `outline-none`.

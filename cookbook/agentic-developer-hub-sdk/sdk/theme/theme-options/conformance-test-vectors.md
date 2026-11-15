@@ -1,5 +1,4 @@
-
-The source has no test file of its own. The only test that names these types is `BubbleTruncationTests` in the macOS test target, which builds `ThemeTerminalOptions(fontName: "Menlo-Bold", fontSize: 21)` as a fixture and asserts nothing about the types. Vectors derive from the source's code and doc comments, and they belong in a new `ThemeOptionsTests` file beside the other theme tests in `Tests/AgenticDeveloperHubSDKMacOSTests/Theme/`; the types are otherwise exercised only through `ColorTheme` coding.
+Tests: `ThemeOptionsTests` in `SDK/Tests/AgenticDeveloperHubSDKTests/Theme/ThemeOptionsTests.swift`, one test per vector. `BubbleTruncationTests` in the macOS test target only uses `ThemeTerminalOptions` as a fixture.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

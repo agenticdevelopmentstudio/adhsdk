@@ -10,7 +10,7 @@
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 Statuses rest on the source: the real `<button type="button">` (via `Button`) and
 `aria-label={label}` ground the passed accessibility checks, and
@@ -23,6 +23,6 @@ grounds both internationalization failures. `separation-of-concerns` passes:
 `copy-button.tsx` holds only the presentational `Button` wiring, while the
 clipboard-write-and-flash logic lives entirely in the generic `useClipboard`
 hook, which carries no knowledge of this component. `unit-test-coverage`
-fails — no test file in the `ui` package exercises `CopyButton` or
-`useClipboard`.
+passes — `copyButton.test.tsx` in the `ui` package covers all eleven
+conformance vectors (T1-T11).
 

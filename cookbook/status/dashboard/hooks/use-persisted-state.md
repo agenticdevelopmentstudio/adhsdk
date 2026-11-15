@@ -2,7 +2,7 @@
 id: 07fab18a-2390-4899-b4ee-a273abc3a3eb
 title: "Persisted State"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -124,7 +124,7 @@ Vectors 001–003 are the assertions in `use-persisted-state.dom.test.tsx` (the 
 | pstate-015 | set-persists-same-value | mount with initial `false`; storage is cleared; call the setter with `false` | storage holds the text `false` after the call, even though the value did not change |
 | pstate-016 | set-encode-captured | mount with an inline `encode` that wraps the value in an array; re-render with the same `key` and an `encode` that wraps it in an object; call the setter with `1` | storage holds the text `[1]`, from the `encode` of the render that created the setter |
 | pstate-017 | set-key-bound | mount with key `a`; capture the setter; re-render with key `a`, then with key `b`; call the captured setter and the current setter | the setter's identity is the same across the re-render with key `a` and different after the change to `b`; the captured setter writes to `a` |
-| pstate-018 | set-updater-throws | mount with initial `0`; call the setter with an updater that throws | the exception is not caught by the state, no write happens for that call, and the value stays `0` |
+| pstate-018 | set-updater-throws | mount with initial `0`; call the setter with an updater that throws | the exception is not caught by the state, no write happens for that call (the throw unmounts the hook's tree, so there is no value left to read) |
 | pstate-019 | hydrate-once-per-key | mount with key `k`, re-render three times with the same key, then change the key to `j` | storage is read once for `k` and once more for `j`, and not on the re-renders |
 | pstate-020 | hydrate-no-write | storage holds `true` under `k`; mount with `decodeBoolean` and initial `false` | the value becomes `true`, and no write call is made to storage during hydration |
 | pstate-021 | per-instance-state | two mounts with the same key; call one setter with `true` | the other mount's value stays `false`; storage holds `true` |
@@ -198,7 +198,7 @@ Not applicable: the state never logs; a failed read or write is ignored silently
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-persisted-state.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-web/src/hooks/use-persisted-state.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -234,14 +234,14 @@ Not applicable: the state never logs; a failed read or write is ignored silently
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | partial | privacy-and-data |
 
 **Separation of Concerns**: The hook knows nothing about what it stores. Shape validation lives in the caller's `decode`, serialisation in `encode`, and the meaning of each setting in the source-filter state and the overview tab.
 
-**Unit Test Coverage**: `use-persisted-state.dom.test.tsx` covers the round trip, an unrecognised stored value and per-key isolation through the source filter. The bad-JSON, blocked-storage, write-failure, functional-update, key-change and decode-once paths have no test.
+**Unit Test Coverage**: `use-persisted-state.dom.test.tsx` has one passing test for each of the 22 conformance vectors, including the bad-JSON, blocked-storage, write-failure, functional-update, key-change and decode-once paths.
 
 **Explicit Error Handling**: Every failure on read and write is caught and ignored by design, with a comment on each; none is surfaced or logged, so a setting that cannot be saved looks identical to one that can. That is deliberate and documented, but not explicit to the caller.
 
@@ -253,5 +253,6 @@ Not applicable: the state never logs; a failed read or write is ignored silently
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-persisted-state.dom.test.tsx, 22 of 22 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added tags, rewrote single-threaded and client-only, fixed the decodeBoolean requirement name, lowered key-change-keeps-value to MAY, marked config keys as examples, defined first render and effect for ports, and added vectors pstate-015 to pstate-022. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial recipe extracted from `use-persisted-state.ts` |

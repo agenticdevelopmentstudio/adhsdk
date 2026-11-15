@@ -141,3 +141,22 @@ describe("providerDeployToDTO stamps the tier", () => {
     expect(providerDeployToDTO(deploy({ environment: "" }), null).tier).toBeNull();
   });
 });
+
+describe("providerDeployToDTO field coalescing", () => {
+  const bare = (over: Partial<ProviderDeploy> = {}): ProviderDeploy => ({
+    id: "ry_1", platform: "railway", projectName: "p", buildPhase: null, deployPhase: "none",
+    environment: null, commitHash: null, commitMessage: null, branch: null, commitRepo: null, url: null,
+    createdAt: new Date(1000), ...over,
+  });
+
+  it("status-server-monitor-provider-deploy-013: phaseConfirmedAt falls back to createdAt, else uses confirmedAt", () => {
+    expect(providerDeployToDTO(bare({ confirmedAt: undefined }), null).phaseConfirmedAt).toBe(new Date(1000).toISOString());
+    expect(providerDeployToDTO(bare({ confirmedAt: new Date(2000) }), null).phaseConfirmedAt).toBe(new Date(2000).toISOString());
+  });
+
+  it("status-server-monitor-provider-deploy-014: an omitted providerProjectId and errorText serialize as null", () => {
+    const dto = providerDeployToDTO(bare({ createdAt: new Date(0) }), null);
+    expect(dto.providerProjectId).toBeNull();
+    expect(dto.errorText).toBeNull();
+  });
+});

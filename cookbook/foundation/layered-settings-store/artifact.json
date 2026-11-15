@@ -4,7 +4,7 @@
     "id": "846ec786-5b96-4ee0-b7db-d6ae4bd6e333",
     "title": "Layered Settings Store",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9a3d876b92b93800",
+  "synced": "d4d0a06c4d9fad67",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

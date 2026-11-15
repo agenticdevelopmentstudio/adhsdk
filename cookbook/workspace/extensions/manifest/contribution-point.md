@@ -2,11 +2,11 @@
 id: 088ed758-8c79-443d-999f-425c69df4d4d
 title: "Contribution Point"
 type: ingredient
-version: 1.1.2
+version: 1.1.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -153,7 +153,7 @@ Not applicable: `ContributionPoint.swift` contains no `os_log`, `Logger`, `print
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributionPoint.swift` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributionPoint.swift` | confirmed (1.1.3) |
 
 ## Design Decisions
 
@@ -182,12 +182,13 @@ Not applicable: `ContributionPoint.swift` contains no `os_log`, `Logger`, `print
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
-`separation-of-concerns` passes because `ContributionPoint.swift` performs no I/O, persistence, or networking of its own — it defines only the contract, the note protocol, and a pure in-memory bookkeeping struct; every conformer owns its own side effects. `idempotent-operations` passes because `record` replaces rather than accumulates (record-replaces-existing-entry), and `withdraw` and `remove` are both documented and tested safe to call on an identifier with nothing recorded (withdraw-safe-on-unapplied-identifier, remove-safe-on-unrecorded-identifier). `unit-test-coverage` is `partial`: `ContributionRegistrationsTests.swift` exhaustively covers `ContributionRegistrations` itself, but the `ContributionPoint` protocol's own contractual requirements — `apply-called-only-for-enabled-extensions`, `caller-error-isolation`, `reload-withdraws-before-reapplying`, and persisted-state-absence-distinction — are exercised only indirectly, through each conformer's own test suite (for example `ThemeContributionPointTests.swift`), never against the protocol's contract directly. `data-integrity` is `partial`: persisted-state-absence-distinction is documented as a MUST in the protocol's doc comment, but nothing in `ContributionPoint.swift` enforces it on a conformer — a non-atomic `apply` that throws partway (no compensating `withdraw` follows) is one further way a conformer's own state can drift from what the contract describes.
+`separation-of-concerns` passes because `ContributionPoint.swift` performs no I/O, persistence, or networking of its own — it defines only the contract, the note protocol, and a pure in-memory bookkeeping struct; every conformer owns its own side effects. `idempotent-operations` passes because `record` replaces rather than accumulates (record-replaces-existing-entry), and `withdraw` and `remove` are both documented and tested safe to call on an identifier with nothing recorded (withdraw-safe-on-unapplied-identifier, remove-safe-on-unrecorded-identifier). `unit-test-coverage` is `partial`: `ContributionRegistrationsTests.swift` carries a test for each of contribution-point-001 through contribution-point-005; contribution-point-006 (confines-to-ui-thread) is skipped because thread confinement is enforced by the compiler through `@MainActor` on the protocol, which no runtime unit test can exercise. `data-integrity` is `partial`: persisted-state-absence-distinction is documented as a MUST in the protocol's doc comment, but nothing in `ContributionPoint.swift` enforces it on a conformer — a non-atomic `apply` that throws partway (no compensating `withdraw` follows) is one further way a conformer's own state can drift from what the contract describes.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (ContributionRegistrationsTests.swift, 5 of 6 vectors tested, 006 skipped); unit-test-coverage now partial. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Edge Cases name the UI thread, not a Swift actor. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Spec-local UI-thread confinement ids folded into the shared confines-to-ui-thread requirement, with a test vector; scope detail is in Platform Notes. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Moved Swift constructs (AnyObject, @MainActor, Sendable, struct/mutating, signatures) out of normative requirements into the AppKit platform note. |

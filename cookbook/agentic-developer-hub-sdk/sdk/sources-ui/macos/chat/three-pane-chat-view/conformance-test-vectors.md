@@ -7,7 +7,7 @@
 | three-pane-004 | append-visible-topic-on-selection | User selects topic 2 while topic 1 is visible | Both topic 1 and topic 2 remain in the visible-topics stack; the earlier selection is preserved for back-navigation |
 | three-pane-005 | arrow-key-navigation | Three topics are visible; the second (of three) is active; user presses arrow down | The active topic moves to the third (last) visible topic |
 | three-pane-006 | arrow-key-navigation | Two topics are visible; the second (last) is active; user presses arrow down | The active topic stays at the last visible topic; navigation clamps rather than wrapping to the first |
-| three-pane-007 | input-focus-keystroke | Focus is on the topics pane; user presses 'a' (no modifiers) | Chat input field receives focus; the 'a' character is inserted into the input |
+| three-pane-007 | input-focus-keystroke | Focus is on the topics pane; user presses 'a' (no modifiers) | Chat input field receives focus (the handler only moves focus; the browser then delivers the keystroke, so the 'a' lands in the input) |
 | three-pane-008 | input-focus-keystroke | Focus is already in the chat input; user presses 'a' | The keystroke is inserted into the input as normal; focus remains in the input |
 | three-pane-009 | draw-connectors-between-panes | The first topic is active and is associated with a message in the transcript | A connector is drawn from the active topic to its message in the transcript, and another from that message to its detail panel |
 | three-pane-010 | recalculate-layout-on-image-load | A detail panel with images is shown | After each image finishes loading, the three-pane layout recalculates its dimensions |

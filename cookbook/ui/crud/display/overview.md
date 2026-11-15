@@ -11,6 +11,6 @@ It is a pure, synchronous function with no side effects. It is the single
 conversion point both list surfaces share: `cellText` in `CrudTable` and the
 cell rendering in `CrudDataView` each pass the raw row value through it before
 their own null, stringify and truncate formatting. This recipe is
-non-visual shared logic; see [CrudTable](cookbook:ec64b22b-8a25-431d-8866-b7a01acd91fe)
+non-visual shared logic; see CrudTable ([adhsdk.ingredient.ui.crud.crud-table](cookbook:ec64b22b-8a25-431d-8866-b7a01acd91fe))
 for the surface that shows its output.
 

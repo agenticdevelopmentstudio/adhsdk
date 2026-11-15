@@ -4,11 +4,11 @@
     "id": "a0ae2ae1-7d51-4639-8f3b-062dcf750b66",
     "title": "Status Row Model",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1cf22228c09bfc19",
+  "synced": "7f51431f1517a02c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

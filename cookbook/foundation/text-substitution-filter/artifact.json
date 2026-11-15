@@ -4,7 +4,7 @@
     "id": "998864ec-d852-4e92-aa2c-3177130ff21d",
     "title": "Text Substitution Filter",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "99698bec256eefbc",
+  "synced": "388c19e018cb0ba2",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

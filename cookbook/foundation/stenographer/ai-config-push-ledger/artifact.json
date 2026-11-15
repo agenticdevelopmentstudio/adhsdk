@@ -4,7 +4,7 @@
     "id": "1a0b943c-35f4-4568-9d92-033acce97afb",
     "title": "AI Config Push Ledger",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "28d39a75ee27758b",
+  "synced": "4ff63e8fb68dd343",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

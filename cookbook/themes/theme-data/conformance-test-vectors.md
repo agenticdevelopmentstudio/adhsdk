@@ -1,5 +1,4 @@
-
-The only test of the generator itself is `src/__tests__/themeDataInSync.test.ts`, which covers theme-data-014 (generated-in-sync). The other tests that read the data go through the manifest: `rescued-themes.test.ts`, `darkAlwaysThemes.test.ts` and `buildScopedCss.test.ts` (`ThemeStyle.test.tsx` mocks the manifest and so never reads the data). Vectors 001 and 002 derive from them and the rest from the generator source. Vectors 003 to 013 have no test yet; vectors 003 to 005, 010 and 011 belong in a `buildThemeData.test.ts` beside the scripts that calls `renderThemeData` on a temporary styles directory, and vectors 006 to 009 in an `inlineImports.test.ts` and a script-run test in the same folder.
+All fifteen vectors are tested in `packages/web/packages/themes/src/__tests__/buildThemeData.test.ts`, one `it` per vector with the vector id at the start of its title. The tests call `renderThemeData` on temporary styles directories and run `scripts/build-theme-data.mjs` as a child process in a temporary package root (the vitest config only collects tests under `src`). `src/__tests__/themeDataInSync.test.ts` also covers theme-data-014 on its own.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

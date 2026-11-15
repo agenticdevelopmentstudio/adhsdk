@@ -1,7 +1,7 @@
 
 - **Null and empty input**: An empty `Data` passed to `decode` MUST return `nil`. An empty `workUnits` array is valid and decodes as an empty array. A null `nextActivation` or `lastMessage` decodes as `nil`.
 - **Malformed input**: Any JSON that does not match the schema, including a missing required key, a wrong type, or an unknown `state` value, MUST yield `nil` from `decode`; the decoder never returns a partially filled report.
-- **Date format**: A `nextActivation` that is not an ISO-8601 date string (for example one with fractional seconds, which the `.iso8601` strategy does not parse, or a numeric timestamp) fails decoding of the whole report, so `decode` returns `nil`.
+- **Date format**: A `nextActivation` that is not an ISO-8601 date string (for example a numeric timestamp; whether fractional seconds parse is up to the OS release's `.iso8601` strategy, and macOS 26 accepts them) fails decoding of the whole report, so `decode` returns `nil`.
 - **Boundary values**: `uptimeSeconds` and `consecutiveFailures` are not range-checked; negative or very large values pass through unchanged.
 - **Deep or wide trees**: `first(ofKind:)` recurses without a depth limit, and a tree is bounded only by what the daemon sends.
 - **Unreachable server**: A refused connection, DNS failure or lost connectivity MUST make the probe closure return `nil`; the closure does not distinguish those causes from one another or from a non-200 status.

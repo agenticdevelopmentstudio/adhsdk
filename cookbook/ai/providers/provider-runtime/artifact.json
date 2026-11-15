@@ -4,7 +4,7 @@
     "id": "3b310d80-e18d-4f45-9041-10a278f775c1",
     "type": "ingredient",
     "title": "Provider Runtime",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "summary": "Provider metadata, HTTP request building, and network-backed catalog stores for AI chat dispatch and model discovery.",
@@ -24,7 +24,7 @@
       "security"
     ],
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "approved-by": null,
     "approved-date": null,
@@ -49,7 +49,7 @@
     ]
   },
   "names_hosts": "Provider metadata names real providers and model ids (Claude, Haiku, gpt-5) as the literal values it builds requests from.",
-  "synced": "0e9b188eae1aca89",
+  "synced": "18003f3c5b1ae782",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

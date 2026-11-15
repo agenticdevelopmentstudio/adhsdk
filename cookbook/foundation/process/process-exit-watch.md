@@ -2,7 +2,7 @@
 id: cfe3d3d4-1149-4fb6-8d77-47554026f389
 title: "Process Exit Watch"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -73,7 +73,7 @@ Not applicable — this is a process-lifecycle utility, not a visual component.
 
 ## Conformance Test Vectors
 
-The source has no test file naming this type directly; `CommandRunner`'s tests exercise it through the runner. The vectors below follow the code and its doc comments, and a port should assert them with a short-lived child such as `/usr/bin/true` and a sleeping child.
+`ProcessExitWatchConformanceTests.swift` tests this type directly, skipping vectors 001, 009 and 012 with a reason; `CommandRunner`'s tests also exercise it through the runner. The vectors below follow the code and its doc comments, and a port should assert them with a short-lived child such as `/usr/bin/true` and a sleeping child.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -152,7 +152,7 @@ Not applicable: this component contains no log call; a false result from `stop(_
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessExitWatch.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessExitWatch.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -200,10 +200,11 @@ Not applicable: this component contains no log call; a false result from `stop(_
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | reliability |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 
-`separation-of-concerns` passes: the type only watches an exit and ends a process; collecting output and deciding what a timeout means belong to `CommandRunner` and the callers. `unit-test-coverage` is partial: no test targets the type directly, and it is exercised only through the runner's tests. `timeout-handling` passes: every wait takes a timeout and the stop sequence is bounded at two graces. `fault-tolerance` is partial: it works around the lost wake-up and reports an unkillable process, but concurrent waiters are not handled (the open question on `concurrent-waiters`). `explicit-error-handling` passes: an unkillable process is returned as false, and a caller error is a precondition.
+`separation-of-concerns` passes: the type only watches an exit and ends a process; collecting output and deciding what a timeout means belong to `CommandRunner` and the callers. `unit-test-coverage` is partial: `ProcessExitWatchConformanceTests.swift` covers vectors 002 to 008, 010 and 011; vectors 001 (a failed precondition ends the test process), 009 (no portable setup makes a process survive SIGKILL) and 012 (an inspection of the public interface) are skipped. `timeout-handling` passes: every wait takes a timeout and the stop sequence is bounded at two graces. `fault-tolerance` is partial: it works around the lost wake-up and reports an unkillable process, but concurrent waiters are not handled (the open question on `concurrent-waiters`). `explicit-error-handling` passes: an unkillable process is returned as false, and a caller error is a precondition.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ProcessExitWatchConformanceTests.swift, 9 of 12 vectors; 001, 009, 012 skipped with reasons); unit-test-coverage stays partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Cited the lost wake-up once in Overview, added Design Decisions for handler replacement and the stop argument, added a stop-same-process requirement, linked the command runner, settled the stop bound, and clarified vectors 001 and 009, the Configuration row and the SwiftUI note. |

@@ -1,7 +1,7 @@
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| overlay-001 | closed-invisible, closed-non-interactive | open=false | Header, close button, and body remain present but the root has no `open` class, `opacity: 0` and `pointer-events: none` apply, and a pointer click on the close button does not invoke `onClose` |
+| overlay-001 | closed-invisible, closed-non-interactive | open=false | Header, close button, and body remain present but the root has no `open` class, `opacity: 0` and `pointer-events: none` apply, as computed from the stylesheet (browser hit-testing of the click itself is not exercised in jsdom) |
 | overlay-002 | apply-open-class | open=true | Root div has class `pc-content-overlay open` |
 | overlay-003 | omit-open-class | open=false | Root div has class `pc-content-overlay` (no `open` class) |
 | overlay-004 | invoke-on-close | open=true; user clicks close button; onClose is a spy function | onClose is called exactly once |

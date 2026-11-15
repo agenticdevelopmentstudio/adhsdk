@@ -4,7 +4,7 @@
     "id": "ccc0d121-4927-4a83-b0e5-337116edebc0",
     "title": "ThemeTypography",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c7dedd8b705cd43a",
+  "synced": "992ef03c9db09092",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

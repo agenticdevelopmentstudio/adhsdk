@@ -17,6 +17,15 @@ struct VSIXInstallerFileSystemFailureTests {
 
     private static let host = SemanticVersion(major: 1, minor: 138, patch: 0)
 
+    /// `FileManager` is not `Sendable` in this SDK, so the double reaches the installer's `@Sendable`
+    /// provider through an unchecked box. Each test uses its manager on one thread.
+    private struct ManagerBox: @unchecked Sendable { let manager: RefusingFileManager }
+
+    private static func provider(_ manager: RefusingFileManager) -> @Sendable () -> FileManager {
+        let box = ManagerBox(manager: manager)
+        return { box.manager }
+    }
+
     private let unsigned = VSIXVerification(
         sha256: "abc", digest: .notPublished, signature: .notPublished)
 
@@ -71,7 +80,7 @@ struct VSIXInstallerFileSystemFailureTests {
         let installer = VSIXInstaller(
             installDirectory: installDirectory,
             hostVersion: Self.host,
-            fileManager: { manager })
+            fileManager: Self.provider(manager))
 
         #expect(throws: VSIXInstallError.self) {
             try installer.install(
@@ -116,7 +125,7 @@ struct VSIXInstallerFileSystemFailureTests {
         let installer = VSIXInstaller(
             installDirectory: installDirectory,
             hostVersion: Self.host,
-            fileManager: { manager })
+            fileManager: Self.provider(manager))
 
         do {
             _ = try installer.install(
@@ -146,7 +155,7 @@ struct VSIXInstallerFileSystemFailureTests {
         let installer = VSIXInstaller(
             installDirectory: installDirectory,
             hostVersion: Self.host,
-            fileManager: { manager })
+            fileManager: Self.provider(manager))
 
         #expect(throws: VSIXInstallError.self) {
             try installer.install(
@@ -179,7 +188,7 @@ struct VSIXInstallerFileSystemFailureTests {
         let installer = VSIXInstaller(
             installDirectory: installDirectory,
             hostVersion: Self.host,
-            fileManager: { manager })
+            fileManager: Self.provider(manager))
 
         let installed = try installer.install(
             archive: try archive(version: "2.0.0", in: scratch),
@@ -358,7 +367,7 @@ struct VSIXInstallerFileSystemFailureTests {
         let installer = VSIXInstaller(
             installDirectory: installDirectory,
             hostVersion: Self.host,
-            fileManager: { manager })
+            fileManager: Self.provider(manager))
 
         do {
             _ = try installer.install(
@@ -399,7 +408,7 @@ struct VSIXInstallerFileSystemFailureTests {
 /// whole path, because the paths involved are inside a temporary directory
 /// whose name the test never sees, and because the interesting move has a
 /// different source each run (`UUID` in the aside name).
-private final class RefusingFileManager: FileManager, @unchecked Sendable {
+private final class RefusingFileManager: FileManager {
 
     /// Fail a move whose destination ends in this — but only the one coming
     /// *from* the expanded payload.

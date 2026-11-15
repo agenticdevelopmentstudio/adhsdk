@@ -1,8 +1,6 @@
-
-Vectors 001–011 are traced to `color.test.ts`; vectors 012–021 to `lens.test.ts`.
-Vectors 022–024 are derived directly from the `apply` arithmetic in `lens.ts`
-and have no dedicated assertion in `color.test.ts` or `lens.test.ts`. Vectors
-025 and 026 are read from `useTextLens.ts`, which has no test file.
+Vectors 001–011 are traced to `color.test.ts`; vectors 012–024 to `lens.test.ts`;
+vectors 025 and 026 to `useTextLens.test.tsx`. Each test title starts with its
+vector id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -27,8 +25,8 @@ and have no dedicated assertion in `color.test.ts` or `lens.test.ts`. Vectors
 | text-lens-019 | destroy-tears-down-and-stops | `lens.destroy(); element.dispatchEvent(new Event('pointerenter')); lens.start();` | `requestAnimationFrame` called exactly once for the post-destroy `start()` — the pointer event after `destroy()` has no bound listener left to affect it (`stops pausing on hover once destroyed`) |
 | text-lens-020 | colour-ramp-pairing | `createLens([el], { fromColor: '#8a8a9a' }).start()` (no `toColor`) | throws matching `/fromColor and toColor/` (`refuses one end of the colour ramp without the other`) |
 | text-lens-021 | colour-ramp-pairing, ramp-resolved-against-first-glyph | `document.body` has `--from`/`--to` custom properties set; `createLens([el], { fromColor: '--from', toColor: '--to' }).start()` | does not throw (`reads both ends of the ramp from custom properties`) |
-| text-lens-022 | radius-cutoff, smoothstep-easing, scale-formula | sweep centre exactly `radius` px from a glyph's centre (`distance === radius`) | `linear = 0`, `t = 0`; `transform` is `scale(1.000)` (no growth), `filter` is cleared (no dedicated test — derived from `apply`'s formula) |
-| text-lens-023 | blur-floor | default `blur: 0.35`, glyph at the sweep centre (`distance = 0`, `t = 1`) | computed `blur = 0.35`; since `0.35 > 0.03`, `filter` is set to `blur(0.35px)` (no dedicated test — derived from `apply`'s formula) |
-| text-lens-024 | leg-direction-alternation, cubic-ease-in-out | `elapsed === duration` exactly (leg boundary) | `leg = 1` (odd), `progress = 0`, `eased = 0`; the sweep centre is exactly `rightEdge` at that instant, having just switched to the return leg (no dedicated test — derived from `apply`/`step`'s formula) |
+| text-lens-022 | radius-cutoff, smoothstep-easing, scale-formula | sweep centre exactly `radius` px from a glyph's centre (`distance === radius`) | `linear = 0`, `t = 0`; `transform` is `scale(1.000)` (no growth), `filter` is cleared |
+| text-lens-023 | blur-floor | default `blur: 0.35`, glyph at the sweep centre (`distance = 0`, `t = 1`) | computed `blur = 0.35`; since `0.35 > 0.03`, `filter` is set to `blur(0.35px)` |
+| text-lens-024 | leg-direction-alternation, cubic-ease-in-out | `elapsed === duration` exactly (leg boundary) | `leg = 1` (odd), `progress = 0`, `eased = 0`; the sweep centre is exactly `rightEdge` at that instant, having just switched to the return leg |
 | text-lens-025 | resweep-is-immediate-after-the-first, deferred-first-sweep | `useTextLens` with `startDelay: 500`, fake timers; the hook runs, 500 ms pass, `enabled` goes `false`, then `true` again | the first run starts the lens after 500 ms; the second run starts it after 0 ms (no delay) |
 | text-lens-026 | cleanup-clears-the-pending-timer-and-destroys | `useTextLens` with `startDelay: 500`; unmount at 100 ms, then advance fake timers past 500 ms | `start()` is never called; `destroy()` is called once |

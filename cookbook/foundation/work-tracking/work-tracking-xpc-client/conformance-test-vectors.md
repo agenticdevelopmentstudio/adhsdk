@@ -1,5 +1,5 @@
 
-Vectors 001 through 010 are backed by `WorkTrackingXPCClientTests`, which drives the client through a scripted transport. Vectors 011 through 017 are spec-only: derived from the source, with no test yet.
+Vectors 001 through 010 are backed by `WorkTrackingXPCClientTests`, which drives the client through a scripted transport. Vectors 011 through 014, 016 and 017 are backed by `WorkTrackingXPCClientConformanceTests`. Vector 015 is spec-only: `WorkTrackingPreferences` cannot fail to encode, so no test can reach it.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

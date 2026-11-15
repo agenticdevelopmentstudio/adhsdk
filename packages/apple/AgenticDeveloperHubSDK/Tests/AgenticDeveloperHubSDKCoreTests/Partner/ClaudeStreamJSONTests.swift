@@ -55,4 +55,85 @@ import Testing
         #expect(message?["role"] as? String == "user" && content?.first?["text"] as? String == "hello")
         #expect(ClaudeStreamInput.userMessage("x").last == 0x0A)
     }
+
+    private func decode(_ json: String) throws -> ClaudeStreamMessage {
+        try ClaudeStreamMessage.decode(Data(json.utf8))
+    }
+    private func contentBlocks(_ element: String) throws -> [ClaudeStreamMessage.Block] {
+        try decode(#"{"type":"user","message":{"role":"user","content":["# + element + "]}}").blocks
+    }
+    @Test("claude-stream-json-010: a non-init system message is other with its subtype")
+    func nonInitSystemIsOther() throws {
+        let msg = try decode(#"{"type":"system","subtype":"api_retry"}"#)
+        #expect(msg.kind == .other("system") && msg.subtype == "api_retry")
+    }
+    @Test("claude-stream-json-011: an empty object decodes to empty defaults")
+    func emptyObjectDecodesToDefaults() throws {
+        let msg = try decode("{}")
+        #expect(msg.kind == .other("") && msg.blocks.isEmpty && !msg.isError && msg.errors.isEmpty)
+    }
+    @Test("claude-stream-json-012: a top-level array throws not a JSON object")
+    func topLevelArrayThrows() {
+        do {
+            _ = try ClaudeStreamMessage.decode(Data("[1,2]".utf8))
+            Issue.record("expected a throw")
+        } catch DecodingError.dataCorrupted(let context) {
+            #expect(context.debugDescription == "not a JSON object")
+        } catch {
+            Issue.record("wrong error \(error)")
+        }
+    }
+    @Test("claude-stream-json-013: empty data throws not JSON")
+    func emptyDataThrows() {
+        do {
+            _ = try ClaudeStreamMessage.decode(Data())
+            Issue.record("expected a throw")
+        } catch DecodingError.dataCorrupted(let context) {
+            #expect(context.debugDescription == "not JSON")
+        } catch {
+            Issue.record("wrong error \(error)")
+        }
+    }
+    @Test("claude-stream-json-014: string content becomes one text block")
+    func stringContentBecomesTextBlock() throws {
+        let msg = try decode(#"{"type":"user","message":{"role":"user","content":"plain"}}"#)
+        #expect(msg.blocks == [ClaudeStreamMessage.Block(kind: .text, text: "plain")])
+    }
+    @Test("claude-stream-json-015: a thinking block carries its thinking text")
+    func thinkingBlock() throws {
+        let blocks = try contentBlocks(#"{"type":"thinking","thinking":"hmm"}"#)
+        #expect(blocks == [ClaudeStreamMessage.Block(kind: .thinking, text: "hmm")])
+    }
+    @Test("claude-stream-json-016: a tool_result with string content")
+    func toolResultString() throws {
+        let blocks = try contentBlocks(#"{"type":"tool_result","tool_use_id":"t1","content":"ok"}"#)
+        #expect(blocks == [ClaudeStreamMessage.Block(kind: .toolResult, text: "ok", toolUseID: "t1")])
+    }
+    @Test("claude-stream-json-017: tool_result parts join their text with newlines")
+    func toolResultParts() throws {
+        let element = #"{"type":"tool_result","tool_use_id":"t1","content":["#
+            + #"{"type":"text","text":"a"},{"type":"image"},{"type":"text","text":"b"}]}"#
+        let blocks = try contentBlocks(element)
+        #expect(blocks.first?.kind == .toolResult && blocks.first?.text == "a\nb")
+    }
+    @Test("claude-stream-json-018: a tool_result without content has nil text")
+    func toolResultNoContent() throws {
+        let blocks = try contentBlocks(#"{"type":"tool_result","tool_use_id":"t1"}"#)
+        #expect(blocks.first?.kind == .toolResult && blocks.first?.text == nil)
+    }
+    @Test("claude-stream-json-019: an unknown block type is other with nil fields")
+    func unknownBlockIsOther() throws {
+        let blocks = try contentBlocks(#"{"type":"image"}"#)
+        #expect(blocks == [ClaudeStreamMessage.Block(kind: .other)])
+    }
+    @Test("claude-stream-json-020: non-string errors are dropped")
+    func nonStringErrorsDropped() throws {
+        let msg = try decode(#"{"type":"result","errors":["a",1,"b"]}"#)
+        #expect(msg.errors == ["a", "b"])
+    }
+    @Test("claude-stream-json-021: user message does not escape slashes")
+    func userMessageKeepsSlashes() throws {
+        let text = String(bytes: ClaudeStreamInput.userMessage("a/b"), encoding: .utf8) ?? ""
+        #expect(text.contains("a/b") && !text.contains("a\\/b"))
+    }
 }

@@ -423,7 +423,7 @@ the avatar component that renders the SVG this engine animates.
 | avatar-behavior-047 | pose-application-on-mood-change, choreography-replaces-per-pose-tweens | `effective` changes to a mood with a `choreography` entry. | The choreography's timeline runs; `applyPose` is not called for that mood. |
 | avatar-behavior-048 | pose-application-on-mood-change | `effective` changes to a mood present in neither `poses` nor `choreography`. | No new tween/timeline starts; the rig visually keeps whatever pose it last applied. |
 | avatar-behavior-049 | pose-channel-guard | `rig` wires only `svg` and `pivot` (no other channels). | `applyPose` runs without throwing and produces no tweens on any channel. |
-| avatar-behavior-050 | body-scale-rotation | `pose = { scale: 1.2, rotation: 10, spinTurns: 1, dur: 0.4, ease: "power3.out" }`. | `rig.body`'s element tweens scale to `1.2` and rotation to `370` (`10 + 360*1`) about `rig.pivot`. |
+| avatar-behavior-050 | body-scale-rotation | `pose = { scale: 1.2, rotation: 10, spinTurns: 1, dur: 0.4, ease: "power3.out" }`. | `rig.body`'s element tweens scale to `1.2` and rotation to `370` (`10 + 360*1`) about `rig.pivot`; with `spinTurns` set the tween runs a fixed `0.9`s on `power3.inOut` instead of `dur`/`ease`. |
 | avatar-behavior-051 | antennae-per-pose-and-continuous-sway | `pose.wiggle = 5` (lively), `eyesShut = false`. | Each antenna loops its bend at amplitude `sway.lively` (`18` by default), out of phase between the two sides. |
 | avatar-behavior-052 | antennae-per-pose-and-continuous-sway | `eyesShut = true`. | Both antennae settle to a neutral bend and hold still; no sway loop runs. |
 | avatar-behavior-053 | descender-toggle-and-flick | `pose.showY = true`, `pose.wiggle = 0`. | Descender morphs to `rig.descender.logoPath`; no tail-flick loop runs. |
@@ -766,7 +766,7 @@ API; failures are silent (guarded no-ops), not logged.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | failed | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
@@ -775,12 +775,7 @@ API; failures are silent (guarded no-ops), not logged.
 Statuses rest on the source: identity (SVG/pose data) and behavior (this
 engine) are cleanly split — no avatar's anatomy or mood names are baked into
 `engine.ts`/`arbitration.ts`/`pose.ts` — so separation-of-concerns passes.
-`engine.test.ts` is an explicit smoke test only (its own comment: "the
-engine is a GSAP-driven hook — its motion is verified in-app, it can't be
-asserted headless"); it checks the exported surface and that
-`DEFAULT_TUNING` has 13 numeric fields, but omits `swayCalm`/`swayLively`
-from that check and asserts none of the arbitration, blink, ladder, gaze, or
-pose behavior itself, so unit-test-coverage is partial rather than passed.
+`engine.test.ts` is a smoke test of the exported surface; `avatar-behavior.test.tsx` covers all 63 conformance vectors (arbitration, blink, idle ladder, speech, gaze, idle fidget, pose application, speech bubble and morph pass-through) against a recording GSAP fake, so unit-test-coverage is passed.
 No file in this source contains a `try`/`catch`, a validation guard on
 `Pose`/`Tuning` shape, or a check on MorphSVG point counts, so
 explicit-error-handling fails outright (see **morph-point-count-validation**

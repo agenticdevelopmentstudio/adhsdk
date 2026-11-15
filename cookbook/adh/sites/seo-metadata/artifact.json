@@ -4,11 +4,11 @@
     "id": "0a627830-a764-4f44-8300-faf4279089a1",
     "title": "SEO Metadata",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d1217f70fe61c2e6",
+  "synced": "59d80d9cd795a773",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

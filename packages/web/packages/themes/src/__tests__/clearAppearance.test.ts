@@ -17,7 +17,7 @@ const EVERY_ATTRIBUTE_SET: AppearancePrefs = {
 }
 
 describe('clearAppearance', () => {
-  it('leaves the element as it was before applyAppearance', () => {
+  it('appearance-016: leaves the element as it was before applyAppearance', () => {
     const el = document.createElement('html')
     el.className = 'font-a font-b'
     el.setAttribute('lang', 'en')
@@ -30,7 +30,7 @@ describe('clearAppearance', () => {
     expect(el.outerHTML).toBe(before)
   })
 
-  it('removes the attributes the pre-paint script writes for the defaults too', () => {
+  it('appearance-017: removes the attributes the pre-paint script writes for the defaults too', () => {
     const el = document.createElement('html')
     el.dataset.colorMode = 'auto'
     el.classList.add('dark')

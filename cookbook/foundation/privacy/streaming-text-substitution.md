@@ -2,7 +2,7 @@
 id: 88d2aa75-3a9c-404a-8d3f-7db520d1bec1
 title: "Streaming Text Substitution"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -77,7 +77,7 @@ Not applicable — this is a byte-stream transformer, not a visual component.
 
 ## Conformance Test Vectors
 
-The source has no test of its own (no test file in the repository names the type). The vectors are derived from the source, and they are the tests to write for this type. Unless stated, the filter has one pair, alias `robin` and real `mike`, direction `concealing`; `feed` takes ASCII bytes and returns the bytes shown as text.
+The vectors are derived from the source and covered by `StreamingTextSubstitutionConformanceTests.swift`. The vectors are derived from the source, and they are the tests to write for this type. Unless stated, the filter has one pair, alias `robin` and real `mike`, direction `concealing`; `feed` takes ASCII bytes and returns the bytes shown as text.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -166,7 +166,7 @@ Not applicable: the type calls no logging API; the stream and the words are neve
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/StreamingTextSubstitution.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Privacy/StreamingTextSubstitution.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -198,14 +198,15 @@ Not applicable: the type calls no logging API; the stream and the words are neve
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | privacy-and-data |
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | partial | internationalization |
 
-Separation of concerns passes: the type matches and holds bytes while the pair list, word storage and flush timing live in the filter, the store and the terminal view. Unit-test coverage fails because no test in the repository exercises the type. No PII in logs passes because the type calls no logging API. Unicode support is partial: bytes pass through unchanged and non-ASCII patterns match byte for byte, but only ASCII letters fold case, so a non-ASCII word typed in another case is not replaced.
+Separation of concerns passes: the type matches and holds bytes while the pair list, word storage and flush timing live in the filter, the store and the terminal view. Unit-test coverage passes: `StreamingTextSubstitutionConformanceTests.swift` (suite `StreamingTextSubstitutionTests`) covers all 21 vectors. No PII in logs passes because the type calls no logging API. Unicode support is partial: bytes pass through unchanged and non-ASCII patterns match byte for byte, but only ASCII letters fold case, so a non-ASCII word typed in another case is not replaced.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (StreamingTextSubstitutionConformanceTests.swift, 21 of 21 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Made requirement keywords normative, moved terminal-view details out, set tie order to MAY, cited doc comments, added five vectors, and linked the filter and terminal view. |

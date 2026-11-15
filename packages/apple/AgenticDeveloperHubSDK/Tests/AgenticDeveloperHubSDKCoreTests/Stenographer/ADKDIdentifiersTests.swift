@@ -61,4 +61,39 @@ final class ADKDIdentifiersTests: XCTestCase {
         XCTAssertNotEqual(paths.socketURL.lastPathComponent, "stenographer.sock")
         XCTAssertNotEqual(ADKDIdentifiers.ownHookLockName, ".stenographer-hooks.lock")
     }
+
+    func testV9_anEmptySuffixLeavesATrailingDot() {
+        XCTAssertEqual(ADKDIdentifiers.subsystem(""), "com.agenticdevelopmentstudio.adkd.")
+    }
+
+    func testV10_aMissingHomeStillYieldsEveryPathAndCreatesNothing() {
+        let missing = FileManager.default.temporaryDirectory
+            .appendingPathComponent("adkd-missing-\(UUID().uuidString)", isDirectory: true)
+        let derived = ADKDPaths(home: missing)
+        let urls: [URL] = [
+            derived.storageDirectory, derived.supportDirectory, derived.databaseURL, derived.spoolURL,
+            derived.errorsDirectory, derived.claudeDirectory, derived.dropDirectory, derived.socketURL,
+            derived.logsDirectory, derived.launchAgentPlist, derived.stopMarkerURL
+        ] + derived.pluginDirectories
+        for url in urls {
+            XCTAssertTrue(url.path.hasPrefix(missing.path))
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: missing.path))
+    }
+
+    func testV11_theSubsystemPropertyIsTheLabelAndTheHookNameIsAdkd() {
+        let subsystem: String = ADKDIdentifiers.subsystem
+        XCTAssertEqual(subsystem, "com.agenticdevelopmentstudio.adkd")
+        XCTAssertEqual(ADKDIdentifiers.hookName, "adkd")
+    }
+
+    func testV12_theDisplayNameAndStorageTokenAreSpelledOut() {
+        XCTAssertEqual(ADKDPaths.displayName, "Agentic Developer Kitchen")
+        XCTAssertEqual(ADKDPaths.storageToken, "AgenticDeveloperKitchen")
+    }
+
+    func testV13_theLaunchdLogFileNamesAreFixed() {
+        XCTAssertEqual(ADKDPaths.launchdStdoutLogName, "stdout.log")
+        XCTAssertEqual(ADKDPaths.launchdStderrLogName, "stderr.log")
+    }
 }

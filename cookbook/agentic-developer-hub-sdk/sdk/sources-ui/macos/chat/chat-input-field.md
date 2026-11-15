@@ -2,11 +2,11 @@
 id: 0ae70642-28e7-436a-b934-0b445652ac09
 title: "Chat Input"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -119,7 +119,7 @@ The values below are the defaults a themed host applies through the AppKit-only 
 | chat-input-018 | provide-accessible-label | Component renders (web) or mounts (AppKit) | Web: input has `aria-label="Message"`. AppKit: the input's accessibility label is nil — no `accessibilityLabel`/`setAccessibilityLabel` call exists on `ChatInputField` or its host `InlineChatView`, so this requirement currently fails on macOS |
 | chat-input-019 | support-external-ref | inputRef prop provided to component | External ref can access and interact with input element |
 | chat-input-020 | support-external-ref | Caller sets `inputRef.current.value = 'Hi'` directly, without dispatching any event | The DOM value updates, but the component's own state does not: `onChange` never runs, `hasText` stays false, and the send button's enabled state is unchanged |
-| chat-input-021 | support-external-ref | Caller sets `inputRef.current.value = 'Hi'` then dispatches a native `input` event on the element | `onChange` fires; `hasText` becomes true; the send button becomes enabled, reflecting the programmatic change |
+| chat-input-021 | support-external-ref | Caller sets the value through the native `HTMLInputElement.prototype` value setter (React's value tracker intercepts a plain `inputRef.current.value = 'Hi'`, so a following `input` event is seen as no change and `onChange` does not run), then dispatches a native `input` event on the element | `onChange` fires; `hasText` becomes true; the send button becomes enabled, reflecting the programmatic change |
 | chat-input-022 | invoke-callback, clear-on-send | User sends "First", then immediately types "Second" and sends again | onSend is called with "First" and separately with "Second"; the input is cleared after each send and the two messages are never conflated |
 | chat-input-023 | retain-text-on-blur | User types "Draft" then clicks outside the input without sending | Input still contains "Draft"; the send button's enabled state is unchanged |
 | chat-input-024 | support-disabled-state | disabled prop becomes true while the user has unsent text in the field | Input becomes read-only, the typed text is still present, send button is disabled |
@@ -209,8 +209,8 @@ Not implemented in source: neither `ChatInput.tsx` (web) nor `ChatInputField.swi
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ChatInputField.swift` | unverified |
-| web | `packages/web/packages/chat/src/components/ChatInput.tsx` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ChatInputField.swift` | confirmed (1.1.2) |
+| web | `packages/web/packages/chat/src/components/ChatInput.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -258,7 +258,7 @@ Not implemented in source: neither `ChatInput.tsx` (web) nor `ChatInputField.swi
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-`passed` rows rest on the source directly: the send button's `aria-label`/`accessibilityDescription`, native focusable `<input>`/`<button>` elements plus the Enter-key handler, correct ARIA/HTML usage in `ChatInput.tsx`, no logging of any kind on either platform (so nothing insecure or PII-bearing can reach a log), and a component that only ever holds the in-progress message text in memory. `screen-reader-support` is `partial` rather than `passed`: web sets `aria-label="Message"` on the input, but AppKit's `ChatInputField`/`InlineChatView` set no accessibility label on the input at all, so VoiceOver on macOS falls back to the placeholder alone (see **provide-accessible-label**). `partial` rows otherwise reflect what these two files alone can't settle — actual rendered contrast, touch-target sizing, and Dynamic Type behavior all depend on the CSS/theme layer that sits outside `ChatInput.tsx` and `ChatInputField.swift`; the placeholder is caller-localizable while the web `aria-label` string is still a hardcoded English literal; and the component validates (trims, rejects empty) without doing any broader input sanitization, which is left to whatever renders the sent text. `reduced-motion` is `failed` because `ChatInputField`'s block-caret blink timer runs unconditionally, with no check of the system's reduced-motion preference. separation-of-concerns passes because both `ChatInput.tsx` and `ChatInputField.swift` hold no business logic beyond trimming/sending text and drawing the field's own caret, while unit-test-coverage is partial: `ChatInputFieldTests.swift` thoroughly exercises the Swift field's caret and baseline behavior, but no test file exercises `ChatInput.tsx` at all.
+`passed` rows rest on the source directly: the send button's `aria-label`/`accessibilityDescription`, native focusable `<input>`/`<button>` elements plus the Enter-key handler, correct ARIA/HTML usage in `ChatInput.tsx`, no logging of any kind on either platform (so nothing insecure or PII-bearing can reach a log), and a component that only ever holds the in-progress message text in memory. `screen-reader-support` is `partial` rather than `passed`: web sets `aria-label="Message"` on the input, but AppKit's `ChatInputField`/`InlineChatView` set no accessibility label on the input at all, so VoiceOver on macOS falls back to the placeholder alone (see **provide-accessible-label**). `partial` rows otherwise reflect what these two files alone can't settle — actual rendered contrast, touch-target sizing, and Dynamic Type behavior all depend on the CSS/theme layer that sits outside `ChatInput.tsx` and `ChatInputField.swift`; the placeholder is caller-localizable while the web `aria-label` string is still a hardcoded English literal; and the component validates (trims, rejects empty) without doing any broader input sanitization, which is left to whatever renders the sent text. `reduced-motion` is `failed` because `ChatInputField`'s block-caret blink timer runs unconditionally, with no check of the system's reduced-motion preference. separation-of-concerns passes because both `ChatInput.tsx` and `ChatInputField.swift` hold no business logic beyond trimming/sending text and drawing the field's own caret, while unit-test-coverage is partial: `ChatInputFieldTests.swift` thoroughly exercises the Swift field's caret and baseline behavior, and `ChatInput.test.tsx` now covers 25 of the 29 vectors on web. Skipped: chat-input-008 (jsdom does not perform a form's implicit submission on keydown), chat-input-025 and chat-input-026 (macOS-only), and chat-input-032 (jsdom has no layout, so horizontal scrolling cannot be observed).
 
 ## Change History
 
@@ -267,3 +267,4 @@ Not implemented in source: neither `ChatInput.tsx` (web) nor `ChatInputField.swi
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: dropped `must-` prefixes from requirement names and their citations; reformatted Design Decisions into Decision/Rationale/Approved entries and rebuilt Compliance as a linked, source-verified table; added test vectors for previously-untested edge cases and Logging events; corrected the external-ref/`onChange` edge case, the SwiftUI note (`ViewModifier`, `.onSubmit`), and the WinUI 3 note (`KeyDown`/`VirtualKey.Enter`, `AccentButtonStyle`, a composed overlay caret instead of a `TextBox` subclass); scoped the autofill opt-out requirements to web; added `name`/send-button-label requirements and vectors; unified Appearance units to pt; clarified that theme-driven Appearance values are applied through the AppKit Configuration options rather than read internally; and populated `related` with sibling recipes |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed Shift+Enter, aria-label, and Logging sections to split AppKit vs Web; softened screen-reader-support to partial. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ChatInput.test.tsx, 25 of 29 vectors); unit-test-coverage stays partial (008, 025, 026, 032 skipped); vector 021 text corrected. |

@@ -4,7 +4,7 @@
     "id": "7185bc91-0646-44c0-b4ea-e59e39946623",
     "title": "Detail Header",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e14f993b818784b9",
+  "synced": "a31b5a4109b0133a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

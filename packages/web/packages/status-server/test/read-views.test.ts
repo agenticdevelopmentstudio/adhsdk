@@ -18,11 +18,43 @@ const check = (c: Partial<IntegrationCheck> & { id: string }): IntegrationCheck 
 });
 
 describe("selfCheckView", () => {
+  it("status-server-monitor-self-check-001: is null for an empty list", () => {
+    expect(selfCheckView([])).toBeNull();
+  });
+
+  it("status-server-monitor-self-check-002: is null when every check is ok", () => {
+    expect(selfCheckView([check({ id: "vercel" }), check({ id: "railway" })])).toBeNull();
+  });
+
+  it("status-server-monitor-self-check-010: an empty missingEnv array does not exclude a check from the issues", () => {
+    const view = selfCheckView([check({ id: "x", state: "error", ok: false, missingEnv: [] })]);
+    expect(view!.issues).toHaveLength(1);
+    expect(view!.hasError).toBe(true);
+  });
+
+  it("status-server-monitor-self-check-011: does not mutate frozen input and returns the same check objects", () => {
+    const input = Object.freeze([Object.freeze(check({ id: "vercel" })), Object.freeze(check({ id: "railway", state: "error", ok: false }))]);
+    const view = selfCheckView(input);
+    expect(view!.issues[0]).toBe(input[1]);
+  });
+
+  it("status-server-monitor-self-check-012: an ok check that reports a missing variable still surfaces it", () => {
+    expect(selfCheckView([check({ id: "stats", state: "ok", missingEnv: ["STATS_TOKEN"] })])).toEqual({
+      missingEnv: ["STATS_TOKEN"], missingEnvError: false, issues: [], hasError: false, issueCount: 1,
+    });
+  });
+
+  it("status-server-monitor-self-check-013: a correlated check that reports a missing variable still contributes the variable", () => {
+    expect(selfCheckView([check({ id: "vercel", state: "warn", ok: false, correlated: true, missingEnv: ["VERCEL_API_TOKEN"] })])).toEqual({
+      missingEnv: ["VERCEL_API_TOKEN"], missingEnvError: false, issues: [], hasError: false, issueCount: 1,
+    });
+  });
+
   it("is null when everything is ok", () => {
     expect(selfCheckView([check({ id: "stats" }), check({ id: "vercel" })])).toBeNull();
   });
 
-  it("surfaces missing env (deduped) as a non-error warning", () => {
+  it("status-server-monitor-self-check-005 and 007: surfaces missing env (deduped) as a non-error warning", () => {
     const view = selfCheckView([
       check({ id: "cloudflare", state: "warn", configured: false, ok: false, missingEnv: ["CLOUDFLARE_ACCOUNT_ID"] }),
       check({ id: "vercel", state: "warn", configured: false, ok: false, missingEnv: ["VERCEL_API_TOKEN"] }),
@@ -36,14 +68,14 @@ describe("selfCheckView", () => {
     expect(view!.issueCount).toBe(2);
   });
 
-  it("an error-severity missing env goes red and counts as an error", () => {
+  it("status-server-monitor-self-check-006: an error-severity missing env goes red and counts as an error", () => {
     const view = selfCheckView([check({ id: "cloudflare", state: "error", configured: false, ok: false, missingEnv: ["CLOUDFLARE_ACCOUNT_ID"] })]);
     expect(view!.missingEnvError).toBe(true);
     expect(view!.hasError).toBe(true);
     expect(view!.issues).toHaveLength(0);
   });
 
-  it("keeps reachability issues as chips but excludes the internal cron check", () => {
+  it("status-server-monitor-self-check-003 and 008: keeps reachability issues as chips but excludes the internal cron check", () => {
     const view = selfCheckView([
       check({ id: "cron", state: "warn", ok: false, detail: "first poll pending" }),
       check({ id: "railway", state: "error", configured: true, ok: false, detail: "HTTP 500" }),
@@ -54,7 +86,7 @@ describe("selfCheckView", () => {
     expect(view!.issueCount).toBe(1);
   });
 
-  it("collapses correlated provider failures into the Connectivity chip only", () => {
+  it("status-server-monitor-self-check-009: collapses correlated provider failures into the Connectivity chip only", () => {
     const view = selfCheckView([
       check({ id: "cloudflare", state: "warn", ok: false, correlated: true }),
       check({ id: "posthog", state: "warn", ok: false, correlated: true }),
@@ -64,7 +96,7 @@ describe("selfCheckView", () => {
     expect(view!.hasError).toBe(false);
   });
 
-  it("a warning alone is not a red error", () => {
+  it("status-server-monitor-self-check-004: a warning alone is not a red error", () => {
     const view = selfCheckView([check({ id: "railway", state: "warn", ok: false, detail: "slow" })]);
     expect(view!.issues.map((c) => c.id)).toEqual(["railway"]);
     expect(view!.hasError).toBe(false);
