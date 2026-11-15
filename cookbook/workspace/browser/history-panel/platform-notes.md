@@ -22,8 +22,11 @@
   panel buttons across the top, one item "History"), and
   `SingleWindowController` saves and restores frame and visibility under
   the window id. `WebBrowserWindowsFeature` registers the window id and the
-  Show History command. Opening a visit uses the key window's focused
-  browser pane as a new tab, otherwise `WebBrowserWindowController.openNew`.
+  Show History command. Opening a visit uses the focused browser pane of
+  the frontmost visible window other than History (a
+  `WebBrowserWindowController`'s pane, or the `ComposableTabsWindowController`
+  pane holding the first responder) as a new tab, otherwise
+  `WebBrowserWindowController.openNew`.
   The recording gate is one function,
   `recordsHistory(globalRecords:paneIsPrivate:) -> Bool` returning
   `globalRecords && !paneIsPrivate`, on `WebBrowserPaneViewController` or a

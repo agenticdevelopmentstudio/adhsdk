@@ -23,7 +23,7 @@
 | history-panel-020 | window-hosts-panel-in-shelf | Show the History window | A shelf with a panel bar holding one "History" button, with the History panel beneath |
 | history-panel-021 | window-is-single | Show the History window twice | One window exists with the fixed identifier; its frame and visibility are saved under it and restored on the next launch |
 | history-panel-022 | window-opened-from-browser-menu | Key window has no browser pane; choose Browser › Show History | The command is enabled and the History window is shown |
-| history-panel-023 | window-opens-visit-in-browser | Open a visit from the window while the key window has a browser pane | The visit opens as a new tab in that pane |
+| history-panel-023 | window-opens-visit-in-browser | Open a visit from the window while the frontmost other window has a focused browser pane | The visit opens as a new tab in that pane |
 | history-panel-024 | window-opens-visit-in-browser | Open a visit from the window while no browser pane exists | The visit opens in a new browser window |
 | history-panel-025 | recording-gated-on-setting | Record history on, pane not private; navigate | One visit is recorded |
 | history-panel-026 | recording-gated-on-setting | Record history off, pane not private; navigate | No visit is recorded |

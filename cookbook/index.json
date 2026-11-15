@@ -6312,6 +6312,13 @@
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryWindowController.swift",
           "platform": "macos"
+        },
+        {
+          "conformance": {
+            "state": "unverified"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",

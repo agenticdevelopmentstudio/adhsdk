@@ -1,0 +1,122 @@
+import XCTest
+@testable import AgenticDeveloperHubSDKMacOS
+
+/// The History panel's list model, on a store in a temporary directory —
+/// never the user's history file.
+@MainActor
+final class BrowserHistoryListModelTests: XCTestCase {
+
+    private var directory: URL!
+
+    override func setUp() async throws {
+        directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BrowserHistoryListModelTests-\(UUID().uuidString)")
+    }
+
+    override func tearDown() async throws {
+        try? FileManager.default.removeItem(at: directory)
+    }
+
+    private func makeStore() throws -> BrowserHistoryStore {
+        try BrowserHistoryStore(path: directory.appendingPathComponent("BrowserHistory.db").path)
+    }
+
+    @discardableResult
+    private func record(
+        _ store: BrowserHistoryStore, _ url: String, _ title: String, at seconds: TimeInterval
+    ) throws -> Int64 {
+        try store.record(URL(string: url)!, title: title, at: Date(timeIntervalSince1970: seconds))
+    }
+
+    func test_emptyFilterShowsRecent() async throws {
+        let store = try makeStore()
+        try record(store, "https://example.com/1", "One", at: 1_000)
+        try record(store, "https://example.com/2", "Two", at: 2_000)
+        try record(store, "https://example.com/3", "Three", at: 3_000)
+        let model = BrowserHistoryListModel(store: store)
+
+        await model.reload()
+
+        XCTAssertEqual(model.visits.count, 3)
+        XCTAssertEqual(model.visits.map(\.title), ["Three", "Two", "One"])
+    }
+
+    func test_filterSearchesTitleAndAddress() async throws {
+        let store = try makeStore()
+        try record(store, "https://example.com/home", "Kitchen", at: 1_000)
+        try record(store, "https://kit.example", "Tools", at: 2_000)
+        try record(store, "https://example.com/other", "Elsewhere", at: 3_000)
+        let model = BrowserHistoryListModel(store: store)
+
+        model.filter = "kit"
+        await model.reload()
+
+        XCTAssertEqual(model.visits.map(\.title), ["Tools", "Kitchen"])
+    }
+
+    func test_filterIsTrimmed() async throws {
+        let store = try makeStore()
+        try record(store, "https://example.com/home", "Kitchen", at: 1_000)
+        try record(store, "https://example.com/other", "Elsewhere", at: 2_000)
+        let model = BrowserHistoryListModel(store: store)
+
+        model.filter = "  kit "
+        await model.reload()
+        XCTAssertEqual(model.visits.map(\.title), ["Kitchen"])
+
+        model.filter = "   "
+        await model.reload()
+        XCTAssertEqual(model.visits.map(\.title), ["Elsewhere", "Kitchen"])
+    }
+
+    func test_latestFilterWins() async throws {
+        let store = try makeStore()
+        try record(store, "https://example.com/alpha", "Alpha", at: 1_000)
+        try record(store, "https://example.com/abbey", "Abbey", at: 2_000)
+        let model = BrowserHistoryListModel(store: store)
+        var published: [[String]] = []
+        let changed = expectation(description: "the list changed")
+        changed.assertForOverFulfill = true
+        model.onChange = {
+            published.append(model.visits.map(\.title))
+            changed.fulfill()
+        }
+
+        // Neither change is awaited: the reload for "a" is still in flight
+        // when "ab" replaces it, and only "ab"'s answer may be published.
+        model.filter = "a"
+        model.filter = "ab"
+        await fulfillment(of: [changed], timeout: 5)
+
+        XCTAssertEqual(published, [["Abbey"]])
+        XCTAssertEqual(model.visits.map(\.title), ["Abbey"])
+    }
+
+    func test_removeDeletesFromStore() async throws {
+        let store = try makeStore()
+        let first = try record(store, "https://example.com/1", "One", at: 1_000)
+        try record(store, "https://example.com/2", "Two", at: 2_000)
+        let model = BrowserHistoryListModel(store: store)
+        await model.reload()
+        XCTAssertEqual(try store.count(), 2)
+
+        await model.remove([first])
+
+        XCTAssertEqual(try store.count(), 1)
+        XCTAssertEqual(model.visits.map(\.title), ["Two"])
+    }
+
+    func test_clearAll() async throws {
+        let store = try makeStore()
+        try record(store, "https://example.com/1", "One", at: 1_000)
+        try record(store, "https://example.com/2", "Two", at: 2_000)
+        let model = BrowserHistoryListModel(store: store)
+        await model.reload()
+        XCTAssertEqual(model.visits.count, 2)
+
+        await model.clearAll()
+
+        XCTAssertEqual(try store.count(), 0)
+        XCTAssertTrue(model.visits.isEmpty)
+    }
+}

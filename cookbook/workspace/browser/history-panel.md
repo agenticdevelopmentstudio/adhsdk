@@ -2,7 +2,7 @@
 id: 497f5d5f-e95b-473e-8798-cbe62ebcc425
 title: "History Panel and Window"
 type: ingredient
-version: 0.1.0
+version: 0.1.1
 status: draft
 language: en
 created: 2026-11-15
@@ -134,8 +134,9 @@ browsing, so private browsing never appears here.
   command MUST show the History window, and MUST stay enabled whether or
   not the key window has a browser pane.
 - **window-opens-visit-in-browser**: The History window MUST open a visit
-  the panel hands it in the key window's browser pane as a new tab when
-  such a pane exists, and in a new browser window when none does.
+  the panel hands it in the focused browser pane of the frontmost other
+  window (the window that was key before the History window) as a new tab
+  when such a pane exists, and in a new browser window when none does.
 - **recording-gated-on-setting**: The browser MUST record a visit only
   when the Record history setting is on and the pane is not in private
   browsing.
@@ -225,7 +226,7 @@ browsing, so private browsing never appears here.
 | history-panel-020 | window-hosts-panel-in-shelf | Show the History window | A shelf with a panel bar holding one "History" button, with the History panel beneath |
 | history-panel-021 | window-is-single | Show the History window twice | One window exists with the fixed identifier; its frame and visibility are saved under it and restored on the next launch |
 | history-panel-022 | window-opened-from-browser-menu | Key window has no browser pane; choose Browser › Show History | The command is enabled and the History window is shown |
-| history-panel-023 | window-opens-visit-in-browser | Open a visit from the window while the key window has a browser pane | The visit opens as a new tab in that pane |
+| history-panel-023 | window-opens-visit-in-browser | Open a visit from the window while the frontmost other window has a focused browser pane | The visit opens as a new tab in that pane |
 | history-panel-024 | window-opens-visit-in-browser | Open a visit from the window while no browser pane exists | The visit opens in a new browser window |
 | history-panel-025 | recording-gated-on-setting | Record history on, pane not private; navigate | One visit is recorded |
 | history-panel-026 | recording-gated-on-setting | Record history off, pane not private; navigate | No visit is recorded |
@@ -364,8 +365,11 @@ reporting is the builder's choice (see Design Decisions).
   panel buttons across the top, one item "History"), and
   `SingleWindowController` saves and restores frame and visibility under
   the window id. `WebBrowserWindowsFeature` registers the window id and the
-  Show History command. Opening a visit uses the key window's focused
-  browser pane as a new tab, otherwise `WebBrowserWindowController.openNew`.
+  Show History command. Opening a visit uses the focused browser pane of
+  the frontmost visible window other than History (a
+  `WebBrowserWindowController`'s pane, or the `ComposableTabsWindowController`
+  pane holding the first responder) as a new tab, otherwise
+  `WebBrowserWindowController.openNew`.
   The recording gate is one function,
   `recordsHistory(globalRecords:paneIsPrivate:) -> Bool` returning
   `globalRecords && !paneIsPrivate`, on `WebBrowserPaneViewController` or a
@@ -390,6 +394,7 @@ reporting is the builder's choice (see Design Decisions).
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryListModel.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryPanelViewController.swift` | planned |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/BrowserHistoryWindowController.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/History/` | unverified |
 
 ## Design Decisions
 
@@ -449,4 +454,5 @@ the implementation is written and confirmed against this recipe.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-15 | Mike Fullerton | A visit opens in the frontmost other window's focused browser pane |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

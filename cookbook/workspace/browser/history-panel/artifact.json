@@ -4,7 +4,7 @@
     "id": "497f5d5f-e95b-473e-8798-cbe62ebcc425",
     "title": "History Panel and Window",
     "type": "ingredient",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
@@ -40,7 +40,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b712082f6964ff90",
+  "synced": "a3b6881298fd25db",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

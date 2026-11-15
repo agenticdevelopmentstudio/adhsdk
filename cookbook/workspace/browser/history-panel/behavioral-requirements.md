@@ -69,8 +69,9 @@
   command MUST show the History window, and MUST stay enabled whether or
   not the key window has a browser pane.
 - **window-opens-visit-in-browser**: The History window MUST open a visit
-  the panel hands it in the key window's browser pane as a new tab when
-  such a pane exists, and in a new browser window when none does.
+  the panel hands it in the focused browser pane of the frontmost other
+  window (the window that was key before the History window) as a new tab
+  when such a pane exists, and in a new browser window when none does.
 - **recording-gated-on-setting**: The browser MUST record a visit only
   when the Record history setting is on and the pane is not in private
   browsing.
