@@ -424,15 +424,6 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         refreshActivePaneChrome()
     }
 
-    /// Hands the window's spacing to the tabs: the room around the panes, and
-    /// where a side bar's first tab begins.
-    ///
-    /// Both come from the same insets, so they are applied together — a top
-    /// spacing that moved the panes down without moving the tabs with them
-    /// would break the alignment the tab is there to show.
-    /// `MultiTabbedViewController` is generic and knows nothing about pane
-    /// chrome, so the arithmetic belongs here, where the spacing and the
-    /// pane's own title bar are both in view.
     /// Whether this window's panes wear their chrome — see `init`.
     private let showsPaneChrome: Bool
 
@@ -461,6 +452,15 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         }
     }
 
+    /// Hands the window's spacing to the tabs: the room around the panes, and
+    /// where a side bar's first tab begins.
+    ///
+    /// Both come from the same insets, so they are applied together — a top
+    /// spacing that moved the panes down without moving the tabs with them
+    /// would break the alignment the tab is there to show.
+    /// `MultiTabbedViewController` is generic and knows nothing about pane
+    /// chrome, so the arithmetic belongs here, where the spacing and the
+    /// pane's own title bar are both in view.
     static func applyPaneSpacing(_ insets: NSEdgeInsets, to tabbed: MultiTabbedViewController) {
         tabbed.contentInsets = insets
         let firstTabTop = insets.top + ComposableTabsPaneViewController.titleBarBottom

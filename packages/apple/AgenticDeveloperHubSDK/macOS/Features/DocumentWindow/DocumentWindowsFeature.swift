@@ -15,8 +15,8 @@ import os
 ///
 /// - `.tabs`: one shared Document window, each file a tab of its Document
 ///   pane. Its workspace is the single `.documentTabs` row.
-/// - `.windows`: a window per file, the pane's tab strip hidden until a
-///   second tab is opened in it. Its workspace is a `.document` row found by
+/// - `.windows`: a window per file, showing the Document pane's full tabs
+///   like the shared window. Its workspace is a `.document` row found by
 ///   the file's path, so opening a file that already has a window brings
 ///   that window forward.
 ///

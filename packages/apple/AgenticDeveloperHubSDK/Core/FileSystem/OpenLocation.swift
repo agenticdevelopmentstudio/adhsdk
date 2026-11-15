@@ -2,8 +2,8 @@ import Foundation
 
 /// What File ▸ Open Location… does with the text typed into it: a web
 /// address opens in a web browser, a directory in a File Browser window, a
-/// file in a File Browser window on its parent with the file showing, and
-/// anything else is refused with an alert.
+/// file in a Document window (where Settings > General > Tab Behavior says
+/// single documents open), and anything else is refused with an alert.
 ///
 /// Pure, apart from asking the file system whether a path exists, so the
 /// rules are testable without a window (`separation-of-concerns`).
