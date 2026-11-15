@@ -44,6 +44,72 @@ struct PrivacySitePatternTests {
         #expect(PrivacySitePattern.matches("foo.com/*/edit", url: url("https://foo.com/doc/edit")))
     }
 
+    @Test("X/* covers X, stars in X or not")
+    func starPrefixCoversItself() {
+        #expect(PrivacySitePattern.matches("foo.com/*/hi/*", url: url("https://foo.com/x/hi/")))
+        #expect(PrivacySitePattern.matches("github.com/*/settings/*", url: url("https://github.com/o/r/settings")))
+        #expect(PrivacySitePattern.matches("github.com/*/settings/*", url: url("https://github.com/o/r/settings/")))
+        #expect(PrivacySitePattern.matches(
+            "github.com/*/settings/*", url: url("https://github.com/o/r/settings/branches")))
+        #expect(!PrivacySitePattern.matches("github.com/*/settings/*", url: url("https://github.com/o/r/set")))
+    }
+
+    @Test("a port matches that port, the scheme's default standing in; no port matches every port")
+    func ports() {
+        #expect(PrivacySitePattern.matches("localhost:3000/*", url: url("http://localhost:3000/admin")))
+        #expect(PrivacySitePattern.matches("localhost:3000", url: url("http://localhost:3000/admin")))
+        #expect(!PrivacySitePattern.matches("localhost:3000", url: url("http://localhost:3001/admin")))
+        #expect(PrivacySitePattern.matches("127.0.0.1:8080", url: url("http://127.0.0.1:8080/")))
+        #expect(PrivacySitePattern.matches("example.com:443", url: url("https://example.com/")))
+        #expect(PrivacySitePattern.matches("localhost/*", url: url("http://localhost:3000/x")))
+        #expect(PrivacySitePattern.matches("localhost:*", url: url("http://localhost:3000/x")))
+    }
+
+    @Test("a scheme is ignored only in front; a URL in the path stays in the path")
+    func schemes() {
+        #expect(PrivacySitePattern.matches("http://localhost:3000/admin", url: url("http://localhost:3000/admin")))
+        #expect(PrivacySitePattern.matches("https://google.com", url: url("https://google.com/x")))
+        let archived = "web.archive.org/web/*/https://example.com/*"
+        #expect(PrivacySitePattern.matches(
+            archived, url: url("https://web.archive.org/web/2020/https://example.com/")))
+        #expect(!PrivacySitePattern.matches(archived, url: url("https://example.com/")))
+    }
+
+    @Test("IPv6 with or without brackets, IDN in Unicode or punycode")
+    func hostForms() {
+        #expect(PrivacySitePattern.matches("[::1]:3000/*", url: url("http://[::1]:3000/a")))
+        #expect(PrivacySitePattern.matches("::1", url: url("http://[::1]:3000/a")))
+        #expect(!PrivacySitePattern.matches("[::1]:3001", url: url("http://[::1]:3000/a")))
+        #expect(PrivacySitePattern.matches("münchen.de/*", url: url("https://xn--mnchen-3ya.de/")))
+        #expect(PrivacySitePattern.matches("xn--mnchen-3ya.de", url: url("https://münchen.de/x")))
+        #expect(PrivacySitePattern.matches("*.MÜNCHEN.de", url: url("https://www.münchen.de/x")))
+    }
+
+    @Test("a path matches as the address reads: trailing slash, query, fragment, escapes")
+    func addressForms() {
+        #expect(PrivacySitePattern.matches("foo.com/docs/", url: url("https://foo.com/docs/")))
+        #expect(PrivacySitePattern.matches("foo.com/docs/", url: url("https://foo.com/docs")))
+        let pasted = "docs.google.com/document/d/ID/edit?tab=t.0"
+        #expect(PrivacySitePattern.matches(pasted, url: url("https://docs.google.com/document/d/ID/edit?tab=t.0")))
+        #expect(!PrivacySitePattern.matches(pasted, url: url("https://docs.google.com/document/d/ID/edit?tab=t.1")))
+        #expect(PrivacySitePattern.matches("foo.com/a/b#sec", url: url("https://foo.com/a/b?x=1#sec")))
+        #expect(PrivacySitePattern.matches("foo.com/a/b", url: url("https://foo.com/a/b?x=1#sec")))
+        #expect(PrivacySitePattern.matches("foo.com/a%20b", url: url("https://foo.com/a%20b/")))
+        #expect(PrivacySitePattern.matches("foo.com/a b", url: url("https://foo.com/a%20b")))
+    }
+
+    @Test("the site patterns' glob: * crosses /, everything else is literal")
+    func wildcardGlob() {
+        #expect(GlobPattern(wildcard: "/hi/*").matches("/hi/a/b"))
+        #expect(GlobPattern(wildcard: "/a?b").matches("/a?b"))
+        #expect(!GlobPattern(wildcard: "/a?b").matches("/axb"))
+        #expect(GlobPattern(wildcard: "{a,b}").matches("{a,b}"))
+        #expect(GlobPattern(wildcard: "**").matches(""))
+        #expect(!GlobPattern(wildcard: "a*b").matches("a/c"))
+        // The workspace syntax's `*` still stops at `/`.
+        #expect(GlobPattern("src/*")?.matches("src/a/b") == false)
+    }
+
     @Test("parse and format the editor's comma-separated text")
     func parseFormat() {
         #expect(PrivacySitePattern.parse(" google.com/* , ,foo.com/hi/*") == ["google.com/*", "foo.com/hi/*"])
@@ -73,6 +139,8 @@ struct PrivacySitePatternTests {
         #expect(PrivacySitePattern.defaultPattern(for: url("https://WWW.Google.com/search")) == "www.google.com/*")
         #expect(PrivacySitePattern.defaultPattern(for: nil) == "*")
         #expect(PrivacySitePattern.defaultPattern(for: url("about:blank")) == "*")
+        #expect(PrivacySitePattern.defaultPattern(for: url("http://[::1]:3000/a")) == "[::1]/*")
+        #expect(PrivacySitePattern.defaultPattern(for: url("http://localhost:3000/a")) == "localhost/*")
     }
 
     @Test("words filter by the address")

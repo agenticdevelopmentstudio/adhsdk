@@ -83,7 +83,8 @@ public final class PrivacyWordsEditor: NSObject {
                 .init(id: Column.sites, title: "Sites", width: 200, kind: .text(editable: true),
                       headerToolTip: "Where the word applies, comma-separated: * is everywhere, "
                         + "private terminals included; google.com/* every page on google.com; "
-                        + "foo.com/hi/* the pages under foo.com/hi; *.google.com any subdomain. "
+                        + "foo.com/hi/* the pages under foo.com/hi; *.google.com any subdomain; "
+                        + "localhost:3000/* one port. An address pasted whole matches its page. "
                         + "Left empty, it is *.")
             ],
             emptyMessage: "No privacy words yet — add one with +.",
