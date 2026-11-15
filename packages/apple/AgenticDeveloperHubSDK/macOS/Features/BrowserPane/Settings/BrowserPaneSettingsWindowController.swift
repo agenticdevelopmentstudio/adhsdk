@@ -20,11 +20,11 @@ final class BrowserPaneSettingsWindowController: SingleWindowController {
 
     private static var open: [ObjectIdentifier: BrowserPaneSettingsWindowController] = [:]
     private let key: ObjectIdentifier
-    let settings: BrowserPaneSettingsSheetController
+    let settings: BrowserPaneSettingsViewController
 
     /// Brings `pane`'s settings window forward, or opens one with `make`.
     static func show(for pane: WebBrowserPaneViewController,
-                     make: () -> BrowserPaneSettingsSheetController?) {
+                     make: () -> BrowserPaneSettingsViewController?) {
         let key = ObjectIdentifier(pane)
         if let existing = open[key] {
             existing.showWindow()
@@ -52,10 +52,9 @@ final class BrowserPaneSettingsWindowController: SingleWindowController {
     /// The app-modal session, from `show` until the window closes.
     private var modalSession: AppModalWindowSession?
 
-    private init(settings: BrowserPaneSettingsSheetController, key: ObjectIdentifier) {
+    private init(settings: BrowserPaneSettingsViewController, key: ObjectIdentifier) {
         self.key = key
         self.settings = settings
-        settings.presentsInWindow = true
         let container = NSViewController()
         container.view = NSView(frame: NSRect(x: 0, y: 0, width: 820, height: 560))
         container.addChild(settings)
@@ -89,7 +88,7 @@ final class BrowserPaneSettingsWindowController: SingleWindowController {
         Self.open[key] = nil
         modalSession?.end()
         modalSession = nil
-        settings.finish(dismissing: false)
+        settings.finish()
         // Unique to this opening, so nothing will ask for it again.
         WindowManager.shared.forgetOneOffWindow(self)
     }

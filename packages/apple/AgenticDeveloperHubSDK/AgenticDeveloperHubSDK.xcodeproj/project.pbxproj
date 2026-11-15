@@ -1871,6 +1871,7 @@
 		70CBDA6C5158EA317C11792F /* IngestSocketHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B1025E8B9BE86FDBB7E311 /* IngestSocketHandler.swift */; };
 		70CE3E5DA30642D449A2D7D8 /* TerminalChatControlServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 443B0CAFD096E342C995884E /* TerminalChatControlServer.swift */; };
 		70D3B0E77D7A420760E93AB3 /* AuthenticationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA361939BB644435D6CBC714 /* AuthenticationModels.swift */; };
+		710E3AEAA8D65BBBDA672A05 /* BrowserPaneSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3990B6B36B4300DBC3B7341 /* BrowserPaneSettingsViewController.swift */; };
 		711AC03B97341B0F4AD5876A /* SyncGRDBSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB3E4D07DFBFF07669A6C95 /* SyncGRDBSmokeTests.swift */; };
 		71284EF8F6AB8ED994C6A141 /* MarkdownEditorToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E342314DC04E97916B817D21 /* MarkdownEditorToolbar.swift */; };
 		713AD528ACDA2171ECB21E7E /* ToastStackWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 195C14C2A36CA93405647299 /* ToastStackWindowTests.swift */; };
@@ -1902,7 +1903,6 @@
 		72E0CB460B123271CA94A619 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB8E5C1C5E30D5F9BB0E645A /* AppCoordinator.swift */; };
 		72F246FC10A7EBE6C207E939 /* WebviewResourceURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9DD0894D676656A640475E1 /* WebviewResourceURL.swift */; };
 		72FCBD61AEC90B652541A4B0 /* WebviewPanelSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B701AED5D9C4121E482390 /* WebviewPanelSerializer.swift */; };
-		7302D9B28FF824B778B8F6FE /* BrowserPaneSettingsSheetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1E774098CA0141B550F33B /* BrowserPaneSettingsSheetController.swift */; };
 		7311D65ED3B06F2BAA031046 /* WindowFooterBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D461ED301F2547335904C553 /* WindowFooterBarTests.swift */; };
 		731A32448E750D2B3943E076 /* ThemeReExports.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3C1BD5282389672A00069AB /* ThemeReExports.swift */; };
 		731EEA136F807500A9B55AD9 /* PartnerSessionRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C580BBE48C6FE125370F24C5 /* PartnerSessionRegistry.swift */; };
@@ -9444,7 +9444,6 @@
 		C9C676A2E345A1A895027874 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		CA0EDAF2D0806790986B82FE /* AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProvider.swift; sourceTree = "<group>"; };
 		CA14D253712D151F3FA5CA7A /* FloodFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloodFolder.swift; sourceTree = "<group>"; };
-		CA1E774098CA0141B550F33B /* BrowserPaneSettingsSheetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPaneSettingsSheetController.swift; sourceTree = "<group>"; };
 		CA229C82C77FF9E0C900DB8F /* ModelChooserContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelChooserContent.swift; sourceTree = "<group>"; };
 		CA22DB5D8F1D22E5B9B854B7 /* AIRequestBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIRequestBuilderTests.swift; sourceTree = "<group>"; };
 		CA283923195A7B382637B59D /* VSIXInstallerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VSIXInstallerTests.swift; sourceTree = "<group>"; };
@@ -9898,6 +9897,7 @@
 		F3432A69EF351C97AB673B83 /* JSONLImportPass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONLImportPass.swift; sourceTree = "<group>"; };
 		F34BCCFE2FAB064B41F20FF3 /* RetentionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionServiceTests.swift; sourceTree = "<group>"; };
 		F34DED85DC60DC8CEF03726F /* BrowserSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserSettingsPanelViewController.swift; sourceTree = "<group>"; };
+		F3990B6B36B4300DBC3B7341 /* BrowserPaneSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPaneSettingsViewController.swift; sourceTree = "<group>"; };
 		F3AE0A5F276061D44535A099 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		F3CD4AEFC02787C4BE3A5006 /* MainMenuCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuCommand.swift; sourceTree = "<group>"; };
 		F3DD3860721AACCFD8FE66FF /* ChatViewFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewFocusTests.swift; sourceTree = "<group>"; };
@@ -12939,7 +12939,7 @@
 				69B1A03A0FDC44EF340D322A /* AgentPrivacySettingsPanel.swift */,
 				EA85DDAEA29E116C277E2EED /* AutomationSettingsPanelViewController.swift */,
 				9C00D9F941C203E1C6C16857 /* BrowserEngineTopicPanels.swift */,
-				CA1E774098CA0141B550F33B /* BrowserPaneSettingsSheetController.swift */,
+				F3990B6B36B4300DBC3B7341 /* BrowserPaneSettingsViewController.swift */,
 				B3091AE778013A336BCD9788 /* BrowserPaneSettingsWindowController.swift */,
 				6F47E4346C0F5250A7EE4127 /* BrowserPrivacySettingsDialog.swift */,
 				F34DED85DC60DC8CEF03726F /* BrowserSettingsPanelViewController.swift */,
@@ -23115,7 +23115,7 @@
 				CEC6038DC8DA560135C633B7 /* BrowserPaneDirectory.swift in Sources */,
 				9BDB47526253E0A08F475B57 /* BrowserPaneFocus.swift in Sources */,
 				2E0376F3E62B54DB653665F8 /* BrowserPaneOpenBeside.swift in Sources */,
-				7302D9B28FF824B778B8F6FE /* BrowserPaneSettingsSheetController.swift in Sources */,
+				710E3AEAA8D65BBBDA672A05 /* BrowserPaneSettingsViewController.swift in Sources */,
 				BC7E738C64FA61CBFD544879 /* BrowserPaneSettingsWindowController.swift in Sources */,
 				D385CD544D401F816FD1E447 /* BrowserPrivacySettingsDialog.swift in Sources */,
 				E4C1FAAD147CDF40A7102C05 /* BrowserSettings.swift in Sources */,

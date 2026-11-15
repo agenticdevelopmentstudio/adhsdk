@@ -154,8 +154,8 @@ open class WebBrowserPaneViewController: NSViewController {
     public let paneContext: BrowserPaneContext
     /// The pane's own layered settings, when the factory built it with one.
     public var paneSettings: LayeredSettingsStore? { settings as? LayeredSettingsStore }
-    /// The engine's own maintenance, which the pane's settings sheet hands
-    /// its engine topics: the Chrome pane sets it, so its sheet can show the
+    /// The engine's own maintenance, which the pane's settings window hands
+    /// its engine topics: the Chrome pane sets it, so its settings can show the
     /// engine's version and manage its jar's extensions. `nil` for a Safari
     /// pane, whose topics need none.
     public var engineMaintenance: BrowserEngineMaintenance?
@@ -250,14 +250,14 @@ open class WebBrowserPaneViewController: NSViewController {
     private(set) var capturesConsole: Bool
     /// The construction-time settings the current engine was built with
     /// (`BrowserSettings.constructionSnapshot`), so closing the settings
-    /// sheet can tell whether the pane still matches them.
+    /// can tell whether the pane still matches them.
     private(set) var builtConstructionSettings: [String: String]
     /// The construction-time settings in effect when the first of the
     /// pane's open settings sessions opened; `nil` while none is up. Closing
     /// the last one rebuilds only for what changed since then, so a global
     /// change made earlier — which an open pane does not follow (spec
     /// sections 3 and 4) — is never applied by a close that changed nothing.
-    private(set) var settingsSheetSnapshot: [String: String]?
+    private(set) var settingsSnapshot: [String: String]?
     /// How many settings sessions are open on the pane: the settings window
     /// and the Privacy popover can both be up. They share the one snapshot,
     /// taken by the first to open and compared by the last to close, so
@@ -265,9 +265,9 @@ open class WebBrowserPaneViewController: NSViewController {
     /// consumes it from under the other, and a jar change held back while
     /// either was up is applied once both have gone.
     private var openSettingsSessions = 0
-    /// Whether the pane's settings sheet is up. While it is, a jar change
-    /// waits for the sheet to close rather than rebuilding under it.
-    var isSettingsSheetOpen: Bool { settingsSheetSnapshot != nil }
+    /// Whether a settings session is open on the pane. While one is, a jar
+    /// change waits for the last to close rather than rebuilding under it.
+    var isSettingsOpen: Bool { settingsSnapshot != nil }
     /// What the jar's row was last named, so a title change writes only when
     /// the name it would write is new.
     private var jarLabel: String?
@@ -726,11 +726,11 @@ open class WebBrowserPaneViewController: NSViewController {
     /// The shared jar setting moved. A pane following it — no override of
     /// its own, not private — moves too, when the jar it would now resolve to
     /// is not the one it is on. A pane's own jar override is applied by its
-    /// settings sheet, not here: the sheet decides when a rebuild is due.
-    /// While the sheet is up nothing moves — not even a dropped override —
-    /// and the sheet's close compares what changed (spec section 4).
+    /// settings, not here: their close decides when a rebuild is due. While
+    /// they are up nothing moves — not even a dropped override — and the last
+    /// close compares what changed (spec section 4).
     private func storageJarSettingDidChange() {
-        guard !isSettingsSheetOpen else { return }
+        guard !isSettingsOpen else { return }
         guard resolvedJar.jar != nil else { return }
         if paneSettings?.hasOverride(UserSettings.browserPrivacyStorageJar) == true { return }
         guard needsRebuildForJar() else { return }
@@ -2045,9 +2045,9 @@ extension WebBrowserPaneViewController: PaneMenuProviding {
         BrowserSettings.constructionSnapshot(in: settings) != snapshot
     }
 
-    /// Whether `settings` — the values the settings sheet shows — put this
+    /// Whether `settings` — the values the pane's settings show — put this
     /// pane on a store no other pane uses: private browsing, or a pane jar
-    /// the registry can make. Answers for the jar the sheet now shows, not
+    /// the registry can make. Answers for the jar the settings now show, not
     /// the one the engine was built on, so the Accept cookies row is never
     /// offered as an override that would not apply after the close.
     func wouldOwnDataStore(under settings: SettingsStore) -> Bool {
@@ -2057,38 +2057,38 @@ extension WebBrowserPaneViewController: PaneMenuProviding {
         return jars.canIsolate(.pane, context: paneContext)
     }
 
-    /// The pane's settings sheet, ready to present: its construction-time
+    /// The pane's settings, ready to present: their construction-time
     /// values are recorded now, unless another settings session already
     /// recorded them, and the last close rebuilds the engine for whatever of
     /// them changed while any was up (spec section 3). `nil` for a
     /// pane with no settings layer of its own. Internal so a test can drive
     /// open and close without a window.
-    func makePaneSettingsSheet() -> BrowserPaneSettingsSheetController? {
-        guard let sheet = BrowserPaneSettingsSheetController(pane: self, history: history) else {
+    func makePaneSettingsController() -> BrowserPaneSettingsViewController? {
+        guard let controller = BrowserPaneSettingsViewController(pane: self, history: history) else {
             logger.info("browser pane settings requested, but the pane has no settings layer of its own")
             return nil
         }
         if openSettingsSessions == 0 {
-            settingsSheetSnapshot = BrowserSettings.constructionSnapshot(in: settings)
+            settingsSnapshot = BrowserSettings.constructionSnapshot(in: settings)
         }
         openSettingsSessions += 1
-        sheet.onClose = { [weak self] in self?.paneSettingsSheetDidClose() }
-        return sheet
+        controller.onClose = { [weak self] in self?.paneSettingsDidClose() }
+        return controller
     }
 
     /// A settings session has gone. When it was the last one open, rebuild
     /// if a construction-time value differs from what it was when the first
     /// opened.
-    private func paneSettingsSheetDidClose() {
+    private func paneSettingsDidClose() {
         openSettingsSessions = max(0, openSettingsSessions - 1)
-        guard openSettingsSessions == 0, let snapshot = settingsSheetSnapshot else { return }
-        settingsSheetSnapshot = nil
+        guard openSettingsSessions == 0, let snapshot = settingsSnapshot else { return }
+        settingsSnapshot = nil
         guard !isDiscarded else { return }
         if needsRebuild(after: snapshot) { rebuildEngine() }
     }
 
     @objc func showPaneSettings() {
-        BrowserPaneSettingsWindowController.show(for: self) { makePaneSettingsSheet() }
+        BrowserPaneSettingsWindowController.show(for: self) { makePaneSettingsController() }
     }
 
     /// The host's log presenter, else the default: beside the pane in a

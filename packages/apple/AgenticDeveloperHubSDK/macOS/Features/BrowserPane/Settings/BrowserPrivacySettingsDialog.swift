@@ -12,9 +12,9 @@ import AppKit
 ///
 /// It opens and closes the way the full settings window does
 /// (`BrowserPaneSettingsWindowController`): the pane's
-/// `makePaneSettingsSheet()` records the construction-time values when it
-/// opens, and the popover's closing finishes that sheet, which rebuilds the
-/// pane if one of them changed. Edit Privacy Words… closes the popover and
+/// `makePaneSettingsController()` records the construction-time values when
+/// it opens, and the popover's closing finishes that controller, which
+/// rebuilds the pane if one of them changed. Edit Privacy Words… closes the popover and
 /// opens its editor over the pane's window, since a popover is no window to
 /// put a sheet on. One per pane.
 @MainActor
@@ -23,7 +23,7 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
     private static var open: [ObjectIdentifier: BrowserPrivacySettingsDialog] = [:]
     private let key: ObjectIdentifier
     /// Owns the open/close semantics; its own view is never shown.
-    private let session: BrowserPaneSettingsSheetController
+    private let session: BrowserPaneSettingsViewController
     private let popover = NSPopover()
 
     /// Shows `pane`'s Privacy settings in a popover from `button`, or closes
@@ -35,7 +35,7 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
             existing.popover.performClose(nil)
             return
         }
-        guard let layered = pane.paneSettings, let session = pane.makePaneSettingsSheet() else { return }
+        guard let layered = pane.paneSettings, let session = pane.makePaneSettingsController() else { return }
         let binding = BrowserSettingsBinding(settings: layered.fallback, scope: .pane(layered, pane))
         let dialog = BrowserPrivacySettingsDialog(session: session, key: key)
         let panel = BrowserPrivacySettingsPanel(binding: binding) { [weak pane, weak dialog] in
@@ -68,7 +68,7 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
         dialog.popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
     }
 
-    private init(session: BrowserPaneSettingsSheetController, key: ObjectIdentifier) {
+    private init(session: BrowserPaneSettingsViewController, key: ObjectIdentifier) {
         self.session = session
         self.key = key
         super.init()
@@ -79,6 +79,6 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
 
     func popoverDidClose(_ notification: Notification) {
         Self.open[key] = nil
-        session.finish(dismissing: false)
+        session.finish()
     }
 }

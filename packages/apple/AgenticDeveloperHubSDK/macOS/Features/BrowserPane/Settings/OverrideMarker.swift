@@ -5,7 +5,7 @@
 
 import AppKit
 
-/// The dot a row of a browser pane's settings sheet carries while the pane
+/// The dot a row of a browser pane's settings carries while the pane
 /// holds its own value for that setting, and the context menu that puts the
 /// global value back (spec section 3).
 ///

@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 import WebKit
 import AgenticDeveloperHubSDKCore
@@ -263,12 +264,32 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertFalse(pane.needsRebuild(after: pane.builtConstructionSettings))
         XCTAssertFalse(pane.capturesConsole)
 
-        let sheet = try XCTUnwrap(BrowserPaneSettingsSheetController(pane: pane, history: nil))
-        XCTAssertEqual(sheet.title, "Settings for \(pane.paneTitle)")
+        let controller = try XCTUnwrap(BrowserPaneSettingsViewController(pane: pane, history: nil))
+        XCTAssertEqual(controller.title, "Settings for \(pane.paneTitle)")
         let unlayered = SafariBrowserPaneViewController(store: EphemeralPaneStateStore(), settings: global)
         panes.append(unlayered)
-        XCTAssertNil(BrowserPaneSettingsSheetController(pane: unlayered, history: nil),
-                     "a pane with no layer of its own has no sheet")
+        XCTAssertNil(BrowserPaneSettingsViewController(pane: unlayered, history: nil),
+                     "a pane with no layer of its own has no settings")
+    }
+
+    /// The settings close through OK as well as the window's close button:
+    /// OK is the default button and sends the window's close.
+    func testSettingsViewEndsInAnOKButton() throws {
+        let pane = try makePane(settings: makeLayered(over: makeSettings()))
+        let controller = try XCTUnwrap(BrowserPaneSettingsViewController(pane: pane, history: nil))
+        let buttons = allSubviews(of: controller.view).compactMap { $0 as? NSButton }
+        let okButton = try XCTUnwrap(buttons.first {
+            $0.accessibilityIdentifier() == BrowserPaneSettingsViewController.okIdentifier
+        })
+        XCTAssertEqual(okButton.title, "OK")
+        XCTAssertEqual(okButton.keyEquivalent, "\r", "OK is the default button")
+        XCTAssertTrue(okButton.target === controller)
+        XCTAssertNotNil(okButton.action)
+        controller.finish()
+    }
+
+    private func allSubviews(of view: NSView) -> [NSView] {
+        view.subviews + view.subviews.flatMap { allSubviews(of: $0) }
     }
 
     func testGlobalCookiesTopicTitle() throws {
@@ -280,28 +301,28 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertEqual(titles[cookies + 1], "Privacy", "Privacy follows Cookies")
     }
 
-    // MARK: - The sheet's open and close
+    // MARK: - The settings' open and close
 
-    func testSheetCloseRebuildsForAChangeMadeWhileOpen() throws {
+    func testSettingsCloseRebuildsForAChangeMadeWhileOpen() throws {
         let global = makeSettings()
         let layered = makeLayered(over: global)
         let pane = try makePane(settings: layered)
         let built = pane.webView
 
-        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
-        XCTAssertTrue(pane.isSettingsSheetOpen)
+        let controller = try XCTUnwrap(pane.makePaneSettingsController())
+        XCTAssertTrue(pane.isSettingsOpen)
         layered.set(false, for: UserSettings.browserPrivacyConsoleCapture)
         settle()
-        XCTAssertTrue(pane.webView === built, "nothing is rebuilt while the sheet is up")
+        XCTAssertTrue(pane.webView === built, "nothing is rebuilt while the settings are up")
 
-        sheet.finish()
+        controller.finish()
 
-        XCTAssertFalse(pane.webView === built, "closing the sheet rebuilds the pane")
+        XCTAssertFalse(pane.webView === built, "closing the settings rebuilds the pane")
         XCTAssertFalse(pane.capturesConsole)
-        XCTAssertFalse(pane.isSettingsSheetOpen)
+        XCTAssertFalse(pane.isSettingsOpen)
     }
 
-    func testSheetCloseIgnoresGlobalChangesMadeBeforeItOpened() throws {
+    func testSettingsCloseIgnoresGlobalChangesMadeBeforeTheyOpened() throws {
         let global = makeSettings()
         let layered = makeLayered(over: global)
         let pane = try makePane(settings: layered)
@@ -312,15 +333,15 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         settle()
         XCTAssertTrue(pane.webView === built)
 
-        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
-        sheet.finish()
+        let controller = try XCTUnwrap(pane.makePaneSettingsController())
+        controller.finish()
 
         XCTAssertTrue(pane.webView === built, "a Done that changed nothing rebuilds nothing")
         XCTAssertTrue(pane.capturesConsole)
         XCTAssertEqual(pane.resolvedJar.jar, .pane, "still on its jar, not moved to private browsing")
     }
 
-    func testJarChangeInTheSheetWaitsForItToClose() throws {
+    func testJarChangeInTheSettingsWaitsForThemToClose() throws {
         let global = makeSettings()
         global.set(BrowserStorageJar.global, for: UserSettings.browserPrivacyStorageJar)
         let layered = makeLayered(over: global)
@@ -329,36 +350,36 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         XCTAssertEqual(pane.resolvedJar.jar, .pane)
         let built = pane.webView
 
-        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
-        _ = sheet.view
-        sheet.panels.panels.forEach { _ = $0.view }
-        let useGlobal = try XCTUnwrap(sheet.panels.binding.buttons["settings.browser.reset.use-global"])
+        let controller = try XCTUnwrap(pane.makePaneSettingsController())
+        _ = controller.view
+        controller.panels.panels.forEach { _ = $0.view }
+        let useGlobal = try XCTUnwrap(controller.panels.binding.buttons["settings.browser.reset.use-global"])
         useGlobal.wasPressedCallback?()
         settle()
 
         XCTAssertFalse(layered.hasOverride(UserSettings.browserPrivacyStorageJar))
-        XCTAssertTrue(pane.webView === built, "the jar does not move under an open sheet")
+        XCTAssertTrue(pane.webView === built, "the jar does not move under open settings")
         XCTAssertEqual(pane.resolvedJar.jar, .pane)
 
-        sheet.finish()
+        controller.finish()
 
         XCTAssertFalse(pane.webView === built)
         XCTAssertEqual(pane.resolvedJar.jar, .global, "the close applies the jar change")
     }
 
-    func testSheetClosesOncePerPresentation() throws {
+    func testSettingsCloseOncePerPresentation() throws {
         let layered = makeLayered(over: makeSettings())
         let pane = try makePane(settings: layered)
-        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
-        let paneClose = sheet.onClose
+        let controller = try XCTUnwrap(pane.makePaneSettingsController())
+        let paneClose = controller.onClose
         var closes = 0
-        sheet.onClose = { closes += 1; paneClose?() }
+        controller.onClose = { closes += 1; paneClose?() }
 
-        sheet.finish()
-        sheet.finish(dismissing: false)
+        controller.finish()
+        controller.finish()
 
         XCTAssertEqual(closes, 1)
-        XCTAssertFalse(pane.isSettingsSheetOpen)
+        XCTAssertFalse(pane.isSettingsOpen)
     }
 
     /// The settings window and the Privacy popover can both be up on one
@@ -370,29 +391,29 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         let pane = try makePane(settings: layered)
         let built = pane.webView
 
-        let window = try XCTUnwrap(pane.makePaneSettingsSheet())
+        let window = try XCTUnwrap(pane.makePaneSettingsController())
         layered.set(false, for: UserSettings.browserPrivacyConsoleCapture)
         settle()
-        let popover = try XCTUnwrap(pane.makePaneSettingsSheet())
+        let popover = try XCTUnwrap(pane.makePaneSettingsController())
 
         window.finish()
-        XCTAssertTrue(pane.isSettingsSheetOpen, "the popover is still up")
+        XCTAssertTrue(pane.isSettingsOpen, "the popover is still up")
         XCTAssertTrue(pane.webView === built, "nothing is rebuilt while a session is up")
 
         popover.finish()
-        XCTAssertFalse(pane.isSettingsSheetOpen)
+        XCTAssertFalse(pane.isSettingsOpen)
         XCTAssertFalse(pane.webView === built, "the last close rebuilds for the change the first session made")
         XCTAssertFalse(pane.capturesConsole)
     }
 
-    func testAcceptCookiesLockFollowsTheJarTheSheetShows() throws {
+    func testAcceptCookiesLockFollowsTheJarTheSettingsShow() throws {
         let global = makeSettings()
         let layered = makeLayered(over: global)
         let pane = try makePane(settings: layered)
-        let sheet = try XCTUnwrap(pane.makePaneSettingsSheet())
-        _ = sheet.view
-        sheet.panels.panels.forEach { _ = $0.view }
-        let cookies = try row(UserSettings.browserAcceptsCookies, in: sheet.panels)
+        let controller = try XCTUnwrap(pane.makePaneSettingsController())
+        _ = controller.view
+        controller.panels.panels.forEach { _ = $0.view }
+        let cookies = try row(UserSettings.browserAcceptsCookies, in: controller.panels)
         let marker = try XCTUnwrap(cookies.row.marker)
         let toggle = try XCTUnwrap(cookies.row.view as? ComposableSettings.CheckboxView).toggle
         XCTAssertTrue(cookies.row.isEnabled)
@@ -419,7 +440,7 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         settle()
         XCTAssertTrue(cookies.row.isEnabled)
         XCTAssertTrue(toggle.isEnabled)
-        sheet.finish()
+        controller.finish()
     }
 
     // MARK: - Privacy
