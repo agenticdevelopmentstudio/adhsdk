@@ -161,6 +161,9 @@ public protocol BrowserEngine: BrowserPageDriver {
     /// Raises or lowers the activation shield, on the page showing now and
     /// every page after it.
     func setActivationShieldActive(_ active: Bool)
+    /// Draws every image as a crossed-out eye (`BrowserHiddenImages`), on the
+    /// page showing now and every page after it.
+    func setHidesImages(_ hides: Bool)
     /// Puts the cookie policy the pane decided on the engine's store. The pane
     /// decides because only it knows whether the store is shared.
     func applyCookiePolicy(acceptsCookies: Bool)
@@ -187,6 +190,8 @@ public protocol BrowserEngine: BrowserPageDriver {
 }
 
 extension BrowserEngine {
+    /// An engine that cannot hide images draws them as they are.
+    public func setHidesImages(_ hides: Bool) {}
     public var pageWindow: NSWindow? { nil }
     public var providesOwnToolbar: Bool { false }
     public func focusOwnAddressBar() {}

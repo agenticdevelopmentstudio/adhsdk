@@ -46,6 +46,15 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
 
     private static let sessionHelpTopics: [ComposableSettings.PanelHelp.Topic] = [
         .init(
+            title: "General",
+            body: "Pause all events, in a tab's privacy settings, keeps every event from "
+                + "that page until you uncheck it; the privacy button turns red while it is on. "
+                + "Show privacy toolbar puts a bar under the address bar that shows what is "
+                + "being kept from the page, with the privacy button at its left end. Set in "
+                + "the Settings window it applies to every web browser; set in a tab's "
+                + "privacy settings, to that browser alone."
+        ),
+        .init(
             title: "Input",
             body: "Disable keyboard events and Disable mouse and scrolling events decide "
                 + "whether the page receives what you type and click. Checked, the pane drops the event before "
@@ -128,12 +137,31 @@ final class BrowserPrivacySettingsPanel: BrowserTopicPanel {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        settingsView.addGroup(makeGeneralGroup())
         settingsView.addGroup(makeInputGroup())
         settingsView.addGroup(makeFocusGroup())
         settingsView.addGroup(makeAgentGroup())
         settingsView.addGroup(agentPrivacy.makeGroup())
         settingsView.addGroup(makeStorageGroup())
         settingsView.addGroup(makeScriptsGroup())
+    }
+
+    /// Pause all events (a pane's own state, so only in a pane's settings)
+    /// and whether the privacy toolbar shows.
+    private func makeGeneralGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "General")
+        if let pane = binding.pane {
+            let model = ComposableSettings.ViewModel<Bool>(
+                title: "Pause all events",
+                get: { [weak pane] in pane?.isEventsPaused ?? false },
+                set: { [weak pane] in pane?.setEventsPaused($0) }
+            )
+            let view = ComposableSettings.CheckboxView(with: model)
+            _ = view.toggle.accessibilityID(Self.identifier("pause"))
+            group.addSettingSubview(view)
+        }
+        addSwitch("Show privacy toolbar", UserSettings.browserPrivacyShowToolbar, id: "show-toolbar", to: group)
+        return group
     }
 
     private static func identifier(_ row: String) -> String {

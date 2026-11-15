@@ -265,6 +265,13 @@ extension UserSettings {
     // Agent Privacy: set globally, overridable per pane like any other.
     // Kept by a global reset: see `BrowserSettings.keptByResetNames`.
     public static let browserAgentPrivacy = UserSetting<Bool>("browser.agent_privacy.enabled", default: false)
+    /// Whether the privacy toolbar shows under the address bar, with the
+    /// privacy button at its leading edge.
+    public static let browserPrivacyShowToolbar = UserSetting<Bool>("browser.privacy.show_toolbar", default: false)
+    /// Whether the page's images are drawn as a crossed-out eye instead
+    /// (Agent Privacy's Hide Images), so neither the person's screen nor a
+    /// model's screenshot shows them.
+    public static let browserPrivacyHideImages = UserSetting<Bool>("browser.privacy.hide_images", default: false)
 
     // Developer
     public static let browserWebInspectorEnabled = UserSetting<Bool>("browser.web_inspector_enabled", default: false)
@@ -325,7 +332,8 @@ public enum BrowserSettings {
         UserSettings.browserPrivacyHideActivation, UserSettings.browserPrivacyAgentAccess,
         UserSettings.browserPrivacyAgentWhilePaused, UserSettings.browserPrivacyStorageJar,
         UserSettings.browserPrivacyThirdPartyContent, UserSettings.browserPrivacyConsoleCapture,
-        UserSettings.browserAgentPrivacy
+        UserSettings.browserAgentPrivacy, UserSettings.browserPrivacyShowToolbar,
+        UserSettings.browserPrivacyHideImages
     ]
 
     /// The remote-debugging ports the Chrome topic accepts; 0 is off.

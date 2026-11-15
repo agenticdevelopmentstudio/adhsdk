@@ -3148,6 +3148,7 @@
 		C9D05519154E615E32B70315 /* HorizontalStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC5016D6BCF4343FC56B9271 /* HorizontalStackView.swift */; };
 		C9F6914CCB4545A20D46BA0F /* GitContextFingerprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = A51F7CBB6800B6A055053639 /* GitContextFingerprint.swift */; };
 		CA11F0969B631C04BB634282 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 43F7780AEF0D47F0F472D055 /* OpenAPIRuntime */; };
+		CA12F20213F060D94BD34DCF /* BrowserHiddenImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CE784C4BBA755C846C0224 /* BrowserHiddenImages.swift */; };
 		CA1D22031E6CABF3A50F3571 /* AgenticDeveloperHubSDKMacOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 12155A973F205CAFC9CB0896 /* AgenticDeveloperHubSDKMacOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		CA455293219A01C9B2ACD743 /* AgenticDeveloperHubSDKSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EA0DB6D4238ACD85E05AD70 /* AgenticDeveloperHubSDKSync.framework */; };
 		CA5272273AF9C33CCB785574 /* AIInteractionDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = A452BBBC524DC77995412538 /* AIInteractionDTO.swift */; };
@@ -9029,6 +9030,7 @@
 		A3936E5CC717E3A82665EF86 /* user-tool-result.jsonl */ = {isa = PBXFileReference; path = "user-tool-result.jsonl"; sourceTree = "<group>"; };
 		A39FC893DFAA0B02DE142756 /* GitCommandLogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitCommandLogTests.swift; sourceTree = "<group>"; };
 		A3B0C1528B71E655A104CCF3 /* BrowserPaneFocus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPaneFocus.swift; sourceTree = "<group>"; };
+		A3CE784C4BBA755C846C0224 /* BrowserHiddenImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserHiddenImages.swift; sourceTree = "<group>"; };
 		A3F1C666746F5BC4E7F2CA64 /* DisplayIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayIdentity.swift; sourceTree = "<group>"; };
 		A3F3B309A2C1155A92FDC284 /* SystemWindowAXHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWindowAXHelper.swift; sourceTree = "<group>"; };
 		A3FF8396F6622A0528842B3D /* AIChatViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatViewModelTests.swift; sourceTree = "<group>"; };
@@ -13661,6 +13663,7 @@
 				837ABF01E03D029F13A85AB3 /* BrowserEventLog.swift */,
 				57DAA1B0DE0ECEFA264255F7 /* BrowserExtension.swift */,
 				D6726998676148EF0715BE75 /* BrowserExtensionManagerCache.swift */,
+				A3CE784C4BBA755C846C0224 /* BrowserHiddenImages.swift */,
 				EAD7982D11635AAB962FFF82 /* BrowserHistoryStore.swift */,
 				536221673651E23898EECCD8 /* BrowserInputGate.swift */,
 				5E0FE856CD88A87005E693D1 /* BrowserJarLabelGate.swift */,
@@ -23070,6 +23073,7 @@
 				CCAF13FEDA6B52016CC8ED5A /* BrowserEventLog.swift in Sources */,
 				0AC9898C36ADEF5967C6A650 /* BrowserExtension.swift in Sources */,
 				15DDFA2AF56B4AECB70256BC /* BrowserExtensionManagerCache.swift in Sources */,
+				CA12F20213F060D94BD34DCF /* BrowserHiddenImages.swift in Sources */,
 				A829E466319A1B6C43DBBA06 /* BrowserHistoryStore.swift in Sources */,
 				E1B0C98FE9D781D75A42944A /* BrowserInputGate.swift in Sources */,
 				98ECAE3AC87D7F14BB0AFE04 /* BrowserJarLabelGate.swift in Sources */,

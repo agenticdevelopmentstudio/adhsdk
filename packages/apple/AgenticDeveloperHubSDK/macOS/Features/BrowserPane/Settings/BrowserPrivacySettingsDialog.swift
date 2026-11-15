@@ -49,21 +49,6 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
         title.setAccessibilityIdentifier("browser.privacy-settings.title")
         title.translatesAutoresizingMaskIntoConstraints = false
         container.view.addSubview(title)
-        let pause = NSButton(checkboxWithTitle: "Pause all events", target: dialog,
-                             action: #selector(togglePause(_:)))
-        pause.state = pane.isEventsPaused ? .on : .off
-        pause.setAccessibilityIdentifier("browser.privacy-settings.pause")
-        let strip = NSButton(checkboxWithTitle: "Show Privacy Settings toolbar", target: dialog,
-                             action: #selector(toggleStrip(_:)))
-        strip.state = pane.isPrivacyStripShown ? .on : .off
-        strip.setAccessibilityIdentifier("browser.privacy-settings.show-strip")
-        let toggles = NSStackView(views: [pause, strip])
-        toggles.orientation = .vertical
-        toggles.alignment = .leading
-        toggles.spacing = 6
-        toggles.translatesAutoresizingMaskIntoConstraints = false
-        container.view.addSubview(toggles)
-        dialog.pane = pane
         container.addChild(panel)
         let panelView = panel.view
         panelView.translatesAutoresizingMaskIntoConstraints = false
@@ -71,9 +56,7 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
         NSLayoutConstraint.activate([
             title.topAnchor.constraint(equalTo: container.view.topAnchor, constant: 14),
             title.centerXAnchor.constraint(equalTo: container.view.centerXAnchor),
-            toggles.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 10),
-            toggles.leadingAnchor.constraint(equalTo: container.view.leadingAnchor, constant: 20),
-            panelView.topAnchor.constraint(equalTo: toggles.bottomAnchor, constant: 6),
+            panelView.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 6),
             panelView.leadingAnchor.constraint(equalTo: container.view.leadingAnchor),
             panelView.trailingAnchor.constraint(equalTo: container.view.trailingAnchor),
             panelView.bottomAnchor.constraint(equalTo: container.view.bottomAnchor)
@@ -92,16 +75,6 @@ final class BrowserPrivacySettingsDialog: NSObject, NSPopoverDelegate {
         popover.behavior = .transient
         popover.animates = true
         popover.delegate = self
-    }
-
-    private weak var pane: WebBrowserPaneViewController?
-
-    @objc private func togglePause(_ sender: NSButton) {
-        pane?.setEventsPaused(sender.state == .on)
-    }
-
-    @objc private func toggleStrip(_ sender: NSButton) {
-        pane?.isPrivacyStripShown = sender.state == .on
     }
 
     func popoverDidClose(_ notification: Notification) {

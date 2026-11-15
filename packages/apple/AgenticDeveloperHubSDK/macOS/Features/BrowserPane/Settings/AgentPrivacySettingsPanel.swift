@@ -27,7 +27,10 @@ final class AgentPrivacySettingsGroup {
     static let helpTopics: [ComposableSettings.PanelHelp.Topic] = [
         .init(
             title: "Agent Privacy",
-            body: "Conceal privacy words from agents makes every model that reads or "
+            body: "Hide Images draws every image on the page as an eye with a line "
+                + "through it, on the page showing and every page after, so neither your "
+                + "screen nor an agent's screenshot shows them. "
+                + "Conceal privacy words from agents makes every model that reads or "
                 + "drives a browser see it through the privacy words: each real word in "
                 + "what a browser tool hands back — the page's text, its snapshot, its "
                 + "title and address, its console, the pane's row in the list of browser "
@@ -78,8 +81,11 @@ final class AgentPrivacySettingsGroup {
         )
     ]
 
+    static let hideImagesIdentifier = "settings.browser.agent-privacy.hide-images"
+
     static let keywords: [String] = [
-        "agent privacy", "privacy words", "conceal", "stand-in", "substitution", "model", "agent",
+        "images", "hide images", "agent privacy",
+        "privacy words", "conceal", "stand-in", "substitution", "model", "agent",
         "private", "sites", "global"
     ]
 
@@ -101,6 +107,12 @@ final class AgentPrivacySettingsGroup {
         let view = ComposableSettings.CheckboxView(with: model)
         _ = view.toggle.accessibilityID(Self.switchIdentifier)
         binding.add(view, model: model, key: key, to: group)
+
+        let imagesKey = UserSettings.browserPrivacyHideImages
+        let images = binding.model("Hide Images", imagesKey)
+        let imagesView = ComposableSettings.CheckboxView(with: images)
+        _ = imagesView.toggle.accessibilityID(Self.hideImagesIdentifier)
+        binding.add(imagesView, model: images, key: imagesKey, to: group)
 
         if binding.privacyVault != nil {
             let edit = ComposableSettings.ButtonViewModel(title: "Edit Privacy Words…") { [weak self] in

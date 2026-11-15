@@ -350,6 +350,18 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         if activationShield.isActive != wasActive { installUserScripts() }
     }
 
+    /// Whether the page's images are drawn as a crossed-out eye.
+    private var hidesImages = false
+
+    public func setHidesImages(_ hides: Bool) {
+        guard hides != hidesImages else { return }
+        hidesImages = hides
+        installUserScripts()
+        guard webView.url != nil else { return }
+        let source = hides ? BrowserHiddenImages.hideSource : BrowserHiddenImages.showSource
+        webView.evaluateJavaScript(source, in: nil, in: .page) { _ in }
+    }
+
     public private(set) var pageWordFilter: TextSubstitutionFilter?
 
     /// The filter's script goes in with the other user scripts, at document
@@ -401,6 +413,11 @@ public final class WebKitBrowserEngine: WebKitPageDriver, BrowserEngine {
         if capturesConsole { controller.addUserScript(consoleLog.userScript) }
         if let shieldScript = activationShield.userScript {
             controller.addUserScript(shieldScript)
+        }
+        if hidesImages {
+            controller.addUserScript(WKUserScript(
+                source: BrowserHiddenImages.hideSource, injectionTime: .atDocumentStart,
+                forMainFrameOnly: false))
         }
         if let source = pageWordScript {
             controller.addUserScript(WKUserScript(

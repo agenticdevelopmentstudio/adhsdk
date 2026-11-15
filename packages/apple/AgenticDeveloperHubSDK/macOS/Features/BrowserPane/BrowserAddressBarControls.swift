@@ -55,47 +55,58 @@ final class BrowserAddressBox: NSView {
     }
 }
 
-/// The one line the privacy strip shows: whether the pane's events are
-/// active or paused, what the agent may do, which kinds of event are
-/// disabled, and what else is kept from the page, built from the pane's
-/// effective settings and its pause state.
+/// What the privacy toolbar shows: every privacy setting a page or the
+/// agent is subject to, always, each with its symbol and whether it is on —
+/// whether the page (or the agent) gets that thing now, given the pane's
+/// effective settings and its pause state. The toolbar draws on green and
+/// off red.
 @MainActor
 enum BrowserPrivacyStatus {
 
-    static func text(settings: SettingsStore, isPaused: Bool, isAgentPrivacyOn: Bool) -> String {
-        var sections: [String] = []
-        let agentPaused = isPaused && settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
-        if isPaused {
-            sections.append("Paused: all events blocked")
-        } else {
-            sections.append("Active")
-        }
-        let access = settings.get(UserSettings.browserPrivacyAgentAccess)
-        sections.append("Agent: " + (agentPaused ? "Paused" : access.menuTitle))
-        if !isPaused {
-            let disabled = disabledEvents(settings: settings)
-            if !disabled.isEmpty { sections.append("Disabled: " + disabled.joined(separator: ", ")) }
-        }
-        var other: [String] = []
-        switch settings.get(UserSettings.browserPrivacyThirdPartyContent) {
-        case .allow: break
-        case .blockScripts: other.append("No third-party scripts")
-        case .blockAll: other.append("No third-party content")
-        }
-        if isAgentPrivacyOn { other.append("Privacy words on") }
-        sections += other
-        return sections.joined(separator: "  ·  ")
+    struct Item: Equatable {
+        let symbol: String
+        let title: String
+        let isOn: Bool
+        /// What the item says beside its title: "On", "Off", or a choice's name.
+        var state: String?
+
+        var text: String { "\(title): \(state ?? (isOn ? "On" : "Off"))" }
     }
 
-    /// The kinds of event the page is kept from, in the settings' order.
-    static func disabledEvents(settings: SettingsStore) -> [String] {
-        var disabled: [String] = []
-        if settings.get(UserSettings.browserPrivacyKeyboard) == .block { disabled.append("Keyboard") }
-        if settings.get(UserSettings.browserPrivacyMouse) == .block { disabled.append("Mouse Events") }
-        if settings.get(UserSettings.browserPrivacyPointerTracking) != .always { disabled.append("Mouse Tracking") }
-        if !settings.get(UserSettings.browserPrivacyDragAndDrop) { disabled.append("Drag and Drop") }
-        if settings.get(UserSettings.browserPrivacyHideActivation) { disabled.append("Activation") }
-        return disabled
+    static func items(settings: SettingsStore, isPaused: Bool, isAgentPrivacyOn: Bool) -> [Item] {
+        let live = !isPaused
+        let agentPaused = isPaused && settings.get(UserSettings.browserPrivacyAgentWhilePaused) == .paused
+        let access = settings.get(UserSettings.browserPrivacyAgentAccess)
+        let thirdParty = settings.get(UserSettings.browserPrivacyThirdPartyContent)
+        return [
+            Item(symbol: isPaused ? "pause.circle.fill" : "play.circle", title: "Events", isOn: live,
+                 state: isPaused ? "Paused" : "On"),
+            Item(symbol: "keyboard", title: "Keyboard",
+                 isOn: live && settings.get(UserSettings.browserPrivacyKeyboard) != .block),
+            Item(symbol: "computermouse", title: "Mouse",
+                 isOn: live && settings.get(UserSettings.browserPrivacyMouse) != .block),
+            Item(symbol: "cursorarrow.motionlines", title: "Tracking",
+                 isOn: live && settings.get(UserSettings.browserPrivacyPointerTracking) == .always),
+            Item(symbol: "hand.draw", title: "Drag and Drop",
+                 isOn: live && settings.get(UserSettings.browserPrivacyDragAndDrop)),
+            Item(symbol: "macwindow", title: "Activation",
+                 isOn: live && !settings.get(UserSettings.browserPrivacyHideActivation)),
+            Item(symbol: agentPaused ? "pause.circle" : access.symbolName, title: "Agent",
+                 isOn: !agentPaused && access != .hidden,
+                 state: agentPaused ? "Paused" : access.menuTitle),
+            Item(symbol: "puzzlepiece.extension", title: "Third-Party", isOn: thirdParty == .allow,
+                 state: thirdParty == .allow ? "On" : thirdParty == .blockScripts ? "No Scripts" : "Off"),
+            Item(symbol: "circle.hexagongrid", title: "Cookies",
+                 isOn: settings.get(UserSettings.browserAcceptsCookies)),
+            Item(symbol: "text.badge.xmark", title: "Privacy Words", isOn: isAgentPrivacyOn),
+            Item(symbol: "eye.slash", title: "Hide Images",
+                 isOn: settings.get(UserSettings.browserPrivacyHideImages))
+        ]
+    }
+
+    static func text(settings: SettingsStore, isPaused: Bool, isAgentPrivacyOn: Bool) -> String {
+        items(settings: settings, isPaused: isPaused, isAgentPrivacyOn: isAgentPrivacyOn)
+            .map(\.text).joined(separator: "  ·  ")
     }
 }
 

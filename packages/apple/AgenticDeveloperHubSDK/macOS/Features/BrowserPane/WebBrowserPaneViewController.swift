@@ -313,18 +313,21 @@ open class WebBrowserPaneViewController: NSViewController {
     let privacyButton = NSButton()
     /// The browser menu at the row's trailing end (`makePaneMenuItems`).
     let menuButton = NSButton()
-    /// The one-line privacy status under the address row, while shown.
-    let privacyStrip: NSTextField = {
-        let label = NSTextField(labelWithString: "")
-        label.textColor = .secondaryLabelColor
-        label.font = .systemFont(ofSize: NSFont.systemFontSize)
-        label.lineBreakMode = .byTruncatingTail
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        label.setAccessibilityIdentifier("browser.privacy-strip")
-        return label
+    /// The privacy status under the address row, while shown: one icon and
+    /// label per item (`BrowserPrivacyStatus.items`).
+    let privacyStrip: NSStackView = {
+        let stack = NSStackView()
+        stack.orientation = .horizontal
+        stack.alignment = .centerY
+        stack.spacing = 10
+        stack.detachesHiddenViews = true
+        stack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        // As wide as its items, so they sit together after the privacy button.
+        stack.setHuggingPriority(.required, for: .horizontal)
+        stack.distribution = .fill
+        stack.setAccessibilityIdentifier("browser.privacy-strip")
+        return stack
     }()
-    /// The pane-state key the privacy strip's visibility is kept under.
-    static let privacyStripKey = "privacy-strip"
     let backButton = NSButton()
     let forwardButton = NSButton()
     let reloadButton = NSButton()
@@ -458,6 +461,7 @@ open class WebBrowserPaneViewController: NSViewController {
         }
         engine.inputGate = BrowserInputGate(settings: settings, isPaused: isEventsPaused)
         engine.setActivationShieldActive(isActivationShieldWanted)
+        engine.setHidesImages(settings.get(UserSettings.browserPrivacyHideImages))
         engine.setPageWordFilter(pageWordFilter(for: engine))
     }
 
@@ -557,6 +561,12 @@ open class WebBrowserPaneViewController: NSViewController {
         for tab in tabs { tab.engine.setActivationShieldActive(active) }
     }
 
+    /// Hides or shows every tab's images from Agent Privacy's Hide Images.
+    private func refreshHiddenImages() {
+        let hides = settings.get(UserSettings.browserPrivacyHideImages)
+        for tab in tabs { tab.engine.setHidesImages(hides) }
+    }
+
     private var isActivationShieldWanted: Bool {
         settings.get(UserSettings.browserPrivacyHideActivation) || isEventsPaused
     }
@@ -653,6 +663,7 @@ open class WebBrowserPaneViewController: NSViewController {
                 self.eventLog.record(channel: "settings", event: "changed", decision: .info, detail: key)
                 self.refreshInputGate()
                 self.refreshActivationShield()
+                self.refreshHiddenImages()
                 self.refreshAddressRowControls()
                 if key == UserSettings.browserAcceptsCookies.name { self.applyCookiePolicy() }
                 if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
@@ -891,8 +902,13 @@ open class WebBrowserPaneViewController: NSViewController {
                 MainActor.assumeIsolated { self?.refreshBarInsets() }
             }
         }
-        let strip = NSStackView(views: [privacyStrip])
-        strip.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
+        // The spacer takes the row's spare width, so the items stay packed
+        // after the privacy button instead of one of them stretching.
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.init(1), for: .horizontal)
+        let strip = NSStackView(views: [privacyStrip, spacer])
+        strip.spacing = 10
+        strip.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 12)
         strip.alignment = .centerY
         strip.setAccessibilityIdentifier("browser.privacy-strip-row")
         privacyStripRow = strip
@@ -909,7 +925,7 @@ open class WebBrowserPaneViewController: NSViewController {
             strip.heightAnchor.constraint(
                 equalToConstant: BrowserAddressBox.height + Self.barInsets.top + Self.barInsets.bottom)
         ])
-        strip.isHidden = store.paneStateValue(forKey: Self.privacyStripKey) != "shown"
+        strip.isHidden = true
         refreshAddressRowControls()
         installTabStrip(addressBar: rows)
     }
@@ -948,23 +964,65 @@ open class WebBrowserPaneViewController: NSViewController {
         // Red while every event is held back, so a paused page is plain to see.
         privacyButton.contentTintColor = isEventsPaused ? .systemRed : nil
         privacyButton.setAccessibilityValue(isEventsPaused ? "paused" : "active")
-        privacyStrip.stringValue = BrowserPrivacyStatus.text(
+        let items = BrowserPrivacyStatus.items(
             settings: settings, isPaused: isEventsPaused, isAgentPrivacyOn: isAgentPrivacyOn)
+        for view in privacyStrip.arrangedSubviews { privacyStrip.removeView(view) }
+        for view in items.map(Self.stripItemView) { privacyStrip.addArrangedSubview(view) }
+        placePrivacyButton()
+    }
+
+    /// One strip item: its symbol and title, green while on and red while off,
+    /// with its state in the tooltip and to accessibility.
+    private static func stripItemView(_ item: BrowserPrivacyStatus.Item) -> NSView {
+        let color: NSColor = item.isOn ? .systemGreen : .systemRed
+        let icon = NSImageView(image: NSImage(systemSymbolName: item.symbol, accessibilityDescription: nil)
+            ?? NSImage())
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+        icon.contentTintColor = color
+        let label = NSTextField(labelWithString: item.state.map { "\(item.title): \($0)" } ?? item.title)
+        label.textColor = color
+        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        label.lineBreakMode = .byTruncatingTail
+        let view = NSStackView(views: [icon, label])
+        view.spacing = 3
+        view.alignment = .centerY
+        view.setHuggingPriority(.required, for: .horizontal)
+        view.toolTip = item.text
+        view.setAccessibilityElement(true)
+        view.setAccessibilityRole(.staticText)
+        view.setAccessibilityLabel(item.text)
+        view.setAccessibilityValue(item.isOn ? "on" : "off")
+        view.setAccessibilityIdentifier("browser.privacy-strip.\(item.title.lowercased())")
+        return view
+    }
+
+    /// The privacy button sits at the toolbar's leading edge while the
+    /// toolbar shows, and in the address bar while it does not.
+    private func placePrivacyButton() {
+        guard let row = privacyStripRow as? NSStackView else { return }
+        let shown = settings.get(UserSettings.browserPrivacyShowToolbar)
+        row.isHidden = !shown
+        if shown {
+            guard privacyButton.superview !== row else { return }
+            installedBar.removeView(privacyButton)
+            row.insertView(privacyButton, at: 0, in: .leading)
+        } else {
+            guard privacyButton.superview !== installedBar else { return }
+            row.removeView(privacyButton)
+            installedBar.insertView(privacyButton, at: 0, in: .leading)
+            installedBar.setVisibilityPriority(.mustHold, for: privacyButton)
+        }
     }
 
     @objc func showPrivacyDialog() {
         BrowserPrivacySettingsDialog.present(for: self, from: privacyButton)
     }
 
-    /// Whether the privacy status strip shows under the address bar.
+    /// Whether the privacy toolbar shows under the address bar: the pane's
+    /// own value of `browserPrivacyShowToolbar`.
     var isPrivacyStripShown: Bool {
-        get { privacyStripRow.map { !$0.isHidden } ?? false }
-        set {
-            guard let row = privacyStripRow else { return }
-            row.isHidden = !newValue
-            store.setPaneStateValue(newValue ? "shown" : nil, forKey: Self.privacyStripKey)
-            refreshAddressRowControls()
-        }
+        get { settings.get(UserSettings.browserPrivacyShowToolbar) }
+        set { settings.set(newValue, for: UserSettings.browserPrivacyShowToolbar) }
     }
 
     /// Pops the pane's menu (Pause Events, Settings…, Show Browser Log) under
