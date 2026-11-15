@@ -328,6 +328,9 @@ public final class DocumentEditorViewController: NSViewController {
     /// Empties the editor without taking the pane with it — what the close box
     /// does on the last pane of the last tab.
     public func clearDocument() {
+        // Off the trail, not out of it: the file just closed is then a
+        // choice in the trail's menu instead of the checked, inert row.
+        history.leave()
         show(nil, persist: true)
     }
 

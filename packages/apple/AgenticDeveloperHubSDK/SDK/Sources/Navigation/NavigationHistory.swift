@@ -14,7 +14,7 @@ public struct NavigationHistory<Element: Equatable>: Equatable {
     public private(set) var entries: [Element] = []
 
     /// Index into `entries` of where the user is now; -1 before anything is
-    /// visited.
+    /// visited, and after `leave()`.
     private var cursor: Int = -1
 
     public init() {}
@@ -39,7 +39,9 @@ public struct NavigationHistory<Element: Equatable>: Equatable {
     /// reachable, exactly as in a browser.
     public mutating func record(_ element: Element) {
         guard current != element else { return }
-        if cursor < entries.count - 1 {
+        // After `leave()` there is no current place and so no forward trail:
+        // the whole trail stays, and the new place goes on its end.
+        if cursor >= 0, cursor < entries.count - 1 {
             entries.removeSubrange((cursor + 1)...)
         }
         entries.append(element)
@@ -75,6 +77,14 @@ public struct NavigationHistory<Element: Equatable>: Equatable {
         guard entries.indices.contains(index) else { return nil }
         cursor = index
         return entries[index]
+    }
+
+    /// Steps off the trail without forgetting it: nothing is current, back
+    /// and forward go nowhere, and every entry can still be chosen with
+    /// `go(to:)` — what an editor emptied of its file needs, so the file it
+    /// showed is one choice away rather than checked and unreachable.
+    public mutating func leave() {
+        cursor = -1
     }
 
     /// Forgets the whole trail, for when the places it names stop meaning

@@ -116,4 +116,33 @@ struct NavigationHistoryTests {
         #expect(history.go(to: -1) == nil)
         #expect(history.current == "a")
     }
+
+    @Test("leaving keeps the trail, makes nothing current, and every entry choosable")
+    func leavingKeepsTheTrail() {
+        var history = NavigationHistory<String>()
+        history.record("a")
+        history.record("b")
+        history.leave()
+
+        #expect(history.current == nil)
+        #expect(history.currentIndex == nil)
+        #expect(!history.canGoBack)
+        #expect(!history.canGoForward)
+        #expect(history.entries == ["a", "b"])
+        #expect(history.go(to: 1) == "b")
+        #expect(history.current == "b")
+    }
+
+    @Test("a place recorded after leaving goes on the end of the kept trail")
+    func recordAfterLeavingAppends() {
+        var history = NavigationHistory<String>()
+        history.record("a")
+        history.record("b")
+        history.leave()
+        history.record("c")
+
+        #expect(history.entries == ["a", "b", "c"])
+        #expect(history.current == "c")
+        #expect(history.goBack() == "b")
+    }
 }
