@@ -172,13 +172,20 @@ public enum ClaudeArchiveReplay {
         return BackfillStatus(target: target, lastRawID: try lastRawID(in: store))
     }
 
+    /// Records per write transaction of a ``backfill(archive:store:chunk:clock:shouldContinue:progress:)``:
+    /// five times `Replayer.liveChunk`, so a backfill of millions of records
+    /// commits (an fsync under `synchronous=FULL`, plus its cursor) a fifth as
+    /// often. Each chunk holds the writer a few seconds at most, which a drain
+    /// pass waiting behind it absorbs well inside `Replayer.liveDeadline`.
+    public static let backfillChunk = 5_000
+
     /// Replays the archive from ``lastRawID(in:)`` through the backfill target
     /// into a store a running daemon keeps live (`Replayer.replayLive`): no bulk
     /// load, small chunks, each committing its cursor. Does nothing when no
     /// backfill is pending. Errors and the result behave as in `run`;
     /// `interrupted` is true while records remain before the target.
     public static func backfill(
-        archive: RawArchive, store: EventStore, chunk: Int = Replayer.liveChunk,
+        archive: RawArchive, store: EventStore, chunk: Int = backfillChunk,
         clock: @escaping @Sendable () -> Date = Date.init,
         shouldContinue: (@Sendable () -> Bool)? = nil,
         progress: (@Sendable (ReplayReport) -> Void)? = nil

@@ -295,7 +295,7 @@ public final class ClaudeMainDBSink: PipelineSink {
     }
 
     /// A stub keeps what the batch that created it knew, and a drain batch holds
-    /// at most a few hundred records, so a long transcript-only session would
+    /// at most a couple of thousand records, so a long transcript-only session would
     /// otherwise keep its first batch's last activity, model and branch. This
     /// raises `last_activity_at` to the batch's newest line time when that is later
     /// than the stored one (both compared in `datetime` form, written in it), and

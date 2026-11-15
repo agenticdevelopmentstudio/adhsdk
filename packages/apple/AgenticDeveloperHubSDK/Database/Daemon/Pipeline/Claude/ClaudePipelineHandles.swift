@@ -25,6 +25,14 @@ public struct ClaudePipelineHandles: Sendable {
 
     /// Rows moved from the legacy spool per transaction.
     static let legacyBatchSize = 200
+    /// Records the drainer takes per pass (still capped by
+    /// `PipelineLimits.defaultMaxBatchBytes`). Above the drainer's default 200
+    /// because `ClaudeMainDBSink` recomputes `session_metrics` over all of a
+    /// session's stored turns once per pass for every session the pass touched:
+    /// a backlog drained 200 lines at a time rescans a long session's turns for
+    /// every 200 of its lines. Live captures arrive a few at a time, so a pass
+    /// only fills up while a backlog drains.
+    public static let drainBatchSize = 2_000
     /// Added to the hook source's `minimumAge` before a deferred drop file is
     /// looked at again, so it is old enough by then.
     static let rewakeMargin: TimeInterval = 0.05
@@ -54,6 +62,7 @@ public struct ClaudePipelineHandles: Sendable {
         self.transcriptSource = ClaudeTranscriptSource(projectsDirectory: projectsDirectory)
         self.drainer = try PipelineDrainer(
             spool: spool, archive: archive, normalizer: ClaudeNormalizer(), store: store,
+            batchSize: Self.drainBatchSize,
             sinks: [ClaudeMainDBSink(database: database, eventReads: store)],
             faultInjector: drainerFaultInjector)
     }
