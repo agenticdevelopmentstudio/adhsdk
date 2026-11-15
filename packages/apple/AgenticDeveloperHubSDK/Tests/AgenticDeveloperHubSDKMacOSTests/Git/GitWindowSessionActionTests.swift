@@ -1002,4 +1002,103 @@ struct GitWindowSessionActionTests {
         #expect(presenter.failures.isEmpty)
         #expect(try await repository.sha("HEAD") == first.id)
     }
+
+    // MARK: Diff staging
+
+    /// Twenty numbered lines, committed, then lines 2 and 18 changed: two hunks.
+    private func twoChangedRegions(_ repository: GitTestRepository) async throws {
+        let lines = (1...20).map { "line \($0)" }
+        try await commitFile(repository, "f.txt", lines.joined(separator: "\n") + "\n", at: 100)
+        var changed = lines
+        changed[1] = "two"
+        changed[17] = "eighteen"
+        try repository.write(changed.joined(separator: "\n") + "\n", to: "f.txt")
+    }
+
+    private func fileDiff(_ model: GitRepositoryModel, _ target: GitDiffTarget) async throws -> GitFileDiff {
+        try #require(try await model.diff(target, options: GitDiffOptions()).files.first)
+    }
+
+    @Test("Stage Hunk stages only that hunk")
+    func stageHunkFromTheDiff() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await twoChangedRegions(repository)
+        let (model, session) = await makeSession(repository, presenter: StubPresenter())
+        let file = try await fileDiff(model, .unstaged(paths: ["f.txt"]))
+        #expect(file.hunks.count == 2)
+
+        await act(session, .diff(.stage(.hunk(0, of: file))))
+
+        #expect(model.staged.map(\.path) == ["f.txt"])
+        let staged = try await fileDiff(model, .staged(paths: ["f.txt"]))
+        #expect(staged.hunks.count == 1)
+        #expect(staged.hunks.first?.lines.contains { $0.kind == .added && $0.text == "two" } == true)
+        let unstaged = try await fileDiff(model, .unstaged(paths: ["f.txt"]))
+        #expect(unstaged.hunks.count == 1)
+        #expect(unstaged.hunks.first?.lines.contains { $0.kind == .added && $0.text == "eighteen" } == true)
+    }
+
+    @Test("Unstage Lines unstages only the selected lines")
+    func unstageLinesFromTheDiff() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await twoChangedRegions(repository)
+        try await repository.run(["add", "--", "f.txt"])
+        let (model, session) = await makeSession(repository, presenter: StubPresenter())
+        let file = try await fileDiff(model, .staged(paths: ["f.txt"]))
+        let first = file.hunks[0].lines
+        let changed = IndexSet(first.indices.filter { first[$0].kind == .added || first[$0].kind == .removed })
+
+        await act(session, .diff(.unstage(GitPatchSelection(file: file, lines: [0: changed]))))
+
+        let staged = try await fileDiff(model, .staged(paths: ["f.txt"]))
+        #expect(staged.hunks.count == 1)
+        #expect(staged.hunks.first?.lines.contains { $0.kind == .added && $0.text == "eighteen" } == true)
+        #expect(model.unstaged.map(\.path) == ["f.txt"])
+    }
+
+    @Test("Discard Lines confirms; declining changes nothing, confirming removes the line")
+    func discardLinesFromTheDiff() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "f.txt", "a\nb\nc\n", at: 100)
+        try repository.write("a\nb\nnew\nc\n", to: "f.txt")
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [false, true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        let file = try await fileDiff(model, .unstaged(paths: ["f.txt"]))
+        let lines = file.hunks[0].lines
+        let added = try #require(lines.firstIndex { $0.kind == .added })
+        let intent = GitWindowSession.Request.diff(.discard(GitPatchSelection(file: file,
+                                                                              lines: [0: IndexSet([added])])))
+
+        await act(session, intent)
+        #expect(try String(contentsOf: repository.url("f.txt"), encoding: .utf8) == "a\nb\nnew\nc\n")
+
+        await act(session, intent)
+        let confirmation = GitConfirmation(title: "Discard 1 selected line?", message: "This cannot be undone.",
+                                           actionTitle: "Discard", isDestructive: true)
+        #expect(presenter.confirmations == [confirmation, confirmation])
+        #expect(try String(contentsOf: repository.url("f.txt"), encoding: .utf8) == "a\nb\nc\n")
+        #expect(model.unstaged.isEmpty)
+        #expect(presenter.failures.isEmpty)
+    }
+
+    @Test("a diff intent with nothing to patch runs nothing")
+    func emptyDiffIntentDoesNothing() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await twoChangedRegions(repository)
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        let file = try await fileDiff(model, .unstaged(paths: ["f.txt"]))
+
+        await act(session, .diff(.discard(GitPatchSelection(file: file, lines: [0: IndexSet([0])]))))
+
+        #expect(presenter.confirmations.isEmpty)
+        #expect(presenter.failures.isEmpty)
+        #expect(model.unstaged.map(\.path) == ["f.txt"])
+    }
 }

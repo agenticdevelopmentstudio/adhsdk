@@ -11,6 +11,7 @@ private final class RecordingHistoryDiffDelegate: GitDiffDelegate {
         blamed.append(path)
     }
     func diff(_ diff: GitDiffViewController, didRequestHistoryFor path: String) {}
+    func diff(_ diff: GitDiffViewController, didRequest intent: GitDiffIntent) {}
 }
 
 @Suite("GitFileHistoryViewController")

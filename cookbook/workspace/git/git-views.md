@@ -2,11 +2,11 @@
 id: bdd3a72d-8810-439b-bad7-ec16233cb2a3
 title: "Git Views"
 type: ingredient
-version: 1.7.1
+version: 1.8.0
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -125,6 +125,9 @@ The **diff** (`GitDiffViewController`) shows one file's change for a `GitDiffTar
 - **diff-latest-wins**: The latest `show(target:file:)` or `clear()` MUST win: a diff or colouring requested by an earlier call never changes the view, whichever order they finish in, decided by the view's own counter, bumped before it awaits.
 - **diff-controls**: The view MUST offer a segmented control `Inline` / `Side by Side`, checkboxes `Ignore Whitespace` and `Word Highlighting`, and buttons `Blame` and `History`. The three settings MUST be read from and written to `UserSettings` keys `git_diff_layout` (`inline` or `sideBySide`, default `inline`), `git_diff_ignore_whitespace` (default false) and `git_diff_word_highlight` (default true). Changing the layout or word highlighting MUST rebuild from the loaded diff without asking the source again; changing ignore-whitespace MUST ask for the shown target again. Side by side locks the two sides' vertical scroll together.
 - **diff-blame-history**: `Blame` MUST call the delegate's `diff(_:didRequestBlameFor:at:)` with the shown file and the revision its new side is at (the commit's id, a range's `to`, otherwise nil for the working file); for a deleted file, the revision before it (`<id>^1`, `from`, otherwise `HEAD`). `History` MUST call `diff(_:didRequestHistoryFor:)` with the shown file. Both MUST act on the latest `show`: until its diff arrives they use the `file` it named, as a file that is not deleted, never the previous diff still on screen. Both are disabled while no file is shown.
+- **diff-line-refs**: Each diff model (`GitInlineDiffModel`, each side of `GitSideBySideDiffModel`) MUST carry `lineRefs`, one `GitDiffLineRef?` per row: a hunk header `(hunk, nil)`, a row made from a hunk line, marker included, `(hunk, index into that hunk's lines)`, and nil for a filler and the binary row.
+- **diff-staging-menu**: A right-click on a row of the diff MUST offer, through the line viewer's `menuProvider`, on an `.unstaged` target `Stage Hunk` (`git.diff.menu.stageHunk`), `Stage Lines` (`stageLines`), a separator, `Discard Hunk…` (`discardHunk`) and `Discard Lines…` (`discardLines`); on a `.staged` target `Unstage Hunk` (`unstageHunk`) and `Unstage Lines` (`unstageLines`). The Lines items are present only when the selection holds an added or removed line. There is no menu for a commit, range or untracked target, for a file `GitPatchBuilder.canBuild` refuses, for a row with no hunk, or for a diff read with options other than the defaults (ignore-whitespace on), whose hunks are not the ones git would apply a patch against.
+- **diff-staging-intents**: The diff MUST NOT run git. Each item is one call of the delegate's `diff(_:didRequest:)` with a `GitDiffIntent` (`.stage`, `.unstage`, `.discard`) of a `GitPatchSelection` of the shown file: Hunk is `GitPatchSelection.hunk` of the clicked row's hunk (a filler's is the hunk of the row above it); Lines is every added or removed line among the selected rows, grouped by hunk; side by side, each selected row contributes the line of its left row and of its right row. The viewers' selection is cleared after.
 - **diff-ui-thread**: The diff, its models and its coloring MUST be used on the UI thread; every read and highlight is awaited, never blocked on.
 
 ### Blame
@@ -335,6 +338,10 @@ The root view carries `git.fileHistory`, the split `git.fileHistory.split`, the 
 | git-views-066 | sidebar-menus | `origin/dev`'s menu; the `Remotes · upstream` header's; every other header's | `Checkout`, `New Branch…`, `Delete…`, separator, `Fetch origin` → `.checkout`, `.createBranch(from:)`, `.delete`, `.fetch(remote: "origin")`; `Fetch` → `.fetch(remote: "upstream")`; none. |
 | git-views-067 | sidebar-menus | `v1`'s menu; `stash@{1}`'s; the working copy's, a submodule's and each worktree's | `Push`, `Delete…` → `.pushTag`, `.deleteTag`; `Apply`, `Pop`, `Drop…` → `.applyStash`, `.popStash`, `.dropStash` of stash 1; no menu. |
 | git-views-068 | sidebar-double-click | Double-click `dev`, `origin/main`, then the working copy, `main` (head), `v1`, a stash, a submodule and a worktree | `.checkout(dev)`, `.checkout(origin/main)`, nothing else. |
+| git-views-069 | diff-line-refs | `twoHunks` inline | refs `(0,nil) (0,0) (0,1) (0,2) (0,3) (1,nil) (1,0) (1,1) (1,2)`; binary `[nil]`. |
+| git-views-070 | diff-line-refs | `twoHunks` side by side | left `(0,nil) (0,0) (0,1) (0,3) (1,nil) (1,0) nil (1,2)`; right `(0,nil) (0,0) (0,2) (0,3) (1,nil) (1,0) (1,1) (1,2)`. |
+| git-views-071 | diff-staging-menu | right-click a changed row of an unstaged, a staged, a commit, an untracked diff, and of an unstaged diff with Ignore Whitespace on | `Stage Hunk`, `Stage Lines`, separator, `Discard Hunk…`, `Discard Lines…`; `Unstage Hunk`, `Unstage Lines`; no menu; no menu; no menu. |
+| git-views-072 | diff-staging-intents | unstaged `twoHunks`, rows of the removed line of hunk 0 and the added line of hunk 1 selected; `Stage Lines` | one `.stage` with lines `[0: [1], 1: [1]]`; the selection is cleared. |
 ## Edge Cases
 
 - **Null / empty input**: An unborn repository lists only the working copy (and its worktree).
@@ -446,16 +453,16 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.6.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.6.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.6.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.6.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.6.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.6.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.6.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.6.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.6.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.6.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/` | confirmed (1.8.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift` | confirmed (1.8.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift` | confirmed (1.8.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift` | confirmed (1.8.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift` | confirmed (1.8.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift` | confirmed (1.8.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift` | confirmed (1.8.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift` | confirmed (1.8.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift` | confirmed (1.8.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift` | confirmed (1.8.0) |
 
 ## Design Decisions
 
@@ -556,3 +563,4 @@ The commit detail, the diff, the blame and the file history each log a failed lo
 | 1.6.0 | 2026-11-14 | Mike Fullerton | Working copy actions: stage, unstage and discard by menu, double-click and header buttons, and a commit box with Amend; every action a GitWorkingCopyIntent sent to the delegate; vectors 058-061 |
 | 1.7.0 | 2026-11-14 | Mike Fullerton | Commit and ref menus: history row menu with a reset submenu and Copy SHA; branch, remote, remote header, tag and stash menus and double-click to check out in the sidebar; every action a GitCommitIntent or GitRefIntent sent to the delegate; vectors 062-068 |
 | 1.7.1 | 2026-11-14 | Mike Fullerton | Review fixes: the tag menu items carry tag.push and tag.delete |
+| 1.8.0 | 2026-11-15 | Mike Fullerton | Diff staging menu: line refs on each diff model; Stage, Unstage and Discard of the clicked hunk or the selected lines, each a GitDiffIntent sent to the delegate; no menu ignoring whitespace; vectors 069-072 |

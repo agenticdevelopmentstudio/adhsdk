@@ -4,11 +4,21 @@ import AgenticDeveloperHubSDKCoreUI
 import AgenticDeveloperHubSDKLanguage
 import os
 
-/// Told when the diff's Blame or History button is pressed for the shown file.
+/// What the diff's row menu asks for: some of the shown file's lines staged, unstaged or
+/// discarded. The diff never runs git; its delegate does.
+public enum GitDiffIntent: Equatable, Sendable {
+    case stage(GitPatchSelection)
+    case unstage(GitPatchSelection)
+    case discard(GitPatchSelection)
+}
+
+/// Told when the diff's Blame or History button is pressed for the shown file, and when a
+/// row menu asks for lines to be staged, unstaged or discarded.
 @MainActor public protocol GitDiffDelegate: AnyObject {
     /// Blame `path` at `revision`; nil means the working file.
     func diff(_ diff: GitDiffViewController, didRequestBlameFor path: String, at revision: String?)
     func diff(_ diff: GitDiffViewController, didRequestHistoryFor path: String)
+    func diff(_ diff: GitDiffViewController, didRequest intent: GitDiffIntent)
 }
 
 /// The git window's diff (recipe `workspace/git/git-views`, "Diff"): one file's change in
@@ -20,7 +30,9 @@ import os
 /// own counter. The layout and the two toggles are stored in `settings`; the layout and
 /// word highlighting rebuild the rows from the diff already read, while ignoring
 /// whitespace asks for the diff again. A diff that fails is logged and its description
-/// shown in place of the rows. Used on the main thread.
+/// shown in place of the rows. On a staged or unstaged diff read with the default options,
+/// a row's context menu stages, unstages or discards its hunk or the selected lines, each a
+/// `GitDiffIntent` sent to the delegate. Used on the main thread.
 @MainActor
 public final class GitDiffViewController: NSViewController {
 
@@ -61,6 +73,9 @@ public final class GitDiffViewController: NSViewController {
     private var fileDiff: GitFileDiff?
     /// The request `fileDiff` answers.
     private var fileDiffRequest: (target: GitDiffTarget, file: String)?
+    /// The options `fileDiff` was read with. A patch only applies to hunks read with the
+    /// defaults: ignoring whitespace gives hunks git cannot apply against the real files.
+    private var fileDiffOptions: GitDiffOptions?
     private var colouredSides: (old: [StyledLine]?, new: [StyledLine]?)?
     /// The viewers hold their data sources weakly; these keep them alive.
     private var inlineModel: GitInlineDiffModel?
@@ -194,6 +209,7 @@ public final class GitDiffViewController: NSViewController {
                 let fileDiff = Self.file(request.file, in: diff)
                 self.fileDiff = fileDiff
                 self.fileDiffRequest = request
+                self.fileDiffOptions = options
                 self.colouredSides = nil
                 self.render()
                 guard let fileDiff, let coloring, !fileDiff.isBinary else { return }
@@ -280,6 +296,12 @@ public final class GitDiffViewController: NSViewController {
         ignoreWhitespaceButton.state = settings.get(UserSettings.gitDiffIgnoreWhitespace) ? .on : .off
         wordHighlightButton.state = settings.get(UserSettings.gitDiffWordHighlight) ? .on : .off
         updateButtons()
+        for viewer in [inlineViewer, leftViewer, rightViewer] {
+            viewer.menuProvider = { [weak self, weak viewer] row, rows in
+                guard let self, let viewer else { return nil }
+                return self.stagingMenu(in: viewer, clickedRow: row, selectedRows: rows)
+            }
+        }
     }
 
     private func applyLayout() {
@@ -343,6 +365,94 @@ public final class GitDiffViewController: NSViewController {
         case .range(let from, let until, _): deleted ? from : until
         case .unstaged, .staged, .untracked: deleted ? "HEAD" : nil
         }
+    }
+
+    // MARK: - Staging menu
+
+    /// The row menu: on an unstaged diff Stage and Discard, on a staged one Unstage, each of
+    /// the clicked row's hunk and of the selected changed lines. None for any other target,
+    /// a file no patch can be built for, a diff read ignoring whitespace, a row with no
+    /// hunk, or while a different file is loading.
+    private func stagingMenu(in viewer: LineViewerViewController, clickedRow: Int,
+                             selectedRows: IndexSet) -> NSMenu? {
+        guard let file = requestedFileDiff, let target = fileDiffRequest?.target,
+              fileDiffOptions == GitDiffOptions(), GitPatchBuilder.canBuild(for: file),
+              let hunk = hunk(at: clickedRow, in: viewer) else { return nil }
+        let lines = selectedLines(selectedRows, in: viewer, of: file)
+        let hunkSelection = GitPatchSelection.hunk(hunk, of: file)
+        let lineSelection = lines.isEmpty ? nil : GitPatchSelection(file: file, lines: lines)
+        let menu = NSMenu()
+        switch target {
+        case .unstaged:
+            menu.addItem(menuItem("Stage Hunk", "stageHunk", .stage(hunkSelection)))
+            if let lineSelection { menu.addItem(menuItem("Stage Lines", "stageLines", .stage(lineSelection))) }
+            menu.addItem(.separator())
+            menu.addItem(menuItem("Discard Hunk…", "discardHunk", .discard(hunkSelection)))
+            if let lineSelection {
+                menu.addItem(menuItem("Discard Lines…", "discardLines", .discard(lineSelection)))
+            }
+        case .staged:
+            menu.addItem(menuItem("Unstage Hunk", "unstageHunk", .unstage(hunkSelection)))
+            if let lineSelection {
+                menu.addItem(menuItem("Unstage Lines", "unstageLines", .unstage(lineSelection)))
+            }
+        case .commit, .range, .untracked:
+            return nil
+        }
+        return menu
+    }
+
+    /// The line refs of the rows `viewer` shows: inline its own; side by side both sides',
+    /// whose rows are aligned, so a selected row stands for its removed and its added line.
+    private func refSets(for viewer: LineViewerViewController) -> [[GitDiffLineRef?]] {
+        if viewer === inlineViewer { return [inlineModel?.lineRefs ?? []] }
+        guard let sideModels else { return [] }
+        return [sideModels.left.lineRefs, sideModels.right.lineRefs]
+    }
+
+    /// The hunk of row `row` of `viewer`: its own ref's, else (a filler) the nearest row
+    /// above it with one.
+    private func hunk(at row: Int, in viewer: LineViewerViewController) -> Int? {
+        let refs: [GitDiffLineRef?]
+        if viewer === inlineViewer {
+            refs = inlineModel?.lineRefs ?? []
+        } else if viewer === leftViewer {
+            refs = sideModels?.left.lineRefs ?? []
+        } else {
+            refs = sideModels?.right.lineRefs ?? []
+        }
+        guard refs.indices.contains(row) else { return nil }
+        return refs[...row].last { $0 != nil }??.hunk
+    }
+
+    /// Every added or removed line among `rows`, by hunk.
+    private func selectedLines(_ rows: IndexSet, in viewer: LineViewerViewController,
+                               of file: GitFileDiff) -> [Int: IndexSet] {
+        var lines: [Int: IndexSet] = [:]
+        for refs in refSets(for: viewer) {
+            for row in rows where refs.indices.contains(row) {
+                guard let ref = refs[row], let index = ref.line, file.hunks.indices.contains(ref.hunk),
+                      file.hunks[ref.hunk].lines.indices.contains(index),
+                      GitPatchBuilder.isChange(file.hunks[ref.hunk].lines[index]) else { continue }
+                lines[ref.hunk, default: IndexSet()].insert(index)
+            }
+        }
+        return lines
+    }
+
+    private func menuItem(_ title: String, _ name: String, _ intent: GitDiffIntent) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: #selector(performMenuIntent(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = MenuPayload(intent)
+        item.accessibilityID("git.diff.menu.\(name)")
+        return item
+    }
+
+    /// Sends the item's intent, then clears the selection the intent was made from.
+    @objc private func performMenuIntent(_ sender: NSMenuItem) {
+        guard let intent = sender.payload(GitDiffIntent.self) else { return }
+        delegate?.diff(self, didRequest: intent)
+        for viewer in [inlineViewer, leftViewer, rightViewer] { viewer.clearSelection() }
     }
 
     // MARK: - Failure

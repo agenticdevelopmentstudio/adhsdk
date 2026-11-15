@@ -557,4 +557,85 @@ struct LineViewerTests {
         #expect(bitmap.colorAt(x: width - 5, y: 10)?.alphaComponent == 0)
         withExtendedLifetime(source) {}
     }
+
+    // MARK: - Context menu
+
+    @Test func contextMenuInsideTheSelectionKeepsIt() {
+        let source = FakeSource(count: 10)
+        let viewer = makeViewer(source)
+        let document = viewer.documentView
+        document.handleClick(at: textPoint(viewer, row: 2), modifiers: [])
+        document.handleClick(at: textPoint(viewer, row: 4), modifiers: [.shift])
+        var asked: [(Int, IndexSet)] = []
+        let menu = NSMenu(title: "test")
+        viewer.menuProvider = { row, rows in
+            asked.append((row, rows))
+            return menu
+        }
+
+        #expect(document.contextMenu(at: textPoint(viewer, row: 3)) === menu)
+        #expect(asked.count == 1)
+        #expect(asked.first?.0 == 3)
+        #expect(asked.first?.1 == IndexSet(2...4))
+        #expect(viewer.selectedRows == IndexSet(2...4))
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func contextMenuOutsideTheSelectionSelectsTheClickedRow() {
+        let source = FakeSource(count: 10)
+        let viewer = makeViewer(source)
+        let recorder = Recorder()
+        viewer.delegate = recorder
+        let document = viewer.documentView
+        document.handleClick(at: textPoint(viewer, row: 2), modifiers: [])
+        document.handleClick(at: textPoint(viewer, row: 4), modifiers: [.shift])
+        var asked: [(Int, IndexSet)] = []
+        viewer.menuProvider = { row, rows in
+            asked.append((row, rows))
+            return NSMenu(title: "test")
+        }
+
+        _ = document.contextMenu(at: textPoint(viewer, row: 7))
+        #expect(viewer.selectedRows == IndexSet([7]))
+        #expect(recorder.selections.last == IndexSet([7]))
+        #expect(asked.first?.0 == 7)
+        #expect(asked.first?.1 == IndexSet([7]))
+
+        // A shift-click now extends from the right-clicked row.
+        document.handleClick(at: textPoint(viewer, row: 8), modifiers: [.shift])
+        #expect(viewer.selectedRows == IndexSet(7...8))
+
+        viewer.menuProvider = nil
+        let count = recorder.selections.count
+        #expect(document.contextMenu(at: textPoint(viewer, row: 1)) == nil)
+        #expect(viewer.selectedRows == IndexSet(7...8))
+        #expect(recorder.selections.count == count)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func contextMenuBelowTheLastRowAsksNothing() {
+        let source = FakeSource(count: 3)
+        let viewer = makeViewer(source)
+        var asked = 0
+        viewer.menuProvider = { _, _ in
+            asked += 1
+            return NSMenu(title: "test")
+        }
+        #expect(viewer.documentView.contextMenu(at: textPoint(viewer, row: 8)) == nil)
+        #expect(asked == 0)
+        #expect(viewer.selectedRows.isEmpty)
+        withExtendedLifetime(source) {}
+    }
+
+    @Test func clearSelectionEmptiesItAndTellsTheDelegate() {
+        let source = FakeSource(count: 5)
+        let viewer = makeViewer(source)
+        let recorder = Recorder()
+        viewer.delegate = recorder
+        viewer.documentView.handleClick(at: textPoint(viewer, row: 1), modifiers: [])
+        viewer.clearSelection()
+        #expect(viewer.selectedRows.isEmpty)
+        #expect(recorder.selections == [IndexSet([1]), IndexSet()])
+        withExtendedLifetime(source) {}
+    }
 }

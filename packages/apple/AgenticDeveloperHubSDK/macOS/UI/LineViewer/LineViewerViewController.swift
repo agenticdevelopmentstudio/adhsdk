@@ -18,6 +18,12 @@ public final class LineViewerViewController: NSViewController {
         didSet { documentView.foldsAtHeaders = foldsAtHeaders }
     }
 
+    /// Builds the menu for a right-click on a row: the clicked data row and the
+    /// selection, which already holds that row (a click outside the selection
+    /// selects the clicked row first). Nil shows no menu. The viewer knows nothing
+    /// of what the menu does.
+    public var menuProvider: ((_ clickedRow: Int, _ selectedRows: IndexSet) -> NSMenu?)?
+
     private let accessibilityName: String
     private let scroll = NSScrollView()
     let documentView = LineViewerView(frame: .zero)
@@ -67,6 +73,12 @@ public final class LineViewerViewController: NSViewController {
     public func reloadData() {
         loadViewIfNeeded()
         documentView.reload()
+    }
+
+    /// Empties the selection, telling the delegate when it changes.
+    public func clearSelection() {
+        loadViewIfNeeded()
+        documentView.clearSelection()
     }
 
     /// Unfolds the fold hiding data row `row`, if any, and scrolls so the row is

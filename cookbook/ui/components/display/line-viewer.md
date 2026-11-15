@@ -2,11 +2,11 @@
 id: 5f9e0c63-382d-4803-bd50-a8fb90ea9e4d
 title: "Line Viewer"
 type: ingredient
-version: 1.3.0
+version: 1.4.0
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -47,6 +47,7 @@ A read-only, virtualised view of many lines of text: each row is a text line or 
 - **selection**: A click MUST select the clicked row; shift-click MUST extend from the anchor row; command-click MUST toggle the row; dragging MUST extend from the anchor. Every change MUST call `lineViewer(_:didSelectRows:)` with data-source row indices. `selectedRows` is in data-source indices.
 - **gutter-click**: A click inside gutter column `c` of row `r` MUST call `lineViewer(_:didClickGutterColumn: c, row: r)` and MUST NOT change the selection.
 - **copy**: Copy (Cmd-C, `copy(_:)`) MUST put the selected rows' `text`, in row order, joined by `\n` with no trailing newline, on the general pasteboard as a plain string; with nothing selected the menu item MUST be disabled and the pasteboard left alone.
+- **context-menu**: A right-click (`menu(for:)`) on a row MUST, when `menuProvider` is set, first select the clicked row (as a plain click, the anchor too) if it is not already in the selection, leaving a selection that holds it alone, then return `menuProvider(clickedRow, selectedRows)` in data-source indices; with no provider, or below the last row, it MUST return the view's default menu and leave the selection alone. The viewer knows nothing of what the menu does.
 - **scroll-to-row**: `scrollToRow(_:)` MUST unfold the fold hiding the row, if any, then scroll vertically so the row is at the top, clamped to the scrollable range, keeping the horizontal offset.
 - **scroll-sync**: `LineViewerScrollSync` MUST keep the vertical scroll offset of every viewer it holds equal to the last one scrolled, leaving each viewer's horizontal offset alone, without re-entering itself. It holds the viewers weakly; rows are assumed aligned.
 - **theme**: The viewer MUST repaint and re-measure (font, row height, gutter column widths) on every theme change, through `ThemePaletteObserver`.
@@ -103,7 +104,8 @@ A read-only, virtualised view of many lines of text: each row is a text line or 
 | line-viewer-015 | long-row-layout | one 1 000 000-unit ASCII row with 100 000 ten-unit runs, a whole-row bold run and a half-row highlight; draw a 400 pt one-row rect at x 0 and at 600 000 advances | at most 16 runs touched each time; no layout built. |
 | line-viewer-016 | long-row-layout | the same shape, 300 000 units ending in `é`, three-unit runs; draw at x 0 and at 200 000 advances | at most 40 runs touched each time; one layout built. |
 | line-viewer-017 | long-row-layout | an ASCII code row × 50, and the same ending in `é`, with five overlapping runs given out of order whose edges straddle 333 and 617 pt; draw whole, then as three adjacent rects | identical pixels. |
-
+| line-viewer-018 | context-menu | 10 rows, rows 2–4 selected, a provider; right-click row 3 | the provider gets row 3 and rows 2–4; the selection is unchanged. |
+| line-viewer-019 | context-menu | 10 rows, rows 2–4 selected, a provider; right-click row 7; then no provider and right-click row 1 | the selection becomes row 7 and the delegate hears it; the provider gets row 7 and row 7 alone; then nothing changes and no provider is asked. |
 ## Edge Cases
 
 - **Null / empty input**: No data source or no rows draws only the background; copy is disabled.
@@ -157,7 +159,7 @@ Not applicable: The viewer logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/LineViewer/` | confirmed (1.4.0) |
 
 ## Design Decisions
 
@@ -202,6 +204,7 @@ Not applicable: The viewer logs nothing.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.4.0 | 2026-11-15 | Mike Fullerton | A right-click with a `menuProvider` set selects the clicked row when it is outside the selection and returns the provider's menu; `clearSelection()`; vectors 018-019 |
 | 1.3.0 | 2026-11-13 | Mike Fullerton | Long rows index their runs once and each frame touches only the runs under the slice or drawn glyphs; the cache limits are soft and the cache is trimmed back to them when a frame ends. |
 | 1.2.0 | 2026-11-13 | Mike Fullerton | Long ASCII rows in a column-true font are sliced by column with no layout; other long rows use a cache sized to twice the visible rows that never evicts a row of the current frame; a row's content MUST NOT change between reloadData() calls. |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | Long rows draw from a cached per-row layout, only the glyphs under the dirty rect, so split and whole drawing agree; the gutter view carries `<identifier>.gutter`. |

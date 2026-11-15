@@ -251,4 +251,48 @@ struct GitDiffLineModelsTests {
         #expect(Self.rows(left) == [header])
         #expect(Self.rows(right) == [header])
     }
+
+    // MARK: - Line references
+
+    private static func ref(_ hunk: Int, _ line: Int?) -> GitDiffLineRef { GitDiffLineRef(hunk: hunk, line: line) }
+
+    @Test("inline line refs name each row's hunk and line, headers with no line")
+    func inlineLineRefs() {
+        let model = GitInlineDiffModel(diff: Fixture.twoHunks(), oldLines: nil, newLines: nil, wordHighlights: false)
+        #expect(model.lineRefs.count == model.rowCount)
+        #expect(model.lineRefs == [Self.ref(0, nil), Self.ref(0, 0), Self.ref(0, 1), Self.ref(0, 2), Self.ref(0, 3),
+                                   Self.ref(1, nil), Self.ref(1, 0), Self.ref(1, 1), Self.ref(1, 2)])
+        let binary = GitInlineDiffModel(diff: Fixture.binary, oldLines: nil, newLines: nil, wordHighlights: false)
+        #expect(binary.lineRefs == [nil])
+    }
+
+    @Test("side by side line refs follow each side's rows, fillers nil")
+    func sideBySideLineRefs() {
+        let (left, right) = GitSideBySideDiffModel.make(diff: Fixture.twoHunks(), oldLines: nil, newLines: nil,
+                                                        wordHighlights: false)
+        #expect(left.lineRefs == [Self.ref(0, nil), Self.ref(0, 0), Self.ref(0, 1), Self.ref(0, 3),
+                                  Self.ref(1, nil), Self.ref(1, 0), nil, Self.ref(1, 2)])
+        #expect(right.lineRefs == [Self.ref(0, nil), Self.ref(0, 0), Self.ref(0, 2), Self.ref(0, 3),
+                                   Self.ref(1, nil), Self.ref(1, 0), Self.ref(1, 1), Self.ref(1, 2)])
+        let (binaryLeft, binaryRight) = GitSideBySideDiffModel.make(diff: Fixture.binary, oldLines: nil,
+                                                                    newLines: nil, wordHighlights: false)
+        #expect(binaryLeft.lineRefs == [nil])
+        #expect(binaryRight.lineRefs == [nil])
+    }
+
+    @Test("a marker row carries its own line ref and its filler none")
+    func markerLineRefs() {
+        let marker = GitDiffLine(kind: .noNewlineAtEnd, text: " No newline at end of file", oldNumber: nil,
+                                 newNumber: nil)
+        let hunk = GitDiffHunk(oldStart: 1, oldCount: 1, newStart: 1, newCount: 1, section: "", lines: [
+            Fixture.removed("a", 1), marker, Fixture.added("b", 1)
+        ])
+        let diff = GitFileDiff(oldPath: "f", newPath: "f", change: .modified, isBinary: false, hunks: [hunk])
+        let (left, right) = GitSideBySideDiffModel.make(diff: diff, oldLines: nil, newLines: nil,
+                                                        wordHighlights: false)
+        #expect(left.lineRefs == [Self.ref(0, nil), Self.ref(0, 0), Self.ref(0, 1)])
+        #expect(right.lineRefs == [Self.ref(0, nil), Self.ref(0, 2), nil])
+        let inline = GitInlineDiffModel(diff: diff, oldLines: nil, newLines: nil, wordHighlights: false)
+        #expect(inline.lineRefs == [Self.ref(0, nil), Self.ref(0, 0), Self.ref(0, 1), Self.ref(0, 2)])
+    }
 }

@@ -13,6 +13,8 @@ extension GitWindowSession {
         case workingCopy(GitWorkingCopyIntent)
         case commit(GitCommitIntent, GitCommit)
         case ref(GitRefIntent)
+        /// A diff row menu's stage, unstage or discard of some lines.
+        case diff(GitDiffIntent)
         /// The toolbar's verbs.
         case fetch, pull, push, newBranch, stash, popStash
     }
@@ -52,6 +54,7 @@ extension GitWindowSession {
         case .workingCopy(let intent): await run(intent)
         case let .commit(intent, commit): await run(intent, on: commit)
         case .ref(let intent): await run(intent)
+        case .diff(let intent): await run(intent)
         case .fetch: await execute(.fetch(remote: nil))
         case .pull: await execute(.pull)
         case .push: await pushHead()
@@ -93,6 +96,34 @@ extension GitWindowSession {
         let untracked = paths.filter { untrackedPaths.contains($0) }
         if !tracked.isEmpty, !(await execute(.discard(paths: tracked))) { return }
         if !untracked.isEmpty { await execute(.removeUntracked(paths: untracked)) }
+    }
+
+    // MARK: - Diff
+
+    /// Stages or unstages the selected lines at once; discarding them confirms first. A
+    /// selection no patch can be built from does nothing, and asks nothing.
+    private func run(_ intent: GitDiffIntent) async {
+        switch intent {
+        case .stage(let selection):
+            guard let patch = GitPatchBuilder.patch(selection, direction: .forward) else { return }
+            await execute(.applyToIndex(patch: patch, reverse: false))
+        case .unstage(let selection):
+            guard let patch = GitPatchBuilder.patch(selection, direction: .reverse) else { return }
+            await execute(.applyToIndex(patch: patch, reverse: true))
+        case .discard(let selection):
+            guard let patch = GitPatchBuilder.patch(selection, direction: .reverse), let presenter else { return }
+            let count = selection.lines.reduce(0) { total, entry in
+                guard selection.file.hunks.indices.contains(entry.key) else { return total }
+                let lines = selection.file.hunks[entry.key].lines
+                return total + entry.value.filter { lines.indices.contains($0) && GitPatchBuilder.isChange(lines[$0]) }
+                    .count
+            }
+            let confirmation = GitConfirmation(
+                title: "Discard \(count) selected \(count == 1 ? "line" : "lines")?",
+                message: "This cannot be undone.", actionTitle: "Discard", isDestructive: true)
+            guard await presenter.confirm(confirmation) else { return }
+            await execute(.applyToWorktree(patch: patch, reverse: true))
+        }
     }
 
     /// Fills an empty message box with HEAD's message, for an amend.

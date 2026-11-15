@@ -2,11 +2,11 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.5.0
+version: 1.6.0
 status: review
 language: en
 created: 2026-11-14
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -92,11 +92,12 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 
 ### Actions
 
-- **one-funnel**: Every intent a view sends (working copy, history, refs sidebar) and every toolbar verb (`fetch`, `pull`, `push`, `newBranch`, `stash`, `popStash`) MUST go through the session's one `perform(_:)`, which runs git only through the model's `perform`; the model refreshes after every action, so the views show what it left.
+- **one-funnel**: Every intent a view sends (working copy, history, refs sidebar, diff) and every toolbar verb (`fetch`, `pull`, `push`, `newBranch`, `stash`, `popStash`) MUST go through the session's one `perform(_:)`, which runs git only through the model's `perform`; the model refreshes after every action, so the views show what it left.
 - **one-at-a-time**: While an action runs, sheets included, a new request MUST be ignored. The overview's spinner (`git.window.busy`, before Refresh) MUST show and spin exactly while git runs, never while a confirmation or text sheet waits for an answer; `onBusyChange(true)` MUST be called as git starts and `onBusyChange(false)` as it returns.
 - **failure-shown**: A failed action MUST call `showFailure` with the action's title (`Push failed`, `Commit failed`, `Cherry-pick failed`, ...) and `GitClientError.userMessage(of:)`; a cancelled one shows nothing. The log line MUST carry the title and `logDescription`, never git's standard error.
 - **needs-presenter**: While `presenter` is nil, an action that needs the user (a confirmation or a text) MUST do nothing.
 - **discard**: Discarding MUST confirm `Discard changes to N file(s)?` with the destructive action `Discard Changes`, then restore the tracked paths (`.discard`) and delete the untracked ones (`.removeUntracked`), as two actions when there are both, skipping the second when the first fails. Discard All discards every unstaged path the same way.
+- **diff-patches**: A diff intent MUST build its patch with `GitPatchBuilder` and do nothing when there is none: `.stage` runs `.applyToIndex` of the forward patch, `.unstage` `.applyToIndex` of the reverse patch with `reverse: true`, and `.discard` first confirms `Discard N selected line(s)?` / `This cannot be undone.` with the destructive action `Discard`, then runs `.applyToWorktree` of the reverse patch with `reverse: true`. Their failures are titled `Stage failed`, `Unstage failed` and `Discard failed`.
 - **commit**: A commit MUST run `.commit(message:amend:)` and, on success, call `commitDidSucceed()`: the message is emptied, its undo history cleared and Amend unticked. Ticking Amend over a message that is only whitespace MUST fill it with HEAD's message. Amend MUST be enabled exactly while HEAD resolves to a commit, re-read on every working-copy or refs change, so it is disabled on an unborn HEAD, an orphan branch beside others included.
 - **push-remote**: The destination MUST be the one git resolves, never one the window derives from the upstream's name. The checked-out branch with an upstream MUST be pushed with a plain `.push`, so `push.default`, `branch.<name>.pushRemote` and `remote.pushDefault` apply, and a refusal MUST be shown under `Push failed` in git's words. Any other branch with an upstream MUST resolve `<branch>@{push}` (the client's push destination) and, when it splits against a listed remote at the longest remote name that prefixes it, be pushed with `.pushToUpstream` to that remote and branch with its tracking untouched; when git names no destination, or it names none on a listed remote, the window MUST show `Push failed` / `<branch> has no push destination.` followed by git's message, push nothing and change no tracking. A branch with an upstream MUST never fall back to `.pushSettingUpstream`: a branch made from `origin/main` tracks it, and pushing it onto `main` would land unreviewed work on a shared branch. Only a branch with no upstream MUST be pushed with `.pushSettingUpstream` under its own name to `origin`, else the only remote; with none it MUST show `Push failed` / `This repository has no remote.`, and on a detached HEAD `Push failed` / `HEAD is not on a branch.`. Only remotes that have a URL count. Push Tag picks its remote the same way.
 - **pull-fetch**: Pull MUST run `.pull`; the toolbar's Fetch MUST run `.fetch(remote: nil)`, the sidebar's Fetch of a remote `.fetch(remote:)` for it.
@@ -172,6 +173,9 @@ The window keeps the project window's identifiers. Its panes carry `git.window.o
 | git-window-045 | close-stops-model | A push started, then the window's session stopped | The action is cancelled and shows nothing. |
 | git-window-046 | commit | An empty repository; a commit; then `checkout --orphan fresh` | Amend disabled, then enabled, then disabled with HEAD resolving to nothing. |
 | git-window-047 | layout | The layout spec without terminals, then with | Three fixed panes `git.overview`, `git.history`, `git.commit`, one each; then a terminal region under the commit pane that keeps at least one terminal. |
+| git-window-048 | diff-patches | a file of two changed regions, unstaged; Stage Hunk of the first | `staged` lists the file and its staged diff has only that hunk. |
+| git-window-049 | diff-patches | the same file wholly staged; Unstage Lines of the first hunk's lines | its staged diff has one hunk, the second. |
+| git-window-050 | diff-patches | an unstaged inserted line; Discard Lines of it declined, then confirmed; then Discard Lines naming only a context line | `Discard 1 selected line?` / `This cannot be undone.` / `Discard` asked twice; the file is unchanged, then back to its committed text; nothing asked or run. |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -235,7 +239,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.4.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.6.0) |
 
 ## Design Decisions
 
@@ -290,6 +294,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `G
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.6.0 | 2026-11-15 | Mike Fullerton | Diff patches: diff intents through the funnel, staged and unstaged with `git apply --cached`, discarded with `git apply --reverse` after a confirmation; vectors 048-050 |
 | 1.5.0 | 2026-11-14 | Mike Fullerton | Review fixes: describes the composable-tabs panes, the project-window id and title; the not-in-a-repository alert; stashes found by sha; close cancels the action; Amend off on an orphan branch; vectors 042-047 |
 | 1.4.0 | 2026-11-14 | Mike Fullerton | Toolbar: Fetch, Pull, Push, Branch, Stash and Pop, aimed at the window's GitWindowToolbar and forwarded to the session's verbs; the toolbar kept beside the session and dropped on close |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Push goes where git resolves it: the checked-out branch with an upstream by a plain push, any other by its `@{push}` without `--set-upstream`, failing when git names none, never falling back to setting an upstream; the spinner shows only while git runs; local branch and tag deletes confirm destructively |

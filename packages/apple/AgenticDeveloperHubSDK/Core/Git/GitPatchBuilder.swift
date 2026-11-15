@@ -88,7 +88,8 @@ public enum GitPatchBuilder {
         return (head + body).joined(separator: "\n") + "\n"
     }
 
-    static func isChange(_ line: GitDiffLine) -> Bool {
+    /// Whether `line` is one a patch can select: an added or a removed line.
+    public static func isChange(_ line: GitDiffLine) -> Bool {
         line.kind == .added || line.kind == .removed
     }
 

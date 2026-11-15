@@ -840,6 +840,30 @@ final class LineViewerView: NSView {
         }
     }
 
+    override func menu(for event: NSEvent) -> NSMenu? {
+        guard owner?.menuProvider != nil else { return super.menu(for: event) }
+        return contextMenu(at: convert(event.locationInWindow, from: nil))
+    }
+
+    /// The owner's menu for a right-click at `point` (document coordinates). A row
+    /// outside the selection is selected first, as a plain click would; below the
+    /// last row there is no menu and the selection is left alone.
+    func contextMenu(at point: NSPoint) -> NSMenu? {
+        isDragSelecting = false
+        guard let provider = owner?.menuProvider, let display = displayRowIndex(at: point) else { return nil }
+        let row = dataRow(forDisplayRow: display)
+        if !selectedRows.contains(row) {
+            anchorRow = row
+            setSelection(IndexSet(integer: row))
+        }
+        return provider(row, selectedRows)
+    }
+
+    func clearSelection() {
+        anchorRow = nil
+        setSelection(IndexSet())
+    }
+
     /// The visible data rows between two data rows, inclusive, skipping folded ones.
     private func rows(from anchor: Int, to row: Int) -> IndexSet {
         var result = IndexSet(integersIn: min(anchor, row)...max(anchor, row))

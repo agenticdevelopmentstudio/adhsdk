@@ -398,6 +398,10 @@ extension GitWindowSession: GitDiffDelegate {
         bottom.show(fileHistory)
         fileHistory.show(path: path)
     }
+
+    func diff(_ diff: GitDiffViewController, didRequest intent: GitDiffIntent) {
+        perform(.diff(intent))
+    }
 }
 
 // MARK: - GitBlameDelegate

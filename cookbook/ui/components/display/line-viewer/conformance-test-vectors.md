@@ -18,4 +18,5 @@
 | line-viewer-015 | long-row-layout | one 1 000 000-unit ASCII row with 100 000 ten-unit runs, a whole-row bold run and a half-row highlight; draw a 400 pt one-row rect at x 0 and at 600 000 advances | at most 16 runs touched each time; no layout built. |
 | line-viewer-016 | long-row-layout | the same shape, 300 000 units ending in `é`, three-unit runs; draw at x 0 and at 200 000 advances | at most 40 runs touched each time; one layout built. |
 | line-viewer-017 | long-row-layout | an ASCII code row × 50, and the same ending in `é`, with five overlapping runs given out of order whose edges straddle 333 and 617 pt; draw whole, then as three adjacent rects | identical pixels. |
-
+| line-viewer-018 | context-menu | 10 rows, rows 2–4 selected, a provider; right-click row 3 | the provider gets row 3 and rows 2–4; the selection is unchanged. |
+| line-viewer-019 | context-menu | 10 rows, rows 2–4 selected, a provider; right-click row 7; then no provider and right-click row 1 | the selection becomes row 7 and the delegate hears it; the provider gets row 7 and row 7 alone; then nothing changes and no provider is asked. |

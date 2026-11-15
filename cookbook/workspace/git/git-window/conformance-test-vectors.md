@@ -48,3 +48,6 @@
 | git-window-045 | close-stops-model | A push started, then the window's session stopped | The action is cancelled and shows nothing. |
 | git-window-046 | commit | An empty repository; a commit; then `checkout --orphan fresh` | Amend disabled, then enabled, then disabled with HEAD resolving to nothing. |
 | git-window-047 | layout | The layout spec without terminals, then with | Three fixed panes `git.overview`, `git.history`, `git.commit`, one each; then a terminal region under the commit pane that keeps at least one terminal. |
+| git-window-048 | diff-patches | a file of two changed regions, unstaged; Stage Hunk of the first | `staged` lists the file and its staged diff has only that hunk. |
+| git-window-049 | diff-patches | the same file wholly staged; Unstage Lines of the first hunk's lines | its staged diff has one hunk, the second. |
+| git-window-050 | diff-patches | an unstaged inserted line; Discard Lines of it declined, then confirmed; then Discard Lines naming only a context line | `Discard 1 selected line?` / `This cannot be undone.` / `Discard` asked twice; the file is unchanged, then back to its committed text; nothing asked or run. |

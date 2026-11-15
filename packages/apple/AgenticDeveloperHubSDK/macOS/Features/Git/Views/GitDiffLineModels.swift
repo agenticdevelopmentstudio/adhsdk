@@ -2,6 +2,18 @@ import Foundation
 import AgenticDeveloperHubSDKCore
 import AgenticDeveloperHubSDKLanguage
 
+/// Where a diff row came from: hunk `hunk` of the file diff, and the index of the line in
+/// that hunk's `lines`, nil for the hunk's header row.
+public struct GitDiffLineRef: Hashable, Sendable {
+    public var hunk: Int
+    public var line: Int?
+
+    public init(hunk: Int, line: Int?) {
+        self.hunk = hunk
+        self.line = line
+    }
+}
+
 /// A file diff as one `LineViewerDataSource` (recipe `workspace/git/git-views`, "Diff"):
 /// per hunk a header row (`@@ -o,c +n,c @@ section`), then its lines, with the old and new
 /// line numbers in two gutter columns, `.removed`/`.added` backgrounds, each line's syntax
@@ -14,19 +26,25 @@ import AgenticDeveloperHubSDKLanguage
 public final class GitInlineDiffModel: LineViewerDataSource {
 
     public let rows: [LineViewerRow]
+    /// One per row: the hunk line it shows, the hunk alone for a header, nil for the binary row.
+    public let lineRefs: [GitDiffLineRef?]
     private let numberWidth: Int
 
     public init(diff: GitFileDiff, oldLines: [StyledLine]?, newLines: [StyledLine]?, wordHighlights: Bool) {
         numberWidth = GitDiffRows.numberWidth(diff)
         guard !diff.isBinary else {
             rows = [GitDiffRows.binary]
+            lineRefs = [nil]
             return
         }
         var rows: [LineViewerRow] = []
-        for hunk in diff.hunks {
+        var refs: [GitDiffLineRef?] = []
+        for (hunkIndex, hunk) in diff.hunks.enumerated() {
             rows.append(GitDiffRows.header(hunk))
+            refs.append(GitDiffLineRef(hunk: hunkIndex, line: nil))
             let emphasis = GitDiffRows.emphasis(in: hunk, enabled: wordHighlights)
             for (index, line) in hunk.lines.enumerated() {
+                refs.append(GitDiffLineRef(hunk: hunkIndex, line: index))
                 let syntax: [LineViewerRun]
                 let background: LineViewerBackground
                 switch line.kind {
@@ -50,6 +68,7 @@ public final class GitInlineDiffModel: LineViewerDataSource {
             }
         }
         self.rows = rows
+        self.lineRefs = refs
     }
 
     public var gutterColumnCount: Int { 2 }
@@ -63,10 +82,14 @@ public final class GitInlineDiffModel: LineViewerDataSource {
 public final class GitDiffSideModel: LineViewerDataSource {
 
     public let rows: [LineViewerRow]
+    /// One per row: the hunk line it shows, the hunk alone for a header, nil for a filler
+    /// and the binary row.
+    public let lineRefs: [GitDiffLineRef?]
     private let numberWidth: Int
 
-    init(rows: [LineViewerRow], numberWidth: Int) {
+    init(rows: [LineViewerRow], lineRefs: [GitDiffLineRef?], numberWidth: Int) {
         self.rows = rows
+        self.lineRefs = lineRefs
         self.numberWidth = numberWidth
     }
 
@@ -88,52 +111,53 @@ public enum GitSideBySideDiffModel {
                             wordHighlights: Bool) -> (left: GitDiffSideModel, right: GitDiffSideModel) {
         let width = GitDiffRows.numberWidth(diff)
         guard !diff.isBinary else {
-            return (GitDiffSideModel(rows: [GitDiffRows.binary], numberWidth: width),
-                    GitDiffSideModel(rows: [GitDiffRows.binary], numberWidth: width))
+            return (GitDiffSideModel(rows: [GitDiffRows.binary], lineRefs: [nil], numberWidth: width),
+                    GitDiffSideModel(rows: [GitDiffRows.binary], lineRefs: [nil], numberWidth: width))
         }
-        var left: [LineViewerRow] = []
-        var right: [LineViewerRow] = []
-        var removed: [LineViewerRow] = []
-        var added: [LineViewerRow] = []
+        var left = Side()
+        var right = Side()
+        var removed = Side()
+        var added = Side()
         func flush() {
-            let count = max(removed.count, added.count)
-            left += removed + Array(repeating: GitDiffRows.filler, count: count - removed.count)
-            right += added + Array(repeating: GitDiffRows.filler, count: count - added.count)
-            removed.removeAll()
-            added.removeAll()
+            let count = max(removed.rows.count, added.rows.count)
+            left.append(removed, padTo: count)
+            right.append(added, padTo: count)
+            removed = Side()
+            added = Side()
         }
-        for hunk in diff.hunks {
+        for (hunkIndex, hunk) in diff.hunks.enumerated() {
             let header = GitDiffRows.header(hunk)
-            left.append(header)
-            right.append(header)
+            left.append(header, GitDiffLineRef(hunk: hunkIndex, line: nil))
+            right.append(header, GitDiffLineRef(hunk: hunkIndex, line: nil))
             let emphasis = GitDiffRows.emphasis(in: hunk, enabled: wordHighlights)
             var previous: GitDiffLine.Kind?
             for (index, line) in hunk.lines.enumerated() {
                 let marks = emphasis[index] ?? []
+                let ref = GitDiffLineRef(hunk: hunkIndex, line: index)
                 switch line.kind {
                 case .context:
                     flush()
                     left.append(GitDiffRows.sideRow(line, number: line.oldNumber, lines: oldLines, marks: [],
-                                                    background: .none))
+                                                    background: .none), ref)
                     right.append(GitDiffRows.sideRow(line, number: line.newNumber, lines: newLines, marks: [],
-                                                     background: .none))
+                                                     background: .none), ref)
                 case .removed:
-                    if !added.isEmpty { flush() }
+                    if !added.rows.isEmpty { flush() }
                     removed.append(GitDiffRows.sideRow(line, number: line.oldNumber, lines: oldLines, marks: marks,
-                                                       background: .removed))
+                                                       background: .removed), ref)
                 case .added:
                     added.append(GitDiffRows.sideRow(line, number: line.newNumber, lines: newLines, marks: marks,
-                                                     background: .added))
+                                                     background: .added), ref)
                 case .noNewlineAtEnd:
                     // The marker belongs to the line before it: that line's side, or both for context.
                     let marker = GitDiffRows.noNewline(line)
                     switch previous {
-                    case .removed: removed.append(marker)
-                    case .added: added.append(marker)
+                    case .removed: removed.append(marker, ref)
+                    case .added: added.append(marker, ref)
                     default:
                         flush()
-                        left.append(marker)
-                        right.append(marker)
+                        left.append(marker, ref)
+                        right.append(marker, ref)
                     }
                     continue
                 }
@@ -141,7 +165,25 @@ public enum GitSideBySideDiffModel {
             }
             flush()
         }
-        return (GitDiffSideModel(rows: left, numberWidth: width), GitDiffSideModel(rows: right, numberWidth: width))
+        return (GitDiffSideModel(rows: left.rows, lineRefs: left.refs, numberWidth: width),
+                GitDiffSideModel(rows: right.rows, lineRefs: right.refs, numberWidth: width))
+    }
+
+    /// One side's rows and their line refs, built together so they stay the same length.
+    private struct Side {
+        var rows: [LineViewerRow] = []
+        var refs: [GitDiffLineRef?] = []
+
+        mutating func append(_ row: LineViewerRow, _ ref: GitDiffLineRef?) {
+            rows.append(row)
+            refs.append(ref)
+        }
+
+        /// `block`'s rows, then fillers up to `count` rows.
+        mutating func append(_ block: Side, padTo count: Int) {
+            rows += block.rows + Array(repeating: GitDiffRows.filler, count: count - block.rows.count)
+            refs += block.refs + Array(repeating: nil, count: count - block.refs.count)
+        }
     }
 }
 

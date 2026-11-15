@@ -4,11 +4,11 @@
     "id": "5f9e0c63-382d-4803-bd50-a8fb90ea9e4d",
     "title": "Line Viewer",
     "type": "ingredient",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-13",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "30a1c0998ba3ee4f",
+  "synced": "01909b28dc8d2a82",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

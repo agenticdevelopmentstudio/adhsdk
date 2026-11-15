@@ -10,6 +10,7 @@ private final class RecordingDiffDelegate: GitDiffDelegate {
     enum Event: Equatable {
         case blame(String, String?)
         case history(String)
+        case intent(GitDiffIntent)
     }
     private(set) var events: [Event] = []
     func diff(_ diff: GitDiffViewController, didRequestBlameFor path: String, at revision: String?) {
@@ -17,6 +18,9 @@ private final class RecordingDiffDelegate: GitDiffDelegate {
     }
     func diff(_ diff: GitDiffViewController, didRequestHistoryFor path: String) {
         events.append(.history(path))
+    }
+    func diff(_ diff: GitDiffViewController, didRequest intent: GitDiffIntent) {
+        events.append(.intent(intent))
     }
 }
 
@@ -370,5 +374,124 @@ struct GitDiffViewControllerTests {
         #expect(GitDiffViewController.blameRevision(for: .staged(paths: []), deleted: false) == nil)
         #expect(GitDiffViewController.blameRevision(for: .staged(paths: []), deleted: true) == "HEAD")
         #expect(GitDiffViewController.blameRevision(for: .untracked(path: "a"), deleted: false) == nil)
+    }
+
+    // MARK: - Staging menu
+
+    /// A point in the text area of display row `row` of `viewer`.
+    private static func point(_ viewer: LineViewerViewController, row: Int) -> NSPoint {
+        NSPoint(x: viewer.documentView.textOriginX + 4, y: (CGFloat(row) + 0.5) * viewer.rowHeight)
+    }
+
+    /// Selects `rows` (a contiguous range) in `viewer`, then right-clicks `clicked`.
+    private static func menu(_ viewer: LineViewerViewController, select rows: ClosedRange<Int>? = nil,
+                             click clicked: Int) -> NSMenu? {
+        if let rows {
+            viewer.documentView.handleClick(at: point(viewer, row: rows.lowerBound), modifiers: [])
+            viewer.documentView.handleClick(at: point(viewer, row: rows.upperBound), modifiers: [.shift])
+        }
+        return viewer.documentView.contextMenu(at: point(viewer, row: clicked))
+    }
+
+    private static func titles(_ menu: NSMenu?) -> [String] {
+        menu?.items.map { $0.isSeparatorItem ? "-" : $0.title } ?? []
+    }
+
+    private static func item(_ menu: NSMenu?, _ name: String) -> NSMenuItem? {
+        menu?.items.first { $0.accessibilityIdentifier() == "git.diff.menu.\(name)" }
+    }
+
+    private static func fire(_ item: NSMenuItem?) {
+        guard let item, let action = item.action, let target = item.target as? NSObject else {
+            Issue.record("menu item has no target and action")
+            return
+        }
+        _ = target.perform(action, with: item)
+    }
+
+    private static func loaded(_ target: GitDiffTarget, settings: SettingsStore = settings(),
+                               layout: String = "inline") async -> (GitDiffViewController, RecordingDiffDelegate) {
+        let source = GitViewsFakeContentSource()
+        let diff = GitDiff(files: [Fixture.twoHunks()])
+        for key in ["unstaged", "staged", "c1", "untracked:a.swift"] { source.diffs[key] = diff }
+        settings.set(layout, for: UserSettings.gitDiffLayout)
+        let controller = Self.controller(source, settings: settings)
+        let delegate = RecordingDiffDelegate()
+        controller.delegate = delegate
+        controller.show(target: target, file: "a.swift")
+        await controller.loadTask?.value
+        return (controller, delegate)
+    }
+
+    @Test("an unstaged diff offers stage and discard of the hunk and the selected lines")
+    func unstagedMenu() async {
+        let (controller, _) = await Self.loaded(.unstaged(paths: ["a.swift"]))
+        let menu = Self.menu(controller.inlineViewer, select: 2...3, click: 2)
+        #expect(Self.titles(menu) == ["Stage Hunk", "Stage Lines", "-", "Discard Hunk…", "Discard Lines…"])
+        for name in ["stageHunk", "stageLines", "discardHunk", "discardLines"] {
+            #expect(Self.item(menu, name) != nil)
+        }
+    }
+
+    @Test("a selection of context lines offers only the hunk items")
+    func contextOnlyMenu() async {
+        let (controller, _) = await Self.loaded(.unstaged(paths: ["a.swift"]))
+        let menu = Self.menu(controller.inlineViewer, click: 1)
+        #expect(Self.titles(menu) == ["Stage Hunk", "-", "Discard Hunk…"])
+    }
+
+    @Test("a staged diff offers unstage of the hunk and the selected lines")
+    func stagedMenu() async {
+        let (controller, _) = await Self.loaded(.staged(paths: ["a.swift"]))
+        let menu = Self.menu(controller.inlineViewer, click: 7)
+        #expect(Self.titles(menu) == ["Unstage Hunk", "Unstage Lines"])
+        #expect(Self.item(menu, "unstageHunk") != nil)
+        #expect(Self.item(menu, "unstageLines") != nil)
+    }
+
+    @Test("commit, range and untracked diffs, and a diff read ignoring whitespace, have no menu")
+    func noMenu() async {
+        for target in [GitDiffTarget.commit("c1", paths: []), .untracked(path: "a.swift")] {
+            let (controller, _) = await Self.loaded(target)
+            #expect(Self.menu(controller.inlineViewer, click: 2) == nil)
+        }
+        let settings = Self.settings()
+        settings.set(true, for: UserSettings.gitDiffIgnoreWhitespace)
+        let (controller, _) = await Self.loaded(.unstaged(paths: ["a.swift"]), settings: settings)
+        #expect(Self.menu(controller.inlineViewer, click: 2) == nil)
+    }
+
+    @Test("Stage Lines over two hunks sends one stage of every changed line selected, then clears the selection")
+    func stageLinesAcrossHunks() async {
+        let (controller, delegate) = await Self.loaded(.unstaged(paths: ["a.swift"]))
+        let menu = Self.menu(controller.inlineViewer, select: 2...7, click: 4)
+        Self.fire(Self.item(menu, "stageLines"))
+        let file = Fixture.twoHunks()
+        #expect(delegate.events == [.intent(.stage(GitPatchSelection(file: file, lines: [0: IndexSet([1, 2]),
+                                                                                          1: IndexSet([1])])))])
+        #expect(controller.inlineViewer.selectedRows.isEmpty)
+    }
+
+    @Test("Stage Hunk and Discard Hunk send the clicked row's hunk, a header's own")
+    func hunkIntents() async {
+        let (controller, delegate) = await Self.loaded(.unstaged(paths: ["a.swift"]))
+        let file = Fixture.twoHunks()
+        Self.fire(Self.item(Self.menu(controller.inlineViewer, click: 5), "stageHunk"))
+        Self.fire(Self.item(Self.menu(controller.inlineViewer, click: 2), "discardHunk"))
+        #expect(delegate.events == [.intent(.stage(.hunk(1, of: file))), .intent(.discard(.hunk(0, of: file)))])
+    }
+
+    @Test("side by side, a selected row stages both its sides' lines, and a filler row's hunk is the one above")
+    func sideBySideIntents() async {
+        let (controller, delegate) = await Self.loaded(.staged(paths: ["a.swift"]), layout: "sideBySide")
+        let file = Fixture.twoHunks()
+        Self.fire(Self.item(Self.menu(controller.leftViewer, select: 2...6, click: 2), "unstageLines"))
+        Self.fire(Self.item(Self.menu(controller.leftViewer, click: 6), "unstageHunk"))
+        #expect(delegate.events == [
+            .intent(.unstage(GitPatchSelection(file: file, lines: [0: IndexSet([1, 2]), 1: IndexSet([1])]))),
+            .intent(.unstage(.hunk(1, of: file)))
+        ])
+        #expect(controller.leftViewer.selectedRows.isEmpty)
+        #expect(controller.rightViewer.selectedRows.isEmpty)
     }
 }

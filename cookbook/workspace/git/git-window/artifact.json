@@ -4,11 +4,11 @@
     "id": "6a830cf8-0b95-4ffd-b175-f5cf481490c4",
     "title": "Git Window",
     "type": "ingredient",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
-    "modified": "2026-11-14",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "39ccfa31ce8a1d1e",
+  "synced": "a85c3320f8561231",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},
