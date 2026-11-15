@@ -224,7 +224,35 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
     /// answers only for a window adopted for scripting, which belongs to no
     /// group.
     public var frontWindowController: ComposableTabsWindowController? {
-        if let key = NSApp.keyWindow?.commandOwner.windowController as? ComposableTabsWindowController {
+        frontWindowController { _ in true }
+    }
+
+    /// The front window that can hold any pane and has a folder worth
+    /// rooting a workspace at: `frontWindowController` with Document windows
+    /// passed over. A Document window's spec has no room for a pane it did
+    /// not make — the next load turns one into a placeholder — and its row's
+    /// path is a file's folder or the home directory, never a project. What
+    /// splits a pane in, or roots extensions, asks this.
+    public var frontWorkspaceWindowController: ComposableTabsWindowController? {
+        frontWindowController { !isDocumentWindow($0) }
+    }
+
+    /// Whether `controller` is an open Document window's.
+    public func isDocumentWindow(_ controller: ComposableTabsWindowController) -> Bool {
+        repoID(of: controller).map(isDocumentWindow) ?? false
+    }
+
+    private func repoID(of controller: ComposableTabsWindowController) -> UUID? {
+        controllers.first { $0.value === controller }?.key
+    }
+
+    /// `frontWindowController`'s search, taking only the windows `accepts`
+    /// takes.
+    private func frontWindowController(
+        where accepts: (ComposableTabsWindowController) -> Bool
+    ) -> ComposableTabsWindowController? {
+        if let key = NSApp.keyWindow?.commandOwner.windowController as? ComposableTabsWindowController,
+           accepts(key) {
             return key
         }
         // Visible only: a project window group keeps its other active
@@ -232,15 +260,18 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         if let ordered = NSApp.orderedWindows
             .filter(\.isVisible)
             .compactMap({ $0.windowController as? ComposableTabsWindowController })
-            .first {
+            .first(where: accepts) {
             return ordered
         }
         for group in [frontGroup].compactMap({ $0 }) + groups.reversed() {
-            if let shown = shownWindows[group.id] as? ComposableTabsWindowController {
+            if let shown = shownWindows[group.id] as? ComposableTabsWindowController, accepts(shown) {
                 return shown
             }
         }
-        return openOrder.last { group(containing: $0) == nil }.flatMap { controllers[$0] }
+        return openOrder.reversed()
+            .filter { group(containing: $0) == nil }
+            .compactMap { controllers[$0] }
+            .first(where: accepts)
     }
 
     /// Every open project's workspace, in the order their projects were
