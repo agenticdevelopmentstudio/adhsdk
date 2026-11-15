@@ -7234,6 +7234,7 @@
 		01AE5AF912B7AE43125937B2 /* ColorSync.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ColorSync.framework; path = System/Library/Frameworks/ColorSync.framework; sourceTree = SDKROOT; };
 		01C81274483CF8976A1FC3C3 /* DisplayThumbnailerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayThumbnailerTests.swift; sourceTree = "<group>"; };
 		01DC0855F9406998DD6D3434 /* AccountMenuModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountMenuModel.swift; sourceTree = "<group>"; };
+		02000B2AE5E45305E178EFFD /* CodeEditSourceEditor */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CodeEditSourceEditor; path = "/Users/mfullerton/Library/Developer/SharedPackages/CodeEditSourceEditor"; sourceTree = "<absolute>"; };
 		020C331F127F3FC0012ED9F1 /* MCPChipsBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPChipsBarView.swift; sourceTree = "<group>"; };
 		0218DD3BC94824069920A3BB /* EventStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventStoreTests.swift; sourceTree = "<group>"; };
 		02300A0BD89ECB94BCE1B43A /* ProjectWindowManager+Scripting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProjectWindowManager+Scripting.swift"; sourceTree = "<group>"; };
@@ -7260,6 +7261,7 @@
 		0398CFDC9DD252570D0B5E45 /* SettingsPanelSplitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPanelSplitViewController.swift; sourceTree = "<group>"; };
 		03D4189DDECCC4149F87B867 /* TerminalSessionSummarizationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionSummarizationCoordinator.swift; sourceTree = "<group>"; };
 		03DF475516A37CC1178F28A3 /* EventIngestStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventIngestStoreTests.swift; sourceTree = "<group>"; };
+		0406F3CEBFF59F97299FC87F /* swift-openapi-urlsession */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-openapi-urlsession"; path = "/Users/mfullerton/Library/Developer/SharedPackages/swift-openapi-urlsession"; sourceTree = "<absolute>"; };
 		040A43BC0F2A052BC03AEF81 /* FileTreeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTreeConfig.swift; sourceTree = "<group>"; };
 		0418EFF3D6C42B4F8C3981A1 /* SystemNotificationPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemNotificationPresenter.swift; sourceTree = "<group>"; };
 		0418F83105FC050F302B7408 /* DiagnosticTypesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticTypesTests.swift; sourceTree = "<group>"; };
@@ -7417,6 +7419,7 @@
 		11A15EB1F4399AB6BD44C525 /* NoOpObservationAdapters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoOpObservationAdapters.swift; sourceTree = "<group>"; };
 		11B0C02574E35B2AF61C03F7 /* ExpiringMemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpiringMemoTests.swift; sourceTree = "<group>"; };
 		11D15173ABAA713979FC06A0 /* ThemedSplitViewOrientationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemedSplitViewOrientationTests.swift; sourceTree = "<group>"; };
+		120E411DDC59CFAB70F2ECC8 /* Sparkle */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sparkle; path = "/Users/mfullerton/Library/Developer/SharedPackages/Sparkle"; sourceTree = "<absolute>"; };
 		12150814C31F26B38A79DBB1 /* PaneEdgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneEdgeTests.swift; sourceTree = "<group>"; };
 		12155A973F205CAFC9CB0896 /* AgenticDeveloperHubSDKMacOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AgenticDeveloperHubSDKMacOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1215845B1A94C26527A22A90 /* StepperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepperView.swift; sourceTree = "<group>"; };
@@ -7803,6 +7806,7 @@
 		361AE59DD91591AAEC62C5E9 /* ScreenSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenSnapshot.swift; sourceTree = "<group>"; };
 		3628497C82867CB3C8CF4DE2 /* ExtensionHostInstallerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionHostInstallerTests.swift; sourceTree = "<group>"; };
 		362E1CDD56F9363E432C9F8A /* FormStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormStateTests.swift; sourceTree = "<group>"; };
+		3631435A6E7281345404EB17 /* FlyingFox */ = {isa = PBXFileReference; lastKnownFileType = folder; name = FlyingFox; path = "/Users/mfullerton/Library/Developer/SharedPackages/FlyingFox"; sourceTree = "<absolute>"; };
 		364A3D8F9F1DA8229F2F48FE /* AIFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIFeature.swift; sourceTree = "<group>"; };
 		364B9EA116F31C026372C26F /* AppleScriptRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleScriptRunner.swift; sourceTree = "<group>"; };
 		36639C693E6109C969D9AA0C /* PaneWebviewPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneWebviewPresenterTests.swift; sourceTree = "<group>"; };
@@ -7960,7 +7964,7 @@
 		43F9785D03F3BD8EA04D9280 /* ThemedViewsUIKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemedViewsUIKitTests.swift; sourceTree = "<group>"; };
 		43FC8C95FE755B5DF9F2B8A6 /* PermissionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionStatus.swift; sourceTree = "<group>"; };
 		44031DED56A4130B3ED307A9 /* ConversationsWorkOutputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationsWorkOutputTests.swift; sourceTree = "<group>"; };
-		4425FB389BD6CBFC55D569A1 /* CodeEditLanguages */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CodeEditLanguages; path = Vendor/CodeEditLanguages; sourceTree = SOURCE_ROOT; };
+		4425FB389BD6CBFC55D569A1 /* CodeEditLanguages */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CodeEditLanguages; path = "/Users/mfullerton/Library/Developer/SharedPackages/CodeEditLanguages"; sourceTree = "<absolute>"; };
 		442EBE522CBD5CC3945F07ED /* NotesCoordinatorMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesCoordinatorMenuTests.swift; sourceTree = "<group>"; };
 		4432D0040E5377120EF5405E /* ReopenOnLaunchPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReopenOnLaunchPolicy.swift; sourceTree = "<group>"; };
 		4433D556EC0B079840BEF970 /* ContextEventFieldsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEventFieldsTests.swift; sourceTree = "<group>"; };
@@ -8418,6 +8422,7 @@
 		6C31376CA47BF5DB891D34DD /* PaneMinimizePickerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneMinimizePickerTests.swift; sourceTree = "<group>"; };
 		6C385B36FDADB1B9C37E5896 /* ChromeExtensionsTopicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromeExtensionsTopicTests.swift; sourceTree = "<group>"; };
 		6C49AA4F3AABE55252E2306E /* WorkspacesProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacesProviding.swift; sourceTree = "<group>"; };
+		6C49AC3527D023A2063DED5F /* GRDB.swift */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GRDB.swift; path = "/Users/mfullerton/Library/Developer/SharedPackages/GRDB.swift"; sourceTree = "<absolute>"; };
 		6C5366A01AF5454050BA9FDC /* NoticeRoutingRulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeRoutingRulesTests.swift; sourceTree = "<group>"; };
 		6C578D654E4EEAC38CDC85D0 /* ChatStateObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStateObserver.swift; sourceTree = "<group>"; };
 		6C6226274CB30F66FE06F3B8 /* AIProviderConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviderConfigStore.swift; sourceTree = "<group>"; };
@@ -9026,6 +9031,7 @@
 		A2935A696EC5F81815E1B610 /* LLMChatPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMChatPicker.swift; sourceTree = "<group>"; };
 		A29A509851432F07DB88EA7F /* RealScreenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealScreenProvider.swift; sourceTree = "<group>"; };
 		A2C18908DB378DE083779EAD /* TranscriptStore+Lines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TranscriptStore+Lines.swift"; sourceTree = "<group>"; };
+		A2CE6FE53CFC4C3D478EB8F3 /* onnxruntime-swift-package-manager */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "onnxruntime-swift-package-manager"; path = "/Users/mfullerton/Library/Developer/SharedPackages/onnxruntime-swift-package-manager"; sourceTree = "<absolute>"; };
 		A2FD0F72BB0E6AB91FC30400 /* GRDBSyncStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GRDBSyncStoreTests.swift; sourceTree = "<group>"; };
 		A2FD2795131A5DE729761555 /* TimelineFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineFormat.swift; sourceTree = "<group>"; };
 		A3114E958AFEECD0028F3E9F /* RaceBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaceBox.swift; sourceTree = "<group>"; };
@@ -9235,6 +9241,7 @@
 		B3EB0EB44AE71684B374E726 /* NotificationStyleSetPanelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationStyleSetPanelTests.swift; sourceTree = "<group>"; };
 		B3F881C60C2BD5A63E32547D /* MailSyncSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailSyncSettings.swift; sourceTree = "<group>"; };
 		B410A52B137BF0AFDDD8EDD3 /* SystemWindowContextsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWindowContextsModel.swift; sourceTree = "<group>"; };
+		B4119D1F1ACE37985B5B32C2 /* JSONRPC */ = {isa = PBXFileReference; lastKnownFileType = folder; name = JSONRPC; path = "/Users/mfullerton/Library/Developer/SharedPackages/JSONRPC"; sourceTree = "<absolute>"; };
 		B43374A495B78CA365628356 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		B43D7B3594D4EDC7F3BE2BDF /* SystemWindowContextError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWindowContextError.swift; sourceTree = "<group>"; };
 		B440301915F14FB420B51250 /* MailRequestAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailRequestAccessTests.swift; sourceTree = "<group>"; };
@@ -9269,6 +9276,7 @@
 		B6E05481D089F114E57EA076 /* MonitorGaugeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorGaugeView.swift; sourceTree = "<group>"; };
 		B6F340CE1E594DA3AAD588EC /* ScriptAnalyzerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptAnalyzerTests.swift; sourceTree = "<group>"; };
 		B70EE87D8EFE90BAB54E0832 /* ADKDIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ADKDIdentifiers.swift; sourceTree = "<group>"; };
+		B724057E797012A3AFAF1476 /* LanguageClient */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LanguageClient; path = "/Users/mfullerton/Library/Developer/SharedPackages/LanguageClient"; sourceTree = "<absolute>"; };
 		B77B3915BAEC6342D3605827 /* DaemonBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaemonBootstrap.swift; sourceTree = "<group>"; };
 		B786F840DF53F76B14781307 /* WebBrowserWindowsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebBrowserWindowsFeature.swift; sourceTree = "<group>"; };
 		B7A89C904519190477976980 /* TerminalBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalBoxStyle.swift; sourceTree = "<group>"; };
@@ -9595,6 +9603,7 @@
 		D7772082E95F80F9E0B18822 /* LegacyThemePersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyThemePersistenceTests.swift; sourceTree = "<group>"; };
 		D7A5105B6DE23D080F944B45 /* NotesFolderListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesFolderListViewController.swift; sourceTree = "<group>"; };
 		D7B8F58D6AD1C5150B5006E5 /* DisplayConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayConfig.swift; sourceTree = "<group>"; };
+		D7CF4F6A6F507039D46CC028 /* SwiftTerm */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SwiftTerm; path = "/Users/mfullerton/Library/Developer/SharedPackages/SwiftTerm"; sourceTree = "<absolute>"; };
 		D7E687BAFA02766336496584 /* AIProviderConfigSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviderConfigSyncTests.swift; sourceTree = "<group>"; };
 		D7ED09EB105FB7A5DE22B463 /* MessagingTopicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagingTopicTests.swift; sourceTree = "<group>"; };
 		D8139B269E472485086085E5 /* DesktopAppearanceControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopAppearanceControls.swift; sourceTree = "<group>"; };
@@ -9667,6 +9676,7 @@
 		DD35BA95F188E32A7DD3DE12 /* ToastStackWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastStackWindow.swift; sourceTree = "<group>"; };
 		DD3AEA9CAAD8B29A39A7BF28 /* DesktopSettingsAppViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopSettingsAppViewController.swift; sourceTree = "<group>"; };
 		DD3BB72625E02616850E56D2 /* MailCommandLineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailCommandLineTests.swift; sourceTree = "<group>"; };
+		DD7A0A343C97562F7E01D3E4 /* swift-openapi-runtime */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-openapi-runtime"; path = "/Users/mfullerton/Library/Developer/SharedPackages/swift-openapi-runtime"; sourceTree = "<absolute>"; };
 		DD7C112E045BDE1F3F3EF82F /* BrowserHistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserHistoryStoreTests.swift; sourceTree = "<group>"; };
 		DD8FCE1CD89D0367455D4658 /* LogWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWindowController.swift; sourceTree = "<group>"; };
 		DD98D500DC06CEC43B665399 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
@@ -9856,6 +9866,7 @@
 		EEF6C225EEC8998CD2A27272 /* ProjectsMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsMenuTests.swift; sourceTree = "<group>"; };
 		EF182C5C928CF4701C0D3D8C /* LanguageServerRegistryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageServerRegistryTests.swift; sourceTree = "<group>"; };
 		EF295932DC2772B0F91A1E41 /* HookCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookCaptureTests.swift; sourceTree = "<group>"; };
+		EF2E7F90FAAAF0126E64E18B /* swift-http-types */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-http-types"; path = "/Users/mfullerton/Library/Developer/SharedPackages/swift-http-types"; sourceTree = "<absolute>"; };
 		EF30F9818BB40D9B82DF1CCC /* ClientDetailPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientDetailPanel.swift; sourceTree = "<group>"; };
 		EF47F30B8FB979FC96F93185 /* MessageBubbleViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubbleViewTests.swift; sourceTree = "<group>"; };
 		EF623D65805B61B6A144A863 /* StatusBarAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarAppDelegate.swift; sourceTree = "<group>"; };
@@ -9901,6 +9912,7 @@
 		F3432A69EF351C97AB673B83 /* JSONLImportPass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONLImportPass.swift; sourceTree = "<group>"; };
 		F34BCCFE2FAB064B41F20FF3 /* RetentionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionServiceTests.swift; sourceTree = "<group>"; };
 		F34DED85DC60DC8CEF03726F /* BrowserSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserSettingsPanelViewController.swift; sourceTree = "<group>"; };
+		F360EDF77B117FD6A2418B02 /* AppAuth-iOS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "AppAuth-iOS"; path = "/Users/mfullerton/Library/Developer/SharedPackages/AppAuth-iOS"; sourceTree = "<absolute>"; };
 		F3990B6B36B4300DBC3B7341 /* BrowserPaneSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPaneSettingsViewController.swift; sourceTree = "<group>"; };
 		F3AE0A5F276061D44535A099 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		F3CD4AEFC02787C4BE3A5006 /* MainMenuCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuCommand.swift; sourceTree = "<group>"; };
@@ -9914,6 +9926,7 @@
 		F496AD74BE85FEAE4409E93D /* Loggable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Loggable.swift; sourceTree = "<group>"; };
 		F4A49AA66D8EABEC6A5A7CDC /* SystemMemoryMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMemoryMonitorTests.swift; sourceTree = "<group>"; };
 		F4C12F79CBE6F9B689BF8456 /* SigninAppsTopic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigninAppsTopic.swift; sourceTree = "<group>"; };
+		F4CDE7F7E49E416A165C2C16 /* LanguageServerProtocol */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LanguageServerProtocol; path = "/Users/mfullerton/Library/Developer/SharedPackages/LanguageServerProtocol"; sourceTree = "<absolute>"; };
 		F50235C8951BFC92AF0CB39D /* PanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelView.swift; sourceTree = "<group>"; };
 		F5261BECF2EEF3B53EE60DBA /* ConfigurationContributionPointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationContributionPointTests.swift; sourceTree = "<group>"; };
 		F53D4FA1C6AF87E9179E6635 /* EventDetailFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailFormatter.swift; sourceTree = "<group>"; };
@@ -9945,6 +9958,7 @@
 		F811F723212DE83A1DDDD68D /* WorkActivityRecorderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkActivityRecorderTests.swift; sourceTree = "<group>"; };
 		F8149D45C66268834860A506 /* Command.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
 		F8328403127A70E6C6424D65 /* ScriptWindowCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptWindowCommand.swift; sourceTree = "<group>"; };
+		F835069817C704781DFDD2A5 /* KeyboardShortcuts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KeyboardShortcuts; path = "/Users/mfullerton/Library/Developer/SharedPackages/KeyboardShortcuts"; sourceTree = "<absolute>"; };
 		F87E160B819BF6651B1B28E3 /* SpacingSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacingSettingsPanelViewController.swift; sourceTree = "<group>"; };
 		F87EF19D7032C31A87A92423 /* ComposableTabLayoutSpecTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabLayoutSpecTests.swift; sourceTree = "<group>"; };
 		F881B9B6E351CCF70BDE26DB /* AnchorCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnchorCapture.swift; sourceTree = "<group>"; };
@@ -17392,8 +17406,22 @@
 		FBB0B8D85014C765C57B3F5B /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				F360EDF77B117FD6A2418B02 /* AppAuth-iOS */,
 				4425FB389BD6CBFC55D569A1 /* CodeEditLanguages */,
+				02000B2AE5E45305E178EFFD /* CodeEditSourceEditor */,
+				3631435A6E7281345404EB17 /* FlyingFox */,
+				6C49AC3527D023A2063DED5F /* GRDB.swift */,
+				B4119D1F1ACE37985B5B32C2 /* JSONRPC */,
+				F835069817C704781DFDD2A5 /* KeyboardShortcuts */,
+				B724057E797012A3AFAF1476 /* LanguageClient */,
+				F4CDE7F7E49E416A165C2C16 /* LanguageServerProtocol */,
+				A2CE6FE53CFC4C3D478EB8F3 /* onnxruntime-swift-package-manager */,
 				88A9CDB62F6A854FC45E85F3 /* SharedRuntime */,
+				120E411DDC59CFAB70F2ECC8 /* Sparkle */,
+				EF2E7F90FAAAF0126E64E18B /* swift-http-types */,
+				DD7A0A343C97562F7E01D3E4 /* swift-openapi-runtime */,
+				0406F3CEBFF59F97299FC87F /* swift-openapi-urlsession */,
+				D7CF4F6A6F507039D46CC028 /* SwiftTerm */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -19529,22 +19557,22 @@
 			mainGroup = 767AE5EB024C313D97A45EAA;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				488DCCE6B69CFEAD6778CD41 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */,
-				EC6013EB899EC9DF1CB65775 /* XCRemoteSwiftPackageReference "CodeEditSourceEditor" */,
-				72F816DBC9250006085BBAB1 /* XCRemoteSwiftPackageReference "FlyingFox" */,
-				903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
-				22B6E3635EDD9312FF7FB291 /* XCRemoteSwiftPackageReference "JSONRPC" */,
-				E4A8A2D6E575E7DA2468C789 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
-				446E0D9312FC0A50A3D82267 /* XCRemoteSwiftPackageReference "LanguageClient" */,
-				9E563E1A836A33570DA5F6D6 /* XCRemoteSwiftPackageReference "LanguageServerProtocol" */,
-				AA036E6B3C075436E0D984DF /* XCRemoteSwiftPackageReference "Sparkle" */,
-				91550DB23BDE76B879BECE2C /* XCRemoteSwiftPackageReference "SwiftTerm" */,
-				1D6EC255C117989714424537 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */,
-				54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */,
-				5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
-				D6C42E986A615DAFDB454314 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
-				9AC00754B768D43BFF4C38E1 /* XCLocalSwiftPackageReference "Vendor/CodeEditLanguages" */,
+				99706F3204F46241FE977764 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/AppAuth-iOS" */,
+				232003143E4E51E940FE5FEE /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/CodeEditLanguages" */,
+				B78AFE483F4B0A868F4F7E12 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/CodeEditSourceEditor" */,
+				624F66224AD50C42E818A6C4 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/FlyingFox" */,
+				AC12D4B3FA0F8D4CC13D209D /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/GRDB.swift" */,
+				D76DC75FA9864792CD81321B /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/JSONRPC" */,
+				868D59E6474092A37E6DC888 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/KeyboardShortcuts" */,
+				510816309978A772CCE37558 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/LanguageClient" */,
+				3DECDDA72DD48923DB951F7E /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/LanguageServerProtocol" */,
 				D066ADEA67DF9B5A611C8F12 /* XCLocalSwiftPackageReference "SharedRuntime" */,
+				4CE147977FC72A104FB9AB10 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/Sparkle" */,
+				FE1EC10C969F90FD42E1F78F /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/SwiftTerm" */,
+				F16A668AC2B5FB3C85A65BEB /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/onnxruntime-swift-package-manager" */,
+				56F7EF67341476EBE1D07F24 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-http-types" */,
+				9216D7199B0CA1673519995E /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-openapi-runtime" */,
+				366818BC269134708BEE4C60 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-openapi-urlsession" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AC3AE5751E29CD67B04FC0CA /* Products */;
@@ -31132,140 +31160,75 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		9AC00754B768D43BFF4C38E1 /* XCLocalSwiftPackageReference "Vendor/CodeEditLanguages" */ = {
+		232003143E4E51E940FE5FEE /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/CodeEditLanguages" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = Vendor/CodeEditLanguages;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/CodeEditLanguages";
+		};
+		366818BC269134708BEE4C60 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-openapi-urlsession" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/swift-openapi-urlsession";
+		};
+		3DECDDA72DD48923DB951F7E /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/LanguageServerProtocol" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/LanguageServerProtocol";
+		};
+		4CE147977FC72A104FB9AB10 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/Sparkle" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/Sparkle";
+		};
+		510816309978A772CCE37558 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/LanguageClient" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/LanguageClient";
+		};
+		56F7EF67341476EBE1D07F24 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-http-types" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/swift-http-types";
+		};
+		624F66224AD50C42E818A6C4 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/FlyingFox" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/FlyingFox";
+		};
+		868D59E6474092A37E6DC888 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/KeyboardShortcuts" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/KeyboardShortcuts";
+		};
+		9216D7199B0CA1673519995E /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/swift-openapi-runtime" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/swift-openapi-runtime";
+		};
+		99706F3204F46241FE977764 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/AppAuth-iOS" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/AppAuth-iOS";
+		};
+		AC12D4B3FA0F8D4CC13D209D /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/GRDB.swift" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/GRDB.swift";
+		};
+		B78AFE483F4B0A868F4F7E12 /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/CodeEditSourceEditor" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/CodeEditSourceEditor";
 		};
 		D066ADEA67DF9B5A611C8F12 /* XCLocalSwiftPackageReference "SharedRuntime" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = SharedRuntime;
 		};
+		D76DC75FA9864792CD81321B /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/JSONRPC" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/JSONRPC";
+		};
+		F16A668AC2B5FB3C85A65BEB /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/onnxruntime-swift-package-manager" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/onnxruntime-swift-package-manager";
+		};
+		FE1EC10C969F90FD42E1F78F /* XCLocalSwiftPackageReference "$(HOME)/Library/Developer/SharedPackages/SwiftTerm" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "$(HOME)/Library/Developer/SharedPackages/SwiftTerm";
+		};
 /* End XCLocalSwiftPackageReference section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		1D6EC255C117989714424537 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/microsoft/onnxruntime-swift-package-manager";
-			requirement = {
-				kind = exactVersion;
-				version = 1.24.2;
-			};
-		};
-		22B6E3635EDD9312FF7FB291 /* XCRemoteSwiftPackageReference "JSONRPC" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ChimeHQ/JSONRPC";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.2;
-			};
-		};
-		446E0D9312FC0A50A3D82267 /* XCRemoteSwiftPackageReference "LanguageClient" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ChimeHQ/LanguageClient";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.8.2;
-			};
-		};
-		488DCCE6B69CFEAD6778CD41 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/openid/AppAuth-iOS";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.0;
-			};
-		};
-		5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
-			requirement = {
-				kind = versionRange;
-				maximumVersion = 2.0.0;
-				minimumVersion = 1.12.0;
-			};
-		};
-		54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-http-types";
-			requirement = {
-				kind = versionRange;
-				maximumVersion = 2.0.0;
-				minimumVersion = 1.0.0;
-			};
-		};
-		72F816DBC9250006085BBAB1 /* XCRemoteSwiftPackageReference "FlyingFox" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/swhitty/FlyingFox";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.20.0;
-			};
-		};
-		903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/groue/GRDB.swift";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.0.0;
-			};
-		};
-		91550DB23BDE76B879BECE2C /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
-			requirement = {
-				kind = versionRange;
-				maximumVersion = 1.99.0;
-				minimumVersion = 1.20.0;
-			};
-		};
-		9E563E1A836A33570DA5F6D6 /* XCRemoteSwiftPackageReference "LanguageServerProtocol" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ChimeHQ/LanguageServerProtocol";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.14.1;
-			};
-		};
-		AA036E6B3C075436E0D984DF /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.10.0;
-			};
-		};
-		D6C42E986A615DAFDB454314 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
-			requirement = {
-				kind = versionRange;
-				maximumVersion = 2.0.0;
-				minimumVersion = 1.3.0;
-			};
-		};
-		E4A8A2D6E575E7DA2468C789 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
-		EC6013EB899EC9DF1CB65775 /* XCRemoteSwiftPackageReference "CodeEditSourceEditor" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/CodeEditApp/CodeEditSourceEditor.git";
-			requirement = {
-				kind = versionRange;
-				maximumVersion = 1.0.0;
-				minimumVersion = 0.15.2;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		052DE93C70A11092A8E4ADD5 /* JSONRPC */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 22B6E3635EDD9312FF7FB291 /* XCRemoteSwiftPackageReference "JSONRPC" */;
 			productName = JSONRPC;
 		};
 		09F79A97BF71260696540C12 /* ADHSharedRuntime */ = {
@@ -31274,62 +31237,50 @@
 		};
 		0B294E18D40885C1890D5F2D /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		0B3757FDFB5C489DB5D53495 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		0BE4D5E307AA1DFC77BAA357 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		1341B3184E25E85D8F9FCEB4 /* CodeEditSourceEditor */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = EC6013EB899EC9DF1CB65775 /* XCRemoteSwiftPackageReference "CodeEditSourceEditor" */;
 			productName = CodeEditSourceEditor;
 		};
 		1B12C94E81E1078220D81059 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		24A12377857EED3E7E14B785 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AA036E6B3C075436E0D984DF /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
 		};
 		259D87C510F2988D4C18AC6B /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		25E348F8550E6F93F915E83B /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		292D371F08B19702ACF4DA24 /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E4A8A2D6E575E7DA2468C789 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
 		};
 		30786B7C3448A6CA82DDBB38 /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 		37304686417F3460EB7830C8 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		39568943063615588CA6C81E /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AA036E6B3C075436E0D984DF /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
 		};
 		3ACFD5A3F9F66E00606FA707 /* ADHSharedRuntime */ = {
@@ -31338,22 +31289,18 @@
 		};
 		3F45C441D8339CE4C5DA90DD /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		43F7780AEF0D47F0F472D055 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		46FDE966346C04E7E4D2BDB3 /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E4A8A2D6E575E7DA2468C789 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
 		};
 		4A08DDF7DDBB14D22E6523E9 /* FlyingFox */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 72F816DBC9250006085BBAB1 /* XCRemoteSwiftPackageReference "FlyingFox" */;
 			productName = FlyingFox;
 		};
 		4C5939B93C1E1C3FEEFCFA05 /* ADHSharedRuntime */ = {
@@ -31362,17 +31309,14 @@
 		};
 		4EF55F842FB3F52D5582AB59 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		4F8F256533544D1E6E7AEA81 /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 		510ED9EEE774A6634F5BB1C8 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		51484FAF5FC1C6C07E8A559D /* CodeEditLanguages */ = {
@@ -31381,7 +31325,6 @@
 		};
 		5755D2B088275B9813CC6264 /* FlyingFox */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 72F816DBC9250006085BBAB1 /* XCRemoteSwiftPackageReference "FlyingFox" */;
 			productName = FlyingFox;
 		};
 		5BD51A5AFE16EC3886EDC433 /* ADHSharedRuntime */ = {
@@ -31390,37 +31333,30 @@
 		};
 		5E8735CBA336C191E55224B2 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		600C2291F132DCFD4C16B07E /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 		6227E98A1E15BA99C725054F /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		62287B552AA48651DF80ED4E /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D6C42E986A615DAFDB454314 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
 		6985F2846A09F6C82C9BF3EE /* AppAuth */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 488DCCE6B69CFEAD6778CD41 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */;
 			productName = AppAuth;
 		};
 		6CDBA1D2704FCFD68050127F /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		6FC20229A4822BAE51B5C253 /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E4A8A2D6E575E7DA2468C789 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
 		};
 		7B93DB2C0AC90FA751860B27 /* ADHSharedRuntime */ = {
@@ -31429,177 +31365,142 @@
 		};
 		7B96AF69D96C6F7BE8E444F8 /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D6C42E986A615DAFDB454314 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
 		7FA4D4D205585EB406AF7573 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		89AEE9A8E5D1A25CFEED329B /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		8D9BED43E33FD0F359BECE89 /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E4A8A2D6E575E7DA2468C789 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
 		};
 		A72F369929F9067F758EF61F /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D6C42E986A615DAFDB454314 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
 		A7FF49D99B81F06DA3EAEC8E /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		A89D7971DAF5C20D6A29D48E /* FlyingFox */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 72F816DBC9250006085BBAB1 /* XCRemoteSwiftPackageReference "FlyingFox" */;
 			productName = FlyingFox;
 		};
 		ADC1E36F24AED565324D3909 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AA036E6B3C075436E0D984DF /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
 		};
 		B2A39CC5C372207129E0C417 /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 		B4E383F9B1AF1C6EB9B360E0 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		B59A96CA08B702CC681E8FEC /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 91550DB23BDE76B879BECE2C /* XCRemoteSwiftPackageReference "SwiftTerm" */;
 			productName = SwiftTerm;
 		};
 		B8144C759E04385984B67A8A /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		B82BA9533B773A20B4F2F815 /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D6C42E986A615DAFDB454314 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
 		B97D832B8B76CA5983CA3918 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AA036E6B3C075436E0D984DF /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
 		};
 		BDD5A0543110DB9D24369C1E /* LanguageServerProtocol */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 9E563E1A836A33570DA5F6D6 /* XCRemoteSwiftPackageReference "LanguageServerProtocol" */;
 			productName = LanguageServerProtocol;
 		};
 		BE4E1A88C6BE5472F4153AD4 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		BEA88803F8CC4231656C3094 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		BED2F7B5D78D99A6AE8811A6 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AA036E6B3C075436E0D984DF /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
 		};
 		C07244CD1A827FA5650FE8E0 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		C44D4F014FDC7EF70F048C86 /* onnxruntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1D6EC255C117989714424537 /* XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager" */;
 			productName = onnxruntime;
 		};
 		CAA4E48394915CE38B84E04A /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		CC6D43F0034D95C4492B6145 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		DEB35B3541B0C27F349B0C1D /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D6C42E986A615DAFDB454314 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
 		DF8EDCDDC08A5A22CB6774D3 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		E00A476C9866A36D5BA53B01 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5027FA57F40B2D4AAE559DB8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
 		E12DBA7CC70BA2CDFB89AFFE /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		E674816493620FCDB91D1ADD /* FlyingFox */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 72F816DBC9250006085BBAB1 /* XCRemoteSwiftPackageReference "FlyingFox" */;
 			productName = FlyingFox;
 		};
 		E7F586A484E759242CABD776 /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 		EB67276D76A03815F844FBEA /* FlyingFox */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 72F816DBC9250006085BBAB1 /* XCRemoteSwiftPackageReference "FlyingFox" */;
 			productName = FlyingFox;
 		};
 		ECBBDCB0D673CD17E1859274 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 903B729BBBD35306FF1CCAC2 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		EE225D6C37C26916400947B6 /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 		EF3B2A4828D7FF9DA917A5D4 /* LanguageClient */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 446E0D9312FC0A50A3D82267 /* XCRemoteSwiftPackageReference "LanguageClient" */;
 			productName = LanguageClient;
 		};
 		F0CE4B76B31538A7934B5A3C /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E4A8A2D6E575E7DA2468C789 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
 		};
 		F2901DE6EEB224E80B536A68 /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D6C42E986A615DAFDB454314 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
 		FAB085BDE298020121A2919B /* HTTPTypes */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 54220D69812C6EA62ED9412A /* XCRemoteSwiftPackageReference "swift-http-types" */;
 			productName = HTTPTypes;
 		};
 /* End XCSwiftPackageProductDependency section */

@@ -200,16 +200,14 @@ A workspace (this one or a consumer's) that reached either by a second path
 would build a duplicate target into the same products directory, and Xcode
 fails the whole workspace with "Multiple commands produce …".
 
-Swift packages are cloned once per machine, not once per build folder: Xcode
-and `xcodebuild` both honour
-`defaults write com.apple.dt.Xcode IDEClonedSourcePackagesDirPathOverride ~/Library/Developer/Xcode/SharedSourcePackages`.
-Without it every DerivedData folder (one per worktree) carries its own ~1.8 GB
-of clones. The cost of sharing: two worktrees that pin *different* versions of a
-package and resolve at the same time can switch its checkout under each other.
-Third-party code we must carry ourselves goes under
-`packages/apple/AgenticDeveloperHubSDK/Vendor/` as a local package (see
-`Vendor/CodeEditLanguages/README.md`), which SwiftLint skips. The clang module
-cache is shared the same way: each project's `MODULE_CACHE_DIR` points at
+Swift packages come from one folder per machine,
+`~/Library/Developer/SharedPackages`, which the externalpackages repo installs
+from its single version list. Every `project.yml` names a package by `path:`
+into that folder (never `url:`), and runs
+`python3 "${HOME}/Library/Developer/SharedPackages/.tools/externalpackages.py" portable <Name>.xcodeproj`
+as its `postGenCommand`. No `Package.resolved` is committed. A package missing
+from the folder is added to the externalpackages list, not pinned here.
+The clang module cache is shared too: each project's `MODULE_CACHE_DIR` points at
 `~/Library/Developer/Xcode/SharedModuleCache`, which is safe because these
 projects build with implicit modules (`SWIFT_ENABLE_EXPLICIT_MODULES: NO`). Keep
 the two settings together.

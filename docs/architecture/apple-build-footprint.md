@@ -4,7 +4,8 @@ How big an Apple build folder is, why, and what keeps it that size. Derived
 from PR #47 (`fix(apple): shrink per-worktree build folders`), which changed
 `packages/apple/*/project.yml`, every `Package.resolved`,
 `AgenticDeveloperHubSDK/.swiftlint.yml`, `AgenticDeveloperHubSDK/Vendor/` and
-`.claude/CLAUDE.md`.
+`.claude/CLAUDE.md`. Its vendored CodeEditLanguages and shared clone folder have
+since been replaced by the machine's shared package folder (below).
 
 ## The problem it solved
 
@@ -27,12 +28,12 @@ difference to what gets downloaded.
 
 | Measure | Where | Effect |
 |---|---|---|
-| CodeEditLanguages vendored as a local package | `packages/apple/AgenticDeveloperHubSDK/Vendor/CodeEditLanguages` (README has upgrade steps) | No 3.2 GB clone. `Package.swift` fetches the one zip via `binaryTarget(url:checksum:)` into SwiftPM's shared artifact cache. A local package with the same identity (the directory name) replaces the remote one, including CodeEditSourceEditor's own dependency on it. The remote pin is gone from every `Package.resolved`. SwiftLint skips `Vendor/`. |
-| One package folder per machine | Xcode default `IDEClonedSourcePackagesDirPathOverride` → `~/Library/Developer/Xcode/SharedSourcePackages` (a machine setting, not in the repo) | Packages are cloned once (~1.8 GB), not once per DerivedData folder. `xcodebuild` honours it. **Cost:** two worktrees pinning different versions of a package that resolve at the same time can switch its checkout under each other. |
+| One shared package folder per machine | `~/Library/Developer/SharedPackages`, installed by the externalpackages repo from its one version list. Every `project.yml` names each package by `path:` into it, and its `postGenCommand` runs `.tools/externalpackages.py portable` on the generated project. No `Package.resolved` is committed. | Xcode resolves nothing and clones nothing: every package is a local package, checked out once per machine at the one version the list names. A consumer cannot pin a different version, because there is no version to pin. CodeEditLanguages comes from that folder too; a local package of the same identity also replaces CodeEditSourceEditor's own dependency on it, so the old 3.2 GB clone is gone (externalpackages clones shallow). |
 | One clang module cache per machine | `MODULE_CACHE_DIR: $(HOME)/Library/Developer/Xcode/SharedModuleCache` in the AIPlugins, AgenticDeveloperHubSDK and AgenticDeveloperHubSDKApp `project.yml` | Safe because these projects build with implicit modules (`SWIFT_ENABLE_EXPLICIT_MODULES: NO`). Keep the two settings together. A fresh folder's own cache drops to 185 MB (SwiftPM package targets keep theirs), and the shared 311 MB is reused. |
 
-Consumers get the vendored package and the module-cache setting once their
-adhsdk submodule moves past PR #47. Their own app targets still keep a small
+Consumers get the module-cache setting once their adhsdk submodule moves past
+PR #47, and the shared package folder once it moves past the change that
+replaced `Vendor/` and `IDEClonedSourcePackagesDirPathOverride` with it. Their own app targets still keep a small
 per-folder module cache.
 
 ## What a build folder holds now (~4.6 GB, measured)

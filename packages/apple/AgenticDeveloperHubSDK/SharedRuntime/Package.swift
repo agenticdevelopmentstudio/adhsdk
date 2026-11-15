@@ -1,5 +1,8 @@
 // swift-tools-version: 6.4
+import Foundation
 import PackageDescription
+
+let shared = NSHomeDirectory() + "/Library/Developer/SharedPackages/"
 
 // One dynamic library for the third-party packages that two SDK frameworks both
 // need: MCP (Core) and swift-transformers' Tokenizers (SemanticSearchStore) reach
@@ -14,8 +17,8 @@ let package = Package(
         .library(name: "ADHSharedRuntime", type: .dynamic, targets: ["ADHSharedRuntime"])
     ],
     dependencies: [
-        .package(url: "https://github.com/modelcontextprotocol/swift-sdk", "0.11.0"..<"1.0.0"),
-        .package(url: "https://github.com/huggingface/swift-transformers", exact: "1.3.5")
+        .package(path: shared + "swift-sdk"),
+        .package(path: shared + "swift-transformers")
     ],
     targets: [
         .target(
