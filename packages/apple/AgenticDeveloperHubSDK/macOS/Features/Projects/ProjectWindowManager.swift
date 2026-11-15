@@ -1346,9 +1346,9 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         }
     }
 
-    /// Every project window shares one tab configuration — the edges and the
-    /// panes' shape and sizes — and it is the one the user last worked in, so
-    /// switching projects never changes the panels' sizes or tab sides. Put on
+    /// Every project window shares one tab configuration — the panes' shape
+    /// and sizes — and it is the one the user last worked in, so switching
+    /// projects never changes the panels' sizes. Put on
     /// `repoID`'s window as it comes forward.
     private func adoptSharedTabConfiguration(into repoID: UUID) {
         guard let controller = controllers[repoID],
@@ -1363,8 +1363,7 @@ public final class ProjectWindowManager: ProjectOpening, ObservableObject {
         if let live = controllers[repoID] { return live.tabConfiguration }
         guard let loaded = try? database?.loadTabs(repoID: repoID), !loaded.tabs.isEmpty else { return nil }
         return ProjectTabConfiguration(
-            arrangement: ProjectTabReconciler.arrangement(of: loaded.tabs, activeTabID: loaded.activeTabID),
-            enabledEdges: loaded.enabledEdges)
+            arrangement: ProjectTabReconciler.arrangement(of: loaded.tabs, activeTabID: loaded.activeTabID))
     }
 
     /// Drops the controller when its window closes, so reopening the project

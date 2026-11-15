@@ -86,14 +86,13 @@ public final class PartnerSplitViewController: ThemedSplitViewController {
 
     // MARK: - Tabs
 
-    /// One edge of tabs, the left by default — a column of session cards beside the panes, running up
-    /// behind the title bar — and the Projects window's spacing and backdrop: the same shared setters it
-    /// calls. The left is this window's own choice over the app-wide tab positions; every tab call goes
-    /// through `primaryEdge`, so a different choice moves the cards with it.
+    /// One edge of tabs — the primary edge of the app-wide tab positions, which this window follows like
+    /// every other tab host — and the Projects window's spacing and backdrop: the same shared setters it
+    /// calls. Every tab call goes through `primaryEdge`, so a change to the setting moves the cards with
+    /// it (`primaryEdgeDidChange`).
     private func configureTabs() {
         tabbed.delegate = self
         tabbed.keepsTabsOnPrimaryEdge = true
-        tabbed.overrideTabPositions(TabPositions([.left]))
         spacingObservers = PaneSpacing.edgeSettings.values.map { setting in
             UserSettingObserver(setting) { [weak self] _ in self?.applySpacing() }
         }

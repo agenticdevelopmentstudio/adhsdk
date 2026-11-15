@@ -210,7 +210,11 @@ public final class ProjectController: ComposableTabsTabItemDataSource {
             return
         }
 
-        let enabledEdges = stored?.enabledEdges ?? workspace.firstOpenEnabledEdges
+        // The project's Tab Bars choice, if it made one; otherwise the window
+        // follows the app-wide tab positions, so new tabs go on those edges
+        // and the choice stays unmade (`nil` is persisted, writing no edges).
+        let storedEdges = stored?.enabledEdges
+        let enabledEdges = storedEdges ?? ProjectWorkspace.globalEnabledEdges
         var tabs = plan.keep
         // A tab is a place — a checkout, an edge — and the panes in it are the
         // project's, so a checkout that has just appeared opens on what the
@@ -227,7 +231,7 @@ public final class ProjectController: ComposableTabsTabItemDataSource {
         }
         let activeTabID = tabs.first { $0.id == stored?.activeTabID }?.id ?? tabs.first?.id
         onWillChangeTabs?()
-        workspace.persistTabs(tabs, activeTabID: activeTabID, enabledEdges: enabledEdges)
+        workspace.persistTabs(tabs, activeTabID: activeTabID, enabledEdges: storedEdges)
         onTabsDidChange?()
     }
 

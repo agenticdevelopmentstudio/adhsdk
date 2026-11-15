@@ -288,7 +288,7 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     private var isMirroringArrangement = false
 
     /// True while `adopt(_:)` puts another window's configuration on this one:
-    /// every edge toggled and tab reshaped would otherwise write a
+    /// every tab reshaped would otherwise write a
     /// half-adopted project. `adopt` writes once, when it is done.
     private var isAdoptingConfiguration = false
 
@@ -299,6 +299,15 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// Keeps the room around the panes following the setting while the window
     /// is open, so the Spacing panel previews on the window behind its sheet.
     private var spacingObservers: [UserSettingObserver<Int>] = []
+
+    /// Whether the user picked this project's Tab Bars. Until they do, the
+    /// window follows the app-wide tab positions (`UserSettings.tabsPositions`)
+    /// live and persists no edges; once they do, their choice is stored and
+    /// the window stops following.
+    private var hasExplicitEdgeChoice = false
+
+    /// Re-applies the app-wide tab positions while there is no explicit choice.
+    private var tabPositionsObserver: UserSettingObserver<TabPositions>?
 
     /// The tree holding its panes' shares while the shelf moves, if any. See
     /// `ComposableTabsViewController.holdThicknessFractions()`.
@@ -414,6 +423,9 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         }
         self.tabItemDataSource = tabItemDataSource
         installInitialTabs()
+        tabPositionsObserver = UserSettingObserver(UserSettings.tabsPositions) { [weak self] _ in
+            self?.followGlobalTabPositions()
+        }
 
         // The pane the user is working in is tracked once for the whole app;
         // this window only cares when the change is its own.
@@ -793,24 +805,52 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         contentViewController.presentAsSheet(settings)
     }
 
-    /// Single entry point for edge toggling (project settings and Cocoa
-    /// Scripting alike) so a freshly enabled edge is always topped up to
+    /// Single entry point for the user's edge toggling (project settings and
+    /// Cocoa Scripting alike) so a freshly enabled edge is always topped up to
     /// the global tab count and the edge set is persisted. Disabling keeps
-    /// the edge's members so re-enabling restores them.
+    /// the edge's members so re-enabling restores them. A toggle that changes
+    /// anything is the project's explicit Tab Bars choice: from then on the
+    /// window keeps its own edges rather than following the app-wide ones.
     public func setEdgeEnabled(_ edge: Edge, _ enabled: Bool) {
-        guard tabbed.isEdgeEnabled(edge) != enabled else { return }
+        guard applyEdge(edge, enabled) else { return }
+        hasExplicitEdgeChoice = true
+        persistAllTabs()
+    }
+
+    /// Turns `edge` on or off and tops a newly enabled edge up, without making
+    /// or persisting a choice. Returns whether anything changed.
+    @discardableResult
+    private func applyEdge(_ edge: Edge, _ enabled: Bool) -> Bool {
+        guard tabbed.isEdgeEnabled(edge) != enabled else { return false }
         // The last enabled edge stays enabled. A window with no tab bar has no
         // tabs, therefore no panes, and no control anywhere in it to bring one
         // back — the only way out would be the titlebar settings button
         // (`principle-of-least-astonishment`).
         guard enabled || Edge.allCases.contains(where: { $0 != edge && tabbed.isEdgeEnabled($0) }) else {
-            return
+            return false
         }
         tabbed.setEdgeEnabled(edge, enabled)
         if enabled {
             topUpTabs(on: edge)
         }
-        persistAllTabs()
+        return true
+    }
+
+    /// Puts the app-wide tab positions on a window with no Tab Bars choice of
+    /// its own — every enable before any disable, for the reason
+    /// `enabledTabEdgeNames` gives — and saves the tabs any newly enabled edge
+    /// gained. The save writes no edges, so the project keeps following.
+    private func followGlobalTabPositions() {
+        guard !hasExplicitEdgeChoice, !isReloadingTabs, !isClosing else { return }
+        let wanted = ProjectWorkspace.globalEnabledEdges
+        var changed = false
+        for edge in Edge.allCases where wanted.contains(edge) {
+            changed = applyEdge(edge, true) || changed
+        }
+        for edge in Edge.allCases where !wanted.contains(edge) {
+            changed = applyEdge(edge, false) || changed
+        }
+        if changed { persistAllTabs() }
     }
 
     /// Gives `edge` one member tab per group so its count matches the
@@ -1597,9 +1637,13 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
 
     private func installInitialTabs() {
         let initial = project.initialTabs()
-        // Enable edges before adding tabs so members land on live bars.
+        // The project's own Tab Bars choice, or the app-wide tab positions
+        // when it never made one. Enable edges before adding tabs so members
+        // land on live bars.
+        hasExplicitEdgeChoice = initial.enabledEdges != nil
+        let enabledEdges = initial.enabledEdges ?? ProjectWorkspace.globalEnabledEdges
         for edge in Edge.allCases {
-            tabbed.setEdgeEnabled(edge, initial.enabledEdges.contains(edge))
+            tabbed.setEdgeEnabled(edge, enabledEdges.contains(edge))
         }
         // Rebuild groups in stored order: group order is first-seen record
         // order, per-edge member order is record order.
@@ -1798,18 +1842,13 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// This window's tab configuration, for another project window to adopt.
     public var tabConfiguration: ProjectTabConfiguration {
         ProjectTabConfiguration(
-            arrangement: tabbed.activeTabID.flatMap { splitControllersByTabID[$0]?.snapshotNode() },
-            enabledEdges: Edge.allCases.filter { tabbed.isEdgeEnabled($0) })
+            arrangement: tabbed.activeTabID.flatMap { splitControllersByTabID[$0]?.snapshotNode() })
     }
 
-    /// Takes on `configuration` — the edges first, so a newly enabled edge's
-    /// tabs are reshaped with the rest — and writes the result once.
+    /// Takes on `configuration` and writes the result once.
     public func adopt(_ configuration: ProjectTabConfiguration) {
         guard !isReloadingTabs, !isClosing else { return }
         isAdoptingConfiguration = true
-        if !configuration.enabledEdges.isEmpty {
-            enabledTabEdgeNames = configuration.enabledEdges.map(\.rawValue)
-        }
         if let arrangement = configuration.arrangement {
             isMirroringArrangement = true
             reshapeTabs(toMatch: project.layout.spec.reconcile(arrangement), except: nil)
@@ -1838,7 +1877,9 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         project.persistTabs(
             currentTabRecords().map(\.record),
             activeTabID: tabbed.activeTabID,
-            enabledEdges: Edge.allCases.filter { tabbed.isEdgeEnabled($0) }
+            // Edges are written only once the user has chosen them; until
+            // then `nil` writes none, and the project keeps following.
+            enabledEdges: hasExplicitEdgeChoice ? Edge.allCases.filter { tabbed.isEdgeEnabled($0) } : nil
         )
     }
 
