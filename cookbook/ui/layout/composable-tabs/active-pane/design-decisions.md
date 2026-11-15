@@ -51,8 +51,11 @@
   (for example, a checkbox being clicked) would not run until the tracking
   loop ended. `DispatchQueue.main` is drained in every mode.
   **Approved**: pending
-- **Decision**: Every pane's backdrop is always outlined at a constant 2pt
-  width; only the border color distinguishes the active pane.
+- **Decision**: Every pane's backdrop is outlined at a constant 2pt width;
+  only the border color distinguishes the active pane. The one exception
+  is a backdrop whose owner switches the outline off (a window that is a
+  single pane, with no other pane to tell it from), which draws no outline
+  at all (**the-backdrop-outline-is-optional**).
   **Rationale**: The source states that outlining only the active pane left
   every other pane reading as an unbounded field of the window-background
   role, so two panes side by side would look like one pane with a seam down

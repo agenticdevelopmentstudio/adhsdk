@@ -2,11 +2,11 @@
 id: 4205c688-865a-4d74-890d-f803ee66fdcb
 title: "Document Editor"
 type: ingredient
-version: 1.3.0
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -80,9 +80,9 @@ This component is one editor inside one pane of one tab. It hosts a breadcrumb a
 
 ### Layout & Content Hosting
 
-- **breadcrumb-above-content**: The component's view MUST arrange the breadcrumb directly above the hosted editor content in a vertical stack with 0 spacing between them and a fill distribution.
-- **breadcrumb-fixed-height**: The breadcrumb MUST be constrained to a fixed height of `24` points.
-- **content-spans-container-width**: The breadcrumb and the hosted editor content MUST each have their leading and trailing edges pinned to the containing stack's leading and trailing edges.
+- **breadcrumb-above-content**: The component's view MUST arrange the navigation bar, which holds the breadcrumb, directly above the hosted editor content in a vertical stack with 0 spacing between them and a fill distribution.
+- **breadcrumb-fixed-height**: The breadcrumb MUST be constrained to the navigation row's height (see **navigation-row-height**).
+- **content-spans-container-width**: The navigation bar and the hosted editor content MUST each have their leading and trailing edges pinned to the containing stack's leading and trailing edges.
 - **root-view-initial-frame**: The component's root view MUST be created with an initial size of `520`×`424` points, with the stack pinned to all four of the root view's edges.
 - **content-uses-themed-root**: The hosted content MUST be wrapped with the shared theming root so it reads the app's theme palette and paints the theme's window background.
 - **hosts-file-editor-view**: The component MUST host a file editor, supplying it the current selection, the display-option overrides, the document store, the save scheduler, the language services, and an open-file callback that forwards its URL to the open-request callback.
@@ -102,7 +102,7 @@ This component is one editor inside one pane of one tab. It hosts a breadcrumb a
   showing MUST do nothing.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 - **navigation-bar-spans-the-pane**: The component MUST take the pane's content spacing itself (the pane pins it flush) and apply it only to the editor area beneath the navigation bar, so the bar runs the pane's full width from its top edge with its one-point outline-colored line beneath it, and the code editor and the Markdown editor are held off the remaining edges by that spacing. A change to the spacing MUST be applied again without accumulating.
-- **navigation-row-height**: The navigation row MUST be `28` points high, superseding the `24` points of `breadcrumb-fixed-height`.
+- **navigation-row-height**: The navigation row (back/forward, the recent-documents menu, then the breadcrumb) MUST be `28` points high.
 - **back-forward-is-outlined**: The back/forward control MUST carry a one-point outline in the theme's outline color with a `6`-point corner radius round all of its segments, marking it as one enclosed tool in the bar, and MUST follow theme changes.
 - **markdown-opens-on-single-preview**: When its owner asks for it, the component MUST put its Markdown editor in the single-pane layout on the preview, whatever layout and pane were last chosen anywhere else, and MUST NOT record that as the user's choice; a layout or pane the user then chooses in the editor MUST be recorded as usual. The Document tabs container MUST pass the request to every editor it holds or later creates.
 ## Appearance
@@ -170,8 +170,8 @@ This component is one editor inside one pane of one tab. It hosts a breadcrumb a
 | devc-037 | rows-refresh-on-options-change | Build the option rows, then let the popover close so the kept row references become unset; then set the "show overview" override to true | No crash occurs; the refresh operation's writes to the released rows are no-ops |
 | devc-026 | pane-override-isolated | Two component instances, each with its own independent display-option overrides; toggle "Show line numbers" on the first via its row | The first's resolved "show line numbers" value flips and its overridden state becomes true; the second's resolved value and overridden state are unchanged |
 | devc-027 | reset-does-not-affect-other-panes-or-global | Override "Show line numbers" on both of two instances, then click the first's reset button | The first's overridden state becomes false; the second's stays true; the app-wide "show line numbers" setting is unchanged |
-| devc-028 | breadcrumb-above-content | Load the component's view | The root stack's child views are, in order, the breadcrumb then the hosted content; its orientation is vertical; its spacing is 0 |
-| devc-029 | breadcrumb-fixed-height | Load the component's view | The breadcrumb's height constraint constant is `24` |
+| devc-028 | breadcrumb-above-content | Load the component's view | The root stack's child views are, in order, the navigation bar (holding the breadcrumb) then the hosted content; its orientation is vertical; its spacing is 0 |
+| devc-029 | breadcrumb-fixed-height | Load the component's view | The breadcrumb's height equals the navigation row's, which is `28` |
 | devc-030 | content-spans-container-width | Load the component's view | Both the breadcrumb's and the hosted content's leading/trailing edges pin to the stack's leading/trailing edges |
 | devc-031 | root-view-initial-frame | Load the component's view | The returned root view's initial position and size is `(0, 0, 520, 424)`; the stack's top/bottom/leading/trailing edges pin to the root view's edges |
 | devc-032 | content-uses-themed-root | Inspect the hosted content's root-view wrapping | The shared theming root is applied — verified by code inspection; this wrapping cannot be introspected by an automated test |
@@ -267,8 +267,10 @@ Not applicable: no logging call appears anywhere in this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift` | confirmed (1.3.0) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/BackForwardControl.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/BackForwardControl.swift` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MarkdownPane/MarkdownPaneViewController.swift` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -313,4 +315,4 @@ The `screen-reader-support` status is partial: the reset button's and each toggl
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/documents/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns (passed) and unit-test-coverage (partial) compliance rows. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
-| 1.3.0 | 2026-11-14 | Mike Fullerton | Recent-documents menu between back and forward |
+| 2.0.0 | 2026-11-15 | Mike Fullerton | Recent-documents menu between back and forward; navigation-bar-spans-the-pane, navigation-row-height, back-forward-is-outlined and markdown-opens-on-single-preview; the breadcrumb takes the 28-point navigation row's height inside the navigation bar (breadcrumb-fixed-height, breadcrumb-above-content, content-spans-container-width, devc-028 and devc-029 updated). |

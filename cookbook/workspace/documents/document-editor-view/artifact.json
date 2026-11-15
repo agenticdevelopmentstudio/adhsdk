@@ -4,11 +4,11 @@
     "id": "4205c688-865a-4d74-890d-f803ee66fdcb",
     "title": "Document Editor",
     "type": "ingredient",
-    "version": "1.3.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-11-14",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2cc960ce87adc6db",
+  "synced": "816658f65bca4014",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

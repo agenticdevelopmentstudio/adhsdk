@@ -26,9 +26,43 @@
 - **front-window-controller-fallback-chain**: The frontmost-window-controller
   lookup MUST return, in order: the window controller of whichever window
   currently has key status; failing that, the first of this manager's
-  window controllers found among the app's currently ordered windows;
-  failing that, the controller for the most recently opened project —
-  returning the first of the three that resolves to a value.
+  window controllers found among the app's visible windows, front to back;
+  failing that, the window each window group shows, the front group first
+  and then the other groups from the most recently made; failing that, the
+  controller for the most recently opened project that belongs to no group
+  — returning the first that resolves to a value.
+- **front-workspace-window-skips-document-windows**: The front-workspace
+  lookup MUST walk the same chain as **front-window-controller-fallback-chain**
+  but pass over every Document window at each step, so a Document window in
+  front yields the next window that can hold any pane, or nothing when
+  there is none. What splits a pane into the front window, or roots
+  extensions at its folder, MUST use this lookup.
+- **is-document-window-by-controller**: Asking whether a window controller
+  is a Document window's MUST answer true only for a controller this
+  manager holds whose project id names an open Document window, of either
+  sort; a controller it does not hold MUST answer false.
+- **standalone-rows-one-row-per-canonical-path**: The standalone window
+  rows helper (shared by File Browser and Document windows) MUST look a
+  window's row up by its path and its kind together, MUST insert a row of
+  that kind the first time a path is asked for, named by the caller or,
+  failing that, by the path's last component (the path itself for the
+  root), and MUST spell every path canonically first, so a symlink and its
+  target, or a path and its resolved form, are one row and one window.
+- **standalone-rows-discard-clears-saved-window-state**: Discarding a
+  standalone row MUST delete the row, whose tabs, layout and pane state go
+  with it by cascade, and MUST clear the saved frame and visibility of the
+  window id derived from the row's id; a failed delete MUST be logged and
+  MUST NOT stop the window state from being cleared.
+- **standalone-rows-forgotten-rows-discarded-at-launch**: Discarding
+  forgotten rows MUST discard every row of the helper's kind whose path is
+  not in that kind's restore list, and MUST run at launch before any window
+  of that kind is open; a failure to list the rows MUST be logged and
+  discard nothing.
+- **standalone-rows-restore-list**: The restore list MUST hold the paths
+  whose windows of the kind reopen at launch, in the order they were first
+  remembered; remembering a path already in it and forgetting one not in it
+  MUST change nothing, and a kind with no restore-list setting MUST report
+  an empty list and ignore both.
 - **open-workspaces-derived**: The open-workspaces list and the
   open-window-controllers list MUST both be computed by mapping the
   open-order list through the open-controllers table, filtering out any

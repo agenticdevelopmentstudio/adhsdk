@@ -169,14 +169,18 @@ address directly.
   show no pane header (title, window controls, gear) above its panes;
   with it, the default, every pane keeps its header.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
-- **title-document-kinds**: For a repository of a Document kind the window
-  title MUST be the project's display name (the file's name for a
+- **title-document-kinds**: For a repository of a Document kind, while the
+  owner has supplied no focused-document URL (see
+  **title-follows-the-focused-document**, which takes precedence), the
+  window title MUST be the project's display name (the file's name for a
   single-file Document window, the row's name for the Document tabs
   window), never the directory-derived `"Files: <directory>"` title, and it
   MUST be set once per root directory like every other title.
-- **title-breadcrumb-document-file**: For a single-file Document window the
-  title breadcrumb's file URL MUST be the repository's path, which is the
-  file itself; for every other kind it MUST be the root directory.
+- **title-breadcrumb-document-file**: While the owner has supplied no
+  focused-document URL (see **title-follows-the-focused-document**), the
+  title breadcrumb's file URL MUST be the repository's path for a
+  single-file Document window, which is the file itself, and the root
+  directory for every other kind.
 - **footer-is-optional**: The window MUST be creatable without its footer bar, in which case the footer is hidden and the content runs to the window's bottom edge; the footer MUST be shown by default.
 ## Appearance
 
@@ -493,6 +497,7 @@ Not applicable: no logging calls appear anywhere in this component.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` | confirmed (1.3.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -609,4 +614,4 @@ hardcoded-literal inventory in Localization.
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
-| 1.3.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Document windows: title-document-kinds and title-breadcrumb-document-file, then title-sits-in-the-toolbar, title-follows-the-focused-document and pane-chrome-is-optional, then footer-is-optional; the Document-kind title and title-breadcrumb rules apply only while no focused document is supplied. |

@@ -58,6 +58,7 @@
 | ctpvc-050 | focus-check-walks-hierarchy | View loaded; the window's focused element is nested inside this pane's view | The focus-containment check returns true |
 | ctpvc-050b | focus-check-walks-hierarchy | View loaded; the window's focused element belongs to a different pane | The focus-containment check returns false |
 | ctpvc-051 | title-bar-bottom-constant | Read `titleBarBottom` | Equals 28 (2pt border inset + 26pt title bar height) |
-| ctpvc-052 | active-pane-cue-is-color-only | Compare the backdrop's drawn border for the active pane vs. an inactive one | `borderWidth` is 2 in both; only `borderColor` differs |
+| ctpvc-052 | active-pane-cue-is-color-only | With pane outlines on, compare the backdrop's drawn border for the active pane vs. an inactive one | `borderWidth` is 2 in both; only `borderColor` differs |
 | ctpvc-053 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
+| ctpvc-054 | outline-follows-the-owner | Create a leaf pane in a split whose pane outlines are switched off, then switch them on | While off, `borderWidth` is 0 for the pane, active or not; once on, it is 2 |
 

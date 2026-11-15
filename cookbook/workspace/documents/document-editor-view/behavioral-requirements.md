@@ -41,9 +41,9 @@
 
 ### Layout & Content Hosting
 
-- **breadcrumb-above-content**: The component's view MUST arrange the breadcrumb directly above the hosted editor content in a vertical stack with 0 spacing between them and a fill distribution.
-- **breadcrumb-fixed-height**: The breadcrumb MUST be constrained to a fixed height of `24` points.
-- **content-spans-container-width**: The breadcrumb and the hosted editor content MUST each have their leading and trailing edges pinned to the containing stack's leading and trailing edges.
+- **breadcrumb-above-content**: The component's view MUST arrange the navigation bar, which holds the breadcrumb, directly above the hosted editor content in a vertical stack with 0 spacing between them and a fill distribution.
+- **breadcrumb-fixed-height**: The breadcrumb MUST be constrained to the navigation row's height (see **navigation-row-height**).
+- **content-spans-container-width**: The navigation bar and the hosted editor content MUST each have their leading and trailing edges pinned to the containing stack's leading and trailing edges.
 - **root-view-initial-frame**: The component's root view MUST be created with an initial size of `520`×`424` points, with the stack pinned to all four of the root view's edges.
 - **content-uses-themed-root**: The hosted content MUST be wrapped with the shared theming root so it reads the app's theme palette and paints the theme's window background.
 - **hosts-file-editor-view**: The component MUST host a file editor, supplying it the current selection, the display-option overrides, the document store, the save scheduler, the language services, and an open-file callback that forwards its URL to the open-request callback.
@@ -63,6 +63,6 @@
   showing MUST do nothing.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 - **navigation-bar-spans-the-pane**: The component MUST take the pane's content spacing itself (the pane pins it flush) and apply it only to the editor area beneath the navigation bar, so the bar runs the pane's full width from its top edge with its one-point outline-colored line beneath it, and the code editor and the Markdown editor are held off the remaining edges by that spacing. A change to the spacing MUST be applied again without accumulating.
-- **navigation-row-height**: The navigation row MUST be `28` points high, superseding the `24` points of `breadcrumb-fixed-height`.
+- **navigation-row-height**: The navigation row (back/forward, the recent-documents menu, then the breadcrumb) MUST be `28` points high.
 - **back-forward-is-outlined**: The back/forward control MUST carry a one-point outline in the theme's outline color with a `6`-point corner radius round all of its segments, marking it as one enclosed tool in the bar, and MUST follow theme changes.
 - **markdown-opens-on-single-preview**: When its owner asks for it, the component MUST put its Markdown editor in the single-pane layout on the preview, whatever layout and pane were last chosen anywhere else, and MUST NOT record that as the user's choice; a layout or pane the user then chooses in the editor MUST be recorded as usual. The Document tabs container MUST pass the request to every editor it holds or later creates.

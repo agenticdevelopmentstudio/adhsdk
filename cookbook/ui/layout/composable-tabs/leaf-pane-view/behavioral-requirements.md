@@ -183,7 +183,8 @@
 - **active-pane-cue-is-color-only**: As built, the pane's backdrop
   distinguishes the active pane from an inactive one by border color alone
   (`projectActivePaneOutline` vs. `projectPaneOutline`), with a constant
-  2pt border width in both states. This describes the current
+  2pt border width in both states while pane outlines are on (see
+  **outline-follows-the-owner** for when they are off). This describes the current
   implementation; it is not a constraint against adding a secondary cue —
   see Differentiate Without Color in Accessibility Options, which records
   that no such cue is implemented.

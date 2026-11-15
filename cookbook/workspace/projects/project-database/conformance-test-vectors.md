@@ -14,4 +14,4 @@
 | git-client-projects-project-database-011 | delete-cascades | Insert a repository, set one setting on it, then delete it. | Looking it up by id returns nothing; reading its settings returns an empty map. |
 | git-client-projects-project-database-012 | default-path-format, default-path-defaults | Compute the default path for home directory "/tmp/home" and token "COFFEEgrinder", and again for token "CoffeeGrinder". | Both calls return the identical string "/tmp/home/.coffeegrinder/Projects.db". |
 | git-client-projects-project-database-013 | init-creates-parent-directory | Construct this component with a path whose parent directory does not yet exist. | Construction succeeds, and the parent directory exists on disk afterward. |
-
+| git-client-projects-project-database-014 | repos-of-a-kind | Insert two File Browser rows, one Document row and one project row, then list the repositories of the File Browser kind. | Exactly the two File Browser rows are returned |

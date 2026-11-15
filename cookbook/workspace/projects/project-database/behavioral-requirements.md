@@ -150,6 +150,9 @@
   design rationale, "one [the scanner] did not [find] is deleted, not
   filtered out here" — listing performs no filtering by recency, missing
   state, or any other criterion.
+- **repos-of-a-kind**: Listing the repositories of one kind MUST return
+  every row whose `kind` equals that kind, in no promised order, and no row
+  of any other kind.
 - **repo-lookup-by-id-and-path**: Looking up a repository by id MUST
   filter by `id = ?` bound to the id's string form, and looking up by path
   MUST filter by `path = ?` bound to the given string; both MUST return

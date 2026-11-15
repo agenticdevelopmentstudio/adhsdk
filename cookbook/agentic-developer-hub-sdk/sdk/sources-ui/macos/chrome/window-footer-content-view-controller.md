@@ -136,7 +136,8 @@ Not applicable. This component performs no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/WindowFooterContentViewController.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/WindowFooterContentViewController.swift` | confirmed (1.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/WindowFooterContentViewController.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 

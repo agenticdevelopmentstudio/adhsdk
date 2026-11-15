@@ -87,9 +87,43 @@ property and method is confined there by that declaration alone.
 - **front-window-controller-fallback-chain**: The frontmost-window-controller
   lookup MUST return, in order: the window controller of whichever window
   currently has key status; failing that, the first of this manager's
-  window controllers found among the app's currently ordered windows;
-  failing that, the controller for the most recently opened project —
-  returning the first of the three that resolves to a value.
+  window controllers found among the app's visible windows, front to back;
+  failing that, the window each window group shows, the front group first
+  and then the other groups from the most recently made; failing that, the
+  controller for the most recently opened project that belongs to no group
+  — returning the first that resolves to a value.
+- **front-workspace-window-skips-document-windows**: The front-workspace
+  lookup MUST walk the same chain as **front-window-controller-fallback-chain**
+  but pass over every Document window at each step, so a Document window in
+  front yields the next window that can hold any pane, or nothing when
+  there is none. What splits a pane into the front window, or roots
+  extensions at its folder, MUST use this lookup.
+- **is-document-window-by-controller**: Asking whether a window controller
+  is a Document window's MUST answer true only for a controller this
+  manager holds whose project id names an open Document window, of either
+  sort; a controller it does not hold MUST answer false.
+- **standalone-rows-one-row-per-canonical-path**: The standalone window
+  rows helper (shared by File Browser and Document windows) MUST look a
+  window's row up by its path and its kind together, MUST insert a row of
+  that kind the first time a path is asked for, named by the caller or,
+  failing that, by the path's last component (the path itself for the
+  root), and MUST spell every path canonically first, so a symlink and its
+  target, or a path and its resolved form, are one row and one window.
+- **standalone-rows-discard-clears-saved-window-state**: Discarding a
+  standalone row MUST delete the row, whose tabs, layout and pane state go
+  with it by cascade, and MUST clear the saved frame and visibility of the
+  window id derived from the row's id; a failed delete MUST be logged and
+  MUST NOT stop the window state from being cleared.
+- **standalone-rows-forgotten-rows-discarded-at-launch**: Discarding
+  forgotten rows MUST discard every row of the helper's kind whose path is
+  not in that kind's restore list, and MUST run at launch before any window
+  of that kind is open; a failure to list the rows MUST be logged and
+  discard nothing.
+- **standalone-rows-restore-list**: The restore list MUST hold the paths
+  whose windows of the kind reopen at launch, in the order they were first
+  remembered; remembering a path already in it and forgetting one not in it
+  MUST change nothing, and a kind with no restore-list setting MUST report
+  an empty list and ignore both.
 - **open-workspaces-derived**: The open-workspaces list and the
   open-window-controllers list MUST both be computed by mapping the
   open-order list through the open-controllers table, filtering out any
@@ -301,7 +335,9 @@ of which this file renders itself.
 | git-client-projects-project-window-manager-011 | restore-plan-is-pure, restore-forgets-missing-folders, restore-reopens-existing-folders | Not present in the given test suite; synthesized from the source. Compute the restore plan for three repositories a, b, c, where a and b were open at last quit and only a and c still exist on disk. | the reopen set is `{a}` and the forget set is `{b}`; c (never flagged open) appears in neither set — synthesized, no dedicated test in the given suite |
 | git-client-projects-project-window-manager-012 | shutdown-all-language-services-runs-concurrently, shutdown-all-language-services-drains-pending-teardowns | Not present in the given test suite; synthesized from the source together with the pending-teardowns registry's own drain guarantee. Open two projects with distinct counting stand-ins for language services, close one of them (starting its teardown through the pending-teardowns registry), then immediately shut down all language services before that teardown would otherwise finish on its own. | both counting stand-ins report exactly one shutdown call once shutting down all language services returns — the closed project's already-detached teardown is still waited for, not just the still-open project's — synthesized, no dedicated test in the given suite |
 | git-client-projects-project-window-manager-013 | confines-to-ui-thread | Use the component from a thread other than the UI thread | The use is rejected, at build time or by a runtime check; the component's state is unchanged |
-
+| git-client-projects-project-window-manager-014 | front-workspace-window-skips-document-windows, is-document-window-by-controller | Open a project window, then open a Document window and make it key. | The front-window lookup returns the Document window's controller; the front-workspace lookup returns the project window's; asking whether each is a Document window answers true and false respectively |
+| git-client-projects-project-window-manager-015 | standalone-rows-one-row-per-canonical-path | Ask the File Browser rows helper for the row at a folder, then again through a symlink to that folder. | Both calls return the same row, and one row of that kind exists for the folder |
+| git-client-projects-project-window-manager-016 | standalone-rows-forgotten-rows-discarded-at-launch, standalone-rows-restore-list | With Document rows at paths a and b and only a remembered, discard forgotten rows. | The row at a remains and the row at b is gone, along with its saved window frame |
 ## Edge Cases
 
 - **Null and empty input**: The language-services factory and the command
@@ -514,6 +550,8 @@ bundle identifier; category is this component's name.
 | Platform | Location | Conformance |
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift` | confirmed (1.2.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/StandaloneWindowRows.swift` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -635,7 +673,7 @@ anywhere in this file.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.2.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows |
+| 1.2.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows; the front-window chain matches the visible-window and window-group lookup; the front-workspace lookup skips Document windows (is-document-window-by-controller); the standalone window rows shared by File Browser and Document windows (vectors 014-016). |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Spec-local UI-thread confinement ids folded into the shared confines-to-ui-thread requirement, with a test vector; scope detail is in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

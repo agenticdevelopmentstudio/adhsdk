@@ -122,12 +122,16 @@
   show no pane header (title, window controls, gear) above its panes;
   with it, the default, every pane keeps its header.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
-- **title-document-kinds**: For a repository of a Document kind the window
-  title MUST be the project's display name (the file's name for a
+- **title-document-kinds**: For a repository of a Document kind, while the
+  owner has supplied no focused-document URL (see
+  **title-follows-the-focused-document**, which takes precedence), the
+  window title MUST be the project's display name (the file's name for a
   single-file Document window, the row's name for the Document tabs
   window), never the directory-derived `"Files: <directory>"` title, and it
   MUST be set once per root directory like every other title.
-- **title-breadcrumb-document-file**: For a single-file Document window the
-  title breadcrumb's file URL MUST be the repository's path, which is the
-  file itself; for every other kind it MUST be the root directory.
+- **title-breadcrumb-document-file**: While the owner has supplied no
+  focused-document URL (see **title-follows-the-focused-document**), the
+  title breadcrumb's file URL MUST be the repository's path for a
+  single-file Document window, which is the file itself, and the root
+  directory for every other kind.
 - **footer-is-optional**: The window MUST be creatable without its footer bar, in which case the footer is hidden and the content runs to the window's bottom edge; the footer MUST be shown by default.

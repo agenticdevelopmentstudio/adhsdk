@@ -36,7 +36,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:5d136bc1d896379915a3cb478c43df5795f82f715ac413110a22adb10b19cf9b",
+            "state": "confirmed",
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/",
           "platform": "apple"
@@ -312,7 +314,7 @@
           "conformance": {
             "hash": "sha256:08bff327dfeda745604caa50b3ead42cc7d72921922e613c0911fdf021decd43",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift",
           "platform": "apple"
@@ -2784,9 +2786,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:5f0c4cbacf519d94f12deaa1e1e880c1a2d9d8fc805a1dc26a1ed87437a11cff",
+            "hash": "sha256:ef6686d27204c145709ae9df1f9372d6b8834d77ef494f2d88fa7c277c530d15",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift",
           "platform": "apple"
@@ -2795,16 +2797,16 @@
           "conformance": {
             "hash": "sha256:37091826732e552ea9292bac82c141820f9fe8bdf5eacafb02fcf4f3fbc9c080",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/BackForwardControl.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "hash": "sha256:5f0c4cbacf519d94f12deaa1e1e880c1a2d9d8fc805a1dc26a1ed87437a11cff",
+            "hash": "sha256:ef6686d27204c145709ae9df1f9372d6b8834d77ef494f2d88fa7c277c530d15",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift",
           "platform": "macos"
@@ -2813,7 +2815,7 @@
           "conformance": {
             "hash": "sha256:ad836e7aae78aa7a1983dd5cdeecde73372dab15a0f06ec5949dad160bae3cd8",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MarkdownPane/MarkdownPaneViewController.swift",
           "platform": "macos"
@@ -3582,42 +3584,52 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:ac4bcfafb4cae5a7663fa7e484463df54382bc0623b05b180486ecdda6bb1a33",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:eaec56e3cf9badadf3ddbf06b3b7bbba640a62a26731f8c0c95dd44a606f2d50",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerConfiguration.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:fd8f0baa6fc5557fba13e257dc82aa528843cf81b16e9c873675e464411267f5",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4165e7f3a1bdc0e8651abb59af2fe63ea56201c75038a4fb41cb77d2cead7ab0",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4024d26c42e4e07fc7563abd6c06fa393557591f41b594a3464c1dfb06d1755b",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/SubprocessTransport.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "hash": "sha256:4884e0fca8f9cf9dc19d7458f3fbd17a98e1bcb643be8fd8327c9ee655865a59",
+            "hash": "sha256:26bd9ce2299f1d095f41d6f0bf1563cfc9c8607600a6ad618983084506ce2426",
             "state": "confirmed",
             "version": "1.3.0"
           },
@@ -3751,7 +3763,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:a052ef1cc2c50109c96715deb6393e916d08dd910c3b793a4cdae9b074447879",
+            "hash": "sha256:0b9274eb436e05b86f786854613c4bd79488b7f0053df0d2657ae368257c3c28",
             "state": "confirmed",
             "version": "1.3.0"
           },
@@ -3760,7 +3772,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:a052ef1cc2c50109c96715deb6393e916d08dd910c3b793a4cdae9b074447879",
+            "hash": "sha256:0b9274eb436e05b86f786854613c4bd79488b7f0053df0d2657ae368257c3c28",
             "state": "confirmed",
             "version": "1.3.0"
           },
@@ -5596,7 +5608,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:2a32cd8da93fb74ce12a9bc048d2c7fa68ecc4931949e9ef08e57073b11849d4",
+            "hash": "sha256:a0a3908f5235173ae4f1862a36afb2bf9a3670e93fc8fe814e9865bd73f74709",
             "state": "confirmed",
             "version": "1.2.0"
           },
@@ -5605,11 +5617,20 @@
         },
         {
           "conformance": {
-            "hash": "sha256:2a32cd8da93fb74ce12a9bc048d2c7fa68ecc4931949e9ef08e57073b11849d4",
+            "hash": "sha256:a0a3908f5235173ae4f1862a36afb2bf9a3670e93fc8fe814e9865bd73f74709",
             "state": "confirmed",
             "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:b8871209bcacd300bf8dc0c5a53f996de2b933f64197406a75de46ed0ccdc0ca",
+            "state": "confirmed",
+            "version": "1.2.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/StandaloneWindowRows.swift",
           "platform": "macos"
         }
       ],
@@ -8582,7 +8603,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:ab96a65db15ca613ed5e260572ecd2c46fb91b157bee70a33ee3a9db9a8caad6",
+            "state": "confirmed",
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift",
           "platform": "apple"
@@ -8803,15 +8826,7 @@
       "rdid": "adhsdk.ingredient.ui.settings.rows.path-view"
     },
     "c79094d2-1f4b-4c3f-8005-8fb095fb1b40": {
-      "implementations": [
-        {
-          "conformance": {
-            "state": "unverified"
-          },
-          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift",
-          "platform": "apple"
-        }
-      ],
+      "implementations": [],
       "kind": "ingredient",
       "path": "workspace/documents/breadcrumb-popover-view",
       "rdid": "adhsdk.ingredient.workspace.documents.breadcrumb-popover-view"

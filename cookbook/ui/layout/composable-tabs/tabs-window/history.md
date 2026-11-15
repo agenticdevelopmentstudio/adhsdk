@@ -6,4 +6,4 @@
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/composable-tabs/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
-| 1.3.0 | 2026-11-14 | Mike Fullerton | Document window kinds: titles, kinds and standalone windows |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | Document windows: title-document-kinds and title-breadcrumb-document-file, then title-sits-in-the-toolbar, title-follows-the-focused-document and pane-chrome-is-optional, then footer-is-optional; the Document-kind title and title-breadcrumb rules apply only while no focused document is supplied. |

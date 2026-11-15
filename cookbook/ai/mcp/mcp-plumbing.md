@@ -148,7 +148,7 @@ The host MCP server
 The HTTP endpoint
 
 - **http-endpoint-stop-grace-default**: Stopping the HTTP endpoint MUST take a grace, the time a response already being written is given to finish, and that grace MUST default to 1 second.
-- **http-endpoint-stop-takes-the-whole-grace**: Stopping MUST close the listening socket, hand the HTTP server the grace as its stop timeout, cancel the endpoint's own run task and then stop the host MCP server, in that order; because the HTTP server's run task never ends by itself, a stop takes the whole grace, so a caller that must not wait (an app that is quitting) MUST pass a grace of 0, which cancels the server at once.
+- **http-endpoint-stop-waits-only-for-in-flight-work**: Stopping MUST close the listening socket, wait for the requests already being handled to finish, but no longer than the grace, then stop the HTTP server with a write margin, cancel the endpoint's own run task and stop the host MCP server, in that order. The write margin, the time a response that has just been returned is given to reach the client, MUST be the smaller of 0.1 seconds and what remains of the grace when every request finished in time, and 0 when the grace ran out first. A stop with nothing in flight MUST therefore finish at once, so the grace is an upper bound, never a fixed wait; a caller that must not wait at all (an app that is quitting) passes a grace of 0.
 - **http-endpoint-stop-is-idempotent**: Stopping an endpoint that is idle or already stopping MUST do nothing; stopping one that is still starting MUST make that start tear everything down and throw its stopped-while-starting error.
 ## Appearance
 
@@ -280,11 +280,11 @@ The client itself has its own logger, but the given source contains no call site
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerConfiguration.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/SubprocessTransport.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerConfiguration.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/SubprocessTransport.swift` | confirmed (1.3.0) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPHTTPEndpoint.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
@@ -332,7 +332,7 @@ Two further gaps that qualify these findings are recorded beside the requirement
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.3.0 | 2026-11-14 | Mike Fullerton | The HTTP endpoint's stop grace |
+| 1.3.0 | 2026-11-14 | Mike Fullerton | The HTTP endpoint's stop grace (http-endpoint-stop-grace-default); a stop waits only for in-flight requests, up to the grace, with a write margin of at most 0.1 s, and finishes at once when idle (http-endpoint-stop-waits-only-for-in-flight-work). |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the tool-list-refresh-failure NEEDS REVIEW marker as current behavior plus a pending Design Decision; reworded host-server-ignores-tool-arguments as a MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/mcp/. |

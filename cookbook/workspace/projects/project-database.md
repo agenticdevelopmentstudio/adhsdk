@@ -2,11 +2,11 @@
 id: c212ea39-10e7-4146-89dd-36edb3b3455a
 title: "Project Database"
 type: ingredient
-version: 1.2.1
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -206,6 +206,9 @@ bookkeeping under its own table name so the two chains cannot collide.
   design rationale, "one [the scanner] did not [find] is deleted, not
   filtered out here" — listing performs no filtering by recency, missing
   state, or any other criterion.
+- **repos-of-a-kind**: Listing the repositories of one kind MUST return
+  every row whose `kind` equals that kind, in no promised order, and no row
+  of any other kind.
 - **repo-lookup-by-id-and-path**: Looking up a repository by id MUST
   filter by `id = ?` bound to the id's string form, and looking up by path
   MUST filter by `path = ?` bound to the given string; both MUST return
@@ -312,7 +315,7 @@ visual component.
 | git-client-projects-project-database-011 | delete-cascades | Insert a repository, set one setting on it, then delete it. | Looking it up by id returns nothing; reading its settings returns an empty map. |
 | git-client-projects-project-database-012 | default-path-format, default-path-defaults | Compute the default path for home directory "/tmp/home" and token "COFFEEgrinder", and again for token "CoffeeGrinder". | Both calls return the identical string "/tmp/home/.coffeegrinder/Projects.db". |
 | git-client-projects-project-database-013 | init-creates-parent-directory | Construct this component with a path whose parent directory does not yet exist. | Construction succeeds, and the parent directory exists on disk afterward. |
-
+| git-client-projects-project-database-014 | repos-of-a-kind | Insert two File Browser rows, one Document row and one project row, then list the repositories of the File Browser kind. | Exactly the two File Browser rows are returned |
 ## Edge Cases
 
 - **Null and empty input (MUST)**: An empty path argument to construction
@@ -515,7 +518,7 @@ caller through a thrown error, not written to a log by this file.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectDatabase.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -573,3 +576,4 @@ Notes: separation-of-concerns passes because `ProjectDatabase.swift` holds only 
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to workspace/projects/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the malformed-row NEEDS REVIEW marker against source: the row guard silently drops rows with a bad id or null path; restated as current behavior with a pending decision. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Swift-only constructs in normative sections restated as platform-neutral behavior; the Apple mechanism is in Platform Notes. |
+| 1.3.0 | 2026-11-15 | Mike Fullerton | Adds repos-of-a-kind and vector 014 |

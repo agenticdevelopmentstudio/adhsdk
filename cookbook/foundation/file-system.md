@@ -2,11 +2,11 @@
 id: 016f5ba0-f4ee-4b39-b1a2-83629768acdd
 title: "File System"
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -288,7 +288,23 @@ original error otherwise.
   operation's emptiness check and removal are each atomic only relative to
   that one instance's queue, never relative to a second instance or process
   racing the same path in between.
-
+- **open-location-resolves-typed-text**: Resolving the text typed into
+  Open Location MUST trim surrounding whitespace and then answer: a web
+  address for an `http` or `https` URL with a non-empty host; for a `file`
+  URL, a path starting with `~` (expanded to the home directory) or a path
+  starting with `/`, a directory or a file when the path exists, and invalid
+  when it does not; a web address over `https` for text with no whitespace
+  whose host part (before the first `/`) contains a dot that is neither its
+  first nor last character; and invalid for anything else, empty text
+  included.
+- **open-location-touches-only-existence**: Resolving Open Location text
+  MUST do nothing but ask the file system whether a path exists and whether
+  it is a directory, so the rules are testable without a window; a
+  resolved file or directory MUST be the standardized absolute path.
+- **open-location-file-opens-in-a-document-window**: The host MUST open a
+  resolved web address in a web browser, a directory in a File Browser
+  window, a file in a Document window (where the single-document tab
+  setting says it opens), and MUST refuse invalid text with an alert.
 ## Appearance
 
 Not applicable — this is a file-system service, not a visual component.
@@ -335,7 +351,7 @@ Not applicable — this is a file-system service, not a visual component.
 | file-system-028 | rename-overwrite-sequence | Perform the rename operation with the overwrite flag true, where the destination already names a distinct file. | Succeeds; the destination now holds the source's former contents, and the source no longer exists. |
 | file-system-029 | rename-hard-link-and-inode-identity | Perform the rename operation with the overwrite flag true, where the destination is a hard link to a different name for the very inode already at the source's eventual destination shape. | The other name is replaced correctly rather than treated as identical to the source. |
 | file-system-030 | calls-serialize-on-the-queue | Perform eight concurrent read-file operations into one service instance, each against a different file with distinct contents. | Each caller's call returns exactly its own file's bytes, with none mixed up. |
-
+| file-system-031 | open-location-resolves-typed-text | Resolve `  https://example.com  `, `example.com/page`, `~/` (an existing directory), the path of an existing file, `/no/such/path`, `localhost`, and an empty string. | Web `https://example.com`; web `https://example.com/page`; a directory; a file; invalid; invalid; invalid |
 ## Edge Cases
 
 - **Null and empty input**: The read-file, read-directory, stat, delete,
@@ -605,7 +621,7 @@ at its own call site.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/FileSystem/` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -737,6 +753,7 @@ where it already was (`rename-case-only-and-self-renames-succeed`).
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-15 | Mike Fullerton | Describes Open Location, which lives in the same directory: how typed text resolves (open-location-resolves-typed-text, open-location-touches-only-existence, vector file-system-031) and that a file opens in a Document window (open-location-file-opens-in-a-document-window) |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

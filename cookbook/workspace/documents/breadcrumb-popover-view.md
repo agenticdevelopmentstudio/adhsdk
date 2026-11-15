@@ -450,12 +450,6 @@ Not applicable: source contains no logging call anywhere in this file.
   in the `ItemClick`/`SelectionChanged` handler, mirroring
   `guard !node.isDirectory`.
 
-## Reference Implementations
-
-| Platform | Location | Conformance |
-|----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/BreadcrumbPopoverViewController.swift` | unverified |
-
 ## Design Decisions
 
 - **Decision**: Give the popover's root view an explicit pixel frame
