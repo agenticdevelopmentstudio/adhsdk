@@ -41,7 +41,9 @@ public enum ExtensionWebviewPanePlacer {
         _ panel: WebviewPanelViewController,
         using serializer: WebviewPanelSerializer
     ) -> ExtensionWebviewPlacement? {
-        guard let controller = ProjectWindowManager.shared.frontWindowController else {
+        // Never a Document window: its spec has no place for a pane it did
+        // not make, so the panel would become a placeholder on the next load.
+        guard let controller = ProjectWindowManager.shared.frontWorkspaceWindowController else {
             return nil
         }
         // The anchor is the pane the user is working in, falling back to the
