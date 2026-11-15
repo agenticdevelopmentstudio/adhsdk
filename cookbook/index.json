@@ -16477,9 +16477,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c839b28d5de6b25a39b3c2175baac2dd1c74fcd6b1ecb5e96c4c7e6d2f63190e",
+            "hash": "sha256:b4eb90f5d25f9ca0119f3720d7e39076f6d2904c06a5c6e621f7d68530660c77",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/",
           "platform": "apple"
@@ -16488,7 +16488,7 @@
           "conformance": {
             "hash": "sha256:89c5b6d54c6bf328fc8223f850d2f26c9978a2023b50ec769ea4f20075d67a4d",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitHistorySearch.swift",
           "platform": "apple"
@@ -16497,7 +16497,7 @@
           "conformance": {
             "hash": "sha256:593070f97af18f3629fd3c20443251a80859a29d88575ab9c431f471ae7f984f",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileListItem.swift",
           "platform": "apple"
@@ -16506,7 +16506,7 @@
           "conformance": {
             "hash": "sha256:a4550a6cf4acabf6fbaf93bfa97f6577c8421e960012aba4cbed3a68d1350bd3",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffLineModels.swift",
           "platform": "macos"
@@ -16515,16 +16515,16 @@
           "conformance": {
             "hash": "sha256:58255e34a72b3d6aa1dbb75a65d22a2b13c34b76731177e8e9cec56256fef780",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitSyntaxColoring.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "hash": "sha256:9703ce1a5f68cfeb0a6b045af021428b9e6aeb99bbbde4592b3847c2f0610dcc",
+            "hash": "sha256:3bff1ee5748151ac23afb857043053a3d51d7abe0b552af5b05e51af92b7994d",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitDiffViewController.swift",
           "platform": "macos"
@@ -16533,7 +16533,7 @@
           "conformance": {
             "hash": "sha256:cabd6c13d64cc0be5f228ba877652aff1a8d7744343b59a836643d88621bfba3",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitBlameViewController.swift",
           "platform": "macos"
@@ -16542,7 +16542,7 @@
           "conformance": {
             "hash": "sha256:52d9045038dc81aaa012a0392663f9e515b26ed7bd3850e957ab90d16ccd5fba",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Views/GitFileHistoryViewController.swift",
           "platform": "macos"
@@ -16551,7 +16551,7 @@
           "conformance": {
             "hash": "sha256:b812e8ef8c5eff5b36bf3df3faa473a1df51eba93e6bd8b715bcfcec3d54f25a",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Theme/ThemedViews.swift",
           "platform": "apple"
@@ -16560,7 +16560,7 @@
           "conformance": {
             "hash": "sha256:6f51fe0eb4d35f7ec88e067e89e52a6f7193178281494c5423c51a986665b3ae",
             "state": "confirmed",
-            "version": "1.8.0"
+            "version": "1.8.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileStatus.swift",
           "platform": "apple"

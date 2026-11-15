@@ -1039,6 +1039,29 @@ struct GitWindowSessionActionTests {
         #expect(unstaged.hunks.first?.lines.contains { $0.kind == .added && $0.text == "eighteen" } == true)
     }
 
+    @Test("the removal alone, then the addition alone, of a changed line stage on their own")
+    func stageHalfOfAChangedPair() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "f.txt", "a\nold\nc\n", at: 100)
+        try repository.write("a\nnew\nc\n", to: "f.txt")
+        let (model, session) = await makeSession(repository, presenter: StubPresenter())
+        let file = try await fileDiff(model, .unstaged(paths: ["f.txt"]))
+        let lines = file.hunks[0].lines
+        let removed = try #require(lines.firstIndex { $0.kind == .removed })
+
+        await act(session, .diff(.stage(GitPatchSelection(file: file, lines: [0: IndexSet([removed])]))))
+
+        #expect(try await repository.run(["show", ":f.txt"]) == "a\nc\n")
+        let afterRemoval = try await fileDiff(model, .unstaged(paths: ["f.txt"]))
+
+        let addedLine = try #require(afterRemoval.hunks[0].lines.firstIndex { $0.kind == .added })
+        await act(session, .diff(.stage(GitPatchSelection(file: afterRemoval,
+                                                          lines: [0: IndexSet([addedLine])]))))
+
+        #expect(try await repository.run(["show", ":f.txt"]) == "a\nnew\nc\n")
+    }
+
     @Test("Unstage Lines unstages only the selected lines")
     func unstageLinesFromTheDiff() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-actions")

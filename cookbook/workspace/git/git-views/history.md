@@ -14,3 +14,4 @@
 | 1.7.0 | 2026-11-14 | Mike Fullerton | Commit and ref menus: history row menu with a reset submenu and Copy SHA; branch, remote, remote header, tag and stash menus and double-click to check out in the sidebar; every action a GitCommitIntent or GitRefIntent sent to the delegate; vectors 062-068 |
 | 1.7.1 | 2026-11-14 | Mike Fullerton | Review fixes: the tag menu items carry tag.push and tag.delete |
 | 1.8.0 | 2026-11-15 | Mike Fullerton | Diff staging menu: line refs on each diff model; Stage, Unstage and Discard of the clicked hunk or the selected lines, each a GitDiffIntent sent to the delegate; no menu ignoring whitespace; vectors 069-072 |
+| 1.8.1 | 2026-11-15 | Mike Fullerton | Review fix: side by side, Lines reads only the clicked viewer's own side, so one half of a changed pair can be staged, unstaged or discarded alone; vector 073 |

@@ -481,17 +481,33 @@ struct GitDiffViewControllerTests {
         #expect(delegate.events == [.intent(.stage(.hunk(1, of: file))), .intent(.discard(.hunk(0, of: file)))])
     }
 
-    @Test("side by side, a selected row stages both its sides' lines, and a filler row's hunk is the one above")
+    @Test("side by side, a viewer's lines are its own side's alone, and a filler row's hunk is the one above")
     func sideBySideIntents() async {
         let (controller, delegate) = await Self.loaded(.staged(paths: ["a.swift"]), layout: "sideBySide")
         let file = Fixture.twoHunks()
         Self.fire(Self.item(Self.menu(controller.leftViewer, select: 2...6, click: 2), "unstageLines"))
+        Self.fire(Self.item(Self.menu(controller.rightViewer, select: 2...6, click: 6), "unstageLines"))
         Self.fire(Self.item(Self.menu(controller.leftViewer, click: 6), "unstageHunk"))
         #expect(delegate.events == [
-            .intent(.unstage(GitPatchSelection(file: file, lines: [0: IndexSet([1, 2]), 1: IndexSet([1])]))),
+            .intent(.unstage(GitPatchSelection(file: file, lines: [0: IndexSet([1])]))),
+            .intent(.unstage(GitPatchSelection(file: file, lines: [0: IndexSet([2]), 1: IndexSet([1])]))),
             .intent(.unstage(.hunk(1, of: file)))
         ])
         #expect(controller.leftViewer.selectedRows.isEmpty)
         #expect(controller.rightViewer.selectedRows.isEmpty)
+    }
+
+    @Test("side by side, the removal alone or the addition alone of a changed pair can be staged and discarded")
+    func sideBySideHalfOfAPair() async {
+        let (controller, delegate) = await Self.loaded(.unstaged(paths: ["a.swift"]), layout: "sideBySide")
+        let file = Fixture.twoHunks()
+        Self.fire(Self.item(Self.menu(controller.leftViewer, select: 2...2, click: 2), "stageLines"))
+        Self.fire(Self.item(Self.menu(controller.rightViewer, select: 2...2, click: 2), "stageLines"))
+        Self.fire(Self.item(Self.menu(controller.leftViewer, select: 2...2, click: 2), "discardLines"))
+        #expect(delegate.events == [
+            .intent(.stage(GitPatchSelection(file: file, lines: [0: IndexSet([1])]))),
+            .intent(.stage(GitPatchSelection(file: file, lines: [0: IndexSet([2])]))),
+            .intent(.discard(GitPatchSelection(file: file, lines: [0: IndexSet([1])])))
+        ])
     }
 }

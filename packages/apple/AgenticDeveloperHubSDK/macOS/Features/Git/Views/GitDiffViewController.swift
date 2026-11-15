@@ -402,40 +402,33 @@ public final class GitDiffViewController: NSViewController {
         return menu
     }
 
-    /// The line refs of the rows `viewer` shows: inline its own; side by side both sides',
-    /// whose rows are aligned, so a selected row stands for its removed and its added line.
-    private func refSets(for viewer: LineViewerViewController) -> [[GitDiffLineRef?]] {
-        if viewer === inlineViewer { return [inlineModel?.lineRefs ?? []] }
-        guard let sideModels else { return [] }
-        return [sideModels.left.lineRefs, sideModels.right.lineRefs]
+    /// The line refs of the rows `viewer` shows, its own side's alone: the two side-by-side
+    /// viewers keep separate selections, so the left one's rows stand for removed lines and
+    /// the right one's for added lines, never for the other side's partner.
+    private func lineRefs(for viewer: LineViewerViewController) -> [GitDiffLineRef?] {
+        if viewer === inlineViewer { return inlineModel?.lineRefs ?? [] }
+        if viewer === leftViewer { return sideModels?.left.lineRefs ?? [] }
+        return sideModels?.right.lineRefs ?? []
     }
 
     /// The hunk of row `row` of `viewer`: its own ref's, else (a filler) the nearest row
     /// above it with one.
     private func hunk(at row: Int, in viewer: LineViewerViewController) -> Int? {
-        let refs: [GitDiffLineRef?]
-        if viewer === inlineViewer {
-            refs = inlineModel?.lineRefs ?? []
-        } else if viewer === leftViewer {
-            refs = sideModels?.left.lineRefs ?? []
-        } else {
-            refs = sideModels?.right.lineRefs ?? []
-        }
+        let refs = lineRefs(for: viewer)
         guard refs.indices.contains(row) else { return nil }
         return refs[...row].last { $0 != nil }??.hunk
     }
 
-    /// Every added or removed line among `rows`, by hunk.
+    /// Every added or removed line among `viewer`'s selected `rows`, by hunk.
     private func selectedLines(_ rows: IndexSet, in viewer: LineViewerViewController,
                                of file: GitFileDiff) -> [Int: IndexSet] {
+        let refs = lineRefs(for: viewer)
         var lines: [Int: IndexSet] = [:]
-        for refs in refSets(for: viewer) {
-            for row in rows where refs.indices.contains(row) {
-                guard let ref = refs[row], let index = ref.line, file.hunks.indices.contains(ref.hunk),
-                      file.hunks[ref.hunk].lines.indices.contains(index),
-                      GitPatchBuilder.isChange(file.hunks[ref.hunk].lines[index]) else { continue }
-                lines[ref.hunk, default: IndexSet()].insert(index)
-            }
+        for row in rows where refs.indices.contains(row) {
+            guard let ref = refs[row], let index = ref.line, file.hunks.indices.contains(ref.hunk),
+                  file.hunks[ref.hunk].lines.indices.contains(index),
+                  GitPatchBuilder.isChange(file.hunks[ref.hunk].lines[index]) else { continue }
+            lines[ref.hunk, default: IndexSet()].insert(index)
         }
         return lines
     }
