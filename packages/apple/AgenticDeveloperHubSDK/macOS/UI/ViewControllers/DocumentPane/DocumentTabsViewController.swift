@@ -306,6 +306,19 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// Files compare by `canonicalFileURL`, so a symlink and the file it
     /// names are one tab and one buffer.
     public func show(_ url: URL) {
+        if selectTab(showing: url) { return }
+        if let editor = focusedEditor, editor.fileURL == nil {
+            editor.fileURL = url
+            return
+        }
+        openInNewTab(url)
+    }
+
+    /// Selects the tab whose editor shows `url`, and focuses that editor.
+    ///
+    /// - Returns: false, changing nothing, when no tab shows it.
+    @discardableResult
+    public func selectTab(showing url: URL) -> Bool {
         let target = url.canonicalFileURL
         for tab in tabs(on: .top) {
             guard let root = splitsByTabID[tab.id],
@@ -316,13 +329,9 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
             retitle(tab.id)
             reportFocusedDocument()
             persistTabs()
-            return
+            return true
         }
-        if let editor = focusedEditor, editor.fileURL == nil {
-            editor.fileURL = url
-            return
-        }
-        openInNewTab(url)
+        return false
     }
 
     public func openToTheSide(_ url: URL) {

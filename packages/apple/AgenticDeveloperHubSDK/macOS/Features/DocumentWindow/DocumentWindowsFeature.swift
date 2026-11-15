@@ -226,7 +226,10 @@ public final class DocumentWindowsFeature: AppFeature {
         case .document:
             let showing = pane.focusedEditor?.fileURL
             if file.onlyIfEmpty, showing != nil { return }
-            if showing?.canonicalFileURL != file.url.canonicalFileURL {
+            // A tab already holding the file is chosen over replacing the
+            // selected tab's file with a second copy of it.
+            if showing?.canonicalFileURL != file.url.canonicalFileURL,
+               !pane.selectTab(showing: file.url) {
                 pane.openInSelectedPane(file.url)
             }
         default:
