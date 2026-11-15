@@ -21,14 +21,18 @@ final class BrowserPaneToolbarTests: XCTestCase {
         return pane
     }
 
+    /// The bar's navigation controls. The address field sits inside
+    /// `addressBox`, and it is the box the bar holds and hides.
     private func navigation(_ pane: WebBrowserPaneViewController) -> [NSView] {
-        [pane.addressField, pane.backButton, pane.forwardButton, pane.reloadButton]
+        [pane.addressBox, pane.backButton, pane.forwardButton, pane.reloadButton]
     }
 
     func test_ownToolbarEngineHidesKitchenNavigation() throws {
         let pane = makePane(ownToolbar: true)
         XCTAssertTrue(navigation(pane).allSatisfy(\.isHidden))
+        XCTAssertTrue(pane.addressField.isDescendant(of: pane.addressBox), "the field is hidden with its box")
         let bar = try XCTUnwrap(pane.addressBar)
+        XCTAssertTrue(bar.arrangedSubviews.contains(pane.addressBox))
         XCTAssertTrue(bar.arrangedSubviews.contains(pane.drivenBadge))
         XCTAssertTrue(bar.arrangedSubviews.contains(pane.installedBar))
         XCTAssertTrue(bar.arrangedSubviews.contains(pane.menuButton))
@@ -87,6 +91,9 @@ final class BrowserPaneToolbarTests: XCTestCase {
         XCTAssertLessThanOrEqual(pageFrame.maxY, barFrame.minY + 0.5, "the page is under the bar")
     }
 
+    /// The refusal shows in the bar ahead of the installed buttons and the
+    /// menu, which an own-toolbar bar always shows, and goes at the next
+    /// navigation.
     func test_refusalShowsInBarUntilNextNavigation() throws {
         let pane = makePane(ownToolbar: true)
         let bar = try XCTUnwrap(pane.addressBar)
@@ -97,11 +104,11 @@ final class BrowserPaneToolbarTests: XCTestCase {
             sentence, address: "chrome://settings"))
         XCTAssertFalse(pane.refusalNotice.isHidden)
         XCTAssertEqual(pane.refusalNotice.stringValue, sentence)
-        XCTAssertEqual(shown(in: bar), [pane.refusalNotice])
+        XCTAssertEqual(shown(in: bar), [pane.refusalNotice, pane.installedBar, pane.menuButton])
 
         pane.browserEngineDidStartNavigation(engine)
         XCTAssertTrue(pane.refusalNotice.isHidden)
-        XCTAssertEqual(shown(in: bar), [])
+        XCTAssertEqual(shown(in: bar), [pane.installedBar, pane.menuButton])
     }
 
     /// Only the front tab moves the bar: a refusal reported by a tab behind
