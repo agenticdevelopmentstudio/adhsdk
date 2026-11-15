@@ -479,6 +479,8 @@ extension GitAction {
         case .cherryPick: "Cherry-pick failed"
         case .revert: "Revert failed"
         case .reset: "Reset failed"
+        case .applyToIndex(_, let reverse): reverse ? "Unstage failed" : "Stage failed"
+        case .applyToWorktree(_, let reverse): reverse ? "Discard failed" : "Apply failed"
         }
     }
 }

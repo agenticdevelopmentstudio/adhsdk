@@ -4236,12 +4236,21 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:d97f027e570699ee1c9292a034726bb67325780c156688f96ec59345428dfdac",
+            "hash": "sha256:18eea132e578f123dbd6aba3fe578e7beea010ec196570177ff827a10d607409",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/RPC/",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:765ac8d83539c29974887d7819dcfd84e70f77ef589d746612975c1064f051d4",
+            "state": "confirmed",
+            "version": "1.3.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/RPC/SubprocessChannel+Run.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",
@@ -9777,7 +9786,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:387355cc5013dfd07118df8a613a22fc09c029f3b7d38889bf7414f24d61ece4",
+            "hash": "sha256:33d55c8dd639c3d6102f5242c6ce734d3e4adb9e25d61ec57f88c1ad359318ae",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -9795,11 +9804,20 @@
         },
         {
           "conformance": {
-            "hash": "sha256:7c7dae132aefb32842eab6f38122a74a82772f6931c050b082c82818b222b109",
+            "hash": "sha256:39d8e1bd1fd75ad35a736e888662c8a873e90d57a84298a235f2571bc6369d4a",
             "state": "confirmed",
             "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:69818d8a1bb20ad98f3385bc185a717546435161b7939b1c0edeec2147061746",
+            "state": "confirmed",
+            "version": "2.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift",
           "platform": "macos"
         }
       ],

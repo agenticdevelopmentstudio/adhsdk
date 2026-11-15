@@ -66,12 +66,16 @@
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientConfigurationTests.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift (adhsdk)",
       "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitActionTests.swift (adhsdk)",
-      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientWriteTests.swift (adhsdk)"
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientWriteTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Core/RPC/SubprocessChannel+Run.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitPatchBuilderTests.swift (adhsdk)",
+      "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientPatchTests.swift (adhsdk)"
     ],
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5b5ebc9aee533c9c",
+  "synced": "5a8392b23964cc6a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -63,6 +63,10 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitActionTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientWriteTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/RPC/SubprocessChannel+Run.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitPatchBuilderTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientPatchTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -238,8 +242,9 @@ picker) is a consumer of this contract, not part of it.
   delete branch (optional force), delete remote branch, create tag (name,
   commit, optional message), delete tag, push tag, stash save (optional
   message), stash apply, stash pop and stash drop (each by index),
-  cherry-pick and revert (commit, optional mainline), and reset (commit,
-  soft, mixed or hard).
+  cherry-pick and revert (commit, optional mainline), reset (commit,
+  soft, mixed or hard), and apply a patch to the index or to the work
+  tree (patch text, reverse).
 - **write-action-mapping**: Each action MUST map to exactly this verb and
   these arguments, every path list preceded by `--` and every path in it
   written as the literal, top-relative pathspec `:(top,literal)<path>`, so a
@@ -265,7 +270,9 @@ picker) is a consumer of this contract, not part of it.
   <message>` only when the message is present and non-empty; stash apply,
   pop and drop → `stash apply|pop|drop stash@{<index>}`; cherry-pick →
   `cherry-pick [-m <mainline>] <commit>`; revert → `revert --no-edit [-m
-  <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`.
+  <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`; apply to the index → `apply
+  --cached --whitespace=nowarn [--reverse] -`; apply to the work tree →
+  `apply --whitespace=nowarn [--reverse] -`, the patch on standard input.
 - **write-operand-guard**: None of those mappings puts a ref, branch, tag,
   remote or commit after `--`, so git would read one that begins with `-`
   as an option (`branch --delete main` from a branch named `--delete`
@@ -315,6 +322,49 @@ picker) is a consumer of this contract, not part of it.
   branch does not exist yet) it MUST fail as command-failed with git's
   message. An empty or dash-led branch MUST be refused as invalid-argument
   before anything is spawned.
+
+### Patches from diff lines
+
+- **patch-selection**: A selection MUST name one file's parsed diff and, per
+  hunk index, the set of line indices chosen in that hunk. Only added and
+  removed lines count as chosen; a context line, a marker or an index out of
+  range is ignored. The hunk selection of hunk `n` MUST be every added and
+  removed line of that hunk, and empty for an index that is not a hunk.
+- **patch-buildable**: A patch MUST be built only for a text file (not
+  binary) with at least one hunk whose change is modified or renamed, whose
+  old and new paths are both present and non-empty and contain no newline,
+  tab or carriage return. Added, deleted, copied and type-changed files (an
+  untracked file reads as added) are refused, and building returns nothing.
+- **patch-forward-lines**: Forward (staging, applying), each hunk MUST keep
+  a chosen added line, drop an unchosen added line, keep a chosen removed
+  line and write an unchosen removed line as context.
+- **patch-reverse-lines**: Reversed (unstaging, discarding), each hunk MUST
+  keep chosen lines, write an unchosen added line as context and drop an
+  unchosen removed line, because a reversed patch is applied to the new
+  side.
+- **patch-no-newline**: A no-newline-at-end marker MUST be written only when
+  the line before it was written (as itself or as context), and dropped with
+  it otherwise.
+- **patch-hunk-headers**: A hunk with no chosen line MUST be left out. Each
+  written hunk MUST count its lines anew (old = context + removed, new =
+  context + added). Forward keeps the hunk's old start and sets the new start
+  to the old start plus the net change (new count − old count) of the hunks
+  already written; reversed keeps the new start and sets the old start to the
+  new start minus that net change. A side whose count is 0 names the line
+  before it, as git writes it. A selection that writes no hunk MUST build no
+  patch.
+- **patch-file-header**: The patch MUST open `diff --git a/<path> b/<path>`,
+  `--- a/<path>`, `+++ b/<path>` naming one path on both sides: the old path
+  forward, the new path reversed. Naming both paths of a rename would make
+  `apply` rename the file too, so unstaging a line of a staged rename would
+  move the file back. The patch MUST end with a newline.
+- **patch-apply**: Applying MUST go through the perform verb as the apply to
+  the index or apply to the work tree action, the patch written to the
+  child's standard input while its output is read (so neither pipe can stall
+  the other) and the input then closed. The command log MUST record the
+  verb and arguments only, never the patch. An empty patch MUST be refused
+  as invalid-argument with an empty value before anything is spawned. A patch
+  that no longer applies MUST fail as command-failed carrying git's message.
 
 ### Execution, configuration and attribution
 
@@ -715,6 +765,13 @@ component.
 | git-client-061 | write-action-mapping | Discard `[ab].txt` beside a modified `a.txt`; remove untracked `*.log` beside an untracked `keep.log`; stage `app/[slug]/page.tsx` beside `app/s/page.tsx` | Only the named file changes each time; the arguments are `:(top,literal)<path>` after `--`. |
 | git-client-062 | write-operand-guard | Stage, unstage, discard and remove untracked with an empty path list | Each refused as invalid-argument before spawning; nothing in the tree changes. |
 | git-client-063 | redaction-scope-and-positional-rule | `commit` `["--cleanup=strip", "-m", "secret token", "--amend"]`; `tag` `["-a", "v1", "-m", "notes", "abc123"]`; `stash` `["push", "--include-untracked", "-m", "wip"]`; `cherry-pick` `["-m", "1", "abc123"]` | `<redacted:12>`, `<redacted:5>` and `<redacted:3>` in the message positions, everything else kept; cherry-pick unchanged. |
+| git-client-064 | patch-forward-lines, patch-hunk-headers | Hunk `@@ -1,2 +1,4 @@` `a`, `+x`, `+y`, `b`; choose `x` forward, then reversed | `@@ -1,2 +1,3 @@` ` a`, `+x`, ` b`; reversed `@@ -1,3 +1,4 @@` ` a`, `+x`, ` y`, ` b`. |
+| git-client-065 | patch-forward-lines, patch-reverse-lines | Hunk `a`, `-b`, `+c`, `d`; choose `c` | Forward `@@ -1,3 +1,4 @@` with ` b` as context; reversed `@@ -1,2 +1,3 @@` with `b` dropped. |
+| git-client-066 | patch-hunk-headers | Hunks `@@ -1,2 +1,4 @@` (choose `x` of `+x`, `+y`) and `@@ -10,3 +12,3 @@` (choose both changes) | Second hunk forward `@@ -10,3 +11,3 @@`, reversed `@@ -11,3 +12,3 @@`; with the first hunk unchosen, forward `@@ -10,3 +10,3 @@`. |
+| git-client-067 | patch-no-newline | `+x`, ` a`, ` b`, `+c`, no-newline marker; choose `c`, then `x` forward, then `x` reversed | Marker kept after `+c`; dropped with `c`; kept after ` c` as context. |
+| git-client-068 | patch-file-header, patch-buildable | A rename `old name.txt` → `dir/new.txt`; then added, deleted, binary, copied, type-changed, hunkless and tab- or newline-bearing paths | Forward names `old name.txt` on both sides, reversed `dir/new.txt`; every other file builds nothing. |
+| git-client-069 | patch-apply, write-action-mapping | A fixture with two hunks; stage one line, unstage it; stage a hunk; discard a line; stage a last line without a newline; unstage a line of a staged rename | Each leaves exactly the chosen change moved; the rename stays a rename; the index blob returns to HEAD's. |
+| git-client-070 | patch-apply | A patch made stale by a later edit; an empty patch; the log of one apply | Command-failed naming `apply` with `patch does not apply`; empty refused as invalid-argument; the log line carries `--cached --whitespace=nowarn -` and none of the patch. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -943,6 +1000,7 @@ write takes a remote URL.
 | apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/` | confirmed (2.0.0) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileHistoryEntry.swift` | confirmed (2.0.0) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift` | confirmed (2.0.0) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -1088,4 +1146,4 @@ one.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
-| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). Patches from diff lines: a selection of one file's lines, forward and reversed line rules, recomputed hunk headers, the no-newline marker and a one-path file header; apply to the index or the work tree with the patch on standard input, never logged, an empty patch refused. |

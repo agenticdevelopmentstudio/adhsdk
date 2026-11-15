@@ -53,6 +53,12 @@ public enum GitAction: Sendable, Hashable {
     case cherryPick(commit: String, mainline: Int?)
     case revert(commit: String, mainline: Int?)
     case reset(commit: String, mode: GitResetMode)
+    /// Applies `patch` (as `GitPatchBuilder` builds it) to the index only
+    /// (`apply --cached`), reversed when `reverse` is set: staging and unstaging lines.
+    case applyToIndex(patch: String, reverse: Bool)
+    /// Applies `patch` to the working tree only (`apply`), reversed when `reverse` is set:
+    /// discarding lines.
+    case applyToWorktree(patch: String, reverse: Bool)
 
     /// The git subcommand.
     public var verb: String {
@@ -72,6 +78,7 @@ public enum GitAction: Sendable, Hashable {
         case .stashSave, .stashApply, .stashPop, .stashDrop: "stash"
         case .cherryPick: "cherry-pick"
         case .revert: "revert"
+        case .applyToIndex, .applyToWorktree: "apply"
         }
     }
 
@@ -111,6 +118,8 @@ public enum GitAction: Sendable, Hashable {
         case let .cherryPick(commit, mainline): Self.mainlineArguments(mainline) + [commit]
         case let .revert(commit, mainline): ["--no-edit"] + Self.mainlineArguments(mainline) + [commit]
         case let .reset(commit, mode): ["--\(mode.rawValue)", commit]
+        case .applyToIndex(_, let reverse): ["--cached"] + Self.applyArguments(reverse: reverse)
+        case .applyToWorktree(_, let reverse): Self.applyArguments(reverse: reverse)
         }
     }
 
@@ -131,7 +140,7 @@ public enum GitAction: Sendable, Hashable {
     public var operands: [String] {
         switch self {
         case .stage, .stageAll, .unstage, .unstageAll, .discard, .removeUntracked, .commit, .pull, .push,
-             .stashSave, .stashApply, .stashPop, .stashDrop:
+             .stashSave, .stashApply, .stashPop, .stashDrop, .applyToIndex, .applyToWorktree:
             []
         case .fetch(let remote): remote.map { [$0] } ?? []
         case let .pushSettingUpstream(remote, branch): [remote, branch]
@@ -167,11 +176,35 @@ public enum GitAction: Sendable, Hashable {
         }
     }
 
+    /// What git reads on standard input: the patch, UTF-8, for the two apply cases; nil
+    /// otherwise. It is never part of `arguments`, so it never reaches `GitCommandLog`.
+    public var standardInput: Data? {
+        switch self {
+        case .applyToIndex(let patch, _), .applyToWorktree(let patch, _): Data(patch.utf8)
+        default: nil
+        }
+    }
+
+    /// Whether the action applies a patch and was given an empty one. `GitClient.perform`
+    /// refuses it: git reads empty input as "No valid patches in input".
+    public var hasEmptyPatch: Bool {
+        switch self {
+        case .applyToIndex(let patch, _), .applyToWorktree(let patch, _): patch.isEmpty
+        default: false
+        }
+    }
+
     /// The pathspec prefix every write path carries: top-level-relative, no glob magic.
     public static let literalPathspecPrefix = ":(top,literal)"
 
     private static func literal(_ paths: [String]) -> [String] {
         paths.map { literalPathspecPrefix + $0 }
+    }
+
+    /// `--whitespace=nowarn` so a line with trailing whitespace applies as it is, without a
+    /// warning; `-` reads the patch from standard input.
+    private static func applyArguments(reverse: Bool) -> [String] {
+        ["--whitespace=nowarn"] + (reverse ? ["--reverse"] : []) + ["-"]
     }
 
     private static func mainlineArguments(_ mainline: Int?) -> [String] {

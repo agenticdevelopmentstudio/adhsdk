@@ -547,14 +547,18 @@ public actor GitClient {
     /// spawned: `createBranch(name: "--delete", startPoint: "main")` would otherwise run
     /// `git branch --delete main`. A path-taking action with no paths
     /// (`GitAction.hasEmptyPathList`) throws `.invalidArgument` too: git reads an empty
-    /// pathspec list as the whole tree.
+    /// pathspec list as the whole tree. So does an apply with an empty patch
+    /// (`GitAction.hasEmptyPatch`).
+    ///
+    /// An action's `standardInput` (an apply's patch) is written to git's standard input;
+    /// only the arguments are logged, so a patch never reaches `GitCommandLog`.
     @discardableResult
     public func perform(_ action: GitAction, in directory: URL, caller: GitCaller = GitCaller()) async throws
         -> String {
         if let operand = action.invalidOperand {
             throw GitClientError.invalidArgument(verb: action.verb, argument: operand)
         }
-        if action.hasEmptyPathList {
+        if action.hasEmptyPathList || action.hasEmptyPatch {
             throw GitClientError.invalidArgument(verb: action.verb, argument: "")
         }
         let configuration = await configurationProvider()
@@ -566,7 +570,8 @@ public actor GitClient {
             caller: caller,
             configuration: configuration,
             configOverrides: Self.writeConfigOverrides,
-            budget: max(configuration.timeout, floor)
+            budget: max(configuration.timeout, floor),
+            standardInput: action.standardInput
         )
     }
 
@@ -709,11 +714,13 @@ public actor GitClient {
         configuration: GitClientConfiguration,
         configOverrides: [String] = [],
         acceptedExitCodes: Set<Int32> = [0],
-        budget: TimeInterval? = nil
+        budget: TimeInterval? = nil,
+        standardInput: Data? = nil
     ) async throws -> String {
         let result = try await executeRaw(verb: verb, arguments: arguments, directory: directory, caller: caller,
                                           configuration: configuration, configOverrides: configOverrides,
-                                          acceptedExitCodes: acceptedExitCodes, budget: budget)
+                                          acceptedExitCodes: acceptedExitCodes, budget: budget,
+                                          standardInput: standardInput)
         return GitOutputDecoding.string(result.standardOutput)
     }
 
@@ -724,7 +731,8 @@ public actor GitClient {
     /// `configOverrides` are `key=value` pairs passed as `-c key=value` ahead of the verb and
     /// logged at the front of the arguments. An exit status outside `acceptedExitCodes`
     /// throws `.commandFailed`. `budget` replaces `configuration.timeout` as the wall-clock
-    /// limit when given; only the write verbs pass one.
+    /// limit when given; only the write verbs pass one. `standardInput` is written to the
+    /// child's standard input and is never recorded: the log is told the arguments only.
     private func executeRaw(
         verb: String,
         arguments verbArguments: [String],
@@ -733,7 +741,8 @@ public actor GitClient {
         configuration: GitClientConfiguration,
         configOverrides: [String] = [],
         acceptedExitCodes: Set<Int32> = [0],
-        budget: TimeInterval? = nil
+        budget: TimeInterval? = nil,
+        standardInput: Data? = nil
     ) async throws -> SubprocessChannel.RunResult {
         let overrides = configOverrides.flatMap { ["-c", $0] }
         let arguments = overrides + verbArguments
@@ -764,7 +773,8 @@ public actor GitClient {
         let started = Date()
         let result: SubprocessChannel.RunResult
         do {
-            result = try await SubprocessChannel.run(channelConfiguration, budget: budget ?? configuration.timeout)
+            result = try await SubprocessChannel.run(channelConfiguration, standardInput: standardInput,
+                                                     budget: budget ?? configuration.timeout)
         } catch is WallClockBudgetExceeded {
             GitCommandLog.record(
                 verb: verb, arguments: arguments, directory: directory, caller: caller,

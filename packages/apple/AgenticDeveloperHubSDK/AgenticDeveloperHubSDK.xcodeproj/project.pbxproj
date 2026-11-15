@@ -236,6 +236,7 @@
 		03B9DDEFCF64147123FBAD09 /* ComposableTabsFocusable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A379A74A4BCD72E92C46CB40 /* ComposableTabsFocusable.swift */; };
 		03BD0D0F60916BA3B022E358 /* BillingEditing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0CB99E1BB5F08F95A08515 /* BillingEditing.swift */; };
 		03C827AC6C62C9F8CDD67B9A /* OpenVSXClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2AEFDCCD9692DF7136A1B8 /* OpenVSXClient.swift */; };
+		03E8F6A0F82C8A712CC59FCE /* GitPatchBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5446A0B9F4237E77FB367E5B /* GitPatchBuilderTests.swift */; };
 		03ED69D9445646F072E5AF56 /* AuthSettingsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A2B1C40791F7080E516A0C /* AuthSettingsAdapter.swift */; };
 		03EF8A54FB579F9AC9A5D1D2 /* DiskSpaceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9742469CB6E9DB4CD4828DEE /* DiskSpaceMonitor.swift */; };
 		040A6D7CE656C4287670D223 /* CombinedSessionEventDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F66474118E09989767FCCD /* CombinedSessionEventDetectorTests.swift */; };
@@ -3138,6 +3139,7 @@
 		B741B717C1EC8A3DFC038654 /* MockProviderPipelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8E59F2A31879E9F5477643 /* MockProviderPipelineTests.swift */; };
 		B74BAD45AB1794AB036527AC /* AgenticFileBrowserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E6CF7DEA958AFB4B6C5444 /* AgenticFileBrowserTests.swift */; };
 		B74DDCC222D3BE91943C5AB0 /* LanguageModelMessageVocabulary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3947673D4BB35B500B207836 /* LanguageModelMessageVocabulary.swift */; };
+		B76B3A5242B4B89AEBD93EF6 /* GitPatchBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9427F30389BA23EA98D9A3D5 /* GitPatchBuilder.swift */; };
 		B76E5F8AB0CF14915C179150 /* NotationsHostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFC8BE0E6CC3FFC485253148 /* NotationsHostViewController.swift */; };
 		B770D0EC58DA684DD7851788 /* AgenticDeveloperHubSDKMarkdown-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68E7562A3D616D46F1B35DAC /* AgenticDeveloperHubSDKMarkdown-macOS.framework */; };
 		B77D93620542620015711F4A /* BraveHeuristic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 224DE085570321D6FF3A2415 /* BraveHeuristic.swift */; };
@@ -3758,6 +3760,7 @@
 		E001AE8FBFBB5937911B9DD5 /* AgenticDeveloperHubSDKUI-iOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 52346B50D66247F2DB4C7B4B /* AgenticDeveloperHubSDKUI-iOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E0346F8BADAE310D30DAAE34 /* StorableSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953D5B6B6CA43209B2196407 /* StorableSetting.swift */; };
 		E03E5B26146BE968004A1C3A /* LinkOutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874B052572BE4F957DE86B93 /* LinkOutViewController.swift */; };
+		E0622BFB9F44F8320FC4185A /* GitClientPatchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77A2FDC9992145ABDFC607B6 /* GitClientPatchTests.swift */; };
 		E06499320C3BC74F4CABB9B8 /* GitHistoryRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113361D27B625BD0B4BC99BB /* GitHistoryRowView.swift */; };
 		E07193615E5ABEA0400C278A /* SystemWindowContextManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09F6F539CC119DA1B526D89 /* SystemWindowContextManager.swift */; };
 		E07496AEBA3E9C7C437A74AE /* GitClientWriteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41E95B79B0D86D82A1849C0 /* GitClientWriteTests.swift */; };
@@ -8643,6 +8646,7 @@
 		54114966557751A479158212 /* PermissionRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRowView.swift; sourceTree = "<group>"; };
 		5442FC025797B4600EB47554 /* MarkdownProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownProjectionTests.swift; sourceTree = "<group>"; };
 		5444BC3ADEB017D4447096EB /* AIPluginTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPluginTestSupport.swift; sourceTree = "<group>"; };
+		5446A0B9F4237E77FB367E5B /* GitPatchBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitPatchBuilderTests.swift; sourceTree = "<group>"; };
 		544AD9A3CC0C5CBA6A637531 /* IncrementRounding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncrementRounding.swift; sourceTree = "<group>"; };
 		5473C8D48CE19579451F4407 /* FileSystemServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystemServiceTests.swift; sourceTree = "<group>"; };
 		5473DFDB3FFC7494B100DF28 /* LineViewerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineViewerRow.swift; sourceTree = "<group>"; };
@@ -9063,6 +9067,7 @@
 		778A0543ECF32E68E375B8E5 /* CodableIgnoredConformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableIgnoredConformanceTests.swift; sourceTree = "<group>"; };
 		779135595BD53CB07F95E5A5 /* FileBrowserClickFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClickFocusTests.swift; sourceTree = "<group>"; };
 		7794704A1D1EBFF5989BBDC4 /* ToolResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolResult.swift; sourceTree = "<group>"; };
+		77A2FDC9992145ABDFC607B6 /* GitClientPatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitClientPatchTests.swift; sourceTree = "<group>"; };
 		77A5C52681FF78A73C6258CE /* ProportionalDividers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProportionalDividers.swift; sourceTree = "<group>"; };
 		77B91B0EC9DD689501F8CC0B /* AnthropicResponseReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicResponseReader.swift; sourceTree = "<group>"; };
 		77C926DF4F0D3779F1950197 /* KeyCommandRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCommandRegistry.swift; sourceTree = "<group>"; };
@@ -9426,6 +9431,7 @@
 		93BA08D2488AF2E0DE35385E /* WorkTrackingXPCProtocolConformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkTrackingXPCProtocolConformanceTests.swift; sourceTree = "<group>"; };
 		93EEFFAB63B70C1571AEF16E /* TerminalSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionManager.swift; sourceTree = "<group>"; };
 		93F813C52166AEFE7E3244F5 /* SharedWindowLifecycleSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedWindowLifecycleSource.swift; sourceTree = "<group>"; };
+		9427F30389BA23EA98D9A3D5 /* GitPatchBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitPatchBuilder.swift; sourceTree = "<group>"; };
 		942F2535866BED2AC8F2BBDC /* TerminalPaneConnectable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPaneConnectable.swift; sourceTree = "<group>"; };
 		9447BF77B38B6F4988C302D5 /* TextAreaEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextAreaEditView.swift; sourceTree = "<group>"; };
 		947B12D68D7CC5E99AA0BACD /* LocalModelCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModelCatalogTests.swift; sourceTree = "<group>"; };
@@ -12456,6 +12462,7 @@
 				279B20E57CF1D17B8ED426B9 /* GitHistorySearch.swift */,
 				B7C6F19A1961AB92C362F0CF /* GitLogQuery.swift */,
 				C983DEE61C9479FB862FAFE6 /* GitOutputDecoding.swift */,
+				9427F30389BA23EA98D9A3D5 /* GitPatchBuilder.swift */,
 				134D4F605F67A85849BABAB2 /* GitPatchParser.swift */,
 				537396E65952F50AA2C865E8 /* GitPathUnquoting.swift */,
 				2AC6000CB496EBF805A764B1 /* GitPerson.swift */,
@@ -13052,6 +13059,7 @@
 				FAAF489C9B2DDB4EB9460917 /* GitBranchParserTests.swift */,
 				96A3B6E5317A7F0A27E65A66 /* GitClientConfigurationTests.swift */,
 				46EBE33ED41E81196005AF06 /* GitClientHistoryTests.swift */,
+				77A2FDC9992145ABDFC607B6 /* GitClientPatchTests.swift */,
 				2F8302912425F47B9D0BE2FF /* GitClientTests.swift */,
 				C41E95B79B0D86D82A1849C0 /* GitClientWriteTests.swift */,
 				A39FC893DFAA0B02DE142756 /* GitCommandLogTests.swift */,
@@ -13063,6 +13071,7 @@
 				4BD8793CC8F57CEE1220F554 /* GitHistorySearchTests.swift */,
 				568FCCB2D762004AC7EECF7F /* GitLogQueryTests.swift */,
 				5A9D98294462F18CA3CDBE12 /* GitOutputDecodingTests.swift */,
+				5446A0B9F4237E77FB367E5B /* GitPatchBuilderTests.swift */,
 				6B5D55A4A8990F03A4F7CBC2 /* GitProjectRootDisplayLabelTests.swift */,
 				D55AD03F894D9D14BC3DA971 /* GitProjectRootTests.swift */,
 				EDF10A0EF2E7F671F17BBBF7 /* GitRefParserTests.swift */,
@@ -24159,6 +24168,7 @@
 				88B564E041DFBC2EC1F188A5 /* GitBranchParserTests.swift in Sources */,
 				1226430202EDB2E464ACA57A /* GitClientConfigurationTests.swift in Sources */,
 				D28F56506AB692C437A2C037 /* GitClientHistoryTests.swift in Sources */,
+				E0622BFB9F44F8320FC4185A /* GitClientPatchTests.swift in Sources */,
 				16E31C5409FB4CE6E1B797B6 /* GitClientTests.swift in Sources */,
 				E07496AEBA3E9C7C437A74AE /* GitClientWriteTests.swift in Sources */,
 				DDBA66A099C2C45BF65D30A8 /* GitCommandLogTests.swift in Sources */,
@@ -24172,6 +24182,7 @@
 				2124F2D5288BC6F2F06DE019 /* GitIgnoreMatcherTests.swift in Sources */,
 				256ABD93FEE92698B9F90B75 /* GitLogQueryTests.swift in Sources */,
 				CDAEBE8EE7F48C88BEB0A357 /* GitOutputDecodingTests.swift in Sources */,
+				03E8F6A0F82C8A712CC59FCE /* GitPatchBuilderTests.swift in Sources */,
 				FCF345F261772AC0FEC74745 /* GitProjectRootDisplayLabelTests.swift in Sources */,
 				7BF5BF27D89E3F7A11874BF0 /* GitProjectRootTests.swift in Sources */,
 				4CA8BC1C18203C3A472D4DD5 /* GitRefParserTests.swift in Sources */,
@@ -25764,6 +25775,7 @@
 				8AE86F3DD43914DEB62FC8C0 /* GitIgnoreMatcher.swift in Sources */,
 				0121269C6D6C1D1FA8C47B25 /* GitLogQuery.swift in Sources */,
 				B468B1A7BF09631F0BC16279 /* GitOutputDecoding.swift in Sources */,
+				B76B3A5242B4B89AEBD93EF6 /* GitPatchBuilder.swift in Sources */,
 				3374D402D7CD8A7EAF02001B /* GitPatchParser.swift in Sources */,
 				8D3EDA7571E63C585CA3B3C3 /* GitPathUnquoting.swift in Sources */,
 				4F35C4F190940E3B2E21A2D2 /* GitPerson.swift in Sources */,

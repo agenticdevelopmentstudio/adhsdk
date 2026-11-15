@@ -174,4 +174,24 @@ struct GitActionTests {
         ]
         #expect(valid.compactMap(\.invalidOperand).isEmpty)
     }
+
+    @Test("applying a patch: to the index or the work tree, forward or reversed, the patch on standard input")
+    func applyingPatches() {
+        let patch = "diff --git a/a.txt b/a.txt\n"
+        expect(.applyToIndex(patch: patch, reverse: false), "apply", ["--cached", "--whitespace=nowarn", "-"])
+        expect(.applyToIndex(patch: patch, reverse: true), "apply",
+               ["--cached", "--whitespace=nowarn", "--reverse", "-"])
+        expect(.applyToWorktree(patch: patch, reverse: false), "apply", ["--whitespace=nowarn", "-"])
+        expect(.applyToWorktree(patch: patch, reverse: true), "apply", ["--whitespace=nowarn", "--reverse", "-"])
+        #expect(GitAction.applyToIndex(patch: patch, reverse: true).standardInput == Data(patch.utf8))
+        #expect(GitAction.applyToWorktree(patch: patch, reverse: false).standardInput == Data(patch.utf8))
+        #expect(GitAction.stage(paths: ["a"]).standardInput == nil)
+        #expect(GitAction.commit(message: "m", amend: false).standardInput == nil)
+        #expect(GitAction.applyToIndex(patch: "--x", reverse: false).invalidOperand == nil)
+        #expect(!GitAction.applyToIndex(patch: patch, reverse: false).isLongRunning)
+        #expect(GitAction.applyToIndex(patch: "", reverse: false).hasEmptyPatch)
+        #expect(GitAction.applyToWorktree(patch: "", reverse: true).hasEmptyPatch)
+        #expect(!GitAction.applyToWorktree(patch: patch, reverse: true).hasEmptyPatch)
+        #expect(!GitAction.stage(paths: []).hasEmptyPatch)
+    }
 }
