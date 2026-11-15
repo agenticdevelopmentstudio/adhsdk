@@ -4,7 +4,7 @@
     "id": "b32270be-49b8-4227-9e30-1d8e781ab3b5",
     "title": "JSON Renderer",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8c6aedc592309975",
+  "synced": "0de617f95c9751e6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

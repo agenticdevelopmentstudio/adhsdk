@@ -4,11 +4,11 @@
     "id": "0b171409-02f8-4ad2-97d3-8f4b1adfa340",
     "title": "Coarse Clock",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -24,7 +24,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b2f5b7f9fb604d7d",
+  "synced": "b3c2fcf22520290b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

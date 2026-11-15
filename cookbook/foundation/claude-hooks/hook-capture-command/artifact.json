@@ -4,7 +4,7 @@
     "id": "826153e3-cae8-4917-a1d3-c298a54ab558",
     "title": "Hook Capture Command",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "1b2f3bc15e29fc42",
+  "synced": "2ad546d0eabc36f3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,7 +2,7 @@
 id: f3f1af27-6cd7-4b3f-9024-135c6f6e89da
 title: "Work Tracking XPC Client"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -78,7 +78,7 @@ Not applicable — this is a non-visual service client, not a visual component. 
 
 ## Conformance Test Vectors
 
-Vectors 001 through 010 are backed by `WorkTrackingXPCClientTests`, which drives the client through a scripted transport. Vectors 011 through 017 are spec-only: derived from the source, with no test yet.
+Vectors 001 through 010 are backed by `WorkTrackingXPCClientTests`, which drives the client through a scripted transport. Vectors 011 through 014, 016 and 017 are backed by `WorkTrackingXPCClientConformanceTests`. Vector 015 is spec-only: `WorkTrackingPreferences` cannot fail to encode, so no test can reach it.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -169,7 +169,7 @@ Not applicable: this code makes no log calls; failures are returned as nil rathe
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingXPCClient.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingXPCClient.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -208,10 +208,11 @@ Not applicable: this code makes no log calls; failures are returned as nil rathe
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | reliability |
 
-Separation of concerns passes: the client only translates the service interface to transport calls and wire coding; rules are the daemon's and the transport is injected. Unit coverage is partial: vectors 011 through 017 have no test. `WorkTrackingXPCClientTests` covers the snake-case status, empty and unreadable replies, the preferences body, the two long timeouts, span order and the failed-read row, but no test covers a transport that throws, a failure row after good rows, an unencodable body or the `timeout: nil` of status and spans. Timeout handling is partial: the two calls whose daemon answer is known to stall carry an explicit 15-second wait with the reason documented, but `status()` and `spans(since:limit:)` pass `.none` and leave the wait to the transport, which may be unbounded. Retry with backoff is not checked: the client never retries by design (`retries: 0`), see the no-retry design decision.
+Separation of concerns passes: the client only translates the service interface to transport calls and wire coding; rules are the daemon's and the transport is injected. Unit coverage is partial: vectors 001 through 014, 016 and 017 are tested, by `WorkTrackingXPCClientTests` and `WorkTrackingXPCClientConformanceTests` (`WorkTracking/WorkTrackingXPCClientConformanceTests.swift`). Vector 015 is skipped: `WorkTrackingPreferences` holds only a Bool, a `[String]` and an Int, so no value of it can fail to encode. Timeout handling is partial: the two calls whose daemon answer is known to stall carry an explicit 15-second wait with the reason documented, but `status()` and `spans(since:limit:)` pass `.none` and leave the wait to the transport, which may be unbounded. Retry with backoff is not checked: the client never retries by design (`retries: 0`), see the no-retry design decision.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (WorkTrackingXPCClientConformanceTests.swift, 6 of 7 new vectors, 16 of 17 total); unit-test-coverage now partial (015 skipped: preferences cannot fail to encode). |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Removed the untraceable review tags, defined the nil timeout, marked vectors 011-017 spec-only and added three vectors, changed timeout handling to partial, dropped the retry row, clarified fixed constants and added dependencies. |

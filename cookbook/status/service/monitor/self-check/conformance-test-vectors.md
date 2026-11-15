@@ -1,5 +1,5 @@
 
-The `selfCheckView` suite in `packages/web/packages/status-server/test/read-views.test.ts` covers vectors 001 (test "is null when everything is ok"), 005 and 007 (test "surfaces missing env (deduped) as a non-error warning"), 006 (test "an error-severity missing env goes red and counts as an error"), 003 and 008 (test "keeps reachability issues as chips but excludes the internal cron check"), 009 (test "collapses correlated provider failures into the Connectivity chip only") and 004 (test "a warning alone is not a red error"). The remaining vectors (002, 010, 011, 012 and 013) are traced directly to the function body and have no test.
+The `selfCheckView` suite in `packages/web/packages/status-server/test/read-views.test.ts` carries a test for every vector below; each test title begins with its vector id, except the older tests for 001 ("is null when everything is ok"), 003 and 008, 004, 005 and 007, 006, and 009, whose titles name the vector ids they cover.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

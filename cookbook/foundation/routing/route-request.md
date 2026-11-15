@@ -2,7 +2,7 @@
 id: 1a8e345f-c602-4ccb-8880-432b1deac6ac
 title: "Route Request"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-A request as shared routes see it: no transport and no framework. A daemon's HTTP layer converts its own request type into `RouteRequest`, so a route written once against it can be mounted by any daemon. It is a `Sendable`, `Equatable` struct holding `method`, `path`, `queryValues` (every value of every query key, in wire order), `headers` and `body`. Beyond the plain fields it offers path splitting, query accessors, two paging bounds that are safe to hand to SQL (`boundedLimit(default:max:)`, `boundedOffset()`), and ISO-8601 timestamp validation that either returns a canonical string or a typed `InvalidTimestamp` failure. Validation is delegated to `TimestampParsing.parseISO8601` (see the [Timestamp Parsing recipe](cookbook:29a3044c-f785-4fa3-a1b9-746d069ae198)) and the whole-second form comes from `UTCTimestamp` (see the [UTC Timestamp recipe](cookbook:59f7893e-58fe-4f11-abd9-f80c1e05c002)).
+A request as shared routes see it: no transport and no framework. A daemon's HTTP layer converts its own request type into `RouteRequest`, so a route written once against it can be mounted by any daemon. It is a `Sendable`, `Equatable` struct holding `method`, `path`, `queryValues` (every value of every query key, in wire order), `headers` and `body`. Beyond the plain fields it offers path splitting, query accessors, two paging bounds that are safe to hand to SQL (`boundedLimit(default:max:)`, `boundedOffset()`), and ISO-8601 timestamp validation that either returns a canonical string or a typed `InvalidTimestamp` failure. Validation is delegated to `TimestampParsing.parseISO8601` (see the Timestamp Parsing recipe ([adhsdk.ingredient.foundation.time.timestamp-parsing](cookbook:29a3044c-f785-4fa3-a1b9-746d069ae198))) and the whole-second form comes from `UTCTimestamp` (see the UTC Timestamp recipe ([adhsdk.ingredient.foundation.time.utc-timestamp](cookbook:59f7893e-58fe-4f11-abd9-f80c1e05c002))).
 
 ## Behavioral Requirements
 
@@ -193,7 +193,7 @@ Not applicable: `RouteRequest` calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/RouteRequest.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/RouteRequest.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -225,16 +225,17 @@ Not applicable: `RouteRequest` calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
-`separation-of-concerns` passes because the type holds a request and bounds its paging and timestamp inputs; routing, SQL and HTTP transport belong to callers. `unit-test-coverage` is partial: `RouteRequestTests` covers each accessor, both paging bounds, timestamp validation, normalization and `activitySince`, including the SQLite negative-limit regression, but vectors 027 and 028 to 034 are derived and have no test. `input-sanitization` is partial because paging and timestamp inputs are bounded or rejected, while a ceiling below 1 escapes the bound (the open question on `ceiling-below-one`) and the other accessors return raw strings. `explicit-error-handling` passes because a malformed timestamp is a typed failure with a message naming the parameter. `no-hardcoded-strings` fails because the rejection message is an inline English literal; it is an API error text and the source offers no localization path.
+`separation-of-concerns` passes because the type holds a request and bounds its paging and timestamp inputs; routing, SQL and HTTP transport belong to callers. `unit-test-coverage` passes: `RouteRequestTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Routing/RouteRequestTests.swift`) covers all 34 vectors, including the SQLite negative-limit regression and the derived initializer, rejection, static normalizer, equality and purity vectors. `input-sanitization` is partial because paging and timestamp inputs are bounded or rejected, while a ceiling below 1 escapes the bound (the open question on `ceiling-below-one`) and the other accessors return raw strings. `explicit-error-handling` passes because a malformed timestamp is a typed failure with a message naming the parameter. `no-hardcoded-strings` fails because the rejection message is an inline English literal; it is an API error text and the source offers no localization path.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (RouteRequestTests.swift, 34 of 34 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Merged the duplicate limit and timestamp requirements, gave the exact rejection message and the integer grammar, listed Timestamp Parsing and UTC Timestamp in depends-on, added vectors 028 to 034, and corrected the configuration note. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

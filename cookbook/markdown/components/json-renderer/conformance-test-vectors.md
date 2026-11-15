@@ -16,5 +16,5 @@
 | json-renderer-013 | accept-wrap, default-measure | `wrap` omitted, oversized body | Root class is `adh-mv-prose` only: no wrap modifier and no fill modifier. |
 | json-renderer-014 | inherit-markdown-errors | Small valid body while the Markdown pipeline rejects | `MarkdownRenderer`'s "Failed to render document" alert pane is shown; the component adds nothing. |
 
-Test coverage note: the repo tests `prettyJson` and `fenceCode` (`packages/web/packages/markdown/src/__tests__/pretty-json.test.ts`) and `proseClassName` (`prose-class.test.ts`). It has no test that renders `JsonRenderer` itself, so vectors 007 to 014 are derived from the component source, not from an existing assertion. The one SHOULD requirement, `memoise-pretty`, has no vector because it is a performance property with no observable output.
+Test coverage note: `packages/web/packages/markdown/src/__tests__/jsonRenderer.test.tsx` renders `JsonRenderer` for all 14 vectors; `pretty-json.test.ts` and `prose-class.test.ts` cover the helpers. The one SHOULD requirement, `memoise-pretty`, has no vector because it is a performance property with no observable output.
 

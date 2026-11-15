@@ -1,5 +1,5 @@
 
-Vectors 1 to 3 are assertions of `telemetry-dashboard-sections.test.ts` (test names in brackets); 4 to 6 come from `runtime-errors.test.ts`, which exercises `vercelRequest` through `vercelRuntimeFetcher`; 7 to 19 are read from the source. There is no test file for `vercel-api.ts` alone.
+Every vector is a test in `packages/web/packages/status-server/test/vercel-api.test.ts`, titled with its id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -17,7 +17,7 @@ Vectors 1 to 3 are assertions of `telemetry-dashboard-sections.test.ts` (test na
 | vercel-api-012 | non-production-host | `STAGING.x.com`; `x.com`; null | true; false; false |
 | vercel-api-013 | production-project | name `Site-STAGING` | false |
 | vercel-api-014 | json-get | 200 response with body `not json` | rejects |
-| vercel-api-015 | call-timeout, caller-signal | `fetch` that never resolves, a fake timer, no caller `signal`; then the same with a caller `signal` that never aborts | the call aborts with the timeout error once `CALL_TIMEOUT_MS` (20,000 ms) has passed, in both cases; the caller signal does not lengthen it |
+| vercel-api-015 | call-timeout, caller-signal | `fetch` that never resolves, no caller `signal`; then the same with a caller `signal` that never aborts; `AbortSignal.timeout` replaced by a signal the test aborts | `AbortSignal.timeout` is asked for `CALL_TIMEOUT_MS` (20,000 ms), and aborting that signal rejects the call with the timeout error in both cases; the caller signal does not replace it |
 | vercel-api-016 | extra-headers | `init.headers` `{Authorization: "Bearer other"}` | the request carries `Authorization: Bearer other`, not the one built from `env` |
 | vercel-api-017 | query-params | `VERCEL_TEAM_ID` `team_1`, params `{teamId: "team_2"}` | URL carries `teamId=team_2` once |
 | vercel-api-018 | cooldown-first | `rateLimitedUntil("vercel")` returns a time | `VercelRateLimited` with message `Vercel rate limited until <ISO time>`, and `fetch` is not called |

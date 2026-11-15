@@ -2,7 +2,7 @@
 id: 95ea4062-09e5-4342-a376-413cb7deb7d1
 title: "Ingestion Error DTOs"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -77,7 +77,7 @@ Not applicable — this is a set of data shapes, not a visual component.
 
 ## Conformance Test Vectors
 
-`IngestionErrorLogTests` (database test target) exercises `IngestionErrorLogDTO` through `DaemonDatabase`; no test references `IngestionErrorDTO` or `RetryProgressDTO`, so their vectors are derived from the declarations and doc comments.
+`IngestionErrorLogTests` (database test target) exercises `IngestionErrorLogDTO` through `DaemonDatabase`; `IngestionErrorDTOConformanceTests` (Core test target) exercises `IngestionErrorDTO`, `RetryProgressDTO` and the log row's shape; vector 010 is a compile-time check and is skipped.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -87,7 +87,7 @@ Not applicable — this is a set of data shapes, not a visual component.
 | ingestion-error-dto-004 | log-status-lost, log-resolved-at | a row with `status: "lost"`, `retryCount: 0`, `lastRetriedAt: nil`, `sqliteCode: nil` | `lastRetriedAt` nil, `sqliteCode` nil, `retryCount` 0 |
 | ingestion-error-dto-005 | log-no-exhausted-flag | encode an `IngestionErrorLogDTO` | JSON has no `exhausted` key |
 | ingestion-error-dto-006 | progress-fields | `RetryProgressDTO(running: true, total: 10, processed: 4, recovered: 3, stillFailing: 1)` | each field reads back |
-| ingestion-error-dto-007 | progress-polling | a progress value with `running` false, `total` 10, `processed` 10 | the poller stops |
+| ingestion-error-dto-007 | progress-polling | a progress value with `running` false, `total` 10, `processed` 10, encoded then decoded | `running` reads false and `processed` equals `total`: the stop signal a poller reads (the poller is UI code, not tested here) |
 | ingestion-error-dto-008 | error-last-retried | encode an `IngestionErrorDTO` with `lastRetriedAt` nil | the synthesized encoding omits the key; decode gives nil |
 | ingestion-error-dto-009 | no-validation | `IngestionErrorLogDTO` with `status: "mystery"` | constructs; `status` reads `mystery` |
 | ingestion-error-dto-010 | log-no-defaults | construct an `IngestionErrorLogDTO` | every argument must be written, nil included (a compile-time check, not a runtime vector) |
@@ -156,7 +156,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/IngestionErrorDTO.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/IngestionErrorDTO.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -187,10 +187,11 @@ Not applicable: this code makes no log calls.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | reliability |
 
-separation-of-concerns passes: the file holds three shapes; quarantine, retry and persistence are the daemon's. unit-test-coverage is partial: `IngestionErrorLogTests` covers the log row's status lifecycle through the database, but no test references `IngestionErrorDTO` or `RetryProgressDTO`, so vectors 001, 002, 006 to 010 rest on the declarations alone. error-recovery passes: the shapes expose the retry budget (`retryCount`, `exhausted`), resolved states and batch progress that a recovery UI needs.
+separation-of-concerns passes: the file holds three shapes; quarantine, retry and persistence are the daemon's. unit-test-coverage is partial: `IngestionErrorLogTests` covers the log row's status lifecycle through the database, and `IngestionErrorDTOConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/IngestionErrorDTOConformanceTests.swift`) covers vectors 001 to 009; vector 010 is skipped because it is a compile-time check with no runtime behavior. error-recovery passes: the shapes expose the retry budget (`retryCount`, `exhausted`), resolved states and batch progress that a recovery UI needs.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (IngestionErrorDTOConformanceTests.swift, 9 of 10 new vectors plus 011-015 already covered by IngestionErrorLogTests); unit-test-coverage now partial (vector 010 is a compile-time check, skipped). |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Stated ISO-8601 timestamps, added an unknown-status requirement, deduplicated the lost and maxRetries text, clarified the empty batch, set Configuration to not applicable, fixed the SwiftUI and AppKit notes, and added related links. |

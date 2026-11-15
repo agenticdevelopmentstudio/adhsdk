@@ -4,7 +4,7 @@
     "id": "3c0de3a7-a4ed-4eba-b7af-8f6a9cd899f1",
     "title": "Composite Chat Tool Source",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -27,7 +27,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7f7913ed6ca9f9da",
+  "synced": "11c44c111edef80c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

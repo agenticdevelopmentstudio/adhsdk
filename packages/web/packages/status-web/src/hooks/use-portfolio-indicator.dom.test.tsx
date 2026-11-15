@@ -14,8 +14,7 @@ import { usePortfolioIndicator } from "./use-portfolio-indicator";
 // `use-board.dom.test.tsx`, alongside a test that this hook and `GlobalPanel` agree.
 
 const mockState = vi.hoisted(() => ({
-  snapshot: null as { generatedAt: string; freshness?: { state: string; asOf: string | null } } | null,
-  offline: false,
+  snapshot: null as { generatedAt: string; freshness?: { state: string; asOf: string | null } } | null,  offline: false,
   blind: false,
   board: null as { generatedAt: string; indicator: "operational" | "degraded" | "outage"; problems: unknown[] } | null,
 }));
@@ -31,6 +30,118 @@ afterEach(() => {
   mockState.offline = false;
   mockState.blind = false;
   mockState.board = null;
+});
+
+type Indicator = "operational" | "degraded" | "outage";
+const boardOf = (indicator: Indicator, problemCount = 0): NonNullable<typeof mockState.board> => ({
+  generatedAt: "2026-01-01T00:00:00.000Z",
+  indicator,
+  problems: Array.from({ length: problemCount }, (_, i) => ({ id: `p${i + 1}` })),
+});
+const snapshotWith = (freshness?: { state: string; asOf: string | null }): NonNullable<typeof mockState.snapshot> => ({
+  generatedAt: "2026-01-01T00:00:00.000Z",
+  ...(freshness ? { freshness } : {}),
+});
+const FRESH = { state: "fresh", asOf: "2026-01-01T00:00:00.000Z" };
+
+describe("usePortfolioIndicator — conformance vectors", () => {
+  it("portfolio-001: null snapshot is not stale; operational board maps to ok", () => {
+    mockState.board = boardOf("operational");
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current).toEqual({ pillKey: "ok", count: 0 });
+  });
+
+  it("portfolio-002: no board is unknown with count 0", () => {
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current).toEqual({ pillKey: "unknown", count: 0 });
+  });
+
+  it("portfolio-003: offline is unknown but the count still comes from the board", () => {
+    mockState.offline = true;
+    mockState.board = boardOf("operational", 1);
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current).toEqual({ pillKey: "unknown", count: 1 });
+  });
+
+  it("portfolio-004: blind is unknown with the board's count", () => {
+    mockState.blind = true;
+    mockState.board = boardOf("degraded", 2);
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current).toEqual({ pillKey: "unknown", count: 2 });
+  });
+
+  it("portfolio-005: degraded maps to warn", () => {
+    mockState.snapshot = snapshotWith(FRESH);
+    mockState.board = boardOf("degraded", 2);
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current).toEqual({ pillKey: "warn", count: 2 });
+  });
+
+  it("portfolio-006: outage maps to down", () => {
+    mockState.snapshot = snapshotWith(FRESH);
+    mockState.board = boardOf("outage", 1);
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current).toEqual({ pillKey: "down", count: 1 });
+  });
+
+  it("portfolio-007: a stale snapshot verdict forces unknown", () => {
+    mockState.snapshot = snapshotWith({ state: "stale", asOf: "2026-01-01T00:00:00.000Z" });
+    mockState.board = boardOf("operational");
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current).toEqual({ pillKey: "unknown", count: 0 });
+  });
+
+  it("portfolio-008: a very-stale snapshot verdict forces unknown", () => {
+    mockState.snapshot = snapshotWith({ state: "very-stale", asOf: "2026-01-01T00:00:00.000Z" });
+    mockState.board = boardOf("operational");
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current.pillKey).toBe("unknown");
+  });
+
+  it("portfolio-009: a fresh snapshot verdict leaves the board's verdict standing", () => {
+    mockState.snapshot = snapshotWith(FRESH);
+    mockState.board = boardOf("operational");
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current.pillKey).toBe("ok");
+  });
+
+  it("portfolio-010: a fresh verdict with no data clock (no probe yet) is not an alarm", () => {
+    mockState.snapshot = snapshotWith({ state: "fresh", asOf: null });
+    mockState.board = boardOf("operational");
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current.pillKey).toBe("ok");
+  });
+
+  it("portfolio-011: a snapshot with no freshness verdict reads as unknown without throwing", () => {
+    mockState.snapshot = snapshotWith();
+    mockState.board = boardOf("operational");
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current.pillKey).toBe("unknown");
+  });
+
+  it("portfolio-012: a stale snapshot alone overrides an outage board", () => {
+    mockState.snapshot = snapshotWith({ state: "stale", asOf: "2026-01-01T00:00:00.000Z" });
+    mockState.board = boardOf("outage", 1);
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(result.current).toEqual({ pillKey: "unknown", count: 1 });
+  });
+
+  // portfolio-013 runs against the real useBoard in use-board.dom.test.tsx (this file mocks useBoard).
+
+  it("portfolio-014: no memoisation; a null board after an ok verdict reads unknown", () => {
+    mockState.board = boardOf("operational");
+    const { result, rerender } = renderHook(() => usePortfolioIndicator());
+    expect(result.current.pillKey).toBe("ok");
+    mockState.board = null;
+    rerender();
+    expect(result.current.pillKey).toBe("unknown");
+  });
+
+  it("portfolio-015: the result has exactly the keys pillKey and count", () => {
+    mockState.board = boardOf("degraded", 1);
+    const { result } = renderHook(() => usePortfolioIndicator());
+    expect(Object.keys(result.current).sort()).toEqual(["count", "pillKey"]);
+  });
 });
 
 describe("usePortfolioIndicator — trusts useBoard's null fold, doesn't re-derive it", () => {

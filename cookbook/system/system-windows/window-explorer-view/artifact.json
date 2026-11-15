@@ -4,11 +4,11 @@
     "id": "8aee173a-25e4-443e-a9ab-d629b58817e1",
     "title": "Window Explorer View",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dd7d0ec1a0d76e54",
+  "synced": "dc77880f223bf81a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

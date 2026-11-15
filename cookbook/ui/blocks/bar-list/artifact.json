@@ -4,7 +4,7 @@
     "id": "d2534210-3131-48d5-a6f2-d5fa85bb5347",
     "title": "BarList",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "27f18e863a87470a",
+  "synced": "9a1d64ccffbe15af",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

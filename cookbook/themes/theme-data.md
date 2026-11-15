@@ -2,7 +2,7 @@
 id: 6ddafe05-a417-498d-90b1-00f69c89f7ac
 title: "Theme Data"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -97,8 +97,7 @@ Not applicable: the module has no interactive or visual state. The only states a
 Not applicable: the module renders nothing. Its `accessibilityCss` string carries the reduce-motion, contrast and text-size rules, but those are specified by the appearance recipe ([adhsdk.ingredient.themes.appearance](cookbook:0f721fc3-0e8f-4a1b-b895-1b1bad370bd0)), and this module only transports the text unchanged.
 
 ## Conformance Test Vectors
-
-The only test of the generator itself is `src/__tests__/themeDataInSync.test.ts`, which covers theme-data-014 (generated-in-sync). The other tests that read the data go through the manifest: `rescued-themes.test.ts`, `darkAlwaysThemes.test.ts` and `buildScopedCss.test.ts` (`ThemeStyle.test.tsx` mocks the manifest and so never reads the data). Vectors 001 and 002 derive from them and the rest from the generator source. Vectors 003 to 013 have no test yet; vectors 003 to 005, 010 and 011 belong in a `buildThemeData.test.ts` beside the scripts that calls `renderThemeData` on a temporary styles directory, and vectors 006 to 009 in an `inlineImports.test.ts` and a script-run test in the same folder.
+All fifteen vectors are tested in `packages/web/packages/themes/src/__tests__/buildThemeData.test.ts`, one `it` per vector with the vector id at the start of its title. The tests call `renderThemeData` on temporary styles directories and run `scripts/build-theme-data.mjs` as a child process in a temporary package root (the vitest config only collects tests under `src`). `src/__tests__/themeDataInSync.test.ts` also covers theme-data-014 on its own.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -196,10 +195,10 @@ Not applicable: the module logs nothing. The generator prints one completion lin
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/scripts/build-theme-data.mjs` | confirmed (1.0.2) |
-| web | `packages/web/packages/themes/src/theme-data.ts` | confirmed (1.0.2) |
-| web | `packages/web/packages/themes/scripts/theme-data.mjs` | confirmed (1.0.2) |
-| web | `packages/web/packages/themes/scripts/inline-imports.mjs` | confirmed (1.0.2) |
+| web | `packages/web/packages/themes/scripts/build-theme-data.mjs` | confirmed (1.0.3) |
+| web | `packages/web/packages/themes/src/theme-data.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/themes/scripts/theme-data.mjs` | confirmed (1.0.3) |
+| web | `packages/web/packages/themes/scripts/inline-imports.mjs` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -231,16 +230,17 @@ Not applicable: the module logs nothing. The generator prints one completion lin
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.post-generation-verification](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/55f00387-840c-508a-a01b-38b1f5091e9d) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 
-The generated module keeps one concern: it holds stylesheet text and nothing else, while reading, import inlining and writing sit in three small scripts and the choice of theme sits in the manifest, so separation of concerns passes. No test sits beside the generator scripts; the manifest-level tests only prove the strings are non-empty and parse as the expected stylesheets, and vectors 003 to 013 below have no test, so unit-test coverage is partial. `src/__tests__/themeDataInSync.test.ts` re-renders the file through the same `renderThemeData` the generator uses and compares it with the file on disk, so post-generation verification passes. The inliner reports a self-import clearly, but a missing import target surfaces as a raw file system error and a duplicate export name is not detected, so explicit error handling is partial.
+The generated module keeps one concern: it holds stylesheet text and nothing else, while reading, import inlining and writing sit in three small scripts and the choice of theme sits in the manifest, so separation of concerns passes. `src/__tests__/buildThemeData.test.ts` covers all fifteen vectors against the generator scripts and the shipped stylesheets, so unit-test coverage passes. `src/__tests__/themeDataInSync.test.ts` re-renders the file through the same `renderThemeData` the generator uses and compares it with the file on disk, so post-generation verification passes. The inliner reports a self-import clearly, but a missing import target surfaces as a raw file system error and a duplicate export name is not detected, so explicit error handling is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (buildThemeData.test.ts, 15 of 15 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Replaced hard-coded counts with rules, named the sync test and the build, dev and lint hooks, added the self-import no-output rule, a byte-for-byte vector and a collision Design Decision, reworded the outside-directory edge case and linked appearance, manifest and theme-style. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | A sync test compares the generated file with a fresh render; the render moved to scripts/theme-data.mjs |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

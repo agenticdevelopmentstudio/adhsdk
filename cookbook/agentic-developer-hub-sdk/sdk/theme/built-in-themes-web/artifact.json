@@ -4,7 +4,7 @@
     "id": "4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d",
     "title": "Built-In Themes (Web Catalogue)",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f59a5e19ea10a465",
+  "synced": "25fa16696b986d01",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

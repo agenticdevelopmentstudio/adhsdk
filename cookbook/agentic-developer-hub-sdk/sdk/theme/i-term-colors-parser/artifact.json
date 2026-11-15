@@ -4,7 +4,7 @@
     "id": "231a7e9a-8c03-44b3-afaf-b71755e05c1d",
     "title": "ITermColorsParser",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9ad9b5200f8e83d2",
+  "synced": "6e2ceba51933db1c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

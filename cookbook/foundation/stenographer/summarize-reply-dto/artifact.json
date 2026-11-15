@@ -4,7 +4,7 @@
     "id": "703b9227-1bed-46ae-91f8-353c5908883d",
     "title": "Summarize Reply DTO",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "595af3249af53646",
+  "synced": "5714482e1c62747f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

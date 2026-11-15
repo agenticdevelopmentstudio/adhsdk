@@ -4,11 +4,11 @@
     "id": "37dfdd98-266a-4253-8f0a-42987017844a",
     "title": "Billing Activity Cache",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-10-04",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6770e7f273f06126",
+  "synced": "e5975fcf0afc91a3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

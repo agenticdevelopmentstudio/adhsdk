@@ -2,7 +2,7 @@
 id: 9cf9784d-48c9-4b29-b553-c72ffdfce7b9
 title: "Account"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -158,7 +158,7 @@ Not applicable: the source makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/Account.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/Account.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 
@@ -190,10 +190,11 @@ Not applicable: the source makes no log calls.
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | privacy-and-data |
 
-The contract separates concerns cleanly: the protocol and value types hold no UI, storage or network code, and platform specifics reach it only through the type-erased anchor. Unit tests cover `AccountUser.initials` (three cases) and the weak anchor, so coverage is partial: the protocol has only a stub conformer in the tests, and `AccountState` equality, the `onChange` rules and the `restore()` rules have no test in `AccountsTests.swift`. The source makes no log calls, so personal data in `AccountUser` is not written to logs here.
+The contract separates concerns cleanly: the protocol and value types hold no UI, storage or network code, and platform specifics reach it only through the type-erased anchor. `AccountsTests.swift` now covers `AccountUser.initials`, the weak anchor, `AccountState` equality, construction without validation, and the hidden Signup row for a conformer with no signup URL (AC-001 to AC-008, AC-011 to AC-013). Coverage is partial: AC-009 (`onChange` single slot) and AC-010 (`restore()` idempotence) are protocol contracts with no implementation in this source, only stub conformers, so they are skipped. The source makes no log calls, so personal data in `AccountUser` is not written to logs here.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (AccountsTests.swift, 11 of 13 vectors); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Design rationales, full declaration, initials rules and untested-vector notes (earlier round); now links the accounts UI and registry as related, adds an id stability and uniqueness requirement, and marks Configuration not applicable. |

@@ -25,6 +25,7 @@ export function Checkbox({
 }: CheckboxProps) {
   const generatedId = useId()
   const fieldId = id ?? generatedId
+  const hintId = hint ? `${fieldId}-hint` : undefined
   const cls = [
     'aws-field',
     'aws-field--checkbox',
@@ -43,13 +44,18 @@ export function Checkbox({
           role={appearance === 'switch' ? 'switch' : undefined}
           className="aws-checkbox__input"
           checked={value}
+          aria-describedby={hintId}
           disabled={disabled}
           onChange={(e) => onChange(e.target.checked)}
         />
         <span className={`aws-checkbox__indicator aws-checkbox__indicator--${appearance}`} />
         {label && <span className="aws-checkbox__label">{label}</span>}
       </label>
-      {hint && <p className="aws-field__hint">{hint}</p>}
+      {hint && (
+        <p id={hintId} className="aws-field__hint">
+          {hint}
+        </p>
+      )}
     </div>
   )
 }

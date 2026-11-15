@@ -1,4 +1,4 @@
-Test coverage for this module is indirect. `clearAppearance.test.ts` exercises `applyAppearance` and `clearAppearance` directly (appearance-016 and appearance-017), and `appearanceScope.test.ts` and `AppearanceScope.test.tsx` exercise them through the store. No test file targets `normalizeAppearance`, the storage functions or the pre-paint script, so the other vectors are derived from the source and unverified by a test.
+Every vector is asserted by a test whose title starts with its id: `appearance.test.ts` covers all but appearance-016 and appearance-017, which `clearAppearance.test.ts` covers. The store tests (`appearanceScope.test.ts`, `AppearanceScope.test.tsx`) exercise apply and clear through the store as well.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -21,7 +21,7 @@ Test coverage for this module is indirect. `clearAppearance.test.ts` exercises `
 | appearance-017 | clear-undoes-prepaint, clear-removes-all | An `html` element with `data-color-mode="auto"` and class `dark`; `clearAppearance(el)` | `data-color-mode` is absent and the `dark` class is gone |
 | appearance-018 | prepaint-resolve-dark, prepaint-colormode-attribute | Run the script with `{"colorMode":"dark"}` stored | `dark` class on `<html>`, `data-color-mode="dark"` |
 | appearance-019 | prepaint-resolve-dark, prepaint-colormode-attribute | Run the script with nothing stored and `matchMedia` reporting dark | `dark` class on `<html>`, `data-color-mode="auto"` |
-| appearance-020 | prepaint-attributes | Run the script with `{"contrast":"default","textSize":"large","focusOutlines":false}` stored | `data-text-size="large"` only; no `data-contrast`, no `data-focus-outlines` |
+| appearance-020 | prepaint-attributes | Run the script with `{"contrast":"default","textSize":"large","focusOutlines":false}` stored | `data-text-size="large"` set, with `data-color-mode="auto"` (always written); no `data-contrast`, no `data-focus-outlines` |
 | appearance-021 | prepaint-swallows-errors | Run the script with the literal text `null` stored | No exception escapes; `<html>` is left without the `dark` class and without `data-color-mode` |
 | appearance-022 | prepaint-no-validation | Run the script with `{"contrast":"bogus"}` stored | `data-contrast="bogus"` is written |
 | appearance-023 | prepaint-position, prepaint-plugin-name | `appearancePrepaint().transformIndexHtml()` | One tag, `script`, `children` equal to `APPEARANCE_PREPAINT_SCRIPT`, `injectTo: "head"`; plugin `name` is `adh-appearance-prepaint` |

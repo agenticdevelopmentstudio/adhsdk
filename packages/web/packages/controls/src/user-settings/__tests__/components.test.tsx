@@ -161,6 +161,76 @@ describe('ColorPicker', () => {
     fireEvent.change(screen.getByLabelText('C'), { target: { value: '#00ff00' } })
     expect(onChange).toHaveBeenCalledWith('#00ff00')
   })
+
+  it('color-001 renders the label with htmlFor matching the input id', () => {
+    const { container } = render(<ColorPicker label="Choose Color" value="#ff0000" onChange={() => {}} />)
+    const label = screen.getByText('Choose Color') as HTMLLabelElement
+    const input = container.querySelector('input[type="color"]') as HTMLInputElement
+    expect(label.tagName).toBe('LABEL')
+    expect(input.id).not.toBe('')
+    expect(label.htmlFor).toBe(input.id)
+    expect(screen.getByLabelText('Choose Color')).toBe(input)
+  })
+
+  it('color-002 input value is normalized to lowercase', () => {
+    const { container } = render(<ColorPicker value="#FF0000" onChange={() => {}} />)
+    expect((container.querySelector('input') as HTMLInputElement).value).toBe('#ff0000')
+  })
+
+  it('color-003 onChange receives the picked color', () => {
+    const onChange = vi.fn()
+    const { container } = render(<ColorPicker value="#000000" onChange={onChange} />)
+    fireEvent.change(container.querySelector('input')!, { target: { value: '#00ff00' } })
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith('#00ff00')
+  })
+
+  it('color-004 hex display shows the raw value prop unchanged', () => {
+    const { container } = render(<ColorPicker value="#FF0000" onChange={() => {}} />)
+    expect(container.querySelector('.aws-color__hex')!.textContent).toBe('#FF0000')
+  })
+
+  it('color-005 disabled prop disables the input', () => {
+    const { container } = render(<ColorPicker value="#ff0000" onChange={() => {}} disabled />)
+    expect(container.querySelector('input')).toBeDisabled()
+  })
+
+  it('color-006 renders the hint', () => {
+    const { container } = render(
+      <ColorPicker value="#ff0000" onChange={() => {}} hint="Select brand color" />,
+    )
+    expect(container.querySelector('.aws-field__hint')!.textContent).toBe('Select brand color')
+  })
+
+  it('color-007 generates a unique id when none is supplied, and honors an explicit one', () => {
+    const { container } = render(
+      <>
+        <ColorPicker value="#ff0000" onChange={() => {}} />
+        <ColorPicker value="#00ff00" onChange={() => {}} />
+        <ColorPicker value="#0000ff" onChange={() => {}} id="mine" />
+      </>,
+    )
+    const ids = Array.from(container.querySelectorAll('input')).map((i) => i.id)
+    expect(ids[0]).not.toBe('')
+    expect(ids[1]).not.toBe('')
+    expect(ids[0]).not.toBe(ids[1])
+    expect(ids[2]).toBe('mine')
+  })
+
+  it('color-008 hex display is aria-hidden', () => {
+    const { container } = render(<ColorPicker value="#ff0000" onChange={() => {}} />)
+    expect(container.querySelector('.aws-color__hex')!.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('color-009 className is applied to the container div', () => {
+    const { container } = render(
+      <ColorPicker value="#ff0000" onChange={() => {}} className="custom-class" />,
+    )
+    const root = container.firstElementChild as HTMLElement
+    expect(root.tagName).toBe('DIV')
+    expect(root.classList.contains('custom-class')).toBe(true)
+    expect(root.classList.contains('aws-field--color')).toBe(true)
+  })
 })
 
 describe('SettingsButton', () => {

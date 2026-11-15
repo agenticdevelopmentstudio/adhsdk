@@ -2,7 +2,7 @@
 id: d2213cbb-1a6e-452e-98f0-acd2007c8430
 title: "Partner Process"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -101,7 +101,7 @@ Not applicable — this is a process wrapper that exchanges typed messages, not 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `configuration` | `PartnerProcessConfiguration` | none, required | Supplies the executable, arguments and working directory (see [Partner Process Configuration](cookbook:c77c4cfb-e9be-4339-b40d-3f7abc6a4543)). |
+| `configuration` | `PartnerProcessConfiguration` | none, required | Supplies the executable, arguments and working directory (see Partner Process Configuration ([adhsdk.ingredient.foundation.partner.partner-process-configuration](cookbook:c77c4cfb-e9be-4339-b40d-3f7abc6a4543))). |
 | `environment` | `[String: String]` | none, required | The child's whole environment under the replace policy; an empty dictionary inherits the parent's. |
 | framing | fixed | newline-delimited | One JSON object per line in both directions. |
 | stream buffer | fixed | unbounded | The default `AsyncStream` buffering policy. |
@@ -156,7 +156,7 @@ The error description is interpolated without a privacy annotation, so the platf
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcess.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcess.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -188,13 +188,14 @@ The error description is interpolated without a privacy annotation, so the platf
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | Reliability |
 
-`separation-of-concerns` passes because spawning, framing and pipes are the `SubprocessChannel`'s, line decoding is `ClaudeStreamMessage`'s and launch arguments are `PartnerProcessConfiguration`'s; this type only joins them. `unit-test-coverage` is partial: `PartnerProcessTests` runs real processes (`/bin/cat` and `/bin/echo`) and covers echo and terminate, the second `messages()` call, a skipped undecodable line and a decoded result line, but it has no test for send-before-start, start-once, launch failure, terminate-unstarted or the stderr text; those are covered only by the channel's own contract, not by this suite. `error-recovery` is partial: a read error ends the stream with a debug log only, and nothing restarts the process.
+`separation-of-concerns` passes because spawning, framing and pipes are the `SubprocessChannel`'s, line decoding is `ClaudeStreamMessage`'s and launch arguments are `PartnerProcessConfiguration`'s; this type only joins them. `unit-test-coverage` passes: `PartnerProcessConformanceTests` runs real processes (`/bin/cat`, `/bin/echo`, `/bin/sh`) and covers all 12 vectors, including send-before-start, start-once, launch failure, terminate-unstarted, the stderr text, ordering, environment replacement and buffering. `error-recovery` is partial: a read error ends the stream with a debug log only, and nothing restarts the process.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerProcessConformanceTests.swift, 12 of 12 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Marked test coverage partial, pointed stderr text at the channel, added a stream-end alternatives discussion and framing, environment and buffering vectors, links to its ingredients, and moved caller and internal-API text out of requirements. |

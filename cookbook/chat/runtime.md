@@ -2,7 +2,7 @@
 id: 98a0f3de-1489-465d-b1aa-017f4505d05d
 title: "Chat Coordinator Runtime"
 type: ingredient
-version: 1.0.2
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-23
@@ -35,7 +35,7 @@ The chat coordinator runtime is the headless reference implementation of the
 cross-platform chat contract's `Orchestrator`/`ChatViewModel` surface. It has
 no rendered UI of its own — a host layer (`useChatSession` or a similar hook,
 outside the scope of this ingredient) constructs it and lets UI components read
-its state and call its methods. It is three cooperating pieces, in `packages/web/packages/chat/src/runtime/`; later sections say "this runtime" for all three. It implements the contract that the [persona chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b) and [backends](cookbook:91891cc2-3511-4d00-888a-1ff7585c0b64) recipes build on:
+its state and call its methods. It is three cooperating pieces, in `packages/web/packages/chat/src/runtime/`; later sections say "this runtime" for all three. It implements the contract that the persona chat ([adhsdk.ingredient.chat.modes.persona-chat](cookbook:447d0e33-c66e-4bf9-8511-e7823bdbcf9b)) and backends ([adhsdk.ingredient.chat.backends](cookbook:91891cc2-3511-4d00-888a-1ff7585c0b64)) recipes build on:
 
 - **`DefaultOrchestrator`** (`DefaultOrchestrator.ts`) — the reference
   `Orchestrator` implementation. It consumes an injected `Backend`'s
@@ -73,6 +73,7 @@ implementation without changing `DefaultOrchestrator`'s contract.
 - **start-is-idempotent**: Every call to `start()` after the first MUST be a no-op: at most one inbound event-consumption task ever runs per instance, and a later call MUST NOT create a second one.
 - **stop-cancels-iterator**: `stop()` MUST end inbound consumption: it MUST call `return()` on the active async iterator, if one exists, to signal early termination of the inbound stream, and the event loop MUST NOT begin another iteration afterward.
 - **stop-before-start-locks-the-loop**: If `stop()` is called before `start()` has ever been called, a later `start()` call MUST still never consume any event; nothing in this source ever re-enables consumption once `stop()` has been called.
+- **event-loop-recovery**: When the iterator's `next()` rejects inside the event loop, the loop MUST notify one `error` `ChatUpdate` carrying the rejection's message (`error.message` when it is an `Error`, else `String(error)`) and end. `started` is not reset, so a later `start()` is a no-op and consumption MUST NOT resume on that instance; no retry, backoff or reconnect is performed.
 
 ### Display Configuration
 
@@ -187,7 +188,7 @@ describe.
 
 ## Conformance Test Vectors
 
-Test file: `packages/web/packages/chat/src/runtime/__tests__/scenarios.test.ts` (harness in `harness.ts` beside it); each vector names its test by title. Vectors marked Unverified are derived from the source and no named test exercises them.
+Test file: `packages/web/packages/chat/src/runtime/__tests__/scenarios.test.ts` (harness in `harness.ts` beside it); each vector names its test by title. ccr-023 through ccr-039 are tested in `runtimeVectors.test.ts` beside it, each test titled with its vector id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -213,23 +214,23 @@ Test file: `packages/web/packages/chat/src/runtime/__tests__/scenarios.test.ts` 
 | ccr-020 | transport-error-relayed-verbatim | `emit({ kind: 'transportError', message: 'socket closed' })` | A captured update has `kind: 'error'` and `message: 'socket closed'` — `scenarios.test.ts "emits an error update on transportError events"` |
 | ccr-021 | add-remove-observer-mutate-the-same-set | `addObserver(obs)` then `removeObserver(obs)`, then a `typing` event is emitted | `obs` records zero updates — `scenarios.test.ts "does not notify after removeObserver"` |
 | ccr-022 | list-commands-returns-config-commands | `createHarness({ commands: [cmd] })` | `orchestrator.listCommands()` equals `[cmd]` exactly — `scenarios.test.ts "listCommands returns the commands handed in via ChatConfig"` |
-| ccr-023 | send-mints-sequential-local-ids | Two sequential `backend.send(...)` calls on a fresh `ScriptedBackend` with the default prefix | Resolved ids are `'local-1'` then `'local-2'`, both recorded in `sent` in call order — derived directly from `ScriptedBackend.send`'s counter (Unverified: no dedicated `ScriptedBackend` test file exists, and no named test exercises it) |
-| ccr-024 | close-drains-queue-before-ending | `backend.emit(eventA)` with no consumer awaiting yet; then `backend.close()`; then a consumer's first, then second, `next()` call | The first `next()` still yields `eventA` (`done: false`); the second `next()` resolves `done: true` — derived directly from the `inboundEvents` iterator checking its queue before checking closed state (Unverified: no dedicated `ScriptedBackend` test file exists, and no named test exercises it) |
-| ccr-025 | start-is-idempotent | `start()` called twice on a fresh orchestrator over a `ScriptedBackend`, then one `messageReceived` emitted | `messages` has length 1 and observers saw one `messagesChanged` (Unverified, derived from source) |
-| ccr-026 | stop-cancels-iterator | `start()`, then `stop()`, then `emit({ kind: 'messageReceived', ... })` | The event is never processed: `messages` stays length 0 (Unverified, derived from source) |
-| ccr-027 | stop-before-start-locks-the-loop | `stop()`, then `start()`, then `emit({ kind: 'messageReceived', ... })` | The event is never processed: `messages` stays length 0 (Unverified, derived from source) |
-| ccr-028 | submit-message-failure-no-echo | `backend.send` rejects with `new Error('offline')`; `submitMessage('hi', [])` | `submitMessage` rejects with the same error; an `error` update with `message: 'offline'` is notified; `messages` stays length 0 (Unverified, derived from source) |
-| ccr-029 | respond-to-widget-rollback-on-rejection | After a `widgetPresented` event, `respondToWidget(...)` against a `Backend` whose `submitWidgetResponse` rejects with `new Error('nope')` | `respondToWidget` rejects with the same error; `pendingWidgets` is length 1 again; `pendingWidgetsChanged` was notified twice and an `error` update with `message: 'nope'` once (Unverified, derived from source) |
-| ccr-030 | respond-to-widget-unconditional-forward | `respondToWidget({ widgetID: 'unknown', ... })` with no pending widgets | `backend.widgetResponses` has length 1; no `pendingWidgetsChanged` update is notified (Unverified, derived from source) |
-| ccr-031 | read-marker-regression-guard-by-position | `messages` holds `srv-1` then `srv-2`; `markRead('srv-2')`, then `markRead('srv-1')` | The local cursor stays `upToMessageID: 'srv-2'` (Unverified, derived from source) |
-| ccr-032 | read-marker-regression-guard-by-time | No matching messages; `readMarkerAdvanced` for the persona with `upToMessageID: 'x'` at time T2, then with `upToMessageID: 'y'` at an earlier time T1 | The persona cursor stays `upToMessageID: 'x'` and no second `readMarkersChanged` is notified (Unverified, derived from source) |
-| ccr-033 | draft-cleared-also-clears-commands | `commandInvoked` and `draftUpdated` for one participant, then `draftCleared` for the same participant | `activeDrafts` and `activeCommands` are both empty (Unverified, derived from source) |
-| ccr-034 | command-invoked-appends-active-entry | `emit({ kind: 'commandInvoked', participantID: 'p', invocation })` | `activeCommands` has one entry with `participantID: 'p'`, that `invocation`, and `result` unset; `activeCommandsChanged` is notified (Unverified, derived from source) |
-| ccr-035 | command-completed-matches-by-invocation-id, command-completed-sets-result | After ccr-034, `emit({ kind: 'commandCompleted', result })` where `result.invocationID` equals `invocation.id` | The entry's `result` equals `result`; its `participantID` and `invocation` are unchanged; `activeCommandsChanged` is notified (Unverified, derived from source) |
-| ccr-036 | command-completed-matches-by-invocation-id | `commandCompleted` whose `result.invocationID` matches no entry | `activeCommands` is unchanged and no update is notified (Unverified, derived from source) |
-| ccr-037 | permission-response-ignores-unknown-prompt | `await respondToPermission('missing', 'allowAlways')` with no matching prompt | `pendingPermissions` is unchanged, no update is notified, and the store remembers nothing (Unverified, derived from source) |
-| ccr-038 | deliver-bypasses-backend | Without calling `start()`, `deliver({ kind: 'messageReceived', message })` | `messages` has length 1 with that message; the backend recorded no call (Unverified, derived from source) |
-| ccr-039 | iterator-return-unparks-exactly-once | One iterator's `next()` is parked on an empty `ScriptedBackend`; call its `return()`; then `emit(event)` and `close()` | The parked `next()` resolved once with `done: true`; neither `emit` nor `close` resolves it again (Unverified, derived from source) |
+| ccr-023 | send-mints-sequential-local-ids | Two sequential `backend.send(...)` calls on a fresh `ScriptedBackend` with the default prefix | Resolved ids are `'local-1'` then `'local-2'`, both recorded in `sent` in call order — derived directly from `ScriptedBackend.send`'s counter — `runtimeVectors.test.ts "ccr-023 ..."` |
+| ccr-024 | close-drains-queue-before-ending | `backend.emit(eventA)` with no consumer awaiting yet; then `backend.close()`; then a consumer's first, then second, `next()` call | The first `next()` still yields `eventA` (`done: false`); the second `next()` resolves `done: true` — derived directly from the `inboundEvents` iterator checking its queue before checking closed state — `runtimeVectors.test.ts "ccr-024 ..."` |
+| ccr-025 | start-is-idempotent | `start()` called twice on a fresh orchestrator over a `ScriptedBackend`, then one `messageReceived` emitted | `messages` has length 1 and observers saw one `messagesChanged` — `runtimeVectors.test.ts "ccr-025 ..."` |
+| ccr-026 | stop-cancels-iterator | `start()`, then `stop()`, then `emit({ kind: 'messageReceived', ... })` | The event is never processed: `messages` stays length 0 — `runtimeVectors.test.ts "ccr-026 ..."` |
+| ccr-027 | stop-before-start-locks-the-loop | `stop()`, then `start()`, then `emit({ kind: 'messageReceived', ... })` | The event is never processed: `messages` stays length 0 — `runtimeVectors.test.ts "ccr-027 ..."` |
+| ccr-028 | submit-message-failure-no-echo | `backend.send` rejects with `new Error('offline')`; `submitMessage('hi', [])` | `submitMessage` rejects with the same error; an `error` update with `message: 'offline'` is notified; `messages` stays length 0 — `runtimeVectors.test.ts "ccr-028 ..."` |
+| ccr-029 | respond-to-widget-rollback-on-rejection | After a `widgetPresented` event, `respondToWidget(...)` against a `Backend` whose `submitWidgetResponse` rejects with `new Error('nope')` | `respondToWidget` rejects with the same error; `pendingWidgets` is length 1 again; `pendingWidgetsChanged` was notified twice and an `error` update with `message: 'nope'` once — `runtimeVectors.test.ts "ccr-029 ..."` |
+| ccr-030 | respond-to-widget-unconditional-forward | `respondToWidget({ widgetID: 'unknown', ... })` with no pending widgets | `backend.widgetResponses` has length 1; no `pendingWidgetsChanged` update is notified — `runtimeVectors.test.ts "ccr-030 ..."` |
+| ccr-031 | read-marker-regression-guard-by-position | `messages` holds `srv-1` then `srv-2`; `markRead('srv-2')`, then `markRead('srv-1')` | The local cursor stays `upToMessageID: 'srv-2'` — `runtimeVectors.test.ts "ccr-031 ..."` |
+| ccr-032 | read-marker-regression-guard-by-time | No matching messages; `readMarkerAdvanced` for the persona with `upToMessageID: 'x'` at time T2, then with `upToMessageID: 'y'` at an earlier time T1 | The persona cursor stays `upToMessageID: 'x'` and no second `readMarkersChanged` is notified — `runtimeVectors.test.ts "ccr-032 ..."` |
+| ccr-033 | draft-cleared-also-clears-commands | `commandInvoked` and `draftUpdated` for one participant, then `draftCleared` for the same participant | `activeDrafts` and `activeCommands` are both empty — `runtimeVectors.test.ts "ccr-033 ..."` |
+| ccr-034 | command-invoked-appends-active-entry | `emit({ kind: 'commandInvoked', participantID: 'p', invocation })` | `activeCommands` has one entry with `participantID: 'p'`, that `invocation`, and `result` unset; `activeCommandsChanged` is notified — `runtimeVectors.test.ts "ccr-034 ..."` |
+| ccr-035 | command-completed-matches-by-invocation-id, command-completed-sets-result | After ccr-034, `emit({ kind: 'commandCompleted', result })` where `result.invocationID` equals `invocation.id` | The entry's `result` equals `result`; its `participantID` and `invocation` are unchanged; `activeCommandsChanged` is notified — `runtimeVectors.test.ts "ccr-035 ..."` |
+| ccr-036 | command-completed-matches-by-invocation-id | `commandCompleted` whose `result.invocationID` matches no entry | `activeCommands` is unchanged and no update is notified — `runtimeVectors.test.ts "ccr-036 ..."` |
+| ccr-037 | permission-response-ignores-unknown-prompt | `await respondToPermission('missing', 'allowAlways')` with no matching prompt | `pendingPermissions` is unchanged, no update is notified, and the store remembers nothing — `runtimeVectors.test.ts "ccr-037 ..."` |
+| ccr-038 | deliver-bypasses-backend | Without calling `start()`, `deliver({ kind: 'messageReceived', message })` | `messages` has length 1 with that message; the backend recorded no call — `runtimeVectors.test.ts "ccr-038 ..."` |
+| ccr-039 | iterator-return-unparks-exactly-once | One iterator's `next()` is parked on an empty `ScriptedBackend`; call its `return()`; then `emit(event)` and `close()` | The parked `next()` resolved once with `done: true`; neither `emit` nor `close` resolves it again — `runtimeVectors.test.ts "ccr-039 ..."` |
 ## Edge Cases
 
 - **Empty message text (null/empty input).** `submitMessage('', [])` is accepted with no validation — it produces a message with empty `text` and `deliveryStatus: { kind: 'sending' }` exactly like any other call. See submit-message-optimistic-echo, which performs no content validation.
@@ -461,7 +462,7 @@ anywhere in `DefaultOrchestrator.ts`, `InMemoryPermissionStore.ts`, or
 |-------|--------|----------|
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | Reliability |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | partial | Reliability |
 
@@ -473,12 +474,10 @@ loop halts permanently with no further signal (see the event-loop recovery Desig
 `InMemoryPermissionStore` (permission memory), and `ScriptedBackend` (test
 transport) each own exactly one responsibility behind the `Backend`/
 `PermissionStore` interfaces, and `DefaultOrchestrator` never reaches into
-either implementation's internals. The gap is that `ChatConfig` accepts hooks and a permission store whose enforcement no component owns (see the open question on hook-and-permission-enforcement). `unit-test-coverage` is partial:
-`scenarios.test.ts` exercises `DefaultOrchestrator` extensively (18 test
-cases) and, through it, `InMemoryPermissionStore` and `ScriptedBackend`
-indirectly, but neither `InMemoryPermissionStore` nor `ScriptedBackend` has a
-dedicated test file of its own — `close()`'s queue-draining behavior and
-`send()`'s id-minting are untested directly (see ccr-023 and ccr-024).
+either implementation's internals. The gap is that `ChatConfig` accepts hooks and a permission store whose enforcement no component owns (see the open question on hook-and-permission-enforcement). `unit-test-coverage` passes: `scenarios.test.ts` covers ccr-001 through ccr-022 and
+`runtimeVectors.test.ts` covers ccr-023 through ccr-039, including the direct
+`ScriptedBackend` behaviors (id minting, queue draining, iterator return) and
+the `DefaultOrchestrator` lifecycle, failure and rollback paths.
 `fault-tolerance` is partial for the same reason as `explicit-error-handling`:
 the scheduler-equivalent here (the event-loop task) has no catch-up or retry
 mechanism once its source throws. `graceful-degradation` is partial: known,
@@ -493,5 +492,5 @@ or silently missing a whole mechanism.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
-| 1.0.2 | 2026-11-14 | Mike Fullerton | Restated requirements in observable terms, moved event-loop recovery to a Design Decision, made the markRead regression-guard text consistent, corrected the start() consequence, added fifteen test vectors and a test-file path, marked separation-of-concerns partial, and shortened the open-question markers. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Restore requirements lost in the lint pass: event-loop-recovery |
 | 1.0.1 | 2026-09-24 | Mike Fullerton | Phase 6 lint: re-audited open-question markers against the marker rules; kept markers are one-line named bullets. |

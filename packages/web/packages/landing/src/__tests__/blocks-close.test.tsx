@@ -69,6 +69,38 @@ describe('Trust', () => {
     const { container } = render(<Trust items={['Free', 'macOS 14+']} />)
     expect(container.querySelectorAll('ul.lp-trust li')).toHaveLength(2)
   })
+
+  it('trust-001: renders a ul.lp-trust with one li per element item', () => {
+    const { container } = render(<Trust items={[<span>Claim A</span>, <span>Claim B</span>]} />)
+    expect(container.innerHTML).toBe(
+      '<ul class="lp-trust"><li><span>Claim A</span></li><li><span>Claim B</span></li></ul>'
+    )
+  })
+
+  it('trust-002: the ul is the single root, with no wrapping element', () => {
+    const { container } = render(<Trust items={[<span>Claim A</span>]} />)
+    expect(container.children).toHaveLength(1)
+    expect(container.firstElementChild!.tagName).toBe('UL')
+    expect(container.querySelectorAll('ul')).toHaveLength(1)
+  })
+
+  it('trust-003: the ul carries class lp-trust', () => {
+    const { container } = render(<Trust items={[<span>Claim A</span>]} />)
+    expect(container.querySelector('ul')!.getAttribute('class')).toBe('lp-trust')
+  })
+
+  it('trust-004: every entry, including null, becomes an li in order', () => {
+    const Badge = () => <em>Badge</em>
+    const { container } = render(<Trust items={['Text', <Badge />, <span>Mixed</span>, null]} />)
+    const lis = Array.from(container.querySelectorAll('ul.lp-trust > li'))
+    expect(lis).toHaveLength(4)
+    expect(lis.map((li) => li.innerHTML)).toEqual(['Text', '<em>Badge</em>', '<span>Mixed</span>', ''])
+  })
+
+  it('trust-005: an empty items array renders an empty ul.lp-trust', () => {
+    const { container } = render(<Trust items={[]} />)
+    expect(container.innerHTML).toBe('<ul class="lp-trust"></ul>')
+  })
 })
 
 describe('Contact', () => {

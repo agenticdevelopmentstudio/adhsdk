@@ -2,11 +2,11 @@
 id: 4af83bb1-0178-462a-b0fc-ae009b63133f
 title: "Personas"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -450,8 +450,8 @@ confirmed by inspection of every given source file in this domain.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/data/src/personas/` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Personas/` | unverified |
+| web | `packages/web/packages/data/src/personas/` | confirmed (1.1.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Hub/Features/Personas/` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -538,7 +538,11 @@ top comments, zero React or network code. `unit-test-coverage` is `partial`: `Pe
 thoroughly covered by `PersonasModuleTests.swift`, and `canned.ts`/`chat-status.ts`/
 `demo-preview.ts`/`fields.ts`/`personas.ts`/`special-interests.ts` each have a matching
 `__tests__/*.test.ts` file — but `persona-abilities.ts`, `persona-user-tools.ts`, and `wire.ts`
-have no dedicated test file in this checkout. `server-side-authorization` passes: every grant
+have no dedicated test file in this checkout. `__tests__/conformance-vectors.test.ts` has one
+test per conformance vector: the four web-side vectors (demo eligibility and chat-status parsing
+and resolution) pass, and the ten Swift-only vectors (`testRootLevelListsPersonas` through
+`testPersonaDecodesFromWebJSON`) are skipped there because the web package has no facet-navigation
+module or Codable decode, and are covered by `PersonasModuleTests.swift`. `server-side-authorization` passes: every grant
 surface (`personaMayActApi`, `personaToolsApi`, `personaUserToolsApi`, `personaApprovalsApi`)
 defers the actual authorization decision to the server and the client contains no local
 permission check; `interestDocumentsApi`'s act-as-persona header is likewise checked by the
@@ -558,6 +562,7 @@ with what these sources provide.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformance-vectors.test.ts, 4 of 14 vectors passing, 10 Swift-only skipped); unit-test-coverage now partial. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Design Decisions keep the Decision / Rationale / Approved triple; each decision's platform line is folded into its rationale. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to adh/hub/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

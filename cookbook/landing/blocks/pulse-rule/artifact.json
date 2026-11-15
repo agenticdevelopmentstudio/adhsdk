@@ -4,7 +4,7 @@
     "id": "bff3f332-25d0-468d-b6e6-0b668323030c",
     "title": "Pulse Rule",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "0a9fa5ac2a92bce3",
+  "synced": "38d24fcc6f38554b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,7 +2,7 @@
 id: b05ceb21-7c1c-4d62-83ba-01a3132df00a
 title: "AI Provider Config Sync"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -149,7 +149,7 @@ Not applicable: the types call no logging API. Callers must follow **secrets-not
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIProviderConfigSync.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIProviderConfigSync.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -184,10 +184,11 @@ Not applicable: the types call no logging API. Callers must follow **secrets-not
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
 
-`separation-of-concerns` passes because the types only describe the wire shape; applying it, persisting it and recording what landed are done elsewhere. `unit-test-coverage` is partial because tests cover the round trip, the missing selection, the missing removal list and the daemon's full versus partial semantics, but not the missing-key failures or the encoded `removedConfigIds` key. `secure-transport` is partial because the body carries secrets in clear text over loopback HTTP or XPC, with no encryption or redaction in the types; the transport's protections belong to the sender and daemon.
+`separation-of-concerns` passes because the types only describe the wire shape; applying it, persisting it and recording what landed are done elsewhere. `unit-test-coverage` is partial because `AIProviderConfigSyncConformanceTests` (`AgenticDeveloperHubSDKCoreTests/Stenographer/AIProviderConfigSyncConformanceTests.swift`) tests vectors 001 to 009; vector 010 (the alias) is skipped there and covered by `AIPluginKitTests`, vector 011 is compile-time and skipped, and vectors 006 and 007 test only the wire shape there while the daemon's full versus partial semantics are covered by `PreferencesServiceTests`. `secure-transport` is partial because the body carries secrets in clear text over loopback HTTP or XPC, with no encryption or redaction in the types; the transport's protections belong to the sender and daemon.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (AIProviderConfigSyncConformanceTests.swift, 9 of 11 vectors tested, 2 skipped); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Reworded daemon apply rules with MUST keywords, added partial-sync-sends-key and secrets-not-logged requirements, gave real rationales, cited daemon tests for the apply vectors, and linked related specs. |

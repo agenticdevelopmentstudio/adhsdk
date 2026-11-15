@@ -4,7 +4,7 @@
     "id": "dc4d1700-f641-4276-8ecd-ec6790a2c894",
     "title": "Oversight Action DTOs",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -35,7 +35,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "4ec48f02a8c1d9cd",
+  "synced": "214274f8217a0561",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

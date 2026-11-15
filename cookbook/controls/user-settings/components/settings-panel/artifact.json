@@ -4,7 +4,7 @@
     "id": "b3d64a66-ef34-444f-b6b0-449565117d26",
     "title": "Settings Panel",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d34040a5a5ad6ee0",
+  "synced": "ae21fce59658bb02",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

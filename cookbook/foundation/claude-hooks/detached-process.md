@@ -2,7 +2,7 @@
 id: 866770e9-cc76-452f-8216-ee98a8fa1390
 title: "Detached Process"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -154,7 +154,7 @@ Not applicable: this code uses no OSLog and reports failure only through its ret
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/DetachedProcess.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/DetachedProcess.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -194,13 +194,13 @@ Not applicable: this code uses no OSLog and reports failure only through its ret
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: spawning and the per-session lock are each one small type with no knowledge of what is fed. unit-test-coverage is partial: `DetachedProcessTests` covers the payload, the reparenting, the lock's contention, sanitising and fallback, but nothing exercises a failed `posix_spawn`, a failed payload write or a 128-scalar session id.
-
+separation-of-concerns passes: spawning and the per-session lock are each one small type with no knowledge of what is fed. `unit-test-coverage` passes: every vector is covered by `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/DetachedProcessTests.swift`.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (DetachedProcessTests.swift extended with V006-V008; V001-V005 already covered, 8 of 8 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Linked the status-line recipe as related, framed the dispatcher as the motivating caller, moved fixed constants out of Configuration, tied vector 004 to the test's name, added two test vectors, and recorded that lock files are never removed. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

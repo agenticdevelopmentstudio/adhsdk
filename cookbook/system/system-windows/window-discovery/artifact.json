@@ -4,11 +4,11 @@
     "id": "0ab38622-b4a9-424c-89e2-5d27073680c7",
     "title": "Window Discovery",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d9d5504771759500",
+  "synced": "b76be32613199664",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

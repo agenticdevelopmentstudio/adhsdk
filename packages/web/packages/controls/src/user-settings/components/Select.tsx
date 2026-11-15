@@ -26,6 +26,7 @@ export function Select<T extends string = string>({
 }: SelectProps<T>) {
   const generatedId = useId()
   const fieldId = id ?? generatedId
+  const hintId = hint ? `${fieldId}-hint` : undefined
   const cls = ['aws-field', 'aws-field--select', className].filter(Boolean).join(' ')
 
   return (
@@ -39,6 +40,7 @@ export function Select<T extends string = string>({
         id={fieldId}
         className="aws-select"
         value={value}
+        aria-describedby={hintId}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value as T)}
       >
@@ -52,7 +54,11 @@ export function Select<T extends string = string>({
           </option>
         ))}
       </select>
-      {hint && <p className="aws-field__hint">{hint}</p>}
+      {hint && (
+        <p id={hintId} className="aws-field__hint">
+          {hint}
+        </p>
+      )}
     </div>
   )
 }

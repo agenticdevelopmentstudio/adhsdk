@@ -13,6 +13,7 @@
 | viewport-010 | render-children | `<ViewportShell>{null}</ViewportShell>` | Root element renders with no child content |
 | viewport-011 | render-children | `<ViewportShell>{[]}</ViewportShell>` | Root element renders with no child elements |
 | viewport-012 | render-children | `<ViewportShell><span>A</span><span>B</span></ViewportShell>` | Both children appear in the DOM as siblings, in the order provided |
+| viewport-013 | class-name-merge | `<ViewportShell className="  " />` | The whitespace-only string is included verbatim in the joined class attribute; it is not trimmed or filtered out |
 | viewport-014 | clip-prop, open-class | `<ViewportShell clip={true} />` re-rendered with `clip={false}`, then back to `clip={true}` | Class list and computed `overflow` update synchronously on each render; the same children instance is preserved, not remounted |
 | viewport-015 | keyboard-inset | `<ViewportShell />` mounted with `visualViewport.height` equal to `innerHeight` and no event dispatched | `--kb-inset` is `"0px"` (written once on mount, before any event) |
 | viewport-016 | keyboard-inset | `<ViewportShell />` mounted, then `visualViewport` dispatches a `resize` event with `visualViewport.height + visualViewport.offsetTop` greater than `innerHeight` | `--kb-inset` is `"0px"`, never a negative value |

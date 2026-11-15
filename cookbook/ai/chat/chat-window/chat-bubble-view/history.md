@@ -8,3 +8,4 @@
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/chat-window/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | Legacy recipe citations restored to the legacy recipes' own adhsdk://recipes/ domains; the adhsdk://recipes/ form named nothing. |
+| 1.2.3 | 2026-11-15 | Mike Fullerton | Conformance tests added (AIChatBubbleViewConformanceTests.swift, AIChatBubbleLayoutConformanceTests.swift, AIChatBubbleConformanceSupport.swift; 45 of 47 vectors); unit-test-coverage now partial. Vectors 017, 018 and 035 were corrected to match the source. |

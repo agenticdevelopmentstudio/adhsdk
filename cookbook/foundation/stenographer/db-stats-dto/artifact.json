@@ -4,7 +4,7 @@
     "id": "587b3d8d-5f9d-4a32-80ae-ffc053ec49df",
     "title": "Database Stats DTO",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cd5f7d5078533bc5",
+  "synced": "8845a283232802ea",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

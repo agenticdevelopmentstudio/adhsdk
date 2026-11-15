@@ -4,7 +4,7 @@
     "id": "3df8fdde-339e-472f-b6e5-c52aa8738262",
     "title": "JSON-LD",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "81ea660b247108b8",
+  "synced": "b626f8ca2a162601",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

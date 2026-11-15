@@ -22,6 +22,6 @@
 
 ### Related behavior in the same module
 
-- **session-id-accessor**: `ParsedEvent.sessionId` is defined by the envelope-encoding spec ([Parsed Event Envelope](cookbook:7dfeb441-3681-45d3-a11b-049294168607)); this type adds no accessor of its own.
+- **session-id-accessor**: `ParsedEvent.sessionId` is defined by the envelope-encoding spec (Parsed Event Envelope ([adhsdk.ingredient.foundation.sessions.parsed-event-envelope](cookbook:7dfeb441-3681-45d3-a11b-049294168607))); this type adds no accessor of its own.
 - **no-equatable**: The type MUST NOT conform to `Equatable` or `Codable`; tests compare fields one by one, and the serialized form is the envelope.
 

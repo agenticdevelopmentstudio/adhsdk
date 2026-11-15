@@ -1,5 +1,5 @@
 
-No test in the source exercises this module directly; `use-config-status.dom.test.tsx` mocks the unconfigured-partition read (resolving `{ pending: [...], addable: [], noDomain: [], unconfiguredSites: [] }` or failing with an error whose message is `deploy-projects/unconfigured 502`). The vectors below are traced to the source's behavior.
+`use-deploy-projects.dom.test.tsx` exercises this module directly; `use-config-status.dom.test.tsx` separately mocks the unconfigured-partition read (resolving `{ pending: [...], addable: [], noDomain: [], unconfiguredSites: [] }` or failing with an error whose message is `deploy-projects/unconfigured 502`). The vectors below are traced to the source's behavior.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

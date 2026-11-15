@@ -178,7 +178,10 @@ public struct ImportSummary: Codable, Sendable {
         case filesScanned, turnsSeen, eventsInserted, eventsSkipped
         case sessionsCreated, sessionsTouched, metricsUpserted, errors
         case linesSeen, linesInserted, linesSkipped, bytesRead, bytesSkipped
-        case hasMore, cutoffISO
+        case hasMore
+        // Spelled `cutoffIso` so the wire's snake-case round trip lands on it:
+        // `cutoff_iso` decodes back as `cutoffIso`, never `cutoffISO`.
+        case cutoffISO = "cutoffIso"
     }
 
     /// Tolerant decode: this DTO is the daemon→CLI wire contract for

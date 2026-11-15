@@ -4,7 +4,7 @@
     "id": "54b48020-df78-4b41-853c-268ad0ea6b84",
     "title": "Theme Style",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "57e9159466f64d2b",
+  "synced": "3bcf77f70e844165",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

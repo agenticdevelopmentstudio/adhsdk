@@ -4,7 +4,7 @@
     "id": "dccad63a-f56e-4c97-b182-8cdeb7c1a983",
     "title": "Status Server Storage Thread",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7167478ceca76b7c",
+  "synced": "7a5310d1aa2c9c2c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

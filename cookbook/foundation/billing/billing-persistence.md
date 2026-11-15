@@ -2,11 +2,11 @@
 id: 5296d0b7-8416-4e76-8f45-47a726f230cf
 title: "Billing Persistence"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -130,7 +130,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPersistence.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPersistence.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -143,12 +143,13 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-separation-of-concerns passes: this is the seam that keeps rules in the shared tier and storage in the host. unit-test-coverage fails: the protocol is a declaration, and a search of the Tests directories finds no type that conforms to `BillingPersistence` and no test that exercises a conforming store's guard or transaction semantics; `BillingModelTests` and `FakeBillingClient` stand in for the billing service, not for this storage contract, and the host's own database tests live outside this repository.
+separation-of-concerns passes: this is the seam that keeps rules in the shared tier and storage in the host. unit-test-coverage is partial: `BillingPersistenceConformanceTests` names all nine vectors and skips each one, because the guard, transaction and cursor semantics belong to the host's SQLite store (`DatabaseManager`), which is outside this repository, and a fake would only assert its own code. It tests the value types the contract defines (session row, segment context, stored entry, overwrite guards).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingPersistenceConformanceTests.swift, 0 of 9 vectors run, all 9 skipped: need the host's SQLite store; value types tested); unit-test-coverage now partial. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

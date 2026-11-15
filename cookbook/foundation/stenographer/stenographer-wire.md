@@ -2,7 +2,7 @@
 id: e8286557-84ee-4f45-b78c-f1d184c51a37
 title: "Stenographer Wire"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -66,10 +66,10 @@ Not applicable — this is a pair of coder factories, not a visual component.
 | stenographer-wire-002 | decoder-factory | Decode a snake_case summary preference reply. | `SummaryPreferenceResponse` with `maxWords` 8, `activityLines` 60 and the other fields from the body (test: testSummaryResponseDecodesSnakeCase). |
 | stenographer-wire-003 | round-trip | Encode then decode an `OversightPreferenceResponse`. | The decoded value equals the original (test: testOversightRoundTrip). |
 | stenographer-wire-004 | decoder-factory | Decode a `SessionDTO` from daemon JSON with `session_id` `s1`, `event_count` 3 and `started_at` `2026-10-12T00:00:00Z`. | `sessionId` `s1` and `eventCount` 3; `SessionDTO.startedAt` is a `String`, so the timestamp is carried as text and the date strategy is not exercised (test: testSessionDTOStillDecodesFromDaemonJSON). |
-| stenographer-wire-005 | fresh-instance | Call `encoder()` twice. | Two different instances (unverified: derived from the source; no test). |
-| stenographer-wire-006 | encoder-factory | Encode a struct with a `Date` of 2026-10-12 00:00:00 UTC. | The field is the string `2026-10-12T00:00:00Z` (unverified: derived from the strategy; no test). |
-| stenographer-wire-007 | decoder-factory | Decode a date written with fractional seconds, `2026-10-12T00:00:00.123Z`. | Decoding throws a `DecodingError`, because Foundation's `iso8601` strategy accepts only whole seconds (unverified: derived from the strategy; no test). |
-| stenographer-wire-008 | no-validation | Decode `{}` as `SummaryPreferenceResponse` with `decoder()`. | Throws a `DecodingError` for the missing keys (unverified: derived from the source; no test). |
+| stenographer-wire-005 | fresh-instance | Call `encoder()` twice. | Two different instances (test: testV5_encoderReturnsFreshInstanceEachCall). |
+| stenographer-wire-006 | encoder-factory | Encode a struct with a `Date` of 2026-10-12 00:00:00 UTC. | The field is the string `2026-10-12T00:00:00Z` (test: testV6_encoderWritesDatesAsISO8601Strings). |
+| stenographer-wire-007 | decoder-factory | Decode a malformed date string, `not a date`, and a well-formed `2026-10-12T00:00:00Z`. | The well-formed date decodes; the malformed one throws a `DecodingError`. Some Foundation releases also accept fractional seconds, so the vector does not rely on that (test: testV7_decoderRejectsMalformedDateString). |
+| stenographer-wire-008 | no-validation | Decode `{}` as `SummaryPreferenceResponse` with `decoder()`. | Throws a `DecodingError` for the missing keys (test: testV8_decoderDoesNotSupplyMissingKeys). |
 
 ## Edge Cases
 
@@ -128,7 +128,7 @@ Not applicable: the type calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerWire.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerWire.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -152,13 +152,13 @@ Not applicable: the type calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only configures coders; it holds no DTO and does no I/O. `unit-test-coverage` is partial because no test is named for the type, but `StenographerPreferenceDTOsTests` exercises both coders through the preference and session DTOs (snake_case keys, nil omission, round trip), while the date encoding, fractional-second failure and fresh-instance behavior have no assertion.
-
+`separation-of-concerns` passes because the type only configures coders; it holds no DTO and does no I/O. `unit-test-coverage` passes: vectors 001 to 004 are covered by `StenographerPreferenceDTOsTests`, and 005 to 008 by `StenographerWireConformanceTests` (fresh instances, ISO-8601 date encoding, malformed-date rejection, missing keys).
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (StenographerWireConformanceTests.swift, 8 of 8 vectors; 001-004 via existing StenographerPreferenceDTOsTests); unit-test-coverage now passed. Vector 007 text fixed (fractional seconds are accepted on macOS 26). |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the HTTP client recipe, scoped nil-omitted to DTOs, flagged unverified vectors, added ios, and clarified Compose, web and WinUI port notes. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |

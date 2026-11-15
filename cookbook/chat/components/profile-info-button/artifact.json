@@ -4,7 +4,7 @@
     "id": "995da39d-685d-4e28-a572-e6425eace958",
     "title": "ProfileInfoButton",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2975e2331244cfc1",
+  "synced": "d13b281299e953c4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -7,6 +7,6 @@
 | utc-day-004 | day-after | `dayAfter("2026-12-31")`. | `2027-01-01` (test: testDayAfterYearBoundary). |
 | utc-day-005 | day-after | `dayAfter("2024-02-28")`, `dayAfter("2024-02-29")` and `dayAfter("2026-02-28")`. | `2024-02-29`, `2024-03-01` and `2026-03-01` (test: testDayAfterLeapDay). |
 | utc-day-006 | day-after-unparseable, no-throw | `dayAfter("not-a-date")`. | `not-a-date`, unchanged (test: testDayAfterReturnsInputOnGarbage). |
-| utc-day-007 | utc-pinned | `string(from:)` of epoch 1,700,000,000 with the host time zone set to Pacific/Auckland (UTC+13 in November). | `2023-11-14` regardless of host zone; the source pins the zone, though no test varies the host zone. |
-| utc-day-008 | day-after-unparseable | `dayAfter("")` (derived from the source; no test). | The empty string, unchanged. |
-| utc-day-009 | day-after-out-of-range | `dayAfter("2026-13-01")` (derived from the source; no test). | `2026-13-01`, unchanged. |
+| utc-day-007 | utc-pinned | `string(from:)` of epoch 1,700,000,000 with the host time zone set to Pacific/Auckland (UTC+13 in November). | `2023-11-14` regardless of host zone; the source pins the zone (test: testUtcDay007_stringIgnoresHostTimeZone). |
+| utc-day-008 | day-after-unparseable | `dayAfter("")` (test: see UTCDayTests). | The empty string, unchanged. |
+| utc-day-009 | day-after-out-of-range | `dayAfter("2026-13-01")` (test: see UTCDayTests). | `2026-13-01`, unchanged. |

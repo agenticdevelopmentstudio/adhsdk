@@ -4,7 +4,7 @@
     "id": "704d4ae9-e344-44d4-b19c-eadfec082077",
     "title": "Status Line Capture",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "c98aab6b742243d2",
+  "synced": "2c178e4ca5978a80",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

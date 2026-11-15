@@ -4,7 +4,7 @@
     "id": "53408483-6ccf-4a69-bc29-3b5b6e16d4a8",
     "title": "Invalid Timestamp",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8fc49f6a4e8d1375",
+  "synced": "898547a99ddd6c77",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

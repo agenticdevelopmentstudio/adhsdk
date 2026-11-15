@@ -2,7 +2,7 @@
 id: 84c313c7-5204-4955-bca7-46f6c6cd63a8
 title: "Tool JSON Schema"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -74,7 +74,7 @@ Not applicable — this is a schema builder for tool definitions, not a visual c
 | tool-json-schema-007 | fragment-description-verbatim | `string("")` | `description` is the empty string, key still present |
 | tool-json-schema-008 | object-shape | `object(properties: ["u": string("a url")], required: ["u"])` | Top-level keys are exactly `properties`, `required`, `type`; `required` is `["u"]` |
 
-The schema is exercised indirectly as a fixture by `CompositeChatToolSourceTests`, `HostMCPServerTests`, `HostMCPServerDrainTests`, `LocalChatSessionTests`, `MCPHTTPEndpointTests` and `PersonaTerminalChatToolsTests`; no test asserts its output bytes directly.
+The schema is exercised indirectly as a fixture by `CompositeChatToolSourceTests`, `HostMCPServerTests`, `HostMCPServerDrainTests`, `LocalChatSessionTests`, `MCPHTTPEndpointTests` and `PersonaTerminalChatToolsTests`; `ToolJSONSchemaConformanceTests` asserts its output bytes directly, one test per vector.
 
 ## Edge Cases
 
@@ -140,7 +140,7 @@ Not applicable: the component contains no logging call, including on the seriali
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ToolJSONSchema.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ToolJSONSchema.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -168,12 +168,13 @@ Not applicable: the component contains no logging call, including on the seriali
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 
-The enum does one job, building schema bytes, and has no dependencies beyond Foundation, which satisfies separation of concerns. No test file targets `ToolJSONSchema`; other suites call it only to make fixtures, so no assertion covers its output and coverage is partial. The serialization failure is converted to `{}` with no error or log, so explicit error handling is partial.
+The enum does one job, building schema bytes, and has no dependencies beyond Foundation, which satisfies separation of concerns. `ToolJSONSchemaConformanceTests` asserts every conformance vector against the output bytes and the fragments, so coverage passes. The serialization failure is converted to `{}` with no error or log, so explicit error handling is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (ToolJSONSchemaConformanceTests.swift, 8 of 8 vectors); unit-test-coverage now passed. |

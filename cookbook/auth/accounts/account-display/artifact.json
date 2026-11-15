@@ -4,7 +4,7 @@
     "id": "86eccc6f-cd1b-4ac7-bb98-851eb7c54324",
     "title": "Account Display",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "48244cf73dfead36",
+  "synced": "f503cd9021c4d737",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

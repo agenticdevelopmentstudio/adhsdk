@@ -2,11 +2,11 @@
 id: aaf56f9b-896b-4f74-9e18-1ef4116270a9
 title: "Window Contexts"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -245,13 +245,13 @@ Not applicable — this is a window-context persistence store, switching engine,
 | contexts-031 | assign-batch | Assign windows to snapshots in a batch, with an empty list | Returns 0; no windows enumerated |
 | contexts-032 | mark-app-dormant | Live snapshot with `app == "Xcode"`; mark app "xcode"'s windows dormant | Returns 0; snapshot still live |
 | contexts-033 | rematch-app | Dormant Xcode snapshot; live Xcode window scoring 80 against it; re-match dormant windows for app "XCODE" | Returns 1; snapshot's `windowID` is the window's ID |
-| contexts-034 | new-window-autoassign | Dormant snapshot; new window scoring 79 | Checking the new window for auto-assignment returns no value; snapshot stays dormant |
+| contexts-034 | new-window-autoassign | Dormant snapshot; new window scoring 70 (a 60-point substring match plus the 10-point same-display bonus) | Checking the new window for auto-assignment returns no value; snapshot stays dormant |
 | contexts-035 | custom-rule-autoassign | Rule `autoAssign: true`, app "Safari", target "docs"; context named "Docs"; new Safari window whose title the rule matches | Returns the "Docs" context ID; the context gains a snapshot for the window |
 | contexts-036 | rules-write-first | Custom heuristic store whose save throws; add custom heuristic rule `r` | Throws; `customHeuristicRules` unchanged |
 | contexts-037 | model-add-frontmost | Model with no active context; add the frontmost window | Returns `false`; `lastError == "No active context. Switch to a context first."` |
 | contexts-038 | model-cycle | Contexts [A, B, C], active C; switch to the next context | Active becomes A |
 | contexts-039 | model-hidden-apps | `hiddenApps` is `["Zed"]`; add hidden app "Arc"; add hidden app "Arc" again | `hiddenApps == ["Arc", "Zed"]` |
-| contexts-040 | model-unmatched-items | One dormant snapshot; live unassigned windows scoring 30, 0, 90 | One item; candidates scored `[90, 30]` |
+| contexts-040 | model-unmatched-items | One dormant snapshot; live unassigned windows scoring 60, 0, 90 | One item; candidates scored `[90, 60]` |
 | contexts-041 | persist-error-wrap, memory-ahead-of-disk | Make `<root>/contexts` read-only; rename context A to "X" | Throws `persistenceFailed`; `contexts` shows A named "X" |
 | contexts-042 | model-test-environment | Construct the model with `isTestEnvironment: true` | `notificationsEnabled == false`; `observationEnabled == false`; loading state on an empty store leaves `contexts` empty |
 
@@ -386,13 +386,13 @@ Window-controller failures (move, set frame, focus) and notification authorizati
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/ReconcileModels.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextStore.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsSettings.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsState.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextError.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextManager.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextsModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/ReconcileModels.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextStore.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsSettings.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsState.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextError.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextManager.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextsModel.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -466,12 +466,13 @@ Window-controller failures (move, set frame, focus) and notification authorizati
 | [adc.check.privacy-and-data.encryption-at-rest](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/2a8a8918-3e9d-5e0f-a154-106b4f34ca17) | failed | Privacy and Data |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
-`separation-of-concerns` passes: persistence is in the store, window and context logic in the `@MainActor` manager, SwiftUI publishing and user-facing messages in the model, and host branding in an injected configuration, with the window controller and matcher injected. `unit-test-coverage` is partial because `SystemWindowContextManagerTests` covers parking on attach, the no-active-context case, active-context deletion, and both load-time invalidation paths, but nothing tests the store, the settings decoder, the model, switching, or event re-matching. `explicit-error-handling` is partial: store and manager errors are typed and surfaced, but window-controller failures are discarded without a log (the open question on restore-failure-silent) and event operations log rather than surface persistence failures. `data-integrity` is partial because `saveAll` is atomic per file but not across files, and batch assignment can give one window to two snapshots. `state-recovery` passes because a corrupt context file is skipped rather than failing the load, and dormant snapshots keep fingerprints so windows re-attach after relaunch. `graceful-degradation` passes because a missing state file yields an empty state and a failed rules load yields an empty rule list. `no-hardcoded-strings` fails because every error and notification string is an English literal. `encryption-at-rest` fails because window titles and app names are stored in plain JSON. `no-pii-in-logs` passes because logged names and titles go through `Logger` interpolation, which is private by default.
+`separation-of-concerns` passes: persistence is in the store, window and context logic in the `@MainActor` manager, SwiftUI publishing and user-facing messages in the model, and host branding in an injected configuration, with the window controller and matcher injected. `unit-test-coverage` is partial: all 42 vectors are tested, in `SystemWindowContextManagerTests`, `SystemWindowContextsConformanceTests` (manager and model) and `SystemWindowContextStoreConformanceTests` (store and settings), but the window-observer event handlers, the host-app notification path and the multi-display parking layouts are not driven. Vector 024 measures the parking position from the host's leftmost display rather than a forced single screen, and the model tests swap `UserSettings.shared` for an in-memory store. `explicit-error-handling` is partial: store and manager errors are typed and surfaced, but window-controller failures are discarded without a log (the open question on restore-failure-silent) and event operations log rather than surface persistence failures. `data-integrity` is partial because `saveAll` is atomic per file but not across files, and batch assignment can give one window to two snapshots. `state-recovery` passes because a corrupt context file is skipped rather than failing the load, and dormant snapshots keep fingerprints so windows re-attach after relaunch. `graceful-degradation` passes because a missing state file yields an empty state and a failed rules load yields an empty rule list. `no-hardcoded-strings` fails because every error and notification string is an English literal. `encryption-at-rest` fails because window titles and app names are stored in plain JSON. `no-pii-in-logs` passes because logged names and titles go through `Logger` interpolation, which is private by default.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (SystemWindowContextStoreConformanceTests.swift, SystemWindowContextsConformanceTests.swift, SystemWindowContextManagerTests.swift renumbered; 42 of 42 vectors); vectors 034 and 040 reworded to scores the matcher can produce; unit-test-coverage stays partial. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved four NEEDS REVIEW markers as current behavior plus pending decisions |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

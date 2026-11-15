@@ -30,5 +30,5 @@ minimum-contrast-ratio). String-externalization fails because every
 user-facing string in this file is a hardcoded literal with no
 localization mechanism (see Localization).
 
-`unit-test-coverage` is `partial`: `UI/SpacingTests.swift` pins the arithmetic and layout of the control (`testTheGrowingArrowAddsRoomAndTheShrinkingArrowTakesItAway`, `testATypedNumberIsClampedRatherThanRefused`, and the `SpacingControlLayoutTests` cases for number placement and non-overlap), but nothing there exercises `onChange` firing rules, theme re-application or the Reset button.
+`unit-test-coverage` is `partial`: `UI/SpacingTests.swift` (`SpacingControlConformanceTests`, plus the existing edit-rule, layout, accessibility and reset classes) covers 22 of 28 vectors through the control's own arrows, fields, Reset button and field delegate. Skipped: 012 (a pressed arrow exists only inside AppKit's mouse-tracking loop), 013, 014 and 026 (the drag handle is file-private and runs a live mouse event loop, so no drag can be injected) and 028 (main-actor isolation, enforced at build time). Vectors 024 and 027 are asserted for the field and Reset fonts and the field text colour only; the frame and pane colours are painted in `draw` and are not asserted.
 

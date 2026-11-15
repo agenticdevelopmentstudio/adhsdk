@@ -23,7 +23,7 @@
 - **option-aria-selected**: Each item MUST have aria-selected="true" when highlighted, "false" otherwise.
 - **onhighlight-callback**: When the highlighted item changes, component MUST call the onHighlightChange callback with the new highlighted item or null if no item is highlighted.
 - **empty-state-when-no-items**: When total (the unfiltered item count, i.e. items.length) is 0, component MUST display "No items." instead of the list. This message is not affected by emptyContent.
-- **default-no-matches-message**: When filtering leaves zero visible items while total > 0, component MUST render the literal text `No matches for "{query}".` as the list's only item.
+- **default-no-matches-message**: When filtering leaves zero visible items while total > 0, component MUST render the literal text `No matches for “{query}”.` as the list's only item.
 - **custom-empty-content**: If emptyContent is provided and total > 0 but visible.length is 0 after filtering, component MUST render emptyContent instead of the default no-matches message. emptyContent has no effect when total === 0.
 - **render-footer**: If footer is provided, component MUST render it as the last list item.
 - **wrap-input-in-form**: Component MUST wrap the input field in a `<form role="search">` element to prevent Safari autofill misclassification.

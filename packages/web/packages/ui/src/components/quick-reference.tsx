@@ -73,7 +73,7 @@ export function SyntaxQuickReference({
               <Fragment key={label}>
                 <dt className="text-sm text-apt-text-muted">{label}</dt>
                 <dd className="min-w-0">
-                  <code className="block whitespace-pre-wrap font-mono text-xs leading-snug text-apt-text">
+                  <code dir="ltr" className="block whitespace-pre-wrap font-mono text-xs leading-snug text-apt-text">
                     {syntax}
                   </code>
                 </dd>

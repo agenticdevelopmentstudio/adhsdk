@@ -4,7 +4,7 @@
     "id": "090a0676-4c12-4a0d-ae5a-019cdcc3cb6d",
     "title": "Billing App Spans",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "b3702b73d06b4bcd",
+  "synced": "578e12fa563aad57",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

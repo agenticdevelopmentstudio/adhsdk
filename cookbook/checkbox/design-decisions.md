@@ -11,8 +11,8 @@
 **Rationale**: Enforces controlled-only usage at the form-field layer and prevents accidental uncontrolled use. The underlying primitive (`@base-ui/react/checkbox`'s `Checkbox.Root`) separately supports both controlled and uncontrolled modes, which is why `controlled-and-uncontrolled` (see Behavioral Requirements) is scoped to the primitive only.
 **Approved**: pending
 
-4. **Decision**: Rely on `htmlFor` label association and the native `disabled` attribute for accessibility; the source applies no `aria-label` or `aria-describedby`.
-**Rationale**: These two source-visible mechanisms cover role and disabled-state announcement for free; the hint-to-input link (`aria-describedby`) is not automatic, which is why it is captured separately as the `hint-description-association` SHOULD requirement rather than assumed here.
+4. **Decision**: Rely on `htmlFor` label association and the native `disabled` attribute for accessibility, and add only an `aria-describedby` link from the input to the hint; the source applies no `aria-label`.
+**Rationale**: These two source-visible mechanisms cover role and disabled-state announcement for free; the hint-to-input link (`aria-describedby`) is not automatic, so the Wrapper sets it explicitly, as the `hint-description-association` requirement says.
 **Approved**: pending
 
 5. **Decision**: Size the checkmark glyph at 12px (`size-3`) with a 3px stroke inside the 16px container.

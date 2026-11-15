@@ -4,11 +4,11 @@
     "id": "39a7192e-7e1e-4e93-b615-312a5ddf69b0",
     "title": "Hub Domain Access Client",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -38,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c355b5fb6d076199",
+  "synced": "117f688e9b1b084b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

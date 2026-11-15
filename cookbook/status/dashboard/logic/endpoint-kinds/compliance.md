@@ -8,7 +8,7 @@
 
 **Separation of concerns.** The module owns only the vocabulary. Classification of deploy-backed kinds stays with the engine, and it re-exports rather than restating the engine's set.
 
-**Unit test coverage.** No test file exercises `ENDPOINT_KINDS` or `isEndpointKind` in status-web. The re-exported `NON_DEPLOY_KINDS` is covered indirectly by the engine's `classify.test.ts`, which asserts `endpointNeedsWiring` for all six kinds.
+**Unit test coverage.** `endpoint-kinds.test.ts` covers vectors 001 to 007 and 010 to 012. Vectors endpoint-kinds-008 and endpoint-kinds-009 are skipped: they assert type errors (a readonly tuple has no `push`; `"tcp"` is not an `EndpointKind`), which vitest does not check.
 
 **Explicit error handling.** The guard returns `false` for any non-member rather than throwing, and the result is typed as a predicate so callers must branch on it.
 

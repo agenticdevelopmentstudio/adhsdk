@@ -2,7 +2,7 @@
 id: f333f036-2c23-4a87-8496-bd3616b44786
 title: "Claude Stream JSON"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -188,7 +188,7 @@ Not applicable: The source calls no logging API; a bad line is reported to the c
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/ClaudeStreamJSON.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/ClaudeStreamJSON.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -224,15 +224,16 @@ Not applicable: The source calls no logging API; a bad line is reported to the c
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
-`separation-of-concerns` passes because the file only decodes lines and encodes the input line; spawning claude, reading its pipes and acting on messages belong to the process and session types. `unit-test-coverage` is partial: `AgenticDeveloperHubSDKCoreTests/Partner/ClaudeStreamJSONTests.swift` covers assistant text and tool use, error results, the lost-session cases, unknown types, non-JSON input, system init and the input line shape, but not thinking blocks, `tool_result` content, string message content, the top-level-array error or the dropped non-string errors. `explicit-error-handling` passes because a bad line raises a typed `DecodingError` with a stated reason. `graceful-degradation` passes because unknown message types, block types and field shapes decode to `.other` or absent values rather than failing.
+`separation-of-concerns` passes because the file only decodes lines and encodes the input line; spawning claude, reading its pipes and acting on messages belong to the process and session types. `unit-test-coverage` passes: every vector, 001 to 021, has a test in `AgenticDeveloperHubSDKCoreTests/Partner/ClaudeStreamJSONTests.swift`, covering assistant text and tool use, error results, the lost-session cases, unknown types, non-JSON input, system init, the input line shape, thinking blocks, `tool_result` content, string message content, the top-level-array error, the dropped non-string errors and unescaped slashes. `explicit-error-handling` passes because a bad line raises a typed `DecodingError` with a stated reason. `graceful-degradation` passes because unknown message types, block types and field shapes decode to `.other` or absent values rather than failing.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ClaudeStreamJSONTests.swift, 21 of 21 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Narrowed the wrong-type edge case to the NSNumber bridging, fixed the not-object requirement, added a mixed-content decision, a non-text tool_result requirement, links, new tags and vectors 022-027. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

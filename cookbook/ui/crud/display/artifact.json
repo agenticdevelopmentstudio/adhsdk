@@ -4,7 +4,7 @@
     "id": "c459ad9a-fa81-45ea-a5f4-50c45d566622",
     "title": "CrudDisplay",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "aabd43685ee2cda6",
+  "synced": "c8dcfef18aef90f9",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

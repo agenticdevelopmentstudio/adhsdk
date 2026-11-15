@@ -98,7 +98,7 @@
           "conformance": {
             "hash": "sha256:afef094764f958fe30e3bdd35e095b9585452ee4cf328a42c68b47b996722e8b",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPrefs.swift",
           "platform": "apple"
@@ -226,7 +226,7 @@
           "conformance": {
             "hash": "sha256:f7a75be2fdcb95d6666b846a487e8e8f0c116cd0f2c7fe1c4cf3e8387cc5a2dc",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/libsql/storage-worker.ts",
           "platform": "web"
@@ -300,7 +300,7 @@
           "conformance": {
             "hash": "sha256:12c6d3bd5d220758a0882ee3aeca7d289db5bf3f8cb7991861a27215b632b6d7",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingXPCProtocol.swift",
           "platform": "apple"
@@ -352,7 +352,7 @@
           "conformance": {
             "hash": "sha256:e649dbcc4b19adcbaddf129ef78bec28ec2a9e195a018931181e75df2e2fd502",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/src/fonts.ts",
           "platform": "web"
@@ -368,7 +368,7 @@
           "conformance": {
             "hash": "sha256:adc23e087b4d888c0f390f4388c540bc241beab5278fb2879571b574ea593807",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-dashboards.ts",
           "platform": "web"
@@ -522,7 +522,7 @@
           "conformance": {
             "hash": "sha256:5b65139ed52c24dba5ead5b95caa14aee1209b8ba423eb0e9b14064b6a8da5e3",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsViewController.swift",
           "platform": "apple"
@@ -538,7 +538,7 @@
           "conformance": {
             "hash": "sha256:aa0607b49092ecde6405ce1a9a99f405f238de015af2982d348e4ff9213a88fb",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/openapi/build.ts",
           "platform": "web"
@@ -547,7 +547,7 @@
           "conformance": {
             "hash": "sha256:d405088d593d19b8cd3548b30561f7bd514d132ab102a2d30a6e3a6363ebb715",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/openapi/route-key.ts",
           "platform": "web"
@@ -556,7 +556,7 @@
           "conformance": {
             "hash": "sha256:26de217fdeb79e6e06e02e83524a790e4d5d13a6f6f6418ce80f211a015a0e55",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/openapi/shared.ts",
           "platform": "web"
@@ -632,7 +632,7 @@
           "conformance": {
             "hash": "sha256:55f06e4072a1c97512d0b759a47bd03dc8b34968131228a1a1cc8b1b3591f023",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-persisted-state.ts",
           "platform": "web"
@@ -682,7 +682,7 @@
           "conformance": {
             "hash": "sha256:331d44ada358708eb9745177b1825b8ce62a1190ef390e35bd69e0c79c27a5a9",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationFocusOverlay.swift",
           "platform": "apple"
@@ -698,7 +698,7 @@
           "conformance": {
             "hash": "sha256:f83bcba0e9e2506ba601540b8c18c9d991409a34b5ab420d4639df290f3bc2cb",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "1.1.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/ContributionPoint.swift",
           "platform": "apple"
@@ -712,9 +712,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:08bff327dfeda745604caa50b3ead42cc7d72921922e613c0911fdf021decd43",
+            "hash": "sha256:a1916f1a5f21e6cb0edf993ec328477da128852618f9d81cfb6ff6744bea1b4f",
             "state": "confirmed",
-            "version": "2.0.0"
+            "version": "2.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsActivePane.swift",
           "platform": "apple"
@@ -730,7 +730,7 @@
           "conformance": {
             "hash": "sha256:2f7474df989f2db1eac586c547d346cc40ab60b7d446141da277c5adf0c0f14d",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationEntryDTO.swift",
           "platform": "apple"
@@ -764,7 +764,7 @@
           "conformance": {
             "hash": "sha256:a35cf1ab68d9cef6dba65801ab15ef03ee2d1dc6ee722f41cc7734c2eee0d1bd",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingAppSpans.swift",
           "platform": "apple"
@@ -838,7 +838,7 @@
           "conformance": {
             "hash": "sha256:f15fd40059068971a3cf443513857b2cbedeba31c691bf9607a392d2019daae0",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerPaths.swift",
           "platform": "apple"
@@ -870,7 +870,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:d6f5b99ef22f398d4a60c22be10fbb15b7d528078b7fecd65538f95076acdde0",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/adh-registry/src/seo/metadata.ts",
           "platform": "web"
@@ -916,7 +918,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:26ca3d8fd95af1901620fbd677fb62a2843bb1021aa09fbe898dd1cc67f8b9ff",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/WindowDiscovery/WindowDiscoveryViewModel.swift",
           "platform": "apple"
@@ -930,14 +934,18 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:92580e04224774ac05319349b4e60251e3454caea3e64127220c2030d1d9bf93",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ChatInputField.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:001e20d510b5861bea0819692a937686be0a1488dac315588a3b776fca3a67ca",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/chat/src/components/ChatInput.tsx",
           "platform": "web"
@@ -953,7 +961,7 @@
           "conformance": {
             "hash": "sha256:847374b2e60351f6eb8cca19f60fe1b792295fe6c6c2e850d140bc15e3e0d971",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-now.ts",
           "platform": "web"
@@ -1175,7 +1183,7 @@
           "conformance": {
             "hash": "sha256:fc6b4dcfff5e2ac6b024aaab613063ab6c6aee2f065a28ce85df85bcb0d53ef5",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Text/ShortText.swift",
           "platform": "apple"
@@ -1334,7 +1342,7 @@
           "conformance": {
             "hash": "sha256:dd6e15b54c0af2c29f92601811d98e8b6539e328bee174ba3294df35b3e5252c",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/src/appearance.ts",
           "platform": "web"
@@ -1382,7 +1390,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:88a5110c8b7fc3a321be44d4870e8edf4041a078ec81a4186f711424ca57920e",
+            "hash": "sha256:3da50e1cf3c874e9d507b5c153bbbad04137214ffda06cf9fa1d031335851bf5",
             "state": "confirmed",
             "version": "1.3.0"
           },
@@ -1391,7 +1399,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:1e5fed153cad795cb6e0d5038bfb02de91a97712abc552e89ff54f435df30220",
+            "hash": "sha256:19284890f35485c056e1517f02335628126ceb9ddf8ae680754cb7f0e534dbe8",
             "state": "confirmed",
             "version": "1.3.0"
           },
@@ -1425,7 +1433,7 @@
           "conformance": {
             "hash": "sha256:c0519f578d3652edbab08da92e97713628c7a4c59acef53be84ec5d52833514e",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/OversightScriptDTO.swift",
           "platform": "apple"
@@ -1459,7 +1467,7 @@
           "conformance": {
             "hash": "sha256:d0e94789b39ae9145a63e9ee5d1ca04b870c43d16298bdf06f78f58136eb52f2",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/probe.ts",
           "platform": "web"
@@ -1491,7 +1499,7 @@
           "conformance": {
             "hash": "sha256:083668075a94afed16658254dbb753d94ebd3327e87ddda3a7f53330bcf65d58",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/ui/src/blocks/trend-chart.tsx",
           "platform": "web"
@@ -1543,7 +1551,7 @@
           "conformance": {
             "hash": "sha256:137c99f9d3465952b7b414b430bddda09e0fcd106bd512500ed4e5a16240e662",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/themes/src/appearance-store.tsx",
           "platform": "web"
@@ -1655,7 +1663,7 @@
           "conformance": {
             "hash": "sha256:03934e6199d40c65b5d3f0fd84f220a29368c28a9f5b9937e1b88090526c8441",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/ConversationsWindow/ConversationsKeyCommands.swift",
           "platform": "apple"
@@ -1687,7 +1695,7 @@
           "conformance": {
             "hash": "sha256:559145a65210d6eb66bd72e3196294c9e8b38c762e2657f41dd99bcea4ba0a70",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Networking/BoundedBodyLoader.swift",
           "platform": "apple"
@@ -1979,7 +1987,7 @@
           "conformance": {
             "hash": "sha256:decc4c501b2c3d748a29da0c97b3a7f693aeb5b915737dd671215e93aa551589",
             "state": "confirmed",
-            "version": "1.0.3"
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/status-server/src/monitor/url.ts",
           "platform": "web"
@@ -2083,7 +2091,7 @@
           "conformance": {
             "hash": "sha256:71f508395eeed95ff79ca8ea4f067dce3e640f40b64e59a560ecd53a6e068052",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIConfigPushLedger.swift",
           "platform": "apple"
@@ -2117,7 +2125,7 @@
           "conformance": {
             "hash": "sha256:bfde752bbe3ad008bb806217ea6299dc5a1e495cbff796e14bea9d473649a967",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Routing/RouteRequest.swift",
           "platform": "apple"
@@ -2185,7 +2193,7 @@
           "conformance": {
             "hash": "sha256:1a97c41685c5698ddf3a6423d5804f01ff37b47f60783f05857db2215e5aeeec",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerBasePrompt.swift",
           "platform": "apple"
@@ -2267,7 +2275,7 @@
           "conformance": {
             "hash": "sha256:0aefe161690b78441e446eeb38c95e7c42b8202aa3ed2677c00103c2d77c1781",
             "state": "confirmed",
-            "version": "1.0.3"
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/status-server/src/lib/links.ts",
           "platform": "web"
@@ -2299,7 +2307,7 @@
           "conformance": {
             "hash": "sha256:bd2d7313a7a894325d4c31d4b64f41de974de9d4d379b49e5fbbc626b1ea5a7b",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/HookEventType.swift",
           "platform": "apple"
@@ -2349,7 +2357,7 @@
           "conformance": {
             "hash": "sha256:45e15eee411c01e4017c42663a2825367e244ada013d9c8fc5282bbfac94c2b3",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/ui/src/components/badge.tsx",
           "platform": "web"
@@ -2455,7 +2463,7 @@
           "conformance": {
             "hash": "sha256:61fb1212854b94e7494ae460149d0083130382169a268e1684d29a157cb96759",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionListWindow/SessionWatcherActivityIconView.swift",
           "platform": "apple"
@@ -2503,7 +2511,7 @@
           "conformance": {
             "hash": "sha256:de674a07a3bad64d9c82292b585e6d6aca072a93508e4b6a6e1f6f0c64af1dbb",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ADKDIdentifiers.swift",
           "platform": "apple"
@@ -2591,7 +2599,7 @@
           "conformance": {
             "hash": "sha256:f1f8842362d5209dc15b5819ac83444bc1043c8a9ce0448974bc095b27d20ea0",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-web/src/lib/project-key.ts",
           "platform": "web"
@@ -3053,7 +3061,7 @@
           "conformance": {
             "hash": "sha256:41bfc56f19299c4d7887dce2238a7057c074e8411acbf2894f0ddf58a3dea0f7",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/SemanticPalette.swift",
           "platform": "apple"
@@ -3202,7 +3210,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:d176cc5f1c3390e4fd04570a51e0eacc116c099b532571b5f0f99cb8f480c09e",
+            "hash": "sha256:d6f1ec08b522724e8b32b050442d7d4a836980a8b4721951039ea59a9e6ad9c3",
             "state": "confirmed",
             "version": "1.4.0"
           },
@@ -3211,7 +3219,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:015bce06224c11bea2c6e9ec32fd8d1b1068a2abfdfde204e72d45b7a997138b",
+            "hash": "sha256:83a56e90f785850692395fbbc84855b896deb275fc4f0a08e710981ec224cc8d",
             "state": "confirmed",
             "version": "1.4.0"
           },
@@ -3220,7 +3228,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:5c9e35e625b19ee055473cea41f9b7b36816bb7ee555ca008193cb97338b105b",
+            "hash": "sha256:8b7582005080aabcc30b7d992378588ed67c5487950737d43a4ef38edb5da356",
             "state": "confirmed",
             "version": "1.4.0"
           },
@@ -3254,7 +3262,7 @@
           "conformance": {
             "hash": "sha256:205bd89858556d707093d2db4260308a8e99d3c561915f087722591c7e2a7915",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerStepTemplate.swift",
           "platform": "apple"
@@ -3370,7 +3378,7 @@
           "conformance": {
             "hash": "sha256:6c300583f57699d548e66191ae37b47761afd6cdd3a3592c100a44cdc8367831",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ITermColorsParser.swift",
           "platform": "apple"
@@ -3461,7 +3469,7 @@
           "conformance": {
             "hash": "sha256:9a480eef5ddf87c051668af9cf5cd8e6641529628695ef7ffe3199be857ec00f",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.2.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/AIChatBubbleView.swift",
           "platform": "apple"
@@ -3493,7 +3501,7 @@
           "conformance": {
             "hash": "sha256:859bf1be5874e21cc5b25e9ddd529ad830ad1222bf9e6b873ddd8dc43d25de4c",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/report/report-gather.ts",
           "platform": "web"
@@ -3591,7 +3599,7 @@
           "conformance": {
             "hash": "sha256:c8394cd244a0f3f34abee5f61ff02be23aaea6778cfaae140e01abc716180c09",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SessionDTOs.swift",
           "platform": "apple"
@@ -3783,7 +3791,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:cd1094ad268423f32027c3c079ee7b9dca99d387302eb7d18f33b7b06ccda3c6",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/web/packages/data/src/teams/",
           "platform": "web"
@@ -3799,7 +3809,7 @@
           "conformance": {
             "hash": "sha256:6705ea46164c4d4b403f0d1669a794f0f56b18584ccd1d8189f1a15c354c18d2",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/health.ts",
           "platform": "web"
@@ -3833,7 +3843,7 @@
           "conformance": {
             "hash": "sha256:cdeb38f33664eae17d8c3a13e4b2d60bd3c6e1d67c40bf06b05bac369227fecf",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/themes/src/DocumentLoadScript.tsx",
           "platform": "web"
@@ -3881,7 +3891,7 @@
           "conformance": {
             "hash": "sha256:78e67b9894f9fb8433b8ccea8cf8dfd1911be5c8c53279ab3eebce905345ec99",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerJobDefaults.swift",
           "platform": "apple"
@@ -3963,7 +3973,7 @@
           "conformance": {
             "hash": "sha256:0965a339ab4bc76e6fa243d9a4209a26b90473c617d989c818beab50a5b80b13",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerChatSession.swift",
           "platform": "apple"
@@ -3997,7 +4007,7 @@
           "conformance": {
             "hash": "sha256:5f0f8ac5928548494885a42fd5c29f3cbdbc44389856bf25230e04fdc3a868b9",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerReview.swift",
           "platform": "apple"
@@ -4047,7 +4057,7 @@
           "conformance": {
             "hash": "sha256:d4567e288ff114d79395d7f9d8d5344c04611bb2f27cdbabc3d61d77d4c6d9df",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/HostMCPServer+Stdio.swift",
           "platform": "apple"
@@ -4097,7 +4107,7 @@
           "conformance": {
             "hash": "sha256:f5dff765f4de258122c7ab52408964c9d1c300b04255d89940517e5a8c40b485",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeOAuthCredential.swift",
           "platform": "apple"
@@ -4129,7 +4139,7 @@
           "conformance": {
             "hash": "sha256:53fa6765247303ecd24bc98fca8c308a2da7ab3ab1d8e871b547a4e1a2adfa05",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/live-types.ts",
           "platform": "web"
@@ -4161,7 +4171,7 @@
           "conformance": {
             "hash": "sha256:84141618b0b95d1f0a728ea411c47e618942d4bbaf449dbd2101467909d65f7d",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/Badge/Badge.swift",
           "platform": "apple"
@@ -4177,7 +4187,7 @@
           "conformance": {
             "hash": "sha256:e84bf3198947ef9ea2e2537f917adfa631d40c07c126cc4fa1b59bf2f0d43542",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/markdown/src/components/MarkdownContent.tsx",
           "platform": "web"
@@ -4191,14 +4201,18 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:d7d0d4eb25189e919dec702dff306dba4fd0a1751ce2a5779e94237adbc45813",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ThreePaneChatView.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:f106ea11bf332dd3f6e494076c5f2ae4579e2b994133cf7219bf9a42a948c178",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/chat/src/modes/ThreePaneChat.tsx",
           "platform": "web"
@@ -4214,7 +4228,7 @@
           "conformance": {
             "hash": "sha256:ebef63253756f4b5a5127817ddff9d78f3d57a312dd6c38d21a29ec85bb9f898",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/status-web/src/lib/issue-sources.ts",
           "platform": "web"
@@ -4278,7 +4292,7 @@
           "conformance": {
             "hash": "sha256:00e0affdb9f933e1fe9baab2c047b20bba24769eeb30bc4f48d736370475bb0c",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/JSON/JSONCPreprocessor.swift",
           "platform": "apple"
@@ -4328,7 +4342,7 @@
           "conformance": {
             "hash": "sha256:8411c12252853f0d9ecb97bb9d6e52c02e8e4d52a0a7c65a1dedea42fb82d55b",
             "state": "confirmed",
-            "version": "1.3.1"
+            "version": "1.3.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatTranscriptRowView.swift",
           "platform": "apple"
@@ -4631,7 +4645,7 @@
           "conformance": {
             "hash": "sha256:dc6e84e47d91da004f64d26ce6fe74439ae66023ff6fd7dd2b98b039dec18883",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/src/tokens.ts",
           "platform": "web"
@@ -4753,7 +4767,7 @@
           "conformance": {
             "hash": "sha256:75c78d2a3a20f3e74af75eee0c37504c8b0b139811a64206c1900492c4ec757e",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes.swift",
           "platform": "apple"
@@ -4787,7 +4801,7 @@
           "conformance": {
             "hash": "sha256:d22d815477cfb6af62c5bae692559389559f53b1f588ec37e771704f857b40cb",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingEditing.swift",
           "platform": "apple"
@@ -4884,7 +4898,7 @@
           "conformance": {
             "hash": "sha256:eddd071584c1a609aa50b0b14d2d310f0b7856b437ba4bffa5b7a627e0e9395c",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingXPCProtocol.swift",
           "platform": "apple"
@@ -4932,7 +4946,7 @@
           "conformance": {
             "hash": "sha256:e1b1a9e3dcc782cfe24b2de4bbe6366de05e425c44fae91ef80fe52a62c0c3ff",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingActivityCache.swift",
           "platform": "apple"
@@ -4982,7 +4996,7 @@
           "conformance": {
             "hash": "sha256:442e7e149d7a65f0dca0d286d243146e0b28014bd87f4ab2d0d39abccd74bd50",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/src/manifest.ts",
           "platform": "web"
@@ -5030,7 +5044,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:18125448407ef7cb8e00c7a6f5f91ed9f0040a943545ddc0f1c00eb3318c8b50",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/access/",
           "platform": "web"
@@ -5103,7 +5119,7 @@
           "conformance": {
             "hash": "sha256:3a37c309bda8944dfb7a709148713702f3026f8d3461c827832866afbef766e7",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/AI/",
           "platform": "apple"
@@ -5117,7 +5133,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:c323fe0364dfc3eaba92c61bc79b3fda5710d60e19a825e83ac52c6dc911435d",
+            "hash": "sha256:c6ad0adc1102177cb691f1e4447ff43ab84c01f20d6dfd0f1d46e60d4842afcd",
             "state": "confirmed",
             "version": "1.1.2"
           },
@@ -5151,7 +5167,7 @@
           "conformance": {
             "hash": "sha256:da98420680b1cb4901eb33c1d615a7ae2cecec7050f2a65ceef27265bc23f1f2",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-history.ts",
           "platform": "web"
@@ -5201,7 +5217,7 @@
           "conformance": {
             "hash": "sha256:a9bfadb9adcf24364be2169f4188192b767b7db2428d112c9f22b393de5b1f51",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/src/colorMode.tsx",
           "platform": "web"
@@ -5217,7 +5233,7 @@
           "conformance": {
             "hash": "sha256:dde910bf475215b019a89b897e0511ee4e1a428316b3f08c594d358838904a3f",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/CompositeChatToolSource.swift",
           "platform": "apple"
@@ -5357,7 +5373,7 @@
           "conformance": {
             "hash": "sha256:8c055d287ab776bd6a8574442edfdb6bad89f24a1af2fe6b1d2e02ec1f9b13f1",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/landing/src/agent/json-ld.tsx",
           "platform": "web"
@@ -5445,77 +5461,99 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:61959754e3769e49a31febb747ec66beacb63af25513b4cabdbf4e2f0176318b",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/account-security.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:34893ef2dedf85417e8e4c19be3dee16736f4baa4b748520d5f00bc6f579dc8e",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/asBase.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:a58402383f678f05ef33f9204e917c697777ee26bc1f04e765f9342cbdf8c376",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/client.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:9e72203cdfe93441381da0316aa6da174aacfd16ba2dd6fc8f54160a2d18fa3b",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/config.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:86b77a70b5fc147b0700d3e467a75b41517f2acbe569625547e2323d0ce15f4e",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/labels.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:d159cc829c3986027df99cd13538706467499df450396334d1ca803ce8adf247",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/mfa.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0481a8257ab70c6b7995b12b0ed54b88fa5ab5a7fd28ec71c0863d5aafcc1f4e",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/refresh.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6bc7adef752333bbbed3e9b94fc054cbc291aa1e35e16d40ce614a6c5bfe2f9f",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/report.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:5722e465b741ba7900d3018575ac2f88636171002a74640ffc0523ab8e6967d0",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/sso.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:7f928b169bf63e15a5eedc0eb2c6049dc41d73e56b926aefa9b244bb24f74cd4",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/tokens.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:43da8b3ce07d5a7f6fb7fa30d0a1b69fddfeb403dd174fac9d752805e78ca797",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/types.ts",
           "platform": "web"
@@ -5545,7 +5583,7 @@
           "conformance": {
             "hash": "sha256:22d58344bfb0eaba8d64ed3c23bdc333b06c0bdf1dd111ed301de2f1576190dd",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-source-filter.ts",
           "platform": "web"
@@ -5609,7 +5647,7 @@
           "conformance": {
             "hash": "sha256:b19ba5805552f29d72084df4912e8e7387b74a5027e0115c00bb65934862030d",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Process/ReadOnlyGit.swift",
           "platform": "apple"
@@ -5641,9 +5679,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:e6bc68dd0267871af3128f5527e22f1c430ded644fcddcf4b2fbb5bd68677712",
+            "hash": "sha256:2c76a0781770c9e7f9bf14ce43817d01c2eff4998f4839ef381f606b57cf9665",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/ui/src/components/quick-reference.tsx",
           "platform": "web"
@@ -5693,7 +5731,7 @@
           "conformance": {
             "hash": "sha256:8b8a8e3c74d0f75a7248c5d27efc3678698fa825d3faac87c94681fb5d4974e0",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/status-web/src/lib/live-types.ts",
           "platform": "web"
@@ -5800,7 +5838,7 @@
           "conformance": {
             "hash": "sha256:a88a9451778d59a31da7c46451ea9a08132f4049b39cdcf091e66bac70260028",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-portfolio-indicator.ts",
           "platform": "web"
@@ -5961,7 +5999,7 @@
           "conformance": {
             "hash": "sha256:6c6f00c60369895320da930933fb676a5ca0662ebb491e524090e2b379e6466b",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/markdown/src/components/MarkdownDocumentPane.tsx",
           "platform": "web"
@@ -6134,7 +6172,7 @@
           "conformance": {
             "hash": "sha256:46d7f811980f859190e44c26cd1d43b91d43ea202577a1ae3b4bdbf75eb6e367",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/telemetry/dashboard/errors-sections.ts",
           "platform": "web"
@@ -6214,7 +6252,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:7487f5ff1075a41012fee561df2fbf3a59beb828fc01418c4a64ca0122da58f2",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/auth/src/server/proxy.ts",
           "platform": "web"
@@ -6246,7 +6286,7 @@
           "conformance": {
             "hash": "sha256:0a09b8acffed8bea5fee0f43c9c95f9cb7356824f4a427d3433c94ac59ceaf48",
             "state": "confirmed",
-            "version": "1.0.3"
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/status-server/src/monitor/provider-conn.ts",
           "platform": "web"
@@ -6260,14 +6300,18 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:dddbf15ed29ef5872da3720b1e7f2fbec9a46e6da955edc3a149c2b8c881d697",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/data/src/personas/",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:5a8aeec8886ce055455e29e169af4fb62c394bd1a8e7d9bedafb464052d19324",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Personas/",
           "platform": "apple"
@@ -6283,7 +6327,7 @@
           "conformance": {
             "hash": "sha256:b0b847ed455ca2de6c53ef50d8ac10dc0fdf921547a4db8a731bfbef564d58c4",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Web.swift",
           "platform": "apple"
@@ -6397,7 +6441,7 @@
           "conformance": {
             "hash": "sha256:2038d72cd5016c44d5d8a53f1954e11ecb85a124141dd4fb4da877f045b10daf",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-config-status.ts",
           "platform": "web"
@@ -6557,7 +6601,7 @@
           "conformance": {
             "hash": "sha256:882ba728304bad3ba9750f8f265945a739590776b28caf9716223ad16325766b",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/telemetry/dashboard/posthog-sections.ts",
           "platform": "web"
@@ -6591,7 +6635,7 @@
           "conformance": {
             "hash": "sha256:f4fae4caeb062c30b327109f7f2dfa054635fa2acf0da43918cc7d64adf3db87",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingStore.swift",
           "platform": "apple"
@@ -6607,7 +6651,7 @@
           "conformance": {
             "hash": "sha256:5255471453db26afab05dc0965b76d25bb77ce41f94e28efb1b9e5ac141d5d3e",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Concurrency/",
           "platform": "apple"
@@ -6855,7 +6899,7 @@
           "conformance": {
             "hash": "sha256:ac4bcfafb4cae5a7663fa7e484463df54382bc0623b05b180486ecdda6bb1a33",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPClient.swift",
           "platform": "apple"
@@ -6864,7 +6908,7 @@
           "conformance": {
             "hash": "sha256:eaec56e3cf9badadf3ddbf06b3b7bbba640a62a26731f8c0c95dd44a606f2d50",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerConfiguration.swift",
           "platform": "apple"
@@ -6873,7 +6917,7 @@
           "conformance": {
             "hash": "sha256:fd8f0baa6fc5557fba13e257dc82aa528843cf81b16e9c873675e464411267f5",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPServerRegistry.swift",
           "platform": "apple"
@@ -6882,7 +6926,7 @@
           "conformance": {
             "hash": "sha256:4165e7f3a1bdc0e8651abb59af2fe63ea56201c75038a4fb41cb77d2cead7ab0",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/MCPSettings.swift",
           "platform": "apple"
@@ -6891,7 +6935,7 @@
           "conformance": {
             "hash": "sha256:4024d26c42e4e07fc7563abd6c06fa393557591f41b594a3464c1dfb06d1755b",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/SubprocessTransport.swift",
           "platform": "apple"
@@ -6900,7 +6944,7 @@
           "conformance": {
             "hash": "sha256:26bd9ce2299f1d095f41d6f0bf1563cfc9c8607600a6ad618983084506ce2426",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/MCP/MCPHTTPEndpoint.swift",
           "platform": "macos"
@@ -6932,7 +6976,7 @@
           "conformance": {
             "hash": "sha256:df6844996e39e6bf637e5b0a8296f3f9b5c5603df82c39b162bd9beb680cccc7",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingPersistence.swift",
           "platform": "apple"
@@ -6964,7 +7008,7 @@
           "conformance": {
             "hash": "sha256:cd35dd0217f6deac80689c4b606628070e9002c0b679cfe9c48e157583e23974",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Time/UTCDay.swift",
           "platform": "apple"
@@ -6998,7 +7042,7 @@
           "conformance": {
             "hash": "sha256:64cc662700ec96afbf697d383715ac5d06cbe2962570f732ded7f7007c4282e4",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Routing/InvalidTimestamp.swift",
           "platform": "apple"
@@ -7062,7 +7106,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:01efe47a7d14566021804ab6e9bc4cd1451c546301a8fa54931cf8af1c48ab69",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/WindowManager/WindowActivation/",
           "platform": "apple"
@@ -7096,7 +7142,7 @@
           "conformance": {
             "hash": "sha256:73bf263bdf644cf8814e074925670c204fb178f927dfe44ad0594b96139c9565",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/src/ThemeStyle.tsx",
           "platform": "web"
@@ -7112,7 +7158,7 @@
           "conformance": {
             "hash": "sha256:7829dab14b31dba50a72bdb8bb4cd9290099b41442255cc9e5b3c3b616e96e2c",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/ui/src/blocks/cover-all-control.tsx",
           "platform": "web"
@@ -7209,7 +7255,7 @@
           "conformance": {
             "hash": "sha256:f6d1464ad7b346b80d3d8abc9a2adbe8b7458a94966962b68c452a2f9bfd0775",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/telemetry/dashboard/vercel-section.ts",
           "platform": "web"
@@ -7236,7 +7282,7 @@
           "conformance": {
             "hash": "sha256:f0b1b589d84a40552bfb12d0104693c046434faf49fdeda55ae6a63bc66ca5bb",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/deploy-platform/src/providers/vercel.ts",
           "platform": "web"
@@ -7266,7 +7312,7 @@
           "conformance": {
             "hash": "sha256:52f510b58f1fac7816c4d6def7da1cd95164180adaf6fceff404180ecadd1cfe",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-web/src/lib/format.ts",
           "platform": "web"
@@ -7314,7 +7360,7 @@
           "conformance": {
             "hash": "sha256:3e81e527985f5ad89750d4ceea4938b6163144f54d9a69a8e33cd7f77a65d316",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/report/report-rules.ts",
           "platform": "web"
@@ -7348,7 +7394,7 @@
           "conformance": {
             "hash": "sha256:b84c1bf233865a12d4def4ff063992416d5ed4d672a9882071a43b9c373275cf",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/DBStatsDTO.swift",
           "platform": "apple"
@@ -7414,7 +7460,7 @@
           "conformance": {
             "hash": "sha256:6283f43d1c72003f6fd34a3c8b8259f36167da7333009a09f0259cf47b2d5c4d",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor+Theme.swift",
           "platform": "apple"
@@ -7430,7 +7476,7 @@
           "conformance": {
             "hash": "sha256:13df8266cdb23168e09feea1d8d8e8d00b01d218f7c62360c35dadad1f33c8c4",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/web/packages/status-web/src/header-auth.ts",
           "platform": "web"
@@ -7439,7 +7485,7 @@
           "conformance": {
             "hash": "sha256:0aa862cb2da1ec7661265b0cc5d3766ecb7649ba197ddb441f628e96b8562190",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/web/packages/status-web/src/types.ts",
           "platform": "web"
@@ -7535,7 +7581,7 @@
           "conformance": {
             "hash": "sha256:f68c73d624129432e4ceaf55a0d971b5590e3115e590cddb50ac44163771591f",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/useStatusUser.ts",
           "platform": "web"
@@ -7583,7 +7629,7 @@
           "conformance": {
             "hash": "sha256:da78ec2df652e8841b519356e612adf85ca2a8f2f068217293252e3c8ed788ae",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/worker.ts",
           "platform": "web"
@@ -7597,7 +7643,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4492831df0749b58dd940f018b7c544a1325b183a411aae0922677ac1d5a22e2",
+            "state": "confirmed",
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/data/src/games/games.ts",
           "platform": "web"
@@ -7691,7 +7739,7 @@
           "conformance": {
             "hash": "sha256:f87df28ecad87d58da499c2dd5633fde8ffcd92ac7231397d0444e7b869ff80c",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-server/src/monitor/types.ts",
           "platform": "web"
@@ -7853,7 +7901,7 @@
           "conformance": {
             "hash": "sha256:5068b8d5f8afdaf48fac7c24997d651af384aa822948db79b8b5a40a0e035780",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/telemetry/vercel-api.ts",
           "platform": "web"
@@ -8030,7 +8078,7 @@
           "conformance": {
             "hash": "sha256:c6d1cacab9b573596aab18bcd2124616a4be5f59803b9356933e25a0789863bf",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeStorage.swift",
           "platform": "apple"
@@ -8044,7 +8092,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:88bfb8b29ded2d0e183210dac3f3257031ea752437dd748bebfd81f58adc2ad4",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/Shortcuts/",
           "platform": "apple"
@@ -8074,7 +8124,7 @@
           "conformance": {
             "hash": "sha256:262744e9901d8b8964fd70213b71390d1e93968a003f20007bf5f4a8340b297f",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-server/src/live/live-events.ts",
           "platform": "web"
@@ -8383,7 +8433,7 @@
           "conformance": {
             "hash": "sha256:5258dc4a4c15a310401eeda3a9ef1ff0454a5b9bed3a20bffa12533e9d2b5208",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-web/src/lib/colors.ts",
           "platform": "web"
@@ -8431,7 +8481,7 @@
           "conformance": {
             "hash": "sha256:8f0de9ac95db3a7352fd6c287c3fde857ca75ba4275b2ef6239995fef85cdae1",
             "state": "confirmed",
-            "version": "1.3.1"
+            "version": "1.3.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/TypingIndicatorView.swift",
           "platform": "apple"
@@ -8493,7 +8543,7 @@
           "conformance": {
             "hash": "sha256:5b28be170a626a4254e5b4c27527c63b2aff2d32196a68920a80afb57ffe7024",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Extensions/WebviewPanelOptions.swift",
           "platform": "apple"
@@ -8585,7 +8635,7 @@
           "conformance": {
             "hash": "sha256:c1f60bb536fe1186950fb113d0886aad56b3118c8ddd9e287f9dff20c23e87ef",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParseResult.swift",
           "platform": "apple"
@@ -8651,7 +8701,7 @@
           "conformance": {
             "hash": "sha256:5a4b869b9e493bcbaf7e49c29c1b7ba83257f4f0f2de18ea522bf415c0ab4c2d",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-web/src/lib/deploy-display.ts",
           "platform": "web"
@@ -8667,7 +8717,7 @@
           "conformance": {
             "hash": "sha256:0612f37944541b79f29dddb5c774e0302a6a984235be397c920be3e7366a137d",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionEventSink.swift",
           "platform": "apple"
@@ -8694,7 +8744,7 @@
           "conformance": {
             "hash": "sha256:7b7c54374016c2b4937727bafc5f0cc7997f85190a88f8add792c019ea6cfaa0",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Support/RecordingSink.swift",
           "platform": "apple"
@@ -8710,7 +8760,7 @@
           "conformance": {
             "hash": "sha256:b226a037111fde8cd1de6d3c3d46b41286ebc81dac3822960cf2137e8eb0b673",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Routing/RouteResponse.swift",
           "platform": "apple"
@@ -8808,7 +8858,7 @@
           "conformance": {
             "hash": "sha256:e5954b77e7f9204edd0d0848bc4b8280ead569b48408b20601b9e37bfd08254a",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-media-query.ts",
           "platform": "web"
@@ -8942,7 +8992,7 @@
           "conformance": {
             "hash": "sha256:a9f7f26e70f9af99e223b86e3520f812f59baeff27a85605fdd76e360b050744",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/scripts/build-theme-data.mjs",
           "platform": "web"
@@ -8951,7 +9001,7 @@
           "conformance": {
             "hash": "sha256:932162785f39ad3a906649327f01680bdd286c067fd8ea75fbc6cfcdecc07bda",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/src/theme-data.ts",
           "platform": "web"
@@ -8960,7 +9010,7 @@
           "conformance": {
             "hash": "sha256:27eda41879bf4967f2f4c257a06483591428babdbcbb94e01c4392ca44bbd836",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/scripts/theme-data.mjs",
           "platform": "web"
@@ -8969,7 +9019,7 @@
           "conformance": {
             "hash": "sha256:23115be838983155695875547d46c9dd98ca7c796da498bb7765b1d99433577a",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/themes/scripts/inline-imports.mjs",
           "platform": "web"
@@ -9001,7 +9051,7 @@
           "conformance": {
             "hash": "sha256:7b8f0dc1c46abea05e29c2bf607f85166a918c3324022ae9d6b02285fd98c546",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalOutputTracker.swift",
           "platform": "apple"
@@ -9131,7 +9181,7 @@
           "conformance": {
             "hash": "sha256:2e4cbf96a1fd6c8eba993e4c03099096822c1c0138ba29d13fd4607f8e55ab97",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummarizeReplyDTO.swift",
           "platform": "apple"
@@ -9165,7 +9215,7 @@
           "conformance": {
             "hash": "sha256:c03c6b098660139a9be4d9714d6c75df6812c682bec297efc40e480cb18de0dc",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/StatusLineCapture.swift",
           "platform": "apple"
@@ -9190,9 +9240,9 @@
         },
         {
           "conformance": {
-            "hash": "sha256:49bf2c469b47f665cf637a1aad70d3cf756d25895de5641bc6dd93c642b089f2",
+            "hash": "sha256:87b4f25425ec0d462170dfd1942da02e1b1be2c4b96bfeb0afc6490577d07ecb",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/DetachedProcessTests.swift",
           "platform": "apple"
@@ -9224,7 +9274,7 @@
           "conformance": {
             "hash": "sha256:26e220d320a7fb8edeb43bdb0b1934d66c0bd8a169b6a637544bce6fb4ada4d1",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionDaemonConfiguration.swift",
           "platform": "apple"
@@ -9251,7 +9301,7 @@
           "conformance": {
             "hash": "sha256:282f0f6b9642258368d2c27d663c3f9b842a2ec3b3f9430368f776971222d11a",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Core/SessionDaemonRuntimeTests.swift",
           "platform": "apple"
@@ -9305,7 +9355,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:077bba74565153024af5492cd5488d3a6947520b81cca2486fcbc11b14f46d5d",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/data/src/profile/",
           "platform": "web"
@@ -9337,7 +9389,7 @@
           "conformance": {
             "hash": "sha256:e92253ad30713714ae01c98fba15c84f07a06405e9594a033be8826452eb4650",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/ui/src/blocks/detail-header.tsx",
           "platform": "web"
@@ -9419,7 +9471,7 @@
           "conformance": {
             "hash": "sha256:d3c91fca648dddc7cee5e6e20530dda1b7c1c0658f77b196be0e3df2689da6f9",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-web/src/lib/err.ts",
           "platform": "web"
@@ -9606,7 +9658,7 @@
           "conformance": {
             "hash": "sha256:dc6355ebc87cf2043fac5fed0b22159732bef42e6dd05a00649fa3c90d07efec",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Terminal/KnownTerminals.swift",
           "platform": "apple"
@@ -9720,7 +9772,7 @@
           "conformance": {
             "hash": "sha256:fafbe204b0114ff125cfde9abcf8408dbe87ac97edff6c0f05b71e6b76a2a805",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-web/src/telemetry/sources/",
           "platform": "web"
@@ -9734,7 +9786,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:aafcdda09cd6da0685863871f05c00f9579d90a4d17523fad366de8c75a75bf6",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/Heuristics/",
           "platform": "apple"
@@ -9782,7 +9836,7 @@
           "conformance": {
             "hash": "sha256:220e0e5760f96e66cf294c9a69ddb2efb2b7266362d1ed69bdb0d11bc74c395b",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunning.swift",
           "platform": "apple"
@@ -9816,7 +9870,7 @@
           "conformance": {
             "hash": "sha256:00367d81f6952b58a35bdffd16b26c2f0f4c8907d8657aee22eaaa988354f788",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionStatus.swift",
           "platform": "apple"
@@ -9843,7 +9897,7 @@
           "conformance": {
             "hash": "sha256:022ccc21e00edea74086b6ad534f45a2b38ff23a416343bf9b111e60694e61f6",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Sessions/LivenessServiceTests.swift",
           "platform": "apple"
@@ -9893,7 +9947,7 @@
           "conformance": {
             "hash": "sha256:130f6d4f948df64f4e6c05d19ccd5e6d770a88e654b3fce595a7cb05ddbf8a6d",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeOptions.swift",
           "platform": "apple"
@@ -9902,7 +9956,7 @@
           "conformance": {
             "hash": "sha256:fdac5eaaeb36dd6106cd6feff487115cb12be41177fa1c9f0838cacbad32874c",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Theme/Settings/Editor/ThemeTerminalTopicPanel.swift",
           "platform": "macos"
@@ -9911,7 +9965,7 @@
           "conformance": {
             "hash": "sha256:21f46580d970f2a8b2991cfda11e89be1c457c5c402ca9fc5c697998b13c4699",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/TerminalAppearance.swift",
           "platform": "macos"
@@ -9927,7 +9981,7 @@
           "conformance": {
             "hash": "sha256:fc51adf3f4b14a8dc7ec6f435ca2bde52f2183889fa7e8428e535478613f503a",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerJob.swift",
           "platform": "apple"
@@ -10009,7 +10063,7 @@
           "conformance": {
             "hash": "sha256:8c39520291b3875d57443412bcfb261cea6bc6f084363d76be31bff50fd9fc67",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIInteractionDTO.swift",
           "platform": "apple"
@@ -10041,119 +10095,153 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:13df84cea5ef6f242e9f33d5ce9338e23b1b75cd57213ee1198b8c6f63ad6557",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/api-explorer/src/lib/buildRequest.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:44c89c25dc07510c606c519a383c45b0f43f625441da1b50adc6038395e2523b",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/api-explorer/src/lib/getEndpoint.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:db6365cf2bd59b9e2e086def50e61f787aba17df2b88a57311427a5a37ef727c",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/api-explorer/src/lib/highlight.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:eee3a938f6f626189ae6aeb1ae76b82dcfed1f5e024a8c27c8ea73faf3dd76e9",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/api-explorer/src/lib/schema.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:a5828de1f7025ecb18eac20e311d8dfadda4bce3eef6133ec190fb54ce7ead82",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/api-explorer/src/lib/slug.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:24c052bf4d436afd0134d3f8034ec04e5f57939c0fb62b0e6b327131fcbc1217",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/api-explorer/src/lib/snippets.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:014cc8cb6e0bf9989cf6e2eab6dd340d087e08d0b915c4e26205230ef9cc67d5",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/api-explorer/src/lib/tone.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:e39cdc9538906a900d248c412f1671890eef18fde41ee4e390fe229eead4ffbc",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/api-explorer/src/server.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:5fc809e10ef05f7f6086d8ce8b4e3a2926e1533fa8791739b986b557a8bfe367",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/api-explorer/src/types.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:5aeae640e49b0f3c213c3980cf9cf3abb0e45fb36067c27f271b4065ff69d5fe",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/crud/src/editability.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:93b52796e281b9f0c22f320d44ad95d70830f00c39152d625ff9c50d2f4047f9",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/crud/src/edits.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:83aef7ba79e0b41a263aa41a89f5c19683c07dc051ca1e2fe8ed3d028af11c8d",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/crud/src/exposure.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6c7840dca61e35cb2b02fdf6da0439c4d9ec51cef5e6a94c851ef23d57e3b10a",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/crud/src/schemas.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:18f00d266728b981da414912e945fea98f7fa467b6166371640a4b7793178c30",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/crud/src/types.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4f318fcf14ff558065e09bc05cdcad0459fe8464fd3cb664db5e5d2607eefa34",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/crud/src/useCrudResource.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:e7601e805b62ea571c4aaee8604e8b9fac4c75b455bd8eadddeb499486f63bbf",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/crud/src/useExitGuardChannel.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:2c44bd5520f92c007b6e3e07df7102c0d335b7e1c214b15e14a9847749b29118",
+            "state": "confirmed",
+            "version": "1.1.3"
           },
           "location": "packages/web/packages/crud/src/viewer.ts",
           "platform": "web"
@@ -10185,7 +10273,7 @@
           "conformance": {
             "hash": "sha256:fcb4f27133cb7ea02bb05e70f917b94d66abe1d16ec56394270a54f42c93f3cf",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/crud/src/useTablesWithRows.ts",
           "platform": "web"
@@ -10217,7 +10305,7 @@
           "conformance": {
             "hash": "sha256:a591724a92705633d11211d97089b6c20a4498960d22524ce99d6d125534d468",
             "state": "confirmed",
-            "version": "1.0.3"
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/status-server/src/monitor/provider-deploy.ts",
           "platform": "web"
@@ -10249,7 +10337,7 @@
           "conformance": {
             "hash": "sha256:64548026ee97009fdecc9215444990c53af092650c108389adc935fe0f0b897c",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/OversightFindingDTO.swift",
           "platform": "apple"
@@ -10333,7 +10421,7 @@
           "conformance": {
             "hash": "sha256:4dd863b51f84d7d6e5a700fef04a76ad55336e3f7065461d5876413a5ded9789",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParsedEventEnvelope.swift",
           "platform": "apple"
@@ -10365,14 +10453,18 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:924dd5f8607c9dfaa1305ad19c4c73deecc2e63d18e11d4c27fb8332f45b5726",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Hub/Features/Invitations/",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:3c51d6f142593750e062b08a49f0b44be2c0b5bf5681bd790f582b603a10fdb6",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/data/src/invitations/",
           "platform": "web"
@@ -10544,7 +10636,7 @@
           "conformance": {
             "hash": "sha256:6a2585192c99566fe14cb711c55a062651fb1d078e21d2fd2b65890ac4eaad54",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/DaemonHealth/DaemonHealthReport.swift",
           "platform": "apple"
@@ -10578,7 +10670,7 @@
           "conformance": {
             "hash": "sha256:a624470e845e1e76103f2caf1fd4de488601b4548279cedb983625e2e650828b",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingXPCClient.swift",
           "platform": "apple"
@@ -10666,7 +10758,7 @@
           "conformance": {
             "hash": "sha256:d29dc85ed60780d8f8ffd7622c1cecbbfa492fbf7500515307895ef509e8e827",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParsedEvent.swift",
           "platform": "apple"
@@ -10806,7 +10898,7 @@
           "conformance": {
             "hash": "sha256:276cd602bb9279ee226d08c31a40f4e7f442ed4e7d5be1cf11bdf02599f03c12",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Text/DigestHex.swift",
           "platform": "apple"
@@ -10899,7 +10991,7 @@
           "conformance": {
             "hash": "sha256:39589fd337f309bea1eb45faaca1427a17565359efabf2a6d07e0df844172e33",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookCaptureCommand.swift",
           "platform": "apple"
@@ -10926,7 +11018,7 @@
           "conformance": {
             "hash": "sha256:a0af84faab3f45d661050288a72c82b941c97c3c0da3d32ad9cbfdffafaebeb5",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookCaptureTests.swift",
           "platform": "apple"
@@ -10972,7 +11064,7 @@
           "conformance": {
             "hash": "sha256:ddf9646364342d78531cca4e9ca03ef2d996db2db8a5f455bf7d5bfbba74f6c9",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/time-ago.ts",
           "platform": "web"
@@ -11040,42 +11132,54 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:d01e72eb307285051053b3e6279870a0b4ec6a11aefd47de78263978c99a74ef",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/AppHeuristic.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:9b733c25e3db40fc8e4415e3b634c9991473904fc250554554c64f07f9a20ed8",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristic.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:fb6012caa7e395317dc14b22378073fa370d879c3038de63e16da5305f60fba5",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicRule.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:78e93f377e54feed62ad5a1644e2dc3e673dfabbd24da0c5f9a11df18c358f96",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicStore.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:2bd45bcb55191af6af2bbb8ba99f49245614e9ee5deae9ce905c78b01703f86b",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/HeuristicRegistry.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:3c7b83f27694681c930e40d8b3d18c047c7a2075b84436b698a3be5cfbd6c12f",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/SystemWindowMatcher.swift",
           "platform": "apple"
@@ -11107,7 +11211,7 @@
           "conformance": {
             "hash": "sha256:bc422eb88e4352d9e4b6cfa1c26e2cabff38ed0144c0d11d95bc85fe3679fa67",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SummaryPreferenceDTOs.swift",
           "platform": "apple"
@@ -11141,7 +11245,7 @@
           "conformance": {
             "hash": "sha256:cf4af6fa966577b28ded25519b2422ccdebcf1e877998a9790f2fb9d38fb9617",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/LayeredSettingsStore.swift",
           "platform": "apple"
@@ -11175,7 +11279,7 @@
           "conformance": {
             "hash": "sha256:57fd74c3fa159e6f26b12bc2c09f8d794ecd356ce3a65c5054f6a8e2e1bf3385",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/ToolJSONSchema.swift",
           "platform": "apple"
@@ -11231,7 +11335,7 @@
           "conformance": {
             "hash": "sha256:d3eeac27095dc5708f44cdcaa318fc0eca34b3b0ffdaaa0c9ef10a381d7d7474",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-server/src/telemetry/fetchers/",
           "platform": "web"
@@ -11247,7 +11351,7 @@
           "conformance": {
             "hash": "sha256:8c4662bd2e91defa5c73d009e66d2d4f1ac49c85ab1d9c15cd0e62a95d722471",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/DetachedProcess.swift",
           "platform": "apple"
@@ -11313,7 +11417,7 @@
           "conformance": {
             "hash": "sha256:0a2bc39ecb1641d45a731a459f80a6473efb78dea8a07a319bf291d7f0ef7d8e",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/issue-sources.ts",
           "platform": "web"
@@ -11329,7 +11433,7 @@
           "conformance": {
             "hash": "sha256:ee7f7da8c07f4f89a6bb4c86ec42aa81a866a84181de370330507fbc21b3f990",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift",
           "platform": "apple"
@@ -11345,7 +11449,7 @@
           "conformance": {
             "hash": "sha256:365231edb73791aeb37d0cc218c73f89f8bcf16f05df5fff3ca8cb3cd5f16bfa",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/auth/src/v1.ts",
           "platform": "web"
@@ -11683,7 +11787,7 @@
           "conformance": {
             "hash": "sha256:3a9fa62a30578ea0306446f5ce9448227dafc91b124403d88dc2fafb13469eae",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-refresh-all.ts",
           "platform": "web"
@@ -11733,7 +11837,7 @@
           "conformance": {
             "hash": "sha256:2b7acefb2c974efa4355d652abad410cf7cc88178f4a72243f2eb9c7e2dc96ab",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/StreamingTextSubstitution.swift",
           "platform": "apple"
@@ -11801,7 +11905,7 @@
           "conformance": {
             "hash": "sha256:d11978c21f4f9603dfacea3a060a1f17dbebf7486264dba3a9723ad484ecc8b8",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-server/src/monitor/uptime.ts",
           "platform": "web"
@@ -11815,9 +11919,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:878f952d42f1232eadaac6e8250f2db19434ffc0575d4f8c1c944c16605225a9",
+            "hash": "sha256:22d4e0cc7947681bf2a29f8bb80b6649a827e210112a5589046eabe55104c229",
             "state": "confirmed",
-            "version": "1.2.3"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/controls/src/search-dialog/SearchDialog.tsx",
           "platform": "web"
@@ -11905,7 +12009,7 @@
           "conformance": {
             "hash": "sha256:ee0fd1ada0312149daeacfaa8e1cd902c6baea126e9e237f7425c264e8551a8c",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordStore.swift",
           "platform": "apple"
@@ -11937,7 +12041,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4d758849b81ef675ca1989d7e5c7ac45264c3cc43ac6a32dc0df66ead9bb7251",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/SystemWindows/UI/WindowExplorerView.swift",
           "platform": "apple"
@@ -12173,7 +12279,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:054ea43a67d3e3a109dff2d4e90f7dc8024461f6a1ebc8731c9fcb0faacef7fc",
+            "hash": "sha256:7ee21c4f122ad2998adc32b24264a270453a3fe778419c6b9a30c19b8ed81c63",
             "state": "confirmed",
             "version": "1.2.3"
           },
@@ -12191,7 +12297,7 @@
           "conformance": {
             "hash": "sha256:74fb0d7b71e946be600001de5336010711af109e3242a5d2285ba1034787e606",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessLiveness.swift",
           "platform": "apple"
@@ -12255,14 +12361,18 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6196f4987014e9531a8e94c8495a26309317868acc985e036df14a6dedeec630",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/Shared/Markdown/MarkdownViewerController.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:d3981ac8ca7ff125e0efe3418b0fe671407ae7c05dbfa2adbacb5264b1fb445c",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/markdown/src/components/MarkdownViewer.tsx",
           "platform": "web"
@@ -12276,7 +12386,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:d81712a228ab3ce212b98b1d78e200d222c39abea00b8b8c8c50ca529ee26058",
+            "hash": "sha256:aaf992a10a9d941fe9ac72db1595d48f952aedfdff114ce877f228b85eb27717",
             "state": "confirmed",
             "version": "1.1.3"
           },
@@ -12408,7 +12518,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:d75018fe1a020b8b2b82e812d2eb84dbe2a4fef55cdb6ee66a8b3ac2f1d5b893",
+            "hash": "sha256:5cc5f59ec8ecc7413efded3e7378e92dab81af106e79194de61fdaca8377c60c",
             "state": "confirmed",
             "version": "1.0.3"
           },
@@ -12442,7 +12552,7 @@
           "conformance": {
             "hash": "sha256:1cc3a95cb3c45e2078b931b0bfdbf0b86aab77231e9a5c0ff4d121ba2c7a7c42",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatEvent.swift",
           "platform": "apple"
@@ -12451,7 +12561,7 @@
           "conformance": {
             "hash": "sha256:466e9b055fab4cb158df51be397a5a51cfae6746b7784a9e52527c7870790805",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatMessage.swift",
           "platform": "apple"
@@ -12460,7 +12570,7 @@
           "conformance": {
             "hash": "sha256:f84f7b10b144b480d89c644a09956b000a6180234ee79b0428dd863a502c63ca",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSession.swift",
           "platform": "apple"
@@ -12469,7 +12579,7 @@
           "conformance": {
             "hash": "sha256:5a2079cc776b8fa9dfaea90242653433ab07de0306a4407bec25598d61ff7fbd",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSessionState.swift",
           "platform": "apple"
@@ -12478,7 +12588,7 @@
           "conformance": {
             "hash": "sha256:8cdae12b9723dd6099a771297c9cdf1c0629a4fd9137970088c3c42c43753f25",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatToolSource.swift",
           "platform": "apple"
@@ -12487,7 +12597,7 @@
           "conformance": {
             "hash": "sha256:5f7df83934b269676a1201ca113cd7eb30b693e6dfe9a4c963886e54ffc06708",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatTranscriptReducer.swift",
           "platform": "apple"
@@ -12496,7 +12606,7 @@
           "conformance": {
             "hash": "sha256:f28951e21b77722f1d80c0ab60344ee0ef45783e6df3dfa1319964ec4e1eb9e9",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSelectionMode.swift",
           "platform": "apple"
@@ -12505,7 +12615,7 @@
           "conformance": {
             "hash": "sha256:8af708cc74b1f6d55bded7262bd7365d63fcb2eeab3e43387650eaa8ec2ad9ec",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSessionFilter.swift",
           "platform": "apple"
@@ -12514,7 +12624,7 @@
           "conformance": {
             "hash": "sha256:46cb04909713291be9cea4ac53215b68d55cf6abb4550c7f69f00a43a3d2b5af",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/FeedChatSession.swift",
           "platform": "apple"
@@ -12523,7 +12633,7 @@
           "conformance": {
             "hash": "sha256:1572eb13da6668b9e11388f3a19f2996b5f6b9528815c75cc758b539100da12a",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Chat/MockChatSession.swift",
           "platform": "apple"
@@ -12532,7 +12642,7 @@
           "conformance": {
             "hash": "sha256:e733da5cd7c1126427797979ecd3c7a811c90b5352a316646de5fbf382a346c0",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionSources.swift",
           "platform": "apple"
@@ -12541,7 +12651,7 @@
           "conformance": {
             "hash": "sha256:dd190aa3a34c96e1bb17a639bd2664915320bddd06536ee18f69e8e2725c442a",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionWatcherSession.swift",
           "platform": "apple"
@@ -12573,7 +12683,7 @@
           "conformance": {
             "hash": "sha256:f28b7f79d6e0b6026bf1d7180871598317cb0d3cccf22c3877e59bb67da5c619",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/data/src/v1-case.ts",
           "platform": "web"
@@ -12607,7 +12717,7 @@
           "conformance": {
             "hash": "sha256:a339341581a14355b7b21eb3c29cf7f714cbe22523044533d66546a5dd2e27d5",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/ActivitySpanDTO.swift",
           "platform": "apple"
@@ -12691,7 +12801,7 @@
           "conformance": {
             "hash": "sha256:811757835172eef9fe11058dcc553a3664c41a07f5963952751c29a897149b42",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ColorTheme.swift",
           "platform": "apple"
@@ -12739,7 +12849,7 @@
           "conformance": {
             "hash": "sha256:3729a6ab0bc0af35f35211e6ed6380eb0498aa4b5aefa0f76346a9cec3485e60",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/Help/HelpContentView.swift",
           "platform": "apple"
@@ -12803,7 +12913,7 @@
           "conformance": {
             "hash": "sha256:5ee3b968d132f5b1fcd0df873514b7c85777e21ded9bd992b0cd6650f1dbf1f5",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/IngestionErrorDTO.swift",
           "platform": "apple"
@@ -12837,7 +12947,7 @@
           "conformance": {
             "hash": "sha256:23eb38805eb8cf03c133173a34ce13c668eb52b41bc833a326e03ee854fcfeca",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-server/src/monitor/deploy-status.ts",
           "platform": "web"
@@ -12921,7 +13031,7 @@
           "conformance": {
             "hash": "sha256:9c6b8d50445d165b404a21a09767f09bd62b2cd410e27a88fe23be429d0f2929",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/telemetry/errors-summary.ts",
           "platform": "web"
@@ -12948,16 +13058,16 @@
           "conformance": {
             "hash": "sha256:4aaf532aedfbc6899e3a5690d284517bc6cf903d395bbc8f151a866c0e6908bb",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/routes/telemetry.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "hash": "sha256:6de26317e43bff906c4ae74579f31e3ad3c3c7f8056c646405e9a253b26a1ad5",
+            "hash": "sha256:bdccbd5604eb234f38bff9f2c16271604b5555b69adb52d7cbc6f47b969f8643",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/test/telemetry-errors-summary.test.ts",
           "platform": "web"
@@ -12989,7 +13099,7 @@
           "conformance": {
             "hash": "sha256:e00e62af8e0a185df4be02ade7989d86b46cfe88b6edfc831584375ebb7adc7a",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandCaptureField.swift",
           "platform": "apple"
@@ -13003,7 +13113,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:9522a4e4b2536e23f5edebb38408c34626e76494f75cb8918febfd043b3d3f29",
+            "state": "confirmed",
+            "version": "1.4.3"
           },
           "location": "packages/web/packages/adh-ui/src/blocks/delete-entity-section.tsx",
           "platform": "web"
@@ -13035,7 +13147,7 @@
           "conformance": {
             "hash": "sha256:c6b87a25886f80f0cb38eb43b7c238f4dab8952f79d2d29d30b044a7502b2d35",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerDaemonService.swift",
           "platform": "apple"
@@ -13085,7 +13197,7 @@
           "conformance": {
             "hash": "sha256:86020d8d38d4ec1d3543767827d258f3c4d35946ea49b11326181e557e3cd2b0",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountRegistry.swift",
           "platform": "apple"
@@ -13199,7 +13311,7 @@
           "conformance": {
             "hash": "sha256:c0d934156a469378cb5ad66bbdca1f9baf6d0867ac98b66b55994cfbb2015810",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-server/src/monitor/endpoint-kinds.ts",
           "platform": "web"
@@ -13215,7 +13327,7 @@
           "conformance": {
             "hash": "sha256:1c223ec3203b486b1a52821f813f8f625015f0cc0aab01a946809af357680ab7",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/chat/src/components/ProfileInfoButton.tsx",
           "platform": "web"
@@ -13249,7 +13361,7 @@
           "conformance": {
             "hash": "sha256:1b2fc1c4e6e3dfd84001d0ada9b20d50427d17309f49ba774571e4ceb98738ea",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/TextSubstitutionFilter.swift",
           "platform": "apple"
@@ -13283,7 +13395,7 @@
           "conformance": {
             "hash": "sha256:9899375f2031b22f10d5de97fe92086bf74a116815bb929f73324b2fb9f8758c",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/cycle-runner.ts",
           "platform": "web"
@@ -13331,7 +13443,7 @@
           "conformance": {
             "hash": "sha256:ed2eb825eb2a19725480106381016c709bd49c8f085d1f63418098134ce1283d",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-web/src/lib/url.ts",
           "platform": "web"
@@ -13363,7 +13475,7 @@
           "conformance": {
             "hash": "sha256:0ffd47bbc35d57c30d7e7e47d8f8fc7d6797933f1365fceb4f762b35a2e44c78",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/deploy-view.ts",
           "platform": "web"
@@ -13379,7 +13491,7 @@
           "conformance": {
             "hash": "sha256:27b8208684fbf1fc01737db170cd7c20c09f565a7aa2f830d6f3c18e5a83c52d",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/monitor/self-check.ts",
           "platform": "web"
@@ -13471,7 +13583,7 @@
           "conformance": {
             "hash": "sha256:c9f5c45a69abcb74f1b437bf8a6f6f7bc18e6be2789bd8eb1893a2a3d65e578f",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerHTTPClient.swift",
           "platform": "apple"
@@ -13505,7 +13617,7 @@
           "conformance": {
             "hash": "sha256:b5be01d0baa42b4d992ea2eece9c072e0560f5a82d9789a05e00c56d19639b61",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Process/ShellQuoting.swift",
           "platform": "apple"
@@ -13539,7 +13651,7 @@
           "conformance": {
             "hash": "sha256:0a6e405275e533c02b99998bc7b870541d5eb013d75d0223bc50ea7d6fd9268b",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/Account.swift",
           "platform": "apple"
@@ -13577,7 +13689,7 @@
           "conformance": {
             "hash": "sha256:5bac50f3021e02ffe56499d450a9307e730619ab618ed1e2219150e835b07edd",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalTextInjector.swift",
           "platform": "apple"
@@ -13657,7 +13769,7 @@
           "conformance": {
             "hash": "sha256:828c0bb4a4b7cc0e7841e45c0f5b14c498d8a28b156935ac790f54c6450c17d6",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookEnvelopeBuilder.swift",
           "platform": "apple"
@@ -13691,7 +13803,7 @@
           "conformance": {
             "hash": "sha256:c675066e46345e6cfeda6cb93c699e1df546ba9f04fe48f796d8c4e12be98bdb",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ClaudeHookConfiguration.swift",
           "platform": "apple"
@@ -13782,7 +13894,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:b874cd348f3f8fa549bdc14c782c26336c508f4c080a2fdd5c4d07e82a150492",
+            "hash": "sha256:81ad600d901f31089bfda1a58649449c866ac881693cd8952d51ac0d95b20803",
             "state": "confirmed",
             "version": "1.0.4"
           },
@@ -13879,7 +13991,7 @@
           "conformance": {
             "hash": "sha256:ed5e6be8a9980a9b6fb425af5a393e2dd62483ce8421502d5e24148ac8e96812",
             "state": "confirmed",
-            "version": "1.2.1"
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-telemetry.ts",
           "platform": "web"
@@ -13911,7 +14023,7 @@
           "conformance": {
             "hash": "sha256:397db029b066aaa449ccee3532e8bf6be5b2e0e53b5177535ec21e357ff75cf1",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-build-progress.ts",
           "platform": "web"
@@ -13927,7 +14039,7 @@
           "conformance": {
             "hash": "sha256:d000c588313ab516db0fe60e685bc5b6166f92d8b7b876571a48acd5ac903ac7",
             "state": "confirmed",
-            "version": "1.2.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/status-web/src/lib/row-model.ts",
           "platform": "web"
@@ -13957,9 +14069,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:372bda47ea2b46a97bfafe7e70273b9c2841dcef136c2c8d6af0a09c195d81cd",
+            "hash": "sha256:1449b5b1d7a6c729c31978ec6ddbd1a2676b45018aa96ccf17a08caaaf0074d1",
             "state": "confirmed",
-            "version": "1.4.3"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/controls/src/user-settings/components/Checkbox.tsx",
           "platform": "web"
@@ -13968,7 +14080,7 @@
           "conformance": {
             "hash": "sha256:eae7f88c163b0c704da161d54d2d137aa1fe7f71b988e334233eb9b523867dd9",
             "state": "confirmed",
-            "version": "1.4.3"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/ui/src/components/checkbox.tsx",
           "platform": "web"
@@ -14000,7 +14112,7 @@
           "conformance": {
             "hash": "sha256:8725ba8db87001f8acc50e8ae3a8b987d80aeb729926053133ce500828e3a637",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerInbound.swift",
           "platform": "apple"
@@ -14098,7 +14210,7 @@
           "conformance": {
             "hash": "sha256:4db1ccd3a12fecea3d38c8be77ae5e68c28aaa5fa4636d307700c8b1d88176f6",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingRollup.swift",
           "platform": "apple"
@@ -14176,7 +14288,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:761451ed137e1b284196d2c639d99470624678d09071cc98c9b8e6b987d828b6",
+            "state": "confirmed",
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/data/src/monitored-sites/",
           "platform": "web"
@@ -14272,7 +14386,7 @@
           "conformance": {
             "hash": "sha256:fd6a2d2f80fbae5673da4fd26ca932d3bf27cbca9dbc48117c5fd480942fea93",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/TrackedApp.swift",
           "platform": "apple"
@@ -14338,7 +14452,7 @@
           "conformance": {
             "hash": "sha256:e07672ef6cdc296ebc0a25a50097fc3c25410d14fb61edff3d0acde19dd93a50",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/telemetry/collect.ts",
           "platform": "web"
@@ -14347,7 +14461,7 @@
           "conformance": {
             "hash": "sha256:247b1c7794a4051ca8a30e3b77507b0de3487014ff43d19465dea4d122bc795c",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/telemetry/ports.ts",
           "platform": "web"
@@ -14356,7 +14470,7 @@
           "conformance": {
             "hash": "sha256:8d5985ec96e4b91a3dc174cdd8f82ff426fd675c010f48955ef697daa78cde97",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/telemetry/server.ts",
           "platform": "web"
@@ -14365,7 +14479,7 @@
           "conformance": {
             "hash": "sha256:771c86b06500ed4932032ca0ad9f27aa6f391e9a5fd2c7b2db7b1d8cd8983cc5",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/telemetry/types.ts",
           "platform": "web"
@@ -14484,7 +14598,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:05068350041f87b6d1a6f4346cab7c5a0df70db2969b9d784301b4c7f775bc4e",
+            "state": "confirmed",
+            "version": "1.2.3"
           },
           "location": "packages/web/packages/adh-ui/src/blocks/invitation-panes.tsx",
           "platform": "web"
@@ -14522,7 +14638,7 @@
           "conformance": {
             "hash": "sha256:493554c4d54c4b3b7fd3bced9331dbf45025d15ff225d74ba784291b8dd7e9fd",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingModels.swift",
           "platform": "apple"
@@ -14586,49 +14702,63 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:cd178aa3123d980d134406303342bd757a19687ab5df6e523bf8cf8979d6184f",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/ReconcileModels.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:b3dde09ce22af2f07502957f5fccc13fe6408b4e38694d738deec54c01699dfe",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextStore.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:d6b225a99c2a37f55b776b8339c92ee372f64989a32d5eb44eb72ecf29691e27",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsSettings.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:c0eedecb5ce15b36e45826715a2ecca3da27ab78921d833865cc01445718221a",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Contexts/SystemWindowContextsState.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:a7961e2acd2bb6407895046ea87f94dd8d4d15b8ae59e8164ffcbb525e4f3fa7",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextError.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:43979769c1fc2b597077f5eed8f4413441ce08fae901285c82e9e899907aa0bb",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextManager.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:a702bdd4dc834b858a212569bb503db02b59b7e8354cc0fc73aae52bd89973cc",
+            "state": "confirmed",
+            "version": "1.2.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/CoreMacOS/SystemWindows/Contexts/SystemWindowContextsModel.swift",
           "platform": "apple"
@@ -14644,7 +14774,7 @@
           "conformance": {
             "hash": "sha256:96c9479c6a819bf7bd494c6c2134c933c87a2665f815d11a8731c1fa77c905c7",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/openapi/paths/",
           "platform": "web"
@@ -14754,7 +14884,7 @@
           "conformance": {
             "hash": "sha256:64c77e23155c7d3aebd352d55cd99da39603b4f76af44cafca081f0cd2f3f32e",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-status.ts",
           "platform": "web"
@@ -14770,7 +14900,7 @@
           "conformance": {
             "hash": "sha256:60246b2ad152db132a96e6795a7452c4e9bb21d6bad181da4b97e130519b640a",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerMCPConfig.swift",
           "platform": "apple"
@@ -14822,7 +14952,7 @@
           "conformance": {
             "hash": "sha256:9e5a067d76fc80b9adb822894d80ea105d757f2e78c989540f30c273f53c0fe5",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/RGBAColor.swift",
           "platform": "apple"
@@ -14854,7 +14984,7 @@
           "conformance": {
             "hash": "sha256:3c3b8a8d7ff0cfacdcf65a3f40cf0ad8bb4cfdf525ce46180a1a0dc8c91a2499",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/overview.ts",
           "platform": "web"
@@ -14910,7 +15040,7 @@
           "conformance": {
             "hash": "sha256:8be544f5c0fa228851e4e2864b4ef9fe9e7d237f5f924c867c9f0c9ded319490",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerTurnQueue.swift",
           "platform": "apple"
@@ -14960,7 +15090,7 @@
           "conformance": {
             "hash": "sha256:0ed5ce535d792329474560b4c47af7311978e8177a345a74e3290a6ffa15343e",
             "state": "confirmed",
-            "version": "1.0.3"
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/status-server/src/monitor/format.ts",
           "platform": "web"
@@ -14976,7 +15106,7 @@
           "conformance": {
             "hash": "sha256:926b683e0b38ff59a6a9c4e417002952481b4ad4b29f48764dce5e9e22a6f11b",
             "state": "confirmed",
-            "version": "1.2.1"
+            "version": "1.2.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsAddPaneViewController.swift",
           "platform": "apple"
@@ -15042,7 +15172,7 @@
           "conformance": {
             "hash": "sha256:7cf673169cb794e918332012cfa5e2611d173bc1c5681017164193fe19492e95",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/telemetry/dashboard/sectioned-dashboard.ts",
           "platform": "web"
@@ -15067,9 +15197,9 @@
         },
         {
           "conformance": {
-            "hash": "sha256:ab3457baecfac7a9b42320b3d89cff4fb75bb55d236653931a533cfd25abe861",
+            "hash": "sha256:9ad5b0ed23c9c21beaca439c138963d18cf4d3802825e1bab1f5a85517dd9487",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/test/telemetry-sectioned-dashboard.test.ts",
           "platform": "web"
@@ -15078,7 +15208,7 @@
           "conformance": {
             "hash": "sha256:cfef7b37376b5c5a10a12becc9c0a8b058dff2e67e40c92282b626daa4309155",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/deploy-platform/src/util/map-limit.ts",
           "platform": "web"
@@ -15176,7 +15306,7 @@
           "conformance": {
             "hash": "sha256:d3facac5036ed81b71b071a980b600448dc47cbab1fe63d78932f01714a122f5",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/AIProviderConfigSync.swift",
           "platform": "apple"
@@ -15274,7 +15404,7 @@
           "conformance": {
             "hash": "sha256:816f7a54ea15c99882affcbe3d3128f9c0450ba52d5cfd6ff224b9437aeae2d2",
             "state": "confirmed",
-            "version": "1.2.1"
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-deploy-projects.ts",
           "platform": "web"
@@ -15290,7 +15420,7 @@
           "conformance": {
             "hash": "sha256:42664b6fff0856b1fc8ff53dcc772c6dd1555fd072f8c7cc83e88839b55b8786",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-server/src/peers/",
           "platform": "web"
@@ -15320,7 +15450,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:6190575e315d8877670e71ab2cfd8d6fd1676251a3b974827bc021e5386fd299",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/data/src/markdown/",
           "platform": "web"
@@ -15384,7 +15516,7 @@
           "conformance": {
             "hash": "sha256:3277def082d9efdfd77b0dafe63614460ee1f3587abad2d2b56596a9931285d4",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/markdown/src/components/JsonRenderer.tsx",
           "platform": "web"
@@ -15416,7 +15548,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:873805240a95a21472c623700b698a437b547b235ede737dcd87630830d300be",
+            "hash": "sha256:fe19dfc453aa484c106106df947c3665b0f2f09d610d0d084f4023635444b884",
             "state": "confirmed",
             "version": "1.3.2"
           },
@@ -15531,7 +15663,7 @@
           "conformance": {
             "hash": "sha256:82dc4db936d0ce920b8b9be95966063050e8cb4b3b57a44f3518865cef54c7a6",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/controls/src/user-settings/components/SettingsPanel.tsx",
           "platform": "web"
@@ -15685,7 +15817,7 @@
           "conformance": {
             "hash": "sha256:f15b2ed90f817dacc14f016173234f7f341c5f49b6ea0d70b148f3345cd1ec04",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerIdentifiers.swift",
           "platform": "apple"
@@ -15719,7 +15851,7 @@
           "conformance": {
             "hash": "sha256:7db22f0d045ece2b684db24582395c9a45882c5855a37f29f5d7181f77fe96ca",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalChatControl.swift",
           "platform": "apple"
@@ -15919,7 +16051,7 @@
           "conformance": {
             "hash": "sha256:d20509900e13fdaedbf73a1d18dc0326392f6157468f9653a84ab1bdecbbe8b9",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingUserSettings.swift",
           "platform": "apple"
@@ -15953,7 +16085,7 @@
           "conformance": {
             "hash": "sha256:d76901a6d56b6e6a73033c3048401011d69fbd8d98c2a2c3e41e2869662e25c5",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/status-web/src/lib/overview.ts",
           "platform": "web"
@@ -15985,7 +16117,7 @@
           "conformance": {
             "hash": "sha256:90f8edd8d53fc265c519b1063be5e862c518861860e706afb847758b75fd8ff0",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+FileBrowser.swift",
           "platform": "apple"
@@ -16067,7 +16199,7 @@
           "conformance": {
             "hash": "sha256:ce46b85ef98a961fe232dee0ed613d99b067eadc93617353b557fb66444549b8",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/MultiChoiceFilterButton.swift",
           "platform": "apple"
@@ -16099,7 +16231,7 @@
           "conformance": {
             "hash": "sha256:f244e2d043745dcbeda99dceeaed0ff9943948bf3a4f4002d5a683d7b9289974",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionActivity.swift",
           "platform": "apple"
@@ -16126,7 +16258,7 @@
           "conformance": {
             "hash": "sha256:0df1f48bd13216fc9be3e9d19b39966cf401f34833359749290393271c42bd0c",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKMacOSTests/SessionWatcher/SessionWatcherSessionActivityTests.swift",
           "platform": "macos"
@@ -16215,7 +16347,7 @@
           "conformance": {
             "hash": "sha256:09399ce09f6c49fcddfecb22b9852456834f4dd30e70d26dc18c8baeec976a45",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-server/src/monitor/worker-client.ts",
           "platform": "web"
@@ -16330,7 +16462,7 @@
           "conformance": {
             "hash": "sha256:03eaa20437f95911e0b8ab81641037804a38f0c15e653e9284f4f5c9004038d5",
             "state": "confirmed",
-            "version": "1.2.2"
+            "version": "1.2.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/MCPChipsBarView.swift",
           "platform": "apple"
@@ -16380,7 +16512,7 @@
           "conformance": {
             "hash": "sha256:8df0316245a04308ea175681d63c06865dea1c52098c6fc2fb5720733e95b4af",
             "state": "confirmed",
-            "version": "1.2.1"
+            "version": "1.2.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsArrangeOverlayView.swift",
           "platform": "apple"
@@ -16396,7 +16528,7 @@
           "conformance": {
             "hash": "sha256:2fb7be43a8542f2d3a06972d8a1b111071466434f9c6315347f60169a0ca71cc",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/landing/src/blocks/PulseRule.tsx",
           "platform": "web"
@@ -16471,7 +16603,7 @@
           "conformance": {
             "hash": "sha256:5a4df841e18a778f14aed6fe12d26f35dd37770353835341908b95c089579324",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/telemetry/runtime-errors.ts",
           "platform": "web"
@@ -16496,9 +16628,9 @@
         },
         {
           "conformance": {
-            "hash": "sha256:c41e0f565611c6011c276d92eda1db5afde6d3f60fde055a23cec24a8f0f8467",
+            "hash": "sha256:d14482cf0869265d102bd22ec203c295e85ff6cbc816c2b3304d1bf7f9c47ab0",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/test/runtime-errors.test.ts",
           "platform": "web"
@@ -16580,7 +16712,7 @@
           "conformance": {
             "hash": "sha256:74567e92a17bc44ac8b13082ebce5f834db1e88ff22f7370fd8a6f2d9125003b",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingUserSettings.swift",
           "platform": "apple"
@@ -16596,7 +16728,7 @@
           "conformance": {
             "hash": "sha256:cd52df0d1b88edd000a483f0a5f370c073563a118205fe15f9eeda4dab64a6d3",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/ReplyCountingTransport.swift",
           "platform": "apple"
@@ -16758,7 +16890,7 @@
           "conformance": {
             "hash": "sha256:cf5a612f1a8fd49d277eda8a3d013501eb797f77c9d573f6d21047b662ef54fc",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/crud/src/display.ts",
           "platform": "web"
@@ -17046,7 +17178,7 @@
           "conformance": {
             "hash": "sha256:2aaa19f1aeca5fc7e4ac719e679471e3e7b318c934c77906bee5b89cebf69df0",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcessConfiguration.swift",
           "platform": "apple"
@@ -17086,7 +17218,7 @@
           "conformance": {
             "hash": "sha256:b4828158446cbecceb4e340411ece69824bdd72f1097ab205525d7ead9f6733d",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/fetch-vercel.ts",
           "platform": "web"
@@ -17118,7 +17250,7 @@
           "conformance": {
             "hash": "sha256:20c54b095a053d83e63ed2151975b97e1525985ea7f1c8ffb6132b2bfeae4761",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-web/src/telemetry/client.ts",
           "platform": "web"
@@ -17127,7 +17259,7 @@
           "conformance": {
             "hash": "sha256:04e5174e465dafa55bebab4b876cfd368b688aa1962cf7641ed2301e8e51cafc",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-web/src/telemetry/ports.ts",
           "platform": "web"
@@ -17136,7 +17268,7 @@
           "conformance": {
             "hash": "sha256:3d086ddd105448dabf810461e3431198883d05c1fa403d1ad344d0d9317add08",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-web/src/telemetry/types.ts",
           "platform": "web"
@@ -17152,7 +17284,7 @@
           "conformance": {
             "hash": "sha256:5d4e196c41f09db59c695449798efd81f28093539814dfbedefcccb8c14858fe",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-web/src/lib/dashboard-format.ts",
           "platform": "web"
@@ -17200,7 +17332,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:49ae6ea470700db5af7a2386e00e3e56d0b6c8d70227c0e86ccde30dbfa8faea",
+            "hash": "sha256:8a1c59d9ce809f2d2ca80042309fb4c2c25c272b1f1be4652bb0423c3de40810",
             "state": "confirmed",
             "version": "1.3.2"
           },
@@ -17282,7 +17414,7 @@
           "conformance": {
             "hash": "sha256:2715a02e572cfe055709044360911181bbf16c40ce30549c918246d146e05ae7",
             "state": "confirmed",
-            "version": "1.2.3"
+            "version": "1.2.4"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-live-snapshot.ts",
           "platform": "web"
@@ -17398,7 +17530,7 @@
           "conformance": {
             "hash": "sha256:5f10a49d0f2f8bea20b5ed29bd87009d246be7090dff15bf2a4ba148576ba9ba",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeTypography.swift",
           "platform": "apple"
@@ -17444,9 +17576,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:e5ccf1d3a462a4ac859cdaa3e1fea20b59be446fd1c8aebfe118965b381ab180",
+            "hash": "sha256:42d1e0dd0ef2600a79c3d427cdf864344264186ee9eaea652696d3e099d947e4",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SessionMetricsDTO.swift",
           "platform": "apple"
@@ -17530,7 +17662,7 @@
           "conformance": {
             "hash": "sha256:b9efb459a531c5006f94cf865f7c18ee972d252ba86ec77d3cc7958e0afebc8e",
             "state": "confirmed",
-            "version": "1.3.1"
+            "version": "1.3.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatDayBannerView.swift",
           "platform": "apple"
@@ -17646,7 +17778,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:3dd4c40a4c58d2a94de4d3d28ac2439d23d86955d2d2929599ed6e52a72a6046",
+            "hash": "sha256:5826bc9952ee47e160e9eaf18d637f6354abdf7c9c0bddb3d247a5c3221626df",
             "state": "confirmed",
             "version": "1.1.2"
           },
@@ -17664,7 +17796,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:a98f4544d2cf0d77729d8b66794e5418af8540a2b096ac4ae8964a362f18b78e",
+            "hash": "sha256:20a64be29eee9c5c7b4a9c183146361a794d15b9f5fff5c78b41d30a6cb30585",
             "state": "confirmed",
             "version": "1.1.2"
           },
@@ -17707,7 +17839,7 @@
           "conformance": {
             "hash": "sha256:14c531633193db3a3e25c0e07684b971b4166c4b6f4105e0ae5211ef6a8c5645",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-web/src/lib/slug.ts",
           "platform": "web"
@@ -17723,7 +17855,7 @@
           "conformance": {
             "hash": "sha256:b08dedb68a7d2a345d0b99de080f75024b45ca1bf687e065752f6464a795a4aa",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessExitWatch.swift",
           "platform": "apple"
@@ -17805,7 +17937,7 @@
           "conformance": {
             "hash": "sha256:177093b2bae34a5092235c1a0fa80206e741a798d937abc4c9b417df6a8d2dc9",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/landing/src/page/blocks.tsx",
           "platform": "web"
@@ -17889,7 +18021,7 @@
           "conformance": {
             "hash": "sha256:a911f1cba5d42cfaea3f39d6258dd743c07f3243e4c9b77ae857e8a1293e9553",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeStore.swift",
           "platform": "apple"
@@ -17905,7 +18037,7 @@
           "conformance": {
             "hash": "sha256:4f29a7086b1181ba0f147b66391ebeb7a888d93ef267ecf6186de223b6fcd7db",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerProcess.swift",
           "platform": "apple"
@@ -17939,7 +18071,7 @@
           "conformance": {
             "hash": "sha256:58f73784821e3da3a23ff4a68f3bb63a6baa0ec7cffa791731b767eb9ddd8bd6",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/ui/src/blocks/bar-list.tsx",
           "platform": "web"
@@ -18060,9 +18192,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:84ea206df8ff3df4ff0e3263e39cae72826b70b9757085ef0d58134cf0255a43",
+            "hash": "sha256:b654404f467f9289b9e560375d19bddce2696972d36e5b16b0eb3967d107629b",
             "state": "confirmed",
-            "version": "1.1.2"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/controls/src/user-settings/components/RadioGroup.tsx",
           "platform": "web"
@@ -18078,7 +18210,7 @@
           "conformance": {
             "hash": "sha256:4dacf2bea3ac38971f6c011af1c9c6cdb18e81414c0cd1c4b47cbe850f703157",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeAccounts/ClaudeCredentialKind.swift",
           "platform": "apple"
@@ -18148,35 +18280,45 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:2f5d40cd50881c890c2d259c8e4ab90eb6c1a501c2be31b9c42148dbc93cef57",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/MatchStrategy.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:7a7a71ce6fb02426001e54bb2b0640acbe78652d9f04adc4ce226df85c92ae26",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowContext.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:e1266014f39eb85f4be7bb63075f099dde7e0838de0ce31ad20c6d6209b00309",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowFingerprint.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:16ab5c6e5a02a67b7e04ad658a6c91942a5fef63d42eac8e70bff53403c17221",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowInfo.swift",
           "platform": "apple"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:865e6058be9cac1c01b6596f83111ce1c6642af1e0fcdd6473648a5d7b18d993",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/SystemWindowSnapshot.swift",
           "platform": "apple"
@@ -18208,7 +18350,7 @@
           "conformance": {
             "hash": "sha256:d46d913ea5c22b2348cc3fe46c92e2b3f56a1becc0741c526a75cc66d8403608",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/telemetry/dashboard/ranges.ts",
           "platform": "web"
@@ -18233,9 +18375,9 @@
         },
         {
           "conformance": {
-            "hash": "sha256:3185e5e46903bd3bf23a26a0f84c6d20eda323b6957dbcff7286a2731a2cdf81",
+            "hash": "sha256:2ac083ffa4ba1d89e847718d28289dfa9501777b9008f9eeb05485d86276df63",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/test/telemetry-dashboard-sections.test.ts",
           "platform": "web"
@@ -18251,7 +18393,7 @@
           "conformance": {
             "hash": "sha256:2dccbc375486b1e199df08de807c286bc1c74ce3245af3a9e15d2c419daea9a7",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingPrefs.swift",
           "platform": "apple"
@@ -18285,7 +18427,7 @@
           "conformance": {
             "hash": "sha256:baf5181faf6ae6150d2dec6e35ecd298d7f32fba47d78e36acacd19efaf1c91e",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Privacy/PrivacyWordsVault.swift",
           "platform": "apple"
@@ -18317,7 +18459,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:4ba5bfc42d27c35373075b06839893363f9df63b88131ae1e141f9ee73519655",
+            "state": "confirmed",
+            "version": "1.1.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Scripting/",
           "platform": "apple"
@@ -18333,7 +18477,7 @@
           "conformance": {
             "hash": "sha256:08b0e8dcddd9ec4a97d30eb6f5b56c69db288e440b49b2d87f9810e37ea459ed",
             "state": "confirmed",
-            "version": "1.4.0"
+            "version": "1.4.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/Cards/DisclosureCardView.swift",
           "platform": "apple"
@@ -18365,7 +18509,7 @@
           "conformance": {
             "hash": "sha256:4e33fe6b2dbb99f26bc06b9b3e9d8ae01569f34acae7e8c3ca81390a56b7bf6b",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/Attention.swift",
           "platform": "apple"
@@ -18481,7 +18625,7 @@
           "conformance": {
             "hash": "sha256:5ca4371c0e2d92851302c7e6a858b44dd8cfb9628dcc9c2ad8a6f7e79e2532c5",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-web/src/lib/status-sublabel.ts",
           "platform": "web"
@@ -18600,7 +18744,7 @@
           "conformance": {
             "hash": "sha256:ce460a81a9cd0ca2792edfe196a0e69f6772df8739c691afcb0542ad53eabf44",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/ui/src/components/favicon.tsx",
           "platform": "web"
@@ -18664,9 +18808,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:aef9ad84897593d5ebc85909be62808029e9754b58263049a7dc22695e25b370",
+            "hash": "sha256:4ea9da9a742a90a8b39a876d5d1de3d58c93f9fae5e57c77dd67d957e26669de",
             "state": "confirmed",
-            "version": "1.3.2"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/ui/src/components/recipient-input.tsx",
           "platform": "web"
@@ -18882,7 +19026,7 @@
           "conformance": {
             "hash": "sha256:51cd0cd4d9b2e7d1a77816ab64b9ef391ee3c5ccb973836d08db26c38c31f4c4",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/MCP/HostMCPServer.swift",
           "platform": "apple"
@@ -18948,7 +19092,7 @@
           "conformance": {
             "hash": "sha256:0279aae20087622b919a25c0aab839b4f0e3733c4e1d7b2e971f583c863c6032",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/OversightActionDTOs.swift",
           "platform": "apple"
@@ -18998,7 +19142,7 @@
           "conformance": {
             "hash": "sha256:3f0e39cdaad30eabba161e255830095d60e394d23c19ce0701a54e25876d4dd1",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/libsql/storage-thread.ts",
           "platform": "web"
@@ -19048,7 +19192,7 @@
           "conformance": {
             "hash": "sha256:6ac50bdb901ca908383e9350ce97d39e12331184db6c0cbd4be59290ccd69da5",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-env-filter.ts",
           "platform": "web"
@@ -19064,7 +19208,7 @@
           "conformance": {
             "hash": "sha256:eb993959eed9ecba613e84bd3707f15c419eb62f33ee65c50c0dfd9e105260c1",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/heartbeat.ts",
           "platform": "web"
@@ -19130,7 +19274,7 @@
           "conformance": {
             "hash": "sha256:ecde1728d8d14cf156e19f7f42cec0e622e0e8a84d25a236c56b6b8535296997",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-web/src/telemetry/stores/local-cache.ts",
           "platform": "web"
@@ -19162,7 +19306,7 @@
           "conformance": {
             "hash": "sha256:d4520d55910d9c37c275388434d0eae5e20cfe524c12365ecdd66a76514c7e27",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/monitor/enrich-deploy-errors.ts",
           "platform": "web"
@@ -19290,7 +19434,7 @@
           "conformance": {
             "hash": "sha256:e1f33a0a86ee94cf5759c8dc92814cf92ca7849f05fb64ee50a599d7023f4eb7",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/report/types.ts",
           "platform": "web"
@@ -19324,7 +19468,7 @@
           "conformance": {
             "hash": "sha256:14fbb9e70b0ecfe8c8654a89801f7fc3be57ff62f4c628b5359dd4c57d362c33",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-uptime.ts",
           "platform": "web"
@@ -19461,7 +19605,7 @@
           "conformance": {
             "hash": "sha256:f3ae304fe0480cbd4c944e7791662a704856666f36ec0ba010cff3bfcb881867",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-integrations.ts",
           "platform": "web"
@@ -19575,7 +19719,7 @@
           "conformance": {
             "hash": "sha256:2bf865429f640540129431bf64185b226c781db29bd09549170d1132a7bee4d7",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationSummaryDTO.swift",
           "platform": "apple"
@@ -19609,7 +19753,7 @@
           "conformance": {
             "hash": "sha256:02bab3cda44c29a46df393217e7665ea38da539ac67a86d9da74474d12a98452",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/GitContextFingerprint.swift",
           "platform": "apple"
@@ -19643,7 +19787,7 @@
           "conformance": {
             "hash": "sha256:5a6bd743846f616fe400ab7e02239810ef876dfa02ba034b0c12bb0935d924ca",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/storage/remote.ts",
           "platform": "web"
@@ -19693,7 +19837,7 @@
           "conformance": {
             "hash": "sha256:722d696381c24cde516e967fe62804079d05cf4b322383bb5b0e0df2988d1697",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerWire.swift",
           "platform": "apple"
@@ -19775,7 +19919,7 @@
           "conformance": {
             "hash": "sha256:beb58fa830080461253be156aa2ab829bebb08368dde06a961104ad9fc420d05",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Routing/RouteTable.swift",
           "platform": "apple"
@@ -19809,7 +19953,7 @@
           "conformance": {
             "hash": "sha256:2696d29889b73304f1a2e68d867304191a631a55451f8f1707d1c9f3259f34fc",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/TrackingPreferenceResponse.swift",
           "platform": "apple"
@@ -19843,7 +19987,7 @@
           "conformance": {
             "hash": "sha256:568ead20938a1447f289f9ed41939e27370dfe25d2d5e161ddd64c3387629f3e",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-web/src/telemetry/dashboard-types.ts",
           "platform": "web"
@@ -20029,7 +20173,7 @@
           "conformance": {
             "hash": "sha256:f2252363c3c9bccdbd0759b6a9c1c08b363a9ab6cdea132d384c5b3397fa2cb4",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerPreferenceDTOs.swift",
           "platform": "apple"
@@ -20079,7 +20223,7 @@
           "conformance": {
             "hash": "sha256:980c6f0019e86481beb68341937ec2c0f2ee0ee9e976e90b43040801d5cef99c",
             "state": "confirmed",
-            "version": "1.1.0"
+            "version": "1.1.1"
           },
           "location": "packages/web/packages/status-web/src/api/",
           "platform": "web"
@@ -20111,7 +20255,7 @@
           "conformance": {
             "hash": "sha256:d269cdaa42be24b08297a274d9126b5a086544672a325e4bc476e1803e6fed4a",
             "state": "confirmed",
-            "version": "1.3.1"
+            "version": "1.3.2"
           },
           "location": "packages/web/packages/crud/src/CrudTable.tsx",
           "platform": "web"
@@ -20125,63 +20269,81 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:e0a0665c5d3f890a48a3ee7882651eae3ec8f79bb074c83db84e65d6cad55cdb",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/client-helpers.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:86cefd5a142c6408055aac2304b6d7ac64f779090e1d0ab0a5f48b0cebd999b9",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/config.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:3522f0b8e875539651f2203f18e8bd8e9c511153c0ca00846c0e2e3755d68eb9",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/ftd-storage.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:0f21482e760c7d7c6067fb5e4f473e4086e7482e7f0d9f524653f733e243f845",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/http.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:07151177d881a4d3c34ea0f1e464bb7dfa982641998f61d13d2b91dc86aff8d3",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/tenant.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:a393ac2a2e955c6e716d0a9b6c5c64db62819deb06000317a1ef55b6416e8612",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/use-resource-item.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:13a6e6a4378203cda2a243fb3f7293f350aa737369d94f7c683fdd64e04b97b7",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/use-resource-list.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:f9d4c465afa9bccbd99814bb2da3ba6b105ae6c628cd94e2cbde0888179c627d",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/workspace-prefs.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:00dee329e738729a1b30e51703a0c5b5fb23d6e3798222b896f57953a0c6f8bb",
+            "state": "confirmed",
+            "version": "1.2.2"
           },
           "location": "packages/web/packages/data/src/workspaces.ts",
           "platform": "web"
@@ -20253,7 +20415,7 @@
           "conformance": {
             "hash": "sha256:5c8ccbacbe3e649d83affc97bb57e6da176c22a719944631a70ab4dd7cd1c835",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingDTOs.swift",
           "platform": "apple"
@@ -20287,7 +20449,7 @@
           "conformance": {
             "hash": "sha256:c012220ca445086d8a1543a7b8781137d72f08dbfa5314ee3638c0238e4aeba7",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/UserDefaultsThemeStorage.swift",
           "platform": "apple"
@@ -20449,7 +20611,7 @@
           "conformance": {
             "hash": "sha256:368601d22767441114cd45b31be281fafec9b5cc63259adf0079d06c76efd9fd",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-server/src/telemetry/dashboard/dashboard-set.ts",
           "platform": "web"
@@ -20517,7 +20679,7 @@
           "conformance": {
             "hash": "sha256:72023952a08518b91fab1325759501d738fa9e2b7ed9aead198a75e18c1f8e2d",
             "state": "confirmed",
-            "version": "1.3.0"
+            "version": "1.3.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/Spacing/SpacingControl.swift",
           "platform": "apple"
@@ -20533,7 +20695,7 @@
           "conformance": {
             "hash": "sha256:060e6ea13d55c2e83bad31fbb5ccbc432a8e1da4efae42185490c8a6d63a5131",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-server/src/telemetry/dashboard/types.ts",
           "platform": "web"
@@ -20558,9 +20720,9 @@
         },
         {
           "conformance": {
-            "hash": "sha256:d9dad646b0ee5e724e00c05f49d41913b6d40ba93ad1f6b1f63083647529b6ce",
+            "hash": "sha256:817760af7c53ae757ee20371f3f424f3f87121f8deef327898fe27bbc54a12e2",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/web/packages/status-web/src/telemetry/dashboard-types-parity.test.ts",
           "platform": "web"
@@ -20592,7 +20754,7 @@
           "conformance": {
             "hash": "sha256:80db896215fc575870b501a54272e3078c62f3f87d58b797de094f749f86aff3",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/web/packages/status-web/src/lib/endpoint-kinds.ts",
           "platform": "web"
@@ -20696,7 +20858,7 @@
           "conformance": {
             "hash": "sha256:58344bb5bf352a416faa97f28194df2934ea6d796d877363416d8ea36c6bbcfa",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingTimer.swift",
           "platform": "apple"
@@ -20710,42 +20872,54 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:8102c7a9dd585a3626e83c916b2bdbc8af5b19c83516070306e1c246f1bc3b43",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/adh/src/header/SiteMenu.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:938f837c9e3b0444ce41fa0bbeda3f5e8742563ace899867fec2d831fb40a3d5",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/adh/src/header/SiteMenuSwitcher.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:96ada3f62ca738c7e61394be1f0ef7753a213141807286085104f12bd9c483ea",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/adh/src/header/MarketingSiteMenu.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:727ecc7baa281ffe969f32ec2603fdb948196b439e4a0f0914f4c3572f12a71c",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/adh/src/header/WorkspaceSiteMenu.tsx",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:e9983120ff4b1cf28ba80a4e3ee4e835625e232afb5f72d18b628a5e94e5c3bc",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/adh/src/header/menu-icons.ts",
           "platform": "web"
         },
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:7cbe29bc4078eacdf2477f366bea4972100db562265bfdcb0451bb5a677cec0a",
+            "state": "confirmed",
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/adh/src/header/recents.ts",
           "platform": "web"
@@ -20761,7 +20935,7 @@
           "conformance": {
             "hash": "sha256:6544cb068c694949b77a886569c4c2c646705677cb1e1701b3f3a62f38d7828a",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/AIPlugins/",
           "platform": "apple"
@@ -20777,7 +20951,7 @@
           "conformance": {
             "hash": "sha256:caee7c2599e692d182be84acea3ce69d194cf4f7b88852d91b26add99f5ed981",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookDropWriter.swift",
           "platform": "apple"
@@ -20811,7 +20985,7 @@
           "conformance": {
             "hash": "sha256:78a79a56269215350b8ab56133bf12ef06ae9d322e2fc1399d908d8d894e4750",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Partner/ClaudeStreamJSON.swift",
           "platform": "apple"
@@ -20893,7 +21067,7 @@
           "conformance": {
             "hash": "sha256:b23e0e10b572fd08b1bb9408973f953d6ad55246f71e45407dd7ebed3c5df0a3",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingXPCClient.swift",
           "platform": "apple"
@@ -20989,7 +21163,9 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:d989b2e441e25ef68a2688cb4d0781f64a4c3f3ccbaac2d738cba003996b97e6",
+            "state": "confirmed",
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/adh-ui/src/components/time-series-chart.tsx",
           "platform": "web"
@@ -21021,7 +21197,7 @@
           "conformance": {
             "hash": "sha256:46d50ebe0debe75789f16c2dffba1a6650e6d52bdcab84765768d2494cd14c01",
             "state": "confirmed",
-            "version": "1.1.1"
+            "version": "1.1.2"
           },
           "location": "packages/web/packages/status-web/src/hooks/use-response-history.ts",
           "platform": "web"
@@ -21146,7 +21322,7 @@
           "conformance": {
             "hash": "sha256:aebb10a02fb904b64cd59d242618db9920c8f4e11e7be2b310490ac61cf78580",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/ConversationMessageDTO.swift",
           "platform": "apple"
@@ -21320,7 +21496,7 @@
           "conformance": {
             "hash": "sha256:2a605f4f67609c7c54d8fec4cd63895c7d22a9f9284e57325d594b035a995ab5",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.0.2"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Process/ProcessEnv.swift",
           "platform": "apple"
@@ -21493,7 +21669,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:06625f7c61cbd55b0f52b12ed0ada68f63b715954b147894cf781d7b1414e62a",
+            "hash": "sha256:92630fc696013f2ced8c35a1e5fb6fc0b28d60595bf5b584b3200879164449ce",
             "state": "confirmed",
             "version": "1.1.2"
           },
@@ -21509,9 +21685,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:46515b4d2c02f7d4d4ed7fc40e87354f4ae9e9a4e7065a7f9a07c88f95e986aa",
+            "hash": "sha256:09acd08cca5a6eb2cd93573a9771d2bb97da922d5dba60173d5f14ae50f09c1c",
             "state": "confirmed",
-            "version": "1.3.3"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/controls/src/user-settings/components/Select.tsx",
           "platform": "web"
@@ -21520,7 +21696,7 @@
           "conformance": {
             "hash": "sha256:2fd7e524db384adfed9751611f013330d18c01f9b6afd1070604c53e14d39861",
             "state": "confirmed",
-            "version": "1.3.3"
+            "version": "2.0.0"
           },
           "location": "packages/web/packages/ui/src/components/select.tsx",
           "platform": "web"
@@ -21763,7 +21939,7 @@
           "conformance": {
             "hash": "sha256:16134a97ec2cb15cd0c312cb408b2fcc5fc794dd4799aeca43ca7cb918c7616d",
             "state": "confirmed",
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Native.swift",
           "platform": "apple"
@@ -21797,7 +21973,7 @@
           "conformance": {
             "hash": "sha256:edd4b2be64ea8ed353cc935852421c5bdffcfd5a386573d1e1cf0d7e435a2f72",
             "state": "confirmed",
-            "version": "1.0.0"
+            "version": "1.0.1"
           },
           "location": "packages/web/packages/ui/src/blocks/detail-title.tsx",
           "platform": "web"
@@ -21831,7 +22007,7 @@
           "conformance": {
             "hash": "sha256:4da08244c631d0f9e1df3f9c2f63e86beef79d2324597c402b8c538335b626ba",
             "state": "confirmed",
-            "version": "1.0.3"
+            "version": "1.0.4"
           },
           "location": "packages/web/packages/status-server/src/monitor/live-buffer.ts",
           "platform": "web"

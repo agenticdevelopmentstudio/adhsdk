@@ -58,7 +58,7 @@
 
 ### Security
 
-- **credential-source**: Bearer credentials are attached, and a 401 is refreshed and retried once, inside `authedJson`; this module MUST NOT read, store or log a token. Token lifetime, storage and revocation are specified in the [Authentication Client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104) recipe.
+- **credential-source**: Bearer credentials are attached, and a 401 is refreshed and retried once, inside `authedJson`; this module MUST NOT read, store or log a token. Token lifetime, storage and revocation are specified in the Authentication Client ([adhsdk.ingredient.data.services.auth.auth-client](cookbook:3ea9329e-5acc-4c43-b5ce-bb8c50570104)) recipe.
 - **url-as-given**: The module MUST send requests to the `url` the caller passes and MUST NOT rewrite its origin; the caller owns choosing a same-origin proxy path or an authorization-server base.
 - **sensitive-data-in-url**: The only caller-supplied data this module places in a URL is the paging cursor (an object id) and caller params. It MUST NOT be given secrets as params, because the URL is part of the thrown error message from `listAllV1`.
 

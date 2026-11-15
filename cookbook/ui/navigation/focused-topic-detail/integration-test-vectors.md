@@ -1,5 +1,5 @@
 
-No test file imports `FocusedTopicDetail`. Every vector is derived from the source; the selector and the cards are covered separately by the `PopupMenu` and `ResourceCard` tests.
+Every vector is derived from the source and covered by `focusedTopicDetail.test.tsx`; the selector and the cards are also covered separately by the `PopupMenu` and `ResourceCard` tests.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

@@ -4,15 +4,15 @@
     "id": "ba5855cd-bd4c-49be-b7d3-4c3f7f35434e",
     "title": "Overview Projections",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "Pure client projections of the server board: sign indicator, headline, deploy tallies, window caption and real-environment deploy predicate",
+    "summary": "Pure client wording of the server board: wire-indicator translation, headline, window caption and still-unresolved row lookup",
     "platforms": [
       "typescript",
       "web"
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d74a8edb1de4d55d",
+  "synced": "933a104cc72d3a01",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

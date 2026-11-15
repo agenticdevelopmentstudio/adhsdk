@@ -4,7 +4,7 @@
     "id": "6e81fe86-b97d-4af9-a45b-0ace8784fbed",
     "title": "Terminal Output Tracker",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "a476d36f07b09fa7",
+  "synced": "78e530f9c3db5f73",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

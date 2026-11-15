@@ -2,7 +2,7 @@
 id: 86eccc6f-cd1b-4ac7-bb98-851eb7c54324
 title: "Account Display"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`AccountDisplay` is an immutable value that turns one account's state into the visibility decisions every account detail view needs: which user to show, whether the "Checking sign-in…" status line and a spinner show, which of Login, Signup and Logout show, whether the buttons are enabled, and which error or status message line shows. It is the platform-free half of the accounts screen: macOS and iOS each draw it with their own controls, and the rules for what is visible live here once. It is a pure function of its inputs (an `AccountState` from the [Account](cookbook:9cf9784d-48c9-4b29-b553-c72ffdfce7b9) ingredient, a message, whether a signup URL exists, and the previous render's shown user); it holds no storage, performs no I/O and starts no work.
+`AccountDisplay` is an immutable value that turns one account's state into the visibility decisions every account detail view needs: which user to show, whether the "Checking sign-in…" status line and a spinner show, which of Login, Signup and Logout show, whether the buttons are enabled, and which error or status message line shows. It is the platform-free half of the accounts screen: macOS and iOS each draw it with their own controls, and the rules for what is visible live here once. It is a pure function of its inputs (an `AccountState` from the Account ([adhsdk.ingredient.auth.accounts.account](cookbook:9cf9784d-48c9-4b29-b553-c72ffdfce7b9)) ingredient, a message, whether a signup URL exists, and the previous render's shown user); it holds no storage, performs no I/O and starts no work.
 
 ## Behavioral Requirements
 
@@ -182,7 +182,7 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Accounts/AccountDisplay.swift` | confirmed (1.0.2) |
 
 ## Design Decisions
 All four decisions are `Approved: pending`: the recipe is in review and none has been settled by the owner yet.
@@ -208,13 +208,14 @@ All four decisions are `Approved: pending`: the recipe is in review and none has
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
-`separation-of-concerns` passes because the type holds only visibility rules: it draws nothing, stores nothing and performs no I/O, and leaves rendering to each platform's views. `unit-test-coverage` is partial: `AccountDisplayTests` asserts the state initializer for restoring, signed out with and without a signup URL, signed in, and both busy cases, but nothing asserts the `@MainActor` account-based initializer, the `restoringText` value, or an empty-string message. `no-hardcoded-strings` fails because `restoringText` is an English literal with no localization lookup.
+`separation-of-concerns` passes because the type holds only visibility rules: it draws nothing, stores nothing and performs no I/O, and leaves rendering to each platform's views. `unit-test-coverage` passes: `AccountDisplayTests` (`Accounts/AccountDisplayTests.swift`) asserts all fourteen vectors, including the `@MainActor` account-based initializer, the `restoringText` value and an empty-string message. `no-hardcoded-strings` fails because `restoringText` is an English literal with no localization lookup.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (AccountDisplayTests.swift, 14 of 14 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Corrected spec claims against AccountDisplay source and tightened requirements and vectors. |

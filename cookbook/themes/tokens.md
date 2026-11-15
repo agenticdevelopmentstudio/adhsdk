@@ -2,7 +2,7 @@
 id: 345bb44b-1a4b-46ce-be8f-0796edbf70c9
 title: "Theme Tokens"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -93,7 +93,7 @@ Not applicable — this is a pure string-parsing module, not a visual component.
 
 ## Conformance Test Vectors
 
-No test sits beside `tokens.ts`. The themes package tests (`appearanceScope.test.ts`, `AppearanceScope.test.tsx`, `buildScopedCss.test.ts`, `clearAppearance.test.ts`, `darkAlwaysThemes.test.ts`, `DocumentLoadScript.test.tsx`, `rescued-themes.test.ts`, `ThemeStyle.test.tsx`) do not target these functions, so the vectors below are derived from the regular expressions in the source and are the tests a port should write.
+`packages/web/packages/themes/src/__tests__/tokens.test.ts` covers every vector below, tokens-001 to tokens-022, against the regular expressions in `tokens.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -184,7 +184,7 @@ Not applicable: the source contains no log calls.
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/tokens.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/themes/src/tokens.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -213,15 +213,16 @@ Not applicable: the source contains no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | partial | internationalization |
 
-The module does one thing, string parsing with no DOM, React or I/O, so separation of concerns passes. No test file targets `tokens.ts`; its consumers are exercised only indirectly, so unit-test coverage fails. The functions never throw, but malformed input (a missing final semicolon, a value with a semicolon or brace) quietly yields fewer or shorter entries with no signal, so explicit error handling is partial. Property names accept only ASCII word characters while values and hrefs pass any text through unchanged, so unicode support is partial.
+The module does one thing, string parsing with no DOM, React or I/O, so separation of concerns passes. `src/__tests__/tokens.test.ts` in the themes package covers all twenty-two conformance vectors, so unit-test coverage passes. The functions never throw, but malformed input (a missing final semicolon, a value with a semicolon or brace) quietly yields fewer or shorter entries with no signal, so explicit error handling is partial. Property names accept only ASCII word characters while values and hrefs pass any text through unchanged, so unicode support is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (tokens.test.ts, 22 of 22 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Reworded the purity, no-throw, imports-removed and very-large-input claims to match tokens.ts, added the unanchored-name case with vector tokens-022, named an ordered Swift type, and moved the consumer note into the Overview. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |

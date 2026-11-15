@@ -48,6 +48,44 @@ import Testing
             "dontAsk", "--mcp-config", "/m.json", "--strict-mcp-config", "--append-system-prompt-file", "/p.md",
             "--model", "opus", "--allowedTools", "a", "b"])
     }
+    private func sampleConfig(resume: Bool = false, model: String = "", permissionMode: String = "dontAsk",
+                              allowedTools: [String] = [], sessionID: UUID = UUID()) -> PartnerProcessConfiguration {
+        PartnerProcessConfiguration(
+            executable: "/exe-sentinel", sessionID: sessionID, resume: resume, model: model,
+            permissionMode: permissionMode, allowedTools: allowedTools, mcpConfigPath: "/mcp-sentinel",
+            systemPromptPath: "/prompt-sentinel", workingDirectory: "/work-sentinel")
+    }
+    @Test("V5: empty allowedTools omits the flag, model is present") func v5EmptyToolsNoAllowedToolsFlag() {
+        let args = sampleConfig(model: "opus", allowedTools: []).arguments
+        #expect(args.contains("--model") && args.contains("opus"))
+        #expect(!args.contains("--allowedTools"))
+    }
+    @Test("V6: empty permissionMode yields an empty element after the flag") func v6EmptyPermissionMode() {
+        let args = sampleConfig(permissionMode: "").arguments
+        let index = args.firstIndex(of: "--permission-mode")
+        #expect(index != nil)
+        if let index { #expect(args[index + 1] == "") }
+    }
+    @Test("V7: workingDirectory and executable are not arguments") func v7WorkingDirectoryNotAnArgument() {
+        let args = sampleConfig().arguments
+        #expect(!args.contains("/work-sentinel") && !args.contains("/exe-sentinel"))
+        #expect(args.filter { $0 == "/mcp-sentinel" }.count == 1)
+        #expect(args.filter { $0 == "/prompt-sentinel" }.count == 1)
+    }
+    @Test("V8: --verbose immediately follows -p") func v8VerboseFollowsDashP() {
+        let args = sampleConfig().arguments
+        #expect(args.first == "-p")
+        #expect(args[1] == "--verbose")
+    }
+    @Test("V9: exactly one session flag, followed by the lowercase id") func v9SessionFlagExclusive() {
+        let id = UUID()
+        for (resume, flag, other) in [(false, "--session-id", "--resume"), (true, "--resume", "--session-id")] {
+            let args = sampleConfig(resume: resume, sessionID: id).arguments
+            #expect(args.filter { $0 == flag }.count == 1)
+            #expect(!args.contains(other))
+            if let index = args.firstIndex(of: flag) { #expect(args[index + 1] == id.uuidString.lowercased()) }
+        }
+    }
     @Test func pathsDeriveFromHomeAndToken() {
         let paths = PartnerPaths(home: URL(fileURLWithPath: "/h"), token: "tok")
         #expect(paths.mcpConfig.path == "/h/.tok/partner/mcp.json")

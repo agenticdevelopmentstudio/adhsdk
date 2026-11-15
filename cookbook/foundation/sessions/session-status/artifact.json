@@ -4,7 +4,7 @@
     "id": "787b5da6-2f20-4f3e-8104-1763959a735f",
     "title": "Session Status",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component parses Claude Code hook events and settings; the host's name, events and paths are its subject.",
-  "synced": "2b0ca1b8ab2f6dd4",
+  "synced": "4f0d680e8982ae93",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

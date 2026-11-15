@@ -2,7 +2,7 @@
 id: 78390c0c-2610-4480-8a93-0a2dad559126
 title: "Command Running"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -159,7 +159,7 @@ Not applicable: this component contains no log call; a caller that wants a faile
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunning.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/CommandRunning.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -191,15 +191,16 @@ Not applicable: this component contains no log call; a caller that wants a faile
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | reliability |
 | [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | performance |
 
-`separation-of-concerns` passes: the protocol is the seam, the struct only launches and collects, and what to run and what to do with a result belong to the calling jobs. `unit-test-coverage` is partial: `ProcessCommandRunnerTests` covers echo, separate streams, replaced environment, bare-name lookup, non-zero status, large output, missing executable, timeout and the default capture, while the empty command, undecodable output and the timed-out `capture` text have no test. `explicit-error-handling` is partial: every failure is reported rather than thrown or crashed, but launch failure and timeout share status -1 and an undecodable stream becomes an empty string with no signal. `timeout-handling` passes through the backstop. `main-thread-freedom` passes because the blocking work is moved off the cooperative pool.
+`separation-of-concerns` passes: the protocol is the seam, the struct only launches and collects, and what to run and what to do with a result belong to the calling jobs. `unit-test-coverage` passes: `ProcessCommandRunnerTests.swift` covers all 16 vectors, including the empty command, undecodable output, the path lookup and the timed-out `capture` text. `explicit-error-handling` is partial: every failure is reported rather than thrown or crashed, but launch failure and timeout share status -1 and an undecodable stream becomes an empty string with no signal. `timeout-handling` passes through the backstop. `main-thread-freedom` passes because the blocking work is moved off the cooperative pool.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ProcessCommandRunnerTests.swift, 16 of 16 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Dropped 'injected' wording, recorded launch/timeout status sharing as accepted debt, fixed vectors 007/008/009/013, added a backstop-default vector, moved the command-runner link to depends-on and removed the source path from the SwiftUI note. |

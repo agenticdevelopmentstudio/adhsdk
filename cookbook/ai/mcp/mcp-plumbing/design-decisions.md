@@ -13,10 +13,6 @@ All four decisions below are specific to the Apple/Swift reference implementatio
 **Rationale**: Per the type's own doc comment, a `Bool` set only after `connect()`'s suspension at `channel.launch()` would let a `disconnect()` landing in that window observe "not yet connected" and become a no-op while a live child exists — stranding it for the life of the app. The `connecting` case exists precisely to make `disconnect()` treat that window the same as a fully connected one.
 **Approved**: pending
 
-**Decision**: `HostMCPServer` is self-contained, with no integration into `MCPServerRegistry` and no new case added to `MCPServerConfiguration.Transport` for an in-process server.
-**Rationale**: Per the type's own doc comment, this keeps the sample from expanding the `Transport` enum with an in-process variant; a host application that wants `HostMCPServer`'s tools available to its own chat surface is expected to build an `MCP.Client` directly against `clientTransport` and wire that in wherever it already routes tool calls, rather than this component doing so on the host's behalf.
-**Approved**: pending
-
 **Decision**: A failed tool-list refresh after a list-changed notification is silent.
 **Rationale**: The handler discards the refresh error, leaving the previously cached tools in place with no log, state change or retry; closing the gap needs a decision from whoever owns the client's error-reporting contract on whether a failed refresh should log or mark the client failed.
 **Approved**: pending

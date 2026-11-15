@@ -586,7 +586,7 @@ compile-time property, so it has no runtime test vector.
 |---|---|---|
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | passed | Performance |
 | [adc.check.performance.animation-frame-rate](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9eb9b4fc-2e44-5391-9445-d6e78caa874e) | partial | Performance |
 
@@ -602,12 +602,7 @@ walking, transform composition, and paint/ink resolution
 (separation-of-concerns). Both platforms carry a dedicated Scene test
 suite (`SceneTests.swift`, `compose.test.ts`) with meaningful per-behavior
 assertions covering composition, cropping, channel seeding, and most error
-paths (unit-test-coverage: partial). No test exercises the depth guard at its
-limit, an unknown colour, a missing late-bound channel, a wrongly typed
-transform channel, an unknown shape kind, an empty cropped list, a leaf node
-without `children`, a short `bend.weights` array, or a non-`"x"` bend axis
-(vectors 21 to 26 and 28 to 33); those vectors are traced to source, and the
-web has no test for the self-referential ink (vector 15). `compose` is a synchronous, O(node-count)-per-call
+paths (unit-test-coverage: passed). `compose.test.ts` also carries a `conformance vectors` block with one test per vector, 1 to 33, each titled `vector N`; the Apple-only vector 15 wording is exercised on the web through the `body.ink` channel set to `"@body"`, and the traced-to-source vectors (21 to 26 and 28 to 33) build their own scenes or channels to reach the branch. `compose` is a synchronous, O(node-count)-per-call
 function with no I/O of any kind (main-thread-freedom). This is the hot
 per-frame path a `CADisplayLink`/`requestAnimationFrame` loop calls at a
 60fps target, but neither source file measures or enforces a time budget

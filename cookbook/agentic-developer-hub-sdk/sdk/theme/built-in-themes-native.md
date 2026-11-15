@@ -2,7 +2,7 @@
 id: fd1f8d3c-6110-4687-a715-c8fa7c7caa5b
 title: "Built-In Themes Native Adjustments"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -159,7 +159,7 @@ Not applicable: the file contains no log call; it has no failure path to report.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Native.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes+Native.swift` | confirmed (1.0.3) |
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
@@ -186,15 +186,16 @@ Not applicable: the file contains no log call; it has no failure path to report.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | reliability |
 
-Separation of concerns passes: the adjustments are isolated from the generated file and from the hand-authored set, and the file's one job is applying them. Unit test coverage is partial: the suite checks `BuiltInThemes.all` and the ported set as a whole, but nothing asserts the Fishlamp values this file sets, so changing one of those literals would pass the suite. This is a known test gap, not a design choice; the payoff for closing it is that vectors native-003 to native-014 become executable, and it should be closed before the next generator re-run changes the Fishlamp theme. Explicit error handling is partial: the colour literals are force-unwrapped, which is safe for the current valid constants but would trap rather than report if one were mistyped. Data integrity passes: the function copies its input and never mutates the generated theme.
+Separation of concerns passes: the adjustments are isolated from the generated file and from the hand-authored set, and the file's one job is applying them. Unit test coverage passes: `BuiltInThemesNativeConformanceTests` (`BuiltInThemesNativeConformanceTests.swift`) asserts every Fishlamp value this file sets and the pass-through of the other themes, so vectors native-001 to native-014 are all executable. This is a known test gap, not a design choice; the payoff for closing it is that vectors native-003 to native-014 become executable, and it should be closed before the next generator re-run changes the Fishlamp theme. Explicit error handling is partial: the colour literals are force-unwrapped, which is safe for the current valid constants but would trap rather than report if one were mistyped. Data integrity passes: the function copies its input and never mutates the generated theme.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (BuiltInThemesNativeConformanceTests.swift, 14 of 14 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Rewrote hex-literals, access, concurrency and side-effects as MUST requirements, rephrased ember-shared as an observable equality, retitled Configuration as constants, replaced the hard-coded 36 and chatSurface literals in the vectors, moved the Fishlamp test gap from Design Decisions to Compliance, added depends-on and related UUIDs, and corrected the SwiftUI note. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |

@@ -42,11 +42,13 @@ export function SearchDialog({
     if (!grouped.has(section)) grouped.set(section, [])
     grouped.get(section)!.push(r.entry)
   }
+  // The highlight walks the rows in grouped render order, so Enter must select from that same order.
+  const ordered = Array.from(grouped.values()).flat()
 
   function handleKey(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') {
-      const sel = top[state.selectedIndex]
-      if (sel) onSelect(sel.entry)
+      const sel = ordered[state.selectedIndex]
+      if (sel) onSelect(sel)
       return
     }
     if (e.key === 'Escape') {

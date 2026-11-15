@@ -4,11 +4,11 @@
     "id": "0640ca96-95c5-4234-925e-386425cc4435",
     "title": "Composable Tabs",
     "type": "ingredient",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8713e609526a5ea3",
+  "synced": "452c1297513f4310",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

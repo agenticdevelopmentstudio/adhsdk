@@ -2,7 +2,7 @@
 id: ad0b0d88-6ade-49aa-8fd3-5d9926060112
 title: "Partner MCP Config"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -171,7 +171,7 @@ Not applicable: the source makes no log call. A caller that logs the config byte
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerMCPConfig.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerMCPConfig.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -212,11 +212,12 @@ Not applicable: the source makes no log call. A caller that logs the config byte
 | [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | partial | security |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | security |
 
-The type does one job, building and writing the file, so separation of concerns passes. Tests cover the mode of the file and directory, the overwrite of a loose file, the header text and the url, but not the full JSON shape, the failure paths or the cleanup, so coverage is partial. Failures throw named `CocoaError` values and the temp file is removed, so error handling passes. Secure storage is partial: the token is protected by 0700 and 0600 permissions and an atomic rename, but it is stored in clear text and a killed process can leave a temp file behind. Secure transport is partial: the token travels only to the loopback address, but over plain `http` without TLS.
+The type does one job, building and writing the file, so separation of concerns passes. `PartnerMCPConfigConformanceTests` covers the full JSON shape, escaping, file and directory modes, nested parents, the rename failure and its cleanup, repeated writes and the atomic swap, so 13 of 14 vectors have tests; vector 011 (a parent directory owned by another user) is skipped because a unit test cannot create one safely, so coverage is partial. Failures throw named `CocoaError` values and the temp file is removed, so error handling passes. Secure storage is partial: the token is protected by 0700 and 0600 permissions and an atomic rename, but it is stored in clear text and a killed process can leave a temp file behind. Secure transport is partial: the token travels only to the loopback address, but over plain `http` without TLS.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerMCPConfigConformanceTests.swift, 13 of 14 vectors; 011 skipped); unit-test-coverage stays partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Corrected the umask, durability, errno, trap and vector 011/014 claims, made the dedicated-directory rule a MUST, linked the sibling recipes and trimmed the platform note. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

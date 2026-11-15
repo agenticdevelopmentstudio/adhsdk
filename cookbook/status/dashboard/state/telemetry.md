@@ -2,11 +2,11 @@
 id: 9ff57831-bdf9-47ad-b009-bcc1de59d5f4
 title: "Telemetry State"
 type: ingredient
-version: 1.2.1
+version: 1.2.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -201,7 +201,7 @@ Not applicable: the source contains no log calls; the cache adapter swallows sto
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/use-telemetry.ts` | confirmed (1.2.1) |
+| web | `packages/web/packages/status-web/src/hooks/use-telemetry.ts` | confirmed (1.2.2) |
 
 ## Design Decisions
 
@@ -240,12 +240,13 @@ Not applicable: the source contains no log calls; the cache adapter swallows sto
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | partial | reliability |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | partial | privacy-and-data |
 
-The hook depends only on the source and cache ports; transport, persistence and backend choice live in separate adapters composed in `telemetry/client.ts`. `parseSnapshot` has direct unit tests in `local-cache.test.ts` (null, empty, malformed JSON, wrong shapes, round trip), but the hook itself, `liveSource` and the `localCache` I/O wrapper have none, hence partial. Error handling fails the check because the hook discards the query error entirely: a source that never answers looks like an empty, healthy snapshot, and storage failures are swallowed without a log. Caching is deliberate: one shared react-query key, a 60-second poll, and a persisted last-known snapshot for instant paint. Degradation is partial because stale or empty data is served during an outage without any staleness indicator. Storage is partial because error titles, culprits and permalinks sit unencrypted in `localStorage` with no expiry.
+The hook depends only on the source and cache ports; transport, persistence and backend choice live in separate adapters composed in `telemetry/client.ts`. `parseSnapshot` has direct unit tests in `local-cache.test.ts` (null, empty, malformed JSON, wrong shapes, round trip), and `use-telemetry.dom.test.tsx` now covers the hook, `liveSource` and the `localCache` I/O wrapper for telemetry-001 to 017. Coverage is partial because telemetry-018 (client-only module) is skipped: jsdom cannot host a server component boundary. Error handling fails the check because the hook discards the query error entirely: a source that never answers looks like an empty, healthy snapshot, and storage failures are swallowed without a log. Caching is deliberate: one shared react-query key, a 60-second poll, and a persisted last-known snapshot for instant paint. Degradation is partial because stale or empty data is served during an outage without any staleness indicator. Storage is partial because error titles, culprits and permalinks sit unencrypted in `localStorage` with no expiry.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-telemetry.dom.test.tsx, 18 of 18 vectors, 17 passing, 1 skipped); unit-test-coverage stays partial (telemetry-018 client-only skipped). |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | One client-only requirement, worded the same across the dashboard state specs, with a test vector; the web module's "use client" directive is noted in Platform Notes. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved telemetry-failure-signal marker as current behavior plus pending decision |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/state/. |

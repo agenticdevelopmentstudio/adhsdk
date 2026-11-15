@@ -1,5 +1,4 @@
-
-Vectors 001 to 011 derive from `__tests__/ThemeStyle.test.tsx` and `__tests__/buildScopedCss.test.ts` beside the source; the rest derive from the source and have no test yet. Vectors 012 to 015 and 018 to 021 belong in `buildScopedCss.test.ts`, and vector 016 and 017's component cases in `ThemeStyle.test.tsx`. The component tests mock the manifest with a stub theme whose CSS is `:root:not(.dark) { --a: 1; } :root.dark { --a: 2; }`.
+All 22 vectors are tested in `__tests__/ThemeStyle.test.tsx` (component cases: 001 to 005, 015 to 017, 022) and `__tests__/buildScopedCss.test.ts` (transform cases: 006 to 014, 018 to 021) beside the source; each test title starts with its vector id (010 is four tests, 010a to 010d). The component tests mock the manifest with a stub theme whose CSS is `:root:not(.dark) { --a: 1; } :root.dark { --a: 2; }`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

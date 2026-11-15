@@ -4,7 +4,7 @@
     "id": "a14bb137-868e-4e8b-827b-4ea0f5e45b81",
     "title": "Partner Inbound",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "22fe0c09bdedd866",
+  "synced": "8fe1effafcf75363",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

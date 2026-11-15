@@ -2,7 +2,7 @@
 id: 3c0de3a7-a4ed-4eba-b7af-8f6a9cd899f1
 title: "Composite Chat Tool Source"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -141,7 +141,7 @@ Not applicable: the component contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/CompositeChatToolSource.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/CompositeChatToolSource.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -169,13 +169,14 @@ Not applicable: the component contains no logging call.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | internationalization |
 
-The composite does one job, routing, and keeps no tool logic, which satisfies separation of concerns. Four tests cover ordering, routing with caller pass-through, the unknown-tool result and the two-argument default; duplicate-name and re-query behavior have no test, so coverage is partial. The unknown-tool case is surfaced as an error result rather than swallowed. The `unknown tool` sentence is a hardcoded English literal, so the string check is partial.
+The composite does one job, routing, and keeps no tool logic, which satisfies separation of concerns. `CompositeChatToolSourceTests.swift` covers every conformance vector: ordering, routing with caller pass-through, the unknown-tool result, the two-argument default, the empty composite, duplicate names, re-querying per call, sequential definition queries and result pass-through. The unknown-tool case is surfaced as an error result rather than swallowed. The `unknown tool` sentence is a hardcoded English literal, so the string check is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (CompositeChatToolSourceTests.swift, 10 of 10 vectors); unit-test-coverage now passed. |

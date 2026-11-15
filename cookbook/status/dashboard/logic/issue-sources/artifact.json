@@ -4,11 +4,11 @@
     "id": "2d763e2e-ef33-4d49-957e-6b8ced23218e",
     "title": "Issue Sources",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b169e09103d2ced0",
+  "synced": "c2057c5e376c4078",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

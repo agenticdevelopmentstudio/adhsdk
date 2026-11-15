@@ -4,7 +4,7 @@
     "id": "a6b177ee-dc1e-441d-9844-eee2ef48ed8d",
     "title": "TrackedApp",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6c98fa2bc455cd2b",
+  "synced": "b435afe3137effc3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

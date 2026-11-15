@@ -15,5 +15,5 @@
 | tracked-app-012 | tracked-app-identity | `TrackedApp(bundleId: "x.y", name: "N", resolver: .none)` | `id` is `"x.y"` |
 | tracked-app-013 | construct-from-preferences | Empty `defaults` and `.default` preferences | `apps` is empty; `isAllowed("com.apple.dt.Xcode")` and `isAllowed("")` are both `false` |
 
-Vector 001 is covered by `AppAllowlistTests.testDefaultsAreAllowedAndOthersAreNot`, vectors 002 and 003 by `AppAllowlistTests.testRemovedDefaultIsNotAllowedAndAddedAppIs`, vector 004 by `AppAllowlistTests.testSublimeMergeIsAGitClientWithNoPath` and vector 005 by `AppAllowlistTests.testDefaultBundleIdsAreUnique`. Vectors 006 to 013 are derived from the source and have no test beside them; those four tests cover vectors 001 to 005.
+Vector 001 is covered by `AppAllowlistTests.testDefaultsAreAllowedAndOthersAreNot`, vectors 002 and 003 by `AppAllowlistTests.testRemovedDefaultIsNotAllowedAndAddedAppIs`, vector 004 by `AppAllowlistTests.testSublimeMergeIsAGitClientWithNoPath` and vector 005 by `AppAllowlistTests.testDefaultBundleIdsAreUnique`. Vectors 006 to 013 are covered by `AppAllowlistTests.testV006_removedBeatsAdded` through `testV013_emptyDefaultsAllowNothing`, one test per vector.
 

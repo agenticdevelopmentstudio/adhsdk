@@ -4,7 +4,7 @@
     "id": "409f10cf-e42b-44bf-8439-27e113ec8b13",
     "title": "Read Only Git",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "202ebe6fa936fc81",
+  "synced": "2a03224975b582d4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

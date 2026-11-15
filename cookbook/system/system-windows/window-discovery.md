@@ -2,11 +2,11 @@
 id: 0ab38622-b4a9-424c-89e2-5d27073680c7
 title: "Window Discovery"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -242,7 +242,7 @@ Discovery itself logs nothing, including the permission-denied path, which is si
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/WindowDiscovery/WindowDiscoveryViewModel.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/WindowDiscovery/WindowDiscoveryViewModel.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -285,12 +285,13 @@ Discovery itself logs nothing, including the permission-denied path, which is si
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | partial | Privacy and Data |
 
-separation-of-concerns passes because enumeration and focus live in the window-management engine, title parsing in the heuristic registry, permission checks in the Accessibility permission component, and the model only filters, groups, matches and sorts, with matching isolated in a pure static function. unit-test-coverage is partial: the matching tests cover matching (heuristic match, raw-title fallback, non-match, empty and `"Unknown"` projects) but nothing tests grouping, filtering, sorting, the permission gate or activation, and the engine is not injectable. explicit-error-handling is partial: focus failures are caught and logged but not surfaced to the caller, and the ordering of overlapping discoveries is undefined (the open question on overlapping-discovery-order). main-thread-freedom passes because the window list and backfill run on a background queue. progress-indication passes because `isLoading` is published from the start of discovery to the publish. graceful-degradation passes because a missing permission yields `accessibilityDenied` instead of a failure, and withheld titles are backfilled. timeout-handling fails because discovery has no timeout. platform-permissions passes because the model checks trust without prompting and prompts only from the user-initiated settings action. data-minimization passes because only title, pid, window number, name and icon are kept, in memory. no-pii-in-logs is partial because the activation log records the window title, which can contain document or project names, as public.
+separation-of-concerns passes because enumeration and focus live in the window-management engine, title parsing in the heuristic registry, permission checks in the Accessibility permission component, and the model only filters, groups, matches and sorts, with matching isolated in a pure static function. unit-test-coverage is partial: `WindowDiscoveryMatchingTests.swift` covers wdisc-001 to 006 and `WindowDiscoveryModelConformanceTests.swift` (both under `Tests/AgenticDeveloperHubSDKMacOSTests/WindowDiscovery/`) covers wdisc-012 and 016 (its log line is not observable from a unit test), plus wdisc-007 only when the test process is not Accessibility-trusted and wdisc-008 only when it is. Vectors wdisc-009, 010, 011, 013, 014, 015, 017, 018 and 019 are skipped: the model creates its engine and reads the running-app list and Accessibility trust itself, so no test can inject a fake window list or app list, a real focus needs a live window, and opening settings would show the real system prompt. explicit-error-handling is partial: focus failures are caught and logged but not surfaced to the caller, and the ordering of overlapping discoveries is undefined (the open question on overlapping-discovery-order). main-thread-freedom passes because the window list and backfill run on a background queue. progress-indication passes because `isLoading` is published from the start of discovery to the publish. graceful-degradation passes because a missing permission yields `accessibilityDenied` instead of a failure, and withheld titles are backfilled. timeout-handling fails because discovery has no timeout. platform-permissions passes because the model checks trust without prompting and prompts only from the user-initiated settings action. data-minimization passes because only title, pid, window number, name and icon are kept, in memory. no-pii-in-logs is partial because the activation log records the window title, which can contain document or project names, as public.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (WindowDiscoveryMatchingTests.swift, WindowDiscoveryModelConformanceTests.swift, 10 of 19 vectors, 9 skipped for lack of an injection seam); unit-test-coverage now partial. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved overlapping-discovery-order marker as current behavior plus pending decision |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

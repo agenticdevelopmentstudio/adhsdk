@@ -2,7 +2,7 @@
 id: a14bb137-868e-4e8b-827b-4ea0f5e45b81
 title: "Partner Inbound"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -33,7 +33,7 @@ approved-date: ""
 
 ## Overview
 
-`PartnerInbound` is the value type for "everything that can start a partner turn". The partner is a long-running Claude Code process that works one turn at a time; each turn begins with one inbound event rendered to a line or two of plain text. An event is one of five cases: an owner message, a job timer tick, a session going idle, a session exiting, or an app lifecycle notice. Each case supplies the text the partner reads (`text`), an optional coalescing key (`coalescingKey`) that `PartnerTurnQueue` ([Partner Turn Queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150)) uses to collapse repeated events that are still waiting, and, for owner messages only, a chat attribution. The type is pure data and pure formatting: it holds no state and performs no I/O.
+`PartnerInbound` is the value type for "everything that can start a partner turn". The partner is a long-running Claude Code process that works one turn at a time; each turn begins with one inbound event rendered to a line or two of plain text. An event is one of five cases: an owner message, a job timer tick, a session going idle, a session exiting, or an app lifecycle notice. Each case supplies the text the partner reads (`text`), an optional coalescing key (`coalescingKey`) that `PartnerTurnQueue` (Partner Turn Queue ([adhsdk.ingredient.foundation.partner.partner-turn-queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150))) uses to collapse repeated events that are still waiting, and, for owner messages only, a chat attribution. The type is pure data and pure formatting: it holds no state and performs no I/O.
 
 ## Behavioral Requirements
 
@@ -66,7 +66,7 @@ Coalescing (`coalescingKey`)
 - **key-distinct-kinds**: An idle event and an exited event for the same session MUST have different keys, so one never replaces the other.
 - **key-none-owner-lifecycle**: For `owner` and every `lifecycle` case, `coalescingKey` MUST be nil, so those events never collapse.
 - **key-ignores-payload**: A key MUST depend only on the case and its id, never on the title, name, summary or previous-tick date, so that an event with the same key as an earlier one can stand in for it in a queue.
-- **queue-honors-key**: The key is the only coalescing input this type provides. What a queue does with equal keys (replace in place, append, `enqueueFirst`) is specified by [Partner Turn Queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150), not here.
+- **queue-honors-key**: The key is the only coalescing input this type provides. What a queue does with equal keys (replace in place, append, `enqueueFirst`) is specified by Partner Turn Queue ([adhsdk.ingredient.foundation.partner.partner-turn-queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150)), not here.
 
 Attribution
 
@@ -90,7 +90,7 @@ Not applicable — this is an event value type, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 and 002 are asserted in `PartnerModelsTests` (the test name is in the Input column); the rest are derived from the `PartnerInbound` source. The queue behavior that uses these keys has its vectors in [Partner Turn Queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150).
+Vectors 001 and 002 are asserted in `PartnerModelsTests` (the test name is in the Input column); the rest are derived from the `PartnerInbound` source. The queue behavior that uses these keys has its vectors in Partner Turn Queue ([adhsdk.ingredient.foundation.partner.partner-turn-queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150)).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -116,7 +116,7 @@ Vectors 001 and 002 are asserted in `PartnerModelsTests` (the test name is in th
 
 - **Empty or missing values**: An empty list of sessions renders as `none` (MUST); a nil `previousTick` or `summary` omits its line (MUST); an empty `summary` still adds an empty line (MUST, as stated in tick-text-summary).
 - **Empty strings in ids and titles**: Rendered as given; the type does not validate them (MUST, text-verbatim-ids). An empty job id still produces the key `tick:`, which every other empty-id tick shares.
-- **Same id, different titles**: Two idle events with the same session id and different titles share a key (`key-ignores-payload`); what the queue then keeps is specified by [Partner Turn Queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150).
+- **Same id, different titles**: Two idle events with the same session id and different titles share a key (`key-ignores-payload`); what the queue then keeps is specified by Partner Turn Queue ([adhsdk.ingredient.foundation.partner.partner-turn-queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150)).
 - **Ids containing separators**: An id that contains a colon is not escaped. Keys of different kinds cannot collide because each kind has its own prefix, and the separator is not parsed back.
 - **Repeated owner messages**: Identical owner messages never collapse; each starts its own turn (MUST).
 - **Lifecycle notices**: A lifecycle event never collapses with another lifecycle event, including two of the same case (MUST).
@@ -180,7 +180,7 @@ Not applicable: the source makes no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerInbound.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerInbound.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -200,7 +200,7 @@ Not applicable: the source makes no log call.
 **Approved**: pending
 
 **Decision**: The event text is fixed English prose with ids inserted as given.
-**Rationale**: The text is the partner's input, and the partner's guidelines and base prompt ([Partner Base Prompt](cookbook:1abdd016-954c-4058-8db3-224c52712365)) refer to the events by these phrases. The text is not validated or escaped, so the partner reads exactly what the app knows.
+**Rationale**: The text is the partner's input, and the partner's guidelines and base prompt (Partner Base Prompt ([adhsdk.ingredient.foundation.partner.partner-base-prompt](cookbook:1abdd016-954c-4058-8db3-224c52712365))) refer to the events by these phrases. The text is not validated or escaped, so the partner reads exactly what the app knows.
 **Approved**: pending
 
 **Decision**: The text of a tick uses UTC ISO 8601 for the previous tick.
@@ -212,14 +212,15 @@ Not applicable: the source makes no log call.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | internationalization |
 
-The type does one thing, formatting and keying events, with no I/O, so separation of concerns passes. Tests cover the idle, exited and quit text and, through the queue, the tick, idle and exited keys, but not the tick lines, the started text, the guidelines and timeout text or the attribution accessor, so unit-test coverage is partial. `no-hardcoded-strings` passes because the strings are prompt lines for a language model, not text shown to a user.
+The type does one thing, formatting and keying events, with no I/O, so separation of concerns passes. `PartnerInboundConformanceTests` (Core/Partner) covers all 17 vectors: the tick, idle, exited, started, guidelines, timeout and quit text, every coalescing key and the attribution accessor, so unit-test coverage passes. `no-hardcoded-strings` passes because the strings are prompt lines for a language model, not text shown to a user.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerInboundConformanceTests.swift, 17 of 17 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Handed queue behavior to partner-turn-queue by rewriting the queue requirement and vectors 003, 004 and 014 as key-only, dropped text-names-event, added related links, stated the whole-second UTC date format, set no-hardcoded-strings to passed and removed the hard-coded source path. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

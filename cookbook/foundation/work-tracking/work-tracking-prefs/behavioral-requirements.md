@@ -23,5 +23,6 @@
 - **trusted-granted-signature**: `trustedAccessibility` MUST return `.granted` only when the stored answer is `.granted`, the supplied signer is non-nil and non-empty, and it equals the signer stored under `activity_ax_signer`.
 - **trusted-granted-otherwise-unknown**: `trustedAccessibility` MUST return `.unknown` for a stored `.granted` when the signer is nil, empty, differs from the recorded one, or no signer was recorded, so an unrecorded signature matches nothing.
 - **raw-answer-kept**: `trustedAccessibility` MUST NOT change what `lastAccessibility` returns; the raw stored answer is kept.
+- **no-validation-of-ids**: `save` and `load` MUST NOT check that an id looks like a bundle identifier; any string, including an empty one, is stored and returned (an empty string survives de-duplication as one entry).
 - **no-logging-no-cache**: `WorkTrackingPrefs` MUST NOT cache or log; every call goes to the store.
 

@@ -4,7 +4,7 @@
     "id": "112f2150-3fcd-416c-bd25-b40f729b8ef2",
     "title": "Appearance Store",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "8212efb709806706",
+  "synced": "de755500124e104e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

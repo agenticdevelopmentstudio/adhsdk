@@ -513,18 +513,18 @@ is `aria-invalid` toggling on a failing control, captured under
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| content-editing-001 | field-key-membership | `fields.displayNam` misspelled against `Team.displayName` | Fails to compile — `type-enforcement.tsx: misspelledFieldName` |
-| content-editing-002 | descriptor-value-type-match | `checkbox()` assigned to `Team.displayName` (a string) | Fails to compile — `type-enforcement.tsx: wrongControlForTheValueType` |
-| content-editing-003 | descriptor-value-type-match | `text()` assigned to `Team.archived` (a boolean) | Fails to compile — `type-enforcement.tsx: textControlOnABooleanField` |
-| content-editing-004 | select-options-match-union-exactly | `select` options for `visibility` include `"unlisted"`, not in `Team["visibility"]` | Fails to compile — `type-enforcement.tsx: selectOfferingAValueTheFieldCannotHold` |
-| content-editing-005 | select-options-match-union-exactly | `select` options for `visibility` omit `"public"`, a value the field can hold | Fails to compile — `type-enforcement.tsx: selectMissingOneOfTheFieldsValues` |
-| content-editing-006 | validate-requires-repair | `rdid()` descriptor supplies `validate` with no `repair` | Fails to compile — `type-enforcement.tsx: validateWithoutRepair` |
-| content-editing-007 | repair-context-must-be-supplied | A field's `repair` reads `context.orgSlug`; container's `context` prop omitted | Fails to compile — `type-enforcement.tsx: contextNeededButNotSupplied` |
-| content-editing-008 | repair-context-must-be-supplied | Same field; container's `context` is `{ teamSlug }` instead of `{ orgSlug }` | Fails to compile — `type-enforcement.tsx: contextOfTheWrongShape` |
-| content-editing-009 | sections-cover-fields-exactly | `fields` declares `archived`; `sections` lays out only `displayName` | Fails to compile — `type-enforcement.tsx: aFieldNoSectionLaysOut` |
-| content-editing-010 | sections-cover-fields-exactly | `sections` lays out `identifier`, a key `fields` never declares | Fails to compile — `type-enforcement.tsx: aSectionNamingAFieldThatDoesNotExist` |
-| content-editing-011 | sections-cover-fields-exactly | `dangerZone(["archived"])` is the only section; `displayName` is declared but uncovered | Fails to compile — `type-enforcement.tsx: aDangerZoneThatForgetsAField` |
-| content-editing-012 | onsave-receives-the-record | `onSave` typed for `{ noteId: string }`, container edits `Team` | Fails to compile — `type-enforcement.tsx: onSaveExpectingADifferentRecord` |
+| content-editing-001 | field-key-membership | `fields.displayNam` misspelled against `Team.displayName` | Fails to compile — `type-enforcement.tsx: misspelledFieldName`, asserted by `type-enforcement.test.ts` |
+| content-editing-002 | descriptor-value-type-match | `checkbox()` assigned to `Team.displayName` (a string) | Fails to compile — `type-enforcement.tsx: wrongControlForTheValueType`, asserted by `type-enforcement.test.ts` |
+| content-editing-003 | descriptor-value-type-match | `text()` assigned to `Team.archived` (a boolean) | Fails to compile — `type-enforcement.tsx: textControlOnABooleanField`, asserted by `type-enforcement.test.ts` |
+| content-editing-004 | select-options-match-union-exactly | `select` options for `visibility` include `"unlisted"`, not in `Team["visibility"]` | Fails to compile — `type-enforcement.tsx: selectOfferingAValueTheFieldCannotHold`, asserted by `type-enforcement.test.ts` |
+| content-editing-005 | select-options-match-union-exactly | `select` options for `visibility` omit `"public"`, a value the field can hold | Fails to compile — `type-enforcement.tsx: selectMissingOneOfTheFieldsValues`, asserted by `type-enforcement.test.ts` |
+| content-editing-006 | validate-requires-repair | `rdid()` descriptor supplies `validate` with no `repair` | Fails to compile — `type-enforcement.tsx: validateWithoutRepair`, asserted by `type-enforcement.test.ts` |
+| content-editing-007 | repair-context-must-be-supplied | A field's `repair` reads `context.orgSlug`; container's `context` prop omitted | Fails to compile — `type-enforcement.tsx: contextNeededButNotSupplied`, asserted by `type-enforcement.test.ts` |
+| content-editing-008 | repair-context-must-be-supplied | Same field; container's `context` is `{ teamSlug }` instead of `{ orgSlug }` | Fails to compile — `type-enforcement.tsx: contextOfTheWrongShape`, asserted by `type-enforcement.test.ts` |
+| content-editing-009 | sections-cover-fields-exactly | `fields` declares `archived`; `sections` lays out only `displayName` | Fails to compile — `type-enforcement.tsx: aFieldNoSectionLaysOut`, asserted by `type-enforcement.test.ts` |
+| content-editing-010 | sections-cover-fields-exactly | `sections` lays out `identifier`, a key `fields` never declares | Fails to compile — `type-enforcement.tsx: aSectionNamingAFieldThatDoesNotExist`, asserted by `type-enforcement.test.ts` |
+| content-editing-011 | sections-cover-fields-exactly | `dangerZone(["archived"])` is the only section; `displayName` is declared but uncovered | Fails to compile — `type-enforcement.tsx: aDangerZoneThatForgetsAField`, asserted by `type-enforcement.test.ts` |
+| content-editing-012 | onsave-receives-the-record | `onSave` typed for `{ noteId: string }`, container edits `Team` | Fails to compile — `type-enforcement.tsx: onSaveExpectingADifferentRecord`, asserted by `type-enforcement.test.ts` |
 | content-editing-013 | dirty-computed-by-structural-equality | Draft untouched, no `set`/`patch` called | `dirty === false` — `container.test.tsx: "is inert until something actually changes"` |
 | content-editing-014 | dirty-computed-by-structural-equality | `set("displayName", "x")` then `set("displayName", <original value>)` | `dirty` goes `true` then back to `false` — `container.test.tsx: "lights up on the first edit and goes dark again when it is undone"` |
 | content-editing-015 | required-field-blocks-save | `displayName` set to `""`, field is `required: true` | `canSave === false`; error shown is `"Required."` — `container.test.tsx: "names the empty required field rather than going dead in silence"` |
@@ -572,11 +572,11 @@ is `aria-invalid` toggling on a failing control, captured under
 | content-editing-057 | error-replaces-hint | Field has both a `hint` and a validation `error` | Only the error text renders, with `aria-invalid="true"` — `controls.test.tsx: "shows the error in place of the hint, and marks itself invalid"` |
 | content-editing-058 | guard-transport | (transport) Guarded page's `beforeunload`/in-app-link interception | Prompt raised on close/navigate while dirty, cleared on save/cancel/unmount — `guard.test.tsx: "raises the platform's one unsaved-changes prompt"`, `"is clear once the work is saved"`, `"is clear once the edit is cancelled"`, `"is clear once the pane unmounts mid-edit"` |
 | content-editing-059 | draft-seeded-from-record | Container mounted with a `record`, nothing edited | `draft` and baseline equal the record and `dirty === false` — `container.test.tsx: "is inert until something actually changes"` |
-| content-editing-060 | cancel-availability | Clean pane, with `onCancel` supplied and then omitted | Cancel is offered with `onCancel` and absent without it; once dirty it is offered either way — derived from `container.tsx` `canCancel` (no test covers it) |
-| content-editing-061 | descriptor-defaults | `text({ label })` with no `required` or `disabled` | `required === false` and `disabled === false` — derived from `descriptors.ts` `common` (no test covers it) |
-| content-editing-062 | no-numeric-control | `ControlKind` of the package | Exactly `text`, `textarea`, `rdid`, `checkbox`, `select`; no numeric kind — derived from `descriptors.ts` (no test covers it) |
-| content-editing-063 | server-entry-has-no-react-dependency | Evaluate `./server` outside a React runtime | The plain-data builders and `section`/`dangerZone` import and run; no React or `"use client"` module loads — derived from `server.ts` (no test covers it) |
-| content-editing-064 | bound-controls-unreachable-outside-container | Import `BoundField` from either package entry point | The import fails; neither entry exports it — derived from `package.json` exports (no test covers it) |
+| content-editing-060 | cancel-availability | Clean pane, with `onCancel` supplied and then omitted | Cancel is offered with `onCancel` and absent without it; once dirty it is offered either way — derived from `container.tsx` `canCancel` — `package-contract.test.tsx` |
+| content-editing-061 | descriptor-defaults | `text({ label })` with no `required` or `disabled` | `required === false` and `disabled === false` — derived from `descriptors.ts` `common` — `package-contract.test.tsx` |
+| content-editing-062 | no-numeric-control | `ControlKind` of the package | Exactly `text`, `textarea`, `rdid`, `checkbox`, `select`; no numeric kind — derived from `descriptors.ts` — `package-contract.test.tsx` |
+| content-editing-063 | server-entry-has-no-react-dependency | Evaluate `./server` outside a React runtime | The plain-data builders and `section`/`dangerZone` import and run; no React or `"use client"` module loads — derived from `server.ts` — `package-contract.test.tsx` |
+| content-editing-064 | bound-controls-unreachable-outside-container | Import `BoundField` from either package entry point | The import fails; neither entry exports it — derived from `package.json` exports — `package-contract.test.tsx` |
 | content-editing-065 | checkbox-control-shape | A `checkbox` field with a stored value, then toggled both ways | Renders the box with its label beside it, reflects the stored value, and toggles both ways — `controls.test.tsx: "labels itself beside the box and toggles both ways"`, `"reflects the stored value on the way in"` |
 | content-editing-066 | textarea-control-rows | A `textarea` field with `rows: 6` | Renders a textarea at the declared height carrying its value — `controls.test.tsx: "renders as a textarea at the declared height and carries its value"` |
 | content-editing-067 | select-adds-no-extra-option-when-listed | A `select` whose stored value is on its option list | No extra option is rendered — `controls.test.tsx: "adds no such option when the stored value IS on the list"` |
@@ -584,7 +584,7 @@ is `aria-invalid` toggling on a failing control, captured under
 | content-editing-069 | dirty-rolls-up-to-parent-scope | Nested child dirty, parent's own fields untouched | The enclosing container is dirty — `nesting.test.tsx: "marks the enclosing container dirty even though its own fields are untouched"` |
 | content-editing-070 | rollup-propagates-through-multiple-levels | Three levels of nested containers, the innermost dirty | Every level up to the root reports dirty — `nesting.test.tsx: "rolls dirtiness up through more than one level"` |
 | content-editing-071 | validate-receives-context | A field `validate` and `repair` that read `context`, container given a `context` | Each is invoked with the exact `context` prop — `validation.test.ts: "runs the field's own rule on a non-empty value, with the container's context"` |
-| content-editing-072 | layout-faults-logged-and-rendered | A layout with a fault, re-rendered with unchanged `sections` and `fields` | The fault is rendered in a `role="alert"` block and logged once with the `[@adh-sdk/editing]` prefix, not again on re-render — `container.test.tsx: "reports a field laid out twice"`; the single-log timing is derived from `container.tsx` (no test covers it) |
+| content-editing-072 | layout-faults-logged-and-rendered | A layout with a fault, re-rendered with unchanged `sections` and `fields` | The fault is rendered in a `role="alert"` block and logged once with the `[@adh-sdk/editing]` prefix, not again on re-render — `container.test.tsx: "reports a field laid out twice"`; the single-log timing — `package-contract.test.tsx` |
 ## Edge Cases
 
 - **Null/empty field values** (MUST): `null`, `undefined`, a blank
@@ -888,7 +888,7 @@ Server-Component-safe entry into a client-only one with no compiler error
 |-------|--------|----------|
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | Privacy and Data |
@@ -904,13 +904,14 @@ concerns` passes: the container owns draft state, validation, layout
 coverage and the repair decision, but delegates persistence to the caller's
 `onSave`/`onRepair`, control rendering to `@adh-sdk/ui`, and
 the navigation guard/alert chrome to an injected `EditingHost`.
-`unit-test-coverage` is partial: the package's own nine test files exercise
+`unit-test-coverage` passes: every conformance vector is asserted, and the package's own test files exercise
 validation, sections, the repair plan, the container's save/cancel/re-
 seeding/layout-fault paths, nesting/rollup, every control kind, the guard
 integration and the full repair UX flow in detail, plus a dedicated
-compile-time suite for the generic contract — but `useDirtyDraft`'s own
+compile-time suite for the generic contract, which `type-enforcement.test.ts` now runs
+through the real TypeScript compiler so vitest asserts it too. `useDirtyDraft`'s own
 equality semantics are tested in the `ui` package rather than duplicated
-here. The recipe specifies no behaviour for two containers editing the same record, so that case is not a reason for the partial. `graceful-degradation` passes: a layout
+here. `graceful-degradation` passes: a layout
 fault renders as a visible alert and the pane continues rendering rather
 than throwing; an unlisted `select` value is shown rather than crashing or
 silently substituting the first option. `fault-tolerance` passes: a

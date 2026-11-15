@@ -4,7 +4,7 @@
     "id": "67b656ef-78a2-41ae-a910-f87f527360b1",
     "title": "Parse Result",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1849405e19517715",
+  "synced": "0864a425562fcbe1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

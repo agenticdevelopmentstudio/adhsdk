@@ -24,7 +24,7 @@ function ClientProbe({ onClient }: { onClient: (client: unknown) => void }) {
 // assert that property through a RENDERED TREE, which is the shape the bug appeared in;
 // __tests__/query-client.test.tsx asserts the singleton itself, by direct call.
 describe('ToolkitQueryProvider nesting', () => {
-  it('hands a nested provider the SAME QueryClient instance as the outer one, not a second one', () => {
+  it('query-cache-005 hands a nested provider the SAME QueryClient instance as the outer one, not a second one', () => {
     let outer: unknown
     let inner: unknown
 
@@ -45,7 +45,7 @@ describe('ToolkitQueryProvider nesting', () => {
     expect(inner).toBe(outer)
   })
 
-  it('gives two separate, non-nested mounts that same one client', () => {
+  it('query-cache-006 gives two separate, non-nested mounts that same one client', () => {
     let first: unknown
     let second: unknown
 
@@ -76,7 +76,7 @@ describe('ToolkitQueryProvider nesting', () => {
   // with data's would do it too) silently replaced the documented toolkit defaults
   // (staleTime 5min / retry 1) with its own. Same physical copy here, since this test file
   // resolves @tanstack/react-query exactly as src/query/index.tsx does.
-  it('does NOT adopt a host-mounted QueryClient from the same react-query copy', () => {
+  it('query-cache-007 does NOT adopt a host-mounted QueryClient from the same react-query copy', () => {
     const hostClient = new QueryClient({
       defaultOptions: { queries: { staleTime: 30_000, retry: 3 } },
     })

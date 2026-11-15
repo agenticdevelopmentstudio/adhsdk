@@ -4,11 +4,11 @@
     "id": "7add8e4b-922e-4518-aa45-79bf56cdf8bc",
     "title": "API Toolkit",
     "type": "ingredient",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "63b504b0e1101f1c",
+  "synced": "902e8646a4571fb6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

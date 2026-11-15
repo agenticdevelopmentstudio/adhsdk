@@ -2,7 +2,7 @@
 id: 9d6600fa-7b75-40fd-8beb-ab5ad3d1bc3b
 title: "Terminal Text Injector"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -224,7 +224,7 @@ Not applicable: The source calls no logging API; failures are returned as `Injec
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalTextInjector.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/TerminalTextInjector.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -278,11 +278,12 @@ Not applicable: The source calls no logging API; failures are returned as `Injec
 | [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | partial | Performance |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 
-separation-of-concerns passes: the type resolves a pane, builds scripts and runs them, while the choice of what to type and when belongs to its callers (the session watcher and the app). unit-test-coverage is partial: `TerminalTextInjectorTests` covers support, target resolution, both script builders, raising, select-only, the Return script, `escape` and `normalizeTTY`, but `inject`, `run`, the permission mapping and a live `ttyForPid` have no test, because they execute AppleScript. explicit-error-handling passes: every failure is a typed `InjectionError` returned in a `Result`. input-sanitization passes: the text, uuid and TTY are escaped before interpolation and line breaks and control keys are removed. platform-permissions passes: an Automation denial is detected and returned with the terminal's bundle id for the app's permission UI. main-thread-freedom is partial: the wait is an `await` and the TTY lookup is a syscall, but `NSAppleScript` executes synchronously on the main actor. no-hardcoded-strings fails: the error texts are English literals with no localization lookup.
+separation-of-concerns passes: the type resolves a pane, builds scripts and runs them, while the choice of what to type and when belongs to its callers (the session watcher and the app). unit-test-coverage is partial: `TerminalTextInjectorTests` (`Tests/AgenticDeveloperHubSDKCoreMacOSTests/TerminalTextInjectorTests.swift`) covers every vector except 032, 033 and 035, including `run` and the permission mapping through in-process AppleScript errors. Vectors 032, 033 and 035 are skipped because `inject` needs a live iTerm2 or Terminal.app pane to answer the scripts, and vector 031 covers only the `boom` message, since AppleScript always supplies one. explicit-error-handlingexplicit-error-handling passes: every failure is a typed `InjectionError` returned in a `Result`. input-sanitization passes: the text, uuid and TTY are escaped before interpolation and line breaks and control keys are removed. platform-permissions passes: an Automation denial is detected and returned with the terminal's bundle id for the app's permission UI. main-thread-freedom is partial: the wait is an `await` and the TTY lookup is a syscall, but `NSAppleScript` executes synchronously on the main actor. no-hardcoded-strings fails: the error texts are English literals with no localization lookup.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (TerminalTextInjectorTests.swift, 32 of 35 vectors); unit-test-coverage now partial (032, 033, 035 skipped: need a live terminal pane). |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Restated several requirements as plain contract statements, replaced a rationale-free decision with a Retry and logging edge case, added a localization decision and a bundle-id decision, clarified empty-text injection, and added seven test vectors. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

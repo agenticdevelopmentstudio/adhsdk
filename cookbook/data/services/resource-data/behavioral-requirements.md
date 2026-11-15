@@ -194,13 +194,13 @@
 - **write-cached-workspace-swallow**: Caching a workspace slug MUST swallow
   any failure raised while writing storage.
 - **workspace-prefs-get-unwraps**: The workspace-preferences read operation
-  MUST issue a GET request to `/api/me/workspace-prefs`, unwrap the
-  response's `prefs` field, and MUST default to an empty object rather than
-  surface a not-found result.
+  MUST issue a GET request to `/api/v1/account` with the
+  `workspace_prefs` include, unwrap the response's `workspace_prefs.prefs`
+  field, and MUST default to an empty object when the account carries none.
 - **workspace-prefs-put-full-replace**: The workspace-preferences write
-  operation MUST issue a PUT request to `/api/me/workspace-prefs` with the
-  full preferences object, replacing the stored preferences rather than
-  merging into them.
+  operation MUST issue a POST request to `/api/v1/account` with the
+  full preferences object under `workspace_prefs`, replacing the stored
+  preferences rather than merging into them.
 - **workspace-list-cache-key-constant**: The workspace-list cache key MUST
   be the constant `('workspaces')`.
 - **notify-workspaces-changed-dual-invalidate**: The

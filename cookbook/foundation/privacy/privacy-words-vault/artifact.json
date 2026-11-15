@@ -4,7 +4,7 @@
     "id": "d54db476-c847-4ac0-827e-eae336109f38",
     "title": "Privacy Words Vault",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "cf653378f5ffd49c",
+  "synced": "0a538a928a9a4108",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

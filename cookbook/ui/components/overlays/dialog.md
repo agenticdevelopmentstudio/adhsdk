@@ -80,7 +80,7 @@ larger overlay (AlertModal, the invitation and add-users modals) is built on.
 
 | ID | Requirements | Input | Expected |
 |---|---|---|---|
-| T1 | centered-modal | Open the dialog with `<DialogTrigger>` | Popup carries `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2` and the backdrop carries `fixed inset-0 bg-black/30 backdrop-blur-sm`; the popup's bounding box is centered in the viewport |
+| T1 | centered-modal | Open the dialog with `<DialogTrigger>` | Popup carries `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2` and the backdrop carries `fixed inset-0 bg-black/30 backdrop-blur-sm` (the classes center the popup; jsdom does no layout, so the bounding box is not measured) |
 | T2 | backdrop-dismissal-disabled (default) | Click the backdrop area while dialog is open | Dialog remains open |
 | T3 | escape-closes (default) | Press Escape key while dialog is open and focused | Dialog closes |
 | T4 | close-affordance (default) | Render `<DialogContent>` without `showClose` prop | Close button (×) is rendered in top-right corner |
@@ -198,9 +198,9 @@ None — a presentational primitive that emits no logs of its own.
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on `dialog.tsx`: the explicit `aria-label="Close"` plus Base UI's documented role/focus-trap/portal contract support the passed accessibility rows; the `apt-*` token contrast values and whether the `rem`-based `text-base`/`text-sm` classes track system font scaling aren't verifiable from this file, hence partial; the close button's `size-4` icon has no padding class enlarging its hit area, so it plainly fails the 44×44 target; and the hardcoded, non-overridable `"Close"` string in `DialogContent` fails both internationalization checks. `separation-of-concerns` passes because `dialog.tsx` is a thin composition of `DialogPrimitive.*` with Tailwind classes and no business logic of its own; `unit-test-coverage` is partial because `Dialog`/`DialogContent` are exercised only through parent components (`AlertModal` in `alertModal.test.tsx`, `CategoryPickerDialog` in `categoryPickerDialog.test.tsx`), never by a dedicated test of `dialog.tsx` itself.
+Statuses rest on `dialog.tsx`: the explicit `aria-label="Close"` plus Base UI's documented role/focus-trap/portal contract support the passed accessibility rows; the `apt-*` token contrast values and whether the `rem`-based `text-base`/`text-sm` classes track system font scaling aren't verifiable from this file, hence partial; the close button's `size-4` icon has no padding class enlarging its hit area, so it plainly fails the 44×44 target; and the hardcoded, non-overridable `"Close"` string in `DialogContent` fails both internationalization checks. `separation-of-concerns` passes because `dialog.tsx` is a thin composition of `DialogPrimitive.*` with Tailwind classes and no business logic of its own; `unit-test-coverage` passes because `dialog.test.tsx` covers every conformance vector (T1-T10) against the real `dialog.tsx`.
 
 ## Change History
 

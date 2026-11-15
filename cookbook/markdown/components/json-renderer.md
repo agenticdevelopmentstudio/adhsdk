@@ -2,7 +2,7 @@
 id: b32270be-49b8-4227-9e30-1d8e781ab3b5
 title: "JSON Renderer"
 type: ingredient
-version: 1.0.0
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -66,7 +66,7 @@ A client React component that shows a stored JSON document, or a JSON Lines file
 - **Padding**: Not applicable: none set by this component; it comes from the shared prose styles.
 - **Font**: Monospace code, from the code-block styling shared with `MarkdownRenderer`. The invalid-text note below the limit is Markdown emphasis (italic) in the prose body font; above the limit the note is italic through `adh-mv-json-note`.
 - **Background**: Below the limit, the shiki dual-theme code-block background shared with `MarkdownRenderer`. Above the limit, the `pre.shiki` background from the prose styles, without token colours.
-- **Foreground/Text**: Below the limit, shiki token colours for valid JSON; invalid text has no language and so no token colours. Above the limit, a single text colour. The plain-path note uses the muted text variable `--mdv-text-muted`.
+- **Foreground/Text**: Below the limit, shiki token colours for valid JSON; invalid text has no language, so it has no token colours and renders as a bare `pre` without the `shiki` class. Above the limit, a single text colour. The plain-path note uses the muted text variable `--mdv-text-muted`.
 - **Border**: Not applicable: none set by this component.
 - **Shadow**: Not applicable: none set by this component.
 - **Min/Max size**: Not applicable: no size constraint of its own. The root fills the width of its prose measure (`reading`, about 72ch). Long lines scroll sideways unless `wrap` is true.
@@ -112,7 +112,7 @@ A client React component that shows a stored JSON document, or a JSON Lines file
 | json-renderer-013 | accept-wrap, default-measure | `wrap` omitted, oversized body | Root class is `adh-mv-prose` only: no wrap modifier and no fill modifier. |
 | json-renderer-014 | inherit-markdown-errors | Small valid body while the Markdown pipeline rejects | `MarkdownRenderer`'s "Failed to render document" alert pane is shown; the component adds nothing. |
 
-Test coverage note: the repo tests `prettyJson` and `fenceCode` (`packages/web/packages/markdown/src/__tests__/pretty-json.test.ts`) and `proseClassName` (`prose-class.test.ts`). It has no test that renders `JsonRenderer` itself, so vectors 007 to 014 are derived from the component source, not from an existing assertion. The one SHOULD requirement, `memoise-pretty`, has no vector because it is a performance property with no observable output.
+Test coverage note: `packages/web/packages/markdown/src/__tests__/jsonRenderer.test.tsx` renders `JsonRenderer` for all 14 vectors; `pretty-json.test.ts` and `prose-class.test.ts` cover the helpers. The one SHOULD requirement, `memoise-pretty`, has no vector because it is a performance property with no observable output.
 
 ## Edge Cases
 
@@ -189,7 +189,7 @@ Not applicable: the component logs nothing. The only logging on this path is the
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/markdown/src/components/JsonRenderer.tsx` | confirmed (1.0.0) |
+| web | `packages/web/packages/markdown/src/components/JsonRenderer.tsx` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -225,15 +225,17 @@ Not applicable: the component logs nothing. The only logging on this path is the
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.performance.lazy-loading](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/93049d53-e8e2-5ea3-8a3a-9eb07e60d0e2) | partial | performance |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | passed | accessibility |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | partial | accessibility |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 
-Parsing, fencing and class-list logic live in small pure helpers (`prettyJson`, `fenceCode`, `proseClassName`) and Markdown rendering stays in `MarkdownRenderer`, so the component only chooses between two paths: that meets separation-of-concerns. Unit-test coverage is partial because the helpers have tests but the component has none. Performance is partial: the size limit protects the page from a slow highlight, but the pretty-print itself runs synchronously on the render thread for any size. Semantic markup passes because output is a `pre` and `code`. Keyboard navigation is partial: below the limit the shiki `pre` is focusable, but the open question on `keyboard-scroll` remains for the oversized plain `pre`, which is not. No-hardcoded-strings fails on the open question on `note-string`.
+Parsing, fencing and class-list logic live in small pure helpers (`prettyJson`, `fenceCode`, `proseClassName`) and Markdown rendering stays in `MarkdownRenderer`, so the component only chooses between two paths: that meets separation-of-concerns. Unit-test coverage passes: the helpers have tests and `jsonRenderer.test.tsx` covers all 14 vectors against the component. Performance is partial: the size limit protects the page from a slow highlight, but the pretty-print itself runs synchronously on the render thread for any size. Semantic markup passes because output is a `pre` and `code`: `pre.shiki` for valid JSON and for the oversized plain path, and a bare `pre` for invalid text, which is fenced with no language and so is not highlighted. `jsonRenderer.test.tsx` asserts `pre.shiki` wherever the source produces it. Keyboard navigation is partial: below the limit the shiki `pre` is focusable, but the open question on `keyboard-scroll` remains for the oversized plain `pre`, which is not. No-hardcoded-strings fails on the open question on `note-string`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (jsonRenderer.test.tsx, 14 of 14 vectors); unit-test-coverage now passed. |
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Match recipe to source: valid JSON renders pre.shiki, language-less invalid text a bare pre |

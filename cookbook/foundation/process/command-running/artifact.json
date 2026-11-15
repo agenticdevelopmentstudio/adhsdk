@@ -4,7 +4,7 @@
     "id": "78390c0c-2610-4480-8a93-0a2dad559126",
     "title": "Command Running",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ec20836c5638c6fa",
+  "synced": "86a8d6fe7643fd14",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

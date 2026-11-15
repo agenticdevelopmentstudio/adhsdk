@@ -26,5 +26,5 @@
 | daemon-health-report-023 | strategy-memberwise-default | `DaemonStrategyReport(name: "t", kind: "timing", workUnits: [])` | `children == []` |
 | daemon-health-report-024 | children-recursive | A composite strategy with one child that itself has one child; a leaf strategy | The composite's `children` holds the child, whose `children` holds the grandchild; the leaf's `children` is empty |
 | daemon-health-report-025 | status-opaque | A well-formed body whose `status` is `"degraded"` | Decodes; `status == "degraded"` |
-| daemon-health-report-026 | decode-iso8601, decode-nil-on-mismatch | A well-formed body whose `nextActivation` is `"2026-01-01T00:00:00.500Z"` | `decode` returns `nil` for the whole report |
+| daemon-health-report-026 | decode-iso8601, decode-nil-on-mismatch | A well-formed body whose `nextActivation` is the number `1767225600` rather than an ISO-8601 string | `decode` returns `nil` for the whole report |
 | daemon-health-report-027 | probe-url | `baseURL` `http://127.0.0.1:9000/` and, separately, `http://127.0.0.1:9000/api` | The requests are GETs to `http://127.0.0.1:9000/health` and `http://127.0.0.1:9000/api/health` |

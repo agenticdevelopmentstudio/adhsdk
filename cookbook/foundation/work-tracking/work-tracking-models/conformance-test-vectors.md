@@ -16,4 +16,4 @@
 | work-tracking-models-013 | settings-keys | `WorkTrackingSettingsKeys.retentionDays` and `.accessibilitySigner` | `activity_retention_days` and `activity_ax_signer` |
 | work-tracking-models-014 | status-defaults | `WorkTrackingStatus()` | enabled false, accessibility `.unknown`, currentSpan nil, writeFailures 0, lastError nil |
 
-Vectors 010 to 014 are derived from the source and name no test; an implementer should add tests for them, including one that pins the exact bytes of `WorkTrackingWire.readFailedRow` for vector 012.
+Vectors 010 to 014 are derived from the source and are tested in `WorkTrackingModelsTests` (`testV10_` to `testV14_`), including one that pins the exact bytes of `WorkTrackingWire.readFailedRow` for vector 012.

@@ -10,11 +10,7 @@
 `separation-of-concerns` passes for both components: `progress.tsx` (UI) and
 `Progress.tsx` (Controls) each take only display props (`value`/`max` or
 `indeterminate`) and render markup, with no data fetching or business logic.
-`unit-test-coverage` is `partial`: the Controls `Progress` is exercised
-directly (`user-settings`'s component test suite renders it determinate and
-indeterminate), but no test in the `ui` package renders `progress.tsx`
-directly — the only test importing from `blocks/progress-modal` exercises a
-different component (`ProgressModal`), not this one.
+`unit-test-coverage` is `partial`: both components are now rendered directly (`progress.test.tsx` in `ui` covers T1-T8 and T10-T13; `Progress.test.tsx` in `controls` covers T14-T20), 19 of 20 vectors. T9 is skipped: the reduce-motion override comes from `accessibility.css`'s cascade, which jsdom does not load or resolve.
 
 `semantic-markup` is `partial`: the UI bar passes, but the Controls bar's `label` is not associated with its `progressbar` and a consumer cannot name it. `semantic-markup` and `reduced-motion` rest on `progress.tsx` (UI): the
 `role="progressbar"` + `aria-valuemin`/`aria-valuemax`/`aria-valuenow` attributes, and

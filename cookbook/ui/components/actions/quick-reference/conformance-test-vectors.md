@@ -21,4 +21,4 @@
 | quick-ref-018 | entries-definition-list | entries=[] | Popover renders the title and an empty `dl` with no `dt`/`dd` rows |
 | quick-ref-019 | trigger-accessible-name | triggerLabel="Syntax", ariaLabel="Syntax reference" | Trigger has aria-label="Syntax reference", which contains the visible text "Syntax" |
 | quick-ref-020 | trigger-accessible-name | triggerLabel="Syntax", ariaLabel="Reference panel" | Trigger has aria-label="Reference panel" exactly as given; the component neither reconciles it with `triggerLabel` nor warns (the consumer owns label-in-name) |
-| quick-ref-021 | isolate-code-direction | Render inside a `dir="rtl"` ancestor with syntax "**text**" | The code cell keeps left-to-right direction (fails today; see Compliance) |
+| quick-ref-021 | isolate-code-direction | Render inside a `dir="rtl"` ancestor with syntax "**text**" | The code cell keeps left-to-right direction |

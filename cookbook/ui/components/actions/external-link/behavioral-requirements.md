@@ -6,7 +6,7 @@
 - **suppresses-glyph-when-false**: Given `glyph={false}`, the component MUST NOT render the `↗` glyph (so a leading icon can carry the affordance).
 - **default-deep-link-skin**: The component MUST default to the deep-link grammar — inline layout, a small monospace size that scales with the user's text-size setting, the info-blue token color, no underline, and no line wrapping between the label and glyph. The web class list is in the React/Web Platform Note.
 - **focus-ring**: The component MUST show a visible focus ring, in the accent token color, on keyboard focus only.
-- **mirrors-glyph-rtl**: In a right-to-left layout the component SHOULD mirror the trailing `↗` glyph (or swap it for a start-pointing equivalent). The web implementation does not do this yet (see Compliance).
+- **mirrors-glyph-rtl**: In a right-to-left layout the component SHOULD mirror the trailing `↗` glyph (or swap it for a start-pointing equivalent).
 - **merges-classname**: The component MUST merge any `className` after the base classes via `cn()`, so a consumer MAY restyle it (font, color, gap) without losing the new-tab/rel behavior.
 - **forwards-anchor-props**: The component MUST forward native anchor props (`href`, `onClick`, `title`, `data-*`, …) onto the underlying `<a>`.
 - **safe-attrs-not-overridable**: The component MUST apply `target="_blank"` and `rel="noopener noreferrer"` after spreading `...props`, so a caller-supplied `target` or `rel` prop cannot override the safe new-tab contract.

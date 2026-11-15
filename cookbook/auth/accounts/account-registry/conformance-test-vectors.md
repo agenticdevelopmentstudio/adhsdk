@@ -1,5 +1,5 @@
 
-Vectors 001 to 005 are the cases asserted in `AccountRegistryTests` (`AccountsTests.swift`, suite "AccountRegistry"); vectors 006 to 013 have no test behind them yet and follow the source directly.
+Vectors 001 to 005 are asserted in `AccountRegistryTests` (`AccountsTests.swift`, suite "AccountRegistry"); vectors 006 to 013 are asserted in `AccountRegistryConformanceTests` (`AccountRegistryConformanceTests.swift`).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

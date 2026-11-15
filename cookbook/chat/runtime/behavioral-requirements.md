@@ -9,6 +9,7 @@
 - **start-is-idempotent**: Every call to `start()` after the first MUST be a no-op: at most one inbound event-consumption task ever runs per instance, and a later call MUST NOT create a second one.
 - **stop-cancels-iterator**: `stop()` MUST end inbound consumption: it MUST call `return()` on the active async iterator, if one exists, to signal early termination of the inbound stream, and the event loop MUST NOT begin another iteration afterward.
 - **stop-before-start-locks-the-loop**: If `stop()` is called before `start()` has ever been called, a later `start()` call MUST still never consume any event; nothing in this source ever re-enables consumption once `stop()` has been called.
+- **event-loop-recovery**: When the iterator's `next()` rejects inside the event loop, the loop MUST notify one `error` `ChatUpdate` carrying the rejection's message (`error.message` when it is an `Error`, else `String(error)`) and end. `started` is not reset, so a later `start()` is a no-op and consumption MUST NOT resume on that instance; no retry, backoff or reconnect is performed.
 
 ### Display Configuration
 

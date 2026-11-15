@@ -4,11 +4,11 @@
     "id": "aaf56f9b-896b-4f74-9e18-1ef4116270a9",
     "title": "Window Contexts",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "b4768e6dc36e9aa4",
+  "synced": "f9020ece1cdeca8e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -2,11 +2,11 @@
 id: 2d27892d-a3df-4e7d-ba47-dfd6c45b4c6d
 title: "Three Pane Chat"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-22
-modified: 2026-09-25
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -95,7 +95,7 @@ The Three Pane Chat component orchestrates a sophisticated multi-pane chat layou
 | three-pane-004 | append-visible-topic-on-selection | User selects topic 2 while topic 1 is visible | Both topic 1 and topic 2 remain in the visible-topics stack; the earlier selection is preserved for back-navigation |
 | three-pane-005 | arrow-key-navigation | Three topics are visible; the second (of three) is active; user presses arrow down | The active topic moves to the third (last) visible topic |
 | three-pane-006 | arrow-key-navigation | Two topics are visible; the second (last) is active; user presses arrow down | The active topic stays at the last visible topic; navigation clamps rather than wrapping to the first |
-| three-pane-007 | input-focus-keystroke | Focus is on the topics pane; user presses 'a' (no modifiers) | Chat input field receives focus; the 'a' character is inserted into the input |
+| three-pane-007 | input-focus-keystroke | Focus is on the topics pane; user presses 'a' (no modifiers) | Chat input field receives focus (the handler only moves focus; the browser then delivers the keystroke, so the 'a' lands in the input) |
 | three-pane-008 | input-focus-keystroke | Focus is already in the chat input; user presses 'a' | The keystroke is inserted into the input as normal; focus remains in the input |
 | three-pane-009 | draw-connectors-between-panes | The first topic is active and is associated with a message in the transcript | A connector is drawn from the active topic to its message in the transcript, and another from that message to its detail panel |
 | three-pane-010 | recalculate-layout-on-image-load | A detail panel with images is shown | After each image finishes loading, the three-pane layout recalculates its dimensions |
@@ -193,8 +193,8 @@ Subsystem: application (inherited from AgenticDeveloperHubSDK) | Category: `Thre
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ThreePaneChatView.swift` | unverified |
-| web | `packages/web/packages/chat/src/modes/ThreePaneChat.tsx` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chat/ThreePaneChatView.swift` | confirmed (1.1.2) |
+| web | `packages/web/packages/chat/src/modes/ThreePaneChat.tsx` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -249,14 +249,15 @@ Subsystem: application (inherited from AgenticDeveloperHubSDK) | Category: `Thre
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on the web source: `TopicsPane.tsx`/`DetailPane.tsx` render plain `<button>`/`<a>`/`<ul>` markup with no ARIA roles or `aria-live` announcements (screen-reader-support, semantic-markup); the keydown handler in `ThreePaneChat.tsx` makes all navigation reachable from the keyboard (keyboard-navigable); `three-pane.css` mixes `rem` and hardcoded `px` font sizes (dynamic-type-support), uses theme-variable colors whose contrast can't be verified from source alone (contrast-ratio), sizes `.pc-topic-item` well under 44px tall (touch-target-size), and transitions pane opacity/background/border with no `prefers-reduced-motion` query (reduced-motion); focus is redirected to the chat input on a plain keystroke without a dedicated focus-region scope (focus-management); `DetailPane.tsx` renders `link.url` and `img.src` directly with no scheme or origin validation (input-sanitization); the four Logging events log only counts and numeric indices, never message or topic text (secure-log-output, no-pii-in-logs); topic/link/image content is rendered as received from the chat backend with no filtering in this component (harmful-content-filtering); and `TopicsPane.tsx`/`DetailPane.tsx` hardcode the English strings "Topics", "Details", and "Links" (string-externalization) while otherwise rendering arbitrary message/topic text through React, which handles the full Unicode range natively (unicode-support); `separation-of-concerns` is `partial` because `TopicsPane`/`DetailPane`/`PanelStack` are split out, but the topic-derivation and stack-mutation logic (see **derive-topics-from-messages**) lives inline in `ThreePaneChat.tsx`'s effects rather than an extracted hook, and the only Apple source is a stub that renders `InlineChatView` instead of this layout; `unit-test-coverage` is `partial` — `ThreePaneChat.test.tsx` covers basic derivation and selection, but neither the stale-visible-topics-stack behavior nor the popover-count-gated recompute this revision documents had a prior test vector, and the Apple stub has none.
+Statuses rest on the web source: `TopicsPane.tsx`/`DetailPane.tsx` render plain `<button>`/`<a>`/`<ul>` markup with no ARIA roles or `aria-live` announcements (screen-reader-support, semantic-markup); the keydown handler in `ThreePaneChat.tsx` makes all navigation reachable from the keyboard (keyboard-navigable); `three-pane.css` mixes `rem` and hardcoded `px` font sizes (dynamic-type-support), uses theme-variable colors whose contrast can't be verified from source alone (contrast-ratio), sizes `.pc-topic-item` well under 44px tall (touch-target-size), and transitions pane opacity/background/border with no `prefers-reduced-motion` query (reduced-motion); focus is redirected to the chat input on a plain keystroke without a dedicated focus-region scope (focus-management); `DetailPane.tsx` renders `link.url` and `img.src` directly with no scheme or origin validation (input-sanitization); the four Logging events log only counts and numeric indices, never message or topic text (secure-log-output, no-pii-in-logs); topic/link/image content is rendered as received from the chat backend with no filtering in this component (harmful-content-filtering); and `TopicsPane.tsx`/`DetailPane.tsx` hardcode the English strings "Topics", "Details", and "Links" (string-externalization) while otherwise rendering arbitrary message/topic text through React, which handles the full Unicode range natively (unicode-support); `separation-of-concerns` is `partial` because `TopicsPane`/`DetailPane`/`PanelStack` are split out, but the topic-derivation and stack-mutation logic (see **derive-topics-from-messages**) lives inline in `ThreePaneChat.tsx`'s effects rather than an extracted hook, and the only Apple source is a stub that renders `InlineChatView` instead of this layout; `unit-test-coverage` is `passed` — `ThreePaneChatView.conformance.test.tsx` covers all 16 vectors on web, including the visible-topics stack and the popover-count-gated recompute; the Apple stub renders `InlineChatView` and has no layout to test.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ThreePaneChatView.conformance.test.tsx, 16 of 16 vectors); unit-test-coverage now passed. |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | derive-topics commits only on popover-count change; stale stack entries doc'd; vector 016 added. |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only kebab-case and merged the duplicate arrow-key requirements; corrected the input-focus-keystroke swallow and documented that arrow-key navigation is global (not input-scoped), fixing the contradicting edge case and vectors; disambiguated the clamp-vs-wrap and no-topic-click vectors; removed web-internal identifiers from cross-platform requirements and edge cases; replaced line-number traceability with file/symbol citations and fixed the wrong source filename; corrected the WinUI 3, UIKit, SwiftUI, and Compose platform notes to real APIs; added depends-on links to the sub-pane recipes, a Localization table for the required announcements, and a Compliance table; fixed the "vertically stacked" overview contradiction and the detail-pane/detail-panel terminology; removed the keystroke-capturing property from analytics and marked all analytics events as unimplemented/optional; dropped the unsupported topic-removal claim from Design Decisions and recorded the Apple stub as a known gap; split the Keyboard Focus state and named the shared background token. |
 | 1.0.0 | 2026-09-22 | Mike Fullerton | Initial creation |

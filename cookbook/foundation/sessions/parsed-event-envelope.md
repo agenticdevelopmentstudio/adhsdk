@@ -2,7 +2,7 @@
 id: 7dfeb441-3681-45d3-a11b-049294168607
 title: "Parsed Event Envelope"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -158,7 +158,7 @@ Not applicable: this code makes no log call; its doc comment says the caller log
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParsedEventEnvelope.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParsedEventEnvelope.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -194,14 +194,15 @@ Not applicable: this code makes no log call; its doc comment says the caller log
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
-separation-of-concerns passes: the extension only serializes one event and names the session, while parsing, spooling and quarantining are other types. unit-test-coverage is partial: `IngestSpoolTests` and `IngestDrainerTests` cover the round trip through the parser and the empty-type and session-less cases, but no test throws `notSerializable`, checks the key set, or pins the omitted-key rules for `context` and `oauth_account_email`. explicit-error-handling passes: an unserializable payload throws a typed error before any bytes exist and other encoder errors propagate. no-hardcoded-strings is not applicable: the error description is developer-facing log text (see Design Decisions), so the check is omitted.
+separation-of-concerns passes: the extension only serializes one event and names the session, while parsing, spooling and quarantining are other types. unit-test-coverage passes: `ParsedEventEnvelopeConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Sessions/ParsedEventEnvelopeConformanceTests.swift`) has one test per vector 001-016, covering the key set, the omitted-key rules, the round trip and `notSerializable`. explicit-error-handling passes: an unserializable payload throws a typed error before any bytes exist and other encoder errors propagate. no-hardcoded-strings is not applicable: the error description is developer-facing log text (see Design Decisions), so the check is omitted.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ParsedEventEnvelopeConformanceTests.swift, 16 of 16 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Linked ParsedEvent and ParseResult, removed duplicated and untestable requirements, specified key types and the empty-event-type description, marked untested vectors, dropped the contradicting compliance row, and made Privacy applicable. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

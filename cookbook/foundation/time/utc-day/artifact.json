@@ -4,7 +4,7 @@
     "id": "533c7d81-1380-4fba-a5d0-54271dd51772",
     "title": "UTC Day",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fae0ae07c5ffe93d",
+  "synced": "b22f1d6cbbc7d6a0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

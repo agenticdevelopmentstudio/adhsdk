@@ -4,7 +4,7 @@
     "id": "92720f75-89b0-484f-8c0c-403fadc40179",
     "title": "V1 Case",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "557b4932fc7e0f4c",
+  "synced": "228b826295e7f2d6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

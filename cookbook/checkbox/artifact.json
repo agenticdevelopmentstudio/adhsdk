@@ -4,7 +4,7 @@
     "id": "a105b6cf-307d-4156-8b73-468f627f3c9b",
     "title": "Checkbox",
     "type": "ingredient",
-    "version": "1.4.3",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "aa8f23c2423f8637",
+  "synced": "c19da2d2847a0dcb",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

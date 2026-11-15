@@ -1,5 +1,5 @@
 
-No test renders the control by itself. The vectors are derived from the stack tests that exercise it through the host layouts: `hierarchicalTopicDetail.test.tsx` ("`<<<` / `>>>` collapse and expand every list", including the hierarchical menu variant, and "is not in the narrow layout") and `detailTitle.test.tsx`, which finds the control by `[data-htd-cover-all]`.
+`coverAllControl.test.tsx` renders the control by itself and has one test per vector. The host stacks also exercise it: `hierarchicalTopicDetail.test.tsx` ("`<<<` / `>>>` collapse and expand every list", including the hierarchical menu variant, and "is not in the narrow layout") and `detailTitle.test.tsx`, which finds the control by `[data-htd-cover-all]`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

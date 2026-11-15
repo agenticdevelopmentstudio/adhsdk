@@ -2,7 +2,7 @@
 id: 9baed0c1-00e0-4186-9fd3-410039dc9881
 title: "Status Server Self-Check View"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -74,7 +74,7 @@ Not applicable — this is a pure verdict function over check results, not a vis
 
 ## Conformance Test Vectors
 
-The `selfCheckView` suite in `packages/web/packages/status-server/test/read-views.test.ts` covers vectors 001 (test "is null when everything is ok"), 005 and 007 (test "surfaces missing env (deduped) as a non-error warning"), 006 (test "an error-severity missing env goes red and counts as an error"), 003 and 008 (test "keeps reachability issues as chips but excludes the internal cron check"), 009 (test "collapses correlated provider failures into the Connectivity chip only") and 004 (test "a warning alone is not a red error"). The remaining vectors (002, 010, 011, 012 and 013) are traced directly to the function body and have no test.
+The `selfCheckView` suite in `packages/web/packages/status-server/test/read-views.test.ts` carries a test for every vector below; each test title begins with its vector id, except the older tests for 001 ("is null when everything is ok"), 003 and 008, 004, 005 and 007, 006, and 009, whose titles name the vector ids they cover.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -148,7 +148,7 @@ Not applicable: the function contains no `console.*` or logger call; its return 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/self-check.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/monitor/self-check.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -179,14 +179,15 @@ Not applicable: the function contains no `console.*` or logger call; its return 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
-`separation-of-concerns` passes: the function only judges an already-computed list, leaving probing and debounce to `integrations.ts` and `self-check-stability.ts` and rendering to the dashboard. `unit-test-coverage` is partial: the `selfCheckView` suite in `test/read-views.test.ts` has seven tests covering vectors 001, 003, 004, 005, 006, 007, 008 and 009, but vectors 002, 010, 011, 012 and 013 have no test. `good-test-properties` passes for the tests that exist: the function is pure, so they are fast, isolated and deterministic, and each asserts on the returned view. `fault-tolerance` passes: the function is total over any well-typed array and never throws, including for an empty one.
+`separation-of-concerns` passes: the function only judges an already-computed list, leaving probing and debounce to `integrations.ts` and `self-check-stability.ts` and rendering to the dashboard. `unit-test-coverage` passes: the `selfCheckView` suite in `test/read-views.test.ts` has a passing test for every vector 001 through 013. `good-test-properties` passes: the function is pure, so they are fast, isolated and deterministic, and each asserts on the returned view. `fault-tolerance` passes: the function is total over any well-typed array and never throws, including for an empty one.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (read-views.test.ts, 13 of 13 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Compliance now says the selfCheckView suite exists (unit-test-coverage partial), the cron-id coupling is recorded as a known risk, the stability recipe is linked and in depends-on, tags added, the Excluded id row removed, vectors 007 and 011 made concrete, vectors 012 and 013 added, and the WinUI note renamed the method, dropped view wiring and fixed the article. |

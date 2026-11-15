@@ -122,13 +122,13 @@ describe("where each request names its parent", () => {
       unknown
     >;
 
-  it("filters the catalog by ecosystem in the QUERY", async () => {
+  it("hub-domain-games-001: filters the catalog by ecosystem in the QUERY", async () => {
     respondWith(list([]));
     await gamesApi.list("ecosystem.acme");
     expect(urlOf()).toBe("/api/v1/games?ecosystemId=ecosystem.acme&limit=100");
   });
 
-  it("asks for the whole catalog when no ecosystem is named", async () => {
+  it("hub-domain-games-002: asks for the whole catalog when no ecosystem is named", async () => {
     respondWith(list([]));
     await gamesApi.list();
     expect(urlOf()).toBe("/api/v1/games?limit=100");
@@ -139,14 +139,14 @@ describe("where each request names its parent", () => {
   // halves of that: a hit unwraps to the row, a miss is `null` rather than a throw, because a
   // product in `none` or `gamification` mode legitimately has no game and every pane renders
   // an empty state off exactly this.
-  it("resolves the one game of an ecosystem", async () => {
+  it("hub-domain-games-003: resolves the one game of an ecosystem", async () => {
     respondWith(list([{ ...gameRow, id: "8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34" }]));
     const found = await gamesApi.forEcosystem("ecosystem.acme");
     expect(urlOf()).toBe("/api/v1/games?ecosystemId=ecosystem.acme&limit=100");
     expect(found?.id).toBe("8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34");
   });
 
-  it("answers null for an ecosystem with no game", async () => {
+  it("hub-domain-games-004: answers null for an ecosystem with no game", async () => {
     respondWith(list([]));
     await expect(gamesApi.forEcosystem("ecosystem.acme")).resolves.toBeNull();
   });
@@ -155,25 +155,25 @@ describe("where each request names its parent", () => {
   // is an ordinary column filter rather than a scope override — and POST reads no query
   // params at all. Named in the query, the new game is filed under the CALLER's ecosystem
   // instead: silently, and with a 201.
-  it("stamps a created game into its ecosystem through the BODY, not the query", async () => {
+  it("hub-domain-games-005: stamps a created game into its ecosystem through the BODY, not the query", async () => {
     await gamesApi.create(gameInput, "ecosystem.acme");
     expect(urlOf()).not.toContain("ecosystem");
     expect(bodyOf().ecosystem_id).toBe("ecosystem.acme");
   });
 
   // A game does not move between ecosystems, and a PUT naming one is the only way to try.
-  it("does not resend the ecosystem on update", async () => {
+  it("hub-domain-games-006: does not resend the ecosystem on update", async () => {
     await gamesApi.update("8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34", gameInput);
     expect(urlOf()).toBe("/api/v1/games/8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34");
     expect(bodyOf()).not.toHaveProperty("ecosystem_id");
   });
 
-  it("percent-encodes the id in the path", async () => {
+  it("hub-domain-games-007: percent-encodes the id in the path", async () => {
     await gamesApi.delete("a b");
     expect(urlOf()).toBe(`/api/v1/games/${encodeURIComponent("a b")}`);
   });
 
-  it("filters each child collection by game in the QUERY", async () => {
+  it("hub-domain-games-008: filters each child collection by game in the QUERY", async () => {
     for (const [api, base] of [
       [gameDefinitionsApi, "definitions"],
       [gameEffectsApi, "effects"],
@@ -186,20 +186,20 @@ describe("where each request names its parent", () => {
     }
   });
 
-  it("parents a created definition through the BODY, not the query", async () => {
+  it("hub-domain-games-009: parents a created definition through the BODY, not the query", async () => {
     respondWith(definitionRow);
     await gameDefinitionsApi.create("8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34", definitionInput);
     expect(urlOf()).toBe("/api/v1/game/definitions");
     expect(bodyOf().game_id).toBe("8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34");
   });
 
-  it("parents a created effect through the BODY, not the query", async () => {
+  it("hub-domain-games-010: parents a created effect through the BODY, not the query", async () => {
     await gameEffectsApi.create("8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34", effectInput);
     expect(urlOf()).toBe("/api/v1/game/effects");
     expect(bodyOf().game_id).toBe("8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34");
   });
 
-  it("parents a created mapping through the BODY, not the query", async () => {
+  it("hub-domain-games-011: parents a created mapping through the BODY, not the query", async () => {
     await gameMappingsApi.create("8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34", mappingInput);
     expect(urlOf()).toBe("/api/v1/game/mappings");
     expect(bodyOf().game_id).toBe("8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34");
@@ -208,13 +208,13 @@ describe("where each request names its parent", () => {
   // `definitions.author_customer_id` is ROUTE-MANAGED and masked out of the generic CRUD
   // body: a sent value is STRIPPED rather than refused, so the 201 looks identical either
   // way. The guarantee this client can actually make is that it never sends one.
-  it("never sends a definition's author, which the route owns", async () => {
+  it("hub-domain-games-012: never sends a definition's author, which the route owns", async () => {
     respondWith(definitionRow);
     await gameDefinitionsApi.create("8f2b1c40-0d3e-4a7b-9c11-6e5a2d8f0b34", definitionInput);
     expect(bodyOf()).not.toHaveProperty("author_customer_id");
   });
 
-  it("names the entity, not the constraint, when a slug is taken", async () => {
+  it("hub-domain-games-013: names the entity, not the constraint, when a slug is taken", async () => {
     fetchMock.mockResolvedValue({
       ok: false,
       status: 409,
@@ -235,7 +235,7 @@ describe("where each request names its parent", () => {
 // bought nothing.
 
 describe("the nullable text columns", () => {
-  it("reads a null description as an empty field", () => {
+  it("hub-domain-games-014: reads a null description as an empty field", () => {
     const game = gameFromWire({ ...gameRow, description: null });
     expect(game.description).toBe("");
     // Nothing else is touched on the way past.
@@ -243,11 +243,11 @@ describe("the nullable text columns", () => {
     expect(game.eventRetentionDays).toBe(90);
   });
 
-  it("keeps a description that is actually there", () => {
+  it("hub-domain-games-015: keeps a description that is actually there", () => {
     expect(gameFromWire(gameRow).description).toBe("Cold.");
   });
 
-  it("writes an empty box as an empty COLUMN, not an empty string in one", () => {
+  it("hub-domain-games-016: writes an empty box as an empty COLUMN, not an empty string in one", () => {
     for (const typed of ["", "   "]) {
       expect(gameToWire({ ...gameInput, description: typed }).description).toBeNull();
       expect(
@@ -256,7 +256,7 @@ describe("the nullable text columns", () => {
     }
   });
 
-  it("applies the same reading rule to a definition", () => {
+  it("hub-domain-games-017: applies the same reading rule to a definition", () => {
     const definition = definitionFromWire({ ...definitionRow, description: null });
     expect(definition.description).toBe("");
     // `author_customer_id` is NOT NULL with a `''` default — house-authored content, and
@@ -270,14 +270,14 @@ describe("the nullable text columns", () => {
 // unparsed stores a JSON STRING where the engine wants an object; handing the parsed value
 // through as text gives `GameDetail`'s `d.engineConfig.trim()` an object to throw on.
 describe("the jsonb columns", () => {
-  it("reads a config OBJECT as the JSON text the operator edits", () => {
+  it("hub-domain-games-018: reads a config OBJECT as the JSON text the operator edits", () => {
     const game = gameFromWire({ ...gameRow, engine_config: { seed: 7 } });
     expect(game.engineConfig).toBe('{\n  "seed": 7\n}');
     // And it is text — the thing every form helper in this feature calls `.trim()` on.
     expect(typeof game.engineConfig).toBe("string");
   });
 
-  it("parses the operator's text into a JSON VALUE on the way out", () => {
+  it("hub-domain-games-019: parses the operator's text into a JSON VALUE on the way out", () => {
     const written = gameToWire({ ...gameInput, engineConfig: '{"seed":7}' });
     expect(written.engine_config).toEqual({ seed: 7 });
     // Not the string — that stores a JSON string in the column.
@@ -287,7 +287,7 @@ describe("the jsonb columns", () => {
   // `games.engine_config` is NOT NULL with a `{}` default, so its empty is the empty
   // OBJECT. Writing `null` there — the ordinary case of a game saved with the box blank —
   // is a 500 at the column.
-  it("crosses an empty engine config as the empty OBJECT, both ways", () => {
+  it("hub-domain-games-020: crosses an empty engine config as the empty OBJECT, both ways", () => {
     expect(gameFromWire(gameRow).engineConfig).toBe("");
     for (const typed of ["", "   "]) {
       const written = gameToWire({ ...gameInput, engineConfig: typed });
@@ -298,20 +298,20 @@ describe("the jsonb columns", () => {
 
   // The type says this row cannot exist. The type is a cast over whatever the route
   // returns, and a null reaching the client makes `d.engineConfig.trim()` throw.
-  it("reads a null engine config as an empty field, whatever the type says", () => {
+  it("hub-domain-games-021: reads a null engine config as an empty field, whatever the type says", () => {
     expect(gameFromWire({ ...gameRow, engine_config: null }).engineConfig).toBe("");
   });
 
   // `definitions.data` IS nullable, so its empty is the empty COLUMN — the opposite answer
   // to the one above, from an identically empty box.
-  it("crosses an empty definition payload as NULL, both ways", () => {
+  it("hub-domain-games-022: crosses an empty definition payload as NULL, both ways", () => {
     expect(definitionFromWire(definitionRow).data).toBe("");
     const written = definitionToWire({ ...definitionInput, data: "" });
     expect(written.data).toBeNull();
     expect(written.data).not.toEqual({});
   });
 
-  it("round-trips a real payload through both directions of the crossing", () => {
+  it("hub-domain-games-023: round-trips a real payload through both directions of the crossing", () => {
     const written = definitionToWire({ ...definitionInput, data: '{"prose":"a hall"}' });
     expect(written.data).toEqual({ prose: "a hall" });
     expect(definitionFromWire({ ...definitionRow, data: written.data }).data).toBe(
@@ -324,7 +324,7 @@ describe("the jsonb columns", () => {
   // hands what it caught to `reportUnexpectedAuthError`, whose gate keeps only status-less
   // and 5xx errors, so a bare Error reports an operator's typo to production telemetry as
   // an outage.
-  it("refuses unparseable JSON with a 4xx the shared reporter drops", () => {
+  it("hub-domain-games-024: refuses unparseable JSON with a 4xx the shared reporter drops", () => {
     const cases: [() => unknown, string][] = [
       [() => gameToWire({ ...gameInput, engineConfig: "{oops" }), "Engine config"],
       [() => definitionToWire({ ...definitionInput, data: "{oops" }), "Data"],

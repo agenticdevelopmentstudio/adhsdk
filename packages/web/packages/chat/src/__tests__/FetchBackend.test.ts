@@ -12,7 +12,7 @@ describe('FetchBackend', () => {
     globalThis.fetch = vi.fn()
   })
 
-  it('sends POST with message and history', async () => {
+  it('ccb-001: sends POST with message and history', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ reply: 'Hello back!' }),
@@ -33,7 +33,7 @@ describe('FetchBackend', () => {
     expect(result).toBe('Hello back!')
   })
 
-  it('sends custom headers', async () => {
+  it('ccb-002: sends custom headers', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ reply: 'ok' }),
@@ -56,7 +56,7 @@ describe('FetchBackend', () => {
     )
   })
 
-  it('uses custom response mapper', async () => {
+  it('ccb-003: uses custom response mapper', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ data: { answer: 'Mapped!' } }),
@@ -71,7 +71,7 @@ describe('FetchBackend', () => {
     expect(result).toBe('Mapped!')
   })
 
-  it('throws on non-ok response', async () => {
+  it('ccb-004: throws on non-ok response', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 500,
@@ -81,7 +81,7 @@ describe('FetchBackend', () => {
     await expect(backend.sendMessage('hi', [])).rejects.toThrow('Chat backend error: 500')
   })
 
-  it('aborts in-flight request on destroy', async () => {
+  it('ccb-005: aborts in-flight request on destroy', async () => {
     let capturedSignal: AbortSignal | undefined
     globalThis.fetch = vi.fn().mockImplementation((_url, opts) => {
       capturedSignal = opts?.signal

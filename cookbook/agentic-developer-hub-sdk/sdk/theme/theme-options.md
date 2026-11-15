@@ -2,7 +2,7 @@
 id: 794a60b5-7833-4dc3-a7b9-8280333cde8b
 title: "ThemeOptions"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -92,8 +92,7 @@ Not applicable — these are plain value types, not a visual component. The only
 Not applicable — this is a data model, not a visual component. The source carries no labels beyond `TerminalCursorShape.label`.
 
 ## Conformance Test Vectors
-
-The source has no test file of its own. The only test that names these types is `BubbleTruncationTests` in the macOS test target, which builds `ThemeTerminalOptions(fontName: "Menlo-Bold", fontSize: 21)` as a fixture and asserts nothing about the types. Vectors derive from the source's code and doc comments, and they belong in a new `ThemeOptionsTests` file beside the other theme tests in `Tests/AgenticDeveloperHubSDKMacOSTests/Theme/`; the types are otherwise exercised only through `ColorTheme` coding.
+Tests: `ThemeOptionsTests` in `SDK/Tests/AgenticDeveloperHubSDKTests/Theme/ThemeOptionsTests.swift`, one test per vector. `BubbleTruncationTests` in the macOS test target only uses `ThemeTerminalOptions` as a fixture.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -182,9 +181,9 @@ Not applicable: the source makes no log calls; failure is a thrown decoding erro
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeOptions.swift` | confirmed (1.0.2) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Theme/Settings/Editor/ThemeTerminalTopicPanel.swift` | confirmed (1.0.2) |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/TerminalAppearance.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/ThemeOptions.swift` | confirmed (1.0.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Theme/Settings/Editor/ThemeTerminalTopicPanel.swift` | confirmed (1.0.3) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/TerminalSession/TerminalAppearance.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -225,7 +224,7 @@ Not applicable: the source makes no log calls; failure is a thrown decoding erro
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | internationalization |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 
@@ -235,6 +234,7 @@ Separation of concerns passes because the file holds only override values, the c
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (ThemeOptionsTests.swift, 18 of 18 vectors); unit-test-coverage now passed. Type check not run (NOMODULE). |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Fixed module-location wording, merged the duplicate terminal requirements, made project-consumer rules non-normative, added a dropped-unknown-keys decision and whole-theme-loss rationale, rewrote RFC 2119 wording, escaped the vector 012 pipe and named the test file. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

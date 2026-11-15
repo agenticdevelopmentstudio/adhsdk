@@ -34,6 +34,43 @@ final class WorkTrackingModelsTests: XCTestCase {
         XCTAssertEqual(try decoder.decode(WorkTrackingStatus.self, from: encoder.encode(status)), status)
     }
 
+    func testV10_defaultPreferences() {
+        let prefs = WorkTrackingPreferences.default
+        XCTAssertFalse(prefs.enabled)
+        XCTAssertEqual(prefs.addedBundleIds, [])
+        XCTAssertEqual(prefs.removedBundleIds, [])
+        XCTAssertEqual(prefs.retentionDays, 90)
+    }
+
+    func testV11_initStoresFieldsAsGiven() {
+        let prefs = WorkTrackingPreferences(enabled: true, addedBundleIds: ["b", "a", "b"],
+                                            removedBundleIds: [], retentionDays: 1)
+        XCTAssertTrue(prefs.enabled)
+        XCTAssertEqual(prefs.addedBundleIds, ["b", "a", "b"])
+        XCTAssertEqual(prefs.removedBundleIds, [])
+        XCTAssertEqual(prefs.retentionDays, 1)
+    }
+
+    func testV12_readFailedRowBytes() {
+        XCTAssertEqual(String(bytes: WorkTrackingWire.readFailedRow, encoding: .utf8),
+                       "{\"work_tracking_read_failed\":true}")
+        XCTAssertEqual(WorkTrackingWire.readFailedKey, "work_tracking_read_failed")
+    }
+
+    func testV13_settingsKeyStrings() {
+        XCTAssertEqual(WorkTrackingSettingsKeys.retentionDays, "activity_retention_days")
+        XCTAssertEqual(WorkTrackingSettingsKeys.accessibilitySigner, "activity_ax_signer")
+    }
+
+    func testV14_statusDefaults() {
+        let status = WorkTrackingStatus()
+        XCTAssertFalse(status.enabled)
+        XCTAssertEqual(status.accessibility, .unknown)
+        XCTAssertNil(status.currentSpan)
+        XCTAssertEqual(status.writeFailures, 0)
+        XCTAssertNil(status.lastError)
+    }
+
     /// Review D1: a stored grant holds only under the signature it was
     /// recorded under; a denial holds under any.
     func testAStoredGrantIsTrustedOnlyUnderItsOwnSignature() throws {

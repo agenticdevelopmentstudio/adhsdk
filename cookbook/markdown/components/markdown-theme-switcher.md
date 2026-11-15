@@ -173,9 +173,9 @@ Not applicable: The component does not emit any log messages. Debugging theme ch
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on the source's explicit ARIA and native semantics (`aria-label`, `<label htmlFor>`, native `<select>`) and Tailwind sizing classes (`h-8`, `text-xs`) visible in `MarkdownThemeSwitcher.tsx`; the `Select` primitive's actual color tokens and root font-size behavior are not visible from this file, and the hardcoded "Theme" string has no externalization mechanism in the source; the component is pure presentation over `activeThemeId`/`onThemeChange` props with no inline logic (separation-of-concerns: passed), and no test file exercises `MarkdownThemeSwitcher` (unit-test-coverage: failed).
+Statuses rest on the source's explicit ARIA and native semantics (`aria-label`, `<label htmlFor>`, native `<select>`) and Tailwind sizing classes (`h-8`, `text-xs`) visible in `MarkdownThemeSwitcher.tsx`; the `Select` primitive's actual color tokens and root font-size behavior are not visible from this file, and the hardcoded "Theme" string has no externalization mechanism in the source; the component is pure presentation over `activeThemeId`/`onThemeChange` props with no inline logic (separation-of-concerns: passed), and `markdownThemeSwitcher.test.tsx` covers theme-001 to theme-011 (unit-test-coverage: passed).
 
 ## Change History
 

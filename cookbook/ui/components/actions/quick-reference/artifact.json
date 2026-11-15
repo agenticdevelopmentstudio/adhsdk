@@ -4,7 +4,7 @@
     "id": "40a6b717-cbdb-4d49-9f98-b318668b396c",
     "title": "Syntax Quick Reference",
     "type": "ingredient",
-    "version": "1.1.2",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "38222ae8320ee76b",
+  "synced": "008dc4764f8082c6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

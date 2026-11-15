@@ -55,7 +55,7 @@ function sentBody(): Record<string, unknown> {
 const draft = { identifier: "", name: "N", description: "", region: "", domain: "" };
 
 describe("toEcosystem", () => {
-  it("maps the rdid id to both id+identifier and primary_domain→domain", () => {
+  it("ecosystems-019: maps the rdid id to both id+identifier and primary_domain→domain", () => {
     const e = toEcosystem({
       id: "com.acme",
       name: "Acme",
@@ -71,7 +71,7 @@ describe("toEcosystem", () => {
     expect(e.identifier).toBe("com.acme");
     expect(e.domain).toBe("acme.com");
   });
-  it("defaults nullable text columns to empty strings", () => {
+  it("ecosystems-020: defaults nullable text columns to empty strings", () => {
     const e = toEcosystem({
       id: "x",
       name: "X",
@@ -94,14 +94,14 @@ describe("ecosystemsApi.create", () => {
   // `id` as an assertion whose LAST SEGMENT must equal `slug`. Sending the whole
   // dotted rdid as the slug therefore 400s every create — `id "ecosystem.fishlamp.adh"
   // does not match slug "ecosystem.fishlamp.adh"` — which is the bug these pin.
-  it("sends the rdid's LAST SEGMENT as the slug, not the whole identifier", async () => {
+  it("ecosystems-021: sends the rdid's LAST SEGMENT as the slug, not the whole identifier", async () => {
     mockedJson.mockResolvedValueOnce(row("ecosystem.fishlamp.adh", "adh"));
     await ecosystemsApi.create({ ...draft, identifier: "ecosystem.fishlamp.adh" });
     expect(sentBody().id).toBe("ecosystem.fishlamp.adh");
     expect(sentBody().slug).toBe("adh");
   });
 
-  it("sends the leaf for a two-segment identifier too", async () => {
+  it("ecosystems-022: sends the leaf for a two-segment identifier too", async () => {
     mockedJson.mockResolvedValueOnce(row("ecosystem.adh", "adh"));
     await ecosystemsApi.create({ ...draft, identifier: "ecosystem.adh" });
     expect(sentBody().slug).toBe("adh");
@@ -114,7 +114,7 @@ describe("ecosystemsApi.create", () => {
     expect(sentBody().slug).toBe("nope");
   });
 
-  it("takes the same slug on the child-create (?parent=) path", async () => {
+  it("ecosystems-023: takes the same slug on the child-create (?parent=) path", async () => {
     mockedJson.mockResolvedValueOnce(row("ecosystem.fishlamp.adh.sub", "sub"));
     await ecosystemsApi.create(
       { ...draft, identifier: "ecosystem.fishlamp.adh.sub" },
@@ -124,7 +124,7 @@ describe("ecosystemsApi.create", () => {
     expect(sentBody().slug).toBe("sub");
   });
 
-  it("scopes to a workspace with ?workspace=", async () => {
+  it("ecosystems-024: scopes to a workspace with ?workspace=", async () => {
     mockedJson.mockResolvedValueOnce(row("ecosystem.fishlamp.adh", "adh"));
     await ecosystemsApi.create(
       { ...draft, identifier: "ecosystem.fishlamp.adh" },
@@ -140,7 +140,7 @@ describe("ecosystemsApi.update", () => {
   // every descendant. Renaming the HANDLE instead (a registry.identifiers PATCH, what this client
   // used to do) is the non-structural rename — the slug column stays behind, the row goes on
   // deriving its old address, and the next ancestor cascade re-leafs the handle back.
-  it("sends the new LEAF as `slug`, in the one POST", async () => {
+  it("ecosystems-025: sends the new LEAF as `slug`, in the one POST", async () => {
     mockedJson.mockResolvedValueOnce(row("ecosystem.fishlamp.adh2", "adh2"));
     await ecosystemsApi.update("ecosystem.fishlamp.adh", {
       identifier: "ecosystem.fishlamp.adh2",
@@ -163,7 +163,7 @@ describe("ecosystemsApi.update", () => {
     expect(sentBody().slug).toBe("adh");
   });
 
-  it("sends the HEALING rename — back onto the address the stale handle already claims", async () => {
+  it("ecosystems-026: sends the HEALING rename — back onto the address the stale handle already claims", async () => {
     // The drifted row: its handle says `…adh` while its slug column says `chosen`, so it derives to
     // `ecosystem.fishlamp.chosen` and every surface that shows the handle disagrees with it.
     // Renaming it back to `adh` is a genuine slug change (`chosen` -> `adh`) that happens to equal
@@ -178,7 +178,7 @@ describe("ecosystemsApi.update", () => {
     expect(saved.slug).toBe("adh");
   });
 
-  it("omits `slug` when the caller edits fields without touching the identifier", async () => {
+  it("ecosystems-027: omits `slug` when the caller edits fields without touching the identifier", async () => {
     mockedJson.mockResolvedValueOnce(row("ecosystem.fishlamp.adh", "adh"));
     await ecosystemsApi.update("ecosystem.fishlamp.adh", { name: "Renamed" });
     expect(sentBody()).not.toHaveProperty("slug");
@@ -191,7 +191,7 @@ describe("ecosystemsApi.update", () => {
     expect(sentBody().slug).toBe("not an rdid");
   });
 
-  it("returns the address the SERVER derived, never the identifier the caller typed", async () => {
+  it("ecosystems-028: returns the address the SERVER derived, never the identifier the caller typed", async () => {
     mockedJson.mockResolvedValueOnce(row("ecosystem.fishlamp.adh2", "adh2"));
     const saved = await ecosystemsApi.update("ecosystem.fishlamp.adh", {
       identifier: "ecosystem.WRONG.adh2",
@@ -205,7 +205,7 @@ describe("ecosystemsApi.workspaceDefaultEcosystemId", () => {
   // WHOSE infrastructure row gets resolved is the whole question: with a slug it is the
   // WORKSPACE principal's, without one the CALLER's. The two calls mirror the two create
   // scopes exactly, which is what keeps a previewed address equal to the minted one.
-  it("scopes to the workspace principal when given a slug", async () => {
+  it("ecosystems-029: scopes to the workspace principal when given a slug", async () => {
     mockedJson.mockResolvedValueOnce([row("ecosystem.fishlamp", "fishlamp")]);
     const own = await ecosystemsApi.workspaceDefaultEcosystemId("fishlamp");
     expect(sentUrl()).toBe("/api/v1/ecosystems?workspace=fishlamp&infrastructure=true");
@@ -215,7 +215,7 @@ describe("ecosystemsApi.workspaceDefaultEcosystemId", () => {
   // The bare `infrastructure=true` form. It used to be silently INERT server-side — the flag
   // was read only inside the workspace branch — so a slug-less mount got back every manageable
   // ecosystem and could never resolve the parent its create hangs under.
-  it("resolves the CALLER's own row when there is no slug", async () => {
+  it("ecosystems-030: resolves the CALLER's own row when there is no slug", async () => {
     mockedJson.mockResolvedValueOnce([row("ecosystem.realm.mike", "mike")]);
     const own = await ecosystemsApi.workspaceDefaultEcosystemId();
     expect(sentUrl()).toBe("/api/v1/ecosystems?infrastructure=true");
@@ -223,12 +223,12 @@ describe("ecosystemsApi.workspaceDefaultEcosystemId", () => {
   });
 
   // null, never undefined: react-query rejects undefined as query data.
-  it("returns null when the principal has no infrastructure row", async () => {
+  it("ecosystems-031: returns null when the principal has no infrastructure row", async () => {
     mockedJson.mockResolvedValueOnce([]);
     expect(await ecosystemsApi.workspaceDefaultEcosystemId("fishlamp")).toBeNull();
   });
 
-  it("carries the server's canManage=false through", async () => {
+  it("ecosystems-032: carries the server's canManage=false through", async () => {
     mockedJson.mockResolvedValueOnce([{ ...row("ecosystem.fishlamp", "fishlamp"), can_manage: false }]);
     expect(await ecosystemsApi.workspaceDefaultEcosystemId("fishlamp")).toEqual({
       id: "ecosystem.fishlamp",
@@ -244,7 +244,7 @@ describe("ecosystemsApi.ecosystemIdForSlug", () => {
   // Ownership first. A client-side `slug ===` scan is no longer unambiguous: slugs are unique
   // only WITHIN a parent, so once products hang under their owner, any product named <slug>
   // under any OTHER workspace matches just as well and list order decides the tenant.
-  it("asks the server for the workspace's own row before scanning anything", async () => {
+  it("ecosystems-033: asks the server for the workspace's own row before scanning anything", async () => {
     mockedJson.mockResolvedValueOnce([row("ecosystem.fishlamp", "fishlamp")]);
     expect(await ecosystemsApi.ecosystemIdForSlug("fishlamp")).toBe("ecosystem.fishlamp");
     expect(mockedJson).toHaveBeenCalledTimes(1);
@@ -252,7 +252,7 @@ describe("ecosystemsApi.ecosystemIdForSlug", () => {
   });
 
   // A 404 is "this slug names no workspace" — the one verdict that licenses the scan.
-  it("falls back to the raw list when the slug names no workspace", async () => {
+  it("ecosystems-034: falls back to the raw list when the slug names no workspace", async () => {
     mockedJson.mockRejectedValueOnce(httpError(404));
     mockedJson.mockResolvedValueOnce([row("ecosystem.other", "other"), row("ecosystem.zed", "zed")]);
     expect(await ecosystemsApi.ecosystemIdForSlug("zed")).toBe("ecosystem.zed");
@@ -260,7 +260,7 @@ describe("ecosystemsApi.ecosystemIdForSlug", () => {
 
   // The resolver's own empty answer (a workspace with no infrastructure row) is not an error,
   // so it reaches the same fallback without a throw.
-  it("falls back when the workspace resolves to no infrastructure row", async () => {
+  it("ecosystems-051: falls back when the workspace resolves to no infrastructure row", async () => {
     mockedJson.mockResolvedValueOnce([]);
     mockedJson.mockResolvedValueOnce([{ ...row("ecosystem.d", "d"), is_default: true }]);
     expect(await ecosystemsApi.ecosystemIdForSlug("fishlamp")).toBe("ecosystem.d");
@@ -268,7 +268,7 @@ describe("ecosystemsApi.ecosystemIdForSlug", () => {
 
   // Anything OTHER than a 404 is a real failure. Papering over a 403/500 with an arbitrary row
   // is how a member of one org silently lands on another tenant's ecosystem.
-  it("rethrows a non-404 instead of picking a row", async () => {
+  it("ecosystems-035: rethrows a non-404 instead of picking a row", async () => {
     mockedJson.mockRejectedValueOnce(httpError(403));
     await expect(ecosystemsApi.ecosystemIdForSlug("fishlamp")).rejects.toThrow("HTTP 403");
     expect(mockedJson).toHaveBeenCalledTimes(1);
@@ -279,4 +279,27 @@ describe("ecosystemsApi.ecosystemIdForSlug", () => {
     mockedJson.mockResolvedValueOnce([]);
     expect(await ecosystemsApi.ecosystemIdForSlug("nope")).toBeNull();
   });
+});
+
+// Vectors 001-018 describe the Apple module (`EcosystemsModule` and its `Ecosystem` type); the web
+// client has no equivalent, so they are covered by `EcosystemsModuleTests.swift`, not here.
+describe("Apple-only vectors", () => {
+  it.skip("ecosystems-001: Apple-only — decoding a payload with no isDefault/canManage and the identifier prefix are the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-002: Apple-only — identifier prefix is a Swift Ecosystem property (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-003: Apple-only — root-level listing is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-004: Apple-only — topics level is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-005: Apple-only — manageability gate is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-006: Apple-only — topic-group level is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-007: Apple-only — topic dispatch is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-008: Apple-only — settings form view is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-009: Apple-only — settings save derivation is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-010: Apple-only — settings save conflict mapping is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-011: Apple-only — settings delete action is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-012: Apple-only — child-ecosystems recursion is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-013: Apple-only — create-form prefix resolution is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-014: Apple-only — child create-form prefix resolution is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-015: Apple-only — create-form validation is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-016: Apple-only — create-form slug lowercasing is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-017: Apple-only — settings slug lowercasing is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
+  it.skip("ecosystems-018: Apple-only — root-level error wrapping is the Swift EcosystemsModule's (covered by EcosystemsModuleTests.swift)", () => {});
 });

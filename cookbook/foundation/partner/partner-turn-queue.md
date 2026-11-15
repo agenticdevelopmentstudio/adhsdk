@@ -2,7 +2,7 @@
 id: ae6b1991-6aed-4d8b-83e1-5d5e02470150
 title: "Partner Turn Queue"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -140,7 +140,7 @@ Not applicable: the queue calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerTurnQueue.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerTurnQueue.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -168,13 +168,14 @@ Not applicable: the queue calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | best-practices |
 
-Separation of concerns passes: the queue holds ordering and coalescing only, while event text, keys and the turn machinery live in `PartnerInbound` and the controller. Unit-test coverage is partial: three tests cover in-place coalescing, per-kind keys and front insertion, but none exercises `next()` on an empty queue, repeated `enqueueFirst`, or `enqueueFirst` with an equal key. Explicit error handling passes because no operation can fail and none hides an error.
+Separation of concerns passes: the queue holds ordering and coalescing only, while event text, keys and the turn machinery live in `PartnerInbound` and the controller. Unit-test coverage passes: `PartnerTurnQueueConformanceTests.swift` covers all eleven vectors, including `next()` on an empty queue, repeated `enqueueFirst` and `enqueueFirst` with an equal key. Explicit error handling passes because no operation can fail and none hides an error.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerTurnQueueConformanceTests.swift, 11 of 11 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved key-building and controller notes out of the requirements into the Overview, merged coalesce-keeps-position, split infallible from no-side-effects, added ios and partner-inbound, and fixed the summary and vector coverage maps. |

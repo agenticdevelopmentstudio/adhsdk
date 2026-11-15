@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformance-vectors.test.ts, 119 of 120 vectors; auth-client-118 skipped as a static property); vector text corrected to the /v1 API; unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Cite separation-of-concerns and unit-test-coverage in Compliance. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/auth/. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

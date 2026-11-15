@@ -191,6 +191,66 @@ final class GitContextFingerprintTests: XCTestCase {
         XCTAssertNil(decoded[GitContextFingerprint.payloadKey])
     }
 
+    // MARK: - Conformance vectors 013 to 017
+
+    func testV013_entryCountCountsTwoUntrackedFilesAsTwo() throws {
+        try write("one.txt", "1\n")
+        try write("two.txt", "2\n")
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        XCTAssertEqual(sample["status_entry_count"] as? Int, 2)
+        XCTAssertEqual(sample["status_char_count"] as? Int, "?? one.txt\n?? two.txt\n".count)
+    }
+
+    func testV014_sampledAtIsUTCSecondsWithLiteralZ() throws {
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let stamp = try XCTUnwrap(sample["sampled_at"] as? String)
+        XCTAssertNotNil(stamp.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"#,
+                                    options: .regularExpression),
+                        "unexpected sampled_at form: \(stamp)")
+    }
+
+    func testV015_recentCommitCountCoversOnlyTheFiveNewestCommits() throws {
+        for index in 2...7 {
+            try write("file\(index).md", "\(index)\n")
+            XCTAssertEqual(git("add", "file\(index).md"), 0)
+            XCTAssertEqual(commit("commit number \(index)"), 0)
+        }
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        let fiveNewest = ReadOnlyGit.git(
+            ["-C", repo.path, "log", "--oneline", "--no-decorate", "-5"])
+        let everything = ReadOnlyGit.git(
+            ["-C", repo.path, "log", "--oneline", "--no-decorate"])
+        XCTAssertEqual(fiveNewest.split(separator: "\n").count, 5)
+        XCTAssertEqual(everything.split(separator: "\n").count, 7)
+        XCTAssertEqual(GitContextFingerprint.recentCommitCount, 5)
+        XCTAssertEqual(sample["recent_commits_char_count"] as? Int, fiveNewest.count)
+        XCTAssertNotEqual(sample["recent_commits_char_count"] as? Int, everything.count)
+    }
+
+    func testV016_emptyObjectGetsTheFingerprintWithNoLeadingComma() throws {
+        // The empty object has no `cwd`, so the sample lands in the process's
+        // working directory; point that at the fixture repository for the call.
+        let original = FileManager.default.currentDirectoryPath
+        XCTAssertTrue(FileManager.default.changeCurrentDirectoryPath(repo.path))
+        defer { FileManager.default.changeCurrentDirectoryPath(original) }
+
+        let out = GitContextFingerprint.enriched(payload: Data("{}".utf8))
+        let text = try XCTUnwrap(String(data: out, encoding: .utf8))
+        XCTAssertTrue(text.hasPrefix(#"{"stenographer_git":{"#), "got \(text)")
+        XCTAssertTrue(text.hasSuffix("}}"), "got \(text)")
+        XCTAssertFalse(text.contains("{,"))
+        let decoded = try XCTUnwrap(try JSONSerialization.jsonObject(with: out) as? [String: Any])
+        XCTAssertEqual(decoded.count, 1)
+        XCTAssertNotNil(decoded[GitContextFingerprint.payloadKey] as? [String: Any])
+    }
+
+    func testV017_aDirectoryArgumentScopesTheSampleToThatRepository() throws {
+        let original = FileManager.default.currentDirectoryPath
+        XCTAssertNotEqual(original, repo.path)
+        let sample = try XCTUnwrap(GitContextFingerprint.sample(directory: repo.path))
+        XCTAssertEqual(sample["branch"] as? String, "fingerprint-branch")
+    }
+
     // MARK: - Helpers
 
     private func write(_ name: String, _ contents: String) throws {

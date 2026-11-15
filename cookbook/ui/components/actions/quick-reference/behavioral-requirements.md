@@ -15,6 +15,6 @@
 - **customizable-width**: The component MUST accept an optional `contentClassName` prop to customize the popover's rendered width; the default renders at 20rem (see React/Web platform note for the literal class).
 - **customizable-columns**: The component MUST accept an optional `columnsClassName` prop to customize the entries grid's column split; the default makes the label column narrower than the code column (see React/Web platform note for the literal class).
 - **customizable-position**: The component MUST accept optional `side` and `align` props to position the popover relative to the trigger — `side` picks which edge of the trigger it opens from (default `bottom`), and `align` positions it along that edge (default `end`).
-- **isolate-code-direction**: The component SHOULD isolate the direction of the syntax examples (`dir="ltr"` or `unicode-bidi: isolate` on the code cells), so syntax such as `**text**` does not reorder under an RTL ancestor. It does not today (see Compliance).
+- **isolate-code-direction**: The component SHOULD isolate the direction of the syntax examples (`dir="ltr"` on each code cell), so syntax such as `**text**` does not reorder under an RTL ancestor.
 - **customizable-trigger-classes**: The component MUST accept an optional `className` prop to apply additional CSS classes to the trigger button.
 

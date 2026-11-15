@@ -2,7 +2,7 @@
 id: edd40452-1ef7-42ba-b3e9-066a5a2ca1f6
 title: "UserDefaultsThemeStorage"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -220,7 +220,7 @@ The class conforms to `Loggable`. It logs at error level when the stored catalog
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/UserDefaultsThemeStorage.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/UserDefaultsThemeStorage.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -266,12 +266,13 @@ The class conforms to `Loggable`. It logs at error level when the stored catalog
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | passed | privacy-and-data |
 
-Separation of concerns passes because the class does only persistence and change detection behind the `ThemeStorage` seam; the model, the catalog and the repaint live elsewhere. Unit-test coverage is partial: the source has six tests for round trips, nil clearing, silent own writes, foreign-write reporting and corrupt data, but nothing asserts the literal key strings, the empty-array write, coalesced notifications, an unchanged foreign value or the encode-failure path; vectors udts-008 to udts-021 are the tests still to write. Explicit error handling is partial: a decode failure yields an empty value and an encode failure leaves storage unchanged, and both are logged, but neither is reported to the caller because the protocol has no error channel. Graceful degradation passes because corrupt stored data reads as an empty catalog and the app keeps every built-in theme. Secure data storage passes because the data is a theme definition and a theme id, not credentials or personal data, so plain `UserDefaults` is the right medium.
+Separation of concerns passes because the class does only persistence and change detection behind the `ThemeStorage` seam; the model, the catalog and the repaint live elsewhere. Unit-test coverage is partial: `UserDefaultsThemeStorageTests.swift` covers udts-001 to udts-015 and udts-017 to udts-020 (key strings, empty-array write, coalesced notifications, unchanged foreign value, encode failure, observer removal). udts-016 is skipped (structural, by inspection: a storage over `.standard` would observe the real domain) and udts-021 is skipped (a unit test cannot read `os.Logger` output); the log half of udts-017 is likewise unasserted. Explicit error handling is partial: a decode failure yields an empty value and an encode failure leaves storage unchanged, and both are logged, but neither is reported to the caller because the protocol has no error channel. Graceful degradation passes because corrupt stored data reads as an empty catalog and the app keeps every built-in theme. Secure data storage passes because the data is a theme definition and a theme id, not credentials or personal data, so plain `UserDefaults` is the right medium.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (UserDefaultsThemeStorageTests.swift, 19 of 21 vectors); unit-test-coverage now partial. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Fixed the Sendable claim, reworded keyword-less requirements, recorded the partial-decode behavior as known debt, de-duplicated the observer reasoning, tightened vectors 006, 012, 015 and 016, added five missing vectors, removed source paths, linked related recipes and hedged the log-privacy claim. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Theme storage now logs decode and encode failures; claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

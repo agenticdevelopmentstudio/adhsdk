@@ -2,7 +2,7 @@
 id: 4dc15a9e-c129-412a-9f14-e35146563d8d
 title: "PostHog Dashboard Sections"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -90,7 +90,7 @@ Not applicable — this is a query-and-shaping service, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 014 are traced to `telemetry-dashboard-sections.test.ts` (PostHog shapers, `loadSiteErrorDetail` and `loadTraffic`); 015 and later follow the source.
+Vectors 001 to 014 are traced to `telemetry-dashboard-sections.test.ts` (PostHog shapers, `loadSiteErrorDetail` and `loadTraffic`); 015 and later are in `telemetry-dashboard-sections.test.ts` and `telemetry-posthog-sections-queries.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -180,7 +180,7 @@ Not applicable: the loaders return or throw failures and make no log call; the s
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/dashboard/posthog-sections.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/telemetry/dashboard/posthog-sections.ts` | confirmed (1.0.3) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -220,17 +220,18 @@ Not applicable: the loaders return or throw failures and make no log call; the s
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
 | [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | partial | Access Patterns |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
-Query building, shaping and transport are separate, with pure shapers and a closed set of interpolated values. The tests cover the traffic, dimension, vitals, health and detail shapers, the production filter, UTC, truncation, failure and the one-at-a-time rule; the paths and site-health loaders and the 45 second timeout have no direct test, so coverage is partial. Every query has a 45 second timeout. Concurrency is kept to one query at a time, which avoids the 503 but there is no retry or backoff here, so rate-limit handling is partial; a failed section is retried by the section cache on its own schedule.
+Query building, shaping and transport are separate, with pure shapers and a closed set of interpolated values. The tests cover the traffic, dimension, vitals, health and detail shapers, the production filter, UTC, truncation, failure and the one-at-a-time rule; the paths loader, the row caps, the closed query inputs and the 45 second timeout are covered in `telemetry-posthog-sections-queries.test.ts`, so every vector has a test. Every query has a 45 second timeout. Concurrency is kept to one query at a time, which avoids the 503 but there is no retry or backoff here, so rate-limit handling is partial; a failed section is retried by the section cache on its own schedule.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (telemetry-dashboard-sections.test.ts, telemetry-posthog-sections-queries.test.ts, 22 of 22 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Added a loader table, links and depends-on for the fetcher and ranges specs, a traffic truncation edge case, seven vectors, a PRODUCTION_HOSTS configuration row, and split dimension-shape; clarified totals, the host-filter rationale and per-site-health-source. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

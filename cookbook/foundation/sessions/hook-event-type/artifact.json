@@ -4,7 +4,7 @@
     "id": "1c2b7ff7-4d12-4580-94b0-17258d3384e1",
     "title": "Hook Event Type",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component parses Claude Code hook events and settings; the host's name, events and paths are its subject.",
-  "synced": "e8b89ef1fc3b8fff",
+  "synced": "dd3dc0e37d8cf1e4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

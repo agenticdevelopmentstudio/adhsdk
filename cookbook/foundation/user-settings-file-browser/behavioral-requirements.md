@@ -17,6 +17,7 @@
 ### Inherited behavior
 - **inherits-settings-storage**: The setting MUST inherit the get, set, publish and isolation behavior of the generic `UserSetting` and the settings store, unchanged, as specified in [adhsdk.ingredient.foundation.settings-storage](cookbook:6363b5ff-f511-4e21-9ba7-6850787dba62). The only values specific to this setting are the key name, the value type and the empty-list fallback, so a read that finds nothing stored, or a value that cannot be decoded as a list of strings, MUST return the empty list.
 - **inherits-lazy-construction**: The setting MUST read its current value from the shared store when it is first accessed, not before. (The Swift source achieves this with a `static var` initialised on first access.)
+- **inherits-live-mirror**: The setting's `currentValue` MUST follow the store: whenever the store publishes this key's name, `currentValue` MUST be re-read from `UserSettings.shared`.
 
 ### Persistence and side effects
 

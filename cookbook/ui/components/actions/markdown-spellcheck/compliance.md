@@ -10,7 +10,7 @@
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | partial | Internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `screen-reader-support` and `keyboard-navigable` pass because the toggle and every
 apply action are real `<button>` elements with an accessible name (`aria-label`,
@@ -30,8 +30,5 @@ the component makes no third-party calls and sends no document content off the d
 data of its own, and produces no logs (see Logging above). `separation-of-concerns`
 passes because the component isolates harper behind the `MarkdownLinter`/
 `CreateMarkdownLinter` DI seam, so the UI never references harper directly and
-a fake linter can stand in for tests. `unit-test-coverage` is `partial`
-because `markdownSpellcheck.test.tsx` covers only the off-by-default toggle
-(T1), lazy linter creation (T2), linting and listing problems (T3), the empty
-state (T4) and applying a suggestion; the other vectors have no test yet.
-
+a fake linter can stand in for tests. `unit-test-coverage` is `passed`
+because `markdownSpellcheck.test.tsx` has a passing test for each of T1 to T19 (T14 has one for Escape and one for outside click), using a fake `MarkdownLinter` plus a mocked `harper.js` for T9.

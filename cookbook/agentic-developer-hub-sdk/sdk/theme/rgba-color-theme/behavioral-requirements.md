@@ -13,7 +13,7 @@ Hex output
 - **hex-rgb-format**: `hexStringRGB` MUST return `"#"` followed by six lower-case hexadecimal digits in the order red, green, blue, each zero-padded to two digits; it is always 7 characters long.
 - **hex-rgb-no-alpha**: `hexStringRGB` MUST omit alpha; colors that differ only in alpha produce the same string.
 - **hex-rgb-rounding**: Each channel MUST be clamped to 0 to 1, multiplied by 255 and rounded to the nearest integer, with halves rounded away from zero.
-- **hex-rgb-purpose**: The format MUST match the terminal palette's color string: lower-case, six digits, no alpha. The [RGBAColor](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d) ingredient's `hexString` differs: it is upper-case and carries alpha.
+- **hex-rgb-purpose**: The format MUST match the terminal palette's color string: lower-case, six digits, no alpha. The RGBAColor ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.rgba-color](cookbook:ad5bae6b-0172-4cd4-a4b7-297eb58eb28d)) ingredient's `hexString` differs: it is upper-case and carries alpha.
 
 Blending and compositing
 

@@ -2,7 +2,7 @@
 id: cda40dcf-db06-4171-a8f0-fbddf584f196
 title: "Session Metrics and Import DTOs"
 type: ingredient
-version: 1.0.1
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -39,7 +39,7 @@ All are immutable values with `let` fields, spelled in the stenographer-wide wir
 
 The four records are grouped in one ingredient because they share one source file and one purpose, the transcript import; the rdid names the first of them. They use the stenographer wire coders ([adhsdk.ingredient.foundation.stenographer.stenographer-wire](cookbook:e8286557-84ee-4f45-b78c-f1d184c51a37)), the import routes that carry them are served by the daemon service ([adhsdk.ingredient.foundation.stenographer.stenographer-daemon-service](cookbook:96f73261-cf32-42cc-92f3-f8b58542382a)), and the HTTP client ([adhsdk.ingredient.foundation.stenographer.stenographer-http-client](cookbook:9c7c78d3-23ca-4ca6-a519-9968b440b8c6)) decodes them.
 
-**Known defect.** Over the wire, `ImportSummary.cutoffISO` decodes as nil even when sent, because the from-snake-case decoder rebuilds `cutoff_iso` as `cutoffIso`, which does not match the stored key `cutoffISO`. See `summary-cutoff-wire-key`. The decision between spelling the key `cutoffIso` and giving it an explicit `CodingKeys` raw value is open and is not yet recorded as a Design Decision.
+**Wire key.** `ImportSummary.cutoffISO` is stored under the coding key `cutoffIso`, so the wire's `cutoff_iso` decodes back onto it (see `summary-cutoff-wire-key`).
 ## Behavioral Requirements
 
 **SessionMetricsDTO**
@@ -85,7 +85,7 @@ The four records are grouped in one ingredient because they share one source fil
 - **summary-bytes-skipped**: `bytesSkipped` MUST be the bytes the byte cursors let the run skip, the head of every scanned file already ingested. Zero with files being scanned means cursors are being rejected and every pass re-reads from byte zero; a healthy steady state reads kilobytes and skips gigabytes.
 - **summary-has-more**: `hasMore` is true when the importer hit its `maxFiles` option and stopped early, so chunked callers re-enqueue until it is false; it defaults to false for the unbounded CLI path. The importer sets it; the DTO does not enforce it.
 - **summary-cutoff-meaning**: `cutoffISO` holds the ISO 8601 mtime of the latest file processed this run, which the chunked task path persists as the next `since` cutoff; it is nil when nothing was processed. The importer sets it; the DTO does not enforce it.
-- **summary-cutoff-wire-key**: NEEDS REVIEW: Not implemented in source. `cutoffISO` MUST round-trip through `StenographerWire`, but the wire encoder writes `cutoff_iso` and the from-snake-case decoder rebuilds that as `cutoffIso`, which does not match the stored key `cutoffISO`; because the decoder reads it with a present-or-nil read, the field silently decodes as nil, so the documented contract that the value reaches a consumer is unmet for any wire reader. This is a known defect. A fix is either spelling the key `cutoffIso`, as `memoryFootprintMb` is spelled, or an explicit `CodingKeys` raw value. The daemon's own chunked task reads the in-memory summary and is unaffected.
+- **summary-cutoff-wire-key**: `cutoffISO` MUST round-trip through `StenographerWire`. Its coding key's raw value is `cutoffIso`, so the encoder writes `cutoff_iso` and the from-snake-case decoder, which rebuilds `cutoff_iso` as `cutoffIso`, reads it back. A raw value of `cutoffISO` would decode as nil.
 
 ## Appearance
 
@@ -107,7 +107,7 @@ Not applicable — these are non-visual data transfer objects, not visual compon
 | session-metrics-dto-002 | summary-decode-tolerant | Decode a body with `files_scanned` 3 and `has_more` true only | `filesScanned` 3, `hasMore` true, everything else default |
 | session-metrics-dto-003 | summary-init-defaults | Construct `ImportSummary()` | Every field at its default, `cutoffISO` nil (the same nil default shows in JSONLImporterTests `testAScopedRunReportsNoCutoff`, where the importer builds a summary for a scoped run) |
 | session-metrics-dto-004 | summary-cutoff-meaning | Integration check, not a DTO test: an importer run that processed files (JSONLImporterTests chunked-drain tests) | `cutoffISO` is non-nil and parses as an ISO-8601 date |
-| session-metrics-dto-005 | summary-cutoff-wire-key | Encode `ImportSummary(cutoffISO: "2026-01-01T00:00:00Z")` with the wire encoder and decode the bytes with the wire decoder | The JSON key is `cutoff_iso`; the decoded `cutoffISO` equals `"2026-01-01T00:00:00Z"`. Currently failing: the source decodes it as nil (known defect, see `summary-cutoff-wire-key`) |
+| session-metrics-dto-005 | summary-cutoff-wire-key | Encode `ImportSummary(cutoffISO: "2026-01-01T00:00:00Z")` with the wire encoder and decode the bytes with the wire decoder | The JSON key is `cutoff_iso`; the decoded `cutoffISO` equals `"2026-01-01T00:00:00Z"`. |
 | session-metrics-dto-006 | summary-bytes-read, summary-bytes-skipped | Encode a summary with `bytesRead` 5 000 000 000 and `bytesSkipped` 9 000 000 000 | Keys `bytes_read` and `bytes_skipped` carry the full Int64 values with no truncation |
 | session-metrics-dto-007 | request-empty-body | Decode `{}` as `ImportRequestDTO` | `sourceDirectory`, `since` and `dryRun` are nil |
 | session-metrics-dto-008 | request-since-iso8601, request-wire-keys | Encode `ImportRequestDTO(sourceDirectory: "/x", since: <date>, dryRun: true)` with the wire encoder | Keys `source_directory`, `since` (ISO-8601 string) and `dry_run`; decoding with the wire decoder returns the same values |
@@ -128,7 +128,7 @@ Not applicable — these are non-visual data transfer objects, not visual compon
 - **Error states**: `ImportSummary.errors` is a list of strings the importer collected; the type carries it and does not interpret it. A decode failure for the strict types is a thrown `DecodingError`.
 - **Offline or disconnected state**: Not applicable: the types perform no I/O.
 - **Version skew**: A summary from an older peer that omits `has_more` or the cutoff MUST decode. A newer peer's unknown keys are ignored.
-- **Silent cutoff loss**: Over the wire, `cutoffISO` decodes as nil even when sent (the open question on `summary-cutoff-wire-key`); `hasMore` still travels correctly.
+- **Cutoff over the wire**: `cutoffISO` survives a wire round trip because its coding key is `cutoffIso` (`summary-cutoff-wire-key`); a peer built before that fix decodes it as nil.
 - **Date strategy**: A reader that decodes `since` without the shared ISO-8601 date strategy fails, so a reader MUST use the shared decoder.
 - **Permanently dropped lines**: Invalid UTF-8 lines are counted in `linesSkipped` and never re-read (a consumer SHOULD surface a non-zero `linesSkipped` to flag lost content).
 
@@ -175,13 +175,13 @@ Not applicable: this code makes no log calls.
 - **SwiftUI**: Plain Swift with no view code. Render coverage as a progress figure from `bytesCovered` and `bytesOnDisk`, clamping the ratio at 1 because the gap can be negative.
 - **Compose**: `kotlinx.serialization` data classes with snake_case `@SerialName`, `Long` for the Int64 fields, `Instant` for `since` with ISO-8601 text. Give every `ImportSummary` property a default so a missing key decodes, and keep the metrics and cursor keys required. Name the cutoff key explicitly so it round-trips.
 - **React/Web**: TypeScript interfaces with snake_case keys; byte counts beyond 2^53 lose precision in a JavaScript number, so use a string or `BigInt` reader if sizes can exceed it. Send `since` as an ISO-8601 string. Default missing summary keys on read.
-- **AppKit / UIKit**: Foundation-only; `ImportSummary` has a hand-written decoder with a custom `CodingKeys`, and that decoder's key spelling for the cutoff interacts with the from-snake-case strategy as described in the open question.
+- **AppKit / UIKit**: Foundation-only; `ImportSummary` has a hand-written decoder with a custom `CodingKeys`, and its cutoff key has the raw value `cutoffIso` so the from-snake-case strategy maps `cutoff_iso` back onto it.
 - **WinUI 3**: Use C# records with `System.Text.Json` and `JsonNamingPolicy.SnakeCaseLower`; `long` for `bytesCovered`, `bytesOnDisk`, `bytesRead` and `bytesSkipped`, `DateTimeOffset?` for `since` (the default converter reads and writes ISO-8601), `double` for `TotalCostUsd`. Give `ImportSummary` properties initializers (`int FilesScanned { get; init; }`, `string[] Errors { get; init; } = []`, `bool HasMore { get; init; }`, `string? CutoffIso { get; init; }`) so an absent key decodes to the default. Set `[JsonPropertyName("cutoff_iso")]` explicitly on the cutoff: the snake-case policy already produces that name, and the explicit attribute keeps the wire key stable if the property is later renamed. Use `JsonIgnoreCondition.WhenWritingNull` for the request's optionals.
 ## Reference Implementations
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SessionMetricsDTO.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SessionMetricsDTO.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -217,13 +217,15 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
-| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
+| [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | passed | Reliability |
 
-separation-of-concerns passes: the file declares four shapes and one tolerant decoder; scanning, dedup, cursors and the chunked drain live in the daemon importer. unit-test-coverage is partial: `JSONLImporterTests` asserts `cutoffISO`, `hasMore` and the counters on summaries the importer builds, but no test encodes or decodes any of the four records through the wire coders, so vectors 001, 002, 005, 007 to 012 and 014 to 017 follow from the source with no test of their own. data-integrity is partial because a wire read of `ImportSummary` silently loses `cutoffISO`, as described in the open question on `summary-cutoff-wire-key`.
+separation-of-concerns passes: the file declares four shapes and one tolerant decoder; scanning, dedup, cursors and the chunked drain live in the daemon importer. unit-test-coverage passes: `SessionMetricsDTOConformanceTests.swift` covers every vector, with 004 (an importer integration check) covered by the chunked-drain tests in `JSONLImporterTests`. data-integrity passes: `cutoffISO` survives a wire round trip (vector 005).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (SessionMetricsDTOConformanceTests.swift, 15 of 17 vectors tested, 004 and 005 skipped); unit-test-coverage now partial. |
+| 1.0.2 | 2026-11-14 | Mike Fullerton | cutoffISO now round-trips over the wire: its coding key is cutoffIso; vector 005 tested |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Producer and daemon rules rewritten as field-meaning notes, cutoffISO defect restated as a MUST-round-trip marker with vector 005 now expecting the non-nil round trip, parse boundary recorded as a Design Decision, encode and init-default vectors added, edge-case keywords made single-keyword, WinUI 3 note cut to serialization, grouping explained in the Overview, and depends-on and related linked. |

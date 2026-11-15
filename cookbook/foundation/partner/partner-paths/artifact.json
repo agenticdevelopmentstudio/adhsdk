@@ -4,7 +4,7 @@
     "id": "0a3f46c1-aa22-4af3-91f0-6631c9fdddfd",
     "title": "Partner Paths",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "d38f6795b1d5eca1",
+  "synced": "bfe2b37761779f56",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

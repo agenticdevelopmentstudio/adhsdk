@@ -2,7 +2,7 @@
 id: 770a6a4c-6527-4e4d-a9d9-14e5b1cf25fd
 title: "Known Terminals"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -149,7 +149,7 @@ Not applicable: this code makes no log calls; the callers write `displayName` in
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/KnownTerminals.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Terminal/KnownTerminals.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -177,12 +177,12 @@ Not applicable: this code makes no log calls; the callers write `displayName` in
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 
-separation-of-concerns passes: the file holds a value type, a constant list and one lookup; running-app lookup and activation live in `BringTerminalToFrontStrategy` and `WindowActivationTester`. unit-test-coverage is partial: `match` is reached only indirectly, through the conversation summary's app filter in `testAppMatchesAgentOrTerminalByPrefix`, and no test asserts the catalog's four entries, their bundle ids, the unknown-terminal nil or a custom catalog, so those vectors rest on the source alone.
-
+separation-of-concerns passes: the file holds a value type, a constant list and one lookup; running-app lookup and activation live in `BringTerminalToFrontStrategy` and `WindowActivationTester`. unit-test-coverage passes: every vector is covered. Vectors 001 to 006 and 008 to 014 are asserted in `KnownTerminalsConformanceTests.swift` (`Tests/AgenticDeveloperHubSDKCoreTests/Terminal/`), and vector 007 by `testAppMatchesAgentOrTerminalByPrefix`.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (KnownTerminalsConformanceTests.swift, 13 of 14 vectors; 007 already covered by testAppMatchesAgentOrTerminalByPrefix); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Rewrote decision rationales, folded the empty-input requirement into match-contract, added catalog-no-duplicates with a vector, a shared-TERM_PROGRAM edge case, related links and platform notes. |

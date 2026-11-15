@@ -7,6 +7,7 @@ The labels are hardcoded English (brand and protocol names) with no localization
 | Source label map: http | HTTP | Source filter checkbox and badge for HTTP-probe rows |
 | Source label map: glitchtip | GlitchTip | Source filter checkbox and badge for error-tracker rows |
 | Source label map: vercel | Vercel | Source filter checkbox and badge for Vercel deploy rows |
+| Source label map: vercel-runtime | Vercel runtime logs | Source filter checkbox and badge for Vercel runtime-log rows |
 | Source label map: cloudflare-pages | Cloudflare | Source filter checkbox and badge for Cloudflare Pages deploy rows |
 | Source label map: railway | Railway | Source filter checkbox and badge for Railway deploy rows |
 | Source label map: crunchy | Crunchy Bridge | Source filter checkbox and badge for Crunchy Bridge database rows |

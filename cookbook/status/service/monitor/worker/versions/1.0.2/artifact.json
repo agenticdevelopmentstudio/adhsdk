@@ -1,0 +1,77 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "5cb60b95-0a8b-43c8-a747-cb5ca7353f09",
+    "title": "Status Server Monitor Worker",
+    "type": "ingredient",
+    "version": "1.0.2",
+    "status": "review",
+    "language": "en",
+    "created": "2026-09-24",
+    "modified": "2026-09-27",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "Thread entry for the monitor worker: boots one DB connection and cooldown registry, then relays each CycleRequest to runMonitorCycle.",
+    "platforms": [
+      "typescript",
+      "web"
+    ],
+    "tags": [
+      "monitor",
+      "worker",
+      "concurrency",
+      "database",
+      "server"
+    ],
+    "depends-on": [
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/6302654b-8200-4e03-862d-4734d4960d19",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f68778f2-65e3-4e89-bbf8-115151efa9dc",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/ab416d40-2688-4531-95fb-613f0d2fa8cf",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/22f1ca04-2d1d-4faf-8bf0-c6abcd60802c",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0f0c1da3-1c53-417b-890d-0259d7513c65",
+      "00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e80d67b3-813f-47fb-8894-aa4e6f6479f3"
+    ],
+    "related": [
+      "99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db",
+      "6bf27f64-59d0-4b2a-8715-92dba2856814"
+    ],
+    "references": [
+      "packages/web/packages/status-server/src/monitor/worker.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/worker-client.ts (adhsdk)",
+      "packages/web/packages/status-server/src/monitor/cycle-runner.ts (adhsdk)",
+      "packages/web/packages/status-server/src/libsql/client.ts (adhsdk)",
+      "packages/web/packages/status-server/src/libsql/index.ts (adhsdk)",
+      "packages/web/packages/deploy-platform/src/cooldown/provider-cooldown.ts (adhsdk)",
+      "packages/web/packages/status-server/src/config/port.ts (adhsdk)",
+      "packages/web/packages/status-server/test/worker-boot.int.test.ts (adhsdk)",
+      "packages/web/packages/status-server/test/helpers/worker-boot-driver.mjs (adhsdk)",
+      "packages/web/packages/status-server/test/provider-cooldown-shared.int.test.ts (adhsdk)"
+    ],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "e7f32ef5b4b878ff",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

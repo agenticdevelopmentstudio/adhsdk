@@ -2,7 +2,7 @@
 id: eaa5d7f1-c35d-4fe6-91a0-06b6e48b8ba2
 title: "Stenographer Preference DTOs"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -139,7 +139,7 @@ Not applicable: the types call no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerPreferenceDTOs.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerPreferenceDTOs.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -169,11 +169,12 @@ Not applicable: the types call no logging API.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-`separation-of-concerns` passes because the types only hold values; routes, coding strategy and clamping belong to the HTTP client, `StenographerWire` and the daemon. `unit-test-coverage` is partial because `StenographerPreferenceDTOsTests` covers the summary request and response, the older-daemon case and the oversight round trip, but nothing encodes an `OversightPreferenceRequest` or checks that a missing required field fails.
+`separation-of-concerns` passes because the types only hold values; routes, coding strategy and clamping belong to the HTTP client, `StenographerWire` and the daemon. `unit-test-coverage` is partial because `StenographerPreferenceDTOsTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerPreferenceDTOsTests.swift`) covers every vector except stenographer-preference-dt-os-012 (public initializers used from another module), which is skipped: the test target imports the module with `@testable`, so a unit test cannot show that the initializers are public.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (StenographerPreferenceDTOsTests.swift, 13 of 14 vectors, 012 skipped: @testable import cannot prove public initializers); unit-test-coverage now partial. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Moved daemon semantics out of the requirements, linked the wire, HTTP client and summary limits specs, wrote real rationales, added four vectors, and rewrote the platform notes. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |

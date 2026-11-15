@@ -2,7 +2,7 @@
 id: 2a298bb0-d8af-40aa-8fec-42dd3b1d8f43
 title: "Partner Review"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -137,7 +137,7 @@ Not applicable: the source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerReview.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerReview.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -161,12 +161,13 @@ Not applicable: the source calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the file holds only data shapes; persistence, transitions and tool handling belong to the macOS partner store and review service. `unit-test-coverage` is partial: `PartnerStoreReviewsTests`, `PartnerCoordinatorTests`, `PartnerTabCardsTests` and `ReviewServiceTests` build and store reviews, but no test in the core suite asserts the initializer defaults, the coding behavior or `PartnerReviewStart`.
+`separation-of-concerns` passes because the file holds only data shapes; persistence, transitions and tool handling belong to the macOS partner store and review service. `unit-test-coverage` passes: `PartnerReviewConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Partner/PartnerReviewConformanceTests.swift`) has one test for each of the fifteen vectors.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerReviewConformanceTests.swift, 15 of 15 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved ReviewService and store behavior to the Overview, made superseded-by-meaning and start-source testable, added vectors 011-015, added depends-on Partner Job, tightened Compose and WinUI notes, and added secret-handling guidance for tipDiff and summary. |

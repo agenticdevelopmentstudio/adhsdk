@@ -1,5 +1,5 @@
 
-Vectors 001 to 008 are asserted by the named tests. Vectors 009 onward are derived from the source and have no test yet.
+Vectors 001 to 008 are asserted by the named tests. Vectors 009 onward are derived from the source and are asserted by tests whose display names carry the vector id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

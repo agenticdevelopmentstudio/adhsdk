@@ -2,7 +2,7 @@
 id: 0f721fc3-0e8f-4a1b-b895-1b1bad370bd0
 title: "Appearance"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -125,7 +125,7 @@ Not applicable — this is preferences logic, not a visual component; it has no 
 Not applicable — this is preferences logic, not a visual component. It stores and applies the user's accessibility display choices (reduce motion, contrast, text size, spacing, focus outlines, underlined links) but renders no control; the DOM attributes it sets are consumed by the theme CSS.
 
 ## Conformance Test Vectors
-Test coverage for this module is indirect. `clearAppearance.test.ts` exercises `applyAppearance` and `clearAppearance` directly (appearance-016 and appearance-017), and `appearanceScope.test.ts` and `AppearanceScope.test.tsx` exercise them through the store. No test file targets `normalizeAppearance`, the storage functions or the pre-paint script, so the other vectors are derived from the source and unverified by a test.
+Every vector is asserted by a test whose title starts with its id: `appearance.test.ts` covers all but appearance-016 and appearance-017, which `clearAppearance.test.ts` covers. The store tests (`appearanceScope.test.ts`, `AppearanceScope.test.tsx`) exercise apply and clear through the store as well.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -148,7 +148,7 @@ Test coverage for this module is indirect. `clearAppearance.test.ts` exercises `
 | appearance-017 | clear-undoes-prepaint, clear-removes-all | An `html` element with `data-color-mode="auto"` and class `dark`; `clearAppearance(el)` | `data-color-mode` is absent and the `dark` class is gone |
 | appearance-018 | prepaint-resolve-dark, prepaint-colormode-attribute | Run the script with `{"colorMode":"dark"}` stored | `dark` class on `<html>`, `data-color-mode="dark"` |
 | appearance-019 | prepaint-resolve-dark, prepaint-colormode-attribute | Run the script with nothing stored and `matchMedia` reporting dark | `dark` class on `<html>`, `data-color-mode="auto"` |
-| appearance-020 | prepaint-attributes | Run the script with `{"contrast":"default","textSize":"large","focusOutlines":false}` stored | `data-text-size="large"` only; no `data-contrast`, no `data-focus-outlines` |
+| appearance-020 | prepaint-attributes | Run the script with `{"contrast":"default","textSize":"large","focusOutlines":false}` stored | `data-text-size="large"` set, with `data-color-mode="auto"` (always written); no `data-contrast`, no `data-focus-outlines` |
 | appearance-021 | prepaint-swallows-errors | Run the script with the literal text `null` stored | No exception escapes; `<html>` is left without the `dark` class and without `data-color-mode` |
 | appearance-022 | prepaint-no-validation | Run the script with `{"contrast":"bogus"}` stored | `data-contrast="bogus"` is written |
 | appearance-023 | prepaint-position, prepaint-plugin-name | `appearancePrepaint().transformIndexHtml()` | One tag, `script`, `children` equal to `APPEARANCE_PREPAINT_SCRIPT`, `injectTo: "head"`; plugin `name` is `adh-appearance-prepaint` |
@@ -237,7 +237,7 @@ Not applicable: the module makes no log calls; storage failures are discarded wi
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/appearance.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/themes/src/appearance.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -273,17 +273,18 @@ Not applicable: the module makes no log calls; storage failures are discarded wi
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | passed | privacy-and-data |
 | [adc.check.accessibility.reduced-motion](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/412a8e85-ad91-5e53-b3ee-ae938dda2538) | passed | accessibility |
 
-Separation of concerns passes: the pure logic, the plain-Node constants and script, and the React store are three separate files, and the DOM mapping takes the element and the system preference as arguments. Unit-test coverage is partial: `clearAppearance.test.ts` covers apply and clear directly and the scope tests cover the store, but `normalizeAppearance`, the storage functions and the pre-paint script have no direct test. Explicit error handling is partial: storage and parse failures are caught and fall back to defaults, but they are discarded without a signal. Data retention passes because the cache is cleared by `clearStoredAppearance` on sign-out. Reduced motion passes because `reduceMotion` is a stored preference that falls back to the media query when `auto`.
+Separation of concerns passes: the pure logic, the plain-Node constants and script, and the React store are three separate files, and the DOM mapping takes the element and the system preference as arguments. Unit-test coverage passes: every vector (appearance-001 to 030) has a passing test, in `appearance.test.ts` and `clearAppearance.test.ts`. Explicit error handling is partial: storage and parse failures are caught and fall back to defaults, but they are discarded without a signal. Data retention passes because the cache is cleared by `clearStoredAppearance` on sign-out. Reduced motion passes because `reduceMotion` is a stored preference that falls back to the media query when `auto`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (appearance.test.ts, clearAppearance.test.ts, 30 of 30 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the appearance store, added the WHATWG encoding-prescan reference, restated the untestable and descriptive requirements, named the edge-case MUSTs by requirement, wrote concrete inputs for vectors 016-017, added vectors 025-030, said 'a fresh copy' everywhere, and added text size and spacing to Accessibility Options. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

@@ -4,7 +4,7 @@
     "id": "9c81ac1c-ee1e-45b1-824c-deee1850037c",
     "title": "Shell Quoting",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f9809356804c098d",
+  "synced": "fb4e0cd2451d39c6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

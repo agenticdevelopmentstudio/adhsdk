@@ -15,7 +15,7 @@ struct PendingTeardownsTests {
         func record(_ name: String) { finished.append(name) }
     }
 
-    @Test("drain() waits for a teardown that is still running")
+    @Test("foundation-concurrency-019: drain() waits for a teardown that is still running")
     func drainWaitsForWorkInFlight() async {
         let teardowns = PendingTeardowns()
         let journal = Journal()
@@ -30,7 +30,7 @@ struct PendingTeardownsTests {
         #expect(journal.finished == ["slow"], "drain() returned while the teardown was still running")
     }
 
-    @Test("drain() waits for every teardown, not just the first")
+    @Test("foundation-concurrency-020: drain() waits for every teardown, not just the first")
     func drainWaitsForAllOfThem() async {
         let teardowns = PendingTeardowns()
         let journal = Journal()
@@ -46,7 +46,7 @@ struct PendingTeardownsTests {
         #expect(journal.finished.count == 5)
     }
 
-    @Test("a teardown that starts another is waited for too")
+    @Test("foundation-concurrency-021: a teardown that starts another is waited for too")
     func drainWaitsForTeardownsStartedByTeardowns() async {
         // The live shape: a quit sweep closes windows, and a window closing
         // schedules its own shutdown. A single pass would return while the
@@ -67,7 +67,7 @@ struct PendingTeardownsTests {
         #expect(journal.finished == ["outer", "inner"], "the teardown started by a teardown was not awaited")
     }
 
-    @Test("a finished teardown leaves no handle behind")
+    @Test("foundation-concurrency-022: a finished teardown leaves no handle behind")
     func finishedTeardownsAreForgotten() async {
         let teardowns = PendingTeardowns()
         teardowns.add {}
@@ -81,10 +81,16 @@ struct PendingTeardownsTests {
         #expect(teardowns.inFlightCount == 0)
     }
 
-    @Test("drain() on an empty collection returns without suspending indefinitely")
+    @Test("foundation-concurrency-023: drain() on an empty collection returns without suspending indefinitely")
     func drainOnEmptyReturns() async {
         let teardowns = PendingTeardowns()
         await teardowns.drain()
         #expect(teardowns.inFlightCount == 0)
     }
+
+    @Test(
+        "foundation-concurrency-024: an unhandled failing call in a teardown is a compile error",
+        .disabled("compile-time property: a failing call in a non-throwing closure cannot be a runtime test")
+    )
+    func teardownClosureCannotThrow() {}
 }

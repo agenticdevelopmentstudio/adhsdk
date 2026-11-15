@@ -7,7 +7,7 @@
 | [adc.check.accessibility.contrast-ratio](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/a344a531-d87a-5c07-9e1d-747f8105bafa) | partial | accessibility |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 
 Keyboard-navigable passes because Cancel/OK carry the Escape/Return key
 equivalents and every other control is a stock, natively keyboard-accessible
@@ -25,5 +25,5 @@ in this file ("Add:",
 "Where:", "Left", "Right", "Above", "Below", "Cancel", "OK") is a hardcoded
 English literal with no localization key.
 
-`separation-of-concerns` passes because `ComposableTabsAddPaneViewController` only presents the choice of view to add and reports the selection; creating the pane and placing it belong to the arranging controller. `unit-test-coverage` is `failed`: no test file in the Apple test targets references `ComposableTabsAddPaneViewController`.
+`separation-of-concerns` passes because `ComposableTabsAddPaneViewController` only presents the choice of view to add and reports the selection; creating the pane and placing it belong to the arranging controller. `unit-test-coverage` is `partial`: `AddPaneViewControllerConformanceTests.swift` tests every vector except `composable-tabs-add-pane-026`, which is skipped because the `@MainActor` confinement is enforced at build time and has no runtime check to exercise.
 

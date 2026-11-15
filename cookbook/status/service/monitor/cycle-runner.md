@@ -2,11 +2,11 @@
 id: 99e2ec9b-b209-4af9-a7d9-f3c4cc5e27db
 title: "Status Server Monitor Cycle Runner"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -175,7 +175,7 @@ This is the only log line this file emits directly; a full sync whose prune dele
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/cycle-runner.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/monitor/cycle-runner.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -196,7 +196,7 @@ This is the only log line this file emits directly; a full sync whose prune dele
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | passed | Reliability |
@@ -204,12 +204,13 @@ This is the only log line this file emits directly; a full sync whose prune dele
 | [adc.check.reliability.health-observability](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d4ece88d-eeff-5e3f-8823-d8c2929a35e0) | passed | Reliability |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | passed | Reliability |
 
-`unit-test-coverage` is `partial`: `heartbeat.int.test.ts`'s "cycle-runner heartbeat wiring" suite exercises `runMonitorCycle` directly for the full-sync/probe-only gating and for failure-propagation (vectors 001-003), but no test file targets `cycle-runner.ts` for its own sake — the maintenance-logging behavior, the strict five-step ordering, and the config-threading facts (vectors 005-010, 012) are traceable to reading the source rather than to an existing assertion. `separation-of-concerns` passes: the file's own header comment states its role is to keep "the worker entry (`worker.ts`) pure glue," and it contains no business logic of its own — every decision (what to probe, how to alert, how to prune) lives in the collaborator it calls. `explicit-error-handling` passes: this file never swallows an error itself; `runCycle` and `runMaintenance` failures explicitly propagate (core-sweep-failure-propagates, maintenance-phase-failure-aborts-remainder), and every other collaborator's fail-soft contract is documented in that collaborator's own module. `error-recovery` passes: a failed cycle does not crash the host process — the caller (`scheduler.ts`'s `tick()`, external) catches and logs the rejection and retries on the next tick, while each collaborator this file depends on recovers transiently-failing calls (a peer, a provider, a webhook) independently. `graceful-degradation` passes: every optional dependency this file's collaborators reach — the peer roster, GlitchTip, PostHog, the heartbeat URL, the alert webhook — degrades to a no-op or a recorded-unreachable state rather than aborting the cycle when unset or unreachable. `health-observability` passes: the `[maintenance]` log line and the heartbeat ping are exactly the external-facing health signals this check calls for in a long-running background process. `idempotent-operations` passes: every write this file triggers on a retried (next-cycle) run is documented idempotent or non-duplicating by its own module — `rollupMetrics`-driven upserts, cutoff-keyed chunked pruning, an interval-gated snapshot, and a ping/flush that simply repeat with no side effect from repetition.
+`unit-test-coverage` passes: `cycle-runner.test.ts` carries one test per conformance vector (001-012), with every collaborator mocked (the alert queue and flush stay real for vector 004), covering the full-sync/probe-only gating, failure propagation, the maintenance log lines, the strict step ordering, config threading and the import list; `heartbeat.int.test.ts` additionally exercises the same gating against a real migrated database. `separation-of-concerns` passes: the file's own header comment states its role is to keep "the worker entry (`worker.ts`) pure glue," and it contains no business logic of its own — every decision (what to probe, how to alert, how to prune) lives in the collaborator it calls. `explicit-error-handling` passes: this file never swallows an error itself; `runCycle` and `runMaintenance` failures explicitly propagate (core-sweep-failure-propagates, maintenance-phase-failure-aborts-remainder), and every other collaborator's fail-soft contract is documented in that collaborator's own module. `error-recovery` passes: a failed cycle does not crash the host process — the caller (`scheduler.ts`'s `tick()`, external) catches and logs the rejection and retries on the next tick, while each collaborator this file depends on recovers transiently-failing calls (a peer, a provider, a webhook) independently. `graceful-degradation` passes: every optional dependency this file's collaborators reach — the peer roster, GlitchTip, PostHog, the heartbeat URL, the alert webhook — degrades to a no-op or a recorded-unreachable state rather than aborting the cycle when unset or unreachable. `health-observability` passes: the `[maintenance]` log line and the heartbeat ping are exactly the external-facing health signals this check calls for in a long-running background process. `idempotent-operations` passes: every write this file triggers on a retried (next-cycle) run is documented idempotent or non-duplicating by its own module — `rollupMetrics`-driven upserts, cutoff-keyed chunked pruning, an interval-gated snapshot, and a ping/flush that simply repeat with no side effect from repetition.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (cycle-runner.test.ts, 12 of 12 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation |

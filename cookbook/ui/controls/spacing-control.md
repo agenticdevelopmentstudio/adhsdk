@@ -2,11 +2,11 @@
 id: f064de5a-b117-4147-96a9-c1ed11d5c976
 title: "Spacing Control"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -586,7 +586,7 @@ Not applicable: source contains no logging call anywhere.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/Spacing/SpacingControl.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Controls/Spacing/SpacingControl.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 
@@ -672,7 +672,7 @@ minimum-contrast-ratio). String-externalization fails because every
 user-facing string in this file is a hardcoded literal with no
 localization mechanism (see Localization).
 
-`unit-test-coverage` is `partial`: `UI/SpacingTests.swift` pins the arithmetic and layout of the control (`testTheGrowingArrowAddsRoomAndTheShrinkingArrowTakesItAway`, `testATypedNumberIsClampedRatherThanRefused`, and the `SpacingControlLayoutTests` cases for number placement and non-overlap), but nothing there exercises `onChange` firing rules, theme re-application or the Reset button.
+`unit-test-coverage` is `partial`: `UI/SpacingTests.swift` (`SpacingControlConformanceTests`, plus the existing edit-rule, layout, accessibility and reset classes) covers 22 of 28 vectors through the control's own arrows, fields, Reset button and field delegate. Skipped: 012 (a pressed arrow exists only inside AppKit's mouse-tracking loop), 013, 014 and 026 (the drag handle is file-private and runs a live mouse event loop, so no drag can be injected) and 028 (main-actor isolation, enforced at build time). Vectors 024 and 027 are asserted for the field and Reset fonts and the field text colour only; the frame and pane colours are painted in `draw` and are not asserted.
 
 ## Change History
 
@@ -684,3 +684,4 @@ localization mechanism (see Localization).
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/controls/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no contrast check) with a vector and a pending decision; added the unit-test-coverage compliance row. Added the confines-to-ui-thread requirement and vector. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (SpacingControlConformanceTests in UI/SpacingTests.swift, 23 of 28 vectors); unit-test-coverage stays partial (012, 013, 014, 026, 028 skipped; 024 and 027 colours partial). |

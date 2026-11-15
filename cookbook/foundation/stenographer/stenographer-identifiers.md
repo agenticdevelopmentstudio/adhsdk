@@ -2,7 +2,7 @@
 id: b6d96b0b-3ca0-48ac-8e94-a25a8ee68e43
 title: "Stenographer Identifiers"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -165,7 +165,7 @@ Not applicable: the types call no logging API; `subsystem(_:)` only builds the s
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerIdentifiers.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/StenographerIdentifiers.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -201,13 +201,14 @@ Not applicable: the types call no logging API; `subsystem(_:)` only builds the s
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the types only name things and resolve which directory exists; creating directories, registering with launchd and opening the keychain stay with callers. `unit-test-coverage` fails because no test targets these types directly: the only test that touches them is `ADKDIdentifiersTests`, which uses them as the comparison side of a collision check, so directory resolution, `writeSupportFile` and the legacy paths have no assertion.
+`separation-of-concerns` passes because the types only name things and resolve which directory exists; creating directories, registering with launchd and opening the keychain stay with callers. `unit-test-coverage` passes because every vector has a test in `StenographerIdentifiersConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Stenographer/StenographerIdentifiersConformanceTests.swift`), covering directory resolution, `writeSupportFile` and the legacy paths; `ADKDIdentifiersTests` also keeps the collision check against the Kitchen daemon.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (StenographerIdentifiersConformanceTests.swift, 21 of 21 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Recorded the silent give-up and the logs-directory asymmetry as decisions, cited each decision's source symbol, added eight test vectors and the ADKDIdentifiers link, and named the product version. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |

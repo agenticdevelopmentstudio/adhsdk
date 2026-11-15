@@ -13,4 +13,8 @@ struct TextFoldingTests {
     func foldsEmptyString() {
         #expect(TextFolding.folded("") == "")
     }
+
+    @Test("fc-031: folding ignores the current locale",
+          .disabled("the process locale cannot be switched to Turkish inside a unit test"))
+    func fc031_localeIndependence() {}
 }

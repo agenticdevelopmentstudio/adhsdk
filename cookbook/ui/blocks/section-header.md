@@ -112,7 +112,7 @@ A section header is a layout component that anchors a content area with a promin
 | section-header-020 | title-fallback-inline | `paneTitle title="Providers"` outside any stack | The h2 "Providers" is drawn inline |
 | section-header-021 | last-pane-title-wins | Two `paneTitle` headers registered in one stack | The last to register is in the strip; the other draws its h2 in place |
 
-The tests beside the source are in `detailTitle.test.tsx`, which covers only the `paneTitle` behavior. Tested: vector 016, and the leave-in-place half of 017. Derived from the source, with no test: vectors 001 to 015 and 018 to 021. No test renders the help popover, eyebrow or actions.
+The tests are in `sectionHeader.test.tsx`, one per vector (001 to 021). `detailTitle.test.tsx` also covers the `paneTitle` case of vector 016.
 
 ## Edge Cases
 
@@ -245,9 +245,9 @@ Not applicable: Section Header does not emit application logs.
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-The source renders a native `<h2>` and a native button with `aria-label="About this section"` (passed screen-reader-support, keyboard-navigable, semantic-markup); it uses `apt-*` semantic color tokens and rem-based Tailwind text sizing whose actual contrast and font-scaling behavior cannot be confirmed from this file alone (partial contrast-ratio, dynamic-type-support); it delegates focus return and Escape handling to the Popover component without specifying the help button's own hit-area size (partial focus-management, touch-target-size); and it hardcodes the English string `"About this section"` with no localization mechanism (failed no-hardcoded-strings, string-externalization). `separation-of-concerns` passes because `section-header.tsx` is pure presentation composed from its `eyebrow`/`title`/`help`/`actions` props with no business logic, and `unit-test-coverage` is partial because the only test that renders `SectionHeader` is the `paneTitle` case in `detailTitle.test.tsx`, while the eyebrow, actions and help popover are untested.
+The source renders a native `<h2>` and a native button with `aria-label="About this section"` (passed screen-reader-support, keyboard-navigable, semantic-markup); it uses `apt-*` semantic color tokens and rem-based Tailwind text sizing whose actual contrast and font-scaling behavior cannot be confirmed from this file alone (partial contrast-ratio, dynamic-type-support); it delegates focus return and Escape handling to the Popover component without specifying the help button's own hit-area size (partial focus-management, touch-target-size); and it hardcodes the English string `"About this section"` with no localization mechanism (failed no-hardcoded-strings, string-externalization). `separation-of-concerns` passes because `section-header.tsx` is pure presentation composed from its `eyebrow`/`title`/`help`/`actions` props with no business logic, and `unit-test-coverage` passes because `sectionHeader.test.tsx` has one passing test for each of the 21 conformance vectors, including the eyebrow, actions, help popover and `paneTitle` cases.
 
 ## Change History
 

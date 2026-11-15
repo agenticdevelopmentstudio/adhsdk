@@ -1,5 +1,5 @@
 
-Traced to the two source implementations; no test exercises either source directly (the only telemetry test covers the cache).
+Traced to the two source implementations; `sources.test.ts` beside the sources exercises each directly.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

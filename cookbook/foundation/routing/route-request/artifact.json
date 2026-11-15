@@ -4,7 +4,7 @@
     "id": "1a8e345f-c602-4ccb-8880-432b1deac6ac",
     "title": "Route Request",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "e288382bc248b7d8",
+  "synced": "6a50d9fe7d7e2f83",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

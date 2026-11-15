@@ -4,7 +4,7 @@
     "id": "d4e7dd53-4771-425f-af0a-0186ba89c3ef",
     "title": "Analytics Ranges",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "fd98061bbd20b4e7",
+  "synced": "dca216e3fa109067",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -4,7 +4,7 @@
     "id": "e2b50620-c7b1-4268-a56e-e039fea3349f",
     "title": "Status Report Wire Types",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "45523660d86da169",
+  "synced": "7fb1f470f0e28540",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

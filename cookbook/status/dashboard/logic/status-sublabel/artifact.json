@@ -4,11 +4,11 @@
     "id": "d79f556c-163b-48aa-82f0-baff52fa9dab",
     "title": "Status Sublabel",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,7 +27,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "eae0b3aa4aafea3b",
+  "synced": "eabcfcade23ac4b4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

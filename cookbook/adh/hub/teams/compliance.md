@@ -2,7 +2,7 @@
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.access-patterns.api-design-conventions](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b6745c95-4ef2-5ab4-8791-00ffc1d7b82d) | partial | access-patterns |
 | [adc.check.reliability.idempotent-operations](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b476dbc7-de81-5f6b-8d9e-de6d319e631b) | failed | reliability |
 | [adc.check.reliability.error-recovery](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/694a971d-282d-501b-8861-c4ece3b01edd) | partial | reliability |
@@ -16,11 +16,9 @@ Every logic component in this cookbook is held to at least
 passes: `teams.ts` owns the `Team` route stem, `team-members.ts` owns the
 membership route stem, and `wire.ts` is a type-only file the other two read
 — no file reaches into another's internals. **`unit-test-coverage`** is
-`partial`: `teams.test.ts` exercises `toTeam` and `validateTeamIdentifier`
-directly (the vectors above traced to its three assertions), but no test
-file exists for `team-members.ts` at all — every `teamMembersApi` behavior
-in this recipe is traced to the source code and its doc comments, not to a
-test assertion. **`api-design-conventions`** is `partial`: the domain does
+`passed`: `teams.test.ts` exercises `toTeam` and `validateTeamIdentifier`,
+and `conformance-vectors.test.ts` covers every one of the 16 conformance
+vectors across `teamsApi` and `teamMembersApi` with a passing test. **`api-design-conventions`** is `partial`: the domain does
 not follow one uniform client shape end to end — `teamsApi` maps through a
 `wire.ts` row and a `toX` mapper and translates a 409 to a friendly message
 on write, while `teamMembersApi` declares its type directly with no mapper

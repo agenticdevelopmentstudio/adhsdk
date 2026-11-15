@@ -8,6 +8,8 @@ vi.mock("../http", async (importOriginal) => ({
   authedJson,
 }));
 
+import { configureData } from "../config";
+
 const { workspacePrefsApi, readCachedWorkspace, writeCachedWorkspace } = await import(
   "../workspace-prefs"
 );
@@ -71,5 +73,53 @@ describe("the localStorage mirror", () => {
     });
     expect(() => writeCachedWorkspace("acme")).not.toThrow();
     boom2.mockRestore();
+  });
+});
+
+// Conformance vectors for resource-data (cookbook/data/services/resource-data).
+describe("workspace-prefs conformance", () => {
+  it("resource-data-072 caches the workspace under '<prefix>:home:workspace'", () => {
+    configureData({ storageKeyPrefix: "x" });
+    try {
+      writeCachedWorkspace("acme");
+      expect(localStorage.getItem("x:home:workspace")).toBe("acme");
+    } finally {
+      configureData({ storageKeyPrefix: "adh" });
+    }
+  });
+
+  it("resource-data-073 reading the cached workspace with no window is null", () => {
+    localStorage.setItem("adh:home:workspace", "acme");
+    vi.stubGlobal("window", undefined);
+    try {
+      expect(readCachedWorkspace()).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("resource-data-074 caching the workspace swallows a storage failure", () => {
+    vi.spyOn(window.localStorage, "setItem").mockImplementation(() => {
+      throw new Error("QuotaExceededError");
+    });
+    expect(() => writeCachedWorkspace("acme")).not.toThrow();
+  });
+
+  it("resource-data-075 get() resolves {} when the account carries no workspace prefs", async () => {
+    authedJson.mockResolvedValue({ object: "account" });
+    await expect(workspacePrefsApi.get()).resolves.toEqual({});
+  });
+
+  it("resource-data-076 get() resolves the stored prefs", async () => {
+    authedJson.mockResolvedValue({ workspace_prefs: { prefs: { slug: "acme" } } });
+    await expect(workspacePrefsApi.get()).resolves.toEqual({ slug: "acme" });
+  });
+
+  it("resource-data-077 put() POSTs the full prefs under workspace_prefs on /api/v1/account", async () => {
+    await workspacePrefsApi.put({ slug: "acme" });
+    expect(authedJson).toHaveBeenCalledWith("/api/v1/account", {
+      method: "POST",
+      body: JSON.stringify({ workspace_prefs: { slug: "acme" } }),
+    });
   });
 });

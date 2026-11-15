@@ -2,7 +2,7 @@
 id: 02e566d2-7403-4584-948c-1b4fff05070d
 title: "Theme Fonts"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -83,7 +83,7 @@ Not applicable — this is a list of font hrefs, not a visual component.
 
 ## Conformance Test Vectors
 
-The module has no test file beside it. Vectors 1 to 5 come from the tests of its consumer in the adh package, `landingTypeScale.test.ts` (describe block "the first-load font contract"); the rest follow from the filter and map in the source and the committed manifest. Vectors 001 to 005 and 007 exercise the manifest, the css build or the consumer, so they are integration vectors; vectors 008 to 010 have no test yet and should live in a `fonts.test.ts` beside the module, using injected manifests.
+The module has no test file beside it. Vectors 1 to 5 come from the tests of its consumer in the adh package, `landingTypeScale.test.ts` (describe block "the first-load font contract"); the rest follow from the filter and map in the source and the committed manifest. Vectors 001 to 005 and 007 exercise the manifest, the css build or the consumer, so they are integration vectors; vectors 008 to 010 are tested in `fonts.test.ts` in the themes package `__tests__` folder, using injected manifests.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -161,7 +161,7 @@ Not applicable: the source makes no log calls.
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/fonts.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/themes/src/fonts.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -186,16 +186,17 @@ Not applicable: the source makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.performance.startup-impact](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/41f11fb7-abed-5c62-ae13-456da5874bb0) | passed | performance |
 | [adc.check.performance.lazy-loading](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/93049d53-e8e2-5ea3-8a3a-9eb07e60d0e2) | passed | performance |
 
-Separation of concerns passes: the module does one thing, listing preload hrefs, and leaves rule emission to the css build and file placement to `materializeThemeFonts`, with the manifest as the single shared fact. Unit-test coverage is partial: no test sits beside `fonts.ts`; the contract is asserted by the adh package's `landingTypeScale.test.ts`, and the generator's preload flags are tested in `subset-fonts_test.py` for the site cuts only. Startup impact and lazy loading pass because only the three CORE cuts are preloaded and the EXT cuts are left to `unicode-range`.
+Separation of concerns passes: the module does one thing, listing preload hrefs, and leaves rule emission to the css build and file placement to `materializeThemeFonts`, with the manifest as the single shared fact. Unit-test coverage passes: `fonts.test.ts` in the themes package `__tests__` folder covers all ten vectors, with injected manifests for the filter vectors. Startup impact and lazy loading pass because only the three CORE cuts are preloaded and the EXT cuts are left to `unicode-range`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (fonts.test.ts, 10 of 10 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Moved the generator-owned and css-agreement requirements to integration requirements, rewrote immutable-value, split the Overview, added an intro sentence, tokens link, fixture-based vector 006, vector labels and dropped x:Uid. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

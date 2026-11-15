@@ -1,5 +1,5 @@
 
-The module has no test file beside it. Vectors 1 to 5 come from the tests of its consumer in the adh package, `landingTypeScale.test.ts` (describe block "the first-load font contract"); the rest follow from the filter and map in the source and the committed manifest. Vectors 001 to 005 and 007 exercise the manifest, the css build or the consumer, so they are integration vectors; vectors 008 to 010 have no test yet and should live in a `fonts.test.ts` beside the module, using injected manifests.
+The module has no test file beside it. Vectors 1 to 5 come from the tests of its consumer in the adh package, `landingTypeScale.test.ts` (describe block "the first-load font contract"); the rest follow from the filter and map in the source and the committed manifest. Vectors 001 to 005 and 007 exercise the manifest, the css build or the consumer, so they are integration vectors; vectors 008 to 010 are tested in `fonts.test.ts` in the themes package `__tests__` folder, using injected manifests.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

@@ -83,6 +83,13 @@ final class IngestionPipelineTests: XCTestCase {
 
         XCTAssertEqual(try eventLogCount(sessionId: "s-p2"), 1)
         XCTAssertEqual(sink.events.first?.sessionId, "s-p2")
+        // session-event-sink-009: the published bytes are what SessionEventEncoding gives the ingested event.
+        let payload = try XCTUnwrap(sink.events.first?.payload)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let ingested = try decoder.decode(IngestedEvent.self, from: payload)
+        XCTAssertEqual(ingested.sessionId, "s-p2")
+        XCTAssertEqual(SessionEventEncoding.encode(ingested), payload)
     }
 
     func testRetryIngestWritesStraightToTheDatabase() throws {

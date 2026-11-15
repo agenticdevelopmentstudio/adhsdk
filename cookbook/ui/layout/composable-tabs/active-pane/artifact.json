@@ -4,11 +4,11 @@
     "id": "08bfb299-851b-4b01-a84a-6a2a13e07c12",
     "title": "Composable Tabs Active Pane",
     "type": "ingredient",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-23",
-    "modified": "2026-11-15",
+    "modified": "2026-11-16",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -37,7 +37,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "7aa0ef70102511c7",
+  "synced": "74ce39c7ea63653e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

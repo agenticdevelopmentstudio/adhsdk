@@ -31,5 +31,5 @@
 | popup-028 | trigger-fills-width | No `className` | Trigger fills the container width (the web implementation applies `w-full`) |
 | popup-029 | close-on-select | Menu open, user chooses an item, "All" or "New…" | The dropdown closes after the callback fires |
 
-Test vectors popup-015 to popup-017 come from `popupMenu.test.tsx`, which asserts on the trigger only because the menu's open and close need pointer plumbing the package's test setup lacks; the other vectors derive from the source.
+Every vector has a test in `popupMenu.test.tsx`, which opens the menu with `fireEvent.click` on the trigger. popup-013 and popup-023 are skipped there: they depend on real CSS, which jsdom does not apply.
 

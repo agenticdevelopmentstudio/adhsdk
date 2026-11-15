@@ -4,7 +4,7 @@
     "id": "0de17653-f56d-418f-b212-33e9017972cd",
     "title": "Short Text",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -29,7 +29,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "457b475cabe630a1",
+  "synced": "5fbaa1b192ba231c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -67,12 +67,12 @@ function type(name: string, value: string): void {
 afterEach(cleanup)
 
 describe("the Save button", () => {
-  it("is inert until something actually changes", () => {
+  it("content-editing-013, content-editing-059 is inert until something actually changes", () => {
     render(<Harness record={CLEAN} onSave={vi.fn()} />)
     expect(saveButton()).toBeDisabled()
   })
 
-  it("lights up on the first edit and goes dark again when it is undone", () => {
+  it("content-editing-014 lights up on the first edit and goes dark again when it is undone", () => {
     render(<Harness record={CLEAN} onSave={vi.fn()} />)
     type("displayName", "Participants renamed")
     expect(saveButton()).toBeEnabled()
@@ -80,7 +80,7 @@ describe("the Save button", () => {
     expect(saveButton()).toBeDisabled()
   })
 
-  it("hands the whole edited record to onSave and goes quiet once it lands", async () => {
+  it("content-editing-022 hands the whole edited record to onSave and goes quiet once it lands", async () => {
     const onSave = vi.fn(async () => {})
     render(<Harness record={CLEAN} onSave={onSave} />)
     type("displayName", "Renamed")
@@ -108,14 +108,14 @@ describe("the Save button", () => {
     expect(screen.queryByText(RDID_MESSAGE)).not.toBeInTheDocument()
   })
 
-  it("names the empty required field rather than going dead in silence", () => {
+  it("content-editing-015 names the empty required field rather than going dead in silence", () => {
     render(<Harness record={CLEAN} onSave={vi.fn()} />)
     type("displayName", "")
     expect(saveButton()).toBeDisabled()
     expect(screen.getByText("Required.")).toBeInTheDocument()
   })
 
-  it("is blocked by a cross-field rule, with the reason on the pane", () => {
+  it("content-editing-020 is blocked by a cross-field rule, with the reason on the pane", () => {
     render(
       <EditingHostProvider host={testHost}>
         <EditingContainer
@@ -135,7 +135,7 @@ describe("the Save button", () => {
     expect(screen.getByText("Archive it under its old name.")).toBeInTheDocument()
   })
 
-  it("keeps the draft and shows the reason when the write is refused", async () => {
+  it("content-editing-023 keeps the draft and shows the reason when the write is refused", async () => {
     const onSave = vi.fn(async () => {
       throw new Error("Identifier already taken.")
     })
@@ -150,7 +150,7 @@ describe("the Save button", () => {
     expect(guardArmed()).toBe(true)
   })
 
-  it("cannot be pressed twice while a write is in flight", async () => {
+  it("content-editing-021 cannot be pressed twice while a write is in flight", async () => {
     const gate = deferred<void>()
     const onSave = vi.fn(() => gate.promise)
     render(<Harness record={CLEAN} onSave={onSave} />)
@@ -164,7 +164,7 @@ describe("the Save button", () => {
 })
 
 describe("Cancel", () => {
-  it("throws the draft away and tells the pane it is done", () => {
+  it("content-editing-024 throws the draft away and tells the pane it is done", () => {
     const onCancel = vi.fn()
     render(<Harness record={CLEAN} onSave={vi.fn()} onCancel={onCancel} />)
     type("displayName", "Renamed")
@@ -196,7 +196,7 @@ describe("the navigation guard", () => {
 })
 
 describe("a read-only container", () => {
-  it("offers no Save bar, arms no guard, and repairs nothing", () => {
+  it("content-editing-046 offers no Save bar, arms no guard, and repairs nothing", () => {
     const onSave = vi.fn()
     render(<Harness record={BROKEN} onSave={onSave} readOnly />)
     expect(screen.queryByRole("button", { name: /^Sav/ })).not.toBeInTheDocument()
@@ -207,7 +207,7 @@ describe("a read-only container", () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  it("locks every control", () => {
+  it("content-editing-047 locks every control", () => {
     render(<Harness record={CLEAN} onSave={vi.fn()} readOnly />)
     expectLocked(control("displayName"))
     expectLocked(control("identifier"))
@@ -225,14 +225,14 @@ describe("a read-only container", () => {
 })
 
 describe("a record that arrives while the pane is open", () => {
-  it("is adopted while the draft is clean", () => {
+  it("content-editing-026 is adopted while the draft is clean", () => {
     const { rerender } = render(<Harness record={CLEAN} onSave={vi.fn()} />)
     rerender(<Harness record={{ ...CLEAN, displayName: "From the server" }} onSave={vi.fn()} />)
     expect((control("displayName") as HTMLInputElement).value).toBe("From the server")
     expect(saveButton()).toBeDisabled()
   })
 
-  it("does not overwrite what the user has typed", () => {
+  it("content-editing-025 does not overwrite what the user has typed", () => {
     const { rerender } = render(<Harness record={CLEAN} onSave={vi.fn()} />)
     type("displayName", "Mine")
     rerender(<Harness record={{ ...CLEAN, displayName: "From the server" }} onSave={vi.fn()} />)
@@ -240,7 +240,7 @@ describe("a record that arrives while the pane is open", () => {
     expect(saveButton()).toBeEnabled()
   })
 
-  it("is not adopted AFTER the save that superseded it", async () => {
+  it("content-editing-027 is not adopted AFTER the save that superseded it", async () => {
     // The nastiest shape of this. A refetch lands mid-edit and is declined, the
     // user saves, and the pane goes clean — at which point a naive re-seed sees a
     // record identity it has not adopted yet and adopts it, silently replacing
@@ -261,7 +261,7 @@ describe("a record that arrives while the pane is open", () => {
     expect(saveButton()).toBeDisabled()
   })
 
-  it("is picked up by Cancel, which is when it stops being a threat", () => {
+  it("content-editing-028 is picked up by Cancel, which is when it stops being a threat", () => {
     // Cancel means "give me what the server has". A declined refetch IS that, and
     // it is newer than the baseline — so throwing the draft away has to land on
     // the declined row, not on the row the pane was seeded with.
@@ -315,7 +315,7 @@ function renderFaulty(sections: readonly AnySection[]): void {
 }
 
 describe("a layout fault the type system cannot catch", () => {
-  it("reports a field laid out twice", () => {
+  it("content-editing-029, content-editing-072 reports a field laid out twice", () => {
     // The one direction the type genuinely cannot see even with literals: a union
     // of section keys cannot tell one occurrence of a key from two, and a field
     // laid out twice edits one value from two controls.
@@ -328,7 +328,7 @@ describe("a layout fault the type system cannot catch", () => {
     ).toBeInTheDocument()
   })
 
-  it("reports a field no section lays out", () => {
+  it("content-editing-030 reports a field no section lays out", () => {
     // The silent one. An unlaid field is INVISIBLE and still validated, so it can
     // hold Save grey with nothing on screen to fix — the exact failure this package
     // exists to remove.
@@ -339,7 +339,7 @@ describe("a layout fault the type system cannot catch", () => {
     expect(screen.queryByText(/laid out in more than one section/)).not.toBeInTheDocument()
   })
 
-  it("reports a section naming a field that does not exist", () => {
+  it("content-editing-031 reports a section naming a field that does not exist", () => {
     renderFaulty([
       section("Team", ["displayName", "identifier", "nickname"]),
       section("Danger", ["archived"]),

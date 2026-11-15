@@ -2,7 +2,7 @@
 id: e8a2d3a3-259f-43ac-94eb-051d08a42fb1
 title: "Tracking Preference Response"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -141,7 +141,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/TrackingPreferenceResponse.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/TrackingPreferenceResponse.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -173,13 +173,14 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
-separation-of-concerns passes: the struct holds three immutable values and an init; hook installation, marker reading and the HTTP mapping live in `PreferencesService`, `ClaudeHookInstaller` and `PreferenceRoutes`. unit-test-coverage is partial: the five outcome words and the marker-following read are asserted through `PreferencesServiceTests`, but no test constructs the struct directly, checks its encoded form, or covers a write while the marker is present or a failed install, so vectors 007 to 011 rest on the source alone. data-minimization passes: the reply holds two Bools and one status word and no session data.
+separation-of-concerns passes: the struct holds three immutable values and an init; hook installation, marker reading and the HTTP mapping live in `PreferencesService`, `ClaudeHookInstaller` and `PreferenceRoutes`. unit-test-coverage passes: vectors 001 to 006 are asserted through `PreferencesServiceTests`, 007 and 010 are added there (`testV007_…`, `testV010_…`), and 008, 009 and 011 are in `TrackingResponseConformanceTests` (`TrackingPreferenceResponseConformanceTests.swift`). data-minimization passes: the reply holds two Bools and one status word and no session data.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (TrackingPreferenceResponseConformanceTests.swift, PreferencesServiceTests.swift, 11 of 11 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added wire-keys requirement and JSON sample, linked ClaudeHookInstaller in related, recorded the failed-uninstall outcome as a pending decision, reworded the idempotency edge case and fixed the platform notes. |

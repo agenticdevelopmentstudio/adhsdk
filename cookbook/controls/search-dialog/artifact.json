@@ -4,7 +4,7 @@
     "id": "88dc87c9-8058-446d-9513-acfa618c950f",
     "title": "Search Dialog",
     "type": "ingredient",
-    "version": "1.2.3",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c0535d5eb3affb9a",
+  "synced": "2f1bf563401d884c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

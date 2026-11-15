@@ -1,5 +1,5 @@
 
-These vectors follow the WHATWG URL parsing behavior that `hostOf` delegates to. They were checked against Node's `URL` implementation. The source has no test file of its own (there is no `url.test.ts`).
+These vectors follow the WHATWG URL parsing behavior that `hostOf` delegates to. They were checked against Node's `URL` implementation. They are exercised by `url.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

@@ -119,7 +119,7 @@ describe("a clean container", () => {
 })
 
 describe("a dirty container", () => {
-  it("raises the platform's one unsaved-changes prompt", async () => {
+  it("content-editing-058 raises the platform's one unsaved-changes prompt", async () => {
     render(<Harness />)
     type("displayName", "Renamed")
     askToNavigate()

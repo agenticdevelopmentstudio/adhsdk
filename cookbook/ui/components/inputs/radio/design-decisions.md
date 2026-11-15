@@ -15,7 +15,12 @@
   **Approved**: pending
 
 - **Disabled state**
-  **Decision**: `RadioGroupItem` carries `disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50`, but Base UI's `RadioPrimitive.Root` (`nativeButton=false`) renders as a `<span role="radio">`, which never matches the native `:disabled` selector these utilities target, so no visual dimming occurs; the disabled state is instead exposed via `aria-disabled="true"`, `data-disabled`, and `tabindex="-1"`, and selection is still blocked by Base UI's internal pointer/keyboard guards rather than by CSS.
-  **Rationale**: This is the wrapper's existing styling, carried over unchanged from the other form controls; it is dead code for Radio's actual DOM shape, so consumers needing a visible disabled treatment MUST add a `data-disabled:` (or `aria-disabled:`) variant themselves.
+  **Decision**: `RadioGroupItem` carries `disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50`. Because the root is now a native `<button type="button">`, a disabled item carries the native `disabled` attribute (alongside `aria-disabled="true"` and `data-disabled`), so these utilities match and the item is visibly dimmed; selection is also blocked by Base UI's internal pointer/keyboard guards.
+  **Rationale**: This is the wrapper's styling, shared with the other form controls; the native-button root (see Native button root) is what makes it take effect.
+  **Approved**: pending
+
+- **Native button root**
+  **Decision**: `RadioPrimitive.Root` renders a native `<button type="button">` (`nativeButton`, `render={<button type="button" />}`) instead of Base UI's default `<span role="radio">`.
+  **Rationale**: Base UI 1.5's span radio swallows Space inside a group: its composite Space handler prevents the keydown before RadioRoot's `onClick`, which bails on `defaultPrevented`, so Space never selected. A native button takes the `click()` path, so Space selects (radio-007), and it also lets the `disabled:` utilities match.
   **Approved**: pending
 

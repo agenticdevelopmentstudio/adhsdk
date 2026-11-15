@@ -17,8 +17,8 @@
 | chat-bubble-014 | error-notice-fixed-borders | `role = .error` | 1pt danger-color border renders regardless of theme declarations |
 | chat-bubble-015 | error-notice-fixed-borders | `role = .notice` | No border renders |
 | chat-bubble-016 | terminal-font-for-text-and-timestamp | Any role/style, `showsInlineTimestamp = true`, default settings | Message text renders in Menlo-Regular at 13pt; the timestamp renders in Menlo-Regular at (scaled) 11pt; neither uses the theme's general body font |
-| chat-bubble-017 | inline-timestamp-format | `timestamp` = 2026-09-23T09:05:00, `showsInlineTimestamp = true`, `locale = en_US_POSIX` | Appended text reads `9:05 AM` (unpadded hour) |
-| chat-bubble-018 | inline-timestamp-format | `timestamp` = 2026-09-23T14:30:00, `locale = en_US_POSIX` | Appended text reads `2:30 PM` |
+| chat-bubble-017 | inline-timestamp-format | `timestamp` = 2026-09-23T09:05:00 (local time), `showsInlineTimestamp = true` | Appended text reads `9:05` followed by the current locale's AM text (`9:05 AM` in English); the hour is unpadded |
+| chat-bubble-018 | inline-timestamp-format | `timestamp` = 2026-09-23T14:30:00 (local time), `showsInlineTimestamp = true` | Appended text reads `2:30` followed by the current locale's PM text (`2:30 PM` in English) |
 | chat-bubble-019 | inline-timestamp-optional | `showsInlineTimestamp = false` | No timestamp text appears anywhere in the rendered string |
 | chat-bubble-020 | timestamp-font-scaling | Default typography (caption 11pt / body 13pt), message font at 13pt | Timestamp font point size is exactly 11pt (`13 * (11/13)`) |
 | chat-bubble-021 | timestamp-font-scaling | Theme's general body text size resolves to 0 | Timestamp renders in the unscaled message-text font |
@@ -35,7 +35,7 @@
 | chat-bubble-032 | expand-toggle-enablement | `onToggleExpanded` not set | Toggle is disabled |
 | chat-bubble-033 | expand-toggle-enablement | `onToggleExpanded` assigned a handler | Toggle is enabled |
 | chat-bubble-034 | expanded-state-relayout | Palette already applied once; `isExpanded` flipped from `false` to `true` | Bubble re-measures and re-renders with the full text shown |
-| chat-bubble-035 | expanded-state-relayout | No palette applied yet; `isExpanded` set at init time | No re-render occurs (nothing to re-apply) |
+| chat-bubble-035 | expanded-state-relayout | `isExpanded` set to the value it already has | No re-render occurs; a value given at init time is honored by the first palette application |
 | chat-bubble-036 | bubble-width-bound-by-max-width | `maxWidth = 300`, short text, `fillsWidthWhenWrapped = false` | Bubble width equals measured content width + 24pt, and is ≤ 300 |
 | chat-bubble-037 | fills-width-when-wrapped | `fillsWidthWhenWrapped = true`, text wraps to 3 lines, `maxWidth = 300` | Bubble width is exactly 300 |
 | chat-bubble-038 | fills-width-when-wrapped | `fillsWidthWhenWrapped = true`, text does not wrap (1 line) | Bubble width equals measured content width + 24pt, not `maxWidth` |

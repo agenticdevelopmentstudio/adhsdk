@@ -4,11 +4,11 @@
     "id": "ab36ce5f-4624-4097-bb66-a339dfecc4c9",
     "title": "Status Server Paths",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -64,7 +64,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5e64ba0767aa9505",
+  "synced": "7906f18e069a7d4a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

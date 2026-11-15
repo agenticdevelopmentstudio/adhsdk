@@ -7,8 +7,8 @@
 **Rationale**: The doc comment says the other sources answer reachability while GlitchTip answers whether the site is throwing, and a site can be up on every probe with an error Problem open.
 **Approved**: pending
 
-**Decision**: Keep `STUCK_DEPLOY_MS` on the client even though no client code derives stuck Problems from it.
-**Rationale**: The doc comment calls it a "mirror of the server threshold" and records the owner call of 2026-07-10 that an in-flight `building` row is activity, never a Problem. The constant stays as documentation of the backend's rule; the stuck verdict itself comes from the server.
+**Decision**: The stuck-deploy threshold was removed from the client and stays on the server.
+**Rationale**: The client once held a mirror of `STUCK_DEPLOY_MS` that no client code read. The threshold is now the server's alone (`STUCK_DEPLOY_MS` and `deployIsStuck`); the board publishes the resulting Problem and the client renders it, so a second copy could only drift.
 **Approved**: pending
 
 **Decision**: Add `isIssueSource` on the client only.

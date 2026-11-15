@@ -4,33 +4,11 @@
 - **indicator-state-union**: The sign-state value MUST be exactly one of `"ok"`, `"warn"` or `"down"`.
 - **indicator-shape**: An indicator value MUST carry a sign state and a count (a whole number).
 
-### Problems-to-indicator operation
-
-- **indicator-signature**: The problems-to-indicator operation MUST take a list of problems and MUST return an indicator value.
-- **indicator-count**: The returned count MUST equal the number of problems given.
-- **indicator-empty-ok**: For an empty list the operation MUST return sign state `"ok"` with count `0`.
-- **indicator-critical-down**: When at least one problem has severity `"critical"`, the operation MUST return sign state `"down"`.
-- **indicator-otherwise-warn**: When the list is non-empty and no problem has severity `"critical"` (only `"major"` and/or `"minor"`), the operation MUST return sign state `"warn"`.
-- **indicator-server-parity**: On any problem set, the problems-to-indicator operation MUST produce the sign state that results from translating the server's own indicator rule through the wire-indicator translation map, with a count equal to the number of problems given. The doc comment calls it "a rendering projection of severities the server already assigned — not a second opinion"; a parity test pins the two on empty, minor-only, major-only and critical-bearing sets.
-- **indicator-filtered-input**: The operation MUST judge only the problems it is given. A caller applying an active filter passes only the filtered subset of problems; otherwise a caller uses the server's own indicator, translated through the wire-indicator translation map directly.
-
 ### Wire-indicator translation map
 
 - **indicator-map-values**: The wire-indicator translation map MUST map `operational` to `"ok"`, `degraded` to `"warn"` and `outage` to `"down"`.
 - **indicator-map-exhaustive**: The wire-indicator translation map MUST have exactly the three keys `degraded`, `operational` and `outage` — one per member of the server's wire-level indicator vocabulary, with no extras.
 - **indicator-map-sole-translation**: The wire-indicator translation map MUST be the only place that translates the wire indicator into a sign state; the doc comment names it "The ONLY translation between the two."
-
-### Deploy-counts operation
-
-- **counts-signature**: The deploy-counts operation MUST take a list of activity rows and a window-start time, and MUST return a build count, a deploy count and a failure count.
-- **counts-deploy-kind-only**: Rows whose kind is not `"deploy"` (`"probe"`, `"platform"`) MUST NOT contribute to any count.
-- **counts-window-cutoff**: A deploy row whose parsed timestamp is strictly earlier than the window-start time MUST NOT contribute to any count; a row exactly at the window-start time MUST be counted.
-- **counts-builds**: Each counted row with step `"build"` MUST add 1 to the build count.
-- **counts-deploys**: Each counted row with step `"deploy"` MUST add 1 to the deploy count.
-- **counts-null-step**: A counted row with no step MUST add to neither the build count nor the deploy count.
-- **counts-failures**: Each counted row with tone `"bad"` MUST add 1 to the failure count, independently of its step, so a failed build row counts as one build and one failure.
-- **counts-server-window**: The caller MUST pass the board's own activity-window start as the window-start time; the doc comment states "the client never picks the window".
-- **counts-no-rejudging**: The operation MUST read a row's step and tone as they arrive on the wire and MUST NOT recompute them.
 
 ### Activity-window-caption operation
 
@@ -51,15 +29,13 @@
 - **headline-down-plural**: For sign state `"down"` and any other count it MUST return the count followed by `" PROBLEMS"`.
 - **headline-single-wording**: Every surface that announces the sign's headline (hero sign, top-bar pill accessible name, wallboard pill) MUST obtain it from the headline operation, so they cannot word it differently. An "unknown" state is outside the sign-state vocabulary; callers word that case themselves (for example, showing "Status unknown" or "UNKNOWN").
 
-### Real-environment-deploy predicate
+### Still-unresolved operation
 
-- **real-env-row-signature**: The platform/environment form of the predicate MUST take a platform identifier and an environment value (which may be absent) and MUST return true or false.
-- **real-env-vercel-preview**: The predicate MUST return `false` when the platform is `"vercel"` and the environment is absent or the empty string.
-- **real-env-vercel-target**: The predicate MUST return `true` when the platform is `"vercel"` and the environment is any non-empty string.
-- **real-env-other-platforms**: The predicate MUST return `true` for every platform other than the exact string `"vercel"`, whatever the environment is (including absent).
-- **real-env-dto-delegates**: The record form of the predicate MUST return the same result as the platform/environment form, applied to a deployment record's own platform and environment fields.
-- **real-env-case-sensitive**: The platform comparison MUST be exact and case-sensitive; `"Vercel"` is treated as a non-Vercel platform.
-- **real-env-server-agreement**: The doc comment says the predicate is "Shared so the issue recorder and the UI can never disagree", but the server maintains its own textual copy of the same predicate, and the client's copy has no caller in the client outside this module's own test. No parity check pins the two copies (unlike the problems-to-indicator operation). A port keeps one definition that the server and the UI both use.
+- **unresolved-signature**: The still-unresolved operation MUST take an activity row and a list of the board's current problems (each carrying a target and an onset time) and MUST return true or false.
+- **unresolved-server-verdict**: A row whose `unresolved` field is not `true` MUST NOT be revived: the operation returns `false`. It never raises a row the server judged resolved.
+- **unresolved-held-open**: For a row with `unresolved: true` and a non-empty `heldOpenBy` list, the operation MUST return true only while some current problem has the row's own target and an onset time listed in `heldOpenBy`. It only looks those problems up and judges nothing itself.
+- **unresolved-in-flight**: A row with `unresolved: true` and an empty `heldOpenBy` (a row in flight) MUST keep the server's verdict and return true.
+- **unresolved-no-held-open**: A row with `unresolved: true` and no `heldOpenBy` (a backend that sends none) MUST keep the server's verdict and return true.
 
 ### Purity and concurrency
 

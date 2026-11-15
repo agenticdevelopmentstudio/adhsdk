@@ -2,11 +2,11 @@
 id: 14abf162-be65-4a58-9ffd-31f2145a50d3
 title: "Bounded Body Loader"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -316,7 +316,7 @@ line.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Networking/BoundedBodyLoader.swift` | confirmed (1.1.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Networking/BoundedBodyLoader.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -414,11 +414,7 @@ oversized-allocation problem the ceiling exists to prevent.
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | Reliability |
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
 
-`unit-test-coverage` is **partial**: no test file in the module targets
-`BoundedBodyLoader` directly; its ceiling and cancellation behavior is
-exercised only indirectly, through `OpenVSXClientLimitsTests.swift`'s
-assertions against `OpenVSXClient.data(at:)` and `.search(_:)`, which call
-`loader.body(at:limit:)` underneath. `separation-of-concerns` **passed**:
+`unit-test-coverage` is **partial**: `AgenticDeveloperHubSDKCoreTests/Networking/BoundedBodyLoaderConformanceTests.swift` covers networking-001 through networking-008 against a stubbed session. networking-009 (a stale callback for a removed transfer) is skipped: the shared state and the session delegate are file-private, so a test cannot inject a callback. `OpenVSXClientLimitsTests.swift` also exercises the ceilings indirectly. `separation-of-concerns` **passed**:
 the loader does exactly one thing — bound and deliver a response body — and
 leaves status validation, URL-scheme checks, and JSON decoding entirely to
 its caller (see `status-agnosticism`). `explicit-error-handling`
@@ -441,5 +437,6 @@ caller once and the caller alone decides whether to retry.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (BoundedBodyLoaderConformanceTests.swift, 8 of 9 vectors; networking-009 skipped, file-private state); unit-test-coverage now partial. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/networking/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

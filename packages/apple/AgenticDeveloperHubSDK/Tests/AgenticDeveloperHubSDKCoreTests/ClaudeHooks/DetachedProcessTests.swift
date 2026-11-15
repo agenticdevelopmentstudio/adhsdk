@@ -70,6 +70,50 @@ final class DetachedProcessTests: XCTestCase {
         lock?.release()
     }
 
+    private func waitForFile(_ url: URL) {
+        let deadline = Date().addingTimeInterval(10)
+        while !FileManager.default.fileExists(atPath: url.path) && Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+    }
+
+    func testV006_theArgumentArrivesAsOneUnchangedWord() throws {
+        let out = directory.appendingPathComponent("arg")
+        let script = "/usr/bin/printf '%s|%s' \"$#\" \"$1\" > '\(out.path).tmp'; "
+            + "/bin/mv '\(out.path).tmp' '\(out.path)'"
+        let started = DetachedProcess.spawn(executable: "/bin/sh", arguments: ["-c", script, "sh", "a b'c$d"],
+                                            environment: [:], stdin: Data())
+        XCTAssertTrue(started)
+        waitForFile(out)
+        XCTAssertEqual(try String(contentsOf: out, encoding: .utf8), "1|a b'c$d")
+    }
+
+    func testV007_aSessionIDIsCutToItsFirst128Scalars() {
+        let whole = String(repeating: "a", count: 128)
+        let long = String(repeating: "a", count: 129)
+        let wholeName = FeedLock.fileURL(sessionID: whole, name: "n", directory: directory).lastPathComponent
+        let longName = FeedLock.fileURL(sessionID: long, name: "n", directory: directory).lastPathComponent
+        XCTAssertEqual(wholeName, "n-statusline-feed-\(whole).lock")
+        XCTAssertEqual(longName, wholeName)
+        let first = FeedLock.acquire(sessionID: whole, name: "n", directory: directory)
+        XCTAssertNotNil(first)
+        XCTAssertNil(FeedLock.acquire(sessionID: long, name: "n", directory: directory))
+        first?.release()
+    }
+
+    func testV008_emptyStdinAndEmptyEnvironment() throws {
+        let out = directory.appendingPathComponent("empty")
+        let script = "/bin/cat > '\(out.path).in'; "
+            + "echo \"${HOME-unset} ${USER-unset} ${TMPDIR-unset}\" > '\(out.path).tmp';"
+            + " /bin/mv '\(out.path).tmp' '\(out.path)'"
+        let started = DetachedProcess.spawn(executable: "/bin/sh", arguments: ["-c", script],
+                                            environment: [:], stdin: Data())
+        XCTAssertTrue(started)
+        waitForFile(out)
+        XCTAssertEqual(try String(contentsOf: out, encoding: .utf8), "unset unset unset\n")
+        XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: out.path + ".in")), Data())
+    }
+
     func testTheWalkStartsFromTheDispatchersParent() {
         let variable = StatusLineCapture.parentPIDVariable
         XCTAssertEqual(StatusLineCapture.parentPID(environment: [variable: "4242"]), 4242)

@@ -9,7 +9,7 @@
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `secure-storage` is **partial**: the refresh token is deliberately never
 persisted client-side and the CSRF nonce/return-to path live in
@@ -36,5 +36,5 @@ scalar-only context, never a request body or token. `no-hardcoded-strings`
 parameter anywhere in this component (see Localization) — this is a plain,
 honestly-reported gap in the source, not a hidden one.
 
-`separation-of-concerns` passes because each of the eleven source files owns one concern with no overlap — `tokens.ts` token storage, `refresh.ts` the refresh single-flight, `sso.ts` SSO hint and return-to handling, `report.ts` the telemetry sink, `client.ts` the HTTP calls, `mfa.ts` and `account-security.ts` their endpoint families, `config.ts`, `labels.ts` and `types.ts` configuration, copy and shapes. `unit-test-coverage` is partial because `client.test.ts`, `refresh.test.ts`, `sso.test.ts`, `tokens.test.ts`, `report.test.ts`, `silent-restore.test.ts`, `link.test.ts` and `types.test.ts` in the auth package's `__tests__` directory cover the core flows, but `mfa.ts`, `account-security.ts` and `asBase.ts` have no dedicated test file.
+`separation-of-concerns` passes because each of the eleven source files owns one concern with no overlap — `tokens.ts` token storage, `refresh.ts` the refresh single-flight, `sso.ts` SSO hint and return-to handling, `report.ts` the telemetry sink, `client.ts` the HTTP calls, `mfa.ts` and `account-security.ts` their endpoint families, `config.ts`, `labels.ts` and `types.ts` configuration, copy and shapes. `unit-test-coverage` passes because `conformance-vectors.test.ts` exercises 119 of the 120 conformance vectors against every source file, including `mfa.ts`, `account-security.ts` and `asBase.ts`, beside the existing `client.test.ts`, `refresh.test.ts`, `sso.test.ts`, `tokens.test.ts`, `report.test.ts`, `silent-restore.test.ts`, `link.test.ts` and `types.test.ts` in the auth package's `__tests__` directory; auth-client-118 is skipped because it records a static property of the call sites, not a runtime behavior.
 

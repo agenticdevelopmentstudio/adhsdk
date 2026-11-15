@@ -4,7 +4,7 @@
     "id": "07fab18a-2390-4899-b4ee-a273abc3a3eb",
     "title": "Persisted State",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c43d15ab31a6b4d0",
+  "synced": "f933d92f96f8b6cf",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

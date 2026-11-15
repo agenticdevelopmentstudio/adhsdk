@@ -27,5 +27,5 @@ Derived from `HostMCPServerTests` where named; the rest are traced to the source
 | host-mcp-server-022 | call-log | One successful, one failing and one unknown call | Info lines `tools/call a ok`, `tools/call fails error`, `tools/call nope unknown` |
 | host-mcp-server-023 | list-asks-sources-live, call-asks-definitions | Source whose definitions change between two `tools/list` requests | The second listing reflects the change |
 | host-mcp-server-024 | call-result-text | Source returns `hello` | One text item `hello`, no image |
-| host-mcp-server-025 | list-server-gone, call-server-gone, wait-until-completed | Server deallocated before a request; and `waitUntilServerCompleted()` with no server | Empty list and `server is gone`; the wait returns at once. No test in `HostMCPServerTests` reaches the deallocated-server path or the no-server wait, so both are asserted from the source rather than a test. |
+| host-mcp-server-025 | list-server-gone, call-server-gone, wait-until-completed | Server deallocated before a request; and `waitUntilServerCompleted()` with no server | Empty list and `server is gone`; the wait returns at once. `HostMCPServerConformanceTests` reaches both: it drops the server after serving, then lists and calls, and it waits on a server that never served. |
 

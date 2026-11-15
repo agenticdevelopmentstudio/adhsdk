@@ -2,7 +2,7 @@
 id: 81735174-d7d7-4103-87df-7be5944c78cc
 title: "Parsed Event"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -35,9 +35,9 @@ approved-date: ""
 
 `ParsedEvent` is a struct holding one Claude Code hook event in the form the daemon ingests: the event type string, a timestamp string, the hook's payload (`hookData`), an optional `context` of facts about the live `claude` process, the `accountEmail` the event was fingerprinted to, and an optional `oauthAccountEmail`. The oauth login is resolved when the hook fires and carried on the event, not looked up at write time; that capture-time requirement belongs to the hook-capture producer, and the reasoning is in Design Decisions.
 
-It is produced by the drop-file parser (`ParseResult.parse(envelopeJSON:)`, [Parse Result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1)) or the envelope builder (the Unix socket path) and consumed by the daemon's ingestion handler.
+It is produced by the drop-file parser (`ParseResult.parse(envelopeJSON:)`, Parse Result ([adhsdk.ingredient.foundation.sessions.parse-result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1))) or the envelope builder (the Unix socket path) and consumed by the daemon's ingestion handler.
 
-It is `@unchecked Sendable`: the dictionaries are built once and never mutated afterwards, so the value can cross task boundaries even though the compiler cannot prove it. The type has no behavior beyond storing its fields; the envelope encoding and `sessionId` accessor live in an extension in `ParsedEventEnvelope.swift` ([Parsed Event Envelope](cookbook:7dfeb441-3681-45d3-a11b-049294168607)).
+It is `@unchecked Sendable`: the dictionaries are built once and never mutated afterwards, so the value can cross task boundaries even though the compiler cannot prove it. The type has no behavior beyond storing its fields; the envelope encoding and `sessionId` accessor live in an extension in `ParsedEventEnvelope.swift` (Parsed Event Envelope ([adhsdk.ingredient.foundation.sessions.parsed-event-envelope](cookbook:7dfeb441-3681-45d3-a11b-049294168607))).
 
 ## Behavioral Requirements
 
@@ -64,7 +64,7 @@ It is `@unchecked Sendable`: the dictionaries are built once and never mutated a
 
 ### Related behavior in the same module
 
-- **session-id-accessor**: `ParsedEvent.sessionId` is defined by the envelope-encoding spec ([Parsed Event Envelope](cookbook:7dfeb441-3681-45d3-a11b-049294168607)); this type adds no accessor of its own.
+- **session-id-accessor**: `ParsedEvent.sessionId` is defined by the envelope-encoding spec (Parsed Event Envelope ([adhsdk.ingredient.foundation.sessions.parsed-event-envelope](cookbook:7dfeb441-3681-45d3-a11b-049294168607))); this type adds no accessor of its own.
 - **no-equatable**: The type MUST NOT conform to `Equatable` or `Codable`; tests compare fields one by one, and the serialized form is the envelope.
 
 ## Appearance
@@ -88,8 +88,8 @@ Not applicable — this is a data value type, not a visual component.
 | parsed-event-003 | oauth-nil-versus-empty | `oauthAccountEmail: ""` | `oauthAccountEmail == ""`, which is not nil |
 | parsed-event-004 | oauth-account-email | `oauthAccountEmail: "me@x.y"` | `"me@x.y"` |
 | parsed-event-005 | context | `context: ["cwd": "/tmp/p"]` | `context?["cwd"] as? String == "/tmp/p"` (test `testEnvelopeRoundTripsThroughTheDropFileParser`, after the round trip) |
-| parsed-event-006 | no-validation, event-type | `eventType: ""`, `hookData: ["session_id": "s-u"]` | constructed without error (what parsing does with it is in the [Parse Result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1) vectors) |
-| parsed-event-007 | no-validation | `hookData: [:]` | constructed without error; its `sessionId` is `""` (the parse outcome is in the [Parse Result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1) vectors) |
+| parsed-event-006 | no-validation, event-type | `eventType: ""`, `hookData: ["session_id": "s-u"]` | constructed without error (what parsing does with it is in the Parse Result ([adhsdk.ingredient.foundation.sessions.parse-result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1)) vectors) |
+| parsed-event-007 | no-validation | `hookData: [:]` | constructed without error; its `sessionId` is `""` (the parse outcome is in the Parse Result ([adhsdk.ingredient.foundation.sessions.parse-result](cookbook:67b656ef-78a2-41ae-a910-f87f527360b1)) vectors) |
 | parsed-event-008 | account-email | `accountEmail: ""` | `accountEmail == ""` |
 | parsed-event-009 | session-id-accessor | `hookData: ["session_id": "s-rt"]` | `sessionId == "s-rt"` (test `testEnvelopeRoundTripsThroughTheDropFileParser`) |
 | parsed-event-010 | immutable-fields | static check (code review or API-surface inspection, not a runtime test): every stored property is declared `let` | no stored property is `var`; assigning to `eventType` on a constant is a compile error |
@@ -154,7 +154,7 @@ Not applicable: this code makes no log call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParsedEvent.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParsedEvent.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -184,11 +184,12 @@ Not applicable: this code makes no log call.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-separation-of-concerns passes: the type only stores one event's fields, while parsing is `ParseResult`, encoding is the envelope extension and persistence is the spool and ingest store. unit-test-coverage is partial: `IngestSpoolTests` and `IngestDrainerTests` construct it and read fields back through a round trip, but no test file targets `ParsedEvent` and the `oauthAccountEmail` nil-versus-empty contract has no assertion here.
+separation-of-concerns passes: the type only stores one event's fields, while parsing is `ParseResult`, encoding is the envelope extension and persistence is the spool and ingest store. unit-test-coverage is partial: `Tests/AgenticDeveloperHubSDKCoreTests/Sessions/ParsedEventConformanceTests.swift` covers parsed-event-001 to 009; parsed-event-010 is skipped because it is a static check (every stored property is `let`), not a runtime test.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ParsedEventConformanceTests.swift, 9 of 10 vectors; 010 is a static check); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Linked the envelope, ParseResult and HookEventType specs, moved the capture-time requirement to Design Decisions, added keywords to no-equatable, made Privacy applicable with a no-logging requirement, added platform guidance and an equality caveat, and reworded vectors 006, 007 and 010. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

@@ -2,7 +2,7 @@
 id: 359491fd-36ee-4e07-9971-76260183f243
 title: "Built-In Themes"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -39,7 +39,7 @@ approved-date: ""
 
 `BuiltInThemes` is a caseless Swift `enum` that acts as a namespace and static catalogue of the color themes the toolkit ships. It is the single source of truth for the bundled schemes: its doc comment states that the terminal feature derives its built-in profiles from this list (through `ColorTheme.terminalPalette`), so a theme is defined exactly once.
 
-The catalogue has two parts. `handAuthored` is the original curated set of 15 themes. Each carries a 16-color terminal palette and explicit app-chrome role overrides (surface, elevated surface, control background, border, outline) taken from the scheme's own published panel and line colors. `all` is `handAuthored` followed by `webPortedNative`, the themes ported from the web catalogue with their native adjustments (specified in [Built-In Themes (Web Catalogue)](cookbook:4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d) and in the Built-In Themes Native Adjustments ingredient (cookbook:fd1f8d3c-6110-4687-a715-c8fa7c7caa5b); this ingredient does not specify them beyond how `all` composes them).
+The catalogue has two parts. `handAuthored` is the original curated set of 15 themes. Each carries a 16-color terminal palette and explicit app-chrome role overrides (surface, elevated surface, control background, border, outline) taken from the scheme's own published panel and line colors. `all` is `handAuthored` followed by `webPortedNative`, the themes ported from the web catalogue with their native adjustments (specified in Built-In Themes (Web Catalogue) ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.built-in-themes-web](cookbook:4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d)) and in the Built-In Themes Native Adjustments ingredient (cookbook:fd1f8d3c-6110-4687-a715-c8fa7c7caa5b); this ingredient does not specify them beyond how `all` composes them).
 
 The type also exposes `defaultID` (Solarized Dark), `theme(withID:)` for lookup, and two private helpers: `chrome(...)`, which builds the five-role override dictionary, and `rgb(_:)`, which turns a hex literal into an opaque `RGBAColor`. Text, accent and status roles are not set here; they derive from the palette in `SemanticPalette`, which guarantees their contrast.
 
@@ -48,7 +48,7 @@ The type also exposes `defaultID` (Solarized Dark), `theme(withID:)` for lookup,
 ### Catalogue composition
 
 - **all-composition**: `BuiltInThemes.all` MUST equal `handAuthored` followed by `webPortedNative`, in that order, with `handAuthored` first.
-- **all-count**: `BuiltInThemes.all` MUST contain 15 hand-authored themes plus every theme that `webPortedNative` defines, as specified in [Built-In Themes (Web Catalogue)](cookbook:4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d). The `count` test asserts the current total, 36 (15 plus 21); the sum, not the literal, is the requirement.
+- **all-count**: `BuiltInThemes.all` MUST contain 15 hand-authored themes plus every theme that `webPortedNative` defines, as specified in Built-In Themes (Web Catalogue) ([adhsdk.ingredient.agentic-developer-hub-sdk.sdk.theme.built-in-themes-web](cookbook:4b0159a7-3ee0-44d7-bd43-8b7ae5d64e8d)). The `count` test asserts the current total, 36 (15 plus 21); the sum, not the literal, is the requirement.
 - **hand-authored-order**: `BuiltInThemes.handAuthored` MUST list its 15 themes in this order: Solarized Dark, Solarized Light, Dracula, Nord, Tokyo Night, One Dark, Monokai Pro, Rosé Pine, Catppuccin Mocha, Catppuccin Latte, Ayu Dark, GitHub Dark, GitHub Light, Gruvbox Dark, Gruvbox Light.
 - **hand-authored-appearance**: Among the hand-authored themes, 11 MUST declare `appearance` as `.dark` (Solarized Dark, Dracula, Nord, Tokyo Night, One Dark, Monokai Pro, Rosé Pine, Catppuccin Mocha, Ayu Dark, GitHub Dark, Gruvbox Dark) and 4 MUST declare `.light` (Solarized Light, Catppuccin Latte, GitHub Light, Gruvbox Light). None declares `.auto`.
 - **hand-authored-scope**: `handAuthored` MUST NOT be public (it is internal to the module). It MUST stay separate from `all` so tests about the app-chrome override promise can scope to the themes that make it. The web-ported themes carry chat overrides straight from the web CSS and let chrome derive.
@@ -192,7 +192,7 @@ Not applicable: the source makes no log call. The only diagnostic is the `precon
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes.swift` | confirmed (1.0.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/SDK/Sources/Theme/BuiltInThemes.swift` | confirmed (1.0.3) |
 | android | (planned) | planned |
 | windows | (planned) | planned |
 | web | (planned) | planned |
@@ -235,12 +235,13 @@ Not applicable: the source makes no log call. The only diagnostic is the `precon
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | partial | internationalization |
 
-The catalogue does one job: it holds color data and looks it up by ID, while persistence, palette derivation and display live in other types, so separation of concerns passes. `BuiltInThemesTests` covers the count, unique IDs, palette validity, chrome overrides, legibility, the default ID and hex accuracy, so unit-test coverage is partial: it does not directly test `lookup-miss`, the case-sensitive match or the invalid-hex trap, which leaves the matching vectors in this ingredient as the only specification of them. Error handling is partial because a malformed literal halts the process by design instead of returning an error, which is explicit and documented but not recoverable. The no-hardcoded-strings check is partial because theme names and attributions are English literals; they are proper nouns, but they are not externalized.
+The catalogue does one job: it holds color data and looks it up by ID, while persistence, palette derivation and display live in other types, so separation of concerns passes. `BuiltInThemesTests` covers the count, unique IDs, palette validity, chrome overrides, legibility, the default ID and hex accuracy, and `BuiltInThemesConformanceTests` (`BuiltInThemesConformanceTests.swift`) covers the composition, lookup miss, case-sensitive match, hit, hand-authored order, opacity and chrome builder vectors, so unit-test coverage is partial: vectors built-in-themes-016 and built-in-themes-017 are skipped because the `rgb` helper is private and an invalid literal halts the process, which a unit test cannot observe. Error handling is partial because a malformed literal halts the process by design instead of returning an error, which is explicit and documented but not recoverable. The no-hardcoded-strings check is partial because theme names and attributions are English literals; they are proper nouns, but they are not externalized.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (BuiltInThemesConformanceTests.swift, 16 of 18 vectors; 016 and 017 skipped); unit-test-coverage now partial. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Marked unit-test-coverage partial, made all-count a sum linked to the web catalogue spec, recorded the 4.0 legibility floor as a pending Design Decision, named the file and symbol behind each cited comment, rewrote three descriptive requirements with MUST, marked the private-helper requirements Swift-only with observable results, fixed the WinUI and Compose notes and vectors 015 and 016, normalised author and copyright, added depends-on and related UUIDs, and aligned Localization with Compliance. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

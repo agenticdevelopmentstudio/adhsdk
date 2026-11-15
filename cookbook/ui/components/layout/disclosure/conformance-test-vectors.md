@@ -12,6 +12,6 @@
 | T9 | support-uncontrolled | `defaultOpen={true}` | children are mounted on first render and `aria-expanded` is `"true"` |
 | T10 | support-controlled | `open={true}` with an `onOpenChange` that ignores the call | children are mounted and `aria-expanded` is `"true"` |
 | T11 | on-open-change-uncontrolled | uncontrolled with an `onOpenChange` spy; click the header twice | spy is called with `true`, then `false`; children follow |
-| T12 | link-toggle-to-body | open the disclosure | the toggle's `aria-controls` equals the body's `id` (fails on the current source) |
-| T13 | rtl-chevron | render under `dir="rtl"`, collapsed | the chevron points left; open, it points down (fails on the current source) |
-| T14 | respect-reduced-motion | emulate `prefers-reduced-motion: reduce`, toggle | the chevron's computed `transition-duration` is `0s` (fails on the current source) |
+| T12 | link-toggle-to-body | open the disclosure | the toggle's `aria-controls` equals the body's `id` |
+| T13 | rtl-chevron | render under `dir="rtl"`, collapsed | the chevron points left (it carries `rtl:rotate-180`); open, it points down (it carries `rotate-90`) |
+| T14 | respect-reduced-motion | toggle the disclosure and inspect the chevron's classes (jsdom evaluates no media query) | the chevron carries `motion-reduce:transition-none`, so its transition is dropped under reduced motion |

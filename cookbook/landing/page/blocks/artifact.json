@@ -4,7 +4,7 @@
     "id": "d1036253-b5c6-4ce5-a285-b91bae4b9f2f",
     "title": "Landing Page Blocks",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -51,7 +51,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f38eafddb4a40020",
+  "synced": "a00d76efc2351cdd",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

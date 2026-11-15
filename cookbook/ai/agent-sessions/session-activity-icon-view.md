@@ -2,11 +2,11 @@
 id: 1cecd319-1cc2-40a5-8ef0-56267eb78b89
 title: "Session Activity Icon View"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -439,7 +439,7 @@ Not applicable: the source contains no logging calls of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionListWindow/SessionWatcherActivityIconView.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionListWindow/SessionWatcherActivityIconView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 
@@ -520,7 +520,7 @@ Accessibility Options → Reduce Motion). `no-hardcoded-strings` is `failed`
 because the four accessibility label/tooltip strings are plain `String`
 literals with no localization key (see Localization).
 
-`separation-of-concerns` passes because `SessionWatcherActivityIconView` only draws and animates one glyph for a state it is handed; it reads no session data, performs no I/O and owns no layout beyond its own bounds. `unit-test-coverage` is partial: `SessionWatcherActivityIconViewTests.swift` covers the working glyph spinning about its centre, staying centred when the row moves it, and swapping the animation on state changes (that test also asserts the idle accessibility label), but nothing asserts the working, waiting or summarizing labels, the tooltip or the tint role.
+`separation-of-concerns` passes because `SessionWatcherActivityIconView` only draws and animates one glyph for a state it is handed; it reads no session data, performs no I/O and owns no layout beyond its own bounds. `unit-test-coverage` is partial: `SessionWatcherActivityIconViewTests.swift` has a test for each of the 23 conformance vectors except three, which a unit test cannot exercise: session-activity-icon-view-008 (the source looks its symbol up with `NSImage(systemSymbolName:)` and exposes no seam to make that fail), -018 (it needs a second display with another pixel density) and -023 (`init(coder:)` is a `fatalError`, which ends the test process).
 
 ## Change History
 
@@ -531,3 +531,4 @@ literals with no localization key (see Localization).
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/agent-sessions/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the contrast NEEDS REVIEW marker as current behavior plus a pending Design Decision; added separation-of-concerns and unit-test-coverage compliance. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (SessionWatcherActivityIconViewTests.swift, 20 of 23 vectors); unit-test-coverage now partial. |

@@ -245,7 +245,7 @@ describe("useBoard — folding staleness into null (Fix Round 3 item 1)", () => 
     expect(result.current.error).toBeNull();
   });
 
-  it("the pill (usePortfolioIndicator) and GlobalPanel agree a stale board is unknown, not its last verdict", async () => {
+  it("portfolio-013: the pill (usePortfolioIndicator) and GlobalPanel agree a stale board is unknown, not its last verdict", async () => {
     const staleBoard: Board = {
       ...board,
       // Green indicator + zero problems, so the only way either consumer could land

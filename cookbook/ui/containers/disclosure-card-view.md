@@ -2,11 +2,11 @@
 id: d5aba939-471d-48cd-9a9c-888ac92adf38
 title: "Disclosure Card View"
 type: ingredient
-version: 1.4.0
+version: 1.4.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -729,7 +729,7 @@ Not applicable: the source contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Cards/DisclosureCardView.swift` | confirmed (1.4.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Cards/DisclosureCardView.swift` | confirmed (1.4.1) |
 
 ## Design Decisions
 
@@ -832,7 +832,7 @@ contrast ratios; `no-hardcoded-strings` is `failed` because
 `"Show details"`/`"Hide details"` are English literals with no
 localization key (see Localization).
 
-`separation-of-concerns` passes because the card is a pure presentation view: it takes its content, title, summary and palette as inputs, reports a click only through `onToggle`, and leaves fold state to a host-owned `CardFoldMemory`, so no persistence or navigation logic lives in the view (see `does-not-self-mutate-on-toggle`). `unit-test-coverage` is `partial`: `UI/DisclosureCardTests.swift` pins the fold-memory contract, the card's width and height rules (`testAFoldedCardIsExactlyAsWideAsAnOpenOne`, `testACardIsNeverNarrowerThanTheContentItIsHiding`), the title status symbol and its palette tint and spoken label (`testTheSymbolAfterTheNameIsSpokenAndTintedFromTheLivePalette`) and the corner badge's spoken label, but nothing there exercises the surface, outline, titlebar and text palette mapping, the toggle callback, or the disclosure control's labels.
+`separation-of-concerns` passes because the card is a pure presentation view: it takes its content, title, summary and palette as inputs, reports a click only through `onToggle`, and leaves fold state to a host-owned `CardFoldMemory`, so no persistence or navigation logic lives in the view (see `does-not-self-mutate-on-toggle`). `unit-test-coverage` is `partial`: `UI/DisclosureCardTests.swift` has one test per vector (`testDisclosureCard001` … `testDisclosureCard051`) beside its fold-memory and width/height tests, covering the surface, outline, titlebar and text palette mapping, the toggle callback and the disclosure control's labels; only `disclosure-card-051` is skipped, because the `@MainActor` confinement is enforced at build time and has no runtime check to exercise.
 
 ## Change History
 
@@ -845,3 +845,4 @@ localization key (see Localization).
 | 1.2.0 | 2026-09-26 | Mike Fullerton | Documented the title status symbol: `titleTrailingStatus` (a `StatusSymbol` drawn right after the title at its size), `StatusSymbol.placeholder(sizedLike:)` and its silent reserved room, the palette-resolving `color` closure with the `colorName` convenience init, the CoreUI `WholePointLabel` title, the text-size-scaled masthead gap, and the width floor for every card; added requirements, vectors 047–050, configuration rows, edge cases, and two design decisions. |
 | 1.3.0 | 2026-10-01 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/containers/. |
 | 1.4.0 | 2026-10-04 | Mike Fullerton | Resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no contrast check; theme colors as resolved) with a pending design decision; added separation-of-concerns and unit-test-coverage compliance rows. Corrected the unit-test-coverage rationale to credit the title status symbol and badge tests; added the confines-to-ui-thread requirement and vector. |
+| 1.4.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (DisclosureCardTests.swift; 49 of 49 vectors, 051 skipped); unit-test-coverage now partial. |

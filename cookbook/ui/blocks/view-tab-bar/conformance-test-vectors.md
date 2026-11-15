@@ -15,6 +15,6 @@
 | view-tab-bar-013 | layout-spacing | Any valid props | Tablist and nav rows each compute `display: flex`, `align-items: flex-end`, and an equal, non-zero horizontal gap between items; the outer container computes non-zero horizontal padding |
 | view-tab-bar-014 | item-styling | Any valid tabs or links | Every tab button and every link resolves to the same style class as each other (identical `className` reference), with only the active item additionally carrying `data-active` |
 | view-tab-bar-015 | reactnode-labels | `tabs=[{value:"a",label:<span>Custom</span>}]` | Tab renders ReactNode label content correctly |
-| view-tab-bar-016 | empty-tabs-omit-tablist, empty-links-omit-nav | `tabs=[]`, `links=[]`, `className="x"` | Outer container renders with non-zero computed horizontal padding and the custom class `x`; no `role="tablist"` element and no `<nav>` element are present |
-| view-tab-bar-017 | container-class-merge | `className="custom-class"` | Outer container element has `custom-class` and still computes non-zero horizontal padding (merged via `cn()`), not one replacing the other |
+| view-tab-bar-016 | empty-tabs-omit-tablist, empty-links-omit-nav | `tabs=[]`, `links=[]`, `className="x"` | Outer container renders with the horizontal padding class `px-4` and the custom class `x`; no `role="tablist"` element and no `<nav>` element are present |
+| view-tab-bar-017 | container-class-merge | `className="custom-class"` | Outer container element has `custom-class` and still carries `px-4` and `flex` (merged via `cn()`), not one replacing the other |
 

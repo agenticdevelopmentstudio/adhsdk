@@ -4,7 +4,7 @@
     "id": "c116715f-2986-4554-a779-97e99d875c54",
     "title": "Runtime Errors",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c1dfe5ee562c45ab",
+  "synced": "7ed29ad6e59c89e0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

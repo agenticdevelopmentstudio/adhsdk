@@ -2,7 +2,7 @@
 id: bad10d4b-c190-40e7-8571-62e4357b2616
 title: "User Settings: File Browser"
 type: ingredient
-version: 1.0.1
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -55,6 +55,7 @@ The component declares no behavior of its own beyond the key, the value type and
 ### Inherited behavior
 - **inherits-settings-storage**: The setting MUST inherit the get, set, publish and isolation behavior of the generic `UserSetting` and the settings store, unchanged, as specified in [adhsdk.ingredient.foundation.settings-storage](cookbook:6363b5ff-f511-4e21-9ba7-6850787dba62). The only values specific to this setting are the key name, the value type and the empty-list fallback, so a read that finds nothing stored, or a value that cannot be decoded as a list of strings, MUST return the empty list.
 - **inherits-lazy-construction**: The setting MUST read its current value from the shared store when it is first accessed, not before. (The Swift source achieves this with a `static var` initialised on first access.)
+- **inherits-live-mirror**: The setting's `currentValue` MUST follow the store: whenever the store publishes this key's name, `currentValue` MUST be re-read from `UserSettings.shared`.
 
 ### Persistence and side effects
 
@@ -153,7 +154,7 @@ Not applicable: the component makes no log calls; the declaration contains no lo
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+FileBrowser.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SettingStorage/UserSettings+FileBrowser.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -181,14 +182,16 @@ Not applicable: the component makes no log calls; the declaration contains no lo
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
-The declaration holds only a key, a type and a default, and leaves storage to the settings store, matching to `GitIgnoreMatcher`, and display to the macOS view controllers (separation-of-concerns: passed). The matcher that interprets the list has its own `GitIgnoreMatcherTests`, and `LayeredSettingsStoreTests` covers the store, but no test in the source reads or writes `fileBrowserExcludedPatterns` itself, so the key name and default are asserted by no test (unit-test-coverage: partial). The setting stores only what the user types, with an empty default (data-minimization: passed).
+The declaration holds only a key, a type and a default, and leaves storage to the settings store, matching to `GitIgnoreMatcher`, and display to the macOS view controllers (separation-of-concerns: passed). `UserSettingsFileBrowserTests` (`Tests/AgenticDeveloperHubSDKCoreTests/SettingStorage/UserSettingsFileBrowserTests.swift`) asserts every vector: the key name, default, secure flag, store round trips and shared declaration, and the matcher semantics through `GitIgnoreMatcher` (unit-test-coverage: passed). The setting stores only what the user types, with an empty default (data-minimization: passed).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (UserSettingsFileBrowserTests.swift, 12 of 12 vectors); unit-test-coverage now passed. |
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Restore requirements lost in the lint pass: inherits-live-mirror |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Folded the inherited settings behavior into one requirement, trimmed editor and consumer detail from configuration, edge cases and platform notes, replaced the vague tag, and named the test that should cover the setting. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

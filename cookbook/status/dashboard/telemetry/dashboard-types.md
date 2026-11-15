@@ -2,7 +2,7 @@
 id: e8f3cd4d-e208-49db-a500-24d6f7b978f9
 title: "Dashboard Wire Types"
 type: ingredient
-version: 1.0.1
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -57,53 +57,19 @@ The constant lists are the analytics ranges (`ANALYTICS_RANGES`), the breakdown 
 
 ### Sections
 
-- **section-shape**: Every section MUST carry `data`, `error` and `updatedAt`, each nullable, and a response MUST carry one section for each name in its section-data type (`DashboardSections` maps every name to a `DashboardSection` of that name's data).
-- **section-keeps-data**: A client MUST read `data` as the last good answer: it survives a later failure, so stale data stays on screen while `error` carries the reason the latest attempt failed.
-- **section-error-null**: `error` MUST be `null` when the latest attempt succeeded or none has finished.
-- **section-updated-at**: `updatedAt` MUST be the time `data` was fetched, and `null` while no data has arrived.
+- **section-shape**: Every section MUST be typed with `data`, `error` and `updatedAt`, each nullable, and a response MUST be typed with one section for each name in its section-data type (`DashboardSections` maps every name to a `DashboardSection` of that name's data).
 - **analytics-sections**: The analytics sections MUST be `traffic`, `dimensions`, `paths`, `vitals`, `health` and `vercel`.
 - **errors-sections**: The errors sections MUST be `issues`, `sites`, `detail` and `runtime`.
 
 ### Envelope
 
-- **envelope-common**: Both responses MUST carry `generatedAt` (a timestamp string), `refreshing` (a boolean), `configured` (a flag per source) and `views` (the type requires it; `views-absent-older-backend` covers a backend that sends none).
-- **views-absent-older-backend**: A client MUST tolerate a response with no `views`, as an older backend sends, by treating it as "nothing to show" and not throwing; the formatting module's site-list helper does this for `sites`.
+- **envelope-common**: Both responses MUST be typed with `generatedAt` (a timestamp string), `refreshing` (a boolean), `configured` (a flag per source) and `views`.
 - **analytics-envelope**: The analytics response MUST carry its `range` and `configured` flags for `posthog` and `vercel`.
 - **errors-envelope**: The errors response MUST carry `refreshingSources` with a flag each for `glitchtip` and `posthog`, and `refreshing` MUST be true when either is true; `configured` MUST carry flags for `glitchtip`, `posthog` and `vercel`.
 
-### Counts and series
-
-- **series-per-bucket**: Every series on a response (`pageviews`, `sessions`, `visitors`, `series`, `errors`, `failures`) MUST have one value per entry of the `buckets` list beside it, in the same order, except as `vercel-incomplete-series` allows.
-- **vercel-incomplete-series**: The `series` of a `VercelProjectTraffic` MAY be shorter than the Vercel section's `buckets` when that project's `incomplete` is `true`; a client MUST NOT assume a full-length series while the section's `incomplete` count is nonzero.
-- **sessions-sum**: A client MUST read a traffic `sessions` total as a sum of per-bucket unique counts (the `TrafficSection.totals` doc comment), so a session spanning two buckets counts twice.
-- **null-is-not-zero**: Fields typed as nullable numbers (a vitals measure, `p95Ms`, a roster's `pageviews` and `visitors`, `resolved`) MUST be read as "unknown or not applicable", never as zero; the source says a roster count is null when analytics is off or the count could not be read.
-- **failed-request-status-zero**: A failed-request `status` of `0` MUST be read as a request that never got a response.
-- **truncated-flags**: A `truncated` flag (dimensions, per-site error detail) MUST be read as "a row cap was hit, so the tail is missing from every breakdown."
-- **incomplete-flags**: `incomplete` on a Vercel project, `incomplete` and `failed` counts on the Vercel section, `vercelIncomplete` on a site report and `complete: false` on the errors summary and the runtime report MUST each be read as "totals or lists may be short".
-- **vercel-production-only**: A client MUST read the Vercel section's counts as production projects only; staging and testing are never counted.
-
 ### Errors
 
-- **active-rule**: A client MUST read an error issue's `active` flag as the same test that puts an error on the board: error or fatal level, seen in the last 24 hours.
-- **runtime-window**: The runtime report's `window` MUST be the literal `"24h"`, and the runtime section of the errors dashboard MUST have the same body as the runtime errors endpoint.
-- **runtime-group-message**: A client MUST read a runtime group's `message` as the first line of the message, at most 200 characters.
-- **runtime-group-path**: A client MUST read a runtime group's `path` as having numeric, uuid and hash segments replaced by `:id`.
-- **runtime-group-key**: A client MUST read a runtime group's `key` as a stable hash of its grouping fields (project, source, method, normalized path, status and first message line).
-- **runtime-group-deployment**: A client MUST read a runtime group's `deploymentId` as naming the deployment the group was last seen on.
-- **posthog-no-text**: Site error rows MUST carry error names only, because PostHog holds no message text.
-
-### Views
-
-- **views-derived**: Every join, sort, threshold and rating behind `views` MUST be done by the server, and a client MUST NOT recompute them.
-- **views-sites**: Both views MUST carry `sites`, a list of site names.
-- **views-site-reports**: Both views MUST carry `siteReports`, an object keyed by site name.
-- **rated-health**: A rated health row MUST be a site health row plus `failureRateHigh`, the server's verdict that `failures / requests` is high.
-- **rated-vitals**: A rated vitals row MUST be a vitals row plus its `site` and one rating (or `null`) for each vital.
-- **chart-series-nullable**: A chart series MUST carry `labels` and a series per source that is either a list of numbers and nulls or `null` as a whole; a null entry is a bucket the provider has not reached on the shared axis, a gap rather than a zero.
-- **views-null-sections**: View fields typed as nullable (`pages`, `dimensions`, `vercelProjects`, `vercelBreakdowns`, `vitals`) MUST be read as "the section has no data to show".
-- **site-error-ids**: Site error and failed-request views MUST carry an `id`.
-- **views-failures**: `failures` (analytics) and `siteFailures` (errors) MUST list each section failure with its source (`"PostHog"` or `"Vercel"`), what failed and the error text.
-- **most-errors-limit**: A client MUST read `mostErrorsLimit` as the cap the server applied to `mostErrors`; the server derives both.
+- **runtime-window**: The runtime report's `window` MUST be typed as the literal `"24h"`.
 
 ### Parity
 
@@ -125,49 +91,27 @@ Not applicable — this is a set of data types, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 and 002 are the runtime assertions in `dashboard-types-parity.test.ts`; vector 003 is its compile-time check. The rest are derived from the source.
+Vectors 001, 002 and 025 are the runtime assertions in `dashboard-types-parity.test.ts`; the others are compile-time type checks in the same file. Client reading rules over server data are not vectors here: that behavior is not in this module (see Design Decisions).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | dtypes-001 | ranges-list, mirror-constants | test "offer the same ranges": the web `ANALYTICS_RANGES` and the server's | equal lists `["24h","7d","30d"]` |
 | dtypes-002 | dimensions-list, vercel-breakdowns-list, vitals-list, mirror-constants | test "name the same breakdowns and vitals": the three web lists and the server's | each pair equal, in order |
 | dtypes-003 | mirror-parity | type check: the exported `responsesAgree` tuple of five mutual-assignability checks | compiles only while the analytics response, errors response, runtime report and both views agree; fails the type check otherwise |
-| dtypes-004 | section-keeps-data, section-error-null | a section after a success and then a failure | `data` still holds the earlier answer, `error` holds the failure text, `updatedAt` is the earlier fetch time |
-| dtypes-005 | section-error-null, section-updated-at | a section before any attempt finishes | `data`, `error` and `updatedAt` all `null` |
-| dtypes-006 | series-per-bucket | traffic with 7 buckets | `pageviews` and `sessions` each have 7 values, and each site's `series` has 7 |
-| dtypes-007 | null-is-not-zero | roster entry with analytics off | `analyticsOn` false, `pageviews` and `visitors` `null` |
-| dtypes-008 | failed-request-status-zero | a failed-request row with `status` 0 | read as "no response", not an HTTP status |
 | dtypes-009 | errors-envelope | errors response with `refreshingSources` of glitchtip true and posthog false | `refreshing` true |
-| dtypes-010 | chart-series-nullable | chart series whose vercel list is `null` | there is no Vercel series for the chart; a `null` inside a list is a gap, not a zero |
-| dtypes-011 | views-sites, views-site-reports | views with `sites` `["a.com"]` | `siteReports` is an object keyed by site name, and a client reads `a.com` with an own-key lookup |
 | dtypes-012 | runtime-window | runtime report | `window` is `"24h"` |
-| dtypes-013 | rated-vitals | rated vitals row with a vital that has no sample | that vital's rating is `null` |
-
-| dtypes-014 | section-shape | analytics response | `sections` holds `traffic`, `dimensions`, `paths`, `vitals`, `health` and `vercel`, each with `data`, `error` and `updatedAt` |
-| dtypes-015 | analytics-sections | analytics response | exactly the six sections `traffic`, `dimensions`, `paths`, `vitals`, `health`, `vercel` |
+| dtypes-015 | analytics-sections, section-shape | analytics response | exactly the six sections `traffic`, `dimensions`, `paths`, `vitals`, `health`, `vercel`, each typed with nullable `data`, `error` and `updatedAt` |
 | dtypes-016 | errors-sections | errors response | exactly the four sections `issues`, `sites`, `detail`, `runtime` |
 | dtypes-017 | envelope-common | either response | carries `generatedAt`, `refreshing`, `configured` and `views` |
 | dtypes-018 | analytics-envelope | analytics response | carries `range` and `configured` flags for `posthog` and `vercel` |
-| dtypes-019 | truncated-flags | dimensions section with `truncated` true | read as "the tail is missing from every breakdown" |
-| dtypes-020 | incomplete-flags | Vercel project with `incomplete` true | `series` and lists may be short; `pageviews` is still whole |
-| dtypes-021 | rated-health | rated health row | a site health row plus `failureRateHigh` |
-| dtypes-022 | views-null-sections | views built while the vitals section has no data | `vitals` is `null`, read as "nothing to show" |
-| dtypes-023 | site-error-ids | site error and failed-request views | each row carries an `id` |
-| dtypes-024 | views-failures | a failed PostHog section | `failures` lists an entry with source `"PostHog"`, what failed and the error text |
 | dtypes-025 | types-only | importing the module | only the four lists exist at run time; nothing else runs at load |
-| dtypes-026 | series-per-bucket | traffic for the `24h` range | 25 buckets, and `pageviews` and `sessions` each have 25 values |
-| dtypes-027 | views-absent-older-backend | response from an older backend with no `views` | the client shows nothing for views and does not throw |
-| dtypes-028 | vercel-incomplete-series | Vercel project with `incomplete` true | its `series` may be shorter than `buckets` |
 ## Edge Cases
 
-- **Null and empty input — sections**: a section with `data` `null` is a first load or a source that has never answered; a client reads `error` to tell a failure from "not yet".
-- **Null and empty input — views**: nullable view fields are `null` when their section has no data; lists such as `sites` may be empty, and `siteReports` may be an empty object.
-- **Boundary — row caps**: the dimensions and site error detail sections set `truncated` when a row cap is hit; the runtime report's `groups` may be shorter than `total`.
-- **Boundary — series length**: a series is one value per bucket, so the `24h` range, which the server buckets hourly (25 buckets, counting the partial first hour), has 25 values and a daily range has one per day.
-- **Malformed input — versions**: a backend older than `views` sends no `views`; the shape here says `views` is required, so `views-absent-older-backend` makes a client tolerate its absence at the call site (the formatting module's site-list helper does this).
-- **Malformed input — unknown names**: a site name in a URL need not be in `siteReports`; a client looks it up with an own-key check.
+- **Null and empty input — sections**: `data`, `error` and `updatedAt` are each typed nullable, so a section can be fully empty.
+- **Null and empty input — views**: the view fields typed nullable may be `null`; lists such as `sites` may be empty, and `siteReports` may be an empty object.
+- **Malformed input — versions**: the types say `views` is required; tolerating a backend that sends none is done by the components (`viewsMissing`), not by this module.
 - **Concurrent access**: not applicable — the module holds only immutable constants and types.
-- **Error states**: a failed source shows as a section `error` and as an entry in the views' failure list; other sections stay usable.
+- **Error states**: not applicable — the module holds no behavior; the section `error` field is only a typed string or `null`.
 - **Offline and cancellation**: not applicable — the module performs no I/O.
 - **Drift**: if the server adds or renames a field, the parity check fails until the web copy is updated; a field the web copy lacks is not visible to the pages.
 
@@ -213,7 +157,7 @@ Not applicable: the module logs nothing.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/telemetry/dashboard-types.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-web/src/telemetry/dashboard-types.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -240,26 +184,31 @@ Not applicable: the module logs nothing.
 **Rationale**: The `Exact` type comment in `dashboard-types-parity.test.ts`: a renamed field, a nullability change or a union member stops the check being true. It catches drift that a transpile-only test run would not.
 **Approved**: pending
 
+**Decision**: Client reading rules over server data were removed from this recipe; this module only declares types and four constants.
+**Rationale**: An earlier version of this recipe described 18 rules such as keeping stale section data after a failure, reading a null count as unknown, treating a request `status` of 0 as no response, treating `truncated` and `incomplete` as short results, and tolerating a response with no `views`. None of them runs in `dashboard-types.ts`. They are implemented in the status-web components instead: `DashboardPanel` and `viewsMissing` in `DashboardParts.tsx`, the truncation notes in `AnalyticsView.tsx` and `ErrorsSitePage.tsx`, the "No response" label in `ErrorsSitePage.tsx`, and `failureRateHigh` and the failure lists in the site pages. The server produces the rest (series length, sessions sum, runtime group message, path and key, the active-issue rule, the `views` joins), so they are not client code anywhere in status-web.
+**Approved**: pending
 ## Compliance
 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.good-test-properties](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9144e220-ad70-51db-ba81-cdb0cc1b66c8) | passed | best-practices |
 | [adc.check.privacy-and-data.data-minimization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/991d2adb-3f9a-524d-8218-529592614159) | passed | privacy-and-data |
 
 **Separation of Concerns**: The module holds shapes and four constants only; derivation lives on the server and layout in the pages.
 
-**Unit Test Coverage**: The parity test covers the four lists and the five agreeing types. The field-level rules (series length, null meaning, status zero) are documented in comments and have no runtime test, since the module has no code to run.
+**Unit Test Coverage**: `dashboard-types-parity.test.ts` covers all 10 vectors (`dtypes-001`, `002`, `003`, `009`, `012`, `015`, `016`, `017`, `018`, `025`): the four lists, the five agreeing types, the section and envelope key sets and the load-time exports. The module has no other behavior to test.
 
 **Good Test Properties**: The parity test is deterministic, has no I/O and checks one thing per case.
 
-**Data Minimization**: Error rows carry names only, runtime messages are cut to one line of at most 200 characters, and no user identifier appears in any shape.
+**Data Minimization**: No shape carries a user identifier.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Match recipe to source: drop 18 client reading rules the types-only module does not implement |
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (dashboard-types-parity.test.ts, 10 of 28 vectors; 18 type-only client reading rules skipped); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Rephrased server-derived requirements as client reads, added views-absent-older-backend and vercel-incomplete-series, linked the formatting recipe, cited source files in rationales, added tags, fixed the privacy category, replaced the configuration table, and added vectors dtypes-014 to dtypes-028. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial recipe extracted from `dashboard-types.ts` |

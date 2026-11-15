@@ -2,7 +2,7 @@
 id: c1f926d2-4e97-4f0b-862e-53a8cd5ed5a6
 title: "Reply Counting Transport"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -94,13 +94,13 @@ Not applicable — this is a transport wrapper with no user interface.
 | reply-counting-transport-001 | count-request, pay-on-response, wait-until-paid, passthrough-receive | A stdio script of `initialize` (id 1), the initialized notification and `tools/list` (id 2) whose input ends at once, served through `serveUntilDrained` with a source that answers `tools/list` after 300 ms | Both replies, ids 1 and 2, are written before the server returns (`HostMCPServerDrainTests.testRequestsInFlightWhenInputClosesAreStillAnswered`) |
 | reply-counting-transport-002 | pay-on-cancel, count-id-kinds, wait-immediate-when-empty | A script of `tools/call` id 5, `tools/list` id `"6"`, then `notifications/cancelled` for 5, fully received; then a response for id `"6"` is sent | `owedCount` is 1 after receiving; after the send `waitUntilNothingOwed(.seconds(30))` returns true in under 5 seconds (`testACancelledRequestIsNoLongerOwedAReply`) |
 | reply-counting-transport-003 | wait-deadline, wait-result | The same server with a source that takes 60 seconds, drained with a 300 ms deadline | The server returns in under 10 seconds; only the reply that came, id 1, was written (`testDrainGivesUpAtItsDeadline`) |
-| reply-counting-transport-004 | count-ignore-other | A received batch `[{"jsonrpc":"2.0","id":1,"method":"ping"}]` | `owedCount` is 0 (derived from `object(_:)` returning nil for an array; no test) |
-| reply-counting-transport-005 | count-notification-not-counted | A received `{"jsonrpc":"2.0","method":"notifications/initialized"}` | `owedCount` is 0 (derived from `noteIncoming`; no test) |
-| reply-counting-transport-006 | count-id-kinds, pay-on-response | A received request with id 1, then a sent response with id `"1"` | `owedCount` stays 1, because `n:1` and `s:1` differ (derived from `idKey`; no test) |
-| reply-counting-transport-007 | pay-after-send | A received request with id 3; `send` of the response for id 3 where the wrapped `send` throws | `send` rethrows and `owedCount` is 0 (derived from the `defer` in `send`; no test) |
-| reply-counting-transport-008 | pay-unknown-harmless | `notifications/cancelled` for an id that was never received | `owedCount` is unchanged (derived from `Set.remove`; no test) |
-| reply-counting-transport-009 | disconnect-releases | A waiter suspended in `waitUntilNothingOwed(deadline: .seconds(30))` with an id owed, then `disconnect()` | The waiter returns false at once, well before 30 seconds (derived from `disconnect`; no test) |
-| reply-counting-transport-010 | wait-multiple | Two waiters suspended with one id owed, then the response is sent | Both return true (derived from `releaseWaiters`; no test) |
+| reply-counting-transport-004 | count-ignore-other | A received batch `[{"jsonrpc":"2.0","id":1,"method":"ping"}]` | `owedCount` is 0 (`ReplyCountingTransportConformanceTests.testV4_aBatchIsNotCounted`) |
+| reply-counting-transport-005 | count-notification-not-counted | A received `{"jsonrpc":"2.0","method":"notifications/initialized"}` | `owedCount` is 0 (`ReplyCountingTransportConformanceTests.testV5_aNotificationIsNotCounted`) |
+| reply-counting-transport-006 | count-id-kinds, pay-on-response | A received request with id 1, then a sent response with id `"1"` | `owedCount` stays 1, because `n:1` and `s:1` differ (`ReplyCountingTransportConformanceTests.testV6_aStringIdAndANumberIdAreDifferentIds`) |
+| reply-counting-transport-007 | pay-after-send | A received request with id 3; `send` of the response for id 3 where the wrapped `send` throws | `send` rethrows and `owedCount` is 0 (`ReplyCountingTransportConformanceTests.testV7_aThrowingSendStillPaysTheDebt`) |
+| reply-counting-transport-008 | pay-unknown-harmless | `notifications/cancelled` for an id that was never received | `owedCount` is unchanged (`ReplyCountingTransportConformanceTests.testV8_cancellingAnUnknownIdChangesNothing`) |
+| reply-counting-transport-009 | disconnect-releases | A waiter suspended in `waitUntilNothingOwed(deadline: .seconds(30))` with an id owed, then `disconnect()` | The waiter returns false at once, well before 30 seconds (`ReplyCountingTransportConformanceTests.testV9_disconnectReleasesASuspendedWaiter`) |
+| reply-counting-transport-010 | wait-multiple | Two waiters suspended with one id owed, then the response is sent | Both return true (`ReplyCountingTransportConformanceTests.testV10_twoWaitersAreBothReleasedByOnePayment`) |
 
 ## Edge Cases
 
@@ -166,7 +166,7 @@ Not applicable: the transport's logger is a deliberate no-op (`SwiftLogNoOpLogHa
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/ReplyCountingTransport.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/ReplyCountingTransport.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -212,13 +212,14 @@ Not applicable: the transport's logger is a deliberate no-op (`SwiftLogNoOpLogHa
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | passed | Reliability |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 
-`separation-of-concerns` passes: one small actor does one job, counting owed replies, and leaves serving, transport and the deadline policy to others. `timeout-configuration` and `timeout-handling` pass because the drain takes its deadline from the caller and always returns at it. `unit-test-coverage` is partial: the drain tests exercise the end-of-input drain, cancellation and the deadline, but nothing drives a batch, a duplicate id, a throwing wrapped `send`, or `disconnect` with a waiter. `explicit-error-handling` is partial because unparseable messages are ignored silently and a throwing `send` pays the debt, both deliberate and recorded under Design Decisions.
+`separation-of-concerns` passes: one small actor does one job, counting owed replies, and leaves serving, transport and the deadline policy to others. `timeout-configuration` and `timeout-handling` pass because the drain takes its deadline from the caller and always returns at it. `unit-test-coverage` passes: `HostMCPServerDrainTests` exercises the end-of-input drain, cancellation and the deadline, and `ReplyCountingTransportConformanceTests` drives a batch, a notification, string and number ids, a throwing wrapped `send`, an unknown cancelled id, `disconnect` with a waiter, and two waiters. `explicit-error-handling` is partial because unparseable messages are ignored silently and a throwing `send` pays the debt, both deliberate and recorded under Design Decisions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ReplyCountingTransportConformanceTests.swift, 10 of 10 vectors; 001-003 already in HostMCPServerDrainTests); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Platforms name macOS, the source platform |

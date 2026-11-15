@@ -4,7 +4,7 @@
     "id": "bad10d4b-c190-40e7-8571-62e4357b2616",
     "title": "User Settings: File Browser",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f73cf6e9e631781b",
+  "synced": "26c65a39fb1ec11f",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -1,5 +1,4 @@
-
-Vectors bl-001 to bl-005 are derived from the `BarList` block in `trendChart.test.tsx`, which uses items US 100, SG 50, CN 10.
+All 24 vectors are tested in the `BarList` block of `src/__tests__/trendChart.test.tsx`, one `it` per vector with the vector id at the start of its title; the items US 100, SG 50, CN 10 are the shared fixture. jsdom computes no layout or Tailwind styles, so the opacity vectors check the `opacity-55` class and the bar vectors check the inline `width` and `min-width` styles.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

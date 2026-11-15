@@ -1,5 +1,5 @@
 
-Vectors 001 to 014 are traced to `telemetry-dashboard-sections.test.ts` (PostHog shapers, `loadSiteErrorDetail` and `loadTraffic`); 015 and later follow the source.
+Vectors 001 to 014 are traced to `telemetry-dashboard-sections.test.ts` (PostHog shapers, `loadSiteErrorDetail` and `loadTraffic`); 015 and later are in `telemetry-dashboard-sections.test.ts` and `telemetry-posthog-sections-queries.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

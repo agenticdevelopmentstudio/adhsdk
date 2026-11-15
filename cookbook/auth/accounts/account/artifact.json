@@ -4,7 +4,7 @@
     "id": "9cf9784d-48c9-4b29-b553-c72ffdfce7b9",
     "title": "Account",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1cfcaac465c88e18",
+  "synced": "ce34d5e1c0ae93e7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

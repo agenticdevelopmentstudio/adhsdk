@@ -1,5 +1,5 @@
 
-No dedicated test exists for this state; the consuming views' tests mock it out entirely (returning a result with `data: undefined, isLoading: false`), so these vectors are derived from the source. Wrap the state in a shared cache provider configured with retries disabled and an overriding client with a stubbed transport.
+`use-uptime.dom.test.tsx` beside the hook exercises these vectors (the consuming views' tests mock the state out). Wrap the state in a shared cache provider configured with retries disabled and an overriding client with a stubbed transport.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -11,7 +11,7 @@ No dedicated test exists for this state; the consuming views' tests mock it out 
 | use-uptime-006 | parse-failure | This state called with `90`; stub returns `200` with body `not json` | `isError` is true; `error` is the JSON parse error thrown while parsing the body |
 | use-uptime-007 | network-failure | This state called with `90`; stub rejects with a network-level error | `isError` is true; `error` is that same failure |
 | use-uptime-008 | no-polling | This state called with `90`, with fake timers; first fetch succeeds; the application keeps focus | Advancing time by 600,000 ms triggers no second fetch |
-| use-uptime-009 | query-key | Render this state with `90`, then rerender with `30` | Two fetches, one per window; returning to `90` within the cache's lifetime serves the cached 90-day data |
+| use-uptime-009 | query-key | Render this state with `90`, then rerender with `30` | One fetch per window on first visit (two in all); returning to `90` within the cache's lifetime serves the cached 90-day data at once, with no loading state (the default zero staleness then refetches it in the background) |
 | use-uptime-010 | raw-fetch-not-json-helper | This state called with `90`; inspect the request | No `Content-Type` header is added by the state |
 | use-uptime-011 | single-threaded-ordering | Two consumers both use this state with `90` under one shared cache | One fetch is made; both receive the same `data` |
 | use-uptime-012 | return-value | This state called with `90`, before the stub resolves | The result has `isLoading` true and `data` undefined, and exposes no keys beyond the read result's own |

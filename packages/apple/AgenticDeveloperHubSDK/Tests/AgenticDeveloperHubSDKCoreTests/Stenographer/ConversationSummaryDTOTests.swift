@@ -141,4 +141,91 @@ final class ConversationSummaryDTOTests: XCTestCase {
         XCTAssertFalse(ProcessLiveness.isHeadless(argv: ["claude"], sessionFile: nil))
         XCTAssertFalse(ProcessLiveness.isHeadless(argv: nil, sessionFile: nil))
     }
+
+    // MARK: - Vectors 022 to 031
+
+    private let attached: ConversationSendability.AttachmentProbe = { _ in .attached }
+
+    func testV022_endedSessionRefusalNamesTheId() {
+        let refusal = ConversationSendability.refusal(for: session(status: "ended"), liveSessions: [])
+        XCTAssertEqual(refusal, "conversation s1 has ended.")
+    }
+
+    func testV023_unparsableLastActivityIsKeptVerbatim() {
+        let odd = SessionDTO(
+            sessionId: "s1", cwd: "/tmp", model: "", startedAt: "", lastActivityAt: "not a date", lastTool: "",
+            status: "active", gitBranch: "", summary: "", pid: 0, termProgram: "iTerm.app", eventCount: 0)
+        XCTAssertEqual(ConversationSummaryDTO(session: odd, homeDirectory: "/Users/me").lastActivity, "not a date")
+    }
+
+    func testV024_endedWinsOverUnsupportedTerminal() {
+        let refusal = ConversationSendability.refusal(
+            for: session(status: "ended", termProgram: "vscode"), liveSessions: [], attachment: attached)
+        XCTAssertEqual(refusal, "conversation s1 has ended.")
+    }
+
+    func testV025_unknownTerminalSentence() {
+        let refusal = ConversationSendability.refusal(
+            for: session(lastEventType: "Stop", termProgram: ""), liveSessions: [], attachment: attached)
+        XCTAssertEqual(
+            refusal, "typing into a conversation needs iTerm2 or Terminal.app; s1 runs in an unknown terminal.")
+    }
+
+    func testV026_unresolvedPanesAreNotShared() {
+        let bare = SessionDTO(
+            sessionId: "bare", cwd: "/tmp", model: "", startedAt: "", lastActivityAt: "", lastTool: "",
+            status: "active", gitBranch: "", summary: "", pid: 0, termProgram: "iTerm.app",
+            termSessionId: "", lastEventType: "Stop", eventCount: 0)
+        let other = SessionDTO(
+            sessionId: "bare2", cwd: "/tmp", model: "", startedAt: "", lastActivityAt: "", lastTool: "",
+            status: "active", gitBranch: "", summary: "", pid: 0, termProgram: "iTerm.app",
+            termSessionId: "", lastEventType: "Stop", eventCount: 0)
+        let live = [bare, other]
+        XCTAssertNil(ConversationSendability.refusal(for: bare, liveSessions: live, attachment: attached))
+        XCTAssertNil(ConversationSendability.refusal(for: other, liveSessions: live, attachment: attached))
+    }
+
+    func testV027_terminalNameIsTheKnownNameElseTheRawValue() {
+        XCTAssertEqual(ConversationSummaryDTO(session: session(termProgram: "iTerm.app")).terminal, "iTerm2")
+        XCTAssertEqual(ConversationSummaryDTO(session: session(termProgram: "ghostty")).terminal, "ghostty")
+        XCTAssertEqual(ConversationSummaryDTO.terminalName("iTerm.app"), "iTerm2")
+        XCTAssertEqual(ConversationSummaryDTO.terminalName("ghostty"), "ghostty")
+    }
+
+    func testV028_emptyTerminalNameDoesNotMatch() {
+        let headless = session(termProgram: "")
+        XCTAssertFalse(ConversationSummaryDTO.matches(app: "x", session: headless))
+        XCTAssertTrue(ConversationSummaryDTO.matches(app: "claude", session: headless))
+    }
+
+    func testV029_infoCarriesTheRawFields() {
+        let source = SessionDTO(
+            sessionId: "s1", cwd: "/Users/me/src/app", model: "claude-opus-5", startedAt: "2026-11-10 10:00:00",
+            lastActivityAt: "2026-11-10 10:30:00", lastTool: "Bash", status: "active", gitBranch: "main",
+            summary: "fixing a bug", pid: 42, termProgram: "iTerm.app", projectRoot: "/Users/me/src/app",
+            transcriptTitle: "my chat", lastEventType: "Stop", eventCount: 0)
+        let result = ConversationInfoDTO(session: source, liveSessions: [], homeDirectory: "/Users/me")
+        XCTAssertEqual(result.projectRoot, "~/src/app")
+        XCTAssertEqual(result.startedAt, UTCTimestamp.canonical("2026-11-10 10:00:00"))
+        XCTAssertEqual(result.termProgram, "iTerm.app")
+        XCTAssertEqual(result.model, "claude-opus-5")
+        XCTAssertEqual(result.lastTool, "Bash")
+        XCTAssertEqual(result.summary, "fixing a bug")
+        XCTAssertEqual(result.pid, 42)
+    }
+
+    func testV030_processAttachmentClampsAnOversizedPid() {
+        let huge = SessionDTO(
+            sessionId: "s1", cwd: "/tmp", model: "", startedAt: "", lastActivityAt: "", lastTool: "",
+            status: "active", gitBranch: "", summary: "", pid: Int.max, termProgram: "iTerm.app", eventCount: 0)
+        XCTAssertEqual(
+            ConversationSendability.processAttachment(huge),
+            ProcessLiveness.terminalAttachment(ofPid: pid_t.max))
+    }
+
+    func testV031_summaryHomeDefaultsToTheCurrentHome() {
+        let home = NSHomeDirectory()
+        let row = ConversationSummaryDTO(session: session(cwd: home + "/src"))
+        XCTAssertEqual(row.cwd, "~/src")
+    }
 }

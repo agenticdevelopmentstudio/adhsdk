@@ -4,11 +4,11 @@
     "id": "c85f8913-1112-4ba2-b78f-2b97ea2f8fba",
     "title": "Status Web Telemetry",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "817da19f82afb481",
+  "synced": "4d8bed7c001a3a2b",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

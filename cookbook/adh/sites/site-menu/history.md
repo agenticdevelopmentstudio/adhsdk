@@ -7,3 +7,4 @@
 | 1.0.3 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Status review; Design Decisions in triple form; WinUI 3 guidance; Reference Implementations filled; unit-test-coverage note updated for siteMenu.test.tsx. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (siteMenuVectors.test.tsx, recents.test.ts, 11 of 12 vectors); unit-test-coverage now partial. Vectors T1, T3, T4, T5 and T6 rewritten to match the shipped trees. |

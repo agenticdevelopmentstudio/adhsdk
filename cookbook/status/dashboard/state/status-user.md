@@ -2,11 +2,11 @@
 id: 5c202bb7-c4b6-4da9-a9b0-9d58f664461f
 title: "Status User State"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -162,7 +162,7 @@ Not applicable: the source contains no log calls. Failures show up only as throw
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/hooks/useStatusUser.ts` | confirmed (1.1.1) |
+| web | `packages/web/packages/status-web/src/hooks/useStatusUser.ts` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -196,7 +196,7 @@ Not applicable: the source contains no log calls. Failures show up only as throw
 
 **separation-of-concerns** passes. The adapter only reshapes the result, and fetch and cache semantics live in one query function in `header-auth.ts`.
 
-**unit-test-coverage** is partial. `header-auth.test.ts` covers `fetchStatusUser` for 200 with a user, 200 with null, 500 and a network failure. Nothing tests the adapter itself or the query options (retry, stale time, keeping cached data).
+**unit-test-coverage** is partial. `header-auth.test.ts` covers `fetchStatusUser` for 200 with a user, 200 with null, 500 and a network failure. `use-status-user.dom.test.tsx` covers use-status-user-001 to 013, including the adapter and the query options (retry, stale time, keeping cached data). Coverage is partial because use-status-user-014 (client-only module) is skipped: jsdom cannot host a server component boundary.
 
 **explicit-error-handling** passes. Non-OK responses throw with the HTTP status, and network errors propagate instead of turning into a sign-out. The adapter's choice not to expose the error is a documented projection, not a swallowed failure.
 
@@ -210,6 +210,7 @@ Not applicable: the source contains no log calls. Failures show up only as throw
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (use-status-user.dom.test.tsx, 14 of 14 vectors, 13 passing, 1 skipped); unit-test-coverage stays partial (use-status-user-014 client-only skipped). |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | One client-only requirement, worded the same across the dashboard state specs, with a test vector; the web module's "use client" directive is noted in Platform Notes. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to status/dashboard/state/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

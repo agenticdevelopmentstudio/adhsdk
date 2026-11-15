@@ -4,11 +4,11 @@
     "id": "0ae70642-28e7-436a-b934-0b445652ac09",
     "title": "Chat Input",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "38bf480e52c769f9",
+  "synced": "d204875c6a7f8b0d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

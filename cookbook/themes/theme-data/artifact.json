@@ -4,7 +4,7 @@
     "id": "6ddafe05-a417-498d-90b1-00f69c89f7ac",
     "title": "Theme Data",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "17391d6a7e284355",
+  "synced": "f4901800832c1a6e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -4,7 +4,7 @@
     "id": "e8286557-84ee-4f45-b78c-f1d184c51a37",
     "title": "Stenographer Wire",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6a1e76e1b07f858a",
+  "synced": "589e5fc598bcf977",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

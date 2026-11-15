@@ -2,7 +2,7 @@
 id: d525cc69-4d2c-4d17-a570-f71e8d5aa273
 title: "Work Tracking Preferences"
 type: ingredient
-version: 1.0.1
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -59,6 +59,7 @@ approved-date: ""
 - **trusted-granted-signature**: `trustedAccessibility` MUST return `.granted` only when the stored answer is `.granted`, the supplied signer is non-nil and non-empty, and it equals the signer stored under `activity_ax_signer`.
 - **trusted-granted-otherwise-unknown**: `trustedAccessibility` MUST return `.unknown` for a stored `.granted` when the signer is nil, empty, differs from the recorded one, or no signer was recorded, so an unrecorded signature matches nothing.
 - **raw-answer-kept**: `trustedAccessibility` MUST NOT change what `lastAccessibility` returns; the raw stored answer is kept.
+- **no-validation-of-ids**: `save` and `load` MUST NOT check that an id looks like a bundle identifier; any string, including an empty one, is stored and returned (an empty string survives de-duplication as one entry).
 - **no-logging-no-cache**: `WorkTrackingPrefs` MUST NOT cache or log; every call goes to the store.
 
 ## Appearance
@@ -172,7 +173,7 @@ Not applicable: this code makes no log calls; a decode failure on an id list is 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingPrefs.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/WorkTracking/WorkTrackingPrefs.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -208,13 +209,15 @@ Not applicable: this code makes no log calls; a decode failure on an id list is 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | reliability |
 
-Separation of concerns passes: the enum owns only the mapping between preference values and settings rows, storage is the injected protocol, and text parsing and clamping are delegated to `RawSetting` and the model's `normalized()`. Unit coverage is partial: `WorkTrackingModelsTests` asserts the signature-gated trust of a stored grant against a dictionary store, and a settings test asserts normalization through the user-settings holder, and two controller tests call `load` and `save` directly (the unset defaults and the normalized round trip), but the retention clamp on read, the bool and integer parsing fallbacks, the garbage id list and the atomic write have no direct assertion. Data integrity is partial: writes are atomic and normalized, but the four reads in `load` are not grouped, and an undecodable id list is silently reset to empty.
+Separation of concerns passes: the enum owns only the mapping between preference values and settings rows, storage is the injected protocol, and text parsing and clamping are delegated to `RawSetting` and the model's `normalized()`. Unit coverage passes: `WorkTrackingPrefsConformanceTests` (Core tests, `WorkTracking/WorkTrackingPrefsConformanceTests.swift`) has one test for each of the 19 vectors, including the retention clamp on read, the bool and integer parsing fallbacks, the garbage id list, the atomic write with rollback and the signature-gated trust. Data integrity is partial: writes are atomic and normalized, but the four reads in `load` are not grouped, and an undecodable id list is silently reset to empty.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (WorkTrackingPrefsConformanceTests.swift, 19 of 19 vectors); unit-test-coverage now passed. |
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Restore requirements lost in the lint pass: no-validation-of-ids |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added a Source column to the test vectors and split vector 009 from the tested round trip, moved the id-validation rule to an Edge Case, split Configuration into Parameters and Stored keys, reconciled the concurrency edge case, noted the cost of silently resetting a corrupt id list, and dropped the opaque review citation and the iOS claim. |

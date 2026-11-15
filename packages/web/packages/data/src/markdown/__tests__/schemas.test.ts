@@ -6,7 +6,7 @@ vi.mock("../../http", async (orig) => ({
   authedRequest: vi.fn(),
 }));
 
-import { authedJson } from "../../http";
+import { authedJson, authedRequest } from "../../http";
 import { schemasApi } from "../schemas";
 import { fetchMock, installFetch, paramsAt, pathAt, respondWith, v1List } from "../../__tests__/v1-fetch";
 
@@ -83,5 +83,82 @@ describe("schemasApi — bucket slugs", () => {
     await expect(
       schemasApi.create({ name: "Customer CRM", slug: "other", description: "", tables: [] }, "ecosystem.acme"),
     ).rejects.toThrow('A bucket named "Customer CRM" already exists.');
+  });
+});
+
+describe("schemasApi — conformance vectors", () => {
+  const request = vi.mocked(authedRequest);
+  beforeEach(() => request.mockReset());
+
+  it("HDM-013 create rejects a duplicate table name (case-insensitive) before any request", async () => {
+    await expect(
+      schemasApi.create(
+        {
+          name: "CRM",
+          slug: "crm",
+          description: "",
+          tables: [
+            { id: "t1", name: "Contacts", type: "content.contacts" },
+            { id: "t2", name: "contacts", type: "content.contacts" },
+          ],
+        },
+        "ecosystem.acme",
+      ),
+    ).rejects.toThrow('Duplicate table name "contacts" in this bucket.');
+    expect(json).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it("HDM-014 a failed second table rolls back the first table and the bucket, then rethrows the original error", async () => {
+    const failure = new Error("table insert failed");
+    json
+      .mockResolvedValueOnce(ROW)
+      .mockResolvedValueOnce({ id: "bt1", bucket_id: ROW.id, sql_table_name: "content.a", name: "a" })
+      .mockRejectedValueOnce(failure);
+    request.mockResolvedValue(undefined);
+    await expect(
+      schemasApi.create(
+        {
+          name: "Customer CRM",
+          slug: "crm",
+          description: "",
+          tables: [
+            { id: "x1", name: "a", type: "content.a" },
+            { id: "x2", name: "b", type: "content.b" },
+          ],
+        },
+        "ecosystem.acme",
+      ),
+    ).rejects.toBe(failure);
+    expect(request).toHaveBeenCalledTimes(2);
+    const calls = request.mock.calls.map(([url, init]) => [url, init?.method]);
+    expect(calls).toContainEqual(["/api/v1/bucket_types/bt1", "DELETE"]);
+    expect(calls).toContainEqual(["/api/v1/buckets/storage.acme.crm", "DELETE"]);
+  });
+
+  it("HDM-015 get resolves null for a 404, a 500 and a network failure alike", async () => {
+    for (const err of [
+      Object.assign(new Error("not found"), { status: 404 }),
+      Object.assign(new Error("boom"), { status: 500 }),
+      new TypeError("Failed to fetch"),
+    ]) {
+      json.mockReset();
+      json.mockRejectedValueOnce(err);
+      await expect(schemasApi.get("storage.acme.crm")).resolves.toBeNull();
+    }
+  });
+
+  it("HDM-016 list keeps only the ecosystem's buckets, sorted alphabetically by name", async () => {
+    const row = (id: string, name: string, eco: string) => ({ ...ROW, id, name, slug: id, ecosystem_id: eco });
+    fetchMock.mockImplementation(async (url: unknown) => {
+      const body = String(url).includes("/api/v1/buckets")
+        ? v1List([row("b1", "Zeta", "eco-a"), row("b2", "Other", "eco-b"), row("b3", "alpha", "eco-a"), row("b4", "Mid", "eco-a")])
+        : v1List([]);
+      return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) };
+    });
+    const out = await schemasApi.list("eco-a");
+    expect(out.map((d) => d.name)).toEqual(["alpha", "Mid", "Zeta"]);
+    expect(out.every((d) => d.ecosystemId === "eco-a")).toBe(true);
   });
 });

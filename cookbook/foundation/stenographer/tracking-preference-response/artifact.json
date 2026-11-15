@@ -4,7 +4,7 @@
     "id": "e8a2d3a3-259f-43ac-94eb-051d08a42fb1",
     "title": "Tracking Preference Response",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "8f71e259ad004615",
+  "synced": "8e5b3cc0d91b2cb7",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

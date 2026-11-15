@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (conformanceVectors.test.ts, conformanceVectors.test.tsx, 10 of 10 vectors); vectors 7 and 9 text corrected to match source; unit-test-coverage now passed. |
 | 1.1.2 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to data/services/. |

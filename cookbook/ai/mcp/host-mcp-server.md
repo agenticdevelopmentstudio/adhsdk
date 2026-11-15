@@ -2,7 +2,7 @@
 id: dac3e46e-2eeb-4ebd-b88d-4e4999870db7
 title: "HostMCPServer"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -130,7 +130,7 @@ Derived from `HostMCPServerTests` where named; the rest are traced to the source
 | host-mcp-server-022 | call-log | One successful, one failing and one unknown call | Info lines `tools/call a ok`, `tools/call fails error`, `tools/call nope unknown` |
 | host-mcp-server-023 | list-asks-sources-live, call-asks-definitions | Source whose definitions change between two `tools/list` requests | The second listing reflects the change |
 | host-mcp-server-024 | call-result-text | Source returns `hello` | One text item `hello`, no image |
-| host-mcp-server-025 | list-server-gone, call-server-gone, wait-until-completed | Server deallocated before a request; and `waitUntilServerCompleted()` with no server | Empty list and `server is gone`; the wait returns at once. No test in `HostMCPServerTests` reaches the deallocated-server path or the no-server wait, so both are asserted from the source rather than a test. |
+| host-mcp-server-025 | list-server-gone, call-server-gone, wait-until-completed | Server deallocated before a request; and `waitUntilServerCompleted()` with no server | Empty list and `server is gone`; the wait returns at once. `HostMCPServerConformanceTests` reaches both: it drops the server after serving, then lists and calls, and it waits on a server that never served. |
 
 ## Edge Cases
 
@@ -216,7 +216,7 @@ The tool name and outcome are logged with public privacy. The stdio drain adds a
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/HostMCPServer.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/MCP/HostMCPServer.swift` | confirmed (1.0.1) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -261,10 +261,11 @@ The tool name and outcome are logged with public privacy. The stdio drain adds a
 | [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | passed | security |
 | [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | failed | access-patterns |
 
-The server keeps routing, the MCP translation and transport choice separate: transports and tool sources arrive from outside. `HostMCPServerTests` covers listing, routing, prefixes, errors, images, replacement of a connection and the header read, but not the schema fallback, the server-gone paths or overlapping serve calls, so coverage is partial. Failures come back as error results. Logs carry tool names and outcomes only, not arguments or results. The server sets no timeout on a source call, so a hung source holds its request open; the transport owner or the stdio drain deadline bounds it.
+The server keeps routing, the MCP translation and transport choice separate: transports and tool sources arrive from outside. `HostMCPServerTests` and `HostMCPServerConformanceTests` cover every vector except host-mcp-server-022 (the call log lines), which is skipped because the `Logger` is a private OSLog instance with no injection point; overlapping serve calls remain an open question in the requirements. Coverage is therefore partial. Failures come back as error results. Logs carry tool names and outcomes only, not arguments or results. The server sets no timeout on a source call, so a hung source holds its request open; the transport owner or the stdio drain deadline bounds it.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (HostMCPServerConformanceTests.swift, 14 new vectors; 24 of 25 covered with HostMCPServerTests); unit-test-coverage now partial (host-mcp-server-022 skipped: Logger not capturable). |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

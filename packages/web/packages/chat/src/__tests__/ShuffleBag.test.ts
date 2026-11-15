@@ -7,32 +7,32 @@ describe('ShuffleBag', () => {
     vi.restoreAllMocks()
   })
 
-  it('exhausts every item before repeating any', () => {
+  it('ccb-013: exhausts every item before repeating any', () => {
     const items = ['a', 'b', 'c', 'd']
     const bag = new ShuffleBag(items)
     const first = [bag.next(), bag.next(), bag.next(), bag.next()]
     expect([...first].sort()).toEqual([...items].sort())
   })
 
-  it('refills after exhaustion', () => {
+  it('ccb-014: refills after exhaustion', () => {
     const bag = new ShuffleBag(['a', 'b'])
     const drawn = [bag.next(), bag.next(), bag.next(), bag.next()]
     expect(drawn.filter((d) => d === 'a')).toHaveLength(2)
     expect(drawn.filter((d) => d === 'b')).toHaveLength(2)
   })
 
-  it('repeats the sole item of a one-item bag', () => {
+  it('ccb-015: repeats the sole item of a one-item bag', () => {
     const bag = new ShuffleBag(['only'])
     expect([bag.next(), bag.next()]).toEqual(['only', 'only'])
   })
 
-  it('rejects an empty bag at construction', () => {
+  it('ccb-016: rejects an empty bag at construction', () => {
     // next() assumes at least one item (it falls back to items[0]); constructing
     // empty must fail fast rather than hand back a bag that can't draw.
     expect(() => new ShuffleBag([])).toThrow('ShuffleBag requires at least one item')
   })
 
-  it('draws in Fisher-Yates order for a stubbed Math.random', () => {
+  it('ccb-017: draws in Fisher-Yates order for a stubbed Math.random', () => {
     // With Math.random pinned to 0, the correct backward Fisher-Yates walk
     // (i from length-1 down to 1, j = floor(random * (i+1)) = 0 every time)
     // produces a specific, hand-verified permutation. A flipped loop
@@ -52,7 +52,7 @@ describe('streamTokens', () => {
     vi.restoreAllMocks()
   })
 
-  it('emits every token then a done event, preserving whitespace', async () => {
+  it('ccb-018: emits every token then a done event, preserving whitespace', async () => {
     const events = []
     for await (const e of streamTokens('hi there', { minMs: 0, jitterMs: 0 })) {
       events.push(e)
@@ -65,7 +65,7 @@ describe('streamTokens', () => {
     ])
   })
 
-  it('emits just done for empty text', async () => {
+  it('ccb-019: emits just done for empty text', async () => {
     const events = []
     for await (const e of streamTokens('', { minMs: 0, jitterMs: 0 })) {
       events.push(e)
@@ -73,7 +73,7 @@ describe('streamTokens', () => {
     expect(events).toEqual([{ type: 'done' }])
   })
 
-  it('still delays on the empty split entry even though nothing is yielded for it', async () => {
+  it('ccb-020: still delays on the empty split entry even though nothing is yielded for it', async () => {
     // ''.split(/(\s+)/) === [''] — a single falsy token. The delay must run
     // unconditionally on every loop iteration (only the yield is guarded by
     // the truthiness check), so the lone `{ type: 'done' }` event must not
@@ -125,7 +125,7 @@ describe('streamTokens', () => {
     expect(r2.value).toEqual({ type: 'token', text: ' ' })
   })
 
-  it('falls back to the 45ms/55ms defaults when opts is omitted', async () => {
+  it('ccb-021: falls back to the 45ms/55ms defaults when opts is omitted', async () => {
     vi.useFakeTimers()
     vi.spyOn(Math, 'random').mockReturnValue(0) // 45 + 0 * 55 = 45ms
 

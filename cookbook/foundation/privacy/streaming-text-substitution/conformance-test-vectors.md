@@ -1,5 +1,5 @@
 
-The source has no test of its own (no test file in the repository names the type). The vectors are derived from the source, and they are the tests to write for this type. Unless stated, the filter has one pair, alias `robin` and real `mike`, direction `concealing`; `feed` takes ASCII bytes and returns the bytes shown as text.
+The vectors are derived from the source and covered by `StreamingTextSubstitutionConformanceTests.swift`. The vectors are derived from the source, and they are the tests to write for this type. Unless stated, the filter has one pair, alias `robin` and real `mike`, direction `concealing`; `feed` takes ASCII bytes and returns the bytes shown as text.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

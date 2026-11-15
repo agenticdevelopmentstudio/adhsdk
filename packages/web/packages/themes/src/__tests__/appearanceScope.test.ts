@@ -61,7 +61,7 @@ afterEach(() => {
 })
 
 describe('appearance scope', () => {
-  it('an OS scheme change after the scope unmounts leaves <html> alone', async () => {
+  it('AS-001: an OS scheme change after the scope unmounts leaves <html> alone', async () => {
     const os = installSchemeQuery(false)
     const store = await freshStore()
 
@@ -76,7 +76,7 @@ describe('appearance scope', () => {
     expect(painted()).toBe(false)
   })
 
-  it('a commit that resolves after the scope unmounts is cached but not painted', async () => {
+  it('AS-002: a commit that resolves after the scope unmounts is cached but not painted', async () => {
     installSchemeQuery(false)
     const store = await freshStore()
 
@@ -91,7 +91,7 @@ describe('appearance scope', () => {
     expect(painted()).toBe(false)
   })
 
-  it('mounting the scope again paints what the store holds now', async () => {
+  it('AS-003: mounting the scope again paints what the store holds now', async () => {
     installSchemeQuery(false)
     const store = await freshStore()
 
@@ -103,7 +103,7 @@ describe('appearance scope', () => {
     expect(document.documentElement.dataset.colorMode).toBe('dark')
   })
 
-  it('keeps painting until the last of two scopes unmounts, and a release runs once', async () => {
+  it('AS-004: keeps painting until the last of two scopes unmounts, and a release runs once', async () => {
     installSchemeQuery(false)
     const store = await freshStore()
 
@@ -121,7 +121,7 @@ describe('appearance scope', () => {
 
   // A site that only mounts a scope for the app's lifetime (homesite's main.tsx) relies on the
   // first mount alone to arm OS-following: no adopt, no stored prefs, nothing else reads the store.
-  it('a scope mounted with nothing stored follows the OS when it flips', async () => {
+  it('AS-005: a scope mounted with nothing stored follows the OS when it flips', async () => {
     const os = installSchemeQuery(false)
     const store = await freshStore()
 
@@ -136,7 +136,7 @@ describe('appearance scope', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(false)
   })
 
-  it('a site that never mounts a scope keeps painting on commit and on an OS change', async () => {
+  it('AS-006: a site that never mounts a scope keeps painting on commit and on an OS change', async () => {
     const os = installSchemeQuery(false)
     const store = await freshStore()
 

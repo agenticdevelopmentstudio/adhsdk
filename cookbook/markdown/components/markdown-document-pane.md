@@ -2,7 +2,7 @@
 id: 46a9c075-098d-46bd-9b62-e3afeb9bd577
 title: "Markdown Document Pane"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -32,7 +32,7 @@ approved-date: ""
 
 The Markdown Document Pane is a whole detail pane for one markdown document. It stacks two things: the platform's Cancel/Save bar, flush against the top and sides of the pane, and below it a padded body holding the document's Source / Preview view. The document comes from a `useVersionedDocument` hook (it carries the text, an `edit` function and the save, conflict and revert state). The pane owns the layout so that a host renders it as the pane's content with no padding of its own and cannot wrap the bar in padding by mistake.
 
-The pane also exports `MarkdownDocumentPaneBody`, the padded body on its own, for a host that shows something else in the pane's place (loading, not found, an error) and wants it to line up with the loaded pane. The Cancel/Save bar is the [Document Save Bar](cookbook:c54698ea-490c-41e2-ad8f-762f257839ca) block; the editing view is the `MarkdownDocumentEditor` component, to which every prop the pane does not consume is forwarded.
+The pane also exports `MarkdownDocumentPaneBody`, the padded body on its own, for a host that shows something else in the pane's place (loading, not found, an error) and wants it to line up with the loaded pane. The Cancel/Save bar is the Document Save Bar ([adhsdk.ingredient.ui.blocks.document-save-bar](cookbook:c54698ea-490c-41e2-ad8f-762f257839ca)) block; the editing view is the `MarkdownDocumentEditor` component, to which every prop the pane does not consume is forwarded.
 
 ## Behavioral Requirements
 
@@ -107,7 +107,7 @@ The pane also exports `MarkdownDocumentPaneBody`, the padded body on its own, fo
 | pane-010 | body-slot, body-export | Render `MarkdownDocumentPaneBody` with a child | A `data-slot="markdown-document-pane-body"` element wraps the child; no bar or editor is rendered |
 | pane-011 | bar-noun, bar-messages | `noun` omitted, then `noun` "note" with a `messages` override | The bar's notices use "document" by default, then "note", and the override text replaces the default wording |
 
-Vectors pane-006 through pane-011 are derived from the source's behavior rather than existing tests; the test file covers pane-001 to pane-005.
+`markdownDocumentPane.test.tsx` covers pane-001 to pane-011.
 
 ## Edge Cases
 
@@ -176,7 +176,7 @@ Not applicable: the pane emits no log messages.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/markdown/src/components/MarkdownDocumentPane.tsx` | confirmed (1.0.0) |
+| web | `packages/web/packages/markdown/src/components/MarkdownDocumentPane.tsx` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -208,14 +208,15 @@ Not applicable: the pane emits no log messages.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.accessibility.keyboard-navigable](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/56755f54-b31f-59aa-a77d-eeb0cd87731a) | passed | Accessibility |
 | [adc.check.accessibility.semantic-markup](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/1569c175-c689-55bc-a13e-a08bdb7e91c6) | partial | Accessibility |
 
-The pane contains no logic beyond one boolean (`dirty` or `conflict`) and one null check; saving, conflicts and editing are delegated to the bar, the document hook and the editor, so separation-of-concerns passes. The test file covers five behaviors (bar placement, read-only, a pending draft, host children, pre-load) but not a pending conflict, `noun` or `messages` pass-through, or prop forwarding, so unit-test-coverage is partial. Every control is inside the bar and the editor and the pane adds none, so keyboard navigation passes by delegation. The pane's own elements are plain `div` elements with `data-slot` attributes and no landmark or role, so semantic-markup is partial.
+The pane contains no logic beyond one boolean (`dirty` or `conflict`) and one null check; saving, conflicts and editing are delegated to the bar, the document hook and the editor, so separation-of-concerns passes. The test file covers all eleven vectors (bar placement, read-only, a pending draft or conflict, host children, pre-load, editor value and change, prop forwarding, the standalone body, `noun` and `messages`), so unit-test-coverage passes. Every control is inside the bar and the editor and the pane adds none, so keyboard navigation passes by delegation. The pane's own elements are plain `div` elements with `data-slot` attributes and no landmark or role, so semantic-markup is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (markdownDocumentPane.test.tsx, 11 of 11 vectors); unit-test-coverage now passed. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

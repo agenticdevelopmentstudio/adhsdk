@@ -16,6 +16,7 @@
 | markdown-013 | strip-frontmatter | `{ content: "---\ntitle: [unclosed\n---\n# Body" }` | `<div class="adh-mv-prose"><h1>Body</h1></div>` — the malformed block is stripped and no error is thrown |
 | markdown-014 | sanitize-output | `{ content: "[x](javascript:alert(1)) and <img src=x onerror=alert(1)>" }` | Output contains no `javascript:` substring, no `onerror` substring and no `<img`; the link text `x` renders without an `href` |
 | markdown-015 | propagate-render-errors | `{ content: "text" }` with the highlighter initialization mocked to reject with `Error("boom")` | The component's promise rejects with that error; no partial HTML is returned |
+| markdown-016 | apply-measure, accept-optional-class | `{ content: "text", measure: "fill", className: "custom-override" }` | Root `<div>` class attribute is exactly `"adh-mv-prose adh-mv-prose--fill custom-override"`; with no `measure` it is exactly `"adh-mv-prose"` |
 
 The `content` for markdown-010, as one JS string literal:
 

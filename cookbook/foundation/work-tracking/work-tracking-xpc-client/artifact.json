@@ -4,7 +4,7 @@
     "id": "f3f1af27-6cd7-4b3f-9024-135c6f6e89da",
     "title": "Work Tracking XPC Client",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "5c82fb020b09cba2",
+  "synced": "8187f50acd19fea6",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

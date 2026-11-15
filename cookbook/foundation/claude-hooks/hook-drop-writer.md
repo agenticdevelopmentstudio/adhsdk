@@ -2,7 +2,7 @@
 id: f3326f3a-cccd-4ac5-8dc1-84d660ed4581
 title: "Hook Drop Writer"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -37,7 +37,7 @@ approved-date: ""
 
 The type is a caseless enum with three public static functions. `dropDirectoryVariable` names the environment variable that overrides the directory for one configuration. `dropDirectory` picks the override when it is set and non-empty, otherwise the configuration's own directory. `writeDropFile` encodes an envelope and puts it in a directory as a new, uniquely named JSON file, written to a temporary name first and then renamed so that a scanner never sees a half-written file.
 
-It is called by the hook capture command ([HookCaptureCommand](cookbook:826153e3-cae8-4917-a1d3-c298a54ab558)) and by the status-line feed ([StatusLineCapture](cookbook:704d4ae9-e344-44d4-b19c-eadfec082077)) when the daemon refuses a post. Both pass the environment explicitly, which is how tests redirect output to a temporary directory.
+It is called by the hook capture command (HookCaptureCommand ([adhsdk.ingredient.foundation.claude-hooks.hook-capture-command](cookbook:826153e3-cae8-4917-a1d3-c298a54ab558))) and by the status-line feed (StatusLineCapture ([adhsdk.ingredient.foundation.claude-hooks.status-line-capture](cookbook:704d4ae9-e344-44d4-b19c-eadfec082077))) when the daemon refuses a post. Both pass the environment explicitly, which is how tests redirect output to a temporary directory.
 
 ## Behavioral Requirements
 
@@ -178,7 +178,7 @@ Not applicable: the component makes no log call; failures are thrown to the call
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookDropWriter.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/ClaudeHooks/HookDropWriter.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -223,11 +223,12 @@ Not applicable: the component makes no log call; failures are thrown to the call
 | [adc.check.privacy-and-data.secure-data-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9d865cfa-ff98-5b90-b5da-58a611d3535b) | partial | privacy-and-data |
 | [adc.check.privacy-and-data.data-retention-policy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0c9cc813-244a-5dc1-8914-fd4710bb4943) | partial | privacy-and-data |
 
-The component separates concerns cleanly: directory choice and file publication are three small functions whose only side effects are creating the directory and publishing the file. Unit-test coverage is partial because `HookCaptureTests` asserts the variable name and the override rules directly but exercises `writeDropFile` only through the capture command and the status-line feed; the name pattern, tilde expansion and failure paths have no direct assertion. Explicit error handling is partial because the functions throw, but an unencodable envelope raises an exception outside that channel (the open question on `envelope-serializable`). Data integrity is passed because publication is a write followed by a rename. Secure data storage is partial because the file takes default permissions and the source applies no mode or encryption to payloads that carry account emails and process context. Data retention is partial because the component deletes nothing, including its own `.tmp` leftovers.
+The component separates concerns cleanly: directory choice and file publication are three small functions whose only side effects are creating the directory and publishing the file. Unit-test coverage is partial: `HookCaptureTests` and `HookDropWriterConformanceTests` (`Tests/AgenticDeveloperHubSDKCoreTests/ClaudeHooks/HookDropWriterConformanceTests.swift`) cover drop-001 to drop-013, drop-016, drop-017 and drop-018; drop-014 (no overwrite of an existing final name) is skipped because the name comes from the wall clock and a random suffix that cannot be injected, and drop-015 (a scanner never sees a partial file) is skipped because a write in progress cannot be observed deterministically. Explicit error handling is partial because the functions throw, but an unencodable envelope raises an exception outside that channel (the open question on `envelope-serializable`). Data integrity is passed because publication is a write followed by a rename. Secure data storage is partial because the file takes default permissions and the source applies no mode or encryption to payloads that carry account emails and process context. Data retention is partial because the component deletes nothing, including its own `.tmp` leftovers.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (HookDropWriterConformanceTests.swift, 16 of 18 vectors; drop-014 and drop-015 skipped); unit-test-coverage stays partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Moved source paths out of references, linked sibling recipes, downgraded accidental-gap MUSTs to current behavior, pinned the file-name regex and key-order wording, and added pending decisions on permissions and an injectable clock. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

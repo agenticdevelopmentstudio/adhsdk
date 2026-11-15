@@ -1,5 +1,5 @@
 
-Vectors 001 and 002 are asserted in `PartnerModelsTests` (the test name is in the Input column); the rest are derived from the `PartnerInbound` source. The queue behavior that uses these keys has its vectors in [Partner Turn Queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150).
+Vectors 001 and 002 are asserted in `PartnerModelsTests` (the test name is in the Input column); the rest are derived from the `PartnerInbound` source. The queue behavior that uses these keys has its vectors in Partner Turn Queue ([adhsdk.ingredient.foundation.partner.partner-turn-queue](cookbook:ae6b1991-6aed-4d8b-83e1-5d5e02470150)).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

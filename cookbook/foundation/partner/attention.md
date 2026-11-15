@@ -2,7 +2,7 @@
 id: d6ff4cf9-05b9-43f0-96d2-b4c8454dd6d1
 title: "Partner Attention"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -82,7 +82,7 @@ Not applicable — these are data types, not a visual component.
 
 ## Conformance Test Vectors
 
-The source has no tests beside it; the vectors are derived from the initializers, the declared conformances and the standard `Codable` rules for the declared shapes.
+The vectors are derived from the initializers, the declared conformances and the standard `Codable` rules for the declared shapes.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -173,7 +173,7 @@ Not applicable: The source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/Attention.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/Attention.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -201,14 +201,15 @@ Not applicable: The source calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
-`separation-of-concerns` passes because the file holds only value types; storage, state transitions and presentation live in the macOS partner feature. `unit-test-coverage` fails because no test in the repository targets these types directly: they are exercised only through the partner store, controller and attention pane. `data-integrity` is partial because the types validate nothing (duplicate ids, dangling `itemID` values and inconsistent timestamps are all accepted), so integrity rests on the holder.
+`separation-of-concerns` passes because the file holds only value types; storage, state transitions and presentation live in the macOS partner feature. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Partner/AttentionConformanceTests.swift` has a test for each of the seventeen vectors: initializer defaults, enum raw values, wire keys, round trips and the decode failures. `data-integrity` is partial because the types validate nothing (duplicate ids, dangling `itemID` values and inconsistent timestamps are all accepted), so integrity rests on the holder.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (AttentionConformanceTests.swift, 17 of 17 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Merged kind-enumerable into kind-values, rewrote the date, completed-at and item-reference requirements as MUST/MUST NOT with the notes moved to Edge Cases, added item-init-explicit, relaxed the two-clock-read clause, added action round-trip and missing-field vectors, and named the .iso8601 strategy in vector 009. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

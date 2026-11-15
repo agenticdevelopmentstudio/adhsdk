@@ -1,5 +1,5 @@
 
-The source has no test file naming this type directly; `CommandRunner`'s tests exercise it through the runner. The vectors below follow the code and its doc comments, and a port should assert them with a short-lived child such as `/usr/bin/true` and a sleeping child.
+`ProcessExitWatchConformanceTests.swift` tests this type directly, skipping vectors 001, 009 and 012 with a reason; `CommandRunner`'s tests also exercise it through the runner. The vectors below follow the code and its doc comments, and a port should assert them with a short-lived child such as `/usr/bin/true` and a sleeping child.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

@@ -2,11 +2,11 @@
 id: 93f50554-5ae3-4a43-b8db-539d4d804890
 title: "Help Content View"
 type: ingredient
-version: 1.3.0
+version: 1.3.1
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -424,7 +424,7 @@ source.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Help/HelpContentView.swift` | confirmed (1.3.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/Help/HelpContentView.swift` | confirmed (1.3.1) |
 
 ## Design Decisions
 
@@ -505,7 +505,7 @@ and every topic string being rendered as caller-supplied `NSTextField`/
 `ExplanationView` text with no special-casing of its contents
 (unicode-support).
 
-`separation-of-concerns` passes because the view only renders a `HelpContent` value it is handed through `setHelp(_:)` and re-themes from the palette; it does no lookup, navigation or persistence, and the drawer controller owns when help changes. `unit-test-coverage` is `partial`: `Help/HelpContentTests.swift` covers topic order, equality, the empty state (`testEmptyContentRendersTheHonestEmptyStateRatherThanBlank`) and one group per topic (`testSetHelpRendersOneGroupPerTopic`), but nothing tests the fixed heading, scroll reset, wholesale replacement or live theme change.
+`separation-of-concerns` passes because the view only renders a `HelpContent` value it is handed through `setHelp(_:)` and re-themes from the palette; it does no lookup, navigation or persistence, and the drawer controller owns when help changes. `unit-test-coverage` is `partial`: `Help/HelpContentTests.swift` covers help-content-view-001 through -009 and -011; -010 (the archived-construction refusal calls `fatalError` and cannot be caught) and -012 (`@MainActor` isolation is enforced at build time, so no test can express it) are skipped.
 
 ## Change History
 
@@ -517,3 +517,4 @@ and every topic string being rendered as caller-supplied `NSTextField`/
 | 1.1.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/containers/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Wrote coder-init-unavailable as a platform-neutral requirement with vector 010; resolved the minimum-contrast-ratio NEEDS REVIEW marker as current behavior (no contrast floor) with vector 011 and a pending decision; added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
+| 1.3.1 | 2026-11-15 | Mike Fullerton | Conformance tests added (HelpContentTests.swift, 10 of 12 vectors); unit-test-coverage now partial. |

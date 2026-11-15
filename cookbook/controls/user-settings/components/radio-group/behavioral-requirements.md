@@ -3,7 +3,7 @@
 - **reflect-value**: The component MUST render the choice whose value strictly equals (`===`) `value` as checked. The component is controlled and holds no selection state of its own.
 - **handle-value-change**: The component MUST invoke the `onChange` callback with the new value when the user selects a different choice.
 - **fieldset-root**: The component MUST render a `<fieldset>` element as the root container.
-- **legend-label**: When a label prop is provided, the component MUST render it inside a `<legend>` element as the first child of the fieldset.
+- **legend-label**: When a label prop is provided, the component MUST render it inside a `<legend>` element as the first child of the fieldset. A label of `0` counts as provided and renders a legend reading `0`; only `null`, `undefined`, `false` and the empty string render no legend.
 - **radiogroup-role**: The component MUST render a container element with `role="radiogroup"` that contains all radio button inputs.
 - **choice-labels**: The component MUST display a label for each choice; the label MUST be associated with its corresponding radio input.
 - **choice-hints**: When a choice has a hint property, the component MUST render that hint adjacent to the choice label.

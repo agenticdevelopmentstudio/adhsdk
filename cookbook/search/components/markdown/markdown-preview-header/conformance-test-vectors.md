@@ -7,7 +7,7 @@
 | header-004 | title-fallback, title-attribute | hit.title = undefined | h3 text displays "Untitled"; h3 has no title attribute |
 | header-005 | title-fallback | hit.title = "   " (whitespace only) | h3 text displays "   " literally — not "Untitled", since the fallback is a falsy check, not a trim |
 | header-006 | title-attribute | hit.title = "Long Paper Title Here" | h3 title attribute = "Long Paper Title Here" |
-| header-007 | kind-badge | hit.kind = "research", kindRendererFor returns {badge: {variant: "research", label: "Research"}} | Badge renders with variant "research" and label text "Research" |
+| header-007 | kind-badge | hit.kind = "research", kindRendererFor returns {badge: {variant: "blue", label: "Research"}} | Badge renders with variant "blue" and label text "Research" |
 | header-008 | author-attribution | hit.author = {displayName: "Alice Smith", slug: "alice"} | Text shows "by Alice Smith" |
 | header-009 | author-attribution | hit.author = {displayName: "  ", slug: "bob"} | Text shows "by @bob" |
 | header-010 | author-attribution | hit.author = {displayName: null, slug: "charlie"} | Text shows "by @charlie" |

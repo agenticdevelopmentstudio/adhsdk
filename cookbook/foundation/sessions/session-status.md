@@ -2,7 +2,7 @@
 id: 787b5da6-2f20-4f3e-8104-1763959a735f
 title: "Session Status"
 type: ingredient
-version: 1.0.1
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -32,9 +32,9 @@ approved-date: ""
 
 ## Overview
 
-`SessionStatus` is the lifecycle state of a Claude Code session: `active`, `stale` or `ended`. It answers only whether a process exists for the session. What a live session is doing is a separate question, answered by `SessionActivity` ([Session Activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4)).
+`SessionStatus` is the lifecycle state of a Claude Code session: `active`, `stale` or `ended`. It answers only whether a process exists for the session. What a live session is doing is a separate question, answered by `SessionActivity` (Session Activity ([adhsdk.ingredient.foundation.sessions.session-activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4))).
 
-The enum is a `String`-backed value. The raw strings are what the SDK writes to the sessions table's status column, compares against rows read back, and publishes in the `{session_id, status}` payload that `SessionEventEncoding.encodeSessionStatus(sessionId:status:)` builds ([Session Event Sink](cookbook:6a37e531-b5ae-4eea-b4f0-d28866776ddc)). A port has to keep those three strings exactly.
+The enum is a `String`-backed value. The raw strings are what the SDK writes to the sessions table's status column, compares against rows read back, and publishes in the `{session_id, status}` payload that `SessionEventEncoding.encodeSessionStatus(sessionId:status:)` builds (Session Event Sink ([adhsdk.ingredient.foundation.sessions.session-event-sink](cookbook:6a37e531-b5ae-4eea-b4f0-d28866776ddc))). A port has to keep those three strings exactly.
 
 What each case means, as the SDK's daemon uses them. This is description, not requirement; the transitions belong to `LivenessService` and the session-records code. `active` means a live process exists for the session; the liveness service sets it when a live `claude` process maps to the session's id. `ended` means no live process remains; the liveness service sets it when the process is gone and the recorded `cwd` is not empty, and it does not end a session whose `cwd` is empty, because ending it would be a guess. `stale` is declared but nothing in the SDK's own daemon code writes it: the status column's `CHECK(status IN ('active','stale','ended'))` allows it, and `fetchActiveSessionsForLiveness` selects rows whose status is `active` or `stale`. The enum does not conform to `CaseIterable`, and it has no fallback case for an unknown raw string.
 ## Behavioral Requirements
@@ -49,12 +49,13 @@ What each case means, as the SDK's daemon uses them. This is description, not re
 **Meaning of each case**
 
 - **stale-declared**: A consumer MUST accept `stale` as a valid status when it reads one, because the sessions table's status column allows it.
-- **status-vs-activity**: A consumer that needs to know what a live session is doing MUST use `SessionActivity` ([Session Activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4)) and not infer it from `SessionStatus`.
+- **status-vs-activity**: A consumer that needs to know what a live session is doing MUST use `SessionActivity` (Session Activity ([adhsdk.ingredient.foundation.sessions.session-activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4))) and not infer it from `SessionStatus`.
 
 **Use as a stored and published value**
 
 - **status-stored-as-raw**: Code that writes or compares the status column MUST use the `rawValue` string, as `updateSessionStatus(_:sessionId:)` and the liveness comparison `status == SessionStatus.active.rawValue` do.
-- **status-published-as-raw**: A session-status broadcast MUST carry the raw string in the payload's `status` field (see [Session Event Sink](cookbook:6a37e531-b5ae-4eea-b4f0-d28866776ddc)).
+- **status-update-failure**: `updateSessionStatus(_:sessionId:)` MUST NOT throw; it MUST write the raw value with a single-row UPDATE keyed by session id, and on a write failure it MUST log the error through the logger and return.
+- **status-published-as-raw**: A session-status broadcast MUST carry the raw string in the payload's `status` field (see Session Event Sink ([adhsdk.ingredient.foundation.sessions.session-event-sink](cookbook:6a37e531-b5ae-4eea-b4f0-d28866776ddc))).
 
 ## Appearance
 
@@ -79,7 +80,7 @@ Not applicable — this is a lifecycle enum, not a visual component.
 | session-status-005 | status-raw-init-optional | `SessionStatus(rawValue: "closed")` | `nil` |
 | session-status-006 | status-raw-values, status-stored-as-raw | `SessionStatus(rawValue: "active")` and `SessionStatus.active.rawValue == "active"` | `.active`; the stored string and the enum agree |
 | session-status-007 | status-cases | `SessionStatus(rawValue:)` for each of `"active"`, `"stale"`, `"ended"` | `.active`, `.stale`, `.ended`; no other raw string yields a value |
-| session-status-008 | status-vs-activity | Inspect the enum's API surface | `SessionStatus` offers no operation that returns a `SessionActivity`; activity comes only from `SessionActivity.derive` ([Session Activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4)) |
+| session-status-008 | status-vs-activity | Inspect the enum's API surface | `SessionStatus` offers no operation that returns a `SessionActivity`; activity comes only from `SessionActivity.derive` (Session Activity ([adhsdk.ingredient.foundation.sessions.session-activity](cookbook:bc99bb92-f6b7-4767-8d29-f68ee9e5e2b4))) |
 | session-status-009 | stale-declared, status-raw-init-optional | Decode a stored value `"stale"` with `SessionStatus(rawValue:)` | `.stale` |
 | session-status-010 | status-published-as-raw | `SessionEventEncoding.encodeSessionStatus(sessionId: "s1", status: .stale)` | JSON whose `status` is `"stale"` |
 | session-status-011 | status-sendable | Pass a `SessionStatus` value across a task boundary | Compiles without a `Sendable` diagnostic |
@@ -136,11 +137,11 @@ The `platforms` of this recipe are swift and macos; the notes for the other targ
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionStatus.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/SessionStatus.swift` | confirmed (1.0.3) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Sessions/LivenessServiceTests.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKDatabaseTests/Daemon/Sessions/LivenessServiceTests.swift` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -168,10 +169,12 @@ The `platforms` of this recipe are swift and macos; the notes for the other targ
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | best-practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | internationalization |
 
-Separation of concerns passes: the file is three cases and nothing else, with transitions owned by `LivenessService` and persistence by the session records code. Unit-test coverage is partial: the liveness and session-record tests exercise the `active` and `ended` values, but no test sits beside the enum and none covers `stale`, the raw-value strings or an unknown raw string. No user-facing strings exist; the literals are identifiers.
+Separation of concerns passes: the file is three cases and nothing else, with transitions owned by `LivenessService` and persistence by the session records code. Unit-test coverage is partial: `SessionStatusConformanceTests` covers every vector except 008, which is skipped because an absent API cannot be asserted at runtime. No user-facing strings exist; the literals are identifiers.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (SessionStatusConformanceTests.swift, 10 of 11 vectors); unit-test-coverage now partial (008 skipped: an absent API cannot be asserted at runtime). |
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Restore requirements lost in the lint pass: status-update-failure |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Dropped status-not-case-iterable and status-update-failure, cut stale-declared to a consumer MUST and moved the case descriptions to Overview, replaced the liveness vectors with enum-level ones, fixed the WinUI parsing note and the web guard signature, linked related specs and emptied references. |

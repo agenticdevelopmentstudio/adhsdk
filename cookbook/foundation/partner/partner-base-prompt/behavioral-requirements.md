@@ -33,7 +33,7 @@
 
 - **steps-empty**: The steps section MUST be the empty string when the job has no steps.
 - **steps-heading**: A job with steps MUST have its steps section begin with a blank line and the heading `### Steps` followed by a blank line.
-- **steps-code-review-note**: A job whose `id` equals `PartnerJobDefaults.codeReviewsID` (`"code-reviews"`, owned by [Partner Job Defaults](cookbook:294285ac-403a-44fe-9840-8ad9f3cf1eba)) MUST have the sentence "These steps arrive filled in from `partner_review_start`; run the filled copy it returns." placed after the heading as its own paragraph, followed by a blank line, and every other job MUST NOT have it.
+- **steps-code-review-note**: A job whose `id` equals `PartnerJobDefaults.codeReviewsID` (`"code-reviews"`, owned by Partner Job Defaults ([adhsdk.ingredient.foundation.partner.partner-job-defaults](cookbook:294285ac-403a-44fe-9840-8ad9f3cf1eba))) MUST have the sentence "These steps arrive filled in from `partner_review_start`; run the filled copy it returns." placed after the heading as its own paragraph, followed by a blank line, and every other job MUST NOT have it.
 - **steps-line-format**: Each step MUST be one numbered line, counted from 1, in the form `<n>. <name> (<place>): <command in backticks>`.
 - **steps-place-label**: The `<place>` MUST be `Claude Code prompt` when the step's environment is `claude` and `terminal shell` otherwise.
 - **steps-condition**: When a step's condition, trimmed of leading and trailing whitespace and newlines, is not empty, the step line MUST end with `, when <trimmed condition>`; otherwise the line MUST end after the command.

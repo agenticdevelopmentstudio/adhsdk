@@ -2,7 +2,7 @@
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | partial | Reliability |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
@@ -11,11 +11,9 @@ Each hook owns exactly one concern (transport, caret geometry, gaze, mood,
 sizing, scroll, focus, phrase rotation, or image-load gating) in its own
 file, and the only cross-hook composition (`useBlockCursor`/`useCaretGaze`
 on `useCaretTracker`, `usePersonaGaze` on `useMouseGaze`+`useCaretGaze`) is
-one-directional and narrow, so separation-of-concerns passes. Twelve of the
-thirteen hooks have a dedicated test file exercising their documented
+one-directional and narrow, so separation-of-concerns passes. Every one of the thirteen hooks has a dedicated test file exercising its documented
 behavior in real depth (fake timers, jsdom rect stubs, Strict Mode
-rendering); `useAllImagesLoaded` has none at all, so unit-test-coverage is
-partial rather than passed. Error handling is inconsistent rather than
+rendering), and all 73 conformance vectors are covered by passing tests, so unit-test-coverage passes. Error handling is inconsistent rather than
 absent: a legacy backend's rejection is caught and surfaced as a visible
 apology message (**session-backend-error-apology**), but the same
 `sendMessage`'s call into `orchestrator.submitMessage` swallows any

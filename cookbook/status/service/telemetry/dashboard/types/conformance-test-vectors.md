@@ -17,7 +17,7 @@
 | dash-types-014 | no-behavior, export-range-constant, export-view-constants | List the runtime (value) exports of the module | Exactly `ANALYTICS_RANGES`, `DIMENSIONS`, `VERCEL_BREAKDOWNS` and `VITALS`; nothing else exists at runtime |
 | dash-types-015 | series-length | A `TrafficSection` for `"24h"` with traffic in only one hour | `buckets` has 25 entries; `pageviews`, `sessions` and each `sites[].series` have 25 values, the quiet hours being 0 |
 | dash-types-016 | vercel-project-incomplete | A project whose `paths` breakdown call fails while its pageview count succeeds | `incomplete` true; `pageviews` still the whole count; `paths` short or empty |
-| dash-types-017 | vercel-failed-count | Two enabled projects, one of whose counts cannot be read | `failed` is 1; `totals` and the roster cover only the readable project |
+| dash-types-017 | vercel-failed-count | Two enabled projects, one of whose counts cannot be read | `failed` is 1; `totals` cover only the readable project, and the unreadable project's roster entry has `pageviews` and `visitors` null |
 | dash-types-018 | error-issue-active | Issues at levels `error`, `warning` and `null`, all seen 1 hour ago, then one `error` issue last seen 48 hours ago | Only the first `error` issue is `active`; with the error feed frozen, the 48-hour-old `error` issue is `active` too |
 | dash-types-019 | issues-by-type | Three unresolved issues: two of type `TypeError` (4 and 6 events), one of type `SyntaxError` (1 event) | `summary.byType` holds `{ name: "TypeError", issues: 2, events: 10 }` and `{ name: "SyntaxError", issues: 1, events: 1 }` |
 | dash-types-020 | site-error-detail-truncated | More error rows than the row cap | `truncated` true; the rarest rows are absent |

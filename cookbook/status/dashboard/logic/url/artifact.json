@@ -4,11 +4,11 @@
     "id": "9ab21212-c31d-4a4a-b563-2a2666eec03d",
     "title": "Status Web URL Host",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2630bf380c3034fd",
+  "synced": "3897937bd595c237",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

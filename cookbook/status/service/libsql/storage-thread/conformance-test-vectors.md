@@ -1,5 +1,5 @@
 
-The module has no unit test of its own. `storage-thread.int.test.ts` › "migrates, serves two ports, and carries driver errors intact" runs it under bare node through `storage-thread-driver.mjs` (start, a store call on `storage`, a second port from `connect()`, a duplicate-insert error, a monitor cycle, and an empty `exits` list); vectors 001, 009, 010, 011 and 013 are covered by it, and the rest are derived from the source.
+Every vector is covered by `test/storage-thread.test.ts`, which runs the module against a fake Worker that serves attached ports through the real Storage Remote server. `storage-thread.int.test.ts` › "migrates, serves two ports, and carries driver errors intact" also runs the real built thread under bare node (start, a store call, a second port, a duplicate-insert error, a monitor cycle, an empty `exits` list).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

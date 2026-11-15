@@ -2,11 +2,11 @@
 id: 7ba98112-0f6d-4236-ab6b-aa18b72d76bd
 title: "Status Server Monitor Provider Deploy"
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -98,8 +98,8 @@ Not applicable — this is a data-shape and pure-mapping module, not a visual co
 | status-server-monitor-provider-deploy-010 | dto-tier-gate | `providerDeployToDTO(deploy({ projectName: 'hub', branch: 'prepared' }), null)` where `deploy()` defaults to `{ platform: 'vercel', projectName: 'hub-help-testing', environment: 'production', branch: null, ... }` | `dto.tier === 'testing'` and `dto.environment === 'production'` (the raw promotion target is preserved alongside the derived tier) — `deploy-env.test.ts` › "providerDeployToDTO stamps the tier" › "derives it from the branch, alongside the RAW promotion target" |
 | status-server-monitor-provider-deploy-011 | dto-tier-gate | `providerDeployToDTO(deploy(), null)`; `providerDeployToDTO(deploy({ projectName: 'hub' }), null)` | `'testing'` and `'production'` respectively — with no branch, `deployEnv` falls back to the project-name rule — `deploy-env.test.ts` › "falls back to the name rule when the row has no branch" |
 | status-server-monitor-provider-deploy-012 | dto-tier-gate | `providerDeployToDTO(deploy({ environment: null, branch: 'feature/x' }), null)`; `providerDeployToDTO(deploy({ environment: '' }), null)` | Both `dto.tier === null` — a Vercel preview (no real `environment`) is never assigned a tier even though its branch or project name would otherwise suggest one — `deploy-env.test.ts` › "is NULL for a Vercel preview, which is not a deployment of any tier" |
-| status-server-monitor-provider-deploy-013 | dto-phase-confirmed-at-fallback | `providerDeployToDTO({ ...deploy(), confirmedAt: undefined }, null)` vs. `providerDeployToDTO({ ...deploy(), confirmedAt: new Date(2000) }, null)` | The first result's `phaseConfirmedAt` equals `isoOf` applied to `createdAt` (`new Date(1000).toISOString()`); the second's equals `isoOf` applied to the supplied `confirmedAt` (`new Date(2000).toISOString()`) — traced to the mapper's `d.confirmedAt ?? d.createdAt` expression; no dedicated test exercises `phaseConfirmedAt` directly in this package |
-| status-server-monitor-provider-deploy-014 | dto-provider-project-id-coalesce, dto-error-text-coalesce | `providerDeployToDTO({ id: 'ry_1', platform: 'railway', projectName: 'p', buildPhase: null, deployPhase: 'none', environment: null, commitHash: null, commitMessage: null, branch: null, commitRepo: null, url: null, createdAt: new Date(0) }, null)` (both `providerProjectId` and `errorText` omitted) | `dto.providerProjectId === null` and `dto.errorText === null` — traced directly to the mapper's `?? null` expressions; no dedicated test asserts these two fields in isolation in this package |
+| status-server-monitor-provider-deploy-013 | dto-phase-confirmed-at-fallback | `providerDeployToDTO({ ...deploy(), confirmedAt: undefined }, null)` vs. `providerDeployToDTO({ ...deploy(), confirmedAt: new Date(2000) }, null)` | The first result's `phaseConfirmedAt` equals `isoOf` applied to `createdAt` (`new Date(1000).toISOString()`); the second's equals `isoOf` applied to the supplied `confirmedAt` (`new Date(2000).toISOString()`) — traced to the mapper's `d.confirmedAt ?? d.createdAt` expression; `deploy-env.test.ts` › "providerDeployToDTO field coalescing" › "status-server-monitor-provider-deploy-013: ..." |
+| status-server-monitor-provider-deploy-014 | dto-provider-project-id-coalesce, dto-error-text-coalesce | `providerDeployToDTO({ id: 'ry_1', platform: 'railway', projectName: 'p', buildPhase: null, deployPhase: 'none', environment: null, commitHash: null, commitMessage: null, branch: null, commitRepo: null, url: null, createdAt: new Date(0) }, null)` (both `providerProjectId` and `errorText` omitted) | `dto.providerProjectId === null` and `dto.errorText === null` — traced directly to the mapper's `?? null` expressions; `deploy-env.test.ts` › "providerDeployToDTO field coalescing" › "status-server-monitor-provider-deploy-014: ..." |
 
 ## Edge Cases
 
@@ -164,7 +164,7 @@ Subsystem: `status-server` | Category: `provider-deploy`
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/provider-deploy.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/status-server/src/monitor/provider-deploy.ts` | confirmed (1.0.4) |
 
 ## Design Decisions
 
@@ -188,17 +188,18 @@ Subsystem: `status-server` | Category: `provider-deploy`
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
-`unit-test-coverage` is `partial`: `timestamp-validation.test.ts` gives `toValidDate` thorough coverage of its accept and reject branches, and separately asserts `isoOf`'s fail-soft epoch substitution through `providerDeployToDTO`'s `createdAt` field; `deploy-env.test.ts` separately gives the `tier` derivation (the gate plus both of `deployEnv`'s fallback paths) thorough coverage through `providerDeployToDTO`. But `dto-passthrough-fields`, `dto-provider-project-id-coalesce`, `dto-error-text-coalesce`, and `dto-phase-confirmed-at-fallback` have no dedicated assertion anywhere in this package — each is exercised only incidentally, as an unasserted field on a `DeploymentDTO` object the `tier`/`createdAt`-focused tests construct for another purpose. `separation-of-concerns` passes: this file's only responsibility is the `ProviderDeploy` data shape, trust-boundary timestamp parsing, and DTO shaping composed from two other pure modules' exported derivations; it performs no I/O, no persistence, and no presentation of its own. `explicit-error-handling` passes: `toValidDate` converts every unparseable or out-of-range input into an explicit `null` return rather than letting a downstream `.toISOString()` throw later, and `isoOf`'s fail-soft path logs the specific failure (naming the deploy's `id`) via `console.error` rather than silently substituting a value with no signal. `fault-tolerance` passes: `providerDeployToDTO` accepts a `ProviderDeploy` whose `createdAt` or `confirmedAt` may already be an Invalid Date — data this file did not itself validate at construction time — and still returns a well-formed `DeploymentDTO` rather than throwing, per `iso-serialize-invalid-date-fail-soft`.
+`unit-test-coverage` is `passed`: `timestamp-validation.test.ts` gives `toValidDate` thorough coverage of its accept and reject branches (vectors 001-008) and asserts `isoOf`'s fail-soft epoch substitution through `providerDeployToDTO`'s `createdAt` field (009); `deploy-env.test.ts` gives the `tier` derivation (010-012) and, in its "field coalescing" suite, the `phaseConfirmedAt` fallback (013) and the `providerProjectId` and `errorText` null coalescing (014) thorough coverage through `providerDeployToDTO`. `separation-of-concerns` passes: this file's only responsibility is the `ProviderDeploy` data shape, trust-boundary timestamp parsing, and DTO shaping composed from two other pure modules' exported derivations; it performs no I/O, no persistence, and no presentation of its own. `explicit-error-handling` passes: `toValidDate` converts every unparseable or out-of-range input into an explicit `null` return rather than letting a downstream `.toISOString()` throw later, and `isoOf`'s fail-soft path logs the specific failure (naming the deploy's `id`) via `console.error` rather than silently substituting a value with no signal. `fault-tolerance` passes: `providerDeployToDTO` accepts a `ProviderDeploy` whose `createdAt` or `confirmedAt` may already be an Invalid Date — data this file did not itself validate at construction time — and still returns a well-formed `DeploymentDTO` rather than throwing, per `iso-serialize-invalid-date-fail-soft`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-14 | Mike Fullerton | Conformance tests added (deploy-env.test.ts, 14 of 14 vectors; 001-012 already covered by timestamp-validation.test.ts and deploy-env.test.ts); unit-test-coverage now passed. |
 | 1.0.3 | 2026-10-04 | Mike Fullerton | Inverted prohibitions (none/neither/no X MUST) restated as MUST NOT. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

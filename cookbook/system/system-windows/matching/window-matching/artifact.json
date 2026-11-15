@@ -4,11 +4,11 @@
     "id": "840dc813-b4a3-483c-be87-2959ac551ea7",
     "title": "Window Matching",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -38,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "87f74b0c4309ec95",
+  "synced": "5634490fb96f47a4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

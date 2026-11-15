@@ -4,7 +4,7 @@
     "id": "aa775836-5679-4a22-9ff3-b2bdcb09cc20",
     "title": "Work Tracking Models",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -38,7 +38,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "37149e6cb10eeadc",
+  "synced": "ba259a0ed2d2632d",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

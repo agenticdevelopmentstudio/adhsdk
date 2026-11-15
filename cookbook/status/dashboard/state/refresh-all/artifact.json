@@ -4,11 +4,11 @@
     "id": "87d66a8a-5742-4ae0-91c4-8bb1fd09f9e4",
     "title": "Refresh All",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -27,7 +27,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "2369d6ac241056c8",
+  "synced": "a63251dcbce47337",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

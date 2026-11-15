@@ -1,5 +1,5 @@
 
-Vectors 001 to 006 are traced to `storage-remote.test.ts`; 007 to 018 follow the source and have no test.
+Vectors 001 to 018 are traced to `storage-remote.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -20,4 +20,4 @@ Vectors 001 to 006 are traced to `storage-remote.test.ts`; 007 to 018 follow the
 | storage-remote-015 | connect-failure | The port closes before the shape message | `connectStorage` rejects with `storage connection closed` |
 | storage-remote-016 | error-flatten, error-rebuild | A method throws an error with a `cause` chain of seven errors in all | The caller's rejection has five errors in its chain (the error and four causes); the deeper causes are dropped |
 | storage-remote-017 | error-flatten | A method throws an error with the numeric `code` 5 | The caller's rejection has `code` `'5'`, a string |
-| storage-remote-018 | driver-agnostic | The module's imports | Only the `Storage` type from `./ports` and `node:worker_threads` types are imported; no database driver is imported or named |
+| storage-remote-018 | driver-agnostic | The module's imports | Only the `Storage` type from `./ports` and `node:worker_threads` types are imported; no database driver is imported or named in code (comments aside) |

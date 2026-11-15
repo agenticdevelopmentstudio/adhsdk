@@ -2,7 +2,7 @@
 id: 3b310d80-e18d-4f45-9041-10a278f775c1
 type: ingredient
 title: "Provider Runtime"
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 summary: "Provider metadata, HTTP request building, and network-backed catalog stores for AI chat dispatch and model discovery."
@@ -20,7 +20,7 @@ tags:
   - cli
   - security
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 approved-by:
 approved-date:
@@ -297,7 +297,7 @@ Not applicable: none of the 8 parts call a logger of any kind — every failure 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AI/` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/AI/` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -334,7 +334,7 @@ Not applicable: none of the 8 parts call a logger of any kind — every failure 
 | Check | Status | Notes |
 |-------|--------|-------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | partial | Request building (`AIRequestBuilder`), the CLI wrapper (`ClaudeCLI`), and each catalog/metadata store sit in separate types with one concern each, but `ArtificialAnalysisStore` also owns its API-key and rank-cache persistence settings alongside its network fetch. |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | `AIRequestBuilderTests.swift`, `ModelCatalogStoreTests.swift`, `ArtificialAnalysisStoreTests.swift`, `OllamaModelMetadataTests.swift` and `OllamaModelPageStoreTests.swift` exercise the builder and the stores; `ClaudeCLI` has no dedicated test file and the CLI reply-parsing branch is an untested stub. |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Every conformance vector has a test. `AIRequestBuilderTests.swift`, `ModelCatalogStoreTests.swift`, `ArtificialAnalysisStoreTests.swift`, `OllamaModelMetadataTests.swift` and `OllamaModelPageStoreTests.swift` exercise the builder and the stores; `ClaudeCLIFindBinaryTests.swift` and `ClaudeCLISearchPathTests.swift` cover the CLI wrapper's binary lookup and search path, and `OpenAIModelCatalogTests.swift` covers the model listing; the CLI reply-parsing branch is an untested stub with no vector. |
 | [adc.check.security.secure-storage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bb5dfc9b-c5b0-54fa-882f-007ae7dad0e9) | failed | `ArtificialAnalysisStore.apiKey` and `.rankCache` are constructed via `UserSetting` without `isSecure: true`, which routes them through plain (non-Keychain) storage rather than the secure provider this codebase already offers for exactly this purpose. |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | The four hardcoded provider base URLs are fixed HTTPS literals, but `customBaseURL`/`baseURL`/`openAIBaseURL` accepted from a caller for `.custom` and OpenAI-compatible/Ollama routes carry no scheme validation before an API key is attached to a request against them (see custom-endpoint-scheme-validation and its Design Decision). |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Every fetch function across `ArtificialAnalysisStore`, `ModelCatalogStore`, `LocalModelMetadataStore`, `OllamaModelPageStore`, and `OpenAIModelCatalog` degrades to `nil`/`[:]`/`[]` on any failure rather than throwing, with `ArtificialAnalysisStore`/`ModelCatalogStore` additionally falling back to their last good data. |
@@ -350,3 +350,4 @@ Not applicable: none of the 8 parts call a logger of any kind — every failure 
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/providers/. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Restate unimplemented CLI reply parsing and endpoint scheme validation as current behavior with pending decisions; add separation-of-concerns and unit-test-coverage. |
+| 1.2.1 | 2026-11-14 | Mike Fullerton | No new test file needed: all 23 vectors already have tests (ModelCatalogStoreTests, ArtificialAnalysisStoreTests, OllamaModelPageStoreTests, OllamaModelMetadataTests, OpenAIModelCatalogTests); unit-test-coverage now passed. |

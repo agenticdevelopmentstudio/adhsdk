@@ -4,11 +4,11 @@
     "id": "ec6e6ca5-8780-4ce2-8b3a-087adc50ed35",
     "title": "Resource Data",
     "type": "ingredient",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -50,7 +50,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "bc2194a54cd4f007",
+  "synced": "ff4f5c6864740478",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

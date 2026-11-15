@@ -6,8 +6,8 @@
 - **Unattributed rows**: An activity row with no attributed source falls back to its kind (for example `"deploy"`). The issue-source guard operation MUST return `false` for such a string, and the caller shows it unlabeled.
 - **Non-text input at runtime**: A caller that passes an absent value or a non-text value MUST get `false`, because an exact-match comparison does not throw and no member equals a non-text value.
 - **Mutation of the source order list**: The list is not protected against in-place modification. A consumer that pushed to or sorted it in place would change the filter order and the guard's answers for every other consumer. No consumer does so; they only derive new lists from it.
-- **Long-running builds**: A deploy BUILDING for more than 30 minutes MUST NOT become a client-side Problem. Any stuck verdict arrives from the backend on the board.
-- **Null, boundary and error states**: There are no numeric inputs and no I/O. The only numeric export is the fixed stuck-deploy threshold. The module cannot fail at runtime.
+- **Long-running builds**: A deploy BUILDING for a long time MUST NOT become a client-side Problem. Any stuck verdict arrives from the server on the board.
+- **Null, boundary and error states**: There are no numeric inputs and no I/O. The module exports no numbers. The module cannot fail at runtime.
 - **Concurrent access**: Not applicable. The exports are never mutated.
 - **Offline or disconnected**: Not applicable. The module performs no network access.
 

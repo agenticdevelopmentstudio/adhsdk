@@ -2,7 +2,7 @@
 id: 3bff70de-bfca-4bfd-b112-2a6044416ddc
 title: "Color Mode"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -111,12 +111,12 @@ Not applicable — this is a context provider and hook, not a visual component. 
 
 ## Conformance Test Vectors
 
-The only test beside the source that exercises the provider is `AppearanceModeToggle.test.tsx` in the controls package, which wraps a toggle in `ColorModeProvider`; vectors 001 and 002 derive from its behavior and the rest from the source.
+`packages/web/packages/themes/src/__tests__/colorMode.test.tsx` covers every vector below, color-mode-001 to color-mode-019. Vectors 001 and 002 also describe the behavior `AppearanceModeToggle.test.tsx` in the controls package relies on, since it wraps a toggle in `ColorModeProvider`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
 | color-mode-001 | initial-mode-default, cycle-order | `AppearanceModeToggle.test.tsx` "exposes an aria-label that changes after a click": empty storage, system light, default props; the toggle calls `cycle()` once | `mode` goes `auto` to `dark`; the consumer's rendered label differs before and after |
-| color-mode-002 | context-value-shape, hook-requires-provider | `AppearanceModeToggle.test.tsx` "renders a button with the awt-appearance-mode-toggle class" (the toggle renders inside `ColorModeProvider`); the same consumer rendered with no provider (derived from the source, not tested) | inside: `useColorMode` returns the context value; outside: throws `useColorMode must be used within a <ColorModeProvider>` |
+| color-mode-002 | context-value-shape, hook-requires-provider | `AppearanceModeToggle.test.tsx` "renders a button with the awt-appearance-mode-toggle class" (the toggle renders inside `ColorModeProvider`); the same consumer rendered with no provider | inside: `useColorMode` returns the context value; outside: throws `useColorMode must be used within a <ColorModeProvider>` |
 | color-mode-003 | initial-mode-from-storage, invalid-stored-value-ignored | `localStorage['adh-sdk:color-mode']` is `dark`, then is `purple` | first render mode is `dark`; with `purple` the mode is `auto` |
 | color-mode-004 | initial-mode-from-legacy-key, legacy-key-only-for-default, legacy-key-not-cleaned | only `localStorage['agentic-toolkit:color-mode']` is `light`; once with the default key and once with `storageKey="x"` | default key: mode `light` and `adh-sdk:color-mode` becomes `light`, legacy key untouched; custom key: mode `auto` |
 | color-mode-005 | resolve-auto-from-system, dark-class | mode `auto`, `matchMedia('(prefers-color-scheme: dark)').matches` is true | `resolved` is `dark`, `document.documentElement` has class `dark`, `data-appearance-mode` is `auto` |
@@ -215,7 +215,7 @@ Not applicable: the module makes no log calls; storage errors are discarded with
 | ios | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
-| web | `packages/web/packages/themes/src/colorMode.tsx` | confirmed (1.0.2) |
+| web | `packages/web/packages/themes/src/colorMode.tsx` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -244,15 +244,16 @@ Not applicable: the module makes no log calls; storage errors are discarded with
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | Best Practices |
 | [adc.check.platform-compliance.platform-theming](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d2b685fd-b481-5d38-bd70-403bd202b5c6) | passed | Platform Compliance |
 
-The provider keeps one concern: it owns the mode, resolution, persistence and document attributes, and leaves the toggle control and the stylesheets to other modules, so separation of concerns passes. No test sits beside `colorMode.tsx`; the only test that touches it is the controls package's `AppearanceModeToggle.test.tsx`, which covers a small part of the behavior, so unit-test coverage fails. Misuse outside a provider throws a clear error, but storage failures are discarded without a signal, so explicit error handling is partial. Following `prefers-color-scheme` and offering an explicit override satisfies platform theming.
+The provider keeps one concern: it owns the mode, resolution, persistence and document attributes, and leaves the toggle control and the stylesheets to other modules, so separation of concerns passes. `src/__tests__/colorMode.test.tsx` in the themes package covers all nineteen conformance vectors, so unit-test coverage passes. Misuse outside a provider throws a clear error, but storage failures are discarded without a signal, so explicit error handling is partial. Following `prefers-color-scheme` and offering an explicit override satisfies platform theming.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (colorMode.test.tsx, 19 of 19 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Linked the appearance modules and the toggle, qualified the resolved-type guarantee, downgraded accidental behaviors to MAY or observed notes, added vectors 014-019, switched Compliance categories to title case, and updated the UIKit note to registerForTraitChanges. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Claims verified against source |

@@ -4,11 +4,11 @@
     "id": "43d93a67-c469-40d1-8465-076cd782e1b2",
     "title": "Portfolio Indicator",
     "type": "ingredient",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -28,7 +28,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "3b58f83b280dda2a",
+  "synced": "4151ef34e75c073a",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

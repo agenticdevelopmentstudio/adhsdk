@@ -2,7 +2,7 @@
 id: 409f10cf-e42b-44bf-8439-27e113ec8b13
 title: "Read Only Git"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -38,7 +38,7 @@ Three things make it safe to call constantly:
 2. It gives each call a 5-second limit. A status line re-renders constantly, so a `git` that has not answered in time is dropped rather than waited on.
 3. It repairs `PATH`, because a status line launched from the GUI inherits a minimal path (`/usr/bin:/bin:/usr/sbin:/sbin`, no Homebrew).
 
-It offers two forms: `git(_:)`, which trims the output (the default, for any displayed value), and `rawGit(_:)`, which returns the bytes untouched for output where leading or trailing whitespace carries meaning (`git status --porcelain`). Any failure (a non-zero exit, a hang past the limit, a spawn error, output that is not UTF-8) collapses to the empty string. It runs the process through `CommandRunner.runToCompletion`, described by the [command-runner recipe](cookbook:705082e9-8fad-4c20-95a3-4cf843cc6b97).
+It offers two forms: `git(_:)`, which trims the output (the default, for any displayed value), and `rawGit(_:)`, which returns the bytes untouched for output where leading or trailing whitespace carries meaning (`git status --porcelain`). Any failure (a non-zero exit, a hang past the limit, a spawn error, output that is not UTF-8) collapses to the empty string. It runs the process through `CommandRunner.runToCompletion`, described by the command-runner recipe ([adhsdk.ingredient.foundation.processes.command-runner](cookbook:705082e9-8fad-4c20-95a3-4cf843cc6b97)).
 
 ## Behavioral Requirements
 
@@ -83,17 +83,17 @@ Not applicable — this is a process-launching utility, not a visual component.
 | read-only-git-001 | raw-output, trimmed-output | In a repo with one unstaged change to `README.md`, args `-C <repo> status --porcelain -unormal --no-renames` | `rawGit` returns ` M README.md\n` (leading space kept); `git` returns `M README.md` | `testRawGitKeepsWhitespaceThatGitTrimsAway` |
 | read-only-git-002 | trimmed-output | `git(["rev-parse", "--abbrev-ref", "HEAD"])` in a repo on branch `fingerprint-branch` | `fingerprint-branch`, no newline | `testSampleReportsTheBranchAndACleanTree` (through the caller) |
 | read-only-git-003 | failure-is-empty, no-throw | `git(["rev-parse", "--abbrev-ref", "HEAD"])` in a directory that is not a repository | `""` | `testSampleReturnsNilOutsideAGitRepository` (through the caller) |
-| read-only-git-004 | failure-is-empty | `git(["no-such-subcommand"])` | `""` | untested |
-| read-only-git-005 | timeout-is-empty | `git(["-c", "alias.slow=!sleep 30", "slow"])`, a command that does not answer within 5 seconds | `""` after about 5 seconds, and the child is stopped | untested |
-| read-only-git-006 | path-repaired-missing | `repairedPath(nil)` and `repairedPath("")` | `/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin` for both | untested |
-| read-only-git-007 | path-repaired, path-repaired-order | `repairedPath("/opt/homebrew/bin:/custom")` | `/opt/homebrew/bin:/custom:/usr/bin:/bin:/usr/local/bin` | untested |
-| read-only-git-008 | path-repaired | `repairedPath("/usr/bin:/bin:/usr/sbin:/sbin")` (a GUI-launched minimal path) | `/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin` | untested |
-| read-only-git-009 | optional-locks-off | In a tree whose index has stale stat data (a file touched after the last refresh), record the index file's modification time, run `git(["status"])`, then compare | the index file's modification time is unchanged, because the status call did not refresh the index | untested |
-| read-only-git-010 | optional-locks-off, environment-inherited | The caller's environment has `GIT_OPTIONAL_LOCKS=1` and `GIT_DIR` set; run `git(["-c", "alias.showenv=!env", "showenv"])` | the output contains `GIT_OPTIONAL_LOCKS=0` and the same `GIT_DIR` | untested |
-| read-only-git-011 | output-drained | A command printing more than 1 MB (a repo with many branches, `branch --list`) | the full listing is returned and the call does not hang | untested |
-| read-only-git-012 | stdout-only | A command that writes to standard error and exits 0 | the standard error text is absent from the result | untested |
-| read-only-git-013 | working-directory | `git(["-C", dir, "rev-parse", "--show-toplevel"])` for a repository other than the caller's directory | the top level of `dir` | untested |
-| read-only-git-014 | path-repaired, path-repaired-order | `repairedPath("/a::/b:")` (empty segments) | `/a:/b:/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin` | untested |
+| read-only-git-004 | failure-is-empty | `git(["no-such-subcommand"])` | `""` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-005 | timeout-is-empty | `git(["-c", "alias.slow=!sleep 30", "slow"])`, a command that does not answer within 5 seconds | `""` after about 5 seconds, and the child is stopped | skipped in `ReadOnlyGitConformanceTests` (needs five real seconds) |
+| read-only-git-006 | path-repaired-missing | `repairedPath(nil)` and `repairedPath("")` | `/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin` for both | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-007 | path-repaired, path-repaired-order | `repairedPath("/opt/homebrew/bin:/custom")` | `/opt/homebrew/bin:/custom:/usr/bin:/bin:/usr/local/bin` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-008 | path-repaired | `repairedPath("/usr/bin:/bin:/usr/sbin:/sbin")` (a GUI-launched minimal path) | `/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-009 | optional-locks-off | In a tree whose index has stale stat data (a file touched after the last refresh), record the index file's modification time, run `git(["status"])`, then compare | the index file's modification time is unchanged, because the status call did not refresh the index | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-010 | optional-locks-off, environment-inherited | The caller's environment has `GIT_OPTIONAL_LOCKS=1` and an extra variable set (a test uses a uniquely named one, since `GIT_DIR` would redirect other tests' repositories); run `git(["-c", "alias.showenv=!env", "showenv"])` | the output contains `GIT_OPTIONAL_LOCKS=0` and the same extra variable | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-011 | output-drained | A command printing more than 1 MB (a repo with many branches, `branch --list`) | the full listing is returned and the call does not hang | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-012 | stdout-only | A command that writes to standard error and exits 0 | the standard error text is absent from the result | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-013 | working-directory | `git(["-C", dir, "rev-parse", "--show-toplevel"])` for a repository other than the caller's directory | the top level of `dir` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
+| read-only-git-014 | path-repaired, path-repaired-order | `repairedPath("/a::/b:")` (empty segments) | `/a:/b:/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin` | `ReadOnlyGitConformanceTests` (`V#` name matches the vector number) |
 
 ## Edge Cases
 
@@ -158,7 +158,7 @@ Not applicable: this component contains no log call; every failure is collapsed 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/ReadOnlyGit.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Process/ReadOnlyGit.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -207,10 +207,11 @@ Not applicable: this component contains no log call; every failure is collapsed 
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.performance.main-thread-freedom](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/86dd71d6-1ab1-5d59-8c85-b9d469fbae0d) | partial | performance |
 
-`separation-of-concerns` passes: the type only builds the command, its environment and its limit; running, draining and stopping the process belong to `CommandRunner`. `unit-test-coverage` is partial: the trimmed and untrimmed forms are asserted in `GitContextFingerprintTests`, and the callers cover the non-repository failure, while the timeout, the PATH repair, the lock variable, the stdout-only rule and the other vectors marked `untested` in Conformance Test Vectors have no test. `timeout-handling` passes with a fixed 5-second limit and a stopped child. `explicit-error-handling` is partial: failures are surfaced as the empty string by contract, which is lossy by design and cannot tell a failure from empty output. `main-thread-freedom` is partial: the call blocks its calling thread for up to 5 seconds and relies on callers to keep it off the main thread.
+`separation-of-concerns` passes: the type only builds the command, its environment and its limit; running, draining and stopping the process belong to `CommandRunner`. `unit-test-coverage` is partial: `ReadOnlyGitConformanceTests.swift` covers every vector except 005 (the five-second timeout needs real time to pass, so it is skipped); `GitContextFingerprintTests` also covers the trimmed and untrimmed forms through its caller. `timeout-handling` passes with a fixed 5-second limit and a stopped child. `explicit-error-handling` is partial: failures are surfaced as the empty string by contract, which is lossy by design and cannot tell a failure from empty output. `main-thread-freedom` is partial: the call blocks its calling thread for up to 5 seconds and relies on callers to keep it off the main thread.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ReadOnlyGitConformanceTests.swift, 13 of 14 vectors; 005 skipped, needs 5 real seconds); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Cited source members in design decisions, moved the command-runner link to depends-on, fixed RFC 2119 wording, added a Test column, concrete vectors 005/009/010 and empty-PATH-segment vector 014, and corrected the Compose, Web, WinUI and SwiftUI platform notes. |

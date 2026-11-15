@@ -2,7 +2,7 @@
 id: 488a7fef-19c2-4526-8882-3d0529dda3e3
 title: "Errors Dashboard Sections"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-11-14
@@ -81,7 +81,7 @@ Not applicable — this is a data-shaping service, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 010 are traced to the `errors sections` tests in `telemetry-dashboard-sections.test.ts`; 011 and 012 follow the source, as do the vectors from 013 on.
+Vectors 001 to 018 are traced to the `errors sections: conformance vectors` tests in `telemetry-dashboard-sections.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -166,7 +166,7 @@ Not applicable: the module makes no log call; a failed section refresh is logged
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/dashboard/errors-sections.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-server/src/telemetry/dashboard/errors-sections.ts` | confirmed (1.0.3) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -198,16 +198,17 @@ Not applicable: the module makes no log call; a failed section refresh is logged
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.performance.caching-strategy](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/3b773606-ab90-5e7d-8e96-093777dcf070) | passed | Performance |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
-The shaping is pure and kept apart from the fetcher and the board rule it calls, and its tests cover the active rule, the allowlist, the summary and the resolved count (including the failure path); the judging inputs, the section window, the incomplete flag and the capped and never-throws resolved cases have no direct test, so coverage is partial. The resolved count is cached with a TTL that keeps failures out of the cache, and a failed unresolved read is raised rather than hidden.
+The shaping is pure and kept apart from the fetcher and the board rule it calls, and `telemetry-dashboard-sections.test.ts` has a test for every vector, 001 to 018, so unit-test coverage passes. The resolved count is cached with a TTL that keeps failures out of the cache, and a failed unresolved read is raised rather than hidden.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (telemetry-dashboard-sections.test.ts, 18 of 18 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-11-14 | Mike Fullerton | Defined walk outcomes once, added fetch-limit configuration rows, six vectors for untested requirements, the depends-on specs, the 60-second refresh citation and the stateful-counter wording, and marked unit-test-coverage partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Each design decision carries its own approval line |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

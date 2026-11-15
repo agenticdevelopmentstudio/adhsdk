@@ -2,11 +2,11 @@
 id: 36c76e0f-b41c-4fd6-a349-a0e9241fb489
 title: "Billing XPC Protocol"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -129,7 +129,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingXPCProtocol.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingXPCProtocol.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -144,10 +144,11 @@ Not applicable: this code makes no log calls.
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
 
-separation-of-concerns passes: the protocol is a pure wire declaration kept apart from any daemon's own surface and from the client. unit-test-coverage is partial: `BillingXPCClientTests` exercises the client's reading of the reply conventions and the decoder, but no shared test asserts that a daemon implementing the protocol honors them.
+separation-of-concerns passes: the protocol is a pure wire declaration kept apart from any daemon's own surface and from the client. unit-test-coverage is partial: `BillingXPCProtocolConformanceTests` names all eleven vectors and skips each one. They describe how a daemon that implements the protocol replies, and no implementing daemon is in this package; a fake would only assert its own code. `BillingXPCClientTests` covers the client's reading of these reply conventions.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingXPCProtocolConformanceTests.swift, 0 of 11 vectors tested, all skipped: daemon behavior, no implementing daemon in the package); unit-test-coverage stays partial. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

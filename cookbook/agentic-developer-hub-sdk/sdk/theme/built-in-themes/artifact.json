@@ -4,7 +4,7 @@
     "id": "359491fd-36ee-4e07-9971-76260183f243",
     "title": "Built-In Themes",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -38,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "55c51d4f8fa78ee4",
+  "synced": "079371ce35750282",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

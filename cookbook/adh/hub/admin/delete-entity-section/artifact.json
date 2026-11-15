@@ -4,11 +4,11 @@
     "id": "96bc198e-c726-476a-bc4a-ddc1d5c0c2f8",
     "title": "Delete Entity Section",
     "type": "recipe",
-    "version": "1.4.2",
+    "version": "1.4.3",
     "status": "review",
     "language": "en",
     "created": "2026-07-03",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -38,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "d34a6ed061b0c078",
+  "synced": "5e748dfb2080b547",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

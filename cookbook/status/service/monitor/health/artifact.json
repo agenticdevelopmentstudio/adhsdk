@@ -4,11 +4,11 @@
     "id": "2871e97f-f971-46fe-a4d2-de57ad5c94c5",
     "title": "Status Server Monitor Health",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-09-27",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "75e234f0642eeb29",
+  "synced": "d1cc462d7f1d1592",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

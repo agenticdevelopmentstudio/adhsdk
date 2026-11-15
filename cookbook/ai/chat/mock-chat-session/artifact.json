@@ -4,11 +4,11 @@
     "id": "91bd3986-da9d-418e-a969-c878efa88d50",
     "title": "Mock Chat Session",
     "type": "ingredient",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "status": "review",
     "language": "en",
     "created": "2026-09-24",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "6e5e34dddc0af5b5",
+  "synced": "ce5244efd6d9e538",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

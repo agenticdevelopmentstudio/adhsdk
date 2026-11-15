@@ -2,11 +2,11 @@
 id: b1622d2b-587f-4207-89ed-2130f8309f8c
 title: "Status Server Peers"
 type: ingredient
-version: 1.1.1
+version: 1.1.2
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -113,7 +113,7 @@ Not applicable — this is a fleet-peer polling and assembly module, not a visua
 | status-server-peers-016 | fleet-peer-member-defaults, fleet-inactive-peers-excluded | one active peer with no matching snapshot row, plus one inactive peer that has a stored snapshot | returned array has exactly 2 elements (self + the active peer); the active peer's member has `overall: null`, `reachable: false`, `fetchedAt` equal to `new Date(0).toISOString()`; the inactive peer never appears | fleet.ts |
 | status-server-peers-017 | fleet-peer-member-lookup | two active peers `p1`, `p2`; a stored snapshot exists only for `p2` (`overall:"down"`, `reachable:true`) | `p1`'s member is the epoch default of status-server-peers-016; `p2`'s member reflects only `p2`'s own snapshot | fleet.ts |
 | status-server-peers-018 | self-url-canonical-match, self-url-requires-known-public-base-url | `isSelfPeerUrl("https://lewis.example.com", { publicBaseUrl: "https://LEWIS.example.com:443/" })` then `isSelfPeerUrl("https://lewis.example.com", { publicBaseUrl: "" })` | `true`, then `false` | base-url.ts |
-| status-server-peers-019 | peer-snapshot-payload-unvalidated | peer responds 200 with JSON body `{overall: 42}` | `fetchPeers` still resolves; stored row has `reachable: true`, `error: null`, and `overall` stored as the numeric value `42` unchanged | fetch.ts |
+| status-server-peers-019 | peer-snapshot-payload-unvalidated | peer responds 200 with JSON body `{overall: 42}` | `fetchPeers` still resolves; stored row has `reachable: true`, `error: null`, the stored `payload` equals `{overall: 42}` unchanged, and `overall` is stored without rejection (the `overall` text column's affinity reads the number back as `"42.0"`) | peers-fetch.int.test.ts |
 
 ## Edge Cases
 
@@ -182,7 +182,7 @@ None of the three files calls `console.*` or any logger; `fetchPeers` and `fleet
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/peers/` | confirmed (1.1.1) |
+| web | `packages/web/packages/status-server/src/peers/` | confirmed (1.1.2) |
 
 ## Design Decisions
 
@@ -223,7 +223,7 @@ None of the three files calls `console.*` or any logger; `fetchPeers` and `fleet
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
@@ -233,12 +233,13 @@ None of the three files calls `console.*` or any logger; `fetchPeers` and `fleet
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | partial | Security |
 
-`separation-of-concerns` passes: all three files depend only on the `Storage`/`PeerStore` port and `StatusConfig`, never on the libSQL/drizzle implementation directly. `unit-test-coverage` is `partial`: `base-url.ts`'s and `fetch.ts`'s success and failure paths are directly tested (`peer-base-url.test.ts`, `peers-fetch.int.test.ts`), but `fleet.ts`/`assembleFleet` and `isSelfPeerUrl` have no dedicated test among the given sources. `explicit-error-handling` passes: every peer's failure (non-`ok`, thrown, unparseable JSON) is caught per-peer and turned into a stored `error` string; no failure is swallowed silently. `timeout-configuration` passes: every peer request is bounded by `AbortSignal.timeout(10_000)`. `retry-with-backoff` fails as written: `fetchPeers` makes exactly one attempt per peer per call, with no retry or backoff; a failed poll is only retried by the next full-sync cycle, external to these files (see the retry Design Decision). `error-response-handling` passes: an HTTP error response, a thrown request, and a JSON-parse failure are all normalized to the same `reachable: false` shape. `graceful-degradation` passes: one peer's failure never prevents any other peer's snapshot from being attempted or stored, and never causes `fetchPeers` itself to reject. `data-integrity` is `partial`: snapshot storage is keyed and idempotent (`upsertSnapshot`'s `peerId` conflict target, external), but the open question on `peer-snapshot-payload-unvalidated` means a malformed `overall`/`payload` from a peer is stored and read back unchecked. `no-pii-in-logs` passes: none of the three files logs anything at all; no `token`, `baseUrl`, or snapshot `payload` is ever written to a log line. `secure-transport` is `partial`: a peer's `token` is sent only via the `Authorization: Bearer` header, never in a URL or body, but neither `isValidPeerBaseUrl` nor `fetchPeers` requires `https://` — an `http://` peer base URL is accepted and polled the same as an `https://` one.
+`separation-of-concerns` passes: all three files depend only on the `Storage`/`PeerStore` port and `StatusConfig`, never on the libSQL/drizzle implementation directly. `unit-test-coverage` is `passed`: all 19 conformance vectors have a passing test — `base-url.ts` including `isSelfPeerUrl` (`peer-base-url.test.ts`), `fetch.ts`'s success, failure, no-token and HTTP-error paths and the unvalidated payload (`peers-fetch.int.test.ts`), and `assembleFleet` (`fleet.int.test.ts`). `explicit-error-handling` passes: every peer's failure (non-`ok`, thrown, unparseable JSON) is caught per-peer and turned into a stored `error` string; no failure is swallowed silently. `timeout-configuration` passes: every peer request is bounded by `AbortSignal.timeout(10_000)`. `retry-with-backoff` fails as written: `fetchPeers` makes exactly one attempt per peer per call, with no retry or backoff; a failed poll is only retried by the next full-sync cycle, external to these files (see the retry Design Decision). `error-response-handling` passes: an HTTP error response, a thrown request, and a JSON-parse failure are all normalized to the same `reachable: false` shape. `graceful-degradation` passes: one peer's failure never prevents any other peer's snapshot from being attempted or stored, and never causes `fetchPeers` itself to reject. `data-integrity` is `partial`: snapshot storage is keyed and idempotent (`upsertSnapshot`'s `peerId` conflict target, external), but the open question on `peer-snapshot-payload-unvalidated` means a malformed `overall`/`payload` from a peer is stored and read back unchecked. `no-pii-in-logs` passes: none of the three files logs anything at all; no `token`, `baseUrl`, or snapshot `payload` is ever written to a log line. `secure-transport` is `partial`: a peer's `token` is sent only via the `Authorization: Bearer` header, never in a URL or body, but neither `isValidPeerBaseUrl` nor `fetchPeers` requires `https://` — an `http://` peer base URL is accepted and polled the same as an `https://` one.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (peer-base-url.test.ts, peers-fetch.int.test.ts, fleet.int.test.ts, 19 of 19 vectors); unit-test-coverage now passed. |
 | 1.1.1 | 2026-10-04 | Mike Fullerton | Matches its type's shape: required fields, title heading, and only the type's own sections. |
 | 1.1.0 | 2026-10-04 | Mike Fullerton | Resolved peer-snapshot-payload-unvalidated marker as current behavior plus pending decision |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |

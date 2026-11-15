@@ -4,7 +4,7 @@
     "id": "ad0b0d88-6ade-49aa-8fd3-5d9926060112",
     "title": "Partner MCP Config",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -33,7 +33,7 @@
     "approved-date": ""
   },
   "names_hosts": "The partner drives the Claude CLI (its stream-json protocol, flags and model names); the host is its subject.",
-  "synced": "77d74c1d07ddccf3",
+  "synced": "3b0559535c7a68dd",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

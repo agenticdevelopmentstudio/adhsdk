@@ -3,7 +3,7 @@
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.access-patterns.error-response-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/064273f4-c09b-56ec-b1d2-a9ad1015b5ef) | partial | Access Patterns |
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
 | [adc.check.access-patterns.offline-behavior](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/df7f401a-39be-5c60-bab4-85dd95bd1ab1) | failed | Access Patterns |
@@ -23,12 +23,13 @@ types it serves. `explicit-error-handling` **passed**: no path in this
 module silently drops a failure — every error either matches a specific
 remap (`rethrowConflict`'s message test, `textToJson`'s `clientRefusal`)
 or propagates unchanged; nothing is caught and discarded.
-`unit-test-coverage` **partial**: `games.test.ts` exercises `gamesApi`'s
-full surface (list scoping, `forEcosystem`, create/update body-vs-query
-scoping, conflict mapping, delete's id-encoding) and both column crossings
-exhaustively, but never exercises `childApi`'s `update` or `delete` for
-any of the three child collections, and never exercises
-`child-create-update-no-conflict-mapping`'s no-remap behavior directly.
+`unit-test-coverage` **passed**: all 24 conformance vectors
+(`hub-domain-games-001` through `-024`) are covered by passing tests in
+`games.test.ts`, one test per vector, covering `gamesApi`'s full surface
+(list scoping, `forEcosystem`, create/update body-vs-query scoping,
+conflict mapping, delete's id-encoding) and both column crossings. The
+vectors do not pin `childApi`'s `update` or `delete`, nor the no-remap
+behavior of `child-create-update-no-conflict-mapping`.
 `error-response-handling` **partial**: the module distinguishes a
 "duplicate slug" conflict from every other error by message content in
 exactly two functions (`gamesApi.create`/`update`); it never distinguishes

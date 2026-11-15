@@ -2,7 +2,7 @@
 id: 40a6b717-cbdb-4d49-9f98-b318668b396c
 title: "Syntax Quick Reference"
 type: ingredient
-version: 1.1.2
+version: 2.0.0
 status: review
 language: en
 created: 2026-09-22
@@ -51,7 +51,7 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 - **customizable-width**: The component MUST accept an optional `contentClassName` prop to customize the popover's rendered width; the default renders at 20rem (see React/Web platform note for the literal class).
 - **customizable-columns**: The component MUST accept an optional `columnsClassName` prop to customize the entries grid's column split; the default makes the label column narrower than the code column (see React/Web platform note for the literal class).
 - **customizable-position**: The component MUST accept optional `side` and `align` props to position the popover relative to the trigger — `side` picks which edge of the trigger it opens from (default `bottom`), and `align` positions it along that edge (default `end`).
-- **isolate-code-direction**: The component SHOULD isolate the direction of the syntax examples (`dir="ltr"` or `unicode-bidi: isolate` on the code cells), so syntax such as `**text**` does not reorder under an RTL ancestor. It does not today (see Compliance).
+- **isolate-code-direction**: The component SHOULD isolate the direction of the syntax examples (`dir="ltr"` on each code cell), so syntax such as `**text**` does not reorder under an RTL ancestor.
 - **customizable-trigger-classes**: The component MUST accept an optional `className` prop to apply additional CSS classes to the trigger button.
 
 ## Appearance
@@ -113,7 +113,7 @@ A toolbar control that opens a dismissible popover listing a language syntax che
 | quick-ref-018 | entries-definition-list | entries=[] | Popover renders the title and an empty `dl` with no `dt`/`dd` rows |
 | quick-ref-019 | trigger-accessible-name | triggerLabel="Syntax", ariaLabel="Syntax reference" | Trigger has aria-label="Syntax reference", which contains the visible text "Syntax" |
 | quick-ref-020 | trigger-accessible-name | triggerLabel="Syntax", ariaLabel="Reference panel" | Trigger has aria-label="Reference panel" exactly as given; the component neither reconciles it with `triggerLabel` nor warns (the consumer owns label-in-name) |
-| quick-ref-021 | isolate-code-direction | Render inside a `dir="rtl"` ancestor with syntax "**text**" | The code cell keeps left-to-right direction (fails today; see Compliance) |
+| quick-ref-021 | isolate-code-direction | Render inside a `dir="rtl"` ancestor with syntax "**text**" | The code cell keeps left-to-right direction |
 ## Edge Cases
 
 - **Empty entries array**: If no entries are provided, the popover still renders the title and a definition list with no rows (see quick-ref-018). Result: a popover with only the title text is shown.
@@ -144,7 +144,7 @@ Not applicable: this component is a toolbar control for displaying reference mat
 
 ## Localization
 
-String content (title, triggerLabel, ariaLabel, entry labels, syntax) is provided entirely by the consumer; the component renders no hard-coded UI strings. The component sets no explicit `dir` attribute on the `dd`/`code` elements that hold syntax examples: under an RTL-locale ancestor, syntax such as `**text**` inherits `rtl` directionality and can reorder unexpectedly, since the source applies no bidi isolation to code content (see [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d)).
+String content (title, triggerLabel, ariaLabel, entry labels, syntax) is provided entirely by the consumer; the component renders no hard-coded UI strings. Each `code` element that holds a syntax example carries `dir="ltr"`, so under an RTL-locale ancestor syntax such as `**text**` keeps its left-to-right order (see [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d)).
 
 ## Accessibility Options
 
@@ -179,7 +179,7 @@ Not applicable: no logging is implemented in the source code.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/components/quick-reference.tsx` | confirmed (1.1.2) |
+| web | `packages/web/packages/ui/src/components/quick-reference.tsx` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -221,11 +221,11 @@ Not applicable: no logging is implemented in the source code.
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | passed | Internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | passed | Internationalization |
 | [adc.check.internationalization.unicode-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d255b8aa-7379-52ef-b4e8-b08386ba6aac) | passed | Internationalization |
-| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | failed | Internationalization |
+| [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | passed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-label` (semantic-markup, keyboard-navigable); Popover's own focus-restore, inherited rather than reimplemented (the popover is non-modal and traps no focus) (focus-management); the `sm` button's 28px height meeting WCAG 2.5.8 (touch-target-size); rem-based Tailwind text sizing whose actual scaling behavior isn't verified in source (dynamic-type-support: partial); the absence of runtime `aria-label` validation and of `aria-labelledby` on the popover panel (screen-reader-support: partial); `apt-*` design tokens whose resolved contrast can't be checked from source alone (contrast-ratio: partial); consumer-supplied-only text with no hardcoded strings in the component (string-externalization, no-hardcoded-strings); plain JS string rendering, which is Unicode-transparent (unicode-support); and the missing `dir`/bidi isolation on code cells (rtl-layout-support: failed). `SyntaxQuickReference` is the shell only — entries belong to whoever owns the language, with no business logic in the component (separation-of-concerns passed); it has no test file of its own and is exercised only through its consumer `MarkdownQuickReference` in `markdownQuickReference.test.tsx` (unit-test-coverage partial).
+Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-label` (semantic-markup, keyboard-navigable); Popover's own focus-restore, inherited rather than reimplemented (the popover is non-modal and traps no focus) (focus-management); the `sm` button's 28px height meeting WCAG 2.5.8 (touch-target-size); rem-based Tailwind text sizing whose actual scaling behavior isn't verified in source (dynamic-type-support: partial); the absence of runtime `aria-label` validation and of `aria-labelledby` on the popover panel (screen-reader-support: partial); `apt-*` design tokens whose resolved contrast can't be checked from source alone (contrast-ratio: partial); consumer-supplied-only text with no hardcoded strings in the component (string-externalization, no-hardcoded-strings); plain JS string rendering, which is Unicode-transparent (unicode-support); and `dir="ltr"` on each code cell, so syntax samples stay left-to-right under an RTL ancestor (rtl-layout-support). `SyntaxQuickReference` is the shell only — entries belong to whoever owns the language, with no business logic in the component (separation-of-concerns passed); `syntaxQuickReference.test.tsx` covers quick-ref-001 to quick-ref-021 with passing tests (unit-test-coverage).
 
 ## Change History
 
@@ -234,4 +234,4 @@ Statuses rest on: `dl`/`dt`/`dd` markup and the native `button` role with `aria-
 | 1.0.0 | 2026-09-22 | Claude Haiku 4.5 | Initial creation from source |
 | 1.1.0 | 2026-09-22 | Mike Fullerton | Lint pass: renamed requirements to subject-only names; moved web-specific requirement details to Platform Notes; added Popover to depends-on; reformatted Design Decisions to Decision/Rationale/Approved; replaced Compliance with canonical linked checks; fixed the touch-target contradiction and the focus-containment overclaim; corrected align-axis wording; added non-empty-aria-label and WCAG 2.5.3 label-in-name requirements and edge cases; corrected WinUI 3 and SwiftUI platform notes; added missing test vectors; corrected the Localization bidi note |
 | 1.1.1 | 2026-09-25 | Mike Fullerton | Fixed entry-label-style/quick-ref-006 to stop contradicting entry-code-style/quick-ref-007 (code is smaller, not the label); renamed stale should-associate-label ref to popover's label-association. Added best-practices compliance rows (separation-of-concerns: passed, unit-test-coverage: partial). |
-| 1.1.2 | 2026-11-14 | Mike Fullerton | Restated consumer label obligations as integration notes, fixed fragment references, made customizable props MUST, neutralized Appearance, added RTL and label-in-name requirement and vectors, and corrected SwiftUI focus note. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Code cells carry dir="ltr"; quick-ref-021 passes |

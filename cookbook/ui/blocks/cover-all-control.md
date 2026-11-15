@@ -2,7 +2,7 @@
 id: 54f9d317-9ec0-485e-b916-6c8bf2216873
 title: "Cover All Control"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-11-14
@@ -90,7 +90,7 @@ The control decides nothing about the stack. The host passes `canCollapse` and `
 
 ## Conformance Test Vectors
 
-No test renders the control by itself. The vectors are derived from the stack tests that exercise it through the host layouts: `hierarchicalTopicDetail.test.tsx` ("`<<<` / `>>>` collapse and expand every list", including the hierarchical menu variant, and "is not in the narrow layout") and `detailTitle.test.tsx`, which finds the control by `[data-htd-cover-all]`.
+`coverAllControl.test.tsx` renders the control by itself and has one test per vector. The host stacks also exercise it: `hierarchicalTopicDetail.test.tsx` ("`<<<` / `>>>` collapse and expand every list", including the hierarchical menu variant, and "is not in the narrow layout") and `detailTitle.test.tsx`, which finds the control by `[data-htd-cover-all]`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -180,7 +180,7 @@ Not applicable: the source performs no logging.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/ui/src/blocks/cover-all-control.tsx` | confirmed (1.0.0) |
+| web | `packages/web/packages/ui/src/blocks/cover-all-control.tsx` | confirmed (1.0.1) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -213,11 +213,12 @@ Not applicable: the source performs no logging.
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | failed | Internationalization |
 | [adc.check.internationalization.rtl-layout-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f81d57a5-fd2a-5088-9fea-37703287698d) | partial | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-Screen-reader, keyboard, focus and semantic-markup pass because the control uses a named group, native buttons with explicit names, the native disabled state, a visible focus ring and hidden decorative glyphs. Touch-target-size fails because each half is about 34px by 18px, below the platform minimum (see the open question on `touch-target-size`); contrast-ratio is partial because the token values live in the theme (see the open question on `contrast-ratio`). The two string checks fail because all three labels are English literals with no override, and rtl-layout-support is partial because the chevrons and corner rounding use physical directions. Separation-of-concerns passes because the host decides when each half is enabled. Unit-test-coverage is partial because no test renders the control alone; it is exercised only through `hierarchicalTopicDetail.test.tsx` and `detailTitle.test.tsx`.
+Screen-reader, keyboard, focus and semantic-markup pass because the control uses a named group, native buttons with explicit names, the native disabled state, a visible focus ring and hidden decorative glyphs. Touch-target-size fails because each half is about 34px by 18px, below the platform minimum (see the open question on `touch-target-size`); contrast-ratio is partial because the token values live in the theme (see the open question on `contrast-ratio`). The two string checks fail because all three labels are English literals with no override, and rtl-layout-support is partial because the chevrons and corner rounding use physical directions. Separation-of-concerns passes because the host decides when each half is enabled. Unit-test-coverage is passed because `coverAllControl.test.tsx` renders the control alone and covers all twelve vectors; the host layouts also exercise it through `hierarchicalTopicDetail.test.tsx` and `detailTitle.test.tsx`.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (coverAllControl.test.tsx, 12 of 12 vectors); unit-test-coverage now passed. |

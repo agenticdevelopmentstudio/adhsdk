@@ -2,11 +2,11 @@
 id: 840dc813-b4a3-483c-be87-2959ac551ea7
 title: "Window Matching"
 type: ingredient
-version: 1.1.0
+version: 1.1.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -337,12 +337,12 @@ The rule store and the heuristic registry do not log; store errors are thrown to
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/AppHeuristic.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristic.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicRule.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicStore.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/HeuristicRegistry.swift` | unverified |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/SystemWindowMatcher.swift` | unverified |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/AppHeuristic.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristic.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicRule.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/CustomHeuristicStore.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/HeuristicRegistry.swift` | confirmed (1.1.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/SystemWindows/Matching/SystemWindowMatcher.swift` | confirmed (1.1.1) |
 
 ## Design Decisions
 
@@ -397,12 +397,13 @@ The rule store and the heuristic registry do not log; store errors are thrown to
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 | [adc.check.privacy-and-data.no-pii-in-logs](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/23bca2e1-dc0f-5ff4-beaf-03891ad48e6b) | passed | Privacy and Data |
 
-`separation-of-concerns` passes: parsing (`AppHeuristic`, `HeuristicTitleParser`), user rules, persistence (`CustomHeuristicStore`), lookup (`HeuristicRegistry`) and scoring/assignment (`SystemWindowMatcher`) are separate types, and applying match results is left to `SystemWindowContextManager`. `unit-test-coverage` is partial: `SystemWindowMatcherTests` covers the app gate, appOnly, the substring length guard, substring and regex scoring, the display bonus, threshold filtering, deterministic ties and `MatchResult` equality, and `HeuristicTests` covers the separators, custom-rule fingerprinting and `isBuiltIn`; nothing tests `CustomHeuristicStore`, `.appAndTitleExact` scoring, the fingerprint fallback, invalid regexes or `registerCustomRules` replacement. `explicit-error-handling` passes because store failures are thrown to the caller and invalid regexes are logged rather than swallowed. `no-hardcoded-strings` fails because `CustomMatchMode.displayName` and the default rule name are English literals shown in Settings. `data-integrity` is partial because rules are never validated: an invalid regex or empty app name is accepted and saved, and two rules for the same app leave one silently unused. `no-pii-in-logs` passes because only the user-authored regex pattern is logged, never a window title.
+`separation-of-concerns` passes: parsing (`AppHeuristic`, `HeuristicTitleParser`), user rules, persistence (`CustomHeuristicStore`), lookup (`HeuristicRegistry`) and scoring/assignment (`SystemWindowMatcher`) are separate types, and applying match results is left to `SystemWindowContextManager`. `unit-test-coverage` is partial: all 32 vectors have tests in `SystemWindowMatcherTests.swift`, `HeuristicTests.swift` and `CustomHeuristicStoreConformanceTests.swift` (under `Tests/AgenticDeveloperHubSDKMacOSTests/SystemWindows/`), but vectors window-matching-017 and window-matching-023 assert only the nil/0 result, because the one logged error they also expect is not observable from a unit test. `explicit-error-handling` passes because store failures are thrown to the caller and invalid regexes are logged rather than swallowed. `no-hardcoded-strings` fails because `CustomMatchMode.displayName` and the default rule name are English literals shown in Settings. `data-integrity` is partial because rules are never validated: an invalid regex or empty app name is accepted and saved, and two rules for the same app leave one silently unused. `no-pii-in-logs` passes because only the user-authored regex pattern is logged, never a window title.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.1.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (SystemWindowMatcherTests.swift, HeuristicTests.swift, CustomHeuristicStoreConformanceTests.swift, 32 of 32 vectors; 017 and 023 assert the result but not the logged error); unit-test-coverage now partial. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to system/system-windows/matching/. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from the AgenticDeveloperHubSDK Core SystemWindows Matching sources |

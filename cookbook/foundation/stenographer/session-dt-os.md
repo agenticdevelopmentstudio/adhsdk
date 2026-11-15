@@ -2,7 +2,7 @@
 id: 25b6559b-69c1-450f-85b3-fc026d55f469
 title: "Session DTOs"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -184,7 +184,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SessionDTOs.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Stenographer/SessionDTOs.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -220,13 +220,14 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
-separation-of-concerns passes: the file declares four shapes and the tolerant decoder; enrichment, activity derivation, health measurement, routes and transport live in the daemon and the HTTP client. unit-test-coverage is partial: the types are constructed in `DaemonSessionSummarizerTests` and `DaemonProviderPickerViewTests`, but no test decodes a `SessionDTO` with missing optional keys, the `Mb` casing, or the strict event decode, so vectors 001, 002, 005, 007 and 011 follow from the source with no test of their own. graceful-degradation passes because the session decoder defaults the later-added keys instead of failing on an older daemon's payload.
+separation-of-concerns passes: the file declares four shapes and the tolerant decoder; enrichment, activity derivation, health measurement, routes and transport live in the daemon and the HTTP client. unit-test-coverage passes: every vector has a test, in `SessionDTOsConformanceTests.swift` (decode defaults, required keys, `Mb` casing, strict event decode and the rest), beside the constructions in `DaemonSessionSummarizerTests` and `DaemonProviderPickerViewTests`. graceful-degradation passes because the session decoder defaults the later-added keys instead of failing on an older daemon's payload.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (SessionDTOsConformanceTests.swift, 18 of 18 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Daemon and client behavior in Behavioral Requirements rewritten as descriptive field notes, detail-delivery now states the exact SessionDTO?? results, stale doc-comment claims removed from Design Decisions, edge-case keywords made unambiguous, vectors merged, split and added for the uncovered requirements, WinUI 3 note cut to record and serializer guidance with Skip required, and depends-on and related linked. |

@@ -89,6 +89,11 @@ describe('ViewportShell', () => {
     expect(root(container).className).toBe('viewport-shell')
   })
 
+  it('viewport-013: a whitespace-only className is kept verbatim, not trimmed or filtered', () => {
+    const { container } = render(<ViewportShell className="  ">{null}</ViewportShell>)
+    expect(root(container).getAttribute('class')).toBe('viewport-shell   ')
+  })
+
   it('viewport-006: clip defaults to true, no vp-shell--open, computed overflow is hidden', () => {
     loadBaseCss()
     const { container } = render(<ViewportShell>{null}</ViewportShell>)

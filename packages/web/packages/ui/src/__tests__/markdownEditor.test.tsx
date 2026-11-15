@@ -141,6 +141,124 @@ describe('MarkdownEditor — upload control', () => {
   })
 })
 
+describe('MarkdownEditor — conformance vectors T1-T14', () => {
+  const uploadInput = (): HTMLInputElement =>
+    document.querySelector('input[type="file"]') as HTMLInputElement
+
+  it('T1 label-textarea: default label "Markdown body" names a TEXTAREA', () => {
+    render(<MarkdownEditor value="" onChange={vi.fn()} />)
+    expect(screen.getByLabelText('Markdown body').tagName).toBe('TEXTAREA')
+  })
+
+  it('T2 label-textarea: label="Notes" is the textarea accessible name', () => {
+    render(<MarkdownEditor value="" onChange={vi.fn()} label="Notes" />)
+    expect(screen.getByRole('textbox', { name: 'Notes' }).tagName).toBe('TEXTAREA')
+  })
+
+  it('T3 controlled-value: typing "# Title" calls onChange with "# Title"', () => {
+    const onChange = vi.fn()
+    render(<MarkdownEditor value="" onChange={onChange} />)
+    fireEvent.change(screen.getByLabelText('Markdown body'), { target: { value: '# Title' } })
+    expect(onChange).toHaveBeenCalledWith('# Title')
+  })
+
+  it('T4 default-spellcheck-off: spellcheck="false" by default, enabled on request', () => {
+    const { unmount } = render(<MarkdownEditor value="" onChange={vi.fn()} />)
+    expect(screen.getByLabelText('Markdown body')).toHaveAttribute('spellcheck', 'false')
+    unmount()
+    render(<MarkdownEditor value="" onChange={vi.fn()} spellCheck />)
+    expect(screen.getByLabelText('Markdown body')).toHaveAttribute('spellcheck', 'true')
+  })
+
+  it('T5 show-toolbar-when-controls-exist: default render has the named toolbar', () => {
+    render(<MarkdownEditor value="" onChange={vi.fn()} />)
+    expect(screen.getByRole('toolbar', { name: 'Markdown editor toolbar' })).toBeInTheDocument()
+  })
+
+  it('T6 show-toolbar-when-controls-exist, include-quick-reference: quickReference={false} leaves no toolbar and no quick-reference button', () => {
+    render(<MarkdownEditor value="" onChange={vi.fn()} quickReference={false} />)
+    expect(screen.queryByRole('toolbar')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Markdown quick reference' })).toBeNull()
+  })
+
+  it('T7 upload-on-demand: Upload .md is absent without onUpload and present with it', () => {
+    const { rerender } = render(<MarkdownEditor value="" onChange={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: /Upload \.md/ })).toBeNull()
+    rerender(<MarkdownEditor value="" onChange={vi.fn()} onUpload={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /Upload \.md/ })).toBeInTheDocument()
+  })
+
+  it('T8 upload-on-demand, reset-file-input: the same file chosen twice fires onUpload twice', async () => {
+    const onUpload = vi.fn()
+    render(<MarkdownEditor value="" onChange={vi.fn()} onUpload={onUpload} />)
+    const input = uploadInput()
+    const file = new File(['# Hello'], 'notes.md', { type: 'text/markdown' })
+    fireEvent.change(input, { target: { files: [file] } })
+    await waitFor(() => expect(onUpload).toHaveBeenCalledTimes(1))
+    // the control cleared the native input after the first selection
+    expect(input.value).toBe('')
+    fireEvent.change(input, { target: { files: [file] } })
+    await waitFor(() => expect(onUpload).toHaveBeenCalledTimes(2))
+    expect(onUpload).toHaveBeenNthCalledWith(1, '# Hello', 'notes.md')
+    expect(onUpload).toHaveBeenNthCalledWith(2, '# Hello', 'notes.md')
+  })
+
+  it('T9 accept-markdown-and-text-files: the native input accepts md, markdown, txt and both MIME types', () => {
+    render(<MarkdownEditor value="" onChange={vi.fn()} onUpload={vi.fn()} />)
+    const accept = (uploadInput().getAttribute('accept') ?? '').split(',')
+    for (const entry of ['.md', '.markdown', '.txt', 'text/markdown', 'text/plain']) {
+      expect(accept).toContain(entry)
+    }
+  })
+
+  it('T10 include-quick-reference: clicking the Markdown control opens the quick-reference popover', async () => {
+    render(<MarkdownEditor value="" onChange={vi.fn()} />)
+    expect(screen.queryByText('Headings')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Markdown quick reference' }))
+    expect(await screen.findByText('Headings')).toBeInTheDocument()
+  })
+
+  it('T11 slot-extra-controls: toolbarExtras renders inside the toolbar, ahead of the built-ins', () => {
+    render(
+      <MarkdownEditor value="" onChange={vi.fn()} onUpload={vi.fn()}
+        toolbarExtras={<button type="button">Spell check</button>} />,
+    )
+    const toolbar = screen.getByRole('toolbar')
+    const extra = screen.getByRole('button', { name: 'Spell check' })
+    expect(toolbar.contains(extra)).toBe(true)
+    const upload = screen.getByRole('button', { name: /Upload \.md/ })
+    expect(extra.compareDocumentPosition(upload) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('T12 propagate-disabled: the textarea and Upload .md button are disabled', () => {
+    render(<MarkdownEditor value="" onChange={vi.fn()} onUpload={vi.fn()} disabled />)
+    expect(screen.getByLabelText('Markdown body')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Upload \.md/ })).toBeDisabled()
+  })
+
+  it('T13 fill-parent-height: rows=16 by default; fill drops rows and adds flex-1 / resize-none to textarea and flex-1 to root', () => {
+    const { unmount } = render(<MarkdownEditor value="" onChange={vi.fn()} />)
+    expect(screen.getByLabelText('Markdown body')).toHaveAttribute('rows', '16')
+    unmount()
+    const filled = render(<MarkdownEditor value="" onChange={vi.fn()} fill />)
+    const ta = screen.getByLabelText('Markdown body')
+    expect(ta).not.toHaveAttribute('rows')
+    expect(ta.className).toContain('flex-1')
+    expect(ta.className).toContain('resize-none')
+    expect((filled.container.firstElementChild as HTMLElement).className).toContain('flex-1')
+  })
+
+  it('T14 forward-textarea-props: placeholder, textareaClassName and className are forwarded', () => {
+    const { container } = render(
+      <MarkdownEditor value="" onChange={vi.fn()} placeholder="Write here"
+        textareaClassName="x-ta" className="x-root" />,
+    )
+    const ta = screen.getByPlaceholderText('Write here')
+    expect(ta).toHaveClass('x-ta')
+    expect(container.firstElementChild).toHaveClass('x-root')
+  })
+})
+
 describe('MarkdownEditor — controlled round-trip', () => {
   it('reflects edits back into the textarea', () => {
     render(<ControlledEditor />)

@@ -5,7 +5,7 @@
 - **Error states**: `ImportSummary.errors` is a list of strings the importer collected; the type carries it and does not interpret it. A decode failure for the strict types is a thrown `DecodingError`.
 - **Offline or disconnected state**: Not applicable: the types perform no I/O.
 - **Version skew**: A summary from an older peer that omits `has_more` or the cutoff MUST decode. A newer peer's unknown keys are ignored.
-- **Silent cutoff loss**: Over the wire, `cutoffISO` decodes as nil even when sent (the open question on `summary-cutoff-wire-key`); `hasMore` still travels correctly.
+- **Cutoff over the wire**: `cutoffISO` survives a wire round trip because its coding key is `cutoffIso` (`summary-cutoff-wire-key`); a peer built before that fix decodes it as nil.
 - **Date strategy**: A reader that decodes `since` without the shared ISO-8601 date strategy fails, so a reader MUST use the shared decoder.
 - **Permanently dropped lines**: Invalid UTF-8 lines are counted in `linesSkipped` and never re-read (a consumer SHOULD surface a non-zero `linesSkipped` to flag lost content).
 

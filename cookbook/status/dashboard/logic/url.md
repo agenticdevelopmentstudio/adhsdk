@@ -2,11 +2,11 @@
 id: 9ab21212-c31d-4a4a-b563-2a2666eec03d
 title: "Status Web URL Host"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -74,7 +74,7 @@ Not applicable — this is a pure URL-parsing helper, not a visual component.
 
 ## Conformance Test Vectors
 
-These vectors follow the WHATWG URL parsing behavior that `hostOf` delegates to. They were checked against Node's `URL` implementation. The source has no test file of its own (there is no `url.test.ts`).
+These vectors follow the WHATWG URL parsing behavior that `hostOf` delegates to. They were checked against Node's `URL` implementation. They are exercised by `url.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -153,7 +153,7 @@ Not applicable: `hostOf` has no logging calls. The caught parse error is turned 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/lib/url.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-web/src/lib/url.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -174,13 +174,13 @@ Not applicable: `hostOf` has no logging calls. The caught parse error is turned 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | best-practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | best-practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | best-practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | partial | best-practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | reliability |
 
 **Separation of concerns.** The module is one pure parsing function with no React, DOM or I/O. Presentation choices, such as empty-label fallbacks and lowercasing, stay with the calling components.
 
-**Unit test coverage.** There is no `url.test.ts`. `row-detail.test.ts` reaches `hostOf` only indirectly through `rowDetail` titles, and no test asserts the fallback, empty-host or port behavior.
+**Unit test coverage.** `url.test.ts` covers every conformance vector (url-001 to url-014) for `hostOf`, including the fallback, empty-host and port behavior.
 
 **Explicit error handling.** The parse error is caught on purpose and mapped to a documented fallback, so nothing throws. The catch is bare, though: the error is dropped without logging, and the return value cannot tell a caller whether parsing failed (host-of-failure-indistinguishable).
 
@@ -190,6 +190,7 @@ Not applicable: `hostOf` has no logging calls. The caught parse error is turned 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (url.test.ts, 14 of 14 vectors); unit-test-coverage now passed. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from `status-web/src/lib/url.ts` |

@@ -132,4 +132,47 @@ struct ThemeManagerTests {
         let unscaled = SemanticPalette(theme: manager.currentTheme).size(.body)
         #expect(abs(bodySize(manager) - unscaled * 1.5) < 0.0001)
     }
+
+    // MARK: - External-change hook (conformance vectors)
+
+    @Test("theme-storage-007: an external activeThemeID change reloads the theme and posts")
+    func v007ExternalActiveIDChange() throws {
+        let (manager, storage) = makeManager(activeThemeID: BuiltInThemes.solarizedDark.id)
+        var posted = false
+        let observer = NotificationCenter.default.addObserver(
+            forName: ThemeManager.didChangeNotification, object: manager, queue: nil
+        ) { _ in posted = true }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        storage.activeThemeID = BuiltInThemes.dracula.id
+        let hook = try #require(storage.onExternalChange)
+        hook()
+
+        #expect(posted)
+        #expect(manager.currentTheme.id == BuiltInThemes.dracula.id)
+    }
+
+    @Test("theme-storage-008: an external redefinition of the active custom theme reloads and posts")
+    func v008ExternalCustomThemeEdit() throws {
+        let storage = InMemoryThemeStorage()
+        let original = ThemeStore(storage: storage).duplicate(BuiltInThemes.nord, nameSuffix: " Custom")
+        storage.activeThemeID = original.id
+        let manager = ThemeManager(storage: storage)
+        #expect(manager.currentTheme.name == original.name)
+
+        var posted = false
+        let observer = NotificationCenter.default.addObserver(
+            forName: ThemeManager.didChangeNotification, object: manager, queue: nil
+        ) { _ in posted = true }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        var edited = original
+        edited.name = "Nord Custom (edited)"
+        storage.customThemes = [edited]
+        let hook = try #require(storage.onExternalChange)
+        hook()
+
+        #expect(posted)
+        #expect(manager.currentTheme.name == "Nord Custom (edited)")
+    }
 }

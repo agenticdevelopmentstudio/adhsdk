@@ -2,11 +2,11 @@
 id: ce1cec62-6244-4d1c-89db-cf31dea0f0be
 title: "Chat Day Banner View"
 type: ingredient
-version: 1.3.1
+version: 1.3.2
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -164,7 +164,7 @@ Not applicable: the source contains no logging calls (no `os_log`, `Logger`, or 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatDayBannerView.swift` | confirmed (1.3.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/AIChatWindow/ChatDayBannerView.swift` | confirmed (1.3.2) |
 
 ## Design Decisions
 
@@ -211,7 +211,7 @@ Not applicable: the source contains no logging calls (no `os_log`, `Logger`, or 
 
 Statuses rest on: the explicit `.staticText` accessibility role and accessibility label on the container, though the child `NSTextField` is never excluded from the accessibility tree (no `setAccessibilityElement(false)` call in source) and carries its own accessibility label too, so whether VoiceOver announces the banner as one merged element or as the container plus a separate label is not resolved by this source (screen-reader-support, semantic-markup); the label's font and color being resolved entirely from the active `SemanticPalette`, which this source neither defines nor can verify for contrast or Dynamic Type scaling (contrast-ratio, dynamic-type-support); the rendered date string being fully delegated to the shared day-formatting pattern named in **day-text-rendered** (see the AppKit/UIKit Platform Note), whose locale/calendar behavior is not in this source (locale-aware-formatting); the component rendering arbitrary caller-provided Unicode text (via the formatter's output) without special-casing (unicode-support); the absence of any literal user-facing string in this file — the accessibility identifier `chat-day-banner` is an internal test hook, not user-facing text (no-hardcoded-strings); the label's single-line, non-wrapping default with no truncation configured, which narrows the rule lines for a long date but has an undefined limit (text-expansion-tolerance, see **rule-width-priority** and its Design Decision); the layout using `leadingAnchor`/`trailingAnchor` (logical, RTL-aware) throughout rather than fixed left/right anchors (rtl-layout-support); and the `observeTheme` registration that recolors the label and rules on every theme change (platform-theming).
 
-`separation-of-concerns` passes because `ChatDayBannerView` only normalizes its day, formats it through the shared day formatter and lays out a label between two rules; grouping messages into days is the transcript's concern, not the banner's. `unit-test-coverage` is partial: `TranscriptDateTests.swift` exercises the banner through `testTheBannerNamesTheWholeDay`, `testTwoTimesOnOneDayBelongToOneBanner` and the transcript test that heads each day with one banner, but no test covers the rule layout or the theme colors.
+`separation-of-concerns` passes because `ChatDayBannerView` only normalizes its day, formats it through the shared day formatter and lays out a label between two rules; grouping messages into days is the transcript's concern, not the banner's. `unit-test-coverage` is partial: `ChatDayBannerConformanceTests.swift` has a test for each of the 16 conformance vectors except chat-day-banner-014 (`init(coder:)` is unavailable at compile time and a `fatalError` at runtime) and chat-day-banner-016 (main-actor confinement is enforced by the compiler, with no runtime check to assert on). `TranscriptDateTests.swift` covers the day the banner names and where a transcript puts it.
 
 ## Change History
 
@@ -224,3 +224,4 @@ Statuses rest on: the explicit `.staticText` accessibility role and accessibilit
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/chat-window/. |
 | 1.3.0 | 2026-10-04 | Mike Fullerton | Resolved the rule-width-priority NEEDS REVIEW marker as current behavior plus a pending Design Decision; added separation-of-concerns and unit-test-coverage compliance. |
 | 1.3.1 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.3.2 | 2026-11-15 | Mike Fullerton | Conformance tests added (ChatDayBannerConformanceTests.swift, 14 of 16 vectors); unit-test-coverage now partial. |

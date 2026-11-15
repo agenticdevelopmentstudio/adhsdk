@@ -4,7 +4,7 @@
     "id": "54f9d317-9ec0-485e-b916-6c8bf2216873",
     "title": "Cover All Control",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "49c73b7928db0db2",
+  "synced": "3d944346ce344618",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

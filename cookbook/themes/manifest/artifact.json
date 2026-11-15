@@ -4,7 +4,7 @@
     "id": "391a4eef-9872-432f-a049-eac4af00938d",
     "title": "Theme Manifest",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f674f3af61a0cd8a",
+  "synced": "8262ae2fbc95e338",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

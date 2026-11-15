@@ -4,7 +4,7 @@
     "id": "2a298bb0-d8af-40aa-8fec-42dd3b1d8f43",
     "title": "Partner Review",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "040b0ca859dbdab6",
+  "synced": "d0ac093a4fecf2f0",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

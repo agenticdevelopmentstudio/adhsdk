@@ -4,7 +4,7 @@
     "id": "02e566d2-7403-4584-948c-1b4fff05070d",
     "title": "Theme Fonts",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "ae6b52d3bd7460a1",
+  "synced": "ca483b8385eb50e3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

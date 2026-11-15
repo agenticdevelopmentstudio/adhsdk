@@ -37,7 +37,7 @@
 | filtered-list-034 | render-item-details | Item with getDetails callback, renderItem not provided | Details are rendered in fl-details element |
 | filtered-list-035 | custom-item-render | renderItem provided | `renderItem(item)` return value is rendered instead of the default title/subtitle/details layout |
 | filtered-list-036 | arrow-keys-noop-when-no-items | No visible items, ArrowDown, ArrowUp, Enter or Escape pressed | Default browser behavior is not prevented (no e.preventDefault call); no highlight change occurs; onSelect is not called |
-| filtered-list-037 | default-no-matches-message | Query yields zero visible items, total > 0, no emptyContent | List's only item is the literal text `No matches for "{query}".` |
+| filtered-list-037 | default-no-matches-message | Query yields zero visible items, total > 0, no emptyContent | List's only item is the literal text `No matches for “{query}”.` |
 | filtered-list-038 | item-role-option | Items rendered | Each `<li>` has role="option" |
 | filtered-list-039 | enter-selection | Enter pressed with no item highlighted | onSelect is not called; form submission is still prevented by the form wrapper (see prevent-form-submission) |
 | filtered-list-040 | initial-query | `initialQuery="app"` | Input value is "app" and only items matching "app" are visible on first render |

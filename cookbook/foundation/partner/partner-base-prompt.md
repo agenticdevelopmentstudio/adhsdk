@@ -2,7 +2,7 @@
 id: 1abdd016-954c-4058-8db3-224c52712365
 title: "Partner Base Prompt"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -35,7 +35,7 @@ approved-date: ""
 
 ## Overview
 
-`PartnerBasePrompt` produces the text the Coding Partner runs on: one long-lived Claude Code session that does several jobs for the owner. It has three outputs. `text` is the fixed base prompt (who the partner is, the window the owner sees, the kinds of message that reach it, the tool table, and the rules for attention items, sessions, job steps and git). `systemPrompt(jobs:)` is that base followed by one `## Job:` section for each enabled `PartnerJob`, carrying its guidelines and a numbered list of its steps. `skillMarkdown(for:)` is the Claude Code skill file that carries one job's guidelines to the sessions the partner opens. It is a caseless `enum` of static members with no state, and its input types (`PartnerJob`, `PartnerJobStep`) are separate value types described by [Partner Job](cookbook:79810488-c613-4f9b-af2a-4ba9d8ee1c26).
+`PartnerBasePrompt` produces the text the Coding Partner runs on: one long-lived Claude Code session that does several jobs for the owner. It has three outputs. `text` is the fixed base prompt (who the partner is, the window the owner sees, the kinds of message that reach it, the tool table, and the rules for attention items, sessions, job steps and git). `systemPrompt(jobs:)` is that base followed by one `## Job:` section for each enabled `PartnerJob`, carrying its guidelines and a numbered list of its steps. `skillMarkdown(for:)` is the Claude Code skill file that carries one job's guidelines to the sessions the partner opens. It is a caseless `enum` of static members with no state, and its input types (`PartnerJob`, `PartnerJobStep`) are separate value types described by Partner Job ([adhsdk.ingredient.foundation.partner.partner-job](cookbook:79810488-c613-4f9b-af2a-4ba9d8ee1c26)).
 
 ## Behavioral Requirements
 
@@ -73,7 +73,7 @@ approved-date: ""
 
 - **steps-empty**: The steps section MUST be the empty string when the job has no steps.
 - **steps-heading**: A job with steps MUST have its steps section begin with a blank line and the heading `### Steps` followed by a blank line.
-- **steps-code-review-note**: A job whose `id` equals `PartnerJobDefaults.codeReviewsID` (`"code-reviews"`, owned by [Partner Job Defaults](cookbook:294285ac-403a-44fe-9840-8ad9f3cf1eba)) MUST have the sentence "These steps arrive filled in from `partner_review_start`; run the filled copy it returns." placed after the heading as its own paragraph, followed by a blank line, and every other job MUST NOT have it.
+- **steps-code-review-note**: A job whose `id` equals `PartnerJobDefaults.codeReviewsID` (`"code-reviews"`, owned by Partner Job Defaults ([adhsdk.ingredient.foundation.partner.partner-job-defaults](cookbook:294285ac-403a-44fe-9840-8ad9f3cf1eba))) MUST have the sentence "These steps arrive filled in from `partner_review_start`; run the filled copy it returns." placed after the heading as its own paragraph, followed by a blank line, and every other job MUST NOT have it.
 - **steps-line-format**: Each step MUST be one numbered line, counted from 1, in the form `<n>. <name> (<place>): <command in backticks>`.
 - **steps-place-label**: The `<place>` MUST be `Claude Code prompt` when the step's environment is `claude` and `terminal shell` otherwise.
 - **steps-condition**: When a step's condition, trimmed of leading and trailing whitespace and newlines, is not empty, the step line MUST end with `, when <trimmed condition>`; otherwise the line MUST end after the command.
@@ -181,7 +181,7 @@ Not applicable — this is a text builder, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors 001 to 008 are asserted by the named tests. Vectors 009 onward are derived from the source and have no test yet.
+Vectors 001 to 008 are asserted by the named tests. Vectors 009 onward are derived from the source and are asserted by tests whose display names carry the vector id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -269,7 +269,7 @@ Not applicable: The source calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerBasePrompt.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Partner/PartnerBasePrompt.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -305,14 +305,15 @@ Not applicable: The source calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.security.input-sanitization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d7d737e1-b124-5f9a-b1c2-0ca1b96eeb8a) | partial | Security |
 
-`separation-of-concerns` passes because the file only assembles text from job data; running jobs, timers and the tools themselves live elsewhere in the partner feature. `unit-test-coverage` is partial: `AgenticDeveloperHubSDKCoreTests/Partner/PartnerBasePromptTests.swift` covers the enabled-only job sections, step lines and conditions, the code-review note, the git rule, the tool names and key phrases, the button-message phrases, YAML quoting of the job name and the skill frontmatter, but not an empty job list, whitespace-only conditions, job order or the base section order, which are vectors 009 to 017 and are marked untested in the vector table. `input-sanitization` is partial because the job name is escaped for the skill description while the job id, step fields and guidelines are inserted unescaped.
+`separation-of-concerns` passes because the file only assembles text from job data; running jobs, timers and the tools themselves live elsewhere in the partner feature. `unit-test-coverage` passes: every vector, 001 to 020, has a test in `AgenticDeveloperHubSDKCoreTests/Partner/PartnerBasePromptTests.swift`, including the empty job list, whitespace-only conditions, job order, the base section order, the exact base text and the exact steps section. `input-sanitization` is partial because the job name is escaped for the skill description while the job id, step fields and guidelines are inserted unescaped.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (PartnerBasePromptTests.swift, 20 of 20 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Linked partner-job and partner-job-defaults in depends-on and related, quoted the exact base text and a full code-review steps section, stated the unchecked skill id, accepted the backtick risk, marked vectors 009 onward untested and removed unsupported consumer claims. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

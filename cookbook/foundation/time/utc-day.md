@@ -2,7 +2,7 @@
 id: 533c7d81-1380-4fba-a5d0-54271dd51772
 title: "UTC Day"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -67,9 +67,9 @@ Not applicable — this is a pair of date-string helpers, not a visual component
 | utc-day-004 | day-after | `dayAfter("2026-12-31")`. | `2027-01-01` (test: testDayAfterYearBoundary). |
 | utc-day-005 | day-after | `dayAfter("2024-02-28")`, `dayAfter("2024-02-29")` and `dayAfter("2026-02-28")`. | `2024-02-29`, `2024-03-01` and `2026-03-01` (test: testDayAfterLeapDay). |
 | utc-day-006 | day-after-unparseable, no-throw | `dayAfter("not-a-date")`. | `not-a-date`, unchanged (test: testDayAfterReturnsInputOnGarbage). |
-| utc-day-007 | utc-pinned | `string(from:)` of epoch 1,700,000,000 with the host time zone set to Pacific/Auckland (UTC+13 in November). | `2023-11-14` regardless of host zone; the source pins the zone, though no test varies the host zone. |
-| utc-day-008 | day-after-unparseable | `dayAfter("")` (derived from the source; no test). | The empty string, unchanged. |
-| utc-day-009 | day-after-out-of-range | `dayAfter("2026-13-01")` (derived from the source; no test). | `2026-13-01`, unchanged. |
+| utc-day-007 | utc-pinned | `string(from:)` of epoch 1,700,000,000 with the host time zone set to Pacific/Auckland (UTC+13 in November). | `2023-11-14` regardless of host zone; the source pins the zone (test: testUtcDay007_stringIgnoresHostTimeZone). |
+| utc-day-008 | day-after-unparseable | `dayAfter("")` (test: see UTCDayTests). | The empty string, unchanged. |
+| utc-day-009 | day-after-out-of-range | `dayAfter("2026-13-01")` (test: see UTCDayTests). | `2026-13-01`, unchanged. |
 ## Edge Cases
 
 - **Null / empty input**: `dayAfter("")` MUST return the empty string unchanged.
@@ -128,7 +128,7 @@ Not applicable: the type calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/UTCDay.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Time/UTCDay.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -156,12 +156,13 @@ Not applicable: the type calls no logging API.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only pins the UTC zone and shapes the two daemon-facing calls, leaving all civil-date arithmetic to `UTCTimestamp`. `unit-test-coverage` is partial because `AgenticDeveloperHubSDKCoreTests/Time/UTCDayTests.swift` covers the epoch-to-UTC-day conversion, simple, month, year and leap-day rollovers, and unparseable input; `utc-pinned`, the requirement the type exists for, has no test that varies the host zone.
+`separation-of-concerns` passes because the type only pins the UTC zone and shapes the two daemon-facing calls, leaving all civil-date arithmetic to `UTCTimestamp`. `unit-test-coverage` passes because `AgenticDeveloperHubSDKCoreTests/Time/UTCDayTests.swift` covers all nine vectors, including `utc-pinned` with the host time zone set to Pacific/Auckland, empty input and an out-of-range month.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (UTCDayTests.swift, 9 of 9 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Described the contract without the daemon, restated delegation and midnight parsing as observable behavior, added empty and out-of-range vectors, marked unit-test-coverage partial and completed the WinUI 3 formatting step. |

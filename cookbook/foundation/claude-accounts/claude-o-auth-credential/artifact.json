@@ -4,11 +4,11 @@
     "id": "2b552bde-d0bd-425a-9e79-fc624b52f516",
     "title": "Claude OAuth Credential",
     "type": "ingredient",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "review",
     "language": "en",
     "created": "2026-10-04",
-    "modified": "2026-10-04",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -32,7 +32,7 @@
     "approved-date": ""
   },
   "names_hosts": "The subject is the OAuth credential Claude Code stores; the product name is the thing being modelled.",
-  "synced": "5d43b172a591f4cd",
+  "synced": "95500540088babd4",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

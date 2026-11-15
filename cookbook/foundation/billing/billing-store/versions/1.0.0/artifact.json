@@ -1,0 +1,60 @@
+{
+  "format": 2,
+  "meta": {
+    "id": "4df278a3-4897-4a87-a506-bd3f58db3121",
+    "title": "Billing Store",
+    "type": "ingredient",
+    "version": "1.0.0",
+    "status": "review",
+    "language": "en",
+    "created": "2026-10-04",
+    "modified": "2026-10-04",
+    "author": "Mike Fullerton",
+    "copyright": "2026 Mike Fullerton",
+    "license": "MIT",
+    "summary": "The business rules for clients, projects and repos, claim resolution, and the per-session derivation unit of work.",
+    "platforms": [
+      "swift",
+      "macos"
+    ],
+    "tags": [
+      "billing",
+      "foundation",
+      "rules"
+    ],
+    "depends-on": [],
+    "related": [
+      "5296d0b7-8416-4e76-8f45-47a726f230cf",
+      "bbe7358f-2001-4e67-83cb-0627de522c42",
+      "bc417768-9933-49b1-b0ba-4bf537167805",
+      "37dfdd98-266a-4253-8f0a-42987017844a",
+      "f2a31fe2-1302-46d9-8cb4-cc6e9a5e8a12"
+    ],
+    "references": [],
+    "approved-by": "",
+    "approved-date": ""
+  },
+  "synced": "0e726c422c660782",
+  "parts": [
+    {"part": "intro"},
+    {"part": "overview", "heading": "Overview"},
+    {"part": "behavioral-requirements", "heading": "Behavioral Requirements"},
+    {"part": "appearance", "heading": "Appearance"},
+    {"part": "states", "heading": "States"},
+    {"part": "accessibility", "heading": "Accessibility"},
+    {"part": "conformance-test-vectors", "heading": "Conformance Test Vectors"},
+    {"part": "edge-cases", "heading": "Edge Cases"},
+    {"part": "configuration", "heading": "Configuration"},
+    {"part": "deep-linking", "heading": "Deep Linking"},
+    {"part": "localization", "heading": "Localization"},
+    {"part": "accessibility-options", "heading": "Accessibility Options"},
+    {"part": "feature-flags", "heading": "Feature Flags"},
+    {"part": "analytics", "heading": "Analytics"},
+    {"part": "privacy", "heading": "Privacy"},
+    {"part": "logging", "heading": "Logging"},
+    {"part": "platform-notes", "heading": "Platform Notes"},
+    {"part": "design-decisions", "heading": "Design Decisions"},
+    {"part": "compliance", "heading": "Compliance"},
+    {"part": "history", "heading": "Change History"}
+  ]
+}

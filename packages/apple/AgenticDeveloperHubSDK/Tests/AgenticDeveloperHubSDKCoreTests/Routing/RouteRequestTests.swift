@@ -186,4 +186,75 @@ struct RouteRequestTests {
             #expect(accepted == (TimestampParsing.parseISO8601(text) != nil), "\(text)")
         }
     }
+
+    // MARK: - Derived vectors
+
+    @Test("route-request-027: initializer defaults are empty")
+    func routeRequest027InitDefaults() {
+        let bare = RouteRequest(method: "GET", path: "/")
+        #expect(bare.queryValues.isEmpty)
+        #expect(bare.headers.isEmpty)
+        #expect(bare.body.isEmpty)
+    }
+
+    @Test("route-request-028: SQLite-shaped since is rejected")
+    func routeRequest028SQLiteShapeRejected() {
+        let result = request(["since": ["2026-10-01 00:00:00"]]).validatedTimestamp("since")
+        #expect(isFailure(result))
+    }
+
+    @Test("route-request-029: bare date since is rejected")
+    func routeRequest029BareDateRejected() {
+        #expect(isFailure(request(["since": ["2026-10-01"]]).validatedTimestamp("since")))
+    }
+
+    @Test("route-request-030: month 13 since is rejected")
+    func routeRequest030MonthThirteenRejected() {
+        #expect(isFailure(request(["since": ["2026-13-01T00:00:00Z"]]).validatedTimestamp("since")))
+    }
+
+    @Test("route-request-031: normalizedTimestamp static")
+    func routeRequest031NormalizedTimestampStatic() {
+        #expect(RouteRequest.normalizedTimestamp("2026-01-31T00:00:00Z", name: "until")
+                == .success("2026-01-31T00:00:00.000Z"))
+        guard case .failure(let refusal) = RouteRequest.normalizedTimestamp("nope", name: "until") else {
+            Issue.record("`nope` must not be accepted as a timestamp")
+            return
+        }
+        #expect(refusal.message.contains("until"))
+    }
+
+    @Test("route-request-032: fields read back as given")
+    func routeRequest032Fields() {
+        let built = RouteRequest(method: "POST", path: "/x", queryValues: ["a": ["1"]],
+                                 headers: ["h": "v"], body: Data([1, 2]))
+        #expect(built.method == "POST")
+        #expect(built.path == "/x")
+        #expect(built.queryValues == ["a": ["1"]])
+        #expect(built.headers == ["h": "v"])
+        #expect(built.body == Data([1, 2]))
+    }
+
+    @Test("route-request-033: value semantics")
+    func routeRequest033ValueSemantics() {
+        let first = RouteRequest(method: "POST", path: "/x", body: Data([1]))
+        let same = RouteRequest(method: "POST", path: "/x", body: Data([1]))
+        let other = RouteRequest(method: "POST", path: "/x", body: Data([2]))
+        #expect(first == same)
+        #expect(first != other)
+    }
+
+    @Test("route-request-034: pure and synchronous")
+    func routeRequest034Pure() {
+        let subject = request(["limit": ["20"], "since": ["2026-01-31T00:00:00Z"]])
+        let original = subject
+        #expect(subject.boundedLimit(default: 50, max: 500) == subject.boundedLimit(default: 50, max: 500))
+        #expect(subject.validatedTimestamp("since") == subject.validatedTimestamp("since"))
+        #expect(subject == original)
+    }
+
+    private func isFailure<T>(_ result: Result<T, InvalidTimestamp>) -> Bool {
+        if case .failure = result { return true }
+        return false
+    }
 }

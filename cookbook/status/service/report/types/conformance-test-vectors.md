@@ -1,5 +1,5 @@
 
-The type module has no test of its own; vectors 001 to 013 are traced to the producers' tests (`report-rules.test.ts`, `report-gather.test.ts`, `report.int.test.ts`). Vectors 014 to 025 are read from the contract and the producers' source and have no test.
+The type module is declarations only; every vector is covered by a test in `report-types.test.ts` that drives the producers (`buildReport`, `gatherReport`, `parseReportParams`), and the route-level 400 body is also asserted by `report.int.test.ts`.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

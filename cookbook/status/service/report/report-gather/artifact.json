@@ -4,7 +4,7 @@
     "id": "24b45917-4361-44d8-a3dc-224cc2807aa9",
     "title": "Status Report Gather",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -34,7 +34,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "c08490869c887794",
+  "synced": "5b7fce2948ea5607",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

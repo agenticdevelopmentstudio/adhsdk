@@ -31,7 +31,7 @@ afterEach(() => {
 })
 
 describe('defaultMarkdownFetcher', () => {
-  it('resolves to the JSON body on an ok response', async () => {
+  it('mdc-027: resolves to the JSON body on an ok response', async () => {
     const wire = {
       object: 'paper',
       id: 'abc',
@@ -84,7 +84,7 @@ describe('defaultMarkdownFetcher', () => {
 
   // body-read-once path: the fetcher reads the body as text and then parses
   // problem+json from that string — no double-read on the Response stream.
-  it('rejects with a "title — detail" message for problem+json errors', async () => {
+  it('mdc-028: rejects with a "title — detail" message for problem+json errors', async () => {
     const body = JSON.stringify({ title: 'Bad', detail: 'nope' })
     vi.stubGlobal(
       'fetch',
@@ -97,7 +97,7 @@ describe('defaultMarkdownFetcher', () => {
     await expect(defaultMarkdownFetcher('x', signal)).rejects.toThrow('Bad — nope')
   })
 
-  it('rejects with "Document not found" for a 404', async () => {
+  it('mdc-029: rejects with "Document not found" for a 404', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(makeErrorResponse(404, null, '')),

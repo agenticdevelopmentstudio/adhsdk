@@ -8,3 +8,4 @@
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/chat-window/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added unit-test-coverage compliance row. |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
+| 1.2.3 | 2026-11-15 | Mike Fullerton | Conformance tests added (MCPChipsBarViewConformanceTests.swift, 3 of 26 vectors); unit-test-coverage now partial. |

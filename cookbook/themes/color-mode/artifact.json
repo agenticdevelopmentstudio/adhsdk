@@ -4,7 +4,7 @@
     "id": "3bff70de-bfca-4bfd-b112-2a6044416ddc",
     "title": "Color Mode",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -32,7 +32,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "dfe37229637d240a",
+  "synced": "3da0489809a940b1",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

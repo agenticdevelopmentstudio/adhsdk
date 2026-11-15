@@ -204,4 +204,64 @@ struct KeychainHelperTests {
         #expect(KeychainHelper.delete(forKey: key, service: service))
         #expect(KeychainHelper.get(forKey: key, service: service) == nil)
     }
+
+    // MARK: - Conformance vectors
+
+    @Test("fc-004: service defaults to the fallback identifier when no bundle identifier exists",
+          .disabled("the test host always has a bundle identifier, so the fallback branch cannot run"))
+    func fc004_serviceDefaultFallback() {}
+
+    @Test("fc-014: get migrates an item from the no-group scope into the access group",
+          .disabled("a real access-group item needs the keychain-access-groups entitlement the test host lacks"))
+    func fc014_accessGroupMigration() {}
+
+    @Test("fc-016: exists finds a secret under a retired service without migrating it")
+    func fc016_existsChecksLegacyWithoutMigrating() {
+        let key = uniqueKey("legacyexists")
+        withRetiredService { retired in
+            storeRaw("old-key", forKey: key, service: retired)
+            defer { KeychainHelper.delete(forKey: key) }
+
+            #expect(KeychainHelper.exists(forKey: key))
+            #expect(!rawExists(key, service: KeychainHelper.service), "exists must not re-store the item")
+            #expect(rawExists(key, service: retired))
+        }
+    }
+
+    @Test("fc-017: copyValue logs nothing for an item-not-found status",
+          .disabled("the unified log is not observable from a unit test"))
+    func fc017_notFoundLogsNothing() {}
+
+    @Test("fc-018: no log call site interpolates the secret",
+          .disabled("source-review vector: a log call site cannot be inspected at runtime"))
+    func fc018_secretNotLogged() {}
+
+    @Test("fc-019: accessGroup and legacyServices are empty before any caller assigns them")
+    func fc019_defaults() {
+        #expect(KeychainHelper.accessGroup == nil)
+        #expect(KeychainHelper.legacyServices.isEmpty)
+    }
+
+    @Test("fc-021: secrets go through generic-password add, with no network and no expiry",
+          .disabled("source-review vector: the absence of a code path cannot be asserted at runtime"))
+    func fc021_storageMechanism() {}
+
+    @Test("fc-040: data protection alone sets the flag and adds no access group")
+    func fc040_queryDataProtectionOnly() {
+        let query = KeychainHelper.makeQuery(account: "acct", accessGroup: nil, dataProtection: true)
+
+        #expect(query[kSecUseDataProtectionKeychain as String] as? Bool == true)
+        #expect(query[kSecAttrAccessGroup as String] == nil)
+        #expect(query[kSecAttrAccount as String] as? String == "acct")
+    }
+
+    @Test("fc-041: read returns nil for a never-set key without throwing")
+    func fc041_readMissingDoesNotThrow() throws {
+        let key = uniqueKey("readmissing")
+        #expect(try KeychainHelper.read(forKey: key) == nil)
+    }
+
+    @Test("fc-042: entitledAccessGroup is nil off macOS and the data-protection default is false",
+          .disabled("the nil-off-macOS half cannot run on macOS, where the entitlement lookup is live"))
+    func fc042_entitledGroupOffMacOS() {}
 }

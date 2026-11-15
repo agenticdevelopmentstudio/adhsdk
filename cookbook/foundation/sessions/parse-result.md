@@ -2,7 +2,7 @@
 id: 67b656ef-78a2-41ae-a910-f87f527360b1
 title: "Parse Result"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -160,7 +160,7 @@ Not applicable: this code makes no log call; the caller logs the outcome.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParseResult.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Sessions/ParseResult.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -192,13 +192,14 @@ Not applicable: this code makes no log call; the caller logs the outcome.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: the function only decodes text into one of four outcomes, while reading files, retrying, quarantining and ingesting belong to the drain, spool and quarantine code. unit-test-coverage is partial: `IngestSpoolTests` and `IngestDrainerTests` exercise the round trip, the quarantined file, the skip and the empty event type, but no test file targets `ParseResult` itself, and the `.lostEvent` case, the wrong-typed fields and the oauth email defaults have no assertion.
+separation-of-concerns passes: the function only decodes text into one of four outcomes, while reading files, retrying, quarantining and ingesting belong to the drain, spool and quarantine code. unit-test-coverage is passed: every vector is covered by `Tests/AgenticDeveloperHubSDKCoreTests/Sessions/ParseResultConformanceTests.swift`; parse-result-013 is asserted by `IngestDrainerTests.testAQuarantinedFileIsReadableByTheDropFileParser` in the Database target, because it needs the drainer.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (ParseResultConformanceTests.swift, 17 of 18 vectors; 013 covered by IngestDrainerTests); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Removed drainer outcomes from vectors 006 and 008, linked ParsedEvent, reworded no-session-id-on-result and sendable, made trailing garbage a MUST with a vector, stated the JSON null rule once, and fixed the configuration label to envelopeJSON. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

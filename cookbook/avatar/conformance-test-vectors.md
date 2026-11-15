@@ -50,7 +50,7 @@
 | avatar-behavior-047 | pose-application-on-mood-change, choreography-replaces-per-pose-tweens | `effective` changes to a mood with a `choreography` entry. | The choreography's timeline runs; `applyPose` is not called for that mood. |
 | avatar-behavior-048 | pose-application-on-mood-change | `effective` changes to a mood present in neither `poses` nor `choreography`. | No new tween/timeline starts; the rig visually keeps whatever pose it last applied. |
 | avatar-behavior-049 | pose-channel-guard | `rig` wires only `svg` and `pivot` (no other channels). | `applyPose` runs without throwing and produces no tweens on any channel. |
-| avatar-behavior-050 | body-scale-rotation | `pose = { scale: 1.2, rotation: 10, spinTurns: 1, dur: 0.4, ease: "power3.out" }`. | `rig.body`'s element tweens scale to `1.2` and rotation to `370` (`10 + 360*1`) about `rig.pivot`. |
+| avatar-behavior-050 | body-scale-rotation | `pose = { scale: 1.2, rotation: 10, spinTurns: 1, dur: 0.4, ease: "power3.out" }`. | `rig.body`'s element tweens scale to `1.2` and rotation to `370` (`10 + 360*1`) about `rig.pivot`; with `spinTurns` set the tween runs a fixed `0.9`s on `power3.inOut` instead of `dur`/`ease`. |
 | avatar-behavior-051 | antennae-per-pose-and-continuous-sway | `pose.wiggle = 5` (lively), `eyesShut = false`. | Each antenna loops its bend at amplitude `sway.lively` (`18` by default), out of phase between the two sides. |
 | avatar-behavior-052 | antennae-per-pose-and-continuous-sway | `eyesShut = true`. | Both antennae settle to a neutral bend and hold still; no sway loop runs. |
 | avatar-behavior-053 | descender-toggle-and-flick | `pose.showY = true`, `pose.wiggle = 0`. | Descender morphs to `rig.descender.logoPath`; no tail-flick loop runs. |

@@ -4,7 +4,7 @@
     "id": "eaa5d7f1-c35d-4fe6-91a0-06b6e48b8ba2",
     "title": "Stenographer Preference DTOs",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -35,7 +35,7 @@
     "approved-date": ""
   },
   "names_hosts": "The code this spec describes names Claude itself (its CLI, hook events, paths or literal labels); the spec states those values.",
-  "synced": "cd4c6732e35bccb6",
+  "synced": "a9e473e85ad53063",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

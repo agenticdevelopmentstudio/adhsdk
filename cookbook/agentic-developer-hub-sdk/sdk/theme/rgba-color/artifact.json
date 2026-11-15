@@ -4,7 +4,7 @@
     "id": "ad5bae6b-0172-4cd4-a4b7-297eb58eb28d",
     "title": "RGBAColor",
     "type": "ingredient",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "391dc1c94ce21a20",
+  "synced": "e39345a3bbbf4e35",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

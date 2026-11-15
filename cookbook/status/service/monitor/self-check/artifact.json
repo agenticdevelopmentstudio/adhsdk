@@ -4,7 +4,7 @@
     "id": "9baed0c1-00e0-4186-9fd3-410039dc9881",
     "title": "Status Server Self-Check View",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "1d896a1fff57e089",
+  "synced": "c96d18ad31b87718",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

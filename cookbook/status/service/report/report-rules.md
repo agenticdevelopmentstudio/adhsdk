@@ -2,7 +2,7 @@
 id: 581dbca7-c086-48ee-a6e9-e4b80536aa1f
 title: "Status Report Rules"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -139,7 +139,7 @@ Not applicable — this is a pure rules module, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors are derived from `report-rules.test.ts` (test names in parentheses); vectors 033 to 040 are read directly from the source because the tests do not pin them, so they have no test.
+Every vector is covered by a test in `report-rules.test.ts`, whose titles start with the vector id (test names in parentheses are the original descriptions).
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -257,7 +257,7 @@ Not applicable: the module has no log call. Failures are returned as coverage en
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/report/report-rules.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/report/report-rules.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -305,15 +305,16 @@ Not applicable: the module has no log call. Failures are returned as coverage en
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
-The module is pure and separate from reading, so separation of concerns is met. The tests cover every digest and the main dedupe and cap rules, but not the helper edge cases (`firstLine` widths, the config-degraded note, the exact uptime floor, `newestPerTarget`), so unit-test coverage is partial. A failed source is returned as data and never thrown, which meets explicit error handling, and the report still builds from the other sources, which meets graceful degradation.
+The module is pure and separate from reading, so separation of concerns is met. Every conformance vector has a passing test in `test/report-rules.test.ts`, helper edge cases included (`firstLine` widths, the config-degraded note, the exact uptime floor, `newestPerTarget`), so unit-test coverage is passed. A failed source is returned as data and never thrown, which meets explicit error handling, and the report still builds from the other sources, which meets graceful degradation.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (report-rules.test.ts, 40 of 40 vectors); unit-test coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Removed the transport sentence from the WinUI note, pinned FAILURE_RATE_HIGH 0.05 and its source module in constants-values, linked the gather and wire-types recipes and added the wire-types and dashboard-views recipes to depends-on, fixed the monitor-problems title format, and added vectors 038 to 040 for finding shape and the 5% and 15-issue boundaries. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

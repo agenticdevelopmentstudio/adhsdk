@@ -4,7 +4,7 @@
     "id": "c1f926d2-4e97-4f0b-862e-53a8cd5ed5a6",
     "title": "Reply Counting Transport",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "f7c11dae98187625",
+  "synced": "73919ed7ba819d05",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

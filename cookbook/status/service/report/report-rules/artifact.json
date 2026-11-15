@@ -4,7 +4,7 @@
     "id": "581dbca7-c086-48ee-a6e9-e4b80536aa1f",
     "title": "Status Report Rules",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "4637dc0fa89954aa",
+  "synced": "7e1f978ad7771b5c",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

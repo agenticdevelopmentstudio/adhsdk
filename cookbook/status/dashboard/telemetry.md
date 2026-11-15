@@ -2,11 +2,11 @@
 id: c85f8913-1112-4ba2-b78f-2b97ea2f8fba
 title: "Status Web Telemetry"
 type: ingredient
-version: 1.0.2
+version: 1.0.3
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-09-27
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -204,9 +204,9 @@ Not applicable: no module in the subsystem logs. Source failures surface as reje
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-web/src/telemetry/client.ts` | confirmed (1.0.2) |
-| web | `packages/web/packages/status-web/src/telemetry/ports.ts` | confirmed (1.0.2) |
-| web | `packages/web/packages/status-web/src/telemetry/types.ts` | confirmed (1.0.2) |
+| web | `packages/web/packages/status-web/src/telemetry/client.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/status-web/src/telemetry/ports.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/status-web/src/telemetry/types.ts` | confirmed (1.0.3) |
 
 ## Design Decisions
 
@@ -247,7 +247,7 @@ Not applicable: no module in the subsystem logs. Source failures surface as reje
 
 **Separation of concerns.** The DTOs have no runtime dependencies, the ports are pure interfaces, the adapters each own one backend, and the composition root is the only place that picks adapters.
 
-**Unit test coverage.** Partial: `local-cache.test.ts` covers `parseSnapshot` for round-trip, empty, malformed JSON and wrong-shape inputs. No test covers `liveSource`, `tursoSource`, the `localCache` I/O wrapper or the composition root.
+**Unit test coverage.** Partial: `telemetry.test.ts` covers 14 of the 15 vectors (`emptySnapshot`, `parseSnapshot`, the `localCache` guards, both sources and the composition root). `telemetry-015` is skipped: the `Fetcher` and `Store` ports are server-side only, and no status-web module consumes a `FetchResult`, so there is nothing to run.
 
 **Explicit error handling.** Partial: the sources turn non-2xx responses into named `Error`s, and the cache turns every failure into `null` or a no-op. However, `localCache.save` drops write failures with no signal, which the source documents as intended.
 
@@ -261,6 +261,7 @@ Not applicable: no module in the subsystem logs. Source failures surface as reje
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.3 | 2026-11-14 | Mike Fullerton | Conformance tests added (telemetry.test.ts, 14 of 15 vectors; telemetry-015 skipped, no FetchResult consumer in status-web); unit-test-coverage now partial. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.0.0 | 2026-09-24 | Mike Fullerton | Initial creation from source |

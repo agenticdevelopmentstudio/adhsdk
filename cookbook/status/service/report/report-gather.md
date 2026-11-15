@@ -2,7 +2,7 @@
 id: 24b45917-4361-44d8-a3dc-224cc2807aa9
 title: "Status Report Gather"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -105,7 +105,7 @@ Not applicable — this is a data-gathering module, not a visual component.
 
 ## Conformance Test Vectors
 
-Vectors are derived from `report-gather.test.ts` in the status-server `test` directory, by test name, plus direct readings of the source where the tests are silent. Vectors 007 and 019 to 027 have no test: they are read from the source and are untested.
+Every vector is covered by a test in `report-gather.test.ts` in the status-server `test` directory; each test title starts with its vector id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -228,7 +228,7 @@ Not applicable: the module has no log call. A failure is returned in the failed 
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/report/report-gather.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/report/report-gather.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -264,16 +264,17 @@ Not applicable: the module has no log call. A failure is returned in the failed 
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.reliability.timeout-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/f4d73297-4002-5b4d-91c2-74a20866ab61) | partial | Reliability |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
 
-Reading, validating and judging are separate: this module reads and validates, and the rules module judges, so separation of concerns is met. The tests cover params, log tails, fail-soft, settling and log selection, but not the production `reportSources` reads or the 20 second deadline itself, so unit-test coverage is partial. Every failure becomes a failed read rather than a throw, which meets explicit error handling and graceful degradation. Every source has a deadline, but the deadline abandons the work instead of cancelling it and the deploy path can exceed the stated whole-answer allowance, so timeout handling is partial.
+Reading, validating and judging are separate: this module reads and validates, and the rules module judges, so separation of concerns is met. Every conformance vector has a passing test in `test/report-gather.test.ts`, including the production `reportSources` reads and the 20 and 25 second deadlines, so unit-test coverage is passed. Every failure becomes a failed read rather than a throw, which meets explicit error handling and graceful degradation. Every source has a deadline, but the deadline abandons the work instead of cancelling it and the deploy path can exceed the stated whole-answer allowance, so timeout handling is partial.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (report-gather.test.ts, 27 of 27 vectors); unit-test coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Linked the report-rules and routes recipes and added the rules recipe to depends-on, marked vectors 007 and 019 to 027 as untested, added vectors 026 and 027 for check order and param forms, split Configuration into request params, internal constants and seams, said deploys is a compound read, and removed (MUST) from the descriptive edge cases. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

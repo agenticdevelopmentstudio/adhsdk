@@ -2,11 +2,11 @@
 id: 4aad9d0a-4984-4021-ad1f-d8aa6a15b066
 title: "Status Server Monitor Provider Connection"
 type: ingredient
-version: 1.0.3
+version: 1.0.4
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -160,7 +160,7 @@ Neither `providerConn` nor `enumerateDeployProjects` calls `console.*` or any ot
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/monitor/provider-conn.ts` | confirmed (1.0.3) |
+| web | `packages/web/packages/status-server/src/monitor/provider-conn.ts` | confirmed (1.0.4) |
 
 ## Design Decisions
 
@@ -178,18 +178,19 @@ Neither `providerConn` nor `enumerateDeployProjects` calls `console.*` or any ot
 
 | Check | Status | Category |
 |-------|--------|----------|
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | failed | Reliability |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 
-`unit-test-coverage` fails: no test file in `packages/web/packages/status-server/test/` exercises `providerConn` or `enumerateDeployProjects` directly — a repo-wide search finds only a comment mentioning `providerConnFromConfig` in `issues.test.ts`, not an assertion against this file's own two exports; the ten vectors above are derived directly from reading the source, not from an existing test suite, per this recipe's own authoring rules. `separation-of-concerns` passes: this file owns exactly one concern — translating the storage/config ports into the shapes `deploy-platform`'s pure `providerConnFromIntegrations` and `enumerateDeployProjectsFrom` expect — and delegates all per-provider field mapping, network access, and project enumeration to that vendored package, reimplementing none of it. `explicit-error-handling` passes on its narrow "MUST NOT silently swallow" bar: neither function contains a `try`/`catch` of any kind, so nothing here catches-and-discards an error; every rejection from `storage` or from `enumerateDeployProjectsFrom` surfaces intact to the caller, which is exactly the fail-fast, caller-decides pattern `monitor/sync.ts`'s own explicit `.catch` around `enumerateDeployProjects` (external) depends on. `graceful-degradation` fails as written: this file itself has no fallback for an unavailable `storage` or a rejecting `enumerateDeployProjectsFrom` — every dependency failure propagates as an unhandled rejection, and any degradation (an empty-enumeration fallback, for instance) is implemented entirely by the caller, not here — a deliberate design choice recorded above in Design Decisions, not a defended pass. `fault-tolerance` passes: `providerConn`'s own composition tolerates malformed-but-well-typed input without crashing — a missing integration row, a `null` `tokenEnvVar`, or an absent `config` key each resolve to `undefined` fields via optional chaining and nullish coalescing in `providerConnFromIntegrations`, never a thrown `TypeError`, per provider-conn-shape and the null/empty-input edge cases above.
+`unit-test-coverage` passes: `packages/web/packages/status-server/test/provider-conn.test.ts` carries one test per conformance vector (001-010) against `providerConn` and `enumerateDeployProjects`. `separation-of-concerns` passes: this file owns exactly one concern — translating the storage/config ports into the shapes `deploy-platform`'s pure `providerConnFromIntegrations` and `enumerateDeployProjectsFrom` expect — and delegates all per-provider field mapping, network access, and project enumeration to that vendored package, reimplementing none of it. `explicit-error-handling` passes on its narrow "MUST NOT silently swallow" bar: neither function contains a `try`/`catch` of any kind, so nothing here catches-and-discards an error; every rejection from `storage` or from `enumerateDeployProjectsFrom` surfaces intact to the caller, which is exactly the fail-fast, caller-decides pattern `monitor/sync.ts`'s own explicit `.catch` around `enumerateDeployProjects` (external) depends on. `graceful-degradation` fails as written: this file itself has no fallback for an unavailable `storage` or a rejecting `enumerateDeployProjectsFrom` — every dependency failure propagates as an unhandled rejection, and any degradation (an empty-enumeration fallback, for instance) is implemented entirely by the caller, not here — a deliberate design choice recorded above in Design Decisions, not a defended pass. `fault-tolerance` passes: `providerConn`'s own composition tolerates malformed-but-well-typed input without crashing — a missing integration row, a `null` `tokenEnvVar`, or an absent `config` key each resolve to `undefined` fields via optional chaining and nullish coalescing in `providerConnFromIntegrations`, never a thrown `TypeError`, per provider-conn-shape and the null/empty-input edge cases above.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.4 | 2026-11-14 | Mike Fullerton | Conformance tests added (provider-conn.test.ts, 10 of 10 vectors); unit-test-coverage now passed. |
 | 1.0.3 | 2026-10-04 | Mike Fullerton | Restored inverted prohibitions: a 'Neither … MUST' rule now reads 'MUST NOT'. |
 | 1.0.2 | 2026-09-27 | Mike Fullerton | Retitled; moved into the concept grouping. |
 | 1.0.1 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

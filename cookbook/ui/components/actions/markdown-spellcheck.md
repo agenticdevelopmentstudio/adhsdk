@@ -169,14 +169,14 @@ toolbar ────────────────────────
 |---|---|---|---|
 | T1 | default-off | Render with a fake linter, do not click | One button named `Check spelling` with `aria-pressed="false"`; no message/panel text in the DOM |
 | T2 | default-off, lazy-load-harper | Render with a spy `createLinter`, then enable | `createLinter` is not called on render; it is called exactly once after the toggle is enabled |
-| T3 | list-problems, offer-suggestions | Enable over source `"teh cat sat"` (fake flags `teh`→`the`) | The panel shows `teh`, the message, and an apply action named `Replace "teh" with "the"`; the toggle is `aria-pressed="true"` |
+| T3 | list-problems, offer-suggestions | Enable over source `"teh cat sat"` (fake flags `teh`→`the`) | The panel shows `teh`, the message, and an apply action named `Replace “teh” with “the”` (curly quotes); the toggle is `aria-pressed="true"` |
 | T4 | show-empty-state | Enable over clean source `"the cat sat"` | The panel shows "No issues found." |
 | T5 | offer-suggestions, apply-latest-lint | Enable over source with two flagged problems (`teh`, `recieve`); change the source and let a second `lint()` finish with a different list; click the apply action for the second problem | `apply` receives the second index and resolves it against the second `lint()` result, not the first |
 | T6 | show-error-state | Enable with a fake `createLinter` whose returned promise rejects | The panel shows the red `CircleAlert` "Spell check is unavailable in this browser." state instead of throwing |
 | T7 | reset-on-disable | Enable over source with problems, disable, then re-enable before the fake linter's `lint()` resolves | On re-enable the panel shows "Checking…", not the previously listed problems — the prior list was cleared on disable |
 | T8 | relint-on-settle | Enable (immediate first lint resolves), then fire several source changes in quick succession using a spy `lint` and fake timers, then advance past `debounceMs` | `lint` is called once for the initial open and exactly once more after the timers settle — not once per change |
 | T9 | lint-markdown-source, use-worker-linter | Mock the `harper.js` module import and call the exported `createHarperLinter()` directly, then call `.lint(source)` | A `WorkerLinter` is constructed (not `LocalLinter`) and its `lint` is called with `{ language: 'markdown', dedup: true }` |
-| T10 | be-client-only | Import the component module in a simulated server environment (no `window`/`document`) and render without enabling | No throw, and no harper import or worker/WASM code executes |
+| T10 | be-client-only | Render the closed component with the server renderer (`renderToString`), without enabling | No throw, and no harper import or worker/WASM code executes |
 | T11 | dispose-on-unmount | Enable with a fake linter exposing a spied `dispose`, then unmount the component | The spied `dispose()` is called exactly once |
 | T12 | offer-suggestions | Enable over source flagged with an empty suggestion (`Remove` kind, `suggestions: [""]`) | The apply chip reads "Remove"; clicking it calls `onApply` with the flagged span deleted |
 | T13 | drop-stale-lint | Enable, change the source twice, and resolve the older `lint()` after the newer one | The list shows the newer result only |
@@ -362,7 +362,7 @@ is surfaced to the user via the error state rather than logged.
 | [adc.check.internationalization.string-externalization](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/79990a17-72ea-581d-b216-c50d6419e978) | partial | Internationalization |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
 `screen-reader-support` and `keyboard-navigable` pass because the toggle and every
 apply action are real `<button>` elements with an accessible name (`aria-label`,
@@ -382,11 +382,8 @@ the component makes no third-party calls and sends no document content off the d
 data of its own, and produces no logs (see Logging above). `separation-of-concerns`
 passes because the component isolates harper behind the `MarkdownLinter`/
 `CreateMarkdownLinter` DI seam, so the UI never references harper directly and
-a fake linter can stand in for tests. `unit-test-coverage` is `partial`
-because `markdownSpellcheck.test.tsx` covers only the off-by-default toggle
-(T1), lazy linter creation (T2), linting and listing problems (T3), the empty
-state (T4) and applying a suggestion; the other vectors have no test yet.
-
+a fake linter can stand in for tests. `unit-test-coverage` is `passed`
+because `markdownSpellcheck.test.tsx` has a passing test for each of T1 to T19 (T14 has one for Escape and one for outside click), using a fake `MarkdownLinter` plus a mocked `harper.js` for T9.
 ## Change History
 
 | Version | Date | Author | Summary |

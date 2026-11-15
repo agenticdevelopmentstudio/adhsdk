@@ -20,6 +20,8 @@ import {
   endpointDeploys,
   latestTerminalForEndpoint,
   failuresForEndpoint,
+  platformCanon as overviewCanon,
+  deployTargetKey as overviewKey,
 } from "../src/monitor/overview";
 
 // Ported from status-web's deploy-view tests when the per-platform summary and the
@@ -276,5 +278,111 @@ describe("endpointDeploys (what /live publishes per service)", () => {
   it("is empty for an endpoint wired to no deploy target", () => {
     const ep = endpoint({ slug: "x", environment: "production" });
     expect(endpointDeploys([deploy({ status: "failed" })], ep)).toEqual({ deployIds: [], latestTerminalDeployId: null, deployFailures: 0 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Conformance vectors for status-server-monitor-overview
+// ---------------------------------------------------------------------------
+
+describe("overview conformance vectors", () => {
+  const hub = (over: Partial<DeploymentDTO> & { status: DeploymentDTO["status"] }): DeploymentDTO =>
+    deploy({ platform: "vercel", projectName: "hub", ...over });
+  const vercelHub = endpoint({ slug: "hub", environment: "production", platform: "vercel", deployProject: "hub" });
+
+  it("status-server-monitor-overview-001 summarizes by platform in fixed order, unknown platforms last", () => {
+    const result = summarizeByPlatform(
+      [
+        deploy({ platform: "crunchy", status: "success" }),
+        deploy({ platform: "netlify", status: "success" }),
+        deploy({ platform: "vercel", status: "failed" }),
+        deploy({ platform: "vercel", status: "building" }),
+        deploy({ platform: "cloudflare-pages", status: "queued" }),
+      ],
+      NOW,
+    );
+    expect(result.map((r) => r.platform)).toEqual(["vercel", "cloudflare-pages", "crunchy", "netlify"]);
+    expect(result[0]).toEqual({
+      platform: "vercel",
+      ready: 0,
+      building: 1,
+      buildingUnconfirmedAt: [new Date(NOW + 10 * 60_000).toISOString()],
+      failed: 1,
+      total: 2,
+    });
+  });
+
+  it("status-server-monitor-overview-002 counts canceled and unknown rows in total only", () => {
+    const result = summarizeByPlatform([deploy({ platform: "vercel", status: "canceled" }), deploy({ platform: "vercel", status: "unknown" })], NOW);
+    expect(result).toEqual([{ platform: "vercel", ready: 0, building: 0, buildingUnconfirmedAt: [], failed: 0, total: 2 }]);
+  });
+
+  it("status-server-monitor-overview-003 groups by the raw platform string, with no canonicalization", () => {
+    const result = summarizeByPlatform([deploy({ platform: "cloudflare-pages", status: "success" }), deploy({ platform: "cloudflare", status: "success" })], NOW);
+    expect(result).toHaveLength(2);
+    expect(result.find((r) => r.platform === "cloudflare-pages")!.total).toBe(1);
+    expect(result.find((r) => r.platform === "cloudflare")!.total).toBe(1);
+  });
+
+  it("status-server-monitor-overview-004 an endpoint with no deploy target correlates to nothing", () => {
+    expect(deploysForEndpoint([hub({ status: "success" }), hub({ status: "failed" })], {})).toEqual([]);
+  });
+
+  it("status-server-monitor-overview-005 returns only the endpoint's project, newest first", () => {
+    const deploys = [
+      hub({ id: "jan", status: "success", createdAt: "2026-01-01T00:00:00.000Z" }),
+      hub({ id: "mar", status: "success", createdAt: "2026-03-01T00:00:00.000Z" }),
+      hub({ id: "feb", status: "success", createdAt: "2026-02-01T00:00:00.000Z" }),
+      deploy({ id: "other", platform: "vercel", projectName: "other", status: "success" }),
+    ];
+    expect(deploysForEndpoint(deploys, vercelHub).map((d) => d.id)).toEqual(["mar", "feb", "jan"]);
+  });
+
+  it("status-server-monitor-overview-006 Railway also matches on environment", () => {
+    const ep = endpoint({ slug: "backend", environment: "production", platform: "railway", deployProject: "backend" });
+    const deploys = [
+      deploy({ id: "prod", platform: "railway", projectName: "backend", environment: "production", status: "success" }),
+      deploy({ id: "stg", platform: "railway", projectName: "backend", environment: "staging", status: "success" }),
+    ];
+    expect(deploysForEndpoint(deploys, ep).map((d) => d.id)).toEqual(["prod"]);
+  });
+
+  it("status-server-monitor-overview-007 latest terminal skips newer building and canceled rows", () => {
+    const deploys = [
+      hub({ id: "ok", status: "success", createdAt: "2026-01-01T00:00:00.000Z" }),
+      hub({ id: "bad", status: "failed", createdAt: "2026-01-02T00:00:00.000Z" }),
+      hub({ id: "cx", status: "canceled", createdAt: "2026-01-03T00:00:00.000Z" }),
+      hub({ id: "bld", status: "building", createdAt: "2026-01-04T00:00:00.000Z" }),
+    ];
+    expect(latestTerminalForEndpoint(deploys, vercelHub)?.id).toBe("bad");
+  });
+
+  it("status-server-monitor-overview-008 latest terminal also skips an unknown row", () => {
+    const deploys = [
+      hub({ id: "ok", status: "success", createdAt: "2026-01-01T00:00:00.000Z" }),
+      hub({ id: "unk", status: "unknown", createdAt: "2026-01-02T00:00:00.000Z" }),
+    ];
+    expect(latestTerminalForEndpoint(deploys, vercelHub)?.id).toBe("ok");
+  });
+
+  it("status-server-monitor-overview-009 latest terminal is null when every row is in flight", () => {
+    expect(latestTerminalForEndpoint([hub({ status: "building" }), hub({ status: "queued" })], vercelHub)).toBeNull();
+  });
+
+  it("status-server-monitor-overview-010 counts only failed rows", () => {
+    const deploys = [hub({ status: "failed" }), hub({ status: "failed" }), hub({ status: "success" }), hub({ status: "canceled" })];
+    expect(failuresForEndpoint(deploys, vercelHub)).toBe(2);
+  });
+
+  it("status-server-monitor-overview-011 re-exports the canon helpers unchanged", () => {
+    expect(overviewCanon("cloudflare-pages")).toBe("cloudflare");
+    expect(overviewKey("vercel", "hub", null)).toBe("vercel|hub|");
+  });
+
+  it("status-server-monitor-overview-012 summarizeByPlatform is pure across an interleaved deploysForEndpoint call", () => {
+    const deploys = [hub({ status: "success" }), hub({ status: "failed" }), deploy({ platform: "railway", status: "building" })];
+    const first = summarizeByPlatform(deploys, NOW);
+    deploysForEndpoint(deploys, endpoint({ slug: "x", environment: "production", platform: "railway", deployProject: "test-project" }));
+    expect(summarizeByPlatform(deploys, NOW)).toEqual(first);
   });
 });

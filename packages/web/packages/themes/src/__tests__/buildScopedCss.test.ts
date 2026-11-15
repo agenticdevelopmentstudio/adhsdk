@@ -3,13 +3,13 @@ import { buildScopedCss } from '../ThemeStyle'
 import { themes, themeIds } from '../manifest'
 
 describe('buildScopedCss', () => {
-  it('rewrites a full-palette theme’s dark anchor to :scope', () => {
+  it('theme-style-006 rewrites a full-palette theme’s dark anchor to :scope', () => {
     const out = buildScopedCss('html:root {\n  --color-surface: #000;\n}\n', '.host')
     expect(out).toContain(':scope {')
     expect(out).toContain('@scope (.host)')
   })
 
-  it('keeps the light block conditional on data-color-mode', () => {
+  it('theme-style-007 keeps the light block conditional on data-color-mode', () => {
     const out = buildScopedCss(
       'html:root[data-color-mode]:not(.dark) {\n  --color-surface: #fff;\n}\n',
       '.host',
@@ -24,13 +24,13 @@ describe('buildScopedCss', () => {
   // :root / :root.dark pair was converted away from before this repo went public — but
   // buildScopedCss is a public export, and an external consumer's stylesheet may still
   // be in this shape. Keep resolving it even though nothing shipped here still does.
-  it('still resolves the legacy :root / :root.dark anchor pair for external consumers', () => {
+  it('theme-style-008 still resolves the legacy :root / :root.dark anchor pair for external consumers', () => {
     const out = buildScopedCss(':root {\n  --a: 1;\n}\n:root.dark {\n  --a: 2;\n}\n', '.host')
     expect(out).toContain(':scope {')
     expect(out).toContain('html.dark :scope {')
   })
 
-  it('hoists @import above the @scope block', () => {
+  it('theme-style-009 hoists @import above the @scope block', () => {
     const css = "@import url('https://fonts.example/x.css');\nhtml:root {\n  --a: 1;\n}\n"
     const out = buildScopedCss(css, '.host')
     expect(out.indexOf('@import')).toBeLessThan(out.indexOf('@scope'))
@@ -40,7 +40,7 @@ describe('buildScopedCss', () => {
   // the output, matches nothing inside the scope, and drops that theme's entire palette
   // with no error. Assert on the REAL stylesheets so a newly-authored anchor form fails
   // here instead of silently un-theming a scoped surface.
-  it('leaves no unrewritten root anchor in any shipped theme', () => {
+  it('theme-style-011 leaves no unrewritten root anchor in any shipped theme', () => {
     for (const key of themeIds) {
       const scoped = buildScopedCss(themes[key].css, '.host')
       expect(scoped, key).not.toMatch(/(^|,\s*)(html)?:root\b/m)
@@ -56,13 +56,13 @@ describe('buildScopedCss', () => {
   // document's real `data-color-mode` attribute — never the `colorMode` prop — decided
   // which block actually applied.
   describe('colorMode, against a real paired html:root theme (dracula)', () => {
-    it('"system" leaves the light block conditional on data-color-mode (no regression)', () => {
+    it('theme-style-010a "system" leaves the light block conditional on data-color-mode (no regression)', () => {
       const out = buildScopedCss(themes.dracula.css, '.host', 'system')
       expect(out).toContain(':scope {')
       expect(out).toContain('html[data-color-mode]:not(.dark) :scope {')
     })
 
-    it('"light" collapses the light block to :scope too, so it wins by source order', () => {
+    it('theme-style-010b "light" collapses the light block to :scope too, so it wins by source order', () => {
       const out = buildScopedCss(themes.dracula.css, '.host', 'light')
       // Neither block was dropped — the dark block from HTML_ROOT_RE is untouched by
       // colorMode by design, and the light block's discriminator is gone, not the block
@@ -78,7 +78,7 @@ describe('buildScopedCss', () => {
       expect(out).not.toContain('html[data-color-mode]')
     })
 
-    it('"dark" drops the light block with a never-matching selector', () => {
+    it('theme-style-010c "dark" drops the light block with a never-matching selector', () => {
       const out = buildScopedCss(themes.dracula.css, '.host', 'dark')
       expect(out).toContain(':scope.pc-colormode-off {')
       expect(out).not.toContain('html[data-color-mode]')
@@ -93,11 +93,55 @@ describe('buildScopedCss', () => {
   // property alone keeps this anchor out. Assert charcoal's real stylesheet is genuinely
   // byte-identical across all three modes — forcing its light selector to win, when it has
   // no light palette, is the regression this corpus shape exists to catch.
-  it('leaves charcoal.css (dark-always, no light palette) byte-identical across colorModes', () => {
+  it('theme-style-010d leaves charcoal.css (dark-always, no light palette) byte-identical across colorModes', () => {
     const system = buildScopedCss(themes.charcoal.css, '.host', 'system')
     const light = buildScopedCss(themes.charcoal.css, '.host', 'light')
     const dark = buildScopedCss(themes.charcoal.css, '.host', 'dark')
     expect(light).toBe(system)
     expect(dark).toBe(system)
+  })
+
+  it('theme-style-012 a qualified html:root anchor moves its qualifiers onto an html ancestor', () => {
+    const out = buildScopedCss("html:root[data-contrast='high'] {\n  --a: 1;\n}\n", '.host')
+    expect(out).toContain("html[data-contrast='high'] :scope {")
+  })
+
+  it('theme-style-013 an indented anchor is rewritten and a preceding blank line is kept', () => {
+    const out = buildScopedCss('@media (x) {\n\n  html:root {\n    --a: 1;\n  }\n}\n', '.host')
+    expect(out).toContain('{\n\n  :scope {\n')
+  })
+
+  it('theme-style-014 body selectors become :scope', () => {
+    const out = buildScopedCss('body {\n  --a: 1;\n}\nbody.dark {\n  --a: 2;\n}\n', '.host')
+    expect(out).toContain(':scope {')
+    expect(out).toContain(':scope.dark {')
+    expect(out).not.toMatch(/^body/m)
+  })
+
+  it('theme-style-018 only the unquoted url() import form is hoisted', () => {
+    expect(buildScopedCss("@import 'a.css';\nhtml:root { --a: 1; }", '.host')).toBe(
+      "\n@scope (.host) {\n@import 'a.css';\n:scope { --a: 1; }\n}",
+    )
+  })
+
+  it('theme-style-019 the scope is inserted as given, with no escaping', () => {
+    expect(buildScopedCss('body {}', '.a > .b')).toBe('\n@scope (.a > .b) {\n:scope {}\n}')
+  })
+
+  it('theme-style-020 :root:not(.dark) follows colorMode, and an empty stylesheet still wraps', () => {
+    expect(buildScopedCss(':root:not(.dark) {}', '.host', 'system')).toBe(
+      '\n@scope (.host) {\nhtml:not(.dark) :scope {}\n}',
+    )
+    expect(buildScopedCss(':root:not(.dark) {}', '.host', 'light')).toBe('\n@scope (.host) {\n:scope {}\n}')
+    expect(buildScopedCss(':root:not(.dark) {}', '.host', 'dark')).toBe(
+      '\n@scope (.host) {\n:scope.pc-colormode-off {}\n}',
+    )
+    expect(buildScopedCss('', '.host')).toBe('\n@scope (.host) {\n\n}')
+  })
+
+  it('theme-style-021 known limitation: the discriminator last in a comma list gets the colorMode rewrite', () => {
+    expect(buildScopedCss('html:root, html:root[data-color-mode]:not(.dark) {}', '.host')).toBe(
+      '\n@scope (.host) {\n:scope, html[data-color-mode]:not(.dark) :scope {}\n}',
+    )
   })
 })

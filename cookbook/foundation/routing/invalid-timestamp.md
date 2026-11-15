@@ -2,7 +2,7 @@
 id: 53408483-6ccf-4a69-bc29-3b5b6e16d4a8
 title: "Invalid Timestamp"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -32,7 +32,7 @@ approved-date: ""
 
 ## Overview
 
-`InvalidTimestamp` is the failure type for a rejected `?since=` style query parameter. The doc comment on the type in `InvalidTimestamp.swift` gives the reason it exists: `Result`'s failure must be an `Error`, and a retroactive `extension String: Error` would make every string in the process a throwable, a cure worse than the bare `String` it replaces. It is a public struct that carries one human-readable `message`, compares by value, and prints as its message. It holds no parsing logic; `RouteRequest` builds it when a timestamp does not parse (see the [`RouteRequest` recipe](cookbook:1a8e345f-c602-4ccb-8880-432b1deac6ac)).
+`InvalidTimestamp` is the failure type for a rejected `?since=` style query parameter. The doc comment on the type in `InvalidTimestamp.swift` gives the reason it exists: `Result`'s failure must be an `Error`, and a retroactive `extension String: Error` would make every string in the process a throwable, a cure worse than the bare `String` it replaces. It is a public struct that carries one human-readable `message`, compares by value, and prints as its message. It holds no parsing logic; `RouteRequest` builds it when a timestamp does not parse (see the `RouteRequest` recipe ([adhsdk.ingredient.foundation.routing.route-request](cookbook:1a8e345f-c602-4ccb-8880-432b1deac6ac))).
 
 ## Behavioral Requirements
 
@@ -93,7 +93,7 @@ Not applicable: `InvalidTimestamp` defines no URL scheme, route or navigation de
 
 ## Localization
 
-Not applicable: `InvalidTimestamp` contains no string literal; the message text, which is English and built by `RouteRequest`, is the caller's. The open concern for translating that message belongs to the [`RouteRequest` recipe](cookbook:1a8e345f-c602-4ccb-8880-432b1deac6ac).
+Not applicable: `InvalidTimestamp` contains no string literal; the message text, which is English and built by `RouteRequest`, is the caller's. The open concern for translating that message belongs to the `RouteRequest` recipe ([adhsdk.ingredient.foundation.routing.route-request](cookbook:1a8e345f-c602-4ccb-8880-432b1deac6ac)).
 
 ## Accessibility Options
 
@@ -131,7 +131,7 @@ Not applicable: `InvalidTimestamp` calls no logging API.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/InvalidTimestamp.swift` | confirmed (1.0.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Routing/InvalidTimestamp.swift` | confirmed (1.0.2) |
 | web | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -155,11 +155,12 @@ Not applicable: `InvalidTimestamp` calls no logging API.
 | [adc.check.security.secure-log-output](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/b258657f-bb73-5491-9c70-0d14afdfa6ce) | partial | Security |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | passed | Best Practices |
 
-`separation-of-concerns` passes because the type only carries a message; deciding a timestamp is malformed and wording the message belong to `RouteRequest`. `unit-test-coverage` is partial because no test constructs `InvalidTimestamp` directly; only the `RouteRequest` tests assert on its `message`, through the failure path. `explicit-error-handling` passes because the type exists to give a rejected timestamp a typed, equatable error instead of a bare string. `secure-log-output` is partial: the message echoes an untrusted query value and the type leaves escaping to its consumers, so each consumer MUST NOT log or render it unescaped (see Privacy).
+`separation-of-concerns` passes because the type only carries a message; deciding a timestamp is malformed and wording the message belong to `RouteRequest`. `unit-test-coverage` is partial: `InvalidTimestampTests` (`Tests/AgenticDeveloperHubSDKCoreTests/Routing/InvalidTimestampTests.swift`) covers vectors 001 to 006, and vectors 007 and 008 are covered by the `RouteRequest` tests; vectors 009 (a compile-failure check) and 010 (a source search) are skipped because a unit test cannot assert that code fails to compile or search the module source. `explicit-error-handling` passes because the type exists to give a rejected timestamp a typed, equatable error instead of a bare string. `secure-log-output` is partial: the message echoes an untrusted query value and the type leaves escaping to its consumers, so each consumer MUST NOT log or render it unescaped (see Privacy).
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (InvalidTimestampTests.swift, 8 of 10 vectors, 009 and 010 skipped as non-unit checks); unit-test-coverage now partial. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Cited InvalidTimestamp.swift and RouteRequest.swift next to the quoted claims, linked RouteRequest and RouteResponse in related and the text, added vectors 009 and 010, clarified the 400 rationale and added an echoed-value privacy note with a secure-log-output row. |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

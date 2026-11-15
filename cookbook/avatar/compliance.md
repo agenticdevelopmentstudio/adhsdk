@@ -2,7 +2,7 @@
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.best-practices.explicit-error-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0813f93d-65e6-5559-8d81-422b37af430a) | failed | Best Practices |
 | [adc.check.reliability.fault-tolerance](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bf974abf-71df-5370-9d43-fa7e563fc353) | passed | Reliability |
 | [adc.check.reliability.graceful-degradation](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/9a57e6ff-2e53-5163-8cce-6783d44f6b9f) | passed | Reliability |
@@ -11,12 +11,7 @@
 Statuses rest on the source: identity (SVG/pose data) and behavior (this
 engine) are cleanly split — no avatar's anatomy or mood names are baked into
 `engine.ts`/`arbitration.ts`/`pose.ts` — so separation-of-concerns passes.
-`engine.test.ts` is an explicit smoke test only (its own comment: "the
-engine is a GSAP-driven hook — its motion is verified in-app, it can't be
-asserted headless"); it checks the exported surface and that
-`DEFAULT_TUNING` has 13 numeric fields, but omits `swayCalm`/`swayLively`
-from that check and asserts none of the arbitration, blink, ladder, gaze, or
-pose behavior itself, so unit-test-coverage is partial rather than passed.
+`engine.test.ts` is a smoke test of the exported surface; `avatar-behavior.test.tsx` covers all 63 conformance vectors (arbitration, blink, idle ladder, speech, gaze, idle fidget, pose application, speech bubble and morph pass-through) against a recording GSAP fake, so unit-test-coverage is passed.
 No file in this source contains a `try`/`catch`, a validation guard on
 `Pose`/`Tuning` shape, or a check on MorphSVG point counts, so
 explicit-error-handling fails outright (see **morph-point-count-validation**

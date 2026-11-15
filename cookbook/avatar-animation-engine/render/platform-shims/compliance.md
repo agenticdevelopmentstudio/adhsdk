@@ -19,7 +19,7 @@ path for a per-frame, `CADisplayLink`/animation-loop-driven `DisplayList`,
 but neither file measures or enforces a per-frame time budget — the
 node-reuse design (one `<path>`/layer per id, rewritten rather than rebuilt)
 supports a 60fps target without proving it from source alone
-(animation-frame-rate: partial). `unit-test-coverage` is partial:
+(animation-frame-rate: partial). `unit-test-coverage` is partial (`svg.test.ts` now passes vectors 005-012 and 014, one test each; the Swift-only vectors 001-004 and 013 are skipped on the web):
 `RenderTests.swift` exercises the `CGAffineTransform`/`CGColor.avatarInk`/
 `CGPath.avatarItem`/`StrokeStyle` bridges and `svg.test.ts` exercises
 `svg.ts`'s `createSvgRenderer`/`renderToString` against real engine output,

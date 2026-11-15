@@ -1,5 +1,5 @@
 
-No test file sits beside `v1-case.ts`. The mappers and wrappers run only indirectly, through the projects client tests under `packages/web/packages/data/src/projects/__tests__/` (which stub `fetch` with `src/__tests__/v1-fetch.ts`); these vectors are derived from the source's code paths and its header comment, so a port's unit tests should assert them directly.
+`packages/web/packages/data/src/__tests__/v1-case.test.ts` asserts every vector below directly (stubbing `fetch` with `src/__tests__/v1-fetch.ts`); the projects client tests under `src/projects/__tests__/` also run the mappers indirectly. A port's unit tests should assert the same vectors.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|

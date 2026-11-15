@@ -2,11 +2,11 @@
 id: 4df278a3-4897-4a87-a506-bd3f58db3121
 title: "Billing Store"
 type: ingredient
-version: 1.0.0
+version: 1.0.1
 status: review
 language: en
 created: 2026-10-04
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -140,7 +140,7 @@ Not applicable: this code makes no log calls.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingStore.swift` | confirmed (1.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Billing/BillingStore.swift` | confirmed (1.0.1) |
 
 ## Design Decisions
 
@@ -153,12 +153,12 @@ Not applicable: this code makes no log calls.
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | failed | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 
-separation-of-concerns passes: validation and derivation orchestration live here while storage is the persistence contract and rate resolution, rounding and derivation are their own types. unit-test-coverage fails: only `BillingRate` (via `BillingRateResolutionTests`) is tested directly; no test in `AgenticDeveloperHubSDKCoreTests/Billing` calls `BillingStore` save, delete or `deriveSegments`.
-
+separation-of-concerns passes: validation and derivation orchestration live here while storage is the persistence contract and rate resolution, rounding and derivation are their own types. unit-test-coverage passes: every conformance vector (12 of 12) has a test in `AgenticDeveloperHubSDKCoreTests/Billing/BillingStoreConformanceTests.swift`, run against the in-memory `InMemoryBillingPersistence`.
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (BillingStoreConformanceTests.swift with the shared InMemoryBillingPersistence.swift, 12 of 12 vectors); unit-test-coverage now passed. |
 | 1.0.0 | 2026-10-04 | Mike Fullerton | Initial creation |

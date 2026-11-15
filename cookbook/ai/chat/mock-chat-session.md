@@ -2,11 +2,11 @@
 id: 91bd3986-da9d-418e-a969-c878efa88d50
 title: "Mock Chat Session"
 type: ingredient
-version: 1.2.0
+version: 1.2.1
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-10-04
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -153,18 +153,18 @@ Not applicable: the component contains no logging call of any kind.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatEvent.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatMessage.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSession.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSessionState.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatToolSource.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatTranscriptReducer.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSelectionMode.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSessionFilter.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/FeedChatSession.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/MockChatSession.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionSources.swift` | confirmed (1.2.0) |
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionWatcherSession.swift` | confirmed (1.2.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatEvent.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatMessage.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSession.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatSessionState.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatToolSource.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ChatTranscriptReducer.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSelectionMode.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/ConversationsSessionFilter.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/FeedChatSession.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Chat/MockChatSession.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionSources.swift` | confirmed (1.2.1) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/SessionWatcher/SessionWatcherDataModel/SessionWatcherSession.swift` | confirmed (1.2.1) |
 
 ## Design Decisions
 
@@ -190,10 +190,10 @@ Not applicable: the component contains no logging call of any kind.
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
 | [adc.check.internationalization.no-hardcoded-strings](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/c8f9f270-e8cb-57b9-a48f-296d6f260b3a) | failed | Internationalization |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.reliability.data-integrity](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/d773e5db-bb22-5da8-a6f1-953c35a3798d) | partial | Reliability |
 
-Notes: no-hardcoded-strings fails because the default `reply`, `"This is a mock reply."`, is a hardcoded English literal with no localization mechanism (see Localization). unit-test-coverage is partial because `MockChatSessionTests.swift` contains exactly one test, covering only the happy-path scripted reply (dev-chat-model-002 above); it exercises neither `interrupt()`, `close()`, an empty `reply`, a non-positive `chunkSize`, nor a second `events()` subscription. data-integrity is partial because of the unsynchronized `liveTurn` access recorded under **live-turn-synchronization** — a `var` mutated and read from multiple call sites with no lock, on a type declared `@unchecked Sendable`.
+Notes: no-hardcoded-strings fails because the default `reply`, `"This is a mock reply."`, is a hardcoded English literal with no localization mechanism (see Localization). unit-test-coverage passes: `MockChatSessionTests.swift` covers every conformance vector (dev-chat-model-001 to 010), including `interrupt()`, `close()`, an empty `reply`, a non-positive `chunkSize` and a second `events()` subscription. data-integrity is partial because of the unsynchronized `liveTurn` access recorded under **live-turn-synchronization** — a `var` mutated and read from multiple call sites with no lock, on a type declared `@unchecked Sendable`.
 
 `separation-of-concerns` passes because `MockChatSession` only scripts a canned reply as chunked response events for the chat-session contract; it does no I/O, owns no transcript state and leaves reduction of events to `ChatTranscriptReducer`.
 
@@ -201,6 +201,7 @@ Notes: no-hardcoded-strings fails because the default `reply`, `"This is a mock 
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.1 | 2026-11-14 | Mike Fullerton | Conformance tests added (MockChatSessionTests.swift, 10 of 10 vectors); unit-test-coverage now passed. |
 | 1.2.0 | 2026-10-04 | Mike Fullerton | Resolved the live-turn-synchronization NEEDS REVIEW marker as current behavior (gap already recorded as a pending Design Decision); added separation-of-concerns compliance row; moved two misattributed Reference Implementations (ConversationFocusOverlay and ConversationsKeyCommands) to their own specs under ai/chat/conversations/. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ai/chat/. |
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |

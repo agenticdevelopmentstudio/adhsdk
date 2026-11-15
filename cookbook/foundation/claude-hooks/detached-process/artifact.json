@@ -4,7 +4,7 @@
     "id": "866770e9-cc76-452f-8216-ee98a8fa1390",
     "title": "Detached Process",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -31,7 +31,7 @@
     "approved-date": ""
   },
   "names_hosts": "The component integrates with Claude Code's hooks and status line; the host's name, events and paths are its subject.",
-  "synced": "053b04f2374eb0e1",
+  "synced": "2e1fa4a96cc59e5e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

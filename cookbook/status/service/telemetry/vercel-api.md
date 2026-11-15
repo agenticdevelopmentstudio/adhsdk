@@ -2,7 +2,7 @@
 id: 60ff967b-b041-4723-913e-016fba7bae6d
 title: "Vercel API Client"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-14
@@ -86,7 +86,7 @@ Not applicable — this is shared logic with no visual surface or interaction.
 
 ## Conformance Test Vectors
 
-Vectors 1 to 3 are assertions of `telemetry-dashboard-sections.test.ts` (test names in brackets); 4 to 6 come from `runtime-errors.test.ts`, which exercises `vercelRequest` through `vercelRuntimeFetcher`; 7 to 19 are read from the source. There is no test file for `vercel-api.ts` alone.
+Every vector is a test in `packages/web/packages/status-server/test/vercel-api.test.ts`, titled with its id.
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
@@ -104,7 +104,7 @@ Vectors 1 to 3 are assertions of `telemetry-dashboard-sections.test.ts` (test na
 | vercel-api-012 | non-production-host | `STAGING.x.com`; `x.com`; null | true; false; false |
 | vercel-api-013 | production-project | name `Site-STAGING` | false |
 | vercel-api-014 | json-get | 200 response with body `not json` | rejects |
-| vercel-api-015 | call-timeout, caller-signal | `fetch` that never resolves, a fake timer, no caller `signal`; then the same with a caller `signal` that never aborts | the call aborts with the timeout error once `CALL_TIMEOUT_MS` (20,000 ms) has passed, in both cases; the caller signal does not lengthen it |
+| vercel-api-015 | call-timeout, caller-signal | `fetch` that never resolves, no caller `signal`; then the same with a caller `signal` that never aborts; `AbortSignal.timeout` replaced by a signal the test aborts | `AbortSignal.timeout` is asked for `CALL_TIMEOUT_MS` (20,000 ms), and aborting that signal rejects the call with the timeout error in both cases; the caller signal does not replace it |
 | vercel-api-016 | extra-headers | `init.headers` `{Authorization: "Bearer other"}` | the request carries `Authorization: Bearer other`, not the one built from `env` |
 | vercel-api-017 | query-params | `VERCEL_TEAM_ID` `team_1`, params `{teamId: "team_2"}` | URL carries `teamId=team_2` once |
 | vercel-api-018 | cooldown-first | `rateLimitedUntil("vercel")` returns a time | `VercelRateLimited` with message `Vercel rate limited until <ISO time>`, and `fetch` is not called |
@@ -186,7 +186,7 @@ Not applicable: `vercel-api.ts` contains no log call. The cooldown module it cal
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| web | `packages/web/packages/status-server/src/telemetry/vercel-api.ts` | confirmed (1.0.1) |
+| web | `packages/web/packages/status-server/src/telemetry/vercel-api.ts` | confirmed (1.0.2) |
 | apple | (planned) | planned |
 | android | (planned) | planned |
 | windows | (planned) | planned |
@@ -234,17 +234,18 @@ Not applicable: `vercel-api.ts` contains no log call. The cooldown module it cal
 | Check | Status | Category |
 |-------|--------|----------|
 | [adc.check.best-practices.separation-of-concerns](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/5ff14706-ab76-5c69-8a69-109919512b76) | passed | Best Practices |
-| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | partial | Best Practices |
+| [adc.check.best-practices.unit-test-coverage](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/8c0c971b-350f-55ee-90ef-78b3863de437) | passed | Best Practices |
 | [adc.check.access-patterns.timeout-configuration](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/dc15eb62-a72c-5b09-b9e7-c1bed983f499) | passed | Access Patterns |
 | [adc.check.access-patterns.rate-limit-handling](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/aed555ee-66e3-5f99-88ab-24674ed5c789) | passed | Access Patterns |
 | [adc.check.access-patterns.retry-with-backoff](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/bcb17bfe-d2d6-53f3-b2af-06b7eea3da61) | failed | Access Patterns |
 | [adc.check.access-patterns.pagination-support](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/e29ce31a-67cb-5690-b2ca-b1065ccdaf1a) | partial | Access Patterns |
 | [adc.check.security.secure-transport](cookbook:00bf1936-4bb6-4ba2-ba0a-6fc9a3697cd0/0a75f61f-9508-506e-b92e-0f5b29a91c95) | passed | Security |
 
-`separation-of-concerns` passes because the client holds only transport, the 429 policy delegated to the shared cooldown module, and the production predicates. `unit-test-coverage` is partial: `vercelRequest` and `listProjects` are exercised only through the runtime fetcher and dashboard section tests, and the predicates are covered in `telemetry-dashboard-sections.test.ts`, with no test file for the module itself. `timeout-configuration` passes with the 20-second per-call timeout. `rate-limit-handling` passes through the cooldown check and the 429 branch. `retry-with-backoff` fails because the client never retries; it only refuses calls during a cooldown. `pagination-support` is partial: it follows `pagination.next` but stops silently at 20 pages. `secure-transport` passes because the base URL is HTTPS and the token goes only in the `Authorization` header.
+`separation-of-concerns` passes because the client holds only transport, the 429 policy delegated to the shared cooldown module, and the production predicates. `unit-test-coverage` passes: `vercel-api.test.ts` covers `vercelRequest`, `vercelGet`, `listProjects` and the production predicates, one test per vector 001 to 019. `timeout-configuration` passes with the 20-second per-call timeout. `rate-limit-handling` passes through the cooldown check and the 429 branch. `retry-with-backoff` fails because the client never retries; it only refuses calls during a cooldown. `pagination-support` is partial: it follows `pagination.next` but stops silently at 20 pages. `secure-transport` passes because the base URL is HTTPS and the token goes only in the `Authorization` header.
 
 ## Change History
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-14 | Mike Fullerton | Conformance tests added (vercel-api.test.ts, 19 of 19 vectors); unit-test-coverage now passed. |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Added related links and the Vercel REST docs reference, rewrote token-presence as MUST statements, moved rationale out of requirements into Design Decisions, labeled the page cap as known debt, and added vectors 015-019 for the timeout ceiling, extra headers, query params, cooldown message and list errors. |
