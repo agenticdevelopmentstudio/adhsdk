@@ -158,7 +158,7 @@ open class WebBrowserPaneViewController: NSViewController {
     public var engineMaintenance: BrowserEngineMaintenance?
     /// Whether the user has paused this pane's events (Pause Events, spec
     /// section 7). Set only through `setEventsPaused(_:)`, so the gate, the
-    /// shield and the badge always move with it. Not persisted: a relaunch
+    /// shield and the privacy button's red always move with it. Not persisted: a relaunch
     /// reloads the page anyway, and a pane that came back paused would look
     /// broken.
     public private(set) var isEventsPaused = false
@@ -294,7 +294,6 @@ open class WebBrowserPaneViewController: NSViewController {
     private var badgeObservations: [NSKeyValueObservation] = []
     let newTabButton = NSButton()
     let drivenBadge = BrowserDrivenBadge()
-    let pausedBadge = BrowserPausedBadge()
     /// Why the last navigation was refused, until the next one starts. A
     /// refused navigation leaves the page as it was, so without it the
     /// address the user typed would seem to have been ignored.
@@ -311,7 +310,7 @@ open class WebBrowserPaneViewController: NSViewController {
     /// The bordered, rounded box the address field sits in.
     private(set) lazy var addressBox = BrowserAddressBox(field: addressField)
     /// The installed buttons between the address box and the menu button:
-    /// the pane's own (agent visibility, privacy, pause, strip toggle) first,
+    /// the pane's own privacy button first (while the strip is hidden),
     /// then whatever `addToolbarAccessory` adds (a Safari pane's extensions).
     let installedBar = NSStackView()
     let privacyButton = NSButton()
@@ -682,7 +681,8 @@ open class WebBrowserPaneViewController: NSViewController {
                 self.refreshInputGate()
                 self.refreshActivationShield()
                 self.refreshHiddenImages()
-                self.refreshAddressRowControls()
+                // Only a setting the strip shows can change it.
+                if BrowserPrivacyStatus.settingNames.contains(key) { self.refreshAddressRowControls() }
                 if key == UserSettings.browserAcceptsCookies.name { self.applyCookiePolicy() }
                 if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
                 if key == UserSettings.browserAgentPrivacy.name { self.refreshPageWordFilter() }
@@ -947,6 +947,9 @@ open class WebBrowserPaneViewController: NSViewController {
 
     /// The strip's row, hidden with the toggle off.
     private weak var privacyStripRow: NSView?
+    /// The items `privacyStrip` last drew, so a refresh that changes none of
+    /// them leaves its views alone.
+    private var itemsInStrip: [BrowserPrivacyStatus.Item] = []
 
     private func configureInstalledBar() {
         configureButton(privacyButton, symbol: "eye", label: "Privacy", action: #selector(showPrivacyDialog))
@@ -974,16 +977,22 @@ open class WebBrowserPaneViewController: NSViewController {
     }
 
     /// Brings the installed buttons and the strip up to date with the pane's
-    /// settings and pause state.
+    /// settings and pause state. The strip's views are rebuilt only while it
+    /// shows and only when its items changed; a hidden strip is rebuilt the
+    /// moment it is shown again, since `itemsInStrip` still holds what it
+    /// last drew.
     func refreshAddressRowControls() {
         // Red while every event is held back, so a paused page is plain to see.
         privacyButton.contentTintColor = isEventsPaused ? .systemRed : nil
         privacyButton.setAccessibilityValue(isEventsPaused ? "paused" : "active")
+        placePrivacyButton()
+        guard settings.get(UserSettings.browserPrivacyShowToolbar) else { return }
         let items = BrowserPrivacyStatus.items(
             settings: settings, isPaused: isEventsPaused, agentPrivacy: agentPrivacy())
+        guard items != itemsInStrip else { return }
+        itemsInStrip = items
         for view in privacyStrip.arrangedSubviews { privacyStrip.removeView(view) }
         for view in items.map(Self.stripItemView) { privacyStrip.addArrangedSubview(view) }
-        placePrivacyButton()
     }
 
     /// One strip item: its symbol and title, green while the thing it names
@@ -1032,13 +1041,6 @@ open class WebBrowserPaneViewController: NSViewController {
 
     @objc func showPrivacyDialog() {
         BrowserPrivacySettingsDialog.present(for: self, from: privacyButton)
-    }
-
-    /// Whether the privacy toolbar shows under the address bar: the pane's
-    /// own value of `browserPrivacyShowToolbar`.
-    var isPrivacyStripShown: Bool {
-        get { settings.get(UserSettings.browserPrivacyShowToolbar) }
-        set { settings.set(newValue, for: UserSettings.browserPrivacyShowToolbar) }
     }
 
     /// Pops the pane's menu (Pause Events, Settings…, Show Browser Log) under
@@ -1951,15 +1953,15 @@ extension WebBrowserPaneViewController {
     /// the address field without navigating, because the field's cell does
     /// not send its action on end editing. Then the gate closes every user
     /// channel, the activation shield goes up (on the live page too), and the
-    /// paused badge shows. Unpausing hands the gate and the shield back to
-    /// the settings and hides the badge; first responder stays where it is.
+    /// privacy button turns red, with the strip's Events item saying Paused.
+    /// Unpausing hands the gate and the shield back to the settings and the
+    /// button its usual tint; first responder stays where it is.
     public func setEventsPaused(_ paused: Bool) {
         guard paused != isEventsPaused else { return }
         if paused { viewIfLoaded?.window?.makeFirstResponder(engine.view) }
         isEventsPaused = paused
         refreshInputGate()
         refreshActivationShield()
-        pausedBadge.setPaused(paused)
         refreshAddressRowControls()
         eventLog.record(channel: "pane", event: paused ? "pause" : "unpause", decision: .info)
     }

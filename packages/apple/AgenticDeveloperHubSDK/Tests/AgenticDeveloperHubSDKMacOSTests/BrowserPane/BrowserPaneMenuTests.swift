@@ -72,11 +72,11 @@ final class BrowserPaneMenuTests: XCTestCase {
 
         pane.setEventsPaused(true)
         XCTAssertTrue(try gate(of: pane).isPaused)
-        XCTAssertTrue(pane.pausedBadge.isShowing)
+        XCTAssertEqual(pane.privacyButton.accessibilityValue() as? String, "paused")
 
         pane.setEventsPaused(false)
         XCTAssertFalse(try gate(of: pane).isPaused)
-        XCTAssertFalse(pane.pausedBadge.isShowing)
+        XCTAssertEqual(pane.privacyButton.accessibilityValue() as? String, "active")
     }
 
     /// Pause raises the activation shield; unpause hands it back to the Hide
@@ -116,7 +116,7 @@ final class BrowserPaneMenuTests: XCTestCase {
         XCTAssertTrue(pane.activationShield.isActive)
         XCTAssertTrue(hasShieldScript(pane))
         XCTAssertTrue(try gate(of: pane).isPaused)
-        XCTAssertTrue(pane.pausedBadge.isShowing)
+        XCTAssertEqual(pane.privacyButton.accessibilityValue() as? String, "paused")
 
         pane.setEventsPaused(false)
         XCTAssertFalse(pane.activationShield.isActive, "unpaused, the setting (now off) decides")
@@ -143,7 +143,7 @@ final class BrowserPaneMenuTests: XCTestCase {
         XCTAssertTrue(try gate(of: pane).isPaused)
         XCTAssertTrue(pane.activationShield.isActive)
         XCTAssertTrue(hasShieldScript(pane), "the new web view has the shield's script")
-        XCTAssertTrue(pane.pausedBadge.isShowing)
+        XCTAssertEqual(pane.privacyButton.accessibilityValue() as? String, "paused")
     }
 
     func testPauseMakesTheWebViewFirstResponder() throws {

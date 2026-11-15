@@ -106,7 +106,7 @@ enum BrowserPrivacyStatus {
                  isOn: live && !settings.get(UserSettings.browserPrivacyHideActivation)),
             Item(symbol: agentPaused ? "pause.circle" : access.symbolName, title: "Agent",
                  isOn: !agentPaused && access != .hidden,
-                 state: agentPaused ? "Paused" : access.menuTitle),
+                 state: agentPaused ? "Paused" : access.label),
             Item(symbol: "puzzlepiece.extension", title: "Third-Party", isOn: thirdParty == .allow,
                  state: thirdParty == .allow ? "On" : thirdParty == .blockScripts ? "No Scripts" : "Off"),
             Item(symbol: "circle.hexagongrid", title: "Cookies",
@@ -130,38 +130,32 @@ enum BrowserPrivacyStatus {
         return Item(symbol: "text.badge.xmark", title: "Privacy Words", isOn: isApplied, state: state)
     }
 
-    static func text(settings: SettingsStore, isPaused: Bool, agentPrivacy: BrowserAgentPrivacy) -> String {
-        items(settings: settings, isPaused: isPaused, agentPrivacy: agentPrivacy)
-            .map(\.text).joined(separator: "  ·  ")
-    }
+    /// The settings `items` reads. A change to any other `browser.` key
+    /// leaves the strip as it is, so the pane rebuilds it only for these.
+    static let settingNames: Set<String> = [
+        UserSettings.browserPrivacyKeyboard.name,
+        UserSettings.browserPrivacyMouse.name,
+        UserSettings.browserPrivacyPointerTracking.name,
+        UserSettings.browserPrivacyDragAndDrop.name,
+        UserSettings.browserPrivacyHideActivation.name,
+        UserSettings.browserPrivacyAgentAccess.name,
+        UserSettings.browserPrivacyAgentWhilePaused.name,
+        UserSettings.browserPrivacyThirdPartyContent.name,
+        UserSettings.browserAcceptsCookies.name,
+        UserSettings.browserAgentPrivacy.name,
+        UserSettings.browserPrivacyHideImages.name,
+        UserSettings.browserPrivacyShowToolbar.name
+    ]
 }
 
 extension BrowserAgentAccess {
 
-    /// The SF Symbol the agent visibility button shows for this access.
+    /// The SF Symbol the privacy strip's Agent item shows for this access.
     var symbolName: String {
         switch self {
         case .full: "cursorarrow.click.2"
         case .readOnly: "text.magnifyingglass"
         case .hidden: "nosign"
-        }
-    }
-
-    /// The button's tooltip and accessibility label.
-    var visibilityDescription: String {
-        switch self {
-        case .full: "Agent can read and drive this page"
-        case .readOnly: "Agent can read this page only"
-        case .hidden: "This page is hidden from the agent"
-        }
-    }
-
-    /// The menu item title.
-    var menuTitle: String {
-        switch self {
-        case .full: "Read and Write"
-        case .readOnly: "Read Only"
-        case .hidden: "None"
         }
     }
 }

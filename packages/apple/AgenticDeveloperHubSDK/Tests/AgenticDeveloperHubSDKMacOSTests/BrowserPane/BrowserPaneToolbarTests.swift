@@ -29,8 +29,9 @@ final class BrowserPaneToolbarTests: XCTestCase {
         let pane = makePane(ownToolbar: true)
         XCTAssertTrue(navigation(pane).allSatisfy(\.isHidden))
         let bar = try XCTUnwrap(pane.addressBar)
-        XCTAssertTrue(bar.arrangedSubviews.contains(pane.pausedBadge))
         XCTAssertTrue(bar.arrangedSubviews.contains(pane.drivenBadge))
+        XCTAssertTrue(bar.arrangedSubviews.contains(pane.installedBar))
+        XCTAssertTrue(bar.arrangedSubviews.contains(pane.menuButton))
     }
 
     /// What the bar shows: its arranged views that are not hidden, in order.
@@ -39,18 +40,22 @@ final class BrowserPaneToolbarTests: XCTestCase {
     }
 
     /// Chrome's toolbar replaces the navigation controls, so the bar shows
-    /// only the badges that are up, and is nothing at all when none is.
+    /// the installed buttons and the menu, and the driven badge only while
+    /// it is up. A pause adds nothing to the bar: the privacy button turns
+    /// red instead.
     func test_ownToolbarBarShowsOnlyShownBadges() throws {
         let pane = makePane(ownToolbar: true)
         let bar = try XCTUnwrap(pane.addressBar)
-        XCTAssertTrue(pane.pausedBadge.isHidden)
         XCTAssertTrue(pane.drivenBadge.isHidden)
-        XCTAssertEqual(shown(in: bar), [])
+        XCTAssertEqual(shown(in: bar), [pane.installedBar, pane.menuButton])
 
         pane.setEventsPaused(true)
-        XCTAssertEqual(shown(in: bar), [pane.pausedBadge])
+        XCTAssertEqual(shown(in: bar), [pane.installedBar, pane.menuButton])
+        XCTAssertEqual(pane.privacyButton.contentTintColor, .systemRed)
+        XCTAssertEqual(pane.privacyButton.accessibilityValue() as? String, "paused")
         pane.setEventsPaused(false)
-        XCTAssertEqual(shown(in: bar), [])
+        XCTAssertNil(pane.privacyButton.contentTintColor)
+        XCTAssertEqual(pane.privacyButton.accessibilityValue() as? String, "active")
     }
 
     /// The + is the pane's own (its tabs are Kitchen tabs), and it leads the
@@ -171,6 +176,7 @@ final class BrowserPaneToolbarTests: XCTestCase {
     /// window) draws its page unconcealed, so its strip says so.
     func test_paneWithoutAVaultShowsPrivacyWordsUnavailable() {
         let pane = makePane(ownToolbar: false)
+        pane.settings.set(true, for: UserSettings.browserPrivacyShowToolbar)
         pane.settings.set(true, for: UserSettings.browserAgentPrivacy)
         pane.refreshAddressRowControls()
         let item = pane.privacyStrip.arrangedSubviews.first {
@@ -178,6 +184,39 @@ final class BrowserPaneToolbarTests: XCTestCase {
         }
         XCTAssertEqual(item?.accessibilityValue() as? String, "off")
         XCTAssertEqual(item?.accessibilityLabel(), "Privacy Words: Unavailable")
+    }
+
+    /// The strip names the agent's access with the setting's own label,
+    /// the one Settings shows, not a second spelling of it.
+    func test_agentItemUsesTheAccessLabel() {
+        let settings = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider()
+        )
+        for access in BrowserAgentAccess.allCases {
+            settings.set(access, for: UserSettings.browserPrivacyAgentAccess)
+            let item = BrowserPrivacyStatus.items(settings: settings, isPaused: false, agentPrivacy: .off)
+                .first { $0.title == "Agent" }
+            XCTAssertEqual(item?.text, "Agent: \(access.label)")
+        }
+    }
+
+    /// A hidden strip is not rebuilt, and a shown one only when its items
+    /// change: a `browser.` setting the strip does not show leaves its views
+    /// as they were.
+    func test_stripRebuildsOnlyWhenShownAndChanged() {
+        let pane = makePane(ownToolbar: false)
+        XCTAssertTrue(pane.privacyStrip.arrangedSubviews.isEmpty, "hidden by default, so never built")
+        pane.settings.set(true, for: UserSettings.browserPrivacyShowToolbar)
+        pane.refreshAddressRowControls()
+        let built = pane.privacyStrip.arrangedSubviews
+        XCTAssertFalse(built.isEmpty)
+        pane.refreshAddressRowControls()
+        XCTAssertEqual(pane.privacyStrip.arrangedSubviews, built, "same items, same views")
+        XCTAssertFalse(BrowserPrivacyStatus.settingNames.contains(UserSettings.browserPrivacyConsoleCapture.name))
+        pane.settings.set(false, for: UserSettings.browserPrivacyDragAndDrop)
+        pane.refreshAddressRowControls()
+        XCTAssertNotEqual(pane.privacyStrip.arrangedSubviews, built, "a changed item rebuilds the strip")
     }
 
     /// Tracking only while the page has focus is on part of the time: red,
