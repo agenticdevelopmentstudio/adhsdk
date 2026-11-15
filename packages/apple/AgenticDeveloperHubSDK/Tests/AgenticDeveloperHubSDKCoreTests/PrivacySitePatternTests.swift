@@ -76,12 +76,26 @@ struct PrivacySitePatternTests {
         let words = try JSONDecoder().decode([PrivacyWord].self, from: old)
         #expect(words.map(\.sites) == [["*"], ["*"]])
 
+        // A site word is written global, so a pane-era build, which reads
+        // `global` and `pane` and not `sites`, conceals it everywhere rather
+        // than nowhere.
         let saved = try JSONEncoder().encode([PrivacyWord(alias: "C", real: "c", sites: ["a.com"])])
         let object = try #require(try JSONSerialization.jsonObject(with: saved) as? [[String: Any]]).first
-        #expect(object?["global"] as? Bool == false)
+        #expect(object?["global"] as? Bool == true)
         #expect(object?["enabled"] as? Bool == true)
         #expect(object?["sites"] as? [String] == ["a.com"])
         #expect(object?["pane"] == nil)
         #expect(try JSONDecoder().decode([PrivacyWord].self, from: saved).first?.sites == ["a.com"])
+    }
+
+    @Test("an older build's re-save drops sites, and the word widens to *")
+    func olderBuildResave() throws {
+        // What a pane-era build writes back after reading a site word: its
+        // own keys, `sites` gone.
+        let resaved = Data(#"[{"alias":"C","real":"c","enabled":true,"global":true}]"#.utf8)
+        let word = try #require(try JSONDecoder().decode([PrivacyWord].self, from: resaved).first)
+        #expect(word.sites == ["*"])
+        #expect(word.applies(at: nil))
+        #expect(word.applies(at: url("https://a.com/")))
     }
 }

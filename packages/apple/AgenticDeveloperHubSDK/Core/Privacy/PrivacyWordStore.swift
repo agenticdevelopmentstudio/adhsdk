@@ -14,9 +14,20 @@ import Security
 /// existed decode from the old fields: bare `{"alias", "real"}` objects and
 /// global words become `*`, and so do words that belonged to one browser pane
 /// (`"global": false, "pane": …`) — a pane cannot be mapped to a site, and
-/// concealing more is the safe direction. Saving writes `sites` and keeps
-/// writing `global` (whether `sites` holds `*`) beside `alias`, `real` and
-/// `enabled`, so a build from before `sites` still reads every word.
+/// concealing more is the safe direction.
+///
+/// **Concealing more is also the rule across versions, both ways.** Saving
+/// writes `sites` beside `alias`, `real`, `enabled` and `"global": true`, and
+/// never a `pane`. A build from before `sites` therefore applies every word
+/// everywhere: the pane-era builds read `global` (a missing one reads as true
+/// too), and the builds before them read the pair alone. Writing `global` as
+/// whether `sites` holds `*` would make a pane-era build conceal a site word
+/// nowhere, not even on its site. The other way, a build from before `sites`
+/// that saves the list writes each word back without the key it does not
+/// know, so the word decodes here as `*`: its sites are lost, but it is
+/// concealed on every page instead of on none. Nothing this build writes can
+/// stop an older writer dropping a key, so both directions widen and neither
+/// narrows.
 public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
     /// What the user writes and reads.
     public var alias: String
@@ -67,7 +78,8 @@ public struct PrivacyWord: Sendable, Equatable, Hashable, Codable {
         try container.encode(alias, forKey: .alias)
         try container.encode(real, forKey: .real)
         try container.encode(isEnabled, forKey: .isEnabled)
-        try container.encode(isEverywhere, forKey: .isGlobal)
+        // Always true, for older builds (see the type's doc); never read here.
+        try container.encode(true, forKey: .isGlobal)
         try container.encode(sites, forKey: .sites)
     }
 }
