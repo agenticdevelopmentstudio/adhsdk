@@ -29,15 +29,17 @@ public enum GitClientError: Error, LocalizedError, Equatable {
     /// Nothing executable at the configured path; no process was spawned.
     case executableNotFound(path: String)
     /// A write was refused before anything ran: `argument`, a ref, branch, tag, remote or
-    /// commit, was empty or began with `-`, so git would have read it as an option.
+    /// commit, was empty or began with `-`, so git would have read it as an option. Any other
+    /// `argument` is a sentence saying why (an interactive rebase plan git would refuse, a
+    /// relative worktree path, a rebase range holding a merge), shown as it is.
     case invalidArgument(verb: String, argument: String)
 
     public var errorDescription: String? {
         switch self {
         case let .invalidArgument(verb, argument):
-            return argument.isEmpty
-                ? "git \(verb) was not run: a name or commit is empty."
-                : "git \(verb) was not run: “\(argument)” begins with “-”, so git would read it as an option."
+            if argument.isEmpty { return "git \(verb) was not run: a name or commit is empty." }
+            if !argument.hasPrefix("-") { return "git \(verb) was not run: \(argument)" }
+            return "git \(verb) was not run: “\(argument)” begins with “-”, so git would read it as an option."
         case let .commandFailed(verb, exitStatus, standardError):
             let detail = standardError.trimmingCharacters(in: .whitespacesAndNewlines)
             return detail.isEmpty

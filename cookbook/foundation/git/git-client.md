@@ -6,7 +6,7 @@ version: 2.0.0
 status: review
 language: en
 created: 2026-09-24
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -64,9 +64,14 @@ references:
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitActionTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientWriteTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOperationState.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Core/RPC/SubprocessChannel+Run.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitPatchBuilderTests.swift (adhsdk)
   - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientPatchTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitConflict.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Core/Git/GitRebasePlan.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitClientConflictTests.swift (adhsdk)
+  - packages/apple/AgenticDeveloperHubSDK/Tests/AgenticDeveloperHubSDKCoreTests/Git/GitRebasePlanTests.swift (adhsdk)
 approved-by: ""
 approved-date: ""
 ---
@@ -243,8 +248,13 @@ picker) is a consumer of this contract, not part of it.
   commit, optional message), delete tag, push tag, stash save (optional
   message), stash apply, stash pop and stash drop (each by index),
   cherry-pick and revert (commit, optional mainline), reset (commit,
-  soft, mixed or hard), and apply a patch to the index or to the work
-  tree (patch text, reverse).
+  soft, mixed or hard), apply a patch to the index or to the work
+  tree (patch text, reverse), merge (ref, fast-forward allowed, never or
+  only), rebase (onto a ref), an in-progress operation's step
+  (merge, rebase, cherry-pick or revert; continue, abort or skip), resolve
+  (paths, ours or theirs), remove paths, interactive rebase (a plan), add
+  worktree (path, branch, create the branch or not, optional start point),
+  remove worktree (path, force) and update submodules (paths, initialize).
 - **write-action-mapping**: Each action MUST map to exactly this verb and
   these arguments, every path list preceded by `--` and every path in it
   written as the literal, top-relative pathspec `:(top,literal)<path>`, so a
@@ -272,7 +282,17 @@ picker) is a consumer of this contract, not part of it.
   `cherry-pick [-m <mainline>] <commit>`; revert → `revert --no-edit [-m
   <mainline>] <commit>`; reset → `reset --soft|--mixed|--hard <commit>`; apply to the index → `apply
   --cached --whitespace=nowarn [--reverse] -`; apply to the work tree →
-  `apply --whitespace=nowarn [--reverse] -`, the patch on standard input.
+  `apply --whitespace=nowarn [--reverse] -`, the patch on standard input;
+  merge → `merge --no-edit --ff|--no-ff|--ff-only <ref>` (fast-forward
+  allowed, never, only); rebase → `rebase <ref>`; an operation's step →
+  `merge|rebase|cherry-pick|revert --continue|--abort|--skip`; resolve →
+  `checkout --ours|--theirs -- <paths>`; remove paths → `rm -q -- <paths>`;
+  interactive rebase → `rebase -i <onto>`, the todo supplied by the perform
+  verb (`interactive-rebase-run`); add worktree → `worktree add -b <branch>
+  <path> [<start>]` when creating the branch, else `worktree add <path>
+  <branch>`; remove worktree → `worktree remove [--force] <path>`; update
+  submodules → `submodule update [--init] --recursive [-- <paths>]`, every
+  submodule when no paths are named.
 - **write-operand-guard**: None of those mappings puts a ref, branch, tag,
   remote or commit after `--`, so git would read one that begins with `-`
   as an option (`branch --delete main` from a branch named `--delete`
@@ -280,14 +300,25 @@ picker) is a consumer of this contract, not part of it.
   perform verb MUST therefore refuse, before resolving its configuration or
   spawning anything, any action whose positional operands — branch name,
   start point, checkout target, remote branch, commit, tag name, remote,
-  a push's upstream branch, and a rename's old and new names — include one that is empty or begins
+  a push's upstream branch, a rename's old and new names, an interactive
+  rebase's onto commit, and an added worktree's branch and, when the branch
+  is created, its start point — include one that is empty or begins
   with `-`, with a distinct invalid-argument outcome carrying the verb and
   the offending value (its log description carries only the verb). Paths,
   which follow `--`, and messages, which follow `-m`, are exempt. It MUST
   likewise refuse a stage, unstage, discard or remove-untracked action whose
-  path list is empty, as invalid-argument with an empty value: git reads an
+  path list is empty, and a resolve or remove-paths action likewise, as
+  invalid-argument with an empty value (an update-submodules action with no
+  paths is not refused: it means every submodule): git reads an
   empty pathspec list as the whole tree, so `clean -f -d --` with no paths
-  would delete every untracked file.
+  would delete every untracked file. A merge's ref and a rebase's onto ref
+  are operands like any other. A merge has no skip step (`git merge` takes
+  no `--skip`), so the merge-skip action MUST be refused the same way,
+  carrying the verb `merge` and the value `--skip`. The outcome's
+  description MUST say a name or commit is empty for an empty value, that
+  the value begins with `-` for a dash-led one, and otherwise show the value
+  itself, which is then a sentence giving the reason (an invalid rebase
+  plan, a relative worktree path).
 - **write-budgets**: The perform verb MUST run through the same private
   execution step as every read — logged, attributed and mapped onto the
   same error outcomes — with its own wall-clock budget: the larger of the
@@ -295,13 +326,21 @@ picker) is a consumer of this contract, not part of it.
   long-running one. The long-running actions are the ones that talk to a
   remote (fetch, pull, push, push setting upstream, push to upstream,
   delete remote branch,
-  push tag) and commit, which runs the repository's hooks. Both budgets
+  push tag) and the ones that make commits, which run the repository's
+  hooks: commit, merge, rebase, interactive rebase, and an operation's
+  continue and skip steps (an abort makes no commit and is local); adding a
+  worktree (it checks out a whole tree and runs the post-checkout hook) and
+  updating submodules (each may be cloned) are long-running too. Both budgets
   MUST be exposed as constants. A read's budget is unchanged.
 - **write-editor-override**: The perform verb MUST run with `-c
   core.editor=true`, so no write can stop to wait on an editor nobody is
   watching; together with `GIT_TERMINAL_PROMPT=0` a write either finishes
   or fails, and a write that cannot reach a remote (none configured)
-  surfaces as command-failed, not as a timeout.
+  surfaces as command-failed, not as a timeout. It MUST also set
+  `GIT_EDITOR=true` in the child's environment, over anything the parent
+  or the configuration's extra environment set: `GIT_EDITOR` outranks
+  `core.editor`, and a continue step MUST never wait on an editor, so the
+  message git prepared (`MERGE_MSG`, the picked commit's) is kept as it is.
 - **remotes-command**: The remotes verb MUST invoke `git remote -v` and
   return, once each and sorted, the names of the remotes that have a
   non-empty URL. A name that exists only through a setting
@@ -365,6 +404,108 @@ picker) is a consumer of this contract, not part of it.
   verb and arguments only, never the patch. An empty patch MUST be refused
   as invalid-argument with an empty value before anything is spawned. A patch
   that no longer applies MUST fail as command-failed carrying git's message.
+
+### Operations
+
+- **operation-kinds**: An in-progress operation MUST be one of four kinds,
+  merge, rebase, cherry-pick and revert, each run by the git verb of the
+  same name, and its steps MUST be continue, abort and skip, written
+  `--continue`, `--abort` and `--skip`.
+- **operation-state**: The operation-state verb MUST report which operation
+  the working tree is in, read from the files git keeps for it in the
+  working tree's own git directory, each located through the git-path verb
+  (`rev-parse --git-path <name>`), never by joining `.git/` by hand: a
+  linked worktree keeps them under the common directory's
+  `worktrees/<name>/`. They are tried in this order, the first present
+  winning: `rebase-merge/` → rebasing, with the branch from `head-name`
+  (`refs/heads/` stripped), the onto commit from `onto`, the step from
+  `msgnum`, the total from `end`, and interactive when `interactive`
+  exists and `drop_redundant_commits` does not (since git 2.26 every
+  merge-backend rebase writes `interactive`; under default options only a
+  plain rebase, whose `--empty` is drop, writes `drop_redundant_commits`); `rebase-apply/` → rebasing, with `head-name`, `onto`, the step
+  from `next` and the total from `last`, never interactive; `MERGE_HEAD` →
+  merging, with the first commit it names; `CHERRY_PICK_HEAD` →
+  cherry-picking that commit; `REVERT_HEAD` → reverting that commit;
+  otherwise none. Each value is the file's text trimmed of whitespace; a
+  missing, empty or unreadable file, or a count that is not a number, MUST
+  give no value for that field, never a failure. The git-path lookups MAY
+  be one `rev-parse` naming every file, falling back to one call each when
+  its output cannot be split into exactly one line per file.
+- **operation-state-properties**: The state MUST expose its kind (none for
+  no operation) and whether it allows skip: rebasing, cherry-picking and
+  reverting do; merging and none do not.
+- **operation-editor**: A continue step MUST finish without an editor
+  (`write-editor-override`), keeping the message git prepared.
+
+### Conflicts
+
+- **conflict-kinds**: A conflicted path MUST carry one of seven kinds, named
+  by its status pair, the first letter our side (stage 2) and the second
+  theirs (stage 3): both modified `UU`, both added `AA`, deleted by us `DU`,
+  deleted by them `UD`, added by us `AU`, added by them `UA`, both deleted
+  `DD`. Our side exists for `UU`, `AA`, `UD` and `AU`; theirs for `UU`, `AA`,
+  `DU` and `UA`; only `UU` and `AA` leave conflict markers in the working
+  file.
+- **conflict-resolve-by-side**: Taking one side of a conflict MUST be the
+  resolve action (`checkout --ours|--theirs`), after which staging the path
+  marks it resolved. A side that deleted the file MUST be taken with the
+  remove-paths action (`rm -q`), which resolves the path at once. Reading
+  and resolving the markers inside a file is the conflict document's
+  (`git-conflict-document`).
+
+### Interactive rebase
+
+- **rebase-plan-command**: The rebase-plan verb MUST resolve its onto
+  commit to a full sha, then list `log --reverse --first-parent <onto>..HEAD`
+  (no colour, no signatures, the commit format of `commit-format`), oldest
+  first, as plan entries all picked, each with its commit and subject. It
+  MUST refuse, as invalid-argument naming `rebase`, an onto that is empty,
+  begins with `-` or names no commit, an empty range, and a range holding a
+  merge commit (a plan replays a straight line; `rebase -i` without
+  `--rebase-merges` would flatten the merge).
+- **rebase-plan-actions**: An entry's action MUST be one of pick, reword,
+  edit, squash, fixup and drop; a reword carries its new message.
+- **rebase-plan-validation**: A plan MUST report why git would refuse it,
+  checked in this order: every entry dropped (an empty plan included); the
+  first entry that is kept being a squash or fixup (there is no earlier
+  commit to fold it into); a kept reword whose message is empty or only
+  whitespace. The perform verb MUST refuse such a plan as invalid-argument
+  carrying that reason, and a plan holding a commit that is not 4 to 64
+  ASCII hex digits, and a plan run while any operation is in progress, all
+  before writing or spawning anything.
+- **interactive-rebase-todo**: The todo MUST hold one line per entry,
+  `<action> <sha> <subject>`, the subject's line breaks turned into spaces,
+  and end with a newline. A reword MUST be written as `pick <sha> <subject>`
+  followed by `exec git commit --amend --no-edit --allow-empty -F
+  '<helper>/message-<n>'`, `n` counting rewords from 0 in todo order and the
+  path single-quoted for `sh` (each `'` written `'\''`), so the rebase never
+  needs an editor.
+- **interactive-rebase-run**: The perform verb MUST write the todo and each
+  reword's message into the helper folder, `rev-parse --git-path
+  adk-rebase` (inside the working tree's own git directory, beside
+  `rebase-merge/`), replacing any folder already there; MUST set
+  `GIT_SEQUENCE_EDITOR` to `cp '<helper>/todo'`, which git calls with its own
+  todo's path; and MUST run `rebase -i <onto>` under `GIT_EDITOR=true`
+  (`write-editor-override`), so a squash keeps git's combined message.
+- **interactive-rebase-cleanup**: After an interactive rebase and after any
+  rebase step (continue, abort, skip), whether git succeeded or failed, the
+  perform verb MUST remove the helper folder when it exists and the
+  operation state is none. A rebase that stopped (an edit, a conflict) keeps
+  it, since its `exec` lines still read the messages.
+
+### Worktrees and submodules
+
+- **worktree-absolute-paths**: An add-worktree or remove-worktree action
+  MUST name an absolute path; the perform verb MUST refuse a relative one,
+  before spawning, as invalid-argument carrying the verb `worktree` and a
+  sentence naming the path. A relative path would resolve against wherever
+  git runs, and an absolute one can never be read as an option.
+- **worktree-remove-dirty**: Removing a worktree with changes or untracked
+  files MUST fail as command-failed unless forced; forced, it MUST succeed.
+- **submodule-update**: Updating submodules MUST run `submodule update
+  [--init] --recursive`, limited to the named paths after `--` when there
+  are any, so an initialized superproject whose submodules were never
+  cloned ends with each checked out at its recorded commit.
 
 ### Execution, configuration and attribution
 
@@ -491,7 +632,8 @@ picker) is a consumer of this contract, not part of it.
 - **status-conflict-pair-detection**: Parsing status MUST classify a
   record as conflicted when its two-character status pair is exactly one
   of `DD`, `AU`, `UD`, `UA`, `DU`, `AA`, `UU`, ahead of the
-  modified/added/deleted ladder.
+  modified/added/deleted ladder, and MUST keep that pair as the path's
+  conflict kind in a conflicts map (`conflict-kinds`).
 - **status-staged-unstaged-columns**: Parsing status MUST also keep each
   column on its own, in the same pass over the same records: a staged map
   from the index column and an unstaged map from the work-tree column,
@@ -520,6 +662,9 @@ picker) is a consumer of this contract, not part of it.
   record as the main worktree and every subsequent record as not the main
   worktree, per the listing's own contract that the main worktree is
   always listed first.
+- **worktree-locked**: Parsing worktrees MUST mark a record locked when it
+  has a `locked` line, with or without a reason after it, and MUST reset the
+  flag for each record.
 - **branch-parse-tab-separated**: Parsing branches MUST split each line on
   tab, treat a second field of `"*"` as the current branch, and treat a
   third field that is empty as no upstream — the third field for a real
@@ -772,6 +917,34 @@ component.
 | git-client-068 | patch-file-header, patch-buildable | A rename `old name.txt` → `dir/new.txt`; then added, deleted, binary, copied, type-changed, hunkless and tab- or newline-bearing paths | Forward names `old name.txt` on both sides, reversed `dir/new.txt`; every other file builds nothing. |
 | git-client-069 | patch-apply, write-action-mapping | A fixture with two hunks; stage one line, unstage it; stage a hunk; discard a line; stage a last line without a newline; unstage a line of a staged rename | Each leaves exactly the chosen change moved; the rename stays a rename; the index blob returns to HEAD's. |
 | git-client-070 | patch-apply | A patch made stale by a later edit; an empty patch; the log of one apply | Command-failed naming `apply` with `patch does not apply`; empty refused as invalid-argument; the log line carries `--cached --whitespace=nowarn -` and none of the patch. |
+| git-client-071 | write-action-mapping, operation-kinds | Merge `topic` with fast-forward allowed, never and only; rebase onto `main`; every kind with every step | `merge --no-edit --ff topic`, `--no-ff`, `--ff-only`; `rebase main`; `merge --abort`, `rebase --continue`, `cherry-pick --skip`, `revert --abort` and the rest. |
+| git-client-072 | write-operand-guard | Merge `-f`; rebase onto an empty ref; the merge-skip step | Each refused as invalid-argument before spawning: `-f`, an empty value, `--skip` naming `merge`. |
+| git-client-073 | operation-state, operation-state-properties | A clean repository; then `main` and `topic` both changing `a.txt`, merge `topic` into `main` | None; the merge throws command-failed and the state is merging with `topic`'s commit; it does not allow skip. |
+| git-client-074 | operation-state | The merge of 073 aborted | None, and the work tree clean. |
+| git-client-075 | operation-state, operation-editor | `feature` with three commits, the first conflicting with `main`, rebased onto `main`; resolve, stage, continue; a second fixture skips instead | Rebasing `feature` onto `main`'s commit, step 1 of 3, not interactive; continue finishes with no editor and three commits on `main`; skip drops the stopped commit, leaving two. |
+| git-client-076 | operation-state | A cherry-pick and a revert that each stop on a conflict | Cherry-picking that commit; reverting that commit; both allow skip. |
+| git-client-077 | operation-state | A linked worktree (`worktree add`) on `feature`, rebasing onto `main` and stopped; the main worktree read beside it | The linked worktree reports its own rebase; the main worktree reports none. |
+| git-client-078 | operation-state | A git directory with `rebase-merge/` holding only `msgnum` `x` and an empty `onto` | Rebasing with no branch, no onto, no step, no total; nothing throws. |
+| git-client-079 | write-action-mapping | Merge with fast-forward never into a branch it could fast-forward; with fast-forward only on diverged branches | A merge commit with two parents; command-failed, HEAD unmoved. |
+| git-client-080 | operation-state | `rebase -i` (sequence editor `true`) of 075's `feature`, stopped on the conflict; a `rebase-merge/` with `interactive` and `drop_redundant_commits` | Rebasing, step 1 of 3, interactive; the second not interactive. |
+| git-client-081 | conflict-kinds, status-conflict-pair-detection | Status output with each of `UU`, `AA`, `DU`, `UD`, `AU`, `UA`, `DD` for `dir/file.txt` beside ` M other.txt` | The conflicts map holds only `dir/file.txt` with that kind; it is conflicted in the unstaged map and the files map. |
+| git-client-082 | conflict-kinds | Every kind's sides and markers | Ours for `UU`, `AA`, `UD`, `AU`; theirs for `UU`, `AA`, `DU`, `UA`; markers for `UU` and `AA` only. |
+| git-client-083 | write-action-mapping, write-operand-guard | Resolve `a.txt` and `-b` to ours, `a.txt` to theirs; remove paths `gone.txt`; each with an empty path list | `checkout --ours -- :(top,literal)a.txt :(top,literal)-b`, `checkout --theirs -- …`, `rm -q -- :(top,literal)gone.txt`; the empty lists refused as invalid-argument. |
+| git-client-084 | conflict-resolve-by-side | `main` and `topic` both change `a.txt`; merge stops; resolve ours, stage | The conflicts map is empty and `a.txt` holds `main`'s text. |
+| git-client-085 | conflict-resolve-by-side | `main` deletes `a.txt`, `topic` changes it; merge stops (`DU`); remove paths `a.txt` | The conflicts map is empty and `a.txt` is gone. |
+| git-client-086 | rebase-plan-command | `feature` with `add one`, `add two`, `add three` after `main`; plan onto `main` | Onto is `main`'s full sha; entries `add one`, `add two`, `add three`, all pick, the first `HEAD~2`. |
+| git-client-087 | rebase-plan-command | Plan onto `HEAD`; onto `nowhere`; onto `main` after merging a side branch into `feature` with `--no-ff` | Each refused as invalid-argument naming `rebase`: an empty range, `“nowhere” names no commit.`, a reason naming the merge commit. |
+| git-client-088 | rebase-plan-validation | Plans: all dropped; empty; squash first; drop then fixup; reword with no message or only whitespace; commit `abcg123` | The three reasons in order, none for drop-then-pick; the non-hex commit reported invalid. |
+| git-client-089 | interactive-rebase-todo | Pick (subject on two lines), reword, squash, fixup, edit, drop, reword; message files under a path holding `'` | `pick <sha> two lines`; each reword a pick and `exec git commit --amend --no-edit --allow-empty -F '/tmp/it'\''s/message-<n>'`, n 0 then 1; the rest as `<action> <sha> <subject>`; a final newline. |
+| git-client-090 | interactive-rebase-run, interactive-rebase-cleanup | 086's branch: swap the first two; squash the second; fixup the second; drop the second | `add three`, `add one`, `add two`; squash leaves two commits, the first's body naming `add two`, with the client's `GIT_EDITOR=false`; fixup the same without it; drop removes `two.txt`. No operation and no helper folder after each. |
+| git-client-091 | interactive-rebase-todo, interactive-rebase-cleanup | 086's branch with the second entry reworded to `renamed two` with a body holding `'` | Subjects `add three`, `renamed two`, `add one`; the first commit's sha unchanged; no helper folder. |
+| git-client-092 | interactive-rebase-cleanup, operation-state | 086's branch with the second entry edit; then the rebase continue step | Stops rebasing, interactive, the helper folder present; continue ends with no operation, three commits and no helper folder. |
+| git-client-093 | rebase-plan-validation, interactive-rebase-cleanup | 086's plan with its first entry squash; separately a stale helper folder and a rebase abort with no rebase | Refused before anything runs, HEAD unmoved, no helper folder; the abort fails and the stale folder is removed. |
+| git-client-094 | write-action-mapping, write-operand-guard, worktree-absolute-paths | Add worktree `/tmp/wt` creating `topic`, with and without start `main`; checking out `topic`; remove with and without force; branch `-x`; start `-s`; path `wt` | `worktree add -b topic /tmp/wt [main]`, `worktree add /tmp/wt topic`, `worktree remove [--force] /tmp/wt`; `-x` and `-s` (when creating) invalid operands; `wt` relative. |
+| git-client-095 | worktree-absolute-paths, worktree-remove-dirty | Add a worktree creating `fresh`; add one on the existing `existing`; add `relative/wt`; remove `fresh`; dirty `existing`, remove, then force | Worktrees `main`, `fresh`, `existing`; the relative path refused as invalid-argument; `fresh` gone; the dirty removal command-failed and `existing` kept; forced, only `main` left. |
+| git-client-096 | worktree-locked | Porcelain records `locked`, `locked on a removable disk`, and none | Locked, locked, not locked. |
+| git-client-097 | write-action-mapping, submodule-update | Update submodules with no paths, with `--init`, and for `lib/a` | `submodule update --recursive`, `submodule update --init --recursive`, `… -- :(top,literal)lib/a`; no paths is not an empty path list. |
+| git-client-098 | submodule-update | A superproject with submodule `lib`, cloned without `--recurse-submodules`; update submodules initializing | `lib` uninitialized, then current, `lib/lib.txt` present. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -848,7 +1021,7 @@ mechanism.
 | timed-out | `"git \(verb) did not finish within the configured timeout."` | The timed-out outcome |
 | launch-failed | `"git \(verb) could not be run: \(reason)"` | The launch-failed outcome |
 | executable-not-found | `"No git executable at \(path). Change it in Settings > Git."` | The executable-not-found outcome |
-| invalid-argument | `"git \(verb) was not run: “\(argument)” begins with “-”, so git would read it as an option."` (or `"git \(verb) was not run: a name or commit is empty."`) | The invalid-argument outcome |
+| invalid-argument | `"git \(verb) was not run: “\(argument)” begins with “-”, so git would read it as an option."` (or `"git \(verb) was not run: a name or commit is empty."`, or `"git \(verb) was not run: \(reason)"` when the reason is a sentence of its own) | The invalid-argument outcome |
 
 Every string above is hardcoded English with no lookup table, ICU message,
 or locale parameter anywhere in this component — there is no localization
@@ -1001,6 +1174,8 @@ write takes a remote URL.
 | macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitFileHistoryEntry.swift` | confirmed (2.0.0) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitAction.swift` | confirmed (2.0.0) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitPatchBuilder.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOperationState.swift` | confirmed (2.0.0) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/Core/Git/GitRebasePlan.swift` | confirmed (2.0.0) |
 
 ## Design Decisions
 
@@ -1146,4 +1321,4 @@ one.
 | 1.0.2 | 2026-09-25 | Mike Fullerton | Moved into the library cookbook; added Reference Implementations. |
 | 1.1.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to foundation/git/. |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | History model: commit, ref, stash and submodule value types with their format strings and parsers, and the log request; output decoding falls back to Latin-1 per segment; diff, word-diff and blame models with their parsers and C-quoted path unquoting; read verbs (top level, log, refs, stashes, submodules, diff targets and options, blame, file contents) and accepted exit codes in the execution step. Final review: changed files without the patch, literal author and message search, precomposed paths, capped file contents, a named file-history limit. |
-| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). Patches from diff lines: a selection of one file's lines, forward and reversed line rules, recomputed hunk headers, the no-newline marker and a one-path file header; apply to the index or the work tree with the patch on standard input, never logged, an empty patch refused. |
+| 2.0.0 | 2026-11-14 | Mike Fullerton | Write verbs: the action list and its exact command lines, one perform verb through the execution step with its own budgets (60 s, 600 s for remote verbs and commit) and core.editor=true, the remotes verb and the last commit message. An empty or dash-led ref, remote or commit is refused before anything runs, with a fifth error outcome, invalid-argument (the closed error taxonomy grows, hence major). Push to upstream (remote, branch, upstream branch) without `--set-upstream`; every child runs with `LC_MESSAGES=C`; the push-destination verb (`<branch>@{push}`). Patches from diff lines: a selection of one file's lines, forward and reversed line rules, recomputed hunk headers, the no-newline marker and a one-path file header; apply to the index or the work tree with the patch on standard input, never logged, an empty patch refused. Operations: the operation state (merge, rebase, cherry-pick, revert) read from the files at `rev-parse --git-path`, interactive only when `interactive` exists without `drop_redundant_commits`; merge with its fast-forward rule, rebase, and the continue, abort and skip steps, merge-skip refused before anything runs, every write under `GIT_EDITOR=true`. Conflicts: the seven conflict kinds kept per path, resolve by side and remove paths. Interactive rebase: the plan verb (first-parent, oldest first, merges and empty ranges refused), its validation, the todo with reword as pick plus an amending exec, run from an `adk-rebase` helper folder through `GIT_SEQUENCE_EDITOR` and removed once no operation is left. Worktrees and submodules: add and remove worktree (absolute paths only), locked worktrees, update submodules. |

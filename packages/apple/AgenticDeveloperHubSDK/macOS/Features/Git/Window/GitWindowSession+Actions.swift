@@ -484,6 +484,12 @@ extension GitAction {
         case .merge: "Merge failed"
         case .rebase: "Rebase failed"
         case let .operation(kind, step): "\(step.title) \(kind.verb) failed"
+        case .resolve: "Resolve failed"
+        case .removePaths: "Remove failed"
+        case .interactiveRebase: "Rebase failed"
+        case .addWorktree: "Add worktree failed"
+        case .removeWorktree: "Remove worktree failed"
+        case .updateSubmodules: "Update submodules failed"
         }
     }
 }

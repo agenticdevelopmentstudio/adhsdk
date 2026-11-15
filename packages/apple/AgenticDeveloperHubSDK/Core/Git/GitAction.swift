@@ -80,6 +80,23 @@ public enum GitAction: Sendable, Hashable {
     /// Continues, aborts or skips the operation in progress. A merge has no skip:
     /// `isUnsupportedStep`, which `GitClient.perform` refuses.
     case operation(GitOperationKind, GitOperationStep)
+    /// Takes one side of each conflicted path (`checkout --ours|--theirs`); staging it then
+    /// marks it resolved.
+    case resolve(paths: [String], side: GitConflictSide)
+    /// Removes paths from the index and the working tree (`rm -q`): how a conflict whose
+    /// chosen side deleted the file is resolved.
+    case removePaths(paths: [String])
+    /// Runs `plan` as `rebase -i <onto>`. `GitClient.perform` writes the todo and supplies it
+    /// through `GIT_SEQUENCE_EDITOR`; nothing of the plan is on the command line but `onto`.
+    case interactiveRebase(GitRebasePlan)
+    /// `worktree add [-b branch] path [branch|startPoint]`: checks out the existing `branch`, or
+    /// creates it at `startPoint` (HEAD when nil). `path` must be absolute.
+    case addWorktree(path: String, branch: String, createBranch: Bool, startPoint: String?)
+    /// `worktree remove [--force] path`; `path` must be absolute.
+    case removeWorktree(path: String, force: Bool)
+    /// `submodule update [--init] --recursive [-- paths]`. An empty path list means every
+    /// submodule, as git reads it, and is not refused.
+    case updateSubmodules(paths: [String], initialize: Bool)
 
     /// The git subcommand.
     public var verb: String {
@@ -103,6 +120,11 @@ public enum GitAction: Sendable, Hashable {
         case .merge: "merge"
         case .rebase: "rebase"
         case .operation(let kind, _): kind.verb
+        case .resolve: "checkout"
+        case .removePaths: "rm"
+        case .interactiveRebase: "rebase"
+        case .addWorktree, .removeWorktree: "worktree"
+        case .updateSubmodules: "submodule"
         }
     }
 
@@ -147,16 +169,29 @@ public enum GitAction: Sendable, Hashable {
         case let .merge(ref, fastForward): ["--no-edit", fastForward.flag, ref]
         case .rebase(let onto): [onto]
         case .operation(_, let step): [step.flag]
+        case let .resolve(paths, side): ["--\(side.rawValue)", "--"] + Self.literal(paths)
+        case .removePaths(let paths): ["-q", "--"] + Self.literal(paths)
+        case .interactiveRebase(let plan): ["-i", plan.onto]
+        case let .addWorktree(path, branch, createBranch, startPoint):
+            createBranch
+                ? ["add", "-b", branch, path] + (startPoint.map { [$0] } ?? [])
+                : ["add", path, branch]
+        case let .removeWorktree(path, force): ["remove"] + (force ? ["--force"] : []) + [path]
+        case let .updateSubmodules(paths, initialize):
+            ["update"] + (initialize ? ["--init"] : []) + ["--recursive"]
+                + (paths.isEmpty ? [] : ["--"] + Self.literal(paths))
         }
     }
 
     /// Whether the action can take far longer than a local write: anything that talks to a
     /// remote, and whatever makes commits, which runs the repository's hooks: a commit, a
-    /// merge, a rebase, and an operation's continue or skip. An abort makes no commit.
+    /// merge, a rebase, and an operation's continue or skip. An abort makes no commit. Adding
+    /// a worktree checks out a whole tree and runs the post-checkout hook, and updating
+    /// submodules clones and checks out each one.
     public var isLongRunning: Bool {
         switch self {
         case .commit, .fetch, .pull, .push, .pushSettingUpstream, .pushToUpstream, .deleteRemoteBranch,
-             .pushTag, .merge, .rebase:
+             .pushTag, .merge, .rebase, .interactiveRebase, .addWorktree, .updateSubmodules:
             true
         case .operation(_, let step): step != .abort
         default: false
@@ -169,7 +204,8 @@ public enum GitAction: Sendable, Hashable {
     public var operands: [String] {
         switch self {
         case .stage, .stageAll, .unstage, .unstageAll, .discard, .removeUntracked, .commit, .pull, .push,
-             .stashSave, .stashApply, .stashPop, .stashDrop, .applyToIndex, .applyToWorktree, .operation:
+             .stashSave, .stashApply, .stashPop, .stashDrop, .applyToIndex, .applyToWorktree, .operation,
+             .resolve, .removePaths, .removeWorktree, .updateSubmodules:
             []
         case .fetch(let remote): remote.map { [$0] } ?? []
         case let .pushSettingUpstream(remote, branch): [remote, branch]
@@ -187,6 +223,9 @@ public enum GitAction: Sendable, Hashable {
         case .cherryPick(let commit, _), .revert(let commit, _), .reset(let commit, _): [commit]
         case .merge(let ref, _): [ref]
         case .rebase(let onto): [onto]
+        case .interactiveRebase(let plan): [plan.onto]
+        case let .addWorktree(_, branch, createBranch, startPoint):
+            [branch] + (createBranch ? startPoint.map { [$0] } ?? [] : [])
         }
     }
 
@@ -201,7 +240,8 @@ public enum GitAction: Sendable, Hashable {
     /// everything. The `*All` cases are how a caller asks for everything.
     public var hasEmptyPathList: Bool {
         switch self {
-        case .stage(let paths), .unstage(let paths), .discard(let paths), .removeUntracked(let paths):
+        case .stage(let paths), .unstage(let paths), .discard(let paths), .removeUntracked(let paths),
+             .resolve(let paths, _), .removePaths(let paths):
             paths.isEmpty
         default: false
         }
@@ -212,6 +252,17 @@ public enum GitAction: Sendable, Hashable {
     public var isUnsupportedStep: Bool {
         if case .operation(.merge, .skip) = self { return true }
         return false
+    }
+
+    /// A worktree action's path when it is not absolute, or nil. `GitClient.perform` refuses
+    /// it: a relative path is resolved against wherever git runs, which is not what a caller
+    /// that names one means, and an absolute path can never be read as an option.
+    public var relativeWorktreePath: String? {
+        switch self {
+        case .addWorktree(let path, _, _, _), .removeWorktree(let path, _):
+            path.hasPrefix("/") ? nil : path
+        default: nil
+        }
     }
 
     /// What git reads on standard input: the patch, UTF-8, for the two apply cases; nil

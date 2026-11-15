@@ -167,4 +167,14 @@ struct GitStatusParserTests {
                             GitFileChange(path: "b.txt", status: .untracked)])
         #expect(changes.map(\.isUntracked) == [false, true])
     }
+
+    @Test("each unmerged pair keeps its kind and is conflicted in the unstaged files",
+          arguments: GitConflictKind.allCases)
+    func unmergedPairsKeepTheirKind(kind: GitConflictKind) {
+        let status = GitStatus.parse(porcelain: "\(kind.rawValue) dir/file.txt\u{0} M other.txt\u{0}")
+        #expect(status.conflicts == ["dir/file.txt": kind])
+        #expect(status.unstagedFiles["dir/file.txt"] == .conflicted)
+        #expect(status.files["dir/file.txt"] == .conflicted)
+        #expect(status.conflicts["other.txt"] == nil)
+    }
 }

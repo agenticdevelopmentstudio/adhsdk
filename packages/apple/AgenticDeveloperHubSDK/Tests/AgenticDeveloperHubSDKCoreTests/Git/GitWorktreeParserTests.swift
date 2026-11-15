@@ -64,4 +64,13 @@ struct GitWorktreeParserTests {
         #expect(trees[0].isMain)
         #expect(trees[0].branch == "solo")
     }
+
+    @Test("a locked worktree is flagged, with or without a reason; the flag does not carry over")
+    func locked() {
+        let output = "worktree /a\nHEAD 1\nbranch refs/heads/a\nlocked\n\n"
+            + "worktree /b\nHEAD 2\nbranch refs/heads/b\nlocked on a removable disk\n\n"
+            + "worktree /c\nHEAD 3\nbranch refs/heads/c\n"
+        let trees = GitWorktree.parse(porcelain: output)
+        #expect(trees.map(\.isLocked) == [true, true, false])
+    }
 }

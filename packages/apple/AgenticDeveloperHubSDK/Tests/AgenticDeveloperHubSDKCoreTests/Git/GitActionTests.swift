@@ -237,4 +237,64 @@ struct GitActionTests {
         ]
         #expect(supported.filter(\.isUnsupportedStep).isEmpty)
     }
+
+    @Test("resolving a conflict by side, and removing paths")
+    func resolvingConflicts() {
+        expect(.resolve(paths: ["a.txt", "-b"], side: .ours), "checkout",
+               ["--ours", "--", ":(top,literal)a.txt", ":(top,literal)-b"])
+        expect(.resolve(paths: ["a.txt"], side: .theirs), "checkout", ["--theirs", "--", ":(top,literal)a.txt"])
+        expect(.removePaths(paths: ["gone.txt"]), "rm", ["-q", "--", ":(top,literal)gone.txt"])
+        #expect(GitAction.resolve(paths: [], side: .ours).hasEmptyPathList)
+        #expect(GitAction.removePaths(paths: []).hasEmptyPathList)
+        #expect(!GitAction.resolve(paths: ["a"], side: .theirs).hasEmptyPathList)
+    }
+
+    @Test("an interactive rebase names only onto; its operand is checked")
+    func interactiveRebase() {
+        let plan = GitRebasePlan(onto: "abc1234", entries: [GitRebaseEntry(commit: "def5678", subject: "s")])
+        expect(.interactiveRebase(plan), "rebase", ["-i", "abc1234"])
+        #expect(GitAction.interactiveRebase(plan).operands == ["abc1234"])
+        #expect(GitAction.interactiveRebase(GitRebasePlan(onto: "--root", entries: [])).invalidOperand == "--root")
+        #expect(GitAction.interactiveRebase(plan).isLongRunning)
+    }
+
+    @Test("adding and removing worktrees")
+    func worktrees() {
+        expect(.addWorktree(path: "/tmp/wt", branch: "topic", createBranch: true, startPoint: nil), "worktree",
+               ["add", "-b", "topic", "/tmp/wt"])
+        expect(.addWorktree(path: "/tmp/wt", branch: "topic", createBranch: true, startPoint: "main"), "worktree",
+               ["add", "-b", "topic", "/tmp/wt", "main"])
+        expect(.addWorktree(path: "/tmp/wt", branch: "topic", createBranch: false, startPoint: "ignored"), "worktree",
+               ["add", "/tmp/wt", "topic"])
+        expect(.removeWorktree(path: "/tmp/wt", force: false), "worktree", ["remove", "/tmp/wt"])
+        expect(.removeWorktree(path: "/tmp/wt", force: true), "worktree", ["remove", "--force", "/tmp/wt"])
+        #expect(GitAction.addWorktree(path: "/w", branch: "-x", createBranch: true, startPoint: nil)
+            .invalidOperand == "-x")
+        #expect(GitAction.addWorktree(path: "/w", branch: "b", createBranch: true, startPoint: "-s")
+            .invalidOperand == "-s")
+        #expect(GitAction.addWorktree(path: "/w", branch: "b", createBranch: false, startPoint: "-s")
+            .invalidOperand == nil)
+        #expect(GitAction.addWorktree(path: "/w", branch: "b", createBranch: false, startPoint: nil).isLongRunning)
+        #expect(!GitAction.removeWorktree(path: "/w", force: false).isLongRunning)
+    }
+
+    @Test("only a relative worktree path is reported as relative")
+    func relativeWorktreePaths() {
+        #expect(GitAction.addWorktree(path: "wt", branch: "b", createBranch: false, startPoint: nil)
+            .relativeWorktreePath == "wt")
+        #expect(GitAction.removeWorktree(path: "../wt", force: true).relativeWorktreePath == "../wt")
+        #expect(GitAction.removeWorktree(path: "-f", force: false).relativeWorktreePath == "-f")
+        #expect(GitAction.removeWorktree(path: "/tmp/wt", force: false).relativeWorktreePath == nil)
+        #expect(GitAction.stageAll.relativeWorktreePath == nil)
+    }
+
+    @Test("updating submodules: every one when no paths are named, which is not an empty path list")
+    func updatingSubmodules() {
+        expect(.updateSubmodules(paths: [], initialize: false), "submodule", ["update", "--recursive"])
+        expect(.updateSubmodules(paths: [], initialize: true), "submodule", ["update", "--init", "--recursive"])
+        expect(.updateSubmodules(paths: ["lib/a"], initialize: true), "submodule",
+               ["update", "--init", "--recursive", "--", ":(top,literal)lib/a"])
+        #expect(!GitAction.updateSubmodules(paths: [], initialize: true).hasEmptyPathList)
+        #expect(GitAction.updateSubmodules(paths: [], initialize: false).isLongRunning)
+    }
 }

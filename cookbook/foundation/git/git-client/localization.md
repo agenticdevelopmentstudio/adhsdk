@@ -5,7 +5,7 @@
 | timed-out | `"git \(verb) did not finish within the configured timeout."` | The timed-out outcome |
 | launch-failed | `"git \(verb) could not be run: \(reason)"` | The launch-failed outcome |
 | executable-not-found | `"No git executable at \(path). Change it in Settings > Git."` | The executable-not-found outcome |
-| invalid-argument | `"git \(verb) was not run: “\(argument)” begins with “-”, so git would read it as an option."` (or `"git \(verb) was not run: a name or commit is empty."`) | The invalid-argument outcome |
+| invalid-argument | `"git \(verb) was not run: “\(argument)” begins with “-”, so git would read it as an option."` (or `"git \(verb) was not run: a name or commit is empty."`, or `"git \(verb) was not run: \(reason)"` when the reason is a sentence of its own) | The invalid-argument outcome |
 
 Every string above is hardcoded English with no lookup table, ICU message,
 or locale parameter anywhere in this component — there is no localization

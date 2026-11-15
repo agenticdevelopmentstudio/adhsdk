@@ -9786,7 +9786,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:ec7a2b49d0c4cfda1be81cb3e431ebdb77f00a766831a71a1dc254fd6de3699d",
+            "hash": "sha256:a1fb9cef3ae6d33a1b573327f322945648110f7b19da7d66c4097a015227ebfe",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -9804,7 +9804,7 @@
         },
         {
           "conformance": {
-            "hash": "sha256:b4de07ee30ef195671fd0c82ed1a363834e0b221c288bfdacf4c3adaea96d640",
+            "hash": "sha256:7cfc7efd7b2eef6832ca92c6ebd56aeb7ec61cf649abbddc02ec2afad3261358",
             "state": "confirmed",
             "version": "2.0.0"
           },
@@ -9827,6 +9827,15 @@
             "version": "2.0.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitOperationState.swift",
+          "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:fdb60c7d7b39b490736cb2b89dd1c31d3d719dcb89ed95fca6e36dca4353e536",
+            "state": "confirmed",
+            "version": "2.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitRebasePlan.swift",
           "platform": "apple"
         }
       ],
@@ -15536,6 +15545,22 @@
       "kind": "ingredient",
       "path": "adh/hub/content/markdown-client",
       "rdid": "adhsdk.ingredient.adh.hub.content.markdown-client"
+    },
+    "b28294a3-4eba-4c42-a7e9-d50821ed8f75": {
+      "implementations": [
+        {
+          "conformance": {
+            "hash": "sha256:322f5943f12fc5e32099baefe5245d2a692386b2e2bd1ec40c78a8410247fbff",
+            "state": "confirmed",
+            "version": "1.0.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/Core/Git/GitConflict.swift",
+          "platform": "apple"
+        }
+      ],
+      "kind": "ingredient",
+      "path": "foundation/git/git-conflict-document",
+      "rdid": "adhsdk.ingredient.foundation.git.git-conflict-document"
     },
     "b2c3bfad-cfd1-4a0f-bfbf-89f5d3712700": {
       "implementations": [

@@ -156,8 +156,11 @@
   cherry-pick and revert (commit, optional mainline), reset (commit,
   soft, mixed or hard), apply a patch to the index or to the work
   tree (patch text, reverse), merge (ref, fast-forward allowed, never or
-  only), rebase (onto a ref), and an in-progress operation's step
-  (merge, rebase, cherry-pick or revert; continue, abort or skip).
+  only), rebase (onto a ref), an in-progress operation's step
+  (merge, rebase, cherry-pick or revert; continue, abort or skip), resolve
+  (paths, ours or theirs), remove paths, interactive rebase (a plan), add
+  worktree (path, branch, create the branch or not, optional start point),
+  remove worktree (path, force) and update submodules (paths, initialize).
 - **write-action-mapping**: Each action MUST map to exactly this verb and
   these arguments, every path list preceded by `--` and every path in it
   written as the literal, top-relative pathspec `:(top,literal)<path>`, so a
@@ -188,7 +191,14 @@
   `apply --whitespace=nowarn [--reverse] -`, the patch on standard input;
   merge → `merge --no-edit --ff|--no-ff|--ff-only <ref>` (fast-forward
   allowed, never, only); rebase → `rebase <ref>`; an operation's step →
-  `merge|rebase|cherry-pick|revert --continue|--abort|--skip`.
+  `merge|rebase|cherry-pick|revert --continue|--abort|--skip`; resolve →
+  `checkout --ours|--theirs -- <paths>`; remove paths → `rm -q -- <paths>`;
+  interactive rebase → `rebase -i <onto>`, the todo supplied by the perform
+  verb (`interactive-rebase-run`); add worktree → `worktree add -b <branch>
+  <path> [<start>]` when creating the branch, else `worktree add <path>
+  <branch>`; remove worktree → `worktree remove [--force] <path>`; update
+  submodules → `submodule update [--init] --recursive [-- <paths>]`, every
+  submodule when no paths are named.
 - **write-operand-guard**: None of those mappings puts a ref, branch, tag,
   remote or commit after `--`, so git would read one that begins with `-`
   as an option (`branch --delete main` from a branch named `--delete`
@@ -196,17 +206,25 @@
   perform verb MUST therefore refuse, before resolving its configuration or
   spawning anything, any action whose positional operands — branch name,
   start point, checkout target, remote branch, commit, tag name, remote,
-  a push's upstream branch, and a rename's old and new names — include one that is empty or begins
+  a push's upstream branch, a rename's old and new names, an interactive
+  rebase's onto commit, and an added worktree's branch and, when the branch
+  is created, its start point — include one that is empty or begins
   with `-`, with a distinct invalid-argument outcome carrying the verb and
   the offending value (its log description carries only the verb). Paths,
   which follow `--`, and messages, which follow `-m`, are exempt. It MUST
   likewise refuse a stage, unstage, discard or remove-untracked action whose
-  path list is empty, as invalid-argument with an empty value: git reads an
+  path list is empty, and a resolve or remove-paths action likewise, as
+  invalid-argument with an empty value (an update-submodules action with no
+  paths is not refused: it means every submodule): git reads an
   empty pathspec list as the whole tree, so `clean -f -d --` with no paths
   would delete every untracked file. A merge's ref and a rebase's onto ref
   are operands like any other. A merge has no skip step (`git merge` takes
   no `--skip`), so the merge-skip action MUST be refused the same way,
-  carrying the verb `merge` and the value `--skip`.
+  carrying the verb `merge` and the value `--skip`. The outcome's
+  description MUST say a name or commit is empty for an empty value, that
+  the value begins with `-` for a dash-led one, and otherwise show the value
+  itself, which is then a sentence giving the reason (an invalid rebase
+  plan, a relative worktree path).
 - **write-budgets**: The perform verb MUST run through the same private
   execution step as every read — logged, attributed and mapped onto the
   same error outcomes — with its own wall-clock budget: the larger of the
@@ -215,8 +233,10 @@
   remote (fetch, pull, push, push setting upstream, push to upstream,
   delete remote branch,
   push tag) and the ones that make commits, which run the repository's
-  hooks: commit, merge, rebase, and an operation's continue and skip
-  steps (an abort makes no commit and is local). Both budgets
+  hooks: commit, merge, rebase, interactive rebase, and an operation's
+  continue and skip steps (an abort makes no commit and is local); adding a
+  worktree (it checks out a whole tree and runs the post-checkout hook) and
+  updating submodules (each may be cloned) are long-running too. Both budgets
   MUST be exposed as constants. A read's budget is unchanged.
 - **write-editor-override**: The perform verb MUST run with `-c
   core.editor=true`, so no write can stop to wait on an editor nobody is
@@ -322,6 +342,76 @@
   reverting do; merging and none do not.
 - **operation-editor**: A continue step MUST finish without an editor
   (`write-editor-override`), keeping the message git prepared.
+
+### Conflicts
+
+- **conflict-kinds**: A conflicted path MUST carry one of seven kinds, named
+  by its status pair, the first letter our side (stage 2) and the second
+  theirs (stage 3): both modified `UU`, both added `AA`, deleted by us `DU`,
+  deleted by them `UD`, added by us `AU`, added by them `UA`, both deleted
+  `DD`. Our side exists for `UU`, `AA`, `UD` and `AU`; theirs for `UU`, `AA`,
+  `DU` and `UA`; only `UU` and `AA` leave conflict markers in the working
+  file.
+- **conflict-resolve-by-side**: Taking one side of a conflict MUST be the
+  resolve action (`checkout --ours|--theirs`), after which staging the path
+  marks it resolved. A side that deleted the file MUST be taken with the
+  remove-paths action (`rm -q`), which resolves the path at once. Reading
+  and resolving the markers inside a file is the conflict document's
+  (`git-conflict-document`).
+
+### Interactive rebase
+
+- **rebase-plan-command**: The rebase-plan verb MUST resolve its onto
+  commit to a full sha, then list `log --reverse --first-parent <onto>..HEAD`
+  (no colour, no signatures, the commit format of `commit-format`), oldest
+  first, as plan entries all picked, each with its commit and subject. It
+  MUST refuse, as invalid-argument naming `rebase`, an onto that is empty,
+  begins with `-` or names no commit, an empty range, and a range holding a
+  merge commit (a plan replays a straight line; `rebase -i` without
+  `--rebase-merges` would flatten the merge).
+- **rebase-plan-actions**: An entry's action MUST be one of pick, reword,
+  edit, squash, fixup and drop; a reword carries its new message.
+- **rebase-plan-validation**: A plan MUST report why git would refuse it,
+  checked in this order: every entry dropped (an empty plan included); the
+  first entry that is kept being a squash or fixup (there is no earlier
+  commit to fold it into); a kept reword whose message is empty or only
+  whitespace. The perform verb MUST refuse such a plan as invalid-argument
+  carrying that reason, and a plan holding a commit that is not 4 to 64
+  ASCII hex digits, and a plan run while any operation is in progress, all
+  before writing or spawning anything.
+- **interactive-rebase-todo**: The todo MUST hold one line per entry,
+  `<action> <sha> <subject>`, the subject's line breaks turned into spaces,
+  and end with a newline. A reword MUST be written as `pick <sha> <subject>`
+  followed by `exec git commit --amend --no-edit --allow-empty -F
+  '<helper>/message-<n>'`, `n` counting rewords from 0 in todo order and the
+  path single-quoted for `sh` (each `'` written `'\''`), so the rebase never
+  needs an editor.
+- **interactive-rebase-run**: The perform verb MUST write the todo and each
+  reword's message into the helper folder, `rev-parse --git-path
+  adk-rebase` (inside the working tree's own git directory, beside
+  `rebase-merge/`), replacing any folder already there; MUST set
+  `GIT_SEQUENCE_EDITOR` to `cp '<helper>/todo'`, which git calls with its own
+  todo's path; and MUST run `rebase -i <onto>` under `GIT_EDITOR=true`
+  (`write-editor-override`), so a squash keeps git's combined message.
+- **interactive-rebase-cleanup**: After an interactive rebase and after any
+  rebase step (continue, abort, skip), whether git succeeded or failed, the
+  perform verb MUST remove the helper folder when it exists and the
+  operation state is none. A rebase that stopped (an edit, a conflict) keeps
+  it, since its `exec` lines still read the messages.
+
+### Worktrees and submodules
+
+- **worktree-absolute-paths**: An add-worktree or remove-worktree action
+  MUST name an absolute path; the perform verb MUST refuse a relative one,
+  before spawning, as invalid-argument carrying the verb `worktree` and a
+  sentence naming the path. A relative path would resolve against wherever
+  git runs, and an absolute one can never be read as an option.
+- **worktree-remove-dirty**: Removing a worktree with changes or untracked
+  files MUST fail as command-failed unless forced; forced, it MUST succeed.
+- **submodule-update**: Updating submodules MUST run `submodule update
+  [--init] --recursive`, limited to the named paths after `--` when there
+  are any, so an initialized superproject whose submodules were never
+  cloned ends with each checked out at its recorded commit.
 
 ### Execution, configuration and attribution
 
@@ -448,7 +538,8 @@
 - **status-conflict-pair-detection**: Parsing status MUST classify a
   record as conflicted when its two-character status pair is exactly one
   of `DD`, `AU`, `UD`, `UA`, `DU`, `AA`, `UU`, ahead of the
-  modified/added/deleted ladder.
+  modified/added/deleted ladder, and MUST keep that pair as the path's
+  conflict kind in a conflicts map (`conflict-kinds`).
 - **status-staged-unstaged-columns**: Parsing status MUST also keep each
   column on its own, in the same pass over the same records: a staged map
   from the index column and an unstaged map from the work-tree column,
@@ -477,6 +568,9 @@
   record as the main worktree and every subsequent record as not the main
   worktree, per the listing's own contract that the main worktree is
   always listed first.
+- **worktree-locked**: Parsing worktrees MUST mark a record locked when it
+  has a `locked` line, with or without a reason after it, and MUST reset the
+  flag for each record.
 - **branch-parse-tab-separated**: Parsing branches MUST split each line on
   tab, treat a second field of `"*"` as the current branch, and treat a
   third field that is empty as no upstream — the third field for a real

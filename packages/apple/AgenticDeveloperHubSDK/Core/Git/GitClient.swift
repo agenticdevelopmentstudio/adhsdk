@@ -178,6 +178,45 @@ public actor GitClient {
         return GitOperationState.Files(urls).map(GitOperationState.read) ?? .none
     }
 
+    /// The interactive rebase of the current branch onto `commit`, every commit picked: the
+    /// commits `log --reverse --first-parent <onto>..HEAD` lists, oldest first, `onto` resolved
+    /// to its full sha. Throws `.invalidArgument` when `commit` does not resolve, when the range
+    /// is empty, or when it holds a merge commit: a plan replays a straight line of commits, and
+    /// `rebase -i` without `--rebase-merges` would flatten a merge's side into it.
+    public func rebasePlan(
+        onto commit: String,
+        in directory: URL,
+        caller: GitCaller = GitCaller()
+    ) async throws -> GitRebasePlan {
+        guard !commit.isEmpty, !commit.hasPrefix("-") else {
+            throw GitClientError.invalidArgument(verb: "rebase", argument: commit)
+        }
+        guard let onto = try await resolveCommit(commit, in: directory, caller: caller) else {
+            throw GitClientError.invalidArgument(verb: "rebase", argument: "“\(commit)” names no commit.")
+        }
+        let output = try await execute(
+            verb: "log",
+            arguments: ["--no-color", "--no-show-signature", "--reverse", "--first-parent",
+                        "--format=" + GitCommit.logFormat, "--end-of-options", "\(onto)..HEAD"],
+            directory: directory,
+            caller: caller,
+            configuration: await configurationProvider()
+        )
+        let commits = GitCommit.parse(log: output)
+        if let merge = commits.first(where: { $0.parents.count > 1 }) {
+            throw GitClientError.invalidArgument(
+                verb: "rebase",
+                argument: "the range holds the merge commit \(merge.id.prefix(10)), which a plan cannot replay."
+            )
+        }
+        guard !commits.isEmpty else {
+            throw GitClientError.invalidArgument(
+                verb: "rebase", argument: "there are no commits after “\(commit)”."
+            )
+        }
+        return GitRebasePlan(onto: onto, entries: commits.map { GitRebaseEntry(commit: $0.id, subject: $0.subject) })
+    }
+
     /// `rev-parse --git-path` answers relative to the directory it ran in unless the path is absolute.
     private static func gitPathURL(_ path: String, in directory: URL) -> URL {
         path.hasPrefix("/") ? URL(fileURLWithPath: path) : directory.appendingPathComponent(path)
@@ -604,6 +643,33 @@ public actor GitClient {
         if action.isUnsupportedStep {
             throw GitClientError.invalidArgument(verb: action.verb, argument: action.arguments.first ?? "")
         }
+        if let path = action.relativeWorktreePath {
+            throw GitClientError.invalidArgument(verb: action.verb, argument: "“\(path)” is not an absolute path.")
+        }
+        switch action {
+        case .interactiveRebase(let plan):
+            return try await performInteractiveRebase(plan, action: action, in: directory, caller: caller)
+        case .operation(.rebase, _):
+            return try await runThenRemoveRebaseHelper(in: directory, caller: caller) {
+                try await self.runWrite(action, in: directory, caller: caller)
+            }
+        default:
+            return try await runWrite(action, in: directory, caller: caller)
+        }
+    }
+
+    /// The name, under the git directory, of the folder an interactive rebase's todo and reword
+    /// messages are written to. It sits beside `rebase-merge/`, so it lives as long as the rebase.
+    static let rebaseHelperName = "adk-rebase"
+
+    /// Runs one write through `execute`: `core.editor=true`, the write budget, the action's
+    /// standard input, and `writeEnvironment` with `extraEnvironment` over it.
+    private func runWrite(
+        _ action: GitAction,
+        in directory: URL,
+        caller: GitCaller,
+        extraEnvironment: [String: String] = [:]
+    ) async throws -> String {
         let configuration = await configurationProvider()
         let floor = action.isLongRunning ? Self.longWriteBudget : Self.writeBudget
         return try await execute(
@@ -615,8 +681,86 @@ public actor GitClient {
             configOverrides: Self.writeConfigOverrides,
             budget: max(configuration.timeout, floor),
             standardInput: action.standardInput,
-            environment: Self.writeEnvironment
+            environment: Self.writeEnvironment.merging(extraEnvironment) { _, new in new }
         )
+    }
+
+    /// `rebase -i <onto>` with `plan` as its todo. The plan is checked first (its
+    /// `validationError`, a commit that is not a hex sha, an operation already under way), then
+    /// the helper folder is replaced by one holding `todo` and `message-<n>` per reword, and
+    /// `GIT_SEQUENCE_EDITOR` copies that todo over the one git wrote. The folder is removed as
+    /// soon as no operation is left, whether the rebase finished or failed to start; a rebase
+    /// that stopped (an edit, a conflict) keeps it for its `exec` lines until it ends.
+    private func performInteractiveRebase(
+        _ plan: GitRebasePlan,
+        action: GitAction,
+        in directory: URL,
+        caller: GitCaller
+    ) async throws -> String {
+        if let reason = plan.validationError {
+            throw GitClientError.invalidArgument(verb: action.verb, argument: reason)
+        }
+        if let commit = plan.invalidCommit {
+            throw GitClientError.invalidArgument(
+                verb: action.verb, argument: "“\(commit)” is not a commit's object name."
+            )
+        }
+        if try await operationState(in: directory, caller: caller) != .none {
+            throw GitClientError.invalidArgument(
+                verb: action.verb, argument: "another merge, rebase, cherry-pick or revert is in progress."
+            )
+        }
+        let helper = try await gitPath(Self.rebaseHelperName, in: directory, caller: caller)
+        let todo = helper.appendingPathComponent("todo")
+        do {
+            try Self.writeRebaseHelper(plan, at: helper, todo: todo)
+        } catch {
+            try? FileManager.default.removeItem(at: helper)
+            throw GitClientError.launchFailed(verb: action.verb, reason: error.localizedDescription)
+        }
+        let editor = ["GIT_SEQUENCE_EDITOR": "cp " + GitRebasePlan.shellQuoted(todo.path)]
+        return try await runThenRemoveRebaseHelper(in: directory, caller: caller) {
+            try await self.runWrite(action, in: directory, caller: caller, extraEnvironment: editor)
+        }
+    }
+
+    /// Replaces the folder at `helper` with one holding `plan`'s todo and each reword's message.
+    private static func writeRebaseHelper(_ plan: GitRebasePlan, at helper: URL, todo: URL) throws {
+        let files = FileManager.default
+        if files.fileExists(atPath: helper.path) { try files.removeItem(at: helper) }
+        try files.createDirectory(at: helper, withIntermediateDirectories: true)
+        let messageFile = { (index: Int) in helper.appendingPathComponent("message-\(index)").path }
+        for (index, message) in plan.rewordMessages.enumerated() {
+            try Data(message.utf8).write(to: URL(fileURLWithPath: messageFile(index)))
+        }
+        try Data(plan.todo(messageFile: messageFile).utf8).write(to: todo)
+    }
+
+    /// Runs `body`, then, whether it returned or threw, removes the helper folder if the
+    /// rebase is no longer under way.
+    private func runThenRemoveRebaseHelper(
+        in directory: URL,
+        caller: GitCaller,
+        _ body: () async throws -> String
+    ) async throws -> String {
+        let output: String
+        do {
+            output = try await body()
+        } catch {
+            await removeRebaseHelperIfIdle(in: directory, caller: caller)
+            throw error
+        }
+        await removeRebaseHelperIfIdle(in: directory, caller: caller)
+        return output
+    }
+
+    /// Removes the interactive rebase's helper folder when it exists and no operation is under way.
+    func removeRebaseHelperIfIdle(in directory: URL, caller: GitCaller) async {
+        guard let helper = try? await gitPath(Self.rebaseHelperName, in: directory, caller: caller),
+              FileManager.default.fileExists(atPath: helper.path),
+              (try? await operationState(in: directory, caller: caller)) == GitOperationState.none
+        else { return }
+        try? FileManager.default.removeItem(at: helper)
     }
 
     /// The repository's remote names that have a URL, sorted (`git remote -v`). A remote
