@@ -290,14 +290,16 @@ extension BrowserLogPaneViewController: PaneTitleProviding {
 extension BrowserLogPaneViewController {
 
     /// Show Browser Log for `pane`: brings forward the log pane already
-    /// following it in its window, or splits one off beside it.
+    /// following it in its window, or splits one off beside it. A browser in
+    /// a web browser window shows its log in that window's own split
+    /// (`WebBrowserWindowController` sets the pane's `onShowBrowserLog`), so
+    /// this is the one presenter for a browser in a project window; a browser
+    /// anywhere else has no log to open.
     public static func show(for pane: WebBrowserPaneViewController) {
         guard let nodeID = pane.paneContext.paneNodeID,
               let window = pane.viewIfLoaded?.window,
               let controller = window.windowController as? ComposableTabsWindowController else {
-            // A browser in no project window has no layout to split, so its
-            // log gets a window of its own.
-            BrowserLogWindowController.show(for: pane)
+            logger.info("browser log not shown: the browser is in no project window and its host shows no log")
             return
         }
         let panes = controller.allPanes()

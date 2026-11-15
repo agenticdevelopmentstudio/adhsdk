@@ -50,9 +50,6 @@ public final class ChromeBrowserPaneViewController: WebBrowserPaneViewController
     ) -> (PaneStateStore, SettingsStore) -> WebBrowserPaneViewController {
         { store, settings in
             let pane = ChromeBrowserPaneViewController(store: store, settings: settings, history: history)
-            #if DEBUG
-            pane.onShowBrowserLog = { BrowserLogPaneViewController.show(for: $0) }
-            #endif
             return pane
         }
     }
@@ -96,9 +93,6 @@ extension ComposableTabsViewRegistry {
             )
             // The private terminals' words, for the pane's Agent Privacy.
             pane.privacyVault = privacyVault
-            #if DEBUG
-            pane.onShowBrowserLog = { BrowserLogPaneViewController.show(for: $0) }
-            #endif
             return pane
         }
     }

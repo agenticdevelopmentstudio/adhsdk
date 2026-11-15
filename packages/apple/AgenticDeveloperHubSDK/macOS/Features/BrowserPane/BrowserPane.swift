@@ -114,9 +114,6 @@ extension ComposableTabsViewRegistry {
             )
             // The private terminals' words, for the pane's Agent Privacy.
             pane.privacyVault = privacyVault
-            #if DEBUG
-            pane.onShowBrowserLog = { BrowserLogPaneViewController.show(for: $0) }
-            #endif
             return pane
         }
         // The project settings sheet's Cookies and Site Data topic. Jars

@@ -166,7 +166,9 @@ open class WebBrowserPaneViewController: NSViewController {
     /// broken.
     public private(set) var isEventsPaused = false
     /// Asked to open a log of the events this pane delivered and withheld
-    /// (the debug-only Show Browser Log gear item). The host wires it.
+    /// (the debug-only Show Browser Log gear item). `nil` opens the log pane
+    /// beside the browser in its project window; a web browser window sets it
+    /// to its own split under the page.
     public var onShowBrowserLog: ((WebBrowserPaneViewController) -> Void)?
     /// The pane's effective Agent access, read from its own layered settings
     /// so a per-pane override counts.
@@ -2091,8 +2093,8 @@ extension WebBrowserPaneViewController: PaneMenuProviding {
         BrowserPaneSettingsWindowController.show(for: self) { makePaneSettingsController() }
     }
 
-    /// The host's log presenter, else the default: beside the pane in a
-    /// project window, or in a window of its own.
+    /// The host's log presenter, else the default: beside the pane in its
+    /// project window.
     @objc func showBrowserLog() {
         (onShowBrowserLog ?? BrowserLogPaneViewController.show(for:))(self)
     }
