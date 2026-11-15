@@ -18,21 +18,23 @@ final class StubBrowserEngine: BrowserEngine {
     weak var delegate: BrowserEngineDelegate?
     var url: URL? { nil }
     var title: String? { nil }
-    var isLoading: Bool { false }
+    var isLoading = false
     var loadingChanges: AnyPublisher<Bool, Never> { Empty().eraseToAnyPublisher() }
     let view = NSView()
     var viewportSize: CGSize { .zero }
-    var canGoBack: Bool { false }
-    var canGoForward: Bool { false }
+    var canGoBack = false
+    var canGoForward = false
     var inputGate = BrowserInputGate.open
     var onInputDecision: ((BrowserInputChannel, String, Bool, Bool, String) -> Void)?
     var isActivationShieldActive: Bool { false }
     var heldLoadURL: URL? { nil }
     func load(_ url: URL) {}
-    func goBack() {}
-    func goForward() {}
-    func reload() {}
-    func stopLoading() {}
+    /// Every navigation call, in order: "reload", "stop", "back", "forward".
+    private(set) var navigationCalls: [String] = []
+    func goBack() { navigationCalls.append("back") }
+    func goForward() { navigationCalls.append("forward") }
+    func reload() { navigationCalls.append("reload") }
+    func stopLoading() { navigationCalls.append("stop") }
     func teardown() {}
     func setActivationShieldActive(_ active: Bool) {}
     private(set) var hidesImages = false

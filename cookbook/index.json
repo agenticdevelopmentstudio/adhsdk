@@ -12283,14 +12283,14 @@
       "implementations": [
         {
           "conformance": {
-            "state": "planned"
+            "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserMenuCommands.swift",
           "platform": "macos"
         },
         {
           "conformance": {
-            "state": "planned"
+            "state": "unverified"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandMenuBridge.swift",
           "platform": "macos"

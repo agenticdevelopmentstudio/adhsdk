@@ -4,7 +4,7 @@
     "id": "8a4aca5f-977b-4f4c-86f6-16f4150132ac",
     "title": "Browser Menu",
     "type": "ingredient",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "status": "draft",
     "language": "en",
     "created": "2026-11-15",
@@ -38,7 +38,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "788412fa8bb4cb98",
+  "synced": "7179f815a05a83dd",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

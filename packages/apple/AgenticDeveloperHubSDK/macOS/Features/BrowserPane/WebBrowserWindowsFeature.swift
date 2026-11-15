@@ -15,6 +15,11 @@ import AppKit
 /// (`BrowserHistoryWindowController`), and registers that window with the
 /// window manager so it comes back at launch as the other single windows do.
 /// The host sets `BrowserHistoryWindowController.store` before composing it.
+///
+/// And it contributes the Browser menu (`BrowserMenuCommands`): Reload, Stop,
+/// Back, Forward, Show History and Show / Hide Privacy Toolbar, for the key
+/// window's browser pane, installing Back and Forward in the key command
+/// registry under "Web Browser" so the person can rebind them.
 @MainActor
 public final class WebBrowserWindowsFeature: AppFeature {
 
@@ -24,8 +29,18 @@ public final class WebBrowserWindowsFeature: AppFeature {
         public static let showHistory = "browser.action.showHistory"
     }
 
-    public init(commandRegistry registry: CommandRegistry) {
+    /// The Browser menu's items and Back / Forward's key commands.
+    public let browserMenu: BrowserMenuCommands
+
+    public init(
+        commandRegistry registry: CommandRegistry,
+        keyCommands: KeyCommandRegistry = .shared
+    ) {
+        browserMenu = BrowserMenuCommands(
+            keyPane: { WebBrowserPaneViewController.keyPane() },
+            showHistory: { BrowserHistoryWindowController.show() })
         super.init()
+        keyCommands.install(BrowserMenuCommands.keySection)
         registry.register(AppCommand(
             id: CommandID.newWindow,
             title: "New Web Browser Window",
@@ -62,6 +77,6 @@ public final class WebBrowserWindowsFeature: AppFeature {
                 order: 21,
                 isHidden: { !WebBrowserWindowController.canOpen }
             )
-        ]
+        ] + browserMenu.contributions()
     }
 }

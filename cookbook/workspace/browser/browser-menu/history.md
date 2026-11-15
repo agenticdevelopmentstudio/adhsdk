@@ -1,4 +1,5 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-15 | Mike Fullerton | macOS implementation: dynamicTitle, ItemID, showSectionOrder, keyPane(in:) and the command-window rule recorded in platform notes |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

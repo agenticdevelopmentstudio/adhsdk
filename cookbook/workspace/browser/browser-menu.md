@@ -2,7 +2,7 @@
 id: 8a4aca5f-977b-4f4c-86f6-16f4150132ac
 title: "Browser Menu"
 type: ingredient
-version: 0.1.0
+version: 0.1.1
 status: draft
 language: en
 created: 2026-11-15
@@ -274,11 +274,20 @@ Not applicable: the design asks for no log line of the menu's own.
   appends `contributions()` to its `menuContributions`. The default
   `keyPane` is `WebBrowserPaneViewController.keyPane()`: the key window's
   standalone browser pane, else `BrowserPaneFocus.shared.lastFocused` when
-  its `view.window` is the key window, else `nil`. Engine calls are
+  its `view.window` is the key window, else `nil` — "the key window" being
+  `KeyCommandRegistry.shared.commandWindow` resolved through `commandOwner`,
+  so a Chrome pane's attached child window counts as its parent; the window
+  form is `keyPane(in:)`. The items' stable ids are
+  `BrowserMenuCommands.ItemID` (`browser.reload` … `browser.toggle-privacy-toolbar`),
+  which `MenuManager` prefixes into `menu.browser.*` accessibility identifiers,
+  and the separator falls before `BrowserMenuCommands.showSectionOrder` (100). Engine calls are
   `BrowserEngine.reload()`, `stopLoading()`, `goBack()`, `goForward()`;
   enablement reads `canGoBack`, `canGoForward`, `isLoading`. The toggle writes
   `UserSettings.browserPrivacyShowToolbar` into the pane's
-  `LayeredSettingsStore`. `MenuContribution` gains `keyCommandID: String?`;
+  `LayeredSettingsStore`; its title, "Show" or "Hide Privacy Toolbar", is
+  re-read every time the menu opens through a second new field,
+  `MenuContribution.dynamicTitle: (() -> String)?`, which `MenuManager` hands
+  to `MenuUpdateDelegate.addRetitle`. `MenuContribution` gains `keyCommandID: String?`;
   `KeyCommandMenuBridge.bind(_:toCommand:registry:)` sets the `NSMenuItem`'s
   `keyEquivalent` and `keyEquivalentModifierMask` from
   `registry.shortcut(for:)` (empty when `nil` or disabled) and re-applies on
@@ -303,8 +312,8 @@ Not applicable: the design asks for no log line of the menu's own.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserMenuCommands.swift` | planned |
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandMenuBridge.swift` | planned |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/BrowserPane/BrowserMenuCommands.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/KeyCommands/KeyCommandMenuBridge.swift` | unverified |
 
 ## Design Decisions
 
@@ -353,4 +362,5 @@ checks are run when the code lands and the recipe is confirmed against it.
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 0.1.1 | 2026-11-15 | Mike Fullerton | macOS implementation: dynamicTitle, ItemID, showSectionOrder, keyPane(in:) and the command-window rule recorded in platform notes |
 | 0.1.0 | 2026-11-15 | Mike Fullerton | Initial creation (design-first, from the more privacy features design) |

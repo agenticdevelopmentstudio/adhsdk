@@ -25,6 +25,10 @@ public struct MenuContribution {
         case projects
         /// View menu — typically Toggle Sidebar / Enter Full Screen.
         case view
+        /// Browser menu, after View — the commands for the browser pane in
+        /// the key window (Reload, Stop, Back, Forward) and the browser's own
+        /// windows and toolbars.
+        case browser
         /// Notes menu, between View and Window — the commands that open the
         /// notes windows.
         case notes
@@ -79,6 +83,18 @@ public struct MenuContribution {
     /// title, placed where the lowest `order` among them would be — View ▸
     /// Tab Position ▸ Top, Left, Right, Bottom.
     public let submenu: String?
+    /// The id of a `KeyCommandRegistry` command whose binding the item shows
+    /// as its key equivalent, or `nil` (the default) for an item that keeps
+    /// its own fixed `key`. The host hands such an item to
+    /// `KeyCommandMenuBridge`, so the displayed key follows a rebind in
+    /// Settings › Keyboard without the menu being rebuilt; `key` and
+    /// `modifiers` are then ignored.
+    public let keyCommandID: String?
+    /// The item's title as it should read right now, asked each time its menu
+    /// opens; `nil` (the default) keeps `title` for good. For an item whose
+    /// wording follows state — Show Privacy Toolbar / Hide Privacy Toolbar.
+    /// `title` is still what the item is built with.
+    public let dynamicTitle: (() -> String)?
     /// What to do when the user activates the item.
     public let action: () -> Void
 
@@ -93,6 +109,8 @@ public struct MenuContribution {
         isChecked: (() -> Bool)? = nil,
         identifier: String? = nil,
         submenu: String? = nil,
+        keyCommandID: String? = nil,
+        dynamicTitle: (() -> String)? = nil,
         action: @escaping () -> Void
     ) {
         self.slot = slot
@@ -105,6 +123,8 @@ public struct MenuContribution {
         self.isChecked = isChecked
         self.identifier = identifier
         self.submenu = submenu
+        self.keyCommandID = keyCommandID
+        self.dynamicTitle = dynamicTitle
         self.action = action
     }
 
@@ -173,6 +193,8 @@ public struct MenuContribution {
         self.isChecked = nil
         self.identifier = nil
         self.submenu = nil
+        self.keyCommandID = nil
+        self.dynamicTitle = nil
         self.isEnabled = { registry.isEnabled(id: commandID) }
         self.action = {
             do {
