@@ -259,7 +259,11 @@ public final class ComposableTabsActivePane {
         }
 
         // A click carries its own focus: the view under it takes first
-        // responder the ordinary AppKit way. The pointer carries nothing, so a
+        // responder the ordinary AppKit way — unless that view accepts none (a
+        // breadcrumb strip, a divider, padding), when the keys stay where they
+        // were; a pane with such parts moves them itself on
+        // `didChangeNotification`, as the file browser does for its filter.
+        // The pointer carries nothing, so a
         // pane it moves into would be outlined as active while the keys kept
         // going to the pane the user left.
         //

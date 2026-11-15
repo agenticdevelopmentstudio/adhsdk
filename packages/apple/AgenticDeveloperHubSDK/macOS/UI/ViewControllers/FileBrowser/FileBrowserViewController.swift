@@ -418,26 +418,39 @@ public final class FileBrowserViewController: NSViewController {
     }
 
     /// The filter takes the keyboard whenever this pane becomes the active
-    /// one — by the keyboard, a menu, a tab switch — except when the reader
-    /// clicked somewhere in the pane, which already says where they want to be.
+    /// one — by the keyboard, a menu, a tab switch, or a click on a part of the
+    /// pane that takes no focus of its own — except when the reader clicked
+    /// the tree or the filter, which take the keyboard themselves.
     ///
-    /// A click anywhere in the pane carries its own focus. Refocusing the
-    /// filter a turn later, after a click *in the filter*, ran while the field
-    /// editor was still tracking that mouse-down: the edit was torn down and
-    /// restarted under it, and the keys the reader typed next went nowhere.
+    /// The breadcrumb strip, the dividers and the padding around the filter
+    /// accept no first responder, so a click there activates the pane without
+    /// moving the keys: skipping the refocus for it left them in the pane that
+    /// was active before, while this one was drawn as the active pane.
     private func activePaneDidChange(in window: NSWindow?) {
         guard isViewLoaded, let window, window === view.window else { return }
         let isActive = ComposableTabsActivePane.shared.isInActivePane(view)
         defer { wasActivePane = isActive }
         guard isActive, !wasActivePane else { return }
-        if let event = NSApp.currentEvent, Self.isMouseDown(event), event.window === window {
-            let point = view.convert(event.locationInWindow, from: nil)
-            if view.bounds.contains(point) { return }
+        if let event = NSApp.currentEvent, Self.isMouseDown(event), event.window === window,
+           clickTakesFocus(atWindowPoint: event.locationInWindow) {
+            return
         }
         if let responder = window.firstResponder as? NSView, responder.isDescendant(of: view) { return }
         // After the click or key that activated the pane has been handled, so
         // whatever it does with the first responder does not undo this.
         DispatchQueue.main.async { [weak self] in self?.focusFilter() }
+    }
+
+    /// Whether a click at `point`, in window coordinates, lands on a view that
+    /// takes the first responder itself: the tree, or the filter field.
+    /// Refocusing the filter a turn after a click *in the filter* ran while the
+    /// field editor was still tracking that mouse-down, tearing the edit down
+    /// under it; after a click in the tree it would pull the keys out of the
+    /// list the reader chose. Internal so a test can drive it.
+    func clickTakesFocus(atWindowPoint point: NSPoint) -> Bool {
+        [tree.view, filterField].contains { target in
+            target.bounds.contains(target.convert(point, from: nil))
+        }
     }
 
     private static func isMouseDown(_ event: NSEvent) -> Bool {
