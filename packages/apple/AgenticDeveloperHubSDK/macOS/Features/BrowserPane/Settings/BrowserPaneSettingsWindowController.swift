@@ -34,6 +34,14 @@ final class BrowserPaneSettingsWindowController: SingleWindowController {
         controller.startModal()
     }
 
+    /// Closes `pane`'s settings window, if one is open: the pane is being
+    /// discarded, and settings bound to it would otherwise outlive it — still
+    /// app-modal, and holding the pane, its torn-down web views and its jar's
+    /// data store until someone closed them.
+    static func close(for pane: WebBrowserPaneViewController) {
+        open[ObjectIdentifier(pane)]?.window?.close()
+    }
+
     /// Whether `NSApp.runModal(for:)` is running this window.
     private var isRunningModal = false
     private var isClosed = false

@@ -2095,7 +2095,7 @@ extension WebBrowserPaneViewController: PaneContentTeardown {
     /// Lets go of the engine: a navigation or a transfer that completes into
     /// a discarded pane would otherwise call back into it. The jar is
     /// released, so the reconciler may collect it once the layout no longer
-    /// holds the pane.
+    /// holds the pane. The pane's settings window closes with it.
     public func paneContentWillBeDiscarded() {
         firstResponderObservation = nil
         cancellables.removeAll()
@@ -2113,6 +2113,8 @@ extension WebBrowserPaneViewController: PaneContentTeardown {
         // its list empties and its title drops this pane's name.
         isDiscarded = true
         eventLog.clear()
+        // After `isDiscarded`, so the settings' close rebuilds nothing.
+        BrowserPaneSettingsWindowController.close(for: self)
     }
 }
 
