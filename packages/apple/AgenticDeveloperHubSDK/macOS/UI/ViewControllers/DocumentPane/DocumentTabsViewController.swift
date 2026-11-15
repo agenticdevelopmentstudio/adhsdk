@@ -77,6 +77,16 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     /// its highlight to follow.
     public var onFocusedDocumentChange: ((URL?) -> Void)?
 
+    /// Every editor here opens Markdown in one pane on the preview
+    /// (`DocumentEditorViewController.opensMarkdownOnSinglePreview`).
+    public var opensMarkdownOnSinglePreview = false {
+        didSet {
+            for root in splitsByTabID.values {
+                editors(in: root).forEach { $0.opensMarkdownOnSinglePreview = opensMarkdownOnSinglePreview }
+            }
+        }
+    }
+
     /// Fires with a file any editor in this container asked to open — a
     /// go-to-definition target, or a file chosen from a breadcrumb popover.
     /// Routed out to the session rather than opened directly: choosing in the
@@ -240,6 +250,7 @@ public final class DocumentTabsViewController: MultiTabbedViewController {
     private func wireTitles(in root: ComposableTabsViewController, tabID: UUID) {
         for editor in editors(in: root) where !wiredEditors.contains(editor) {
             wiredEditors.add(editor)
+            editor.opensMarkdownOnSinglePreview = opensMarkdownOnSinglePreview
             let previousTitleHandler = editor.onTitleChange
             editor.onTitleChange = { [weak self] in
                 previousTitleHandler?()

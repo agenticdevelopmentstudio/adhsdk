@@ -264,6 +264,7 @@ property and method is confined there by that declaration alone.
   a close callback; it MUST bring an already open window for that id
   forward instead of building a second, and MUST honour quiet presentation
   when activating.
+- **document-windows-have-no-footer**: A window for a repository of a Document kind MUST be created without the footer bar, as it is created without pane chrome; every other kind keeps both.
 ## Appearance
 
 Not applicable — this is a window-lifecycle manager, not a visual component.

@@ -6,4 +6,4 @@
 - **status-forwarding**: The `status` property MUST forward all getter and setter calls to the footer's `status` property, allowing callers to set the footer's leading status text through a single reference.
 - **accessibility-prefix-required**: The initializer MUST require an `accessibilityPrefix` parameter (no default) to namespace the footer's accessibility controls, ensuring that multiple windows with footers do not share accessibility identifiers.
 - **nscoder-init-unsupported**: Initialization from an `NSCoder` (e.g., from Interface Builder) MUST NOT be supported and MUST raise a fatal error if attempted.
-
+- **footer-can-be-left-out**: The initializer MUST take whether the footer is shown, defaulting to shown. When it is not, the footer bar MUST be hidden and the content view MUST be pinned to the container's bottom edge instead of the footer's top, superseding `content-space-fill` for that case.

@@ -130,3 +130,4 @@
 - **title-breadcrumb-document-file**: For a single-file Document window the
   title breadcrumb's file URL MUST be the repository's path, which is the
   file itself; for every other kind it MUST be the root directory.
+- **footer-is-optional**: The window MUST be creatable without its footer bar, in which case the footer is hidden and the content runs to the window's bottom edge; the footer MUST be shown by default.

@@ -164,6 +164,8 @@ public final class DocumentWindowsFeature: AppFeature {
     /// first and wait in `pendingFiles`.
     public func attach(_ pane: DocumentTabsViewController, to project: ProjectWorkspace) {
         guard project.repo.kind.isDocument else { return }
+        // A file opened by itself is read first: Markdown starts on its preview.
+        pane.opensMarkdownOnSinglePreview = true
         // A file chosen in a breadcrumb stays in this window: the current tab
         // (and its editor's trail), or a new tab with Option held.
         pane.onOpenRequest = { [weak pane] url in

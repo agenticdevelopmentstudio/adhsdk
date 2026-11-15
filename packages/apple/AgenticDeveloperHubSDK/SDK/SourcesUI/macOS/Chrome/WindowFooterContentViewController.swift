@@ -17,6 +17,8 @@ public final class WindowFooterContentViewController: NSViewController {
 
     public let footer: WindowFooterBar
 
+    private let showsFooter: Bool
+
     /// The footer's leading status text, forwarded so a host holds one
     /// reference rather than reaching through two.
     public var status: String {
@@ -31,7 +33,10 @@ public final class WindowFooterContentViewController: NSViewController {
     ///     windows with footers would otherwise share one identifier and a UI
     ///     test addressing "the footer" would find whichever came first
     ///     (`explicit-over-implicit`).
-    public init(contentViewController: NSViewController, accessibilityPrefix: String) {
+    ///   - showsFooter: false for a window with no footer; the content then
+    ///     runs to the window's bottom edge.
+    public init(contentViewController: NSViewController, accessibilityPrefix: String, showsFooter: Bool = true) {
+        self.showsFooter = showsFooter
         self.contentViewController = contentViewController
         self.footer = WindowFooterBar(accessibilityPrefix: accessibilityPrefix)
         super.init(nibName: nil, bundle: nil)
@@ -49,12 +54,13 @@ public final class WindowFooterContentViewController: NSViewController {
         content.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(content)
         container.addSubview(footer)
+        footer.isHidden = !showsFooter
 
         NSLayoutConstraint.activate([
             content.topAnchor.constraint(equalTo: container.topAnchor),
             content.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             content.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            content.bottomAnchor.constraint(equalTo: footer.topAnchor),
+            content.bottomAnchor.constraint(equalTo: showsFooter ? footer.topAnchor : container.bottomAnchor),
 
             footer.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             footer.trailingAnchor.constraint(equalTo: container.trailingAnchor),

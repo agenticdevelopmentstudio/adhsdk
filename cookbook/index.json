@@ -2784,7 +2784,7 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:ac9106edce15e5849f94b708abcd70599d3dc4101e07e9a51c8f27c909c0dfbd",
+            "hash": "sha256:5f0c4cbacf519d94f12deaa1e1e880c1a2d9d8fc805a1dc26a1ed87437a11cff",
             "state": "confirmed",
             "version": "1.3.0"
           },
@@ -2798,6 +2798,24 @@
             "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/BackForwardControl.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:5f0c4cbacf519d94f12deaa1e1e880c1a2d9d8fc805a1dc26a1ed87437a11cff",
+            "state": "confirmed",
+            "version": "1.3.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/DocumentPane/DocumentEditorViewController.swift",
+          "platform": "macos"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:ad836e7aae78aa7a1983dd5cdeecde73372dab15a0f06ec5949dad160bae3cd8",
+            "state": "confirmed",
+            "version": "1.3.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MarkdownPane/MarkdownPaneViewController.swift",
           "platform": "macos"
         }
       ],
@@ -2879,10 +2897,21 @@
       "implementations": [
         {
           "conformance": {
-            "state": "unverified"
+            "hash": "sha256:2385232fa77e3c5cb82104e440d872b1520556df98fed416fdfe6e13adbd2a90",
+            "state": "confirmed",
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/WindowFooterContentViewController.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:2385232fa77e3c5cb82104e440d872b1520556df98fed416fdfe6e13adbd2a90",
+            "state": "confirmed",
+            "version": "1.2.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/SDK/SourcesUI/macOS/Chrome/WindowFooterContentViewController.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",
@@ -3722,12 +3751,21 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:59e6c4e291115ac4578045f42dfcbf9e7ccba9167f21795fc743a7b303227cdf",
+            "hash": "sha256:a052ef1cc2c50109c96715deb6393e916d08dd910c3b793a4cdae9b074447879",
             "state": "confirmed",
             "version": "1.3.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:a052ef1cc2c50109c96715deb6393e916d08dd910c3b793a4cdae9b074447879",
+            "state": "confirmed",
+            "version": "1.3.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/ComposableTabs/ComposableTabsWindowController.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",
@@ -5558,12 +5596,21 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:7caebeaf628885e17f7e8cc52fe3791c820ff407505eecf3ab5d1219f2a5c612",
+            "hash": "sha256:2a32cd8da93fb74ce12a9bc048d2c7fa68ecc4931949e9ef08e57073b11849d4",
             "state": "confirmed",
             "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift",
           "platform": "apple"
+        },
+        {
+          "conformance": {
+            "hash": "sha256:2a32cd8da93fb74ce12a9bc048d2c7fa68ecc4931949e9ef08e57073b11849d4",
+            "state": "confirmed",
+            "version": "1.2.0"
+          },
+          "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Projects/ProjectWindowManager.swift",
+          "platform": "macos"
         }
       ],
       "kind": "ingredient",

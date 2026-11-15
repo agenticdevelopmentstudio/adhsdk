@@ -80,6 +80,22 @@ public final class DocumentEditorViewController: NSViewController {
     private weak var editorContainer: NSView?
     /// The bar row; the Markdown editor's layout control joins it, at the end.
     private weak var navigationRow: NSStackView?
+    /// Where the editors sit inside their slot: the pane's content spacing
+    /// off its edges. The bar above is not inside it, so it runs edge to edge.
+    private let editorContentGuide = NSLayoutGuide()
+    /// Top, leading, bottom, trailing of `editorContentGuide`.
+    private var editorSpacingConstraints: [NSLayoutConstraint] = []
+    private var paneSpacing = Spacing()
+
+    /// Opens Markdown files in one pane on the preview, whatever layout was
+    /// last chosen anywhere else and without changing that choice. Set by a
+    /// Document window, where a file opened from Finder is first of all read.
+    public var opensMarkdownOnSinglePreview = false {
+        didSet {
+            guard opensMarkdownOnSinglePreview, !oldValue else { return }
+            markdownEditor?.open(in: .singlePane, on: .preview)
+        }
+    }
 
     public var fileURL: URL? {
         get { displayedURL }
@@ -268,6 +284,7 @@ public final class DocumentEditorViewController: NSViewController {
         if let markdownEditor { return markdownEditor }
         let editor = MarkdownPaneViewController(accessibilityID: "document.markdown-layout",
                                                 opensOn: .preview)
+        if opensMarkdownOnSinglePreview { editor.open(in: .singlePane, on: .preview) }
         editor.onTextChange = { [weak self] text in
             guard let self, let document = self.markdownDocument, document.text != text else { return }
             // An edit, not a reload: `apply` marks the document dirty, which
@@ -282,10 +299,10 @@ public final class DocumentEditorViewController: NSViewController {
             editorView.translatesAutoresizingMaskIntoConstraints = false
             container.addSubview(editorView)
             NSLayoutConstraint.activate([
-                editorView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-                editorView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-                editorView.topAnchor.constraint(equalTo: container.topAnchor),
-                editorView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+                editorView.leadingAnchor.constraint(equalTo: editorContentGuide.leadingAnchor),
+                editorView.trailingAnchor.constraint(equalTo: editorContentGuide.trailingAnchor),
+                editorView.topAnchor.constraint(equalTo: editorContentGuide.topAnchor),
+                editorView.bottomAnchor.constraint(equalTo: editorContentGuide.bottomAnchor)
             ])
         }
         if let navigationRow {
@@ -294,6 +311,14 @@ public final class DocumentEditorViewController: NSViewController {
         }
         markdownEditor = editor
         return editor
+    }
+
+    private func applyEditorSpacing() {
+        guard editorSpacingConstraints.count == 4 else { return }
+        let constants = [paneSpacing.top, paneSpacing.leading, paneSpacing.bottom, paneSpacing.trailing]
+        for (constraint, constant) in zip(editorSpacingConstraints, constants) {
+            constraint.constant = CGFloat(constant)
+        }
     }
 
     private static func isDirectory(_ url: URL) -> Bool {
@@ -327,12 +352,20 @@ public final class DocumentEditorViewController: NSViewController {
         let editor = NSView()
         codeEditor.translatesAutoresizingMaskIntoConstraints = false
         editor.addSubview(codeEditor)
-        NSLayoutConstraint.activate([
-            codeEditor.leadingAnchor.constraint(equalTo: editor.leadingAnchor),
-            codeEditor.trailingAnchor.constraint(equalTo: editor.trailingAnchor),
-            codeEditor.topAnchor.constraint(equalTo: editor.topAnchor),
-            codeEditor.bottomAnchor.constraint(equalTo: editor.bottomAnchor)
+        editor.addLayoutGuide(editorContentGuide)
+        editorSpacingConstraints = [
+            editorContentGuide.topAnchor.constraint(equalTo: editor.topAnchor),
+            editorContentGuide.leadingAnchor.constraint(equalTo: editor.leadingAnchor),
+            editor.bottomAnchor.constraint(equalTo: editorContentGuide.bottomAnchor),
+            editor.trailingAnchor.constraint(equalTo: editorContentGuide.trailingAnchor)
+        ]
+        NSLayoutConstraint.activate(editorSpacingConstraints + [
+            codeEditor.leadingAnchor.constraint(equalTo: editorContentGuide.leadingAnchor),
+            codeEditor.trailingAnchor.constraint(equalTo: editorContentGuide.trailingAnchor),
+            codeEditor.topAnchor.constraint(equalTo: editorContentGuide.topAnchor),
+            codeEditor.bottomAnchor.constraint(equalTo: editorContentGuide.bottomAnchor)
         ])
+        applyEditorSpacing()
         codeEditorView = codeEditor
         editorContainer = editor
         // Where a pane's title bar would be: back/forward, then the breadcrumb.
@@ -342,8 +375,16 @@ public final class DocumentEditorViewController: NSViewController {
         navigationRow.orientation = .horizontal
         navigationRow.alignment = .centerY
         navigationRow.spacing = 4
-        navigationRow.edgeInsets = NSEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
+        navigationRow.edgeInsets = NSEdgeInsets(top: 0, left: 6, bottom: 0, right: 6)
         self.navigationRow = navigationRow
+        // One outline round all its segments: the control is a tool of its
+        // own in the bar, not three loose glyphs before the breadcrumb.
+        backForward.wantsLayer = true
+        backForward.layer?.cornerRadius = 6
+        backForward.layer?.borderWidth = 1
+        backForward.observeTheme { control, palette in
+            control.layer?.borderColor = palette.nsColor(.outline).cgColor
+        }
         backForward.setContentHuggingPriority(.required, for: .horizontal)
         backForward.setContentCompressionResistancePriority(.required, for: .horizontal)
         breadcrumb.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -373,7 +414,7 @@ public final class DocumentEditorViewController: NSViewController {
             navigationRow.topAnchor.constraint(equalTo: navigationBar.topAnchor),
             navigationRow.leadingAnchor.constraint(equalTo: navigationBar.leadingAnchor),
             navigationRow.trailingAnchor.constraint(equalTo: navigationBar.trailingAnchor),
-            navigationRow.heightAnchor.constraint(equalToConstant: 24),
+            navigationRow.heightAnchor.constraint(equalToConstant: 28),
             barBorder.topAnchor.constraint(equalTo: navigationRow.bottomAnchor),
             barBorder.leadingAnchor.constraint(equalTo: navigationBar.leadingAnchor),
             barBorder.trailingAnchor.constraint(equalTo: navigationBar.trailingAnchor),
@@ -484,5 +525,15 @@ private struct DocumentEditorPaneView: View {
             options: options,
             openFile: openFile
         )
+    }
+}
+
+// The pane pins the editor flush and hands it the content spacing, so the
+// navigation bar spans the pane's full width at its very top and only the
+// text below it is held off the edges.
+extension DocumentEditorViewController: PaneContentSpacingConsuming {
+    public func applyPaneSpacing(_ spacing: Spacing) {
+        paneSpacing = spacing
+        applyEditorSpacing()
     }
 }

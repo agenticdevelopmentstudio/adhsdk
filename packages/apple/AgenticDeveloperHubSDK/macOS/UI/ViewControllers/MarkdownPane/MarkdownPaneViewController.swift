@@ -115,6 +115,16 @@ public final class MarkdownPaneViewController: NSViewController {
     @available(*, unavailable)
     public required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    /// Puts this editor in `layout` on `content` without recording either as
+    /// the user's choice: where one surface starts is not what the others
+    /// should follow. A choice made in the editor afterwards is recorded as
+    /// usual.
+    public func open(in layout: MarkdownPaneLayout, on content: MarkdownPaneContent) {
+        self.layout = layout
+        shownContent = content
+        if isViewLoaded { applyArrangement() }
+    }
+
     isolated deinit {
         pendingRender?.cancel()
     }

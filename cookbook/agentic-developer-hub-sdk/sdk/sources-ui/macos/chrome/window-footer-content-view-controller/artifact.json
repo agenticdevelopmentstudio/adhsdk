@@ -4,11 +4,11 @@
     "id": "44544cfb-39e5-419d-81b9-8e1c504c6e64",
     "title": "WindowFooterContentViewController",
     "type": "ingredient",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "status": "review",
     "language": "en",
     "created": "2026-09-22",
-    "modified": "2026-09-25",
+    "modified": "2026-11-14",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -30,7 +30,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "97afbd7f669f2c3a",
+  "synced": "461a8c6e00263fad",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

@@ -328,12 +328,15 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
     /// - Parameter showsPaneChrome: false for a window that is one pane and
     ///   nothing else (a Document window): no pane title bar, no pane outline
     ///   or active-pane border, and no frame spacing around the pane.
+    /// - Parameter showsFooter: false for a window with no footer bar (a
+    ///   Document window, for now).
     public init(
         project: ProjectWorkspace,
         tabItemDataSource: ComposableTabsTabItemDataSource? = nil,
         shelf: ProjectShelfViewController? = nil,
         showsTabBars: Bool = true,
-        showsPaneChrome: Bool = true
+        showsPaneChrome: Bool = true,
+        showsFooter: Bool = true
     ) {
         self.project = project
         self.shelf = shelf
@@ -345,7 +348,8 @@ public final class ComposableTabsWindowController: WindowController<NSViewContro
         tabbed.showsCenterOutline = showsPaneChrome
         let content = WindowFooterContentViewController(
             contentViewController: tabbed,
-            accessibilityPrefix: "project.footer"
+            accessibilityPrefix: "project.footer",
+            showsFooter: showsFooter
         )
         let windowContent = ProjectWindowSplitViewController(content: content, shelf: shelf)
         self.tabbed = tabbed

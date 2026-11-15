@@ -62,4 +62,7 @@
   adding, removing or reordering entries; choosing the entry already
   showing MUST do nothing.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
-
+- **navigation-bar-spans-the-pane**: The component MUST take the pane's content spacing itself (the pane pins it flush) and apply it only to the editor area beneath the navigation bar, so the bar runs the pane's full width from its top edge with its one-point outline-colored line beneath it, and the code editor and the Markdown editor are held off the remaining edges by that spacing. A change to the spacing MUST be applied again without accumulating.
+- **navigation-row-height**: The navigation row MUST be `28` points high, superseding the `24` points of `breadcrumb-fixed-height`.
+- **back-forward-is-outlined**: The back/forward control MUST carry a one-point outline in the theme's outline color with a `6`-point corner radius round all of its segments, marking it as one enclosed tool in the bar, and MUST follow theme changes.
+- **markdown-opens-on-single-preview**: When its owner asks for it, the component MUST put its Markdown editor in the single-pane layout on the preview, whatever layout and pane were last chosen anywhere else, and MUST NOT record that as the user's choice; a layout or pane the user then chooses in the editor MUST be recorded as usual. The Document tabs container MUST pass the request to every editor it holds or later creates.
