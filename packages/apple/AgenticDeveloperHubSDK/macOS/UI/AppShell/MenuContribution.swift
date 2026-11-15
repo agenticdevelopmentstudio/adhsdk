@@ -73,6 +73,12 @@ public struct MenuContribution {
     /// when the title is too long or too likely to change to name the item.
     /// `nil` — the default — slugs the title.
     public let identifier: String?
+    /// The title of the submenu the item goes in, or `nil` (the default) for
+    /// an item directly in its slot's menu. The host puts every contribution
+    /// of one group naming the same submenu into one submenu item with that
+    /// title, placed where the lowest `order` among them would be — View ▸
+    /// Tab Position ▸ Top, Left, Right, Bottom.
+    public let submenu: String?
     /// What to do when the user activates the item.
     public let action: () -> Void
 
@@ -86,6 +92,7 @@ public struct MenuContribution {
         isHidden: (() -> Bool)? = nil,
         isChecked: (() -> Bool)? = nil,
         identifier: String? = nil,
+        submenu: String? = nil,
         action: @escaping () -> Void
     ) {
         self.slot = slot
@@ -97,6 +104,7 @@ public struct MenuContribution {
         self.isHidden = isHidden
         self.isChecked = isChecked
         self.identifier = identifier
+        self.submenu = submenu
         self.action = action
     }
 
@@ -164,6 +172,7 @@ public struct MenuContribution {
         self.isHidden = isHidden
         self.isChecked = nil
         self.identifier = nil
+        self.submenu = nil
         self.isEnabled = { registry.isEnabled(id: commandID) }
         self.action = {
             do {

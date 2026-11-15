@@ -563,7 +563,11 @@ final class BrowserSettingsBinding {
 
     func settingDidChange(_ name: String) {
         if Self.lockingKeyNames.contains(name) { updateLocks() }
-        for row in rows(named: name) {
+        // A pane's tab-position row shows the app-wide value while it has no
+        // override, so a change to that value is a change to the row.
+        let names = name == UserSettings.tabsPositions.name
+            ? [name, UserSettings.browserTabsPositions.name] : [name]
+        for row in names.flatMap({ rows(named: $0) }) {
             row.refresh()
             showMarker(of: row)
         }
@@ -624,6 +628,14 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
                     + "instead, as File ▸ New Tab does."
             ),
             .init(
+                title: "Tab Position",
+                body: "In a pane's settings: which edges of this pane show its tab bar. "
+                    + "Without an override the pane follows the app's own tab position, "
+                    + "set in System ▸ General or View ▸ Tab Position; changing a switch "
+                    + "here gives the pane its own, and Use Global Setting in the row's "
+                    + "menu goes back. At least one edge stays on."
+            ),
+            .init(
                 title: "Home Page",
                 body: "What a new browser pane opens on when it has no page to go back to. "
                     + "Blank opens an empty page, with the address bar ready. A bare host "
@@ -655,7 +667,7 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
 
     static let keywords: [String] = [
         "new opens tabs", "new tab", "home page", "start page", "zoom", "font size",
-        "javascript", "pop-up", "popup", "user agent"
+        "javascript", "pop-up", "popup", "user agent", "tab position", "tabs"
     ]
 
     override var searchKeywords: [String] { Self.keywords }
@@ -665,6 +677,11 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
         // A window's New, not a pane's: shown only in the app's Settings.
         if !binding.isPaneScope {
             settingsView.addGroup(makeWindowsGroup())
+        }
+        // A pane's own tab positions: in the app's Settings there is no pane
+        // to override for, and the app-wide value is System ▸ General's.
+        if binding.isPaneScope {
+            settingsView.addGroup(makeTabsGroup())
         }
         settingsView.addGroup(makeHomeGroup())
         settingsView.addGroup(makePageGroup())
@@ -679,6 +696,27 @@ private final class BrowserGeneralPanel: BrowserTopicPanel {
         ))
         _ = checkbox.accessibilityID("settings.browser.general.new-opens-tabs")
         group.addSettingSubview(checkbox)
+        return group
+    }
+
+    private func makeTabsGroup() -> ComposableSettings.GroupView {
+        let group = ComposableSettings.GroupView(withTitle: "Tabs")
+        let key = UserSettings.browserTabsPositions
+        let store = binding.store
+        let row = TabPositionsSettingView(
+            get: { BrowserSettings.tabPositions(in: store) },
+            set: { store.set($0, for: key) },
+            identifierPrefix: "settings.browser.general.tab-position"
+        )
+        let layered = binding.layered
+        binding.add(row, name: key.name, model: nil, to: group, refresh: { [weak row] in
+            row?.refresh()
+        }, hasOverride: {
+            layered?.hasOverride(key) ?? false
+        }, revert: { [weak row] in
+            layered?.removeOverride(key)
+            row?.refresh()
+        })
         return group
     }
 

@@ -212,6 +212,16 @@ extension UserSettings {
     public static let browserBlocksPopups = UserSetting<Bool>("browser.blocks_popups", default: true)
     public static let browserCustomUserAgent = UserSetting<String>("browser.custom_user_agent", default: "")
 
+    // Tabs
+    /// A browser pane's own tab positions. Meaningful only as a pane's
+    /// override: a pane whose layer holds none follows the app-wide
+    /// `tabs.positions`, which is what the row shows for it
+    /// (`BrowserSettings.tabPositions(in:)`). The default here matches that
+    /// setting's and is never what a pane uses.
+    public static let browserTabsPositions = UserSetting<TabPositions>(
+        "browser.tabs.positions", default: TabPositions([.top])
+    )
+
     // History
     public static let browserRecordsHistory = UserSetting<Bool>("browser.records_history", default: true)
     public static let browserHistoryRetention = UserSetting<BrowserHistoryRetention>(
@@ -342,7 +352,7 @@ public enum BrowserSettings {
         UserSettings.browserPrivacyAgentWhilePaused, UserSettings.browserPrivacyStorageJar,
         UserSettings.browserPrivacyThirdPartyContent, UserSettings.browserPrivacyConsoleCapture,
         UserSettings.browserAgentPrivacy, UserSettings.browserPrivacyShowToolbar,
-        UserSettings.browserPrivacyHideImages
+        UserSettings.browserPrivacyHideImages, UserSettings.browserTabsPositions
     ]
 
     /// The remote-debugging ports the Chrome topic accepts; 0 is off.
@@ -384,6 +394,23 @@ public enum BrowserSettings {
     /// follows, or the shared store for a pane with no layer. `nil` is off.
     public static func isAgentPrivacyOn(in settings: SettingsStore?) -> Bool {
         settings?.get(UserSettings.browserAgentPrivacy) ?? false
+    }
+
+    /// The tab positions a pane reading `settings` overrides the app-wide
+    /// ones with: its layer's own value, or `nil` to follow `tabs.positions`.
+    /// A store with no layer (a pane built without one) never overrides.
+    public static func tabPositionsOverride(in settings: SettingsStore?) -> TabPositions? {
+        guard let layered = settings as? LayeredSettingsStore,
+              layered.hasOverride(UserSettings.browserTabsPositions) else { return nil }
+        return layered.get(UserSettings.browserTabsPositions)
+    }
+
+    /// The tab positions a pane reading `settings` shows: its override, or
+    /// the app-wide value it follows without one.
+    public static func tabPositions(in settings: SettingsStore?) -> TabPositions {
+        if let override = tabPositionsOverride(in: settings) { return override }
+        let global = (settings as? LayeredSettingsStore)?.fallback ?? settings ?? UserSettings.shared
+        return global.get(UserSettings.tabsPositions)
     }
 
     /// What `store` holds for every construction-time key, each described as

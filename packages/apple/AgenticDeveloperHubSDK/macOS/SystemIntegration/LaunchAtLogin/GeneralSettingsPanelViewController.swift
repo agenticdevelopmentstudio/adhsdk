@@ -67,6 +67,13 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
                     + "themselves, with their pane layout, not just empty frames."
             ),
             .init(
+                title: "Tab Position",
+                body: "Which edges of a tabbed window show tab bars: any of top, left, right and "
+                    + "bottom, the same choice as View ▸ Tab Position. At least one edge stays on. "
+                    + "A project window whose Tab Bars you set yourself keeps its own edges, and a "
+                    + "browser pane can override them in its settings."
+            ),
+            .init(
                 title: "Recent Documents",
                 body: "How many entries the recent-documents list keeps. Zero switches it "
                     + "off entirely, which is the setting to use on a shared machine — the "
@@ -123,6 +130,8 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
             )
         ))
 
+        group.addSettingSubview(makeTabPositionRow())
+
         return group
     }
 
@@ -158,4 +167,21 @@ public final class GeneralSettingsPanelViewController: ComposableSettings.Settin
 
         return group
     }
+
+    /// The app-wide tab positions, kept in step with View ▸ Tab Position.
+    private func makeTabPositionRow() -> TabPositionsSettingView {
+        let row = TabPositionsSettingView(
+            get: { UserSettings.tabsPositions.value },
+            set: { UserSettings.tabsPositions.value = $0 },
+            identifierPrefix: "settings.general.tab-position"
+        )
+        tabPositionsObserver = UserSettingObserver(UserSettings.tabsPositions) { [weak row] _ in
+            row?.refresh()
+        }
+        return row
+    }
+
+    /// Follows the setting while the panel is up, for a change made from
+    /// the View menu.
+    private var tabPositionsObserver: UserSettingObserver<TabPositions>?
 }

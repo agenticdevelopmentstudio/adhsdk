@@ -392,7 +392,7 @@ The multi-edge tabbed view hosts up to four edge-docked tab bars — top, right,
 | `centerOutlineColor` | Color (optional) | None | Overrides the shared content area's `1pt` border color; unset falls back to the palette's `outline` role. |
 | Tab start inset | Number (points) per edge | `8` | Where a bar's first tab begins, measured along the bar from its start. |
 | Edge enabled state | Boolean per edge | From `tabs.positions` while following the app-wide setting | Whether an edge's tab bar and tabs are shown at all. |
-| `tabs.positions` | Set of edges (never empty) | The top edge alone | App-wide tab positions, set from System > General > Tab behavior and View > Tab Position; a view or pane override takes precedence. |
+| `tabs.positions` | Set of edges (never empty) | The top edge alone | App-wide tab positions, set from System > General > Window Behavior > Tab position and View > Tab Position; a view or pane override takes precedence (a browser pane's is `browser.tabs.positions`). |
 | Follows global tab positions | Boolean | `true` | Whether the view applies `tabs.positions`; becomes `false` on an explicit edge change or override. |
 | Top accessory | View (optional) | None | Pinned above the shared content area regardless of enabled edges. |
 
@@ -574,6 +574,8 @@ Not applicable: this concept contains no logging call of any kind.
 |----------|----------|-------------|
 | apple | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/MultiTabbedViewController.swift` | confirmed (1.3.0) |
 | macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPositionSetting.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPositionMenuContributions.swift` | unverified |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/UI/ViewControllers/MultiTabbedViewController/TabPositionsSettingView.swift` | unverified |
 
 ## Design Decisions
 
@@ -671,4 +673,4 @@ compliance-catalog checks, so they are not listed here.
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/layout/. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added separation-of-concerns and unit-test-coverage compliance rows. Added the confines-to-ui-thread requirement and vector. |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Center outline and tab strips can be hidden |
-| 1.4.0 | 2026-11-15 | Mike Fullerton | Global tab positions: edges follow tabs.positions (default top, never empty) until set explicitly; single-edge hosts use the primary edge; top accessory independent of edges. |
+| 1.4.0 | 2026-11-15 | Mike Fullerton | Global tab positions: edges follow tabs.positions (default top, never empty) until set explicitly; single-edge hosts use the primary edge; top accessory independent of edges. View > Tab Position menu, System > General Tab position row, browser pane override `browser.tabs.positions`. |

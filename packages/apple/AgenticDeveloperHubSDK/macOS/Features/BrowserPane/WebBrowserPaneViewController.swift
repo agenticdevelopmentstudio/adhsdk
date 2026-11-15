@@ -123,8 +123,9 @@ open class WebBrowserPaneViewController: NSViewController {
     private var isActivatingPopup = false
     /// The tab in front, whose engine is `engine`.
     private var activeTab: BrowserTab
-    /// The tab bar and the page area under the address bar.
-    private let tabStrip = MultiTabbedViewController()
+    /// The tab bar and the page area under the address bar. Internal, not
+    /// private, so tests can read the edge its tabs are on.
+    let tabStrip = MultiTabbedViewController()
     /// The tab list last written to the store, so an unchanged list is not
     /// written again.
     private var lastStoredTabs: String?
@@ -436,8 +437,18 @@ open class WebBrowserPaneViewController: NSViewController {
         tabStrip.delegate = self
         // One edge of tabs, on whichever the tab positions put first.
         tabStrip.keepsTabsOnPrimaryEdge = true
+        applyTabPositionsOverride()
         applyCookiePolicy()
         observeSettings()
+    }
+
+    /// Puts the tab strip on the pane's own tab positions when its settings
+    /// layer overrides `browser.tabs.positions`, and back on the app-wide
+    /// ones when it does not.
+    private func applyTabPositionsOverride() {
+        let override = BrowserSettings.tabPositionsOverride(in: settings)
+        guard override != tabStrip.tabPositionsOverride else { return }
+        tabStrip.overrideTabPositions(override)
     }
 
     @available(*, unavailable)
@@ -713,6 +724,7 @@ open class WebBrowserPaneViewController: NSViewController {
                 // Only a setting the strip shows can change it.
                 if BrowserPrivacyStatus.settingNames.contains(key) { self.refreshAddressRowControls() }
                 if key == UserSettings.browserAcceptsCookies.name { self.applyCookiePolicy() }
+                if key == UserSettings.browserTabsPositions.name { self.applyTabPositionsOverride() }
                 if key == UserSettings.browserPrivacyStorageJar.name { self.storageJarSettingDidChange() }
                 if key == UserSettings.browserAgentPrivacy.name { self.refreshPageWordFilter() }
             }

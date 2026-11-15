@@ -21,7 +21,7 @@ final class BrowserSettingsTests: XCTestCase {
 
     func testEveryBrowserKeyIsNamedUnderTheBrowserPrefix() {
         let names = BrowserSettings.allKeyNames
-        XCTAssertEqual(names.count, 36)
+        XCTAssertEqual(names.count, 37)
         XCTAssertEqual(Set(names).count, names.count, "no two settings share a key")
         for name in names {
             XCTAssertTrue(name.hasPrefix("browser."), "\(name) is not a browser key")
@@ -221,5 +221,40 @@ final class BrowserSettingsTests: XCTestCase {
             WebBrowserPaneViewController.uniqueDestination(for: "", in: directory).lastPathComponent, "download",
             "a nameless download still gets a file"
         )
+    }
+
+    // MARK: - Tab position
+
+    /// A pane whose layer overrides `browser.tabs.positions` puts its tabs on
+    /// the override's first edge, not the app-wide one.
+    func test_browserPaneOverrideBeatsGlobal() {
+        let saved = UserSettings.shared
+        defer { UserSettings.shared = saved }
+        let global = UserSettings(
+            with: InMemorySettingsStorageProvider(),
+            secureSettingsProvider: InMemorySecureSettingsStorageProvider()
+        )
+        UserSettings.shared = global
+        global.set(TabPositions([.left]), for: UserSettings.tabsPositions)
+
+        let layered = LayeredSettingsStore(
+            overrides: PaneStateSettingsStorageProvider(store: EphemeralPaneStateStore()),
+            fallback: global
+        )
+        layered.set(TabPositions([.bottom]), for: UserSettings.browserTabsPositions)
+
+        let pane = WebBrowserPaneViewController(
+            makeEngine: { FakeBrowserEngine(configuration: $0) },
+            engineKind: .safari,
+            minimizedSymbol: "safari",
+            store: EphemeralPaneStateStore(),
+            settings: layered,
+            history: nil,
+            homeURL: WebBrowserPaneViewController.blankPage
+        )
+        _ = pane.view
+
+        XCTAssertEqual(BrowserSettings.tabPositionsOverride(in: layered), TabPositions([.bottom]))
+        XCTAssertEqual(pane.tabStrip.primaryEdge, .bottom)
     }
 }
