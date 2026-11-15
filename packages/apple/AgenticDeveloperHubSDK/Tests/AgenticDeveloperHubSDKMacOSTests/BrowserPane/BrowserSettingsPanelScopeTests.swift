@@ -118,6 +118,8 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         )
     }
 
+    /// The drag-and-drop row is "Disable drag and drop": checking it writes
+    /// false (no drag and drop) into this pane's override only.
     func testPaneScopeWritesOnlyTheOverride() throws {
         let global = makeSettings()
         let layered = makeLayered(over: global)
@@ -126,8 +128,9 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         let dragAndDrop = try row(UserSettings.browserPrivacyDragAndDrop, in: panel)
         let marker = try XCTUnwrap(dragAndDrop.row.marker)
         XCTAssertFalse(marker.isShowingOverride)
+        XCTAssertFalse(dragAndDrop.model.value, "drag and drop is allowed, so Disable reads unchecked")
 
-        dragAndDrop.model.settingObserver.value = false
+        dragAndDrop.model.settingObserver.value = true
         settle()
 
         XCTAssertFalse(layered.get(UserSettings.browserPrivacyDragAndDrop))
@@ -143,7 +146,8 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
 
         XCTAssertFalse(layered.hasOverride(UserSettings.browserPrivacyDragAndDrop))
         XCTAssertFalse(marker.isShowingOverride)
-        XCTAssertTrue(dragAndDrop.model.value)
+        XCTAssertTrue(layered.get(UserSettings.browserPrivacyDragAndDrop), "back to the global value, allowed")
+        XCTAssertFalse(dragAndDrop.model.value, "allowed again, so Disable reads unchecked")
     }
 
     /// "Use Global Setting" re-reads the row by force, discarding an edit in
@@ -155,8 +159,10 @@ final class BrowserSettingsPanelScopeTests: XCTestCase {
         let pane = try makePane(settings: layered)
         let panel = makePanel(settings: global, scope: .pane(layered, pane))
         let dragAndDrop = try row(UserSettings.browserPrivacyDragAndDrop, in: panel)
-        dragAndDrop.model.settingObserver.value = false
+        // Checking "Disable drag and drop" writes the override being reverted.
+        dragAndDrop.model.settingObserver.value = true
         settle()
+        XCTAssertTrue(layered.hasOverride(UserSettings.browserPrivacyDragAndDrop))
         var refreshes: [Bool] = []
         dragAndDrop.model.refreshHandler = { force in refreshes.append(force) }
 
