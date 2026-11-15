@@ -1931,6 +1931,15 @@ extension WebBrowserPaneViewController: PaneTitleProviding {
         if let host = engine.url?.host, !host.isEmpty { return shown(host) }
         return engineKind.displayName
     }
+
+    /// The page's site — its host without `www.` — as the pane's chrome
+    /// shows it, through the privacy words like the title; `nil` while the
+    /// pane is on no host. A window that names the pane by its site takes
+    /// it from here, so the words are concealed there too.
+    public var paneSiteTitle: String? {
+        guard let host = engine.url?.host, !host.isEmpty else { return nil }
+        return shown(host.hasPrefix("www.") ? String(host.dropFirst(4)) : host)
+    }
 }
 
 extension WebBrowserPaneViewController: PaneIconProviding {

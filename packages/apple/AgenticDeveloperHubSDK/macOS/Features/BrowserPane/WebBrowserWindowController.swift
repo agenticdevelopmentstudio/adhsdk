@@ -191,9 +191,10 @@ public final class WebBrowserWindowController: SingleWindowController {
 
     private func refreshTitle() {
         titleAccessory.icon = pane.paneIcon
-        let site = pane.engine.url?.host.map { $0.hasPrefix("www.") ? String($0.dropFirst(4)) : $0 }
+        // Both names come through the pane's privacy words, as its own
+        // chrome shows them.
         let prefix = purpose == .privateBrowsing ? "Private Web" : "Web"
-        let text = "\(prefix): \(site ?? pane.paneTitle)"
+        let text = "\(prefix): \(pane.paneSiteTitle ?? pane.paneTitle)"
         titleAccessory.text = text
         window?.title = text
     }
