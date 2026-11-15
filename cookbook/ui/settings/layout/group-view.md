@@ -2,11 +2,11 @@
 id: 775f1761-f757-41d0-b51b-354a410a11f4
 title: "Group View"
 type: ingredient
-version: 1.2.2
+version: 1.3.0
 status: review
 language: en
 created: 2026-09-23
-modified: 2026-10-04
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -121,6 +121,12 @@ recipes fulfill for that reason.
 - **row-content-horizontal-inset**: Component MUST inset the wrapped
   content's leading and trailing edges from the row's own corresponding
   edges by 14pt on each side.
+- **row-control-identifiers**: When a row's content is an explained setting
+  with a non-empty title, the component MUST give each interactive control in
+  that content (every control except a non-editable text label), in subview
+  order, the automation identifier `settings.<slug of the title>` for the
+  first and `settings.<slug>.<n>` for the n-th from 2 on. A control that
+  already has an identifier MUST keep it.
 - **confines-to-ui-thread**: The component MUST be usable only on the UI thread.
 
 ## Appearance
@@ -193,6 +199,10 @@ recipes fulfill for that reason.
   row are layout/presentation containers with no target/action or gesture
   recognizer of their own; whatever tap targets exist belong to each row's
   own caller-supplied content and that content's own recipe.
+- **automation-identifiers**: Each interactive control in a titled row is
+  identified `settings.<slug of the row's title>` (then `.2`, `.3`), so a UI
+  driver can find a setting by the words a user sees; see
+  row-control-identifiers.
 
 ## Conformance Test Vectors
 
@@ -228,6 +238,9 @@ recipes fulfill for that reason.
 | group-view-030 | row-content-padding | Inspect a standard-style row's layout | The content's top edge is inset 9pt below the divider band; the content's bottom edge is inset 9pt from the row's bottom edge |
 | group-view-031 | continuation-padding | Inspect a continuation-style row's layout | The content's top edge has no inset from the divider band (`0`); the content's bottom edge is still inset 9pt from the row's bottom edge |
 | group-view-032 | row-content-horizontal-inset | Inspect any row's layout | The content's leading edge is inset 14pt from the row's leading edge; the content's trailing edge is inset 14pt from the row's trailing edge |
+| group-view-033 | row-control-identifiers | Add a row whose content is titled "Read mail from" and holds a label, a pop-up and a button | The pop-up's identifier is `settings.read-mail-from`, the button's is `settings.read-mail-from.2`, and the label has none |
+| group-view-034 | row-control-identifiers | Add the same row with the button already identified `custom.refresh` | The pop-up is `settings.read-mail-from`; the button keeps `custom.refresh` |
+| group-view-035 | row-control-identifiers | Add a checkbox row titled "Start at Login" | The checkbox's identifier is `settings.start-at-login` |
 
 Two implementation-only construction-rule checks (autoresizing-mask
 disabling and the rejection of a coder-based/decoding constructor on the
@@ -449,7 +462,7 @@ Not applicable: the component contains no logging call.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift` | confirmed (1.2.2) |
+| apple | `packages/apple/AgenticDeveloperHubSDK/macOS/SystemIntegration/ComposableSettingsWindow/Views/GroupView.swift` | confirmed (1.3.0) |
 
 ## Design Decisions
 
@@ -539,6 +552,7 @@ Separation-of-concerns is passed: `GroupView` owns only the card layout (a title
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3.0 | 2026-11-15 | Mike Fullerton | Rows name their interactive controls settings.<slug of title>, then .2, .3; a control's own identifier is kept |
 | 1.2.2 | 2026-10-04 | Mike Fullerton | UI-thread confinement restated as the shared confines-to-ui-thread requirement, with a test vector; the @MainActor mechanism is in Platform Notes. |
 | 1.2.1 | 2026-10-04 | Mike Fullerton | Added Compliance rows for separation-of-concerns and unit-test-coverage |
 | 1.2.0 | 2026-09-27 | Mike Fullerton | Platform-neutral description; platform specifics in Platform Notes; moved to ui/settings/layout/. |

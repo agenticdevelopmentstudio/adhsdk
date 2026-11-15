@@ -20,4 +20,8 @@
   row are layout/presentation containers with no target/action or gesture
   recognizer of their own; whatever tap targets exist belong to each row's
   own caller-supplied content and that content's own recipe.
+- **automation-identifiers**: Each interactive control in a titled row is
+  identified `settings.<slug of the row's title>` (then `.2`, `.3`), so a UI
+  driver can find a setting by the words a user sees; see
+  row-control-identifiers.
 

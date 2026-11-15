@@ -4,11 +4,11 @@
     "id": "26473390-9629-40f0-ae98-32ccab2fc5da",
     "title": "Mail Message List View Controller",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-14",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -33,7 +33,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "af0c61e4bd349f6d",
+  "synced": "a572b57d3fa1af45",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

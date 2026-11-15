@@ -30,6 +30,8 @@ final class MailMessageListViewController: NSViewController, NSTableViewDataSour
         tableView.dataSource = self
         tableView.delegate = self
         tableView.setAccessibilityIdentifier("mail.messages")
+        tableView.setAccessibilityLabel("Messages")
+        emptyLabel.setAccessibilityIdentifier("mail.messages.empty")
 
         let scroll = NSScrollView()
         scroll.documentView = tableView
@@ -184,5 +186,6 @@ private final class MessageRowView: NSTableCellView {
         subject.font = .systemFont(ofSize: NSFont.systemFontSize, weight: unread ? .semibold : .regular)
         snippet.stringValue = message.snippet
         setAccessibilityLabel("\(sender.stringValue), \(subject.stringValue)")
+        setAccessibilityIdentifier("mail.message.\(message.id)")
     }
 }

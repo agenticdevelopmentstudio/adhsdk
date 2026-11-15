@@ -4,11 +4,11 @@
     "id": "4f066e76-2eca-4cd7-8b73-840178e4edf3",
     "title": "GmailSettingsView",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-14",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -36,7 +36,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "65ed950b8e34bab4",
+  "synced": "85a2eec3c1417e62",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

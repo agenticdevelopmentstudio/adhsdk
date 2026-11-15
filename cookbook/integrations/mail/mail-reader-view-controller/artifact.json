@@ -4,11 +4,11 @@
     "id": "ac5b0100-ea5d-4abf-a9aa-11a477878514",
     "title": "MailReaderViewController",
     "type": "ingredient",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "status": "review",
     "language": "en",
     "created": "2026-11-13",
-    "modified": "2026-11-14",
+    "modified": "2026-11-15",
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
@@ -35,7 +35,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "68af70f36076e7bb",
+  "synced": "ce0bbb24d158c6a3",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

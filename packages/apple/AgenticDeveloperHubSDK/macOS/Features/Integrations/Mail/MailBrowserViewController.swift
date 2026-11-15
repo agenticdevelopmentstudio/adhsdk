@@ -28,6 +28,7 @@ public final class MailBrowserViewController: NSSplitViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         splitView.autosaveName = "MailBrowserSplit"
+        splitView.setAccessibilityIdentifier("mail.browser")
 
         let sidebar = NSSplitViewItem(sidebarWithViewController: MailSidebarViewController(model: model))
         sidebar.minimumThickness = 180

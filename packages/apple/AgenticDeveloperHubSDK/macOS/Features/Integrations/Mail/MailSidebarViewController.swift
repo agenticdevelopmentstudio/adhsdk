@@ -51,6 +51,7 @@ final class MailSidebarViewController: NSViewController, NSOutlineViewDataSource
         outlineView.dataSource = self
         outlineView.delegate = self
         outlineView.setAccessibilityIdentifier("mail.sidebar")
+        outlineView.setAccessibilityLabel("Mailboxes")
 
         let scroll = NSScrollView()
         scroll.documentView = outlineView
@@ -128,6 +129,7 @@ final class MailSidebarViewController: NSViewController, NSOutlineViewDataSource
             label.textColor = .secondaryLabelColor
             label.lineBreakMode = .byTruncatingTail
             cell.textField = label
+            cell.setAccessibilityIdentifier("mail.account.\(account.id)")
             Self.pin(label, in: cell, leading: 0)
             return cell
         }
@@ -182,6 +184,7 @@ private final class MailboxCell: NSTableCellView {
             stack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
         setAccessibilityLabel(mailbox.title)
+        setAccessibilityIdentifier("mail.mailbox.\(mailbox.accountId).\(mailbox.labelId ?? "all")")
     }
 
     required init?(coder: NSCoder) {

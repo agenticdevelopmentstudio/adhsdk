@@ -2,11 +2,11 @@
 id: 83a5a5e0-3337-4aff-aef8-40a7393dabfe
 title: "Mail Sidebar View Controller"
 type: ingredient
-version: 1.0.1
+version: 1.0.2
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-14
+modified: 2026-11-15
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -110,7 +110,8 @@ The sidebar reads these fields from `MailBrowserModel` (see [adhsdk.ingredient.i
 ## Accessibility
 
 - **role**: The sidebar is a standard outline, so it carries the platform outline role. The source sets no other role.
-- **outline-identifier**: The outline's accessibility identifier is `mail.sidebar`.
+- **outline-identifier**: The outline's accessibility identifier is `mail.sidebar`, and its label is "Mailboxes".
+- **row-identifiers**: An account group row's identifier is `mail.account.<accountID>`. A mailbox row's identifier is `mail.mailbox.<accountID>.<labelID>`, with `all` in place of the label for the all-mail mailbox.
 - **row-label**: A mailbox row's accessibility label is the mailbox title. The unread count is not part of it. The mailbox symbol is created with no accessibility description.
 - **keyboard-navigation**: The source adds no key handling; arrow-key navigation, expand and collapse come from the platform outline. Group rows are not selectable, so keyboard selection lands only on mailbox rows.
 - **unread-count-announcement**: NEEDS REVIEW: Not implemented in source. The unread count is drawn as visible text but the row's accessibility label is only the title, so a screen reader may not announce it. A screen-reader pass over the mail window would settle whether the label needs the count.
@@ -253,7 +254,7 @@ Not applicable: the source writes no log lines.
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailSidebarViewController.swift` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Integrations/Mail/MailSidebarViewController.swift` | confirmed (1.0.2) |
 | ios | (planned) | planned |
 | web | (planned) | planned |
 | android | (planned) | planned |
@@ -313,5 +314,6 @@ Known debt: the view controller has no test of its own, and `MailBrowserModelTes
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.0.2 | 2026-11-15 | Mike Fullerton | Accessibility identifiers for UI tests and automation |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Reworded the expand-on-rebuild and no-match decisions as observed behavior needing approval, moved the missing controller test into known debt, made the unread count a SHOULD for locale formatting, removed MUST keywords from Edge Cases, linked the model ingredient, added a Windows deep-link row, a contrast check and a collapsed-group vector, and rewrote vectors 018, 023 and 032 so they can be observed. |
 | 1.0.0 | 2026-11-13 | Mike Fullerton | Initial creation |

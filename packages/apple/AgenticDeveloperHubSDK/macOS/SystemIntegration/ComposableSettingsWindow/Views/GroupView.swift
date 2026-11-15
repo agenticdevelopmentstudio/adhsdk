@@ -206,6 +206,7 @@ extension ComposableSettings {
         /// the help drawer — not into the card.
         public func addSettingSubview(_ view: NSView, style: CardRowStyle = .row) {
             if let note = Self.helpNote(for: view) { helpNotes.append(note) }
+            Self.identifyControls(in: view)
             let row = CardRow(content: view, style: style)
             if let selfHiding = view as? any SelfHidingSettingsView {
                 selfHiding.onVisibilityChange = { [weak self, weak row] in
@@ -240,6 +241,38 @@ extension ComposableSettings {
         }
 
         /// `view`'s view-model explanation as a help note, or nil when it has none.
+        /// The accessibility identifier a titled row's first control gets when it
+        /// set none: `settings.<slug of the row's title>`. Further controls in the
+        /// same row get `.2`, `.3` and so on. Static labels are not controls here.
+        ///
+        /// Done once, here, so every row type is reachable by a UI driver without
+        /// each one carrying its own identifier code; a row or panel that sets its
+        /// own identifiers keeps them.
+        static func identifyControls(in view: NSView) {
+            guard let titled = view as? any ExplainedSettingsView,
+                  let title = titled.settingTitle, !title.isEmpty else { return }
+            let base = "settings.\(AccessibilityID.slug(title))"
+            var index = 0
+            for control in interactiveControls(in: view) {
+                index += 1
+                guard control.accessibilityIdentifier().isEmpty else { continue }
+                control.setAccessibilityIdentifier(index == 1 ? base : "\(base).\(index)")
+            }
+        }
+
+        private static func interactiveControls(in view: NSView) -> [NSControl] {
+            var found: [NSControl] = []
+            for subview in view.subviews {
+                if let field = subview as? NSTextField, !field.isEditable { continue }
+                if let control = subview as? NSControl {
+                    found.append(control)
+                } else {
+                    found += interactiveControls(in: subview)
+                }
+            }
+            return found
+        }
+
         private static func helpNote(for view: NSView) -> HelpNote? {
             guard let explained = view as? any ExplainedSettingsView,
                   let text = explained.settingExplanation?.trimmingCharacters(in: .whitespacesAndNewlines),
