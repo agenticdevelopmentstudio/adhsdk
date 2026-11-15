@@ -773,6 +773,7 @@
 		222FB2E6A57E342068B04A45 /* GitCommitParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E40035810EC862953ADAEBC /* GitCommitParserTests.swift */; };
 		224443DD066444667ED906BC /* MainActorScriptCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A88FB186E3A3D1F47B16448 /* MainActorScriptCommand.swift */; };
 		224A448B651478823CBA6E64 /* HTMLText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643821A93AA48B1F39FB38F0 /* HTMLText.swift */; };
+		2259AAF09E287C2C6BD500A8 /* GitAlertPresenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20AE0C9928F38673B672E824 /* GitAlertPresenterTests.swift */; };
 		2259E41620376AF736D55FE3 /* TerminalWorkingDirectoryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916E33B5A994EADFD97F2438 /* TerminalWorkingDirectoryReader.swift */; };
 		2267FBBD5D9F26182F8C2740 /* AgenticDeveloperHubSDKPermissions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAE9D06DBA7E410231438FBD /* AgenticDeveloperHubSDKPermissions.framework */; };
 		226C87FA00C14E462B9655C9 /* FileSystemServicing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1639075C96B6339E3D5139 /* FileSystemServicing.swift */; };
@@ -2512,6 +2513,7 @@
 		8FDFB179783E17B9F36DD859 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B20E00787ED91789F90E500 /* SignInViewController.swift */; };
 		8FF1AFC74799A00BB55AF762 /* AgenticDeveloperHubSDKCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 99B0EDCF642AA70D3B9E629F /* AgenticDeveloperHubSDKCore.framework */; };
 		8FF32892931F61812689AA08 /* InactivityThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72B891BB7F37B651405DA02 /* InactivityThreshold.swift */; };
+		8FF35649EE118C9965BA8A9E /* GitWindowSession+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2039C71DF2E4340A826B23 /* GitWindowSession+Actions.swift */; };
 		8FF487C1E59D1B8E56B0AEB5 /* LogWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD8FCE1CD89D0367455D4658 /* LogWindowController.swift */; };
 		90098DA0246B54C1401A1620 /* PermissionRequest.json in Resources */ = {isa = PBXBuildFile; fileRef = 86AE1A20DB44BA459D297E96 /* PermissionRequest.json */; };
 		901089A36A6396D721C73607 /* ShellQuotingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3040D36CA10DC06FF100C9C0 /* ShellQuotingTests.swift */; };
@@ -3170,6 +3172,7 @@
 		B97AD1A44017F8C7405CBB27 /* AppAllowlistTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 338C1F0E4B10DA2BC2FE7A46 /* AppAllowlistTests.swift */; };
 		B9814CFF4EBC40F68D854520 /* Stop.json in Resources */ = {isa = PBXBuildFile; fileRef = A468E6F3CB22C81FCC156D67 /* Stop.json */; };
 		B99E404D570FEE991020D218 /* AgenticDeveloperHubSDKUI-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52346B50D66247F2DB4C7B4B /* AgenticDeveloperHubSDKUI-iOS.framework */; };
+		B9C37F90F392D3D0AF0AC64A /* GitWindowSessionActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8874F82B8DCBFEB079F721E /* GitWindowSessionActionTests.swift */; };
 		B9C7866B594F45623B79C592 /* ModelChooserContentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFF5246C1B68C617604D8CB /* ModelChooserContentTests.swift */; };
 		B9D09AC2E4A4F7A7724DDF32 /* HubScriptCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3B65CB664B0CD8A99D7704 /* HubScriptCommand.swift */; };
 		B9D9BBADBD865B68BE1B16F1 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD98D500DC06CEC43B665399 /* ViewModel.swift */; };
@@ -8015,6 +8018,7 @@
 		2086AC8274C78FCAD1E8E2EB /* BubbleStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleStyleTests.swift; sourceTree = "<group>"; };
 		208F9D7A8ABC62BA15386D43 /* ChatConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatConfig.swift; sourceTree = "<group>"; };
 		209477FB87CEEB55CAF0062A /* NotImplementedLedger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotImplementedLedger.swift; sourceTree = "<group>"; };
+		20AE0C9928F38673B672E824 /* GitAlertPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitAlertPresenterTests.swift; sourceTree = "<group>"; };
 		20B000AA16A6411C3C18A34F /* PaneContentSpacingConsuming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneContentSpacingConsuming.swift; sourceTree = "<group>"; };
 		20C3203CDBA3AD32CF5ABF04 /* SettingObservingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingObservingTests.swift; sourceTree = "<group>"; };
 		20DD5EBCD3F487A14EFA6483 /* BrowserAutomationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserAutomationTests.swift; sourceTree = "<group>"; };
@@ -8344,6 +8348,7 @@
 		3BFFCD185B8FF18F45726F20 /* QuarantineMeta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuarantineMeta.swift; sourceTree = "<group>"; };
 		3C08D7161F850BFBF326BB43 /* TerminalChatSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalChatSessionTests.swift; sourceTree = "<group>"; };
 		3C1E130D9DE3AE2C41FE005A /* AgenticDeveloperHubSDKHubUI-iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "AgenticDeveloperHubSDKHubUI-iOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C2039C71DF2E4340A826B23 /* GitWindowSession+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GitWindowSession+Actions.swift"; sourceTree = "<group>"; };
 		3C25B60DCEB600BF0699A4D4 /* SystemStatusWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatusWindowController.swift; sourceTree = "<group>"; };
 		3C3D464741FA41EE209DB380 /* KeyedDebouncerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyedDebouncerTests.swift; sourceTree = "<group>"; };
 		3C4DBC279D33265D3DDE1F26 /* HubWorkspace+Query.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HubWorkspace+Query.swift"; sourceTree = "<group>"; };
@@ -10578,6 +10583,7 @@
 		F87E160B819BF6651B1B28E3 /* SpacingSettingsPanelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacingSettingsPanelViewController.swift; sourceTree = "<group>"; };
 		F87EF19D7032C31A87A92423 /* ComposableTabLayoutSpecTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposableTabLayoutSpecTests.swift; sourceTree = "<group>"; };
 		F881B9B6E351CCF70BDE26DB /* AnchorCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnchorCapture.swift; sourceTree = "<group>"; };
+		F8874F82B8DCBFEB079F721E /* GitWindowSessionActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitWindowSessionActionTests.swift; sourceTree = "<group>"; };
 		F88915C4F3DFD2110376FBE6 /* LSPCompletionSnippetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LSPCompletionSnippetTests.swift; sourceTree = "<group>"; };
 		F8B06BFF66B0E12BDE408B5B /* MockSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSource.swift; sourceTree = "<group>"; };
 		F8CF030E889CEA99C00451BD /* MainThreadWindowStatusBarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainThreadWindowStatusBarTests.swift; sourceTree = "<group>"; };
@@ -13890,6 +13896,7 @@
 		5A56CC4A313414F70730266D /* Git */ = {
 			isa = PBXGroup;
 			children = (
+				20AE0C9928F38673B672E824 /* GitAlertPresenterTests.swift */,
 				F626C436F54A810C8E8223FC /* GitBlameViewControllerTests.swift */,
 				8631DC187212DF1AD5BE800D /* GitCommitBoxViewControllerTests.swift */,
 				9E42B729054443A1E1959169 /* GitCommitDetailViewControllerTests.swift */,
@@ -13907,6 +13914,7 @@
 				D1197883DC86EAF8885A66C7 /* GitSyntaxColoringTests.swift */,
 				1EE074A8EC607A2FA9861C31 /* GitViewsTestSupport.swift */,
 				4EC9B97F2925EB8C0565B718 /* GitWindowFeatureTests.swift */,
+				F8874F82B8DCBFEB079F721E /* GitWindowSessionActionTests.swift */,
 				D238E0847B76FEF8E0FD5FC6 /* GitWindowSessionTests.swift */,
 				979E8E0D788DA7586972495A /* GitWorkingCopyViewControllerTests.swift */,
 				DF9D023E01B94CC6D9FF25C7 /* TerminalSessionGitBranchTests.swift */,
@@ -14949,6 +14957,7 @@
 				32F22B0D0B9A586B052761BE /* GitWindowFeature.swift */,
 				FEFE149E4579326D9D17E564 /* GitWindowPanes.swift */,
 				C3EFDCCFFE5E4BC8DC9B0369 /* GitWindowSession.swift */,
+				3C2039C71DF2E4340A826B23 /* GitWindowSession+Actions.swift */,
 			);
 			path = Window;
 			sourceTree = "<group>";
@@ -22526,6 +22535,7 @@
 				D1092AEE714653F33183A8FF /* FolderDisclosureMemoryTests.swift in Sources */,
 				52729A67030071C0715667DE /* FontChooserButtonTests.swift in Sources */,
 				02E4859E57E1FC5FD3F4A9E7 /* FrameCalculatorTests.swift in Sources */,
+				2259AAF09E287C2C6BD500A8 /* GitAlertPresenterTests.swift in Sources */,
 				8AFE57C7A164122C3A69784E /* GitBlameViewControllerTests.swift in Sources */,
 				227C02946935342AA6ECD164 /* GitCommitBoxViewControllerTests.swift in Sources */,
 				943B817FFEC853E0FC98B0A7 /* GitCommitDetailViewControllerTests.swift in Sources */,
@@ -22546,6 +22556,7 @@
 				62136DE90B55709C0E24FB04 /* GitTestRepository.swift in Sources */,
 				B4C2B124F3DF619D29890631 /* GitViewsTestSupport.swift in Sources */,
 				B36A32DEBDC35980FFDD4DF4 /* GitWindowFeatureTests.swift in Sources */,
+				B9C37F90F392D3D0AF0AC64A /* GitWindowSessionActionTests.swift in Sources */,
 				4BF7D6AA2B672EA464BF9DEE /* GitWindowSessionTests.swift in Sources */,
 				165C73D855C5BA19B92A9DAE /* GitWorkingCopyViewControllerTests.swift in Sources */,
 				3B1C67008EBDB0E7D11AFF7F /* GmailSettingsAccountErrorTests.swift in Sources */,
@@ -24699,6 +24710,7 @@
 				12984CF9049DCF47F0A241E0 /* GitSyntaxColoring.swift in Sources */,
 				DCFD0B228C51FFF53C7B740A /* GitWindowFeature.swift in Sources */,
 				BCDCC102D68DDCE31099915F /* GitWindowPanes.swift in Sources */,
+				8FF35649EE118C9965BA8A9E /* GitWindowSession+Actions.swift in Sources */,
 				BA16F76DA03B69C6263E79F2 /* GitWindowSession.swift in Sources */,
 				7BA28B45EF7275F365B30658 /* GitWorkingCopyViewController.swift in Sources */,
 				E531A8089BD0E985E7BD8BE7 /* GmailSettingsModel.swift in Sources */,

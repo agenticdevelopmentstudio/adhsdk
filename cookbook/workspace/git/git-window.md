@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.1.0
+version: 1.2.0
 status: review
 language: en
 created: 2026-11-14
@@ -78,11 +78,29 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 ### Asking the user
 
 - **presenter-seam**: The window MUST ask the user only through `GitActionPresenting` (`confirm`, `askForText`, `showFailure`), never through `NSAlert` directly, so a test answers with a fake.
-- **sheets-only**: `GitAlertPresenter` MUST show each question as an `NSAlert` sheet on the window its provider returns (`beginSheetModal`, bridged to `async` with a checked continuation); it MUST NOT run a modal loop or activate the app. With no window it MUST log at error level and answer as cancelled: `confirm` false, `askForText` nil, `showFailure` nothing shown.
+- **sheets-only**: `GitAlertPresenter` MUST show each question as an `NSAlert` sheet on the window its provider returns (`beginSheetModal`, bridged to `async` with a checked continuation); it MUST NOT run a modal loop or activate the app. With no window it MUST log at error level and answer as cancelled: `confirm` false, `askForText` nil, `showFailure` nothing shown. When the window closes while a sheet is up, the sheet MUST be ended and the question answered as cancelled, so the caller always resumes, exactly once.
 - **confirm-buttons**: A confirmation MUST have the action button first and Cancel second, and answer true only for the first; a destructive one MUST set `hasDestructiveAction` on its first button.
-- **text-fields**: A text request MUST stack one `NSTextField` per field in the alert's accessory view, labelled with the field's label and filled with its initial text, the first field focused; it MUST answer one value per field, trimmed of whitespace and newlines, or nil when cancelled.
+- **text-fields**: A text request MUST stack one `NSTextField` per field in the alert's accessory view, labelled with the field's label and filled with its initial text and with no placeholder, the first field focused; it MUST answer one value per field, trimmed of whitespace and newlines, or nil when cancelled.
 - **text-action-enablement**: The action button MUST be enabled exactly while `GitTextRequest.isComplete(_:)` holds for the fields' current text: every non-optional field holds something other than whitespace (and there is one value per field). It MUST be re-checked on every keystroke.
 - **failure-sheet**: `showFailure(title:message:)` MUST show an informational sheet with one OK button and not wait for it. The message for a failed git call MUST be `GitClientError.userMessage(of:)`: git's trimmed standard error, else the error's description.
+
+### Actions
+
+- **one-funnel**: Every intent a view sends (working copy, history, refs sidebar) and every toolbar verb (`fetch`, `pull`, `push`, `newBranch`, `stash`, `popStash`) MUST go through the session's one `perform(_:)`, which runs git only through the model's `perform`; the model refreshes after every action, so the views show what it left.
+- **one-at-a-time**: While an action runs, a new request MUST be ignored. `onBusyChange(true)` MUST be called before it starts and `onBusyChange(false)` once it ends, and the overview's spinner (`git.window.busy`, before Refresh) MUST show and spin exactly while it runs.
+- **failure-shown**: A failed action MUST call `showFailure` with the action's title (`Push failed`, `Commit failed`, `Cherry-pick failed`, ...) and `GitClientError.userMessage(of:)`; a cancelled one shows nothing. The log line MUST carry the title and `logDescription`, never git's standard error.
+- **needs-presenter**: While `presenter` is nil, an action that needs the user (a confirmation or a text) MUST do nothing.
+- **discard**: Discarding MUST confirm `Discard changes to N file(s)?` with the destructive action `Discard Changes`, then restore the tracked paths (`.discard`) and delete the untracked ones (`.removeUntracked`), as two actions when there are both, skipping the second when the first fails. Discard All discards every unstaged path the same way.
+- **commit**: A commit MUST run `.commit(message:amend:)` and, on success, call `commitDidSucceed()`: the message is emptied, its undo history cleared and Amend unticked. Ticking Amend over a message that is only whitespace MUST fill it with HEAD's message. Amend MUST be enabled exactly while the repository has a commit, re-read on every working-copy or refs change.
+- **push-remote**: Push MUST run `.push` for the checked-out branch with an upstream. Any other branch, or one with no upstream, MUST be pushed with `.pushSettingUpstream` to its upstream's remote, else `origin`, else the only remote; with none it MUST show `Push failed` / `This repository has no remote.`, and on a detached HEAD `Push failed` / `HEAD is not on a branch.`. Only remotes that have a URL count. Push Tag picks its remote the same way.
+- **pull-fetch**: Pull MUST run `.pull`; the toolbar's Fetch MUST run `.fetch(remote: nil)`, the sidebar's Fetch of a remote `.fetch(remote:)` for it.
+- **new-branch**: New Branch (toolbar, ref menu, commit menu) MUST ask one required field `Name` with the action `Create Branch`, then create the branch at the ref's full name, the commit's sha, or HEAD from the toolbar, and check it out.
+- **names-validated**: A typed branch or tag name beginning with `-` MUST be refused before git runs, with `A name cannot begin with “-”.` under the action's failure title.
+- **checkout**: Checking out a local branch MUST run `.checkout(name)`; a remote branch `.checkout` of the local branch already tracking it, else `.checkoutTracking("<remote>/<name>")`; a commit or a tag `.checkoutDetached(sha)`.
+- **rename-delete**: Rename MUST ask one field prefilled with the branch's name and run `.renameBranch` unless the name is unchanged. Deleting a local branch MUST confirm, run `.deleteBranch(force: false)` and, when git answers `not fully merged`, confirm again (`Delete unmerged branch?`, destructive) before `.deleteBranch(force: true)`; declining shows nothing. Deleting a remote branch MUST confirm (destructive), then run `.deleteRemoteBranch`.
+- **tags**: New Tag MUST ask `Name` (required) and `Message` (optional; empty makes a lightweight tag) and run `.createTag`; Delete Tag MUST confirm, then `.deleteTag`.
+- **stashes**: Stash MUST ask one optional `Message` and run `.stashSave`; the toolbar's Pop MUST run `.stashPop(0)` when there is a stash and nothing otherwise; the sidebar's Apply, Pop and Drop work by index, and Drop MUST confirm (destructive).
+- **commit-actions**: Cherry-pick and Revert MUST pass `mainline: 1` for a commit with more than one parent. A soft or mixed reset MUST run at once; a hard one MUST confirm `Reset <branch> to <shortID>?` / `Uncommitted changes are lost.` (destructive) first, naming `HEAD` when detached, where a reset is allowed.
 ## Appearance
 
 A titled, closable, miniaturizable, resizable window, 1200 x 760 points by default and at least 720 x 440, with a unified toolbar: a flexible space, the search field (placeholder `Search history`), then Refresh (`arrow.clockwise`). The title bar shows the folder name over the branch as its subtitle. Columns: sidebar about 220 points (160-360), centre at least 360, right column at least 320; in the right column the commit detail takes about 40 % of the height. Every pane is the git views' own, themed by them.
@@ -117,6 +135,22 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 | git-window-014 | file-type-override-validated | Names `C++`, `C#`, `Shell Script`, `bash`, an unknown name, a blank name | `cpp`, `csharp`, `shellscript`, `shellscript` (an alias), nil, nil. |
 | git-window-015 | commands | Open Git Window for Path run with no argument, then with a number | No window opens and nothing is remembered. |
 | git-window-016 | text-action-enablement | Fields `Name` (required) and `Message` (optional); values `["", "note"]`, `["   ", ""]`, `["v1", ""]`, `["v1"]` | Incomplete, incomplete, complete, incomplete. |
+| git-window-017 | one-at-a-time | A clone of a bare remote; `fetch()` twice before the first ends | One busy cycle (`true`, `false`), the spinner shown during it and hidden after; the second request ignored. |
+| git-window-018 | discard | A tracked file edited and an untracked file; discard both, confirmed | One confirmation `Discard changes to 2 files?`, destructive, `Discard Changes`; the tracked file restored, the untracked file gone, nothing unstaged. |
+| git-window-019 | needs-presenter | No presenter; Discard All and New Branch | Nothing changes. |
+| git-window-020 | commit | A staged change; commit `second` | HEAD's subject is `second`; the box is empty. |
+| git-window-021 | commit | A commit `The subject\n\nThe body.`; Amend ticked over an empty box, then over `typed` | The box holds the commit's message, then still `typed`. |
+| git-window-022 | push-remote | A repository with a commit and no remote, push | `Push failed`: `This repository has no remote.` |
+| git-window-023 | push-remote | A detached HEAD, push | `Push failed`: `HEAD is not on a branch.` |
+| git-window-024 | push-remote | A clone on a new branch with no upstream, push | The remote has the branch at HEAD; its upstream is `origin/<branch>`. |
+| git-window-025 | checkout | A remote branch `origin/feature` with no local branch, checked out; then `origin/main`, tracked by `main` | HEAD is `feature` tracking `origin/feature`; then `main`. |
+| git-window-026 | rename-delete | A branch with a commit on no other branch; delete, confirmed twice | Two confirmations, the second `Delete unmerged branch?` and destructive; the branch is gone; no failure. |
+| git-window-027 | rename-delete | As 026, the second confirmation declined | The branch remains; no failure. |
+| git-window-028 | failure-shown | `f.txt` changed differently on `main` and `side`; cherry-pick `side`'s tip onto `main` | One `Cherry-pick failed` failure; `f.txt` is listed as conflicted. |
+| git-window-029 | commit-actions | A merge commit; revert it | No failure; the merged branch's file is gone. |
+| git-window-030 | commit-actions | Two commits; a hard reset to the first declined, then a soft reset, then a hard one confirmed | One confirmation `Reset main to <shortID>?` and HEAD unchanged; then HEAD at the first commit with the second's file staged; then nothing staged and the file gone. |
+| git-window-031 | sheets-only | A sheet begun on a window that closes before it ends | The sheet is ended once and the question answered as cancelled. |
+| git-window-032 | names-validated | New Branch answered `-f` | `Create branch failed`: `A name cannot begin with “-”.`; HEAD unchanged. |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -174,7 +208,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and
 
 | Platform | Location | Conformance |
 |----------|----------|-------------|
-| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.0.1) |
+| macos | `packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/` | confirmed (1.2.0) |
 
 ## Design Decisions
 
@@ -221,6 +255,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-14 | Mike Fullerton | Actions: every intent and toolbar verb through one funnel, one at a time, with confirmations, failures and the busy spinner; only remotes with a URL count; a sheet ends when its window closes |
 | 1.1.0 | 2026-11-14 | Mike Fullerton | Asking the user: the GitActionPresenting seam and GitAlertPresenter's confirm, text and failure sheets |
 | 1.0.1 | 2026-11-14 | Mike Fullerton | Selection and the bottom pane follow model changes; per-repository autosave; override names mapped through the registry |
 | 1.0.0 | 2026-11-14 | Mike Fullerton | Initial creation |

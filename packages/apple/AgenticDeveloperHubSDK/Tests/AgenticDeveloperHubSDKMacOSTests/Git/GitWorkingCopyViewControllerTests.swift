@@ -265,4 +265,35 @@ struct GitWorkingCopyViewControllerTests {
         #expect(workingCopy.commitBox.isAmend == false)
         #expect(delegate.intents == [.amendChanged(true)])
     }
+
+    @Test("commitDidSucceed also forgets the message's undo history")
+    func commitDidSucceedClearsUndo() {
+        let (workingCopy, _) = loaded(Self.renameSource())
+        let undo = workingCopy.commitBox.messageUndoManager
+        undo.registerUndo(withTarget: workingCopy) { _ in }
+        #expect(undo.canUndo)
+        workingCopy.commitDidSucceed()
+        #expect(!undo.canUndo)
+    }
+
+    @Test("Stage All and Unstage All are disabled while their list is empty")
+    func headerButtonsFollowTheirLists() {
+        let source = Self.renameSource()
+        let (workingCopy, delegate) = loaded(source)
+        #expect(workingCopy.stageAllButton.isEnabled)
+        #expect(workingCopy.unstageAllButton.isEnabled)
+
+        source.staged = []
+        workingCopy.reload()
+        #expect(!workingCopy.unstageAllButton.isEnabled)
+        #expect(workingCopy.stageAllButton.isEnabled)
+
+        source.staged = [GitFileChange(path: "b", status: .modified)]
+        source.unstaged = []
+        workingCopy.reload()
+        #expect(workingCopy.unstageAllButton.isEnabled)
+        #expect(!workingCopy.stageAllButton.isEnabled)
+        workingCopy.stageAllButton.performClick(nil)
+        #expect(delegate.intents.isEmpty)
+    }
 }

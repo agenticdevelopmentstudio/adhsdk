@@ -101,12 +101,16 @@ public final class GitWorkingCopyViewController: NSViewController {
         unstagedHeader.stringValue = "Unstaged (\(unstaged.count))"
         stagedList.files = staged
         unstagedList.files = unstaged
+        unstageAllButton.isEnabled = !staged.isEmpty
+        stageAllButton.isEnabled = !unstaged.isEmpty
         commitBox.hasStagedChanges = !staged.isEmpty
     }
 
-    /// Empties the message and unticks Amend, after the owner's commit succeeded.
+    /// Empties the message, forgets its undo history and unticks Amend, after the
+    /// owner's commit succeeded.
     public func commitDidSucceed() {
         commitBox.message = ""
+        commitBox.clearUndoHistory()
         commitBox.isAmend = false
     }
 

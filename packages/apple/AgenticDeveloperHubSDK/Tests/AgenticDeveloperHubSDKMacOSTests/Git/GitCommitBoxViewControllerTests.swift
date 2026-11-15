@@ -136,4 +136,27 @@ struct GitCommitBoxViewControllerTests {
         box.loadViewIfNeeded()
         #expect(box.messageView.string == "Early")
     }
+
+    @Test("the message view fills the box's height, so a click anywhere in it lands in the text")
+    func messageFillsTheBox() {
+        let box = Self.box(Recorder())
+        box.view.frame = NSRect(x: 0, y: 0, width: 300, height: 200)
+        box.view.layoutSubtreeIfNeeded()
+        box.viewDidLayout()
+        let height = box.messageView.enclosingScrollView?.contentSize.height ?? 0
+        #expect(height > 40)
+        #expect(box.messageView.autoresizingMask.contains(.height))
+        #expect(box.messageView.minSize.height == height)
+        #expect(box.messageView.frame.height >= height)
+    }
+
+    @Test("the message keeps its own undo stack, which clearUndoHistory empties")
+    func undoHistory() {
+        let box = Self.box(Recorder())
+        #expect(box.messageView.undoManager === box.messageUndoManager)
+        box.messageUndoManager.registerUndo(withTarget: box) { _ in }
+        #expect(box.messageUndoManager.canUndo)
+        box.clearUndoHistory()
+        #expect(!box.messageUndoManager.canUndo)
+    }
 }

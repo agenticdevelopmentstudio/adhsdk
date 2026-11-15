@@ -213,6 +213,7 @@ public final class GitWindowFeature: AppFeature {
             }) else { return nil }
         if let session = sessions[repo.id] {
             session.onRefsChange = { [weak controller] in controller?.refreshTitleBranch() }
+            session.presenter = GitAlertPresenter(window: { [weak controller] in controller?.window })
             session.onOpenDirectory = { [weak self] directory in
                 guard let self else { return }
                 Task { await self.open(path: directory) }

@@ -68,7 +68,8 @@ public final class GitCommitBoxViewController: NSViewController {
         messageView.isVerticallyResizable = true
         messageView.isHorizontallyResizable = false
         messageView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
-        messageView.autoresizingMask = [.width]
+        // As tall as the scroll view at least, so a click anywhere in the box lands in the text.
+        messageView.autoresizingMask = [.width, .height]
         messageView.textContainer?.widthTracksTextView = true
         messageView.textContainerInset = NSSize(width: 4, height: 4)
         messageView.delegate = self
@@ -131,6 +132,25 @@ public final class GitCommitBoxViewController: NSViewController {
         view = root
     }
 
+    public override func viewDidLayout() {
+        super.viewDidLayout()
+        let height = scrollView.contentSize.height
+        guard messageView.minSize.height != height else { return }
+        messageView.minSize = NSSize(width: 0, height: height)
+        if messageView.frame.height < height {
+            messageView.setFrameSize(NSSize(width: scrollView.contentSize.width, height: height))
+        }
+    }
+
+    /// The message's own undo stack, so clearing it after a commit touches nothing else
+    /// in the window.
+    let messageUndoManager = UndoManager()
+
+    /// Forgets every edit the message can undo, after the owner's commit succeeded.
+    public func clearUndoHistory() {
+        messageUndoManager.removeAllActions()
+    }
+
     private var canCommit: Bool {
         let hasMessage = !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return hasMessage && (hasStagedChanges || isAmend)
@@ -154,5 +174,9 @@ public final class GitCommitBoxViewController: NSViewController {
 extension GitCommitBoxViewController: NSTextViewDelegate {
     public func textDidChange(_ notification: Notification) {
         updateCommitEnabled()
+    }
+
+    public func undoManager(for view: NSTextView) -> UndoManager? {
+        messageUndoManager
     }
 }

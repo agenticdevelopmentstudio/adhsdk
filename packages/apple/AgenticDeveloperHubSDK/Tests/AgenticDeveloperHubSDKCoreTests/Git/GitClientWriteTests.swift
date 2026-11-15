@@ -342,4 +342,14 @@ struct GitClientWriteTests {
             return
         }
     }
+
+    @Test("a remote named only by a setting, with no URL, is not a remote")
+    func remoteWithoutAURLIsNotListed() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-write-ghost")
+        defer { repository.tearDown() }
+        try await repository.run(["config", "remote.ghost.prune", "true"])
+        try await repository.run(["remote", "add", "real", "/nonexistent/remote.git"])
+        #expect(try await client.remotes(in: repository.root) == ["real"])
+        #expect(GitClient.remoteNames(fromVerbose: "b\t/x (fetch)\nb\t/x (push)\na\t\nc\t/y (fetch)\n") == ["b", "c"])
+    }
 }

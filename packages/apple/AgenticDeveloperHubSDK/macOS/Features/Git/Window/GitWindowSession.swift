@@ -49,6 +49,19 @@ final class GitWindowSession {
     /// Called when the refs change, so the window can read its branch again.
     var onRefsChange: (() -> Void)?
 
+    /// Asks the user before and after an action; set by the feature. While nil, an
+    /// action that needs the user (a confirmation, a name) does nothing, and a failure
+    /// is only logged.
+    var presenter: GitActionPresenting?
+    /// Called with true before an action runs and false once it has finished.
+    var onBusyChange: ((Bool) -> Void)?
+    /// The action running or last finished; tests await it. Set only by `perform(_:)`
+    /// (GitWindowSession+Actions.swift), which is why the setter is not private.
+    var actionTask: Task<Void, Never>?
+    /// True while an action runs; a request made meanwhile is ignored. Set only by
+    /// `perform(_:)`.
+    var isActing = false
+
     private(set) var selection: Selection = .workingCopy
     /// The commit the selected ref pointed at when it was last shown in the history;
     /// nil until the ref's commit was found loaded.
@@ -91,6 +104,7 @@ final class GitWindowSession {
         centre.show(workingCopy)
         commitPane.show(right)
         bottom.show(diff)
+        workingCopy.canAmend = model.hasCommits
         observation = model.observe { [weak self] changes in
             self?.modelDidChange(changes)
         }
@@ -160,6 +174,7 @@ final class GitWindowSession {
         }
         if changes.contains(.history) { history.reload() }
         if workingCopyChanged { workingCopy.reload() }
+        if workingCopyChanged || changes.contains(.refs) { workingCopy.canAmend = model.hasCommits }
         if !changes.isDisjoint(with: [.refs, .history]) { reapplyRefSelection() }
 
         switch bottom.content {
@@ -182,6 +197,7 @@ final class GitWindowSession {
         sidebar.reload()
         history.reload()
         workingCopy.reload()
+        workingCopy.canAmend = model.hasCommits
         reapplyRefSelection()
         switch bottom.content {
         case let shown as GitDiffViewController: shown.reload()
@@ -313,9 +329,9 @@ extension GitWindowSession: GitRefsSidebarDelegate {
         onOpenDirectory?(directory)
     }
 
-    /// The session does not act on ref intents yet; nothing is checked out, pushed or
-    /// deleted from here.
-    func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent) {}
+    func sidebar(_ sidebar: GitRefsSidebarViewController, didRequest intent: GitRefIntent) {
+        perform(.ref(intent))
+    }
 }
 
 // MARK: - GitHistoryDelegate
@@ -328,9 +344,9 @@ extension GitWindowSession: GitHistoryDelegate {
         clearDiff()
     }
 
-    /// The session does not act on commit intents yet; nothing is checked out, picked,
-    /// reverted or reset from here.
-    func history(_ history: GitHistoryViewController, didRequest intent: GitCommitIntent, for commit: GitCommit) {}
+    func history(_ history: GitHistoryViewController, didRequest intent: GitCommitIntent, for commit: GitCommit) {
+        perform(.commit(intent, commit))
+    }
 }
 
 // MARK: - GitCommitDetailDelegate
@@ -361,9 +377,9 @@ extension GitWindowSession: GitWorkingCopyDelegate {
         showDiff(target: target, file: file)
     }
 
-    /// The session does not act on working-copy intents yet; nothing is staged,
-    /// discarded or committed from here.
-    func workingCopy(_ workingCopy: GitWorkingCopyViewController, didRequest intent: GitWorkingCopyIntent) {}
+    func workingCopy(_ workingCopy: GitWorkingCopyViewController, didRequest intent: GitWorkingCopyIntent) {
+        perform(.workingCopy(intent))
+    }
 }
 
 // MARK: - GitDiffDelegate
@@ -452,21 +468,48 @@ class GitWindowContainerViewController: NSViewController, PaneTitleProviding {
     }
 }
 
-/// The overview pane: the refs sidebar, with the Refresh button in the pane's
-/// title bar (`PaneAccessoryProviding`).
+/// The overview pane: the refs sidebar, with a spinner shown while an action runs and
+/// the Refresh button in the pane's title bar (`PaneAccessoryProviding`).
 @MainActor
 final class GitWindowOverviewPaneViewController: GitWindowContainerViewController, PaneAccessoryProviding {
     /// What the Refresh button does.
     var onRefresh: (() -> Void)?
 
+    /// Spins while the window runs an action; hidden otherwise.
+    let busyIndicator = NSProgressIndicator()
+    /// Whether the spinner is showing.
+    private(set) var isBusy = false
+
     init() {
         super.init(identifier: "git.window.overview", paneTitle: "Overview")
+        busyIndicator.style = .spinning
+        busyIndicator.controlSize = .small
+        busyIndicator.isIndeterminate = true
+        busyIndicator.isDisplayedWhenStopped = false
+        busyIndicator.isHidden = true
+        busyIndicator.setAccessibilityLabel("Running")
+        busyIndicator.accessibilityID("git.window.busy")
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    /// Shows and spins the indicator while `busy`, hides it otherwise.
+    func setBusy(_ busy: Bool) {
+        isBusy = busy
+        busyIndicator.isHidden = !busy
+        if busy {
+            busyIndicator.startAnimation(nil)
+        } else {
+            busyIndicator.stopAnimation(nil)
+        }
+    }
+
     func makePaneAccessoryViews() -> [NSView] {
+        [busyIndicator, makeRefreshButton()]
+    }
+
+    private func makeRefreshButton() -> NSView {
         let title = "Refresh"
         let image = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: title) ?? NSImage()
         let button = NSButton(image: image, target: self, action: #selector(refresh(_:)))
@@ -475,7 +518,7 @@ final class GitWindowOverviewPaneViewController: GitWindowContainerViewControlle
         button.toolTip = title
         button.setAccessibilityLabel(title)
         button.accessibilityID("git.window.refresh")
-        return [button]
+        return button
     }
 
     @objc private func refresh(_ sender: Any?) {

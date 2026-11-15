@@ -70,16 +70,58 @@ public protocol GitActionPresenting: AnyObject {
 
 /// `GitActionPresenting` as `NSAlert` sheets on the Git window. Never runs a modal
 /// loop and never activates the app: with no window to attach to it answers no
-/// (false / nil) and logs.
+/// (false / nil) and logs. A sheet still up when its window closes is ended and
+/// answered as cancelled, so whoever waits on it always resumes.
 @MainActor
 public final class GitAlertPresenter: GitActionPresenting {
-    private let window: @MainActor () -> NSWindow?
+    /// Begins `alert` as a sheet on a window, calling the handler when it ends.
+    typealias SheetBeginner = @MainActor (NSAlert, NSWindow, @escaping (NSApplication.ModalResponse) -> Void) -> Void
+    /// Ends the sheet `alert` shows on a window.
+    typealias SheetEnder = @MainActor (NSAlert, NSWindow) -> Void
 
-    public init(window: @escaping @MainActor () -> NSWindow?) {
+    private let window: @MainActor () -> NSWindow?
+    private let beginSheet: SheetBeginner
+    private let endSheet: SheetEnder
+
+    public convenience init(window: @escaping @MainActor () -> NSWindow?) {
+        self.init(
+            window: window,
+            beginSheet: { alert, window, handler in alert.beginSheetModal(for: window, completionHandler: handler) },
+            endSheet: { alert, window in window.endSheet(alert.window, returnCode: .cancel) })
+    }
+
+    /// How a sheet begins and ends is injected, so a test shows none.
+    init(window: @escaping @MainActor () -> NSWindow?, beginSheet: @escaping SheetBeginner,
+         endSheet: @escaping SheetEnder) {
         self.window = window
+        self.beginSheet = beginSheet
+        self.endSheet = endSheet
     }
 
     public func confirm(_ request: GitConfirmation) async -> Bool {
+        let alert = Self.confirmationAlert(request)
+        guard let response = await present(alert, purpose: "confirmation") else { return false }
+        return response == .alertFirstButtonReturn
+    }
+
+    public func askForText(_ request: GitTextRequest) async -> [String]? {
+        let prompt = Self.textAlert(request)
+        guard let response = await present(prompt.alert, purpose: "text request") else { return nil }
+        // Held until the sheet ends: the fields' delegate is weak.
+        withExtendedLifetime(prompt.enabler) {}
+        guard response == .alertFirstButtonReturn else { return nil }
+        return prompt.fields.map { $0.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) }
+    }
+
+    public func showFailure(title: String, message: String) {
+        let alert = Self.failureAlert(title: title, message: message)
+        Task { _ = await present(alert, purpose: "failure") }
+    }
+
+    // MARK: Alerts
+
+    /// The action button first, Cancel second; the first destructive when the request is.
+    static func confirmationAlert(_ request: GitConfirmation) -> NSAlert {
         let alert = NSAlert()
         alert.alertStyle = request.isDestructive ? .critical : .warning
         alert.messageText = request.title
@@ -88,12 +130,13 @@ public final class GitAlertPresenter: GitActionPresenting {
         action.setAccessibilityIdentifier("git.prompt.action")
         alert.addButton(withTitle: "Cancel").setAccessibilityIdentifier("git.prompt.cancel")
         alert.window.setAccessibilityIdentifier("git.prompt.confirm")
-        if request.isDestructive { alert.buttons.first?.hasDestructiveAction = true }
-        guard let response = await present(alert, purpose: "confirmation") else { return false }
-        return response == .alertFirstButtonReturn
+        if request.isDestructive { action.hasDestructiveAction = true }
+        return alert
     }
 
-    public func askForText(_ request: GitTextRequest) async -> [String]? {
+    /// A text request's alert, its fields (one per request field, the first focused) and
+    /// the delegate that keeps the action button enabled only while they are complete.
+    static func textAlert(_ request: GitTextRequest) -> TextPrompt {
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = request.title
@@ -105,7 +148,6 @@ public final class GitAlertPresenter: GitActionPresenting {
 
         let fields = request.fields.enumerated().map { index, field in
             let textField = NSTextField(string: field.initial)
-            textField.placeholderString = field.label
             textField.setAccessibilityLabel(field.label)
             textField.setAccessibilityIdentifier("git.prompt.field.\(index)")
             return textField
@@ -115,37 +157,47 @@ public final class GitAlertPresenter: GitActionPresenting {
         enabler.update()
         alert.layout()
         alert.window.initialFirstResponder = fields.first
-
-        guard let response = await present(alert, purpose: "text request") else { return nil }
-        // Held until the sheet ends: the fields' delegate is weak.
-        withExtendedLifetime(enabler) {}
-        guard response == .alertFirstButtonReturn else { return nil }
-        return fields.map { $0.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) }
+        return TextPrompt(alert: alert, fields: fields, enabler: enabler)
     }
 
-    public func showFailure(title: String, message: String) {
+    /// An informational alert with one OK button.
+    static func failureAlert(title: String, message: String) -> NSAlert {
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = title
         alert.informativeText = message
         alert.addButton(withTitle: "OK").setAccessibilityIdentifier("git.prompt.ok")
         alert.window.setAccessibilityIdentifier("git.prompt.failure")
-        Task { _ = await present(alert, purpose: "failure") }
+        return alert
+    }
+
+    /// A built text request: the alert, its fields in order, and what enables its action.
+    struct TextPrompt {
+        let alert: NSAlert
+        let fields: [NSTextField]
+        let enabler: NSObject
     }
 
     // MARK: Private
 
     /// Runs `alert` as a sheet on the window and returns how it ended; nil when there
-    /// is no window to attach it to.
+    /// is no window to attach it to. The window closing first ends the sheet and
+    /// answers `.cancel`.
     private func present(_ alert: NSAlert, purpose: String) async -> NSApplication.ModalResponse? {
         guard let window = window() else {
             Self.logger.error("Git \(purpose, privacy: .public) not shown: the Git window has no window")
             return nil
         }
+        let endSheet = endSheet
+        let beginSheet = beginSheet
         return await withCheckedContinuation { continuation in
-            alert.beginSheetModal(for: window) { response in
-                continuation.resume(returning: response)
+            let completion = SheetCompletion(continuation, alert: alert, window: window, endSheet: endSheet)
+            completion.observer = NotificationCenter.default.addObserver(
+                forName: NSWindow.willCloseNotification, object: window, queue: .main
+            ) { _ in
+                MainActor.assumeIsolated { completion.windowWillClose() }
             }
+            beginSheet(alert, window) { response in completion.finish(response) }
         }
     }
 
@@ -172,6 +224,40 @@ public final class GitAlertPresenter: GitActionPresenting {
 
 extension GitAlertPresenter: Loggable {
     public static nonisolated let logger = makeLogger()
+}
+
+/// Resumes a sheet's continuation exactly once, whichever comes first, the sheet ending
+/// or its window closing, and stops watching the window then.
+@MainActor
+private final class SheetCompletion {
+    private var continuation: CheckedContinuation<NSApplication.ModalResponse?, Never>?
+    private weak var alert: NSAlert?
+    private weak var window: NSWindow?
+    private let endSheet: GitAlertPresenter.SheetEnder
+    var observer: NSObjectProtocol?
+
+    init(_ continuation: CheckedContinuation<NSApplication.ModalResponse?, Never>, alert: NSAlert,
+         window: NSWindow, endSheet: @escaping GitAlertPresenter.SheetEnder) {
+        self.continuation = continuation
+        self.alert = alert
+        self.window = window
+        self.endSheet = endSheet
+    }
+
+    /// Ends the sheet, then answers cancelled if ending it did not already answer.
+    func windowWillClose() {
+        if continuation != nil, let alert, let window { endSheet(alert, window) }
+        finish(.cancel)
+    }
+
+    func finish(_ response: NSApplication.ModalResponse) {
+        if let observer {
+            NotificationCenter.default.removeObserver(observer)
+            self.observer = nil
+        }
+        continuation?.resume(returning: response)
+        continuation = nil
+    }
 }
 
 /// Enables the action button only while the request is complete, as the user types.

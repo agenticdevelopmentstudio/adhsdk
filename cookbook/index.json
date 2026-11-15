@@ -8799,9 +8799,9 @@
       "implementations": [
         {
           "conformance": {
-            "hash": "sha256:52c861b5ca8cfb5f2429d6666fb24348c877f600cfd7d2858ad11454c709cc22",
+            "hash": "sha256:0bb8636ac9a9614773eb88e50cbee8e9fe42c261676ccec9d50fe0b3d5e73242",
             "state": "confirmed",
-            "version": "1.0.1"
+            "version": "1.2.0"
           },
           "location": "packages/apple/AgenticDeveloperHubSDK/macOS/Features/Git/Window/",
           "platform": "macos"

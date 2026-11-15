@@ -558,16 +558,30 @@ public actor GitClient {
         )
     }
 
-    /// The repository's remote names, sorted (`git remote`).
+    /// The repository's remote names that have a URL, sorted (`git remote -v`). A remote
+    /// named only by a setting, such as a global `remote.origin.prune`, is listed by a
+    /// plain `git remote` in every repository, but there is nothing to push to.
     public func remotes(in directory: URL, caller: GitCaller = GitCaller()) async throws -> [String] {
         let output = try await execute(
             verb: "remote",
-            arguments: [],
+            arguments: ["-v"],
             directory: directory,
             caller: caller,
             configuration: await configurationProvider()
         )
-        return output.split(separator: "\n").map(String.init).filter { !$0.isEmpty }.sorted()
+        return Self.remoteNames(fromVerbose: output)
+    }
+
+    /// The names in `git remote -v` output whose URL is not empty, once each, sorted.
+    static func remoteNames(fromVerbose output: String) -> [String] {
+        var names = Set<String>()
+        for line in output.split(separator: "\n") {
+            let fields = line.split(separator: "\t", maxSplits: 1, omittingEmptySubsequences: false)
+            guard fields.count == 2, !fields[0].isEmpty,
+                  !fields[1].trimmingCharacters(in: .whitespaces).isEmpty else { continue }
+            names.insert(String(fields[0]))
+        }
+        return names.sorted()
     }
 
     /// HEAD's full message (`%B`) with trailing whitespace and newlines trimmed, or nil on an
