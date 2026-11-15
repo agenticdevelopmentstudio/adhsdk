@@ -123,9 +123,12 @@ final class GitWindowSession {
         await model.start()
     }
 
-    /// Stops watching the repository and drops a search in flight; the window closed.
+    /// Stops watching the repository and drops a search and an action in flight; the
+    /// window closed. A cancelled action's git gets SIGTERM, which git answers by
+    /// removing its lock files, no step after it runs, and nothing is shown.
     func stop() {
         searchTask?.cancel()
+        actionTask?.cancel()
         model.stop()
     }
 

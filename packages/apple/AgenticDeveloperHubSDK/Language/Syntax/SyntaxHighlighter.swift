@@ -36,6 +36,11 @@ public actor SyntaxHighlighter {
     public static let maximumBytes = 1_000_000
     /// Text with a line over this many UTF-16 units is not highlighted.
     public static let maximumLineLength = 10_000
+    /// vscode-textmate's per-line limit, in milliseconds: a line that takes longer stops
+    /// early and the whole text comes back uncoloured. VS Code's own value.
+    public static let defaultLineTimeLimit = 500
+    /// The most one `highlight` spends tokenizing, in milliseconds, checked between lines.
+    public static let defaultTimeBudget = 3_000
 
     private let script: String
     /// The Oniguruma module, released once the engine is created.
@@ -43,22 +48,34 @@ public actor SyntaxHighlighter {
     private let registry: GrammarRegistry
     private var context: JSContext?
     private var currentTheme: CodeTheme?
+    private let lineTimeLimit: Int
+    private let timeBudget: Int
     /// How many engines were created; for tests.
     private(set) var engineCount = 0
     /// How many times a theme was handed to the bundle; for tests.
     private(set) var setThemeCount = 0
 
     /// - Throws: the read error when `highlighter.js` or `onig.wasm` cannot be read.
-    public init(resources: TextMateResources, registry: GrammarRegistry) throws {
+    /// - Parameters:
+    ///   - lineTimeLimit: milliseconds one line may take (`defaultLineTimeLimit`).
+    ///   - timeBudget: milliseconds one text may take (`defaultTimeBudget`).
+    public init(resources: TextMateResources, registry: GrammarRegistry,
+                lineTimeLimit: Int = defaultLineTimeLimit, timeBudget: Int = defaultTimeBudget) throws {
         script = try String(contentsOf: resources.highlighterScript, encoding: .utf8)
         wasm = try Data(contentsOf: resources.onigWASM)
         self.registry = registry
+        self.lineTimeLimit = lineTimeLimit
+        self.timeBudget = timeBudget
     }
 
     /// One `StyledLine` per line of `text`, lines split on `\r\n`, `\r` and
     /// `\n` as the bundle splits them.
     ///
-    /// nil when the text is over the limits or the scope has no grammar.
+    /// nil when the text is over the limits, the scope has no grammar, or tokenizing ran
+    /// past `lineTimeLimit` on a line or `timeBudget` overall (a grammar whose regex
+    /// backtracks without end, say): that text stays uncoloured and the actor is free
+    /// for the next call. A single regex match is not interruptible, so the limits bound
+    /// the work between matches, not inside one.
     public func highlight(_ text: String, scopeName: String, theme: CodeTheme) async throws -> [StyledLine]? {
         guard let lengths = Self.lineLengthsWithinLimits(text),
               registry.hasGrammar(scopeName: scopeName) else { return nil }
@@ -68,7 +85,12 @@ public actor SyntaxHighlighter {
             currentTheme = theme
             setThemeCount += 1
         }
-        let json = try Self.settle(try call(context, "highlight", [text, scopeName]), in: context, "highlight")
+        let json = try Self.settle(
+            try call(context, "highlight", [text, scopeName, lineTimeLimit, timeBudget]), in: context, "highlight")
+        if Self.timedOut(json: json) {
+            Self.logger.info("Highlighting \(scopeName, privacy: .public) ran out of time; left uncoloured")
+            return nil
+        }
         return try Self.styledLines(json: json, lineLengths: lengths)
     }
 
@@ -113,6 +135,13 @@ public actor SyntaxHighlighter {
     }
 
     // MARK: - Output
+
+    /// Whether the bundle answered `{"timedOut": true}`.
+    static func timedOut(json: String) -> Bool {
+        guard json.hasPrefix("{\"timedOut\"") else { return false }
+        let root = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any]
+        return root?["timedOut"] as? Bool == true
+    }
 
     /// The bundle's `{"lines": [[[start, length, color, fontStyle], ...], ...]}`
     /// as styled lines, checked against the Swift side's own line split.

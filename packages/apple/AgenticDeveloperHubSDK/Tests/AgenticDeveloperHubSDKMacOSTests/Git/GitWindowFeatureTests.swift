@@ -21,7 +21,8 @@ struct GitWindowFeatureTests {
     /// A feature over its own registry, database, window manager and remembered-roots
     /// setting, so nothing a test opens reaches the app's real ones.
     private func makeFeature(
-        _ openRoots: UserSetting<[String]>, registry: CommandRegistry = CommandRegistry()
+        _ openRoots: UserSetting<[String]>, registry: CommandRegistry = CommandRegistry(),
+        notInRepository: @escaping @MainActor (URL) -> Void = { _ in }
     ) throws -> GitWindowFeature {
         let database = try ProjectDatabase(path: databaseURL.path)
         let windows = ProjectWindowManager()
@@ -37,7 +38,8 @@ struct GitWindowFeatureTests {
             extensionGrammars: { nil },
             fileTypeOverride: { _ in nil },
             client: GitClient(configuration: .default),
-            openRoots: openRoots
+            openRoots: openRoots,
+            notInRepository: notInRepository
         )
     }
 
@@ -116,6 +118,46 @@ struct GitWindowFeatureTests {
 
         #expect(controller == nil)
         #expect(setting.value.isEmpty)
+    }
+
+    @Test("a chosen folder outside any repository tells the user, and a repository does not")
+    func chosenNonRepositoryTellsTheUser() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("git-window-chosen-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let repository = try await GitTestRepository.make(prefix: "git-window-chosen-repo")
+        defer { repository.tearDown() }
+        let setting = makeSetting()
+        defer { setting.remove() }
+        defer { removeDatabase() }
+        var told: [URL] = []
+        let feature = try makeFeature(setting) { told.append($0) }
+        defer { feature.unregister() }
+
+        await feature.openChosen(directory)
+        #expect(told == [directory])
+        #expect(setting.value.isEmpty)
+
+        let controller = await feature.openChosen(repository.root)
+        defer { controller?.window?.close() }
+        #expect(controller != nil)
+        #expect(told == [directory], "a repository opens its window and says nothing")
+    }
+
+    @Test("the not-in-a-repository alert names the folder, has one OK and closes on it")
+    func notInRepositoryAlert() {
+        let folder = URL(fileURLWithPath: "/tmp/Downloads", isDirectory: true)
+        #expect(GitWindowFeature.notInRepositoryMessage(for: folder) == "Downloads is not in a Git repository")
+        var closed = 0
+        let alert = NotInRepositoryAlert(message: GitWindowFeature.notInRepositoryMessage(for: folder)) {
+            closed += 1
+        }
+        #expect(alert.alert.messageText == "Downloads is not in a Git repository")
+        #expect(alert.alert.buttons.map(\.title) == ["OK"])
+        #expect(alert.alert.buttons.first?.accessibilityIdentifier() == "git.prompt.ok")
+        alert.alert.buttons.first?.performClick(nil)
+        #expect(closed == 1)
     }
 
     @Test("Open Git Window for Path takes exactly one non-empty string and ignores anything else")

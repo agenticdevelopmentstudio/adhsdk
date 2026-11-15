@@ -6,9 +6,10 @@
   set-global-config verb, which may carry an email address, a signing key,
   or a URL containing a token.
 - **Redaction lives at the funnel, not at call sites**: The command log's
-  argument redaction is scoped to the config verb and redacts every
-  argument at and after the first non-flag position, so a caller-supplied
-  value never reaches log output in clear text; standard-error text —
+  argument redaction redacts every config argument at and after the first
+  non-flag position, and the message after `-m` for commit, tag and stash,
+  so a caller-supplied value or message never reaches log output in clear
+  text; standard-error text —
   which may itself echo a repository path — MUST NEVER reach the log at
   all.
 - **Nothing leaves the device through this component**: every verb spawns

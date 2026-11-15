@@ -92,6 +92,71 @@ struct GitClientWriteTests {
         #expect(try await client.status(in: repository.root).files.isEmpty)
     }
 
+    @Test("discarding [ab].txt leaves a.txt and b.txt as they are")
+    func discardIsLiteral() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-write-literal-discard")
+        defer { repository.tearDown() }
+        for name in ["a.txt", "b.txt", "[ab].txt"] { try repository.write("one\n", to: name) }
+        try await repository.run(["add", "-A"])
+        try await repository.run(["commit", "-q", "-m", "initial"])
+        for name in ["a.txt", "b.txt", "[ab].txt"] { try repository.write("two\n", to: name) }
+
+        try await client.perform(.discard(paths: ["[ab].txt"]), in: repository.root)
+        #expect(try String(contentsOf: repository.url("[ab].txt"), encoding: .utf8) == "one\n")
+        #expect(try String(contentsOf: repository.url("a.txt"), encoding: .utf8) == "two\n")
+        #expect(try String(contentsOf: repository.url("b.txt"), encoding: .utf8) == "two\n")
+    }
+
+    @Test("removing the untracked *.log leaves u1.log in place")
+    func removeUntrackedIsLiteral() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-write-literal-clean")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "a.txt", "alpha\n", message: "initial")
+        for name in ["u1.log", "u2.log", "*.log"] { try repository.write("x\n", to: name) }
+
+        try await client.perform(.removeUntracked(paths: ["*.log"]), in: repository.root)
+        #expect(!FileManager.default.fileExists(atPath: repository.url("*.log").path))
+        #expect(FileManager.default.fileExists(atPath: repository.url("u1.log").path))
+        #expect(FileManager.default.fileExists(atPath: repository.url("u2.log").path))
+    }
+
+    @Test("a path like app/[slug]/page.tsx stages that file and no other")
+    func stageIsLiteral() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-write-literal-stage")
+        defer { repository.tearDown() }
+        try repository.write("route\n", to: "app/[slug]/page.tsx")
+        try repository.write("other\n", to: "app/s/page.tsx")
+
+        try await client.perform(.stage(paths: ["app/[slug]/page.tsx"]), in: repository.root)
+        let status = try await client.status(in: repository.root)
+        #expect(status.stagedFiles["app/[slug]/page.tsx"] == .added)
+        #expect(status.stagedFiles["app/s/page.tsx"] == nil)
+    }
+
+    @Test("a path-taking action with no paths is refused before git runs")
+    func emptyPathListsAreRefused() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-write-empty-paths")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "a.txt", "alpha\n", message: "initial")
+        try repository.write("untracked\n", to: "u.txt")
+        try repository.write("staged\n", to: "s.txt")
+        try await repository.run(["add", "s.txt"])
+
+        let actions: [GitAction] = [
+            .stage(paths: []), .unstage(paths: []), .discard(paths: []), .removeUntracked(paths: [])
+        ]
+        for action in actions {
+            let error = await failure { try await client.perform(action, in: repository.root) }
+            guard case .invalidArgument(let verb, _)? = error else {
+                Issue.record("expected invalidArgument for \(action), got \(String(describing: error))")
+                continue
+            }
+            #expect(verb == action.verb)
+        }
+        #expect(FileManager.default.fileExists(atPath: repository.url("u.txt").path))
+        #expect(try await client.status(in: repository.root).stagedFiles["s.txt"] == .added)
+    }
+
     @Test("branches are created, checked out, renamed and deleted; unmerged needs force")
     func branchCreateRenameDeleteAndCheckout() async throws {
         let repository = try await GitTestRepository.make(prefix: "git-write-branch")

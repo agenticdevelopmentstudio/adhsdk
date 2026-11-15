@@ -21,4 +21,6 @@
 | syntax-highlighter-018 | extension-source | grammar `source.gadget` (`language` `gadget`) from one extension, language `gadget` with extension `.gdg` and file name `Gadgetfile` from another | one language: id `gadget`, scope `source.gadget`, extensions `.gdg`, file names `Gadgetfile`. |
 | syntax-highlighter-019 | extension-source | language `hin` declaring extension `.H.in`; a grammar at `./pl.plist` | extension `.h.in`, and `config.h.in` resolves to `hin`; `./pl.plist` gives no grammar. |
 | syntax-highlighter-020 | extension-source | `alpha` and `beta` both claiming `source.shared`, then an unrelated extension applied and withdrawn, then `beta` withdrawn and re-applied | one conflict logged, none for the unrelated rebuilds, one more when the conflict returns. |
+| syntax-highlighter-021 | directory-source, first-source-wins | a user `swift.tmLanguage.json` (`scopeName` `source.swift`, no `fileTypes`) ahead of the bundled source | the directory source has no languages; `x.swift` resolves to `swift`, whose scope is `source.swift` and whose extensions include `.swift`; the `source.swift` text is the user file's. |
+| syntax-highlighter-022 | limits | a grammar matching `a` once per character: a 9 000-character line with `lineTimeLimit` 1 ms, and fifty 2 000-character lines with `timeBudget` 0 | nil both times; a following one-line call is highlighted. |
 

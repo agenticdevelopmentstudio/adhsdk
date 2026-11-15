@@ -15,8 +15,16 @@
 **Rationale**: The mapping stores display names (`C++`, `Shell Script`), not ids; only the registry knows its ids and aliases, so the mapping belongs beside it, and a name it cannot map falls through so the extension rules still apply.
 **Approved**: pending
 
-**Decision**: The divider layout is autosaved per repository.
+**Decision**: The commit pane's divider is autosaved per repository.
 **Rationale**: Two repositories open side by side would otherwise move each other's dividers, and the last one closed would win for every window.
+**Approved**: pending
+
+**Decision**: The Git window is the project window over a `.gitWindow` row, its panes fixed on the composable-tabs layout.
+**Rationale**: One window class carries the toolbar, search, title, frames and terminals for every window kind; the Git window supplies only its panes and its session.
+**Approved**: pending
+
+**Decision**: A folder chosen in no repository gets an alert window of its own, not a sheet.
+**Rationale**: No window exists yet to attach a sheet to; ordering it front without activating, and without a modal loop, keeps quiet presentation intact and every other window live.
 **Approved**: pending
 
 **Decision**: The watcher reads the git directory and the common directory with two separate `rev-parse` calls.

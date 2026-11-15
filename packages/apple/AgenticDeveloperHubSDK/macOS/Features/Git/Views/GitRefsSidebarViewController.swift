@@ -233,7 +233,8 @@ public final class GitRefsSidebarViewController: NSViewController {
             switch ref.kind {
             case .localBranch: return localBranchMenu(ref)
             case .remoteBranch: return remoteBranchMenu(ref)
-            case .tag: return makeMenu([("Push", "push", .pushTag(ref)), ("Delete…", "delete", .deleteTag(ref))])
+            case .tag:
+                return makeMenu([("Push", "tag.push", .pushTag(ref)), ("Delete…", "tag.delete", .deleteTag(ref))])
             }
         case .stash(let stash):
             return makeMenu([

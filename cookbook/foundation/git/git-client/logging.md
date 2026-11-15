@@ -13,7 +13,7 @@ repository. Arguments are logged at public visibility after passing through
 the redaction rule (see Behavioral Requirements and Privacy above), never
 collapsed as a whole, because that would hide the entire interpolation for
 every verb rather than redacting the one argument position that needs it.
-The redaction rule today covers only the config verb; a future addition is
-expected to add coverage for a commit-message argument and any remote URL,
-once those verbs exist.
+The redaction rule covers config values and the commit, tag and stash
+messages. Paths, branch, tag and remote names are logged as they are; no
+write takes a remote URL.
 

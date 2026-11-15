@@ -545,12 +545,17 @@ public actor GitClient {
     /// An action with an operand git would read as an option or as nothing
     /// (`GitAction.invalidOperand`) throws `.invalidArgument` before anything is resolved or
     /// spawned: `createBranch(name: "--delete", startPoint: "main")` would otherwise run
-    /// `git branch --delete main`.
+    /// `git branch --delete main`. A path-taking action with no paths
+    /// (`GitAction.hasEmptyPathList`) throws `.invalidArgument` too: git reads an empty
+    /// pathspec list as the whole tree.
     @discardableResult
     public func perform(_ action: GitAction, in directory: URL, caller: GitCaller = GitCaller()) async throws
         -> String {
         if let operand = action.invalidOperand {
             throw GitClientError.invalidArgument(verb: action.verb, argument: operand)
+        }
+        if action.hasEmptyPathList {
+            throw GitClientError.invalidArgument(verb: action.verb, argument: "")
         }
         let configuration = await configurationProvider()
         let floor = action.isLongRunning ? Self.longWriteBudget : Self.writeBudget

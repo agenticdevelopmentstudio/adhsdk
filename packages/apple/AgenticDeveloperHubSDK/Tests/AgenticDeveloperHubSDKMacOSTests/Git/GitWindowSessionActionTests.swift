@@ -309,6 +309,12 @@ struct GitWindowSessionActionTests {
         try await commitFile(repository, "a.txt", "a\n", at: 100)
         await model.refresh([.refs, .workingCopy])
         #expect(session.workingCopy.canAmend == true)
+
+        // An orphan branch beside `main`: the repository has a commit, HEAD names none.
+        try await repository.run(["checkout", "--quiet", "--orphan", "fresh"])
+        await model.refresh([.refs, .workingCopy])
+        #expect(model.headCommit == nil)
+        #expect(session.workingCopy.canAmend == false)
     }
 
     // MARK: Push, pull, fetch
@@ -325,6 +331,22 @@ struct GitWindowSessionActionTests {
         await session.actionTask?.value
 
         #expect(presenter.failures == ["Push failed: This repository has no remote."])
+    }
+
+    @Test("closing the window cancels the running action, which then shows nothing")
+    func stopCancelsTheAction() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "a.txt", "a\n", at: 100)
+        let presenter = StubPresenter()
+        let (_, session) = await makeSession(repository, presenter: presenter)
+
+        session.push()
+        session.stop()
+        await session.actionTask?.value
+
+        #expect(session.actionTask?.isCancelled == true)
+        #expect(presenter.failures.isEmpty)
     }
 
     @Test("push on a detached HEAD shows that HEAD is not on a branch")
@@ -816,6 +838,54 @@ struct GitWindowSessionActionTests {
         try await repository.run(["checkout", "--quiet", "--", "a.txt"])
         await act(session, .ref(.popStash(stash)))
         #expect(model.stashes.isEmpty)
+    }
+
+    @Test("drop finds the chosen stash by sha when another is pushed after the menu was built")
+    func dropFollowsTheStashNotItsIndex() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "a.txt", "a\n", at: 100)
+        try repository.write("older\n", to: "a.txt")
+        try await repository.run(["stash", "push", "--quiet", "-m", "older"])
+        try repository.write("chosen\n", to: "a.txt")
+        try await repository.run(["stash", "push", "--quiet", "-m", "chosen"])
+        let presenter = StubPresenter()
+        presenter.confirmAnswers = [true]
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        let chosen = try #require(model.stashes.first { $0.message.contains("chosen") })
+        #expect(chosen.index == 0)
+
+        // Another tool pushes a stash between building the menu and running git, so
+        // stash@{0} now names the newcomer and the chosen one is stash@{1}.
+        try repository.write("newcomer\n", to: "a.txt")
+        try await repository.run(["stash", "push", "--quiet", "-m", "newcomer"])
+        await act(session, .ref(.dropStash(chosen)))
+        #expect(presenter.failures.isEmpty)
+        let left = try await model.currentStashes().map(\.message)
+        #expect(left.count == 2)
+        #expect(left.contains { $0.contains("newcomer") })
+        #expect(left.contains { $0.contains("older") })
+        #expect(!left.contains { $0.contains("chosen") })
+    }
+
+    @Test("a stash that is gone by the time git runs fails with a clear message and touches nothing")
+    func aVanishedStashFails() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-actions")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "a.txt", "a\n", at: 100)
+        try repository.write("gone\n", to: "a.txt")
+        try await repository.run(["stash", "push", "--quiet", "-m", "gone"])
+        try repository.write("other\n", to: "a.txt")
+        try await repository.run(["stash", "push", "--quiet", "-m", "other"])
+        let presenter = StubPresenter()
+        let (model, session) = await makeSession(repository, presenter: presenter)
+        let gone = try #require(model.stashes.first { $0.message.contains("gone") })
+
+        try await repository.run(["stash", "drop", "--quiet", "stash@{\(gone.index)}"])
+        await act(session, .ref(.popStash(gone)))
+        #expect(presenter.failures == ["Pop stash failed: That stash no longer exists."])
+        #expect(try await model.currentStashes().map(\.message).contains { $0.contains("other") })
+        #expect(try String(contentsOf: repository.url("a.txt"), encoding: .utf8) == "a\n")
     }
 
     // MARK: Commits

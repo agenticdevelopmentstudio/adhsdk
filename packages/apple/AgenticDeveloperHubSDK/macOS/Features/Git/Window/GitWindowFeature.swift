@@ -70,6 +70,12 @@ public final class GitWindowFeature: AppFeature {
     private let openRoots: UserSetting<[String]>
     /// The open the last Open Git Window for Path started; nil until one is.
     private(set) var openTask: Task<Void, Never>?
+    /// Tells the user that the folder they chose in New Git Window… is in no
+    /// repository; nil shows `NotInRepositoryAlert`. The open-for-path command and
+    /// the branch card only log.
+    private let notInRepository: (@MainActor (URL) -> Void)?
+    /// The not-in-a-repository alert on screen, kept until its OK closes it.
+    private var notInRepositoryAlert: NotInRepositoryAlert?
 
     /// - Parameters:
     ///   - resources: the bundled TextMate resources; nil leaves every window uncoloured.
@@ -83,6 +89,8 @@ public final class GitWindowFeature: AppFeature {
     ///   - windows: the window manager that opens them.
     ///   - terminals: the terminal panes the window offers under its commit pane.
     ///   - openRoots: where the open windows' roots are remembered.
+    ///   - notInRepository: tells the user a chosen folder is in no repository; nil
+    ///     shows `NotInRepositoryAlert`.
     public init(
         commandRegistry registry: CommandRegistry,
         database: ProjectDatabase,
@@ -93,7 +101,8 @@ public final class GitWindowFeature: AppFeature {
         fileTypeOverride: @escaping @Sendable (URL) -> String?,
         client: GitClient = .shared,
         terminals: TerminalPaneFamily? = nil,
-        openRoots: UserSetting<[String]> = UserSettings.openGitWindowRoots
+        openRoots: UserSetting<[String]> = UserSettings.openGitWindowRoots,
+        notInRepository: (@MainActor (URL) -> Void)? = nil
     ) {
         self.resources = resources
         self.userGrammarsDirectory = userGrammarsDirectory
@@ -104,6 +113,7 @@ public final class GitWindowFeature: AppFeature {
         self.windows = windows
         self.terminals = terminals
         self.openRoots = openRoots
+        self.notInRepository = notInRepository
         super.init()
         registry.register(AppCommand(
             id: CommandID.open,
@@ -144,9 +154,38 @@ public final class GitWindowFeature: AppFeature {
             guard response == .OK, let url = panel.url else { return }
             MainActor.assumeIsolated {
                 guard let self else { return }
-                Task { await self.open(path: url) }
+                Task { await self.openChosen(url) }
             }
         }
+    }
+
+    /// Opens the folder the user chose, telling them when it is in no repository.
+    @discardableResult
+    func openChosen(_ folder: URL) async -> ComposableTabsWindowController? {
+        let controller = await open(path: folder)
+        if controller == nil {
+            if let notInRepository {
+                notInRepository(folder)
+            } else {
+                showNotInRepositoryAlert(for: folder)
+            }
+        }
+        return controller
+    }
+
+    /// What the alert says about `folder`.
+    static func notInRepositoryMessage(for folder: URL) -> String {
+        let name = folder.lastPathComponent.isEmpty ? folder.path : folder.lastPathComponent
+        return "\(name) is not in a Git repository"
+    }
+
+    private func showNotInRepositoryAlert(for folder: URL) {
+        notInRepositoryAlert?.close()
+        let alert = NotInRepositoryAlert(message: Self.notInRepositoryMessage(for: folder)) { [weak self] in
+            self?.notInRepositoryAlert = nil
+        }
+        notInRepositoryAlert = alert
+        alert.show()
     }
 
     /// Opens the window of the repository containing `path`, or brings forward the
@@ -292,6 +331,48 @@ public final class GitWindowFeature: AppFeature {
             Self.logger.error("Could not build the highlighter: \(description, privacy: .public)")
             return nil
         }
+    }
+}
+
+/// The informational alert New Git Window… shows for a folder in no repository,
+/// presented without a modal loop and without activating the app: there is no
+/// window to attach a sheet to, so it is the alert's own window, ordered front
+/// (made key only when presentation is not quiet), and its OK closes it.
+@MainActor
+final class NotInRepositoryAlert: NSObject {
+    let alert = NSAlert()
+    private let onClose: () -> Void
+
+    init(message: String, onClose: @escaping () -> Void) {
+        self.onClose = onClose
+        super.init()
+        alert.alertStyle = .informational
+        alert.messageText = message
+        let okButton = alert.addButton(withTitle: "OK")
+        okButton.setAccessibilityIdentifier("git.prompt.ok")
+        okButton.target = self
+        okButton.action = #selector(dismiss(_:))
+        alert.window.setAccessibilityIdentifier("git.prompt.failure")
+        alert.layout()
+    }
+
+    func show() {
+        let window = alert.window
+        window.center()
+        if QuietWindowPresentation.isEnabled {
+            window.orderFront(nil)
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func close() {
+        alert.window.orderOut(nil)
+        onClose()
+    }
+
+    @objc private func dismiss(_ sender: Any?) {
+        close()
     }
 }
 

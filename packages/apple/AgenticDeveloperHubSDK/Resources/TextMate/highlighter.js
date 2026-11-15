@@ -2758,7 +2758,7 @@
     if (!grammars.has(scopeName)) grammars.set(scopeName, await requireRegistry().loadGrammar(scopeName));
     return grammars.get(scopeName);
   }
-  async function highlight(text, scopeName) {
+  async function highlight(text, scopeName, lineTimeLimit, timeBudget) {
     const g = await grammar(scopeName);
     if (!g) throw new Error("no grammar for " + scopeName);
     const colorMap = requireRegistry().getColorMap();
@@ -2766,8 +2766,11 @@
     const color = (id) => colors[id] ?? (colors[id] = normalizedColor(colorMap[id]));
     let state = tm.INITIAL;
     const lines = [];
+    const deadline = Date.now() + timeBudget;
     for (const line of text.split(/\r\n|\r|\n/)) {
-      const result = g.tokenizeLine2(line, state);
+      if (Date.now() > deadline) return JSON.stringify({ timedOut: true });
+      const result = g.tokenizeLine2(line, state, lineTimeLimit);
+      if (result.stoppedEarly) return JSON.stringify({ timedOut: true });
       const tokens = result.tokens;
       const count = tokens.length / 2;
       const runs = [];

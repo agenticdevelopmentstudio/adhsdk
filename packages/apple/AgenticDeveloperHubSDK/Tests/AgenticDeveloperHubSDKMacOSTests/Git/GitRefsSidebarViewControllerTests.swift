@@ -364,7 +364,7 @@ struct GitRefsSidebarViewControllerTests {
         sidebar.delegate = delegate
         let tagMenu = rowMenu(sidebar, section: 4, row: 0)
         #expect(menuTitles(tagMenu) == ["Push", "Delete…"])
-        #expect(menuIDs(tagMenu) == ["git.sidebar.menu.push", "git.sidebar.menu.delete"])
+        #expect(menuIDs(tagMenu) == ["git.sidebar.menu.tag.push", "git.sidebar.menu.tag.delete"])
         let stashMenu = rowMenu(sidebar, section: 5, row: 1)
         #expect(menuTitles(stashMenu) == ["Apply", "Pop", "Drop…"])
         #expect(menuIDs(stashMenu) == ["git.sidebar.menu.apply", "git.sidebar.menu.pop", "git.sidebar.menu.drop"])

@@ -2,11 +2,11 @@
 id: 6708bfd4-5b29-4bf9-b180-05904873906e
 title: "Syntax Highlighter"
 type: ingredient
-version: 1.1.1
+version: 1.2.0
 status: review
 language: en
 created: 2026-11-13
-modified: 2026-11-13
+modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
@@ -40,11 +40,11 @@ Colours source text with TextMate grammars. A `GrammarRegistry` answers grammar 
 
 - **resources-validated**: `TextMateResources(directory:)` MUST throw when `highlighter.js`, `onig.wasm`, `languages.json` or `manifest.json` is missing from the directory; code receives the directory by injection, never from a bundle lookup.
 - **bundled-source**: `BundledGrammarSource` MUST read its languages from `languages.json` and map every scope name in `manifest.json`'s `grammars` (embed-only grammars included) to `grammars/<name>.json`, reading a grammar's text only when asked for it.
-- **directory-source**: `DirectoryGrammarSource` MUST offer every `*.tmLanguage.json` in its directory whose JSON has a string `scopeName`, as a language whose id is the file name without `.tmLanguage.json` and whose `fileTypes` are matched as TextMate matches them: each is an extension, lowercased with a leading dot, and each that does not start with a dot is also an exact file name as written (`Makefile`). A file that is not such JSON, and a second file for a scope already taken, MUST be skipped with a log line, and a missing directory MUST give no languages.
+- **directory-source**: `DirectoryGrammarSource` MUST offer every `*.tmLanguage.json` in its directory whose JSON has a string `scopeName`, as a language whose id is the file name without `.tmLanguage.json` and whose `fileTypes` are matched as TextMate matches them: each is an extension, lowercased with a leading dot, and each that does not start with a dot is also an exact file name as written (`Makefile`). A grammar with no non-empty `fileTypes` MUST still give its text by scope name but MUST give no language: an entry with no extension or file name would resolve no file and would hide a later source's language of the same id (a user `swift.tmLanguage.json` with no `fileTypes` overrides the bundled Swift grammar, and `.swift` files still resolve to `swift`). A file that is not such JSON, and a second file for a scope already taken, MUST be skipped with a log line, and a missing directory MUST give no languages.
 - **extension-source**: `ExtensionGrammarSource`, built by `GrammarContributionPoint` from the extensions it has applied (the registry applies only enabled ones, and withdraws an extension when it is disabled), MUST offer every `contributes.grammars` entry whose `path` resolves inside its extension and ends in `.json` (`.tmLanguage.json` included); a plist `.tmLanguage`, a path that escapes the extension, a missing file, and a second claim on a scope (extensions taken in identifier order, then manifest order) MUST be skipped with a log line, a contested scope logged once while the conflict stands rather than on every rebuild. Every offered grammar MUST give its text by scope name. An entry with a `language` MUST also give a language with that id, the grammar's scope, and the aliases, extensions (lowercased with a leading dot, multi-dot values kept, glob and empty values dropped) and file names of every applied extension's `contributes.languages` entry with that id, whichever extension declares it, but only when that yields at least one extension or file name: an entry with neither would resolve no file and would hide a later source's language of the same id. One without a `language` (an injection grammar) MUST give no language. The source is a snapshot: it does not change when extensions do, and `hasGrammar` is a lookup.
 - **first-source-wins**: `GrammarRegistry` MUST answer a scope's grammar text from the first source that has it, list each language id once (the first source's entry), and answer `scopeName(languageID:)` from that entry.
 - **resolution-order**: `LanguageResolver.languageID(for:)` MUST try, in order, the override closure, an exact file name match, an extension match ignoring case (longest multi-dot extension first, so `x.h.in` tries `.h.in` before `.in`), and otherwise answer nil. Among languages claiming the same file name or extension, the earlier language in the registry wins.
-- **limits**: `highlight` MUST answer nil, without running the engine, when the text is over `maximumBytes` (1 000 000 UTF-8 bytes) or any line is over `maximumLineLength` (10 000 UTF-16 units).
+- **limits**: `highlight` MUST answer nil, without running the engine, when the text is over `maximumBytes` (1 000 000 UTF-8 bytes) or any line is over `maximumLineLength` (10 000 UTF-16 units). It MUST also answer nil, leaving the engine usable for the next call, when tokenizing a line runs past `lineTimeLimit` (default 500 ms, passed to vscode-textmate's `tokenizeLine2`, which reports `stoppedEarly`) or the whole text runs past `timeBudget` (default 3 000 ms, checked between lines). vscode-textmate checks its limit between regex matches, so one match that backtracks without end is not interrupted.
 - **unknown-scope**: `highlight` MUST answer nil when the registry has no grammar for the scope, asking `hasGrammar(scopeName:)` (a dictionary lookup for the bundled source, a file-existence check for a directory) rather than reading the grammar.
 - **line-split**: Lines MUST be split on `\r\n`, `\r` and `\n`, each one break, exactly as the bundle splits; the result MUST have one `StyledLine` per line, and a count that disagrees with the bundle's MUST throw.
 - **runs**: Each run's `range` MUST be the bundle's UTF-16 `[start, length]` within its line; a range outside the line MUST throw. `fontStyle` carries the bits italic 1, bold 2, underline 4, strikethrough 8.
@@ -91,6 +91,8 @@ Not applicable: The highlighter presents no UI.
 | syntax-highlighter-018 | extension-source | grammar `source.gadget` (`language` `gadget`) from one extension, language `gadget` with extension `.gdg` and file name `Gadgetfile` from another | one language: id `gadget`, scope `source.gadget`, extensions `.gdg`, file names `Gadgetfile`. |
 | syntax-highlighter-019 | extension-source | language `hin` declaring extension `.H.in`; a grammar at `./pl.plist` | extension `.h.in`, and `config.h.in` resolves to `hin`; `./pl.plist` gives no grammar. |
 | syntax-highlighter-020 | extension-source | `alpha` and `beta` both claiming `source.shared`, then an unrelated extension applied and withdrawn, then `beta` withdrawn and re-applied | one conflict logged, none for the unrelated rebuilds, one more when the conflict returns. |
+| syntax-highlighter-021 | directory-source, first-source-wins | a user `swift.tmLanguage.json` (`scopeName` `source.swift`, no `fileTypes`) ahead of the bundled source | the directory source has no languages; `x.swift` resolves to `swift`, whose scope is `source.swift` and whose extensions include `.swift`; the `source.swift` text is the user file's. |
+| syntax-highlighter-022 | limits | a grammar matching `a` once per character: a 9 000-character line with `lineTimeLimit` 1 ms, and fifty 2 000-character lines with `timeBudget` 0 | nil both times; a following one-line call is highlighted. |
 
 ## Edge Cases
 
@@ -138,7 +140,7 @@ The bundle's `console` output and skipped user and extension grammar files go to
 - **SwiftUI**: Views take `[StyledLine]` and draw runs with their own fonts; the highlighter itself is UI-free.
 - **Compose**: The same bundle runs in any JavaScript engine with WebAssembly and promises; the host contract is `ADKHost.grammarText`.
 - **React/Web**: The bundle runs as is in a browser; no Swift side is needed.
-- **AppKit / UIKit**: JavaScriptCore without `com.apple.security.cs.allow-jit` interprets, correct but slower; the limits keep the worst case bounded.
+- **AppKit / UIKit**: JavaScriptCore without `com.apple.security.cs.allow-jit` interprets, correct but slower. The size limits bound the input and the time limits bound the work between regex matches; a single match that backtracks without end is not interrupted, so a hostile grammar's worst case is not bounded.
 - **WinUI 3**: A WebView2 host would supply `ADKHost`.
 
 ## Reference Implementations
@@ -179,6 +181,7 @@ The bundle's `console` output and skipped user and extension grammar files go to
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.2.0 | 2026-11-14 | Mike Fullerton | Review fixes: a user grammar with no fileTypes no longer shadows a bundled language; tokenizing a line has a time limit |
 | 1.1.1 | 2026-11-13 | Mike Fullerton | A grammar adds a language only when its join yields an extension or file name; a contested scope is logged once while it stands |
 | 1.1.0 | 2026-11-13 | Mike Fullerton | Extension grammars: `ExtensionGrammarSource` from `contributes.grammars` joined with `contributes.languages` |
 | 1.0.1 | 2026-11-13 | Mike Fullerton | Synchronous promise settling with no suspension on the engine path, hasGrammar, fileTypes as file names, both instantiate forms |

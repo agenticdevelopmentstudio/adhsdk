@@ -40,6 +40,24 @@ struct GrammarRegistryTests {
         }
     }
 
+    @Test("a user grammar with no fileTypes overrides the bundled text but keeps the bundled language")
+    func userGrammarWithoutFileTypesKeepsTheBundledLanguage() throws {
+        try withTemporaryDirectory { directory in
+            let userSwift = #"{"name":"User Swift","scopeName":"source.swift","patterns":[]}"#
+            try write(userSwift, "swift.tmLanguage.json", in: directory)
+            let registry = GrammarRegistry(sources: [
+                DirectoryGrammarSource(directory: directory),
+                try BundledGrammarSource(resources: TextMateFixture.resources())
+            ])
+            let resolver = LanguageResolver(registry: registry)
+
+            #expect(resolver.languageID(for: URL(fileURLWithPath: "/p/x.swift")) == "swift")
+            #expect(registry.scopeName(languageID: "swift") == "source.swift")
+            #expect(registry.languages.first { $0.id == "swift" }?.extensions.contains(".swift") == true)
+            #expect(registry.grammarText(scopeName: "source.swift") == userSwift)
+        }
+    }
+
     @Test("the bundled source reads the language table and every manifest scope, embed-only ones included")
     func bundledSource() throws {
         let source = try BundledGrammarSource(resources: TextMateFixture.resources())
@@ -60,8 +78,7 @@ struct GrammarRegistryTests {
 
             let source = DirectoryGrammarSource(directory: directory)
 
-            #expect(source.languages == [LanguageEntry(
-                id: "toy", scopeName: "source.toy", aliases: [], extensions: [], filenames: [])])
+            #expect(source.languages.isEmpty)
             #expect(source.grammarText(scopeName: "source.toy") == #"{"scopeName":"source.toy"}"#)
             #expect(source.grammarText(scopeName: "source.other") == nil)
         }
@@ -88,13 +105,13 @@ struct GrammarRegistryTests {
     @Test("a second grammar with a scope already taken is skipped")
     func directoryDuplicateScope() throws {
         try withTemporaryDirectory { directory in
-            try write(#"{"scopeName":"source.toy"}"#, "a.tmLanguage.json", in: directory)
+            try write(#"{"scopeName":"source.toy","fileTypes":["a"]}"#, "a.tmLanguage.json", in: directory)
             try write(#"{"scopeName":"source.toy","fileTypes":["b"]}"#, "b.tmLanguage.json", in: directory)
 
             let source = DirectoryGrammarSource(directory: directory)
 
             #expect(source.languages.map(\.id) == ["a"])
-            #expect(source.grammarText(scopeName: "source.toy") == #"{"scopeName":"source.toy"}"#)
+            #expect(source.grammarText(scopeName: "source.toy") == #"{"scopeName":"source.toy","fileTypes":["a"]}"#)
         }
     }
 

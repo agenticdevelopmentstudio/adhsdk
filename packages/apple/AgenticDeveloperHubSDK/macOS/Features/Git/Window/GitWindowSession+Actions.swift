@@ -164,8 +164,10 @@ extension GitWindowSession {
         case .fetch(let remote): await execute(.fetch(remote: remote))
         case .deleteTag(let ref): await deleteTag(ref)
         case .pushTag(let ref): await pushTag(ref)
-        case .applyStash(let stash): await execute(.stashApply(index: stash.index))
-        case .popStash(let stash): await execute(.stashPop(index: stash.index))
+        case .applyStash(let stash):
+            await run(on: stash, failureTitle: "Apply stash failed") { .stashApply(index: $0) }
+        case .popStash(let stash):
+            await run(on: stash, failureTitle: "Pop stash failed") { .stashPop(index: $0) }
         case .dropStash(let stash): await drop(stash)
         }
     }
@@ -251,7 +253,7 @@ extension GitWindowSession {
     }
 
     private func pushTag(_ ref: GitRef) async {
-        guard let remote = await pushRemote(for: nil, failureTitle: "Push tag failed") else { return }
+        guard let remote = await pushRemote(failureTitle: "Push tag failed") else { return }
         await execute(.pushTag(name: ref.name, remote: remote))
     }
 
@@ -305,7 +307,7 @@ extension GitWindowSession {
         await execute(.pushToUpstream(remote: target.remote, branch: branch.name, upstreamBranch: target.branch))
     }
 
-    private func pushRemote(for branch: GitRef?, failureTitle: String) async -> String? {
+    private func pushRemote(failureTitle: String) async -> String? {
         guard let remotes = await listRemotes(failureTitle: failureTitle) else { return nil }
         return pushRemote(among: remotes, failureTitle: failureTitle)
     }
@@ -356,7 +358,30 @@ extension GitWindowSession {
         let confirmation = GitConfirmation(
             title: "Drop stash@{\(stash.index)}?", message: stash.message, actionTitle: "Drop", isDestructive: true)
         guard await presenter.confirm(confirmation) else { return }
-        await execute(.stashDrop(index: stash.index))
+        await run(on: stash, failureTitle: "Drop stash failed") { .stashDrop(index: $0) }
+    }
+
+    /// Runs the action `make` builds for `stash`'s index as git numbers it now. The index
+    /// the row was built with can name another entry by the time git runs (a stash pushed
+    /// in a terminal while a sheet was up), so the stash is found again by its sha.
+    private func run(on stash: GitStash, failureTitle: String, _ make: (Int) -> GitAction) async {
+        let current: [GitStash]
+        do {
+            current = try await whileGitRuns { try await model.currentStashes() }
+        } catch {
+            showFailure(title: failureTitle, error: error)
+            return
+        }
+        guard let index = Self.currentIndex(of: stash, in: current) else {
+            showFailure(title: failureTitle, message: "That stash no longer exists.")
+            return
+        }
+        await execute(make(index))
+    }
+
+    /// `stash`'s index in `stashes`, matched by sha; nil when it is no longer there.
+    static func currentIndex(of stash: GitStash, in stashes: [GitStash]) -> Int? {
+        stashes.first { $0.id == stash.id }?.index
     }
 
     // MARK: - Running git
@@ -371,6 +396,7 @@ extension GitWindowSession {
 
     /// Runs `action` through the model, which refreshes either way; its error, or nil.
     private func attempt(_ action: GitAction) async -> Error? {
+        if Task.isCancelled { return CancellationError() }
         do {
             try await whileGitRuns { try await model.perform(action) }
             return nil
@@ -394,13 +420,14 @@ extension GitWindowSession {
     }
 
     private func showFailure(title: String, error: Error) {
-        guard !(error is CancellationError) else { return }
+        guard !(error is CancellationError), !Task.isCancelled else { return }
         let description = GitClientError.logDescription(of: error)
         Self.logger.error("\(title, privacy: .public): \(description, privacy: .public)")
         presenter?.showFailure(title: title, message: GitClientError.userMessage(of: error))
     }
 
     private func showFailure(title: String, message: String) {
+        guard !Task.isCancelled else { return }
         Self.logger.error("\(title, privacy: .public)")
         presenter?.showFailure(title: title, message: message)
     }

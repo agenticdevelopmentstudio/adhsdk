@@ -241,7 +241,11 @@ picker) is a consumer of this contract, not part of it.
   cherry-pick and revert (commit, optional mainline), and reset (commit,
   soft, mixed or hard).
 - **write-action-mapping**: Each action MUST map to exactly this verb and
-  these arguments, every path list preceded by `--`: stage → `add -- <paths>`;
+  these arguments, every path list preceded by `--` and every path in it
+  written as the literal, top-relative pathspec `:(top,literal)<path>`, so a
+  path holding pathspec magic (`[ab].txt`, `*.log`, `app/[slug]/page.tsx`)
+  names only that file and is resolved from the repository root, as status
+  reports it: stage → `add -- <paths>`;
   stage all → `add -A`; unstage → `reset -q -- <paths>`; unstage all →
   `reset -q`; discard → `restore --worktree -- <paths>`; remove untracked →
   `clean -f -d -- <paths>`; commit → `commit --cleanup=strip -m <message>`,
@@ -272,7 +276,11 @@ picker) is a consumer of this contract, not part of it.
   a push's upstream branch, and a rename's old and new names — include one that is empty or begins
   with `-`, with a distinct invalid-argument outcome carrying the verb and
   the offending value (its log description carries only the verb). Paths,
-  which follow `--`, and messages, which follow `-m`, are exempt.
+  which follow `--`, and messages, which follow `-m`, are exempt. It MUST
+  likewise refuse a stage, unstage, discard or remove-untracked action whose
+  path list is empty, as invalid-argument with an empty value: git reads an
+  empty pathspec list as the whole tree, so `clean -f -d --` with no paths
+  would delete every untracked file.
 - **write-budgets**: The perform verb MUST run through the same private
   execution step as every read — logged, attributed and mapped onto the
   same error outcomes — with its own wall-clock budget: the larger of the
@@ -287,8 +295,11 @@ picker) is a consumer of this contract, not part of it.
   watching; together with `GIT_TERMINAL_PROMPT=0` a write either finishes
   or fails, and a write that cannot reach a remote (none configured)
   surfaces as command-failed, not as a timeout.
-- **remotes-command**: The remotes verb MUST invoke `git remote` and return
-  the names, one per line, sorted.
+- **remotes-command**: The remotes verb MUST invoke `git remote -v` and
+  return, once each and sorted, the names of the remotes that have a
+  non-empty URL. A name that exists only through a setting
+  (`remote.<name>.prune` with no `url`) is not a remote: `git remote` alone
+  would list it, and pushing or fetching it fails.
 - **last-commit-message**: The last-commit-message verb MUST return HEAD's
   full message (`git log -1 --no-color --no-show-signature --format=%B
   <HEAD>`) with trailing whitespace and newlines trimmed, and MUST return
@@ -399,10 +410,13 @@ picker) is a consumer of this contract, not part of it.
   literal string `"unfinished"` when no exit status is available), and
   MUST NOT log the process's standard output or standard error.
 - **redaction-scope-and-positional-rule**: The command log's argument
-  redaction MUST return arguments unchanged for every verb except config.
-  For config, it MUST redact every argument at and after the first
-  non-flag (non-`-`-prefixed) argument position — replacing each with
-  `<redacted:<byte length>>` — regardless of whether that argument is
+  redaction MUST return arguments unchanged for every verb except config,
+  commit, tag and stash. For commit, tag and stash it MUST replace the
+  argument after each `-m` (the user's message) with `<redacted:<length>>`
+  and keep the rest; cherry-pick's and revert's `-m` is a mainline number
+  and is kept. For config, it MUST redact every argument at and after the
+  first non-flag (non-`-`-prefixed) argument position — replacing each with
+  `<redacted:<length>>`, the length in characters — regardless of whether that argument is
   shaped like a well-formed key; the config-entry key validator (below) is
   used only to decide whether to *keep* the argument found at that
   position, never to relocate the position itself.
@@ -697,6 +711,10 @@ component.
 | git-client-057 | invalid-argument | `.pushToUpstream` with a remote `-q`, a branch `-f`, or an empty upstream branch | Refused before spawning, naming that operand. |
 | git-client-058 | push-destination | `main` tracking `origin/main`; `feat` tracking `origin/feature`, under `simple`, then under `push.default=upstream` | `origin/main`; `feat` fails, then `origin/feature`. |
 | git-client-059 | push-destination | A branch with no upstream; then the branches `-q`, `--all` and an empty name | Command-failed naming `rev-parse`, its message saying no upstream; each name refused as invalid-argument before spawning. |
+| git-client-060 | remotes-command | `remoteWithoutAURLIsNotListed`: `remote.ghost.prune` set with no URL, and `real` added with a URL; separately the verbose output `b\t/x (fetch)`, `b\t/x (push)`, `a\t`, `c\t/y (fetch)` | `["real"]`; `["b", "c"]`. |
+| git-client-061 | write-action-mapping | Discard `[ab].txt` beside a modified `a.txt`; remove untracked `*.log` beside an untracked `keep.log`; stage `app/[slug]/page.tsx` beside `app/s/page.tsx` | Only the named file changes each time; the arguments are `:(top,literal)<path>` after `--`. |
+| git-client-062 | write-operand-guard | Stage, unstage, discard and remove untracked with an empty path list | Each refused as invalid-argument before spawning; nothing in the tree changes. |
+| git-client-063 | redaction-scope-and-positional-rule | `commit` `["--cleanup=strip", "-m", "secret token", "--amend"]`; `tag` `["-a", "v1", "-m", "notes", "abc123"]`; `stash` `["push", "--include-untracked", "-m", "wip"]`; `cherry-pick` `["-m", "1", "abc123"]` | `<redacted:12>`, `<redacted:5>` and `<redacted:3>` in the message positions, everything else kept; cherry-pick unchanged. |
 ## Edge Cases
 
 - **Null/empty input**: Parsing an empty status output MUST return an
@@ -811,9 +829,10 @@ metadata for debugging and audit, not product-analytics events.
   set-global-config verb, which may carry an email address, a signing key,
   or a URL containing a token.
 - **Redaction lives at the funnel, not at call sites**: The command log's
-  argument redaction is scoped to the config verb and redacts every
-  argument at and after the first non-flag position, so a caller-supplied
-  value never reaches log output in clear text; standard-error text —
+  argument redaction redacts every config argument at and after the first
+  non-flag position, and the message after `-m` for commit, tag and stash,
+  so a caller-supplied value or message never reaches log output in clear
+  text; standard-error text —
   which may itself echo a repository path — MUST NEVER reach the log at
   all.
 - **Nothing leaves the device through this component**: every verb spawns
@@ -837,9 +856,9 @@ repository. Arguments are logged at public visibility after passing through
 the redaction rule (see Behavioral Requirements and Privacy above), never
 collapsed as a whole, because that would hide the entire interpolation for
 every verb rather than redacting the one argument position that needs it.
-The redaction rule today covers only the config verb; a future addition is
-expected to add coverage for a commit-message argument and any remote URL,
-once those verbs exist.
+The redaction rule covers config values and the commit, tag and stash
+messages. Paths, branch, tag and remote names are logged as they are; no
+write takes a remote URL.
 
 ## Platform Notes
 

@@ -72,6 +72,28 @@ struct GitCommandLogTests {
         #expect(redacted == ["--global", "<redacted:5>", "<redacted:19>"])
     }
 
+    @Test("commit, tag and stash messages after -m are redacted; other arguments kept")
+    func messagesAreRedacted() {
+        #expect(GitCommandLog.redactedArguments(
+            verb: "commit", arguments: ["--cleanup=strip", "-m", "secret token", "--amend"]
+        ) == ["--cleanup=strip", "-m", "<redacted:12>", "--amend"])
+        #expect(GitCommandLog.redactedArguments(
+            verb: "tag", arguments: ["-a", "v1", "-m", "notes", "abc123"]
+        ) == ["-a", "v1", "-m", "<redacted:5>", "abc123"])
+        #expect(GitCommandLog.redactedArguments(
+            verb: "stash", arguments: ["push", "--include-untracked", "-m", "wip"]
+        ) == ["push", "--include-untracked", "-m", "<redacted:3>"])
+        #expect(GitCommandLog.redactedArguments(verb: "tag", arguments: ["v1", "abc123"]) == ["v1", "abc123"])
+    }
+
+    @Test("cherry-pick's and revert's -m is a mainline number and is kept")
+    func mainlineIsKept() {
+        let arguments = ["-m", "1", "abc123"]
+        #expect(GitCommandLog.redactedArguments(verb: "cherry-pick", arguments: arguments) == arguments)
+        #expect(GitCommandLog.redactedArguments(verb: "revert", arguments: ["--no-edit"] + arguments)
+                == ["--no-edit"] + arguments)
+    }
+
     @Test("an empty argument list is returned as-is")
     func emptyArguments() {
         #expect(GitCommandLog.redactedArguments(verb: "config", arguments: []).isEmpty)

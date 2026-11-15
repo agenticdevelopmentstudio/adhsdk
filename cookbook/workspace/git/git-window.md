@@ -2,7 +2,7 @@
 id: 6a830cf8-0b95-4ffd-b175-f5cf481490c4
 title: "Git Window"
 type: ingredient
-version: 1.4.0
+version: 1.5.0
 status: review
 language: en
 created: 2026-11-14
@@ -10,7 +10,7 @@ modified: 2026-11-14
 author: Mike Fullerton
 copyright: 2026 Mike Fullerton
 license: MIT
-summary: "One window per repository, keyed by its canonical top level: the refs sidebar, the history or the working copy, and the commit detail over the diff, with search and Refresh in the toolbar; the feature that opens, remembers and restores those windows, shares one syntax highlighter between them and registers the commands that open them."
+summary: "One window per repository, keyed by its canonical top level: the overview (refs sidebar), the history or the working copy, and the commit detail over the diff with terminals under it, on the project window's composable-tabs layout; the feature that opens, remembers and restores those windows, shares one syntax highlighter between them and registers the commands that open them."
 platforms:
   - swift
   - macos
@@ -39,7 +39,7 @@ approved-date: ""
 
 A git window shows one repository. `GitWindowFeature` owns every git window: it turns any directory inside a repository into the repository's canonical top level, keeps one window per top level through a [keyed window set](cookbook:274f0727-b9b3-4fd3-9dea-b7e1bfbe92fc) that remembers which were open and reopens them at launch, builds one [syntax highlighter](cookbook:6708bfd4-5b29-4bf9-b180-05904873906e) for all of them from the [TextMate resources](cookbook:add92e9b-94e5-412c-970f-5ea8e2eb9eed), and registers the two commands that open a window (with a chooser, or on a given path) and the File > New menu item.
 
-`GitWindowController` is one window: a [repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) on its top level, kept current by a watcher, and the [git views](cookbook:bdd3a72d-8810-439b-bad7-ec16233cb2a3) in an autosaved three-column split (`GitWindowSplitViewController`): the refs sidebar; the history, or the working copy while the sidebar's Working Copy row is selected; and the commit detail over the diff, whose bottom pane swaps to a blame or a file history on request. The controller routes every view's delegate call to the view it concerns, so no view knows another. The toolbar carries the history search field and, ahead of it, the six verbs of `GitWindowToolbar` (Fetch, Pull, Push, Branch, Stash, Pop), which forward to the session's actions.
+A Git window is the project window's `ComposableTabsWindowController` over a `.gitWindow` row of the projects database, opened by `ProjectWindowManager.openStandaloneWindow` with no tab bars and the fixed panes of `GitWindowPanes`. Its state is one `GitWindowSession`: a [repository model](cookbook:a2394ca0-3988-410b-9fc8-e0c9e253fc94) on its top level, kept current by a watcher, and the [git views](cookbook:bdd3a72d-8810-439b-bad7-ec16233cb2a3) in three panes: the overview (the refs sidebar, with Refresh and the busy spinner in its title bar); the history, or the working copy while the sidebar's Working Copy row is selected; and the commit, the commit detail over a bottom pane that shows the diff and swaps to a blame or a file history on request, with a terminal region under it when the host gives terminals. The session routes every view's delegate call to the view it concerns, so no view knows another. The window's search field reaches the history through its pane, and the toolbar carries, ahead of it, the six verbs of `GitWindowToolbar` (Fetch, Pull, Push, Branch, Stash, Pop), which forward to the session's actions.
 
 The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de6ee) offers "Open in Git Window" when the open-for-path command is registered.
 ## Behavioral Requirements
@@ -48,7 +48,7 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 
 - **window-key-canonical**: A window's key MUST be the repository top level `GitClient.topLevel(of:)` reports for the requested path, standardised and with symlinks resolved, so a subdirectory, the root, and a symlinked spelling of either open one window.
 - **one-window-per-key**: Opening a key that already has a window MUST return that window's controller and MUST NOT build a second; with `activates` true it brings the window forward and activates the app unless presentation is quiet, with `activates` false it leaves the window where it is.
-- **non-repository-refused**: Opening a path that is not inside a repository (or does not exist) MUST log the client's failure by `GitClientError.logDescription(of:)` and return nil, opening nothing and remembering nothing.
+- **non-repository-refused**: Opening a path that is not inside a repository (or does not exist) MUST log the client's failure by `GitClientError.logDescription(of:)` and return nil, opening nothing and remembering nothing. When the path is the folder the user chose in New Git Window…, the feature MUST also tell them: an informational alert `<folder name> is not in a Git repository` with one OK button, shown in its own window (there is none to attach a sheet to) without a modal loop and without activating the app, ordered front, and made key only when presentation is not quiet; OK closes it, and a second such alert replaces the first. The open-for-path command and the branch card only log.
 - **open-windows-remembered**: The keys of open windows MUST persist in `open_git_window_roots` in the order first opened; a window the user closes MUST be forgotten; a window closed while the app terminates MUST NOT be.
 - **restore-quietly**: `restoreOpenWindows()` MUST reopen every remembered key without activating the app, and MUST forget a key whose directory no longer exists.
 - **shared-highlighter**: Every window MUST share one `GitSyntaxColoring`, built on the first window over a grammar registry whose sources are, in order, the user grammars directory, the extensions' grammars (a snapshot taken then), and the bundled grammars.
@@ -58,8 +58,8 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 
 ### Window
 
-- **window-identity**: The window id MUST be `git:<key>`, the title the top level's folder name, and the subtitle the current branch (`detached HEAD` when there is none), refreshed after every refs change; a failed branch read is logged and keeps the last subtitle.
-- **layout**: The content MUST be a three-column split, autosaved once per repository (the autosave names carry the top level's path): the sidebar, the centre, and a right column that is itself a horizontal-divider split of the commit detail over the bottom pane (diff, blame or file history).
+- **window-identity**: The window MUST be the project window over the key's `.gitWindow` row (inserted the first time, named after the top level's folder), so its id is the project window's `projectWindow.<row id>`; its title MUST be `Git: <name> → <branch>`, or `Git: <name>` before the branch is known or with none (a detached HEAD), read again after every refs change.
+- **layout**: The content MUST be the `GitWindowPanes` layout: overview | (history | right), each Git pane fixed and one of its kind, where right is the commit pane alone, or, with terminals, the commit pane over a terminal region that offers the host's terminal family and always keeps one terminal. Inside the commit pane the commit detail sits over the bottom pane (diff, blame or file history) in a horizontal-divider split, `git.window.right`, autosaved once per repository (its autosave name carries the top level's path).
 - **centre-follows-sidebar**: The centre MUST show the working copy while the sidebar's Working Copy row is selected (including when the sidebar falls back to it after its selection vanished), and the history otherwise.
 - **ref-scrolls-history**: Selecting a branch or tag MUST show the history and select the ref's target commit there; when the commit is not loaded, nothing is selected and the selection is applied after a later history change loads it.
 - **stash-shows-commit**: Selecting a stash MUST show the history and load the stash's commit (`git log` of the stash id, one commit) into the commit detail; a failed load is logged and shown as a plain error label.
@@ -69,10 +69,10 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **working-copy-target**: While the working copy is the centre, a working-copy selection MUST show its target's diff and nil MUST clear it.
 - **blame-and-history**: Blame or History requested from the diff (or from the file history's own diff) MUST swap the bottom pane to the blame of that path at that revision, or the file history of that path; choosing a commit in the blame, or a parent link in the commit detail, MUST select that commit in the history.
 - **refresh-reapplies-selection**: After each model change the window MUST reload the views the change concerns (refs: sidebar; history: history; working copy or operation: working copy) and only then re-check its own selection, once per change: a ref whose target moved re-selects the new target, counted as applied only once the history holds and selects that commit (so a commit picked by hand survives a Refresh that moved nothing), a stash whose id changed reloads it, and one that vanished leaves the sidebar's fallback in charge. The bottom pane MUST follow too: a working-copy diff or a blame of the working file reloads on a working-copy or operation change, and a file history reloads on a history change.
-- **search-drives-history**: Text in the toolbar search field MUST be handed to the history's `setQuery(_:)` as typed.
-- **refresh-button**: Refresh MUST ask the model to reload every part, then reload the visible views, the bottom pane included, and re-check the selection without forgetting what was applied.
+- **search-drives-history**: The history pane MUST be the window's searchable pane (placeholder `Search History`), and text searched there MUST be handed to the history's `setQuery(_:)` as typed; a search typed over the working copy first selects the checked-out branch, so the history it filters is the one on screen.
+- **refresh-button**: Refresh, a button in the overview pane's title bar after the busy spinner, MUST ask the model to reload every part, then reload the visible views, the bottom pane included, and re-check the selection without forgetting what was applied.
 - **latest-call-wins**: Each asynchronous load the window starts (the subtitle, a stash's commit) MUST carry a generation the window owns, and a result for an older generation MUST be dropped.
-- **close-stops-model**: Closing the window MUST stop the model's watcher and tell the feature, unless the app is terminating.
+- **close-stops-model**: Closing the window MUST cancel the running search and action (a cancelled action shows nothing), stop the model's watcher, drop the window's session and toolbar, and tell the feature, unless the app is terminating.
 - **confines-to-ui-thread**: The feature and the window MUST be usable only on the UI thread.
 
 ### Toolbar
@@ -97,7 +97,7 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **failure-shown**: A failed action MUST call `showFailure` with the action's title (`Push failed`, `Commit failed`, `Cherry-pick failed`, ...) and `GitClientError.userMessage(of:)`; a cancelled one shows nothing. The log line MUST carry the title and `logDescription`, never git's standard error.
 - **needs-presenter**: While `presenter` is nil, an action that needs the user (a confirmation or a text) MUST do nothing.
 - **discard**: Discarding MUST confirm `Discard changes to N file(s)?` with the destructive action `Discard Changes`, then restore the tracked paths (`.discard`) and delete the untracked ones (`.removeUntracked`), as two actions when there are both, skipping the second when the first fails. Discard All discards every unstaged path the same way.
-- **commit**: A commit MUST run `.commit(message:amend:)` and, on success, call `commitDidSucceed()`: the message is emptied, its undo history cleared and Amend unticked. Ticking Amend over a message that is only whitespace MUST fill it with HEAD's message. Amend MUST be enabled exactly while the repository has a commit, re-read on every working-copy or refs change.
+- **commit**: A commit MUST run `.commit(message:amend:)` and, on success, call `commitDidSucceed()`: the message is emptied, its undo history cleared and Amend unticked. Ticking Amend over a message that is only whitespace MUST fill it with HEAD's message. Amend MUST be enabled exactly while HEAD resolves to a commit, re-read on every working-copy or refs change, so it is disabled on an unborn HEAD, an orphan branch beside others included.
 - **push-remote**: The destination MUST be the one git resolves, never one the window derives from the upstream's name. The checked-out branch with an upstream MUST be pushed with a plain `.push`, so `push.default`, `branch.<name>.pushRemote` and `remote.pushDefault` apply, and a refusal MUST be shown under `Push failed` in git's words. Any other branch with an upstream MUST resolve `<branch>@{push}` (the client's push destination) and, when it splits against a listed remote at the longest remote name that prefixes it, be pushed with `.pushToUpstream` to that remote and branch with its tracking untouched; when git names no destination, or it names none on a listed remote, the window MUST show `Push failed` / `<branch> has no push destination.` followed by git's message, push nothing and change no tracking. A branch with an upstream MUST never fall back to `.pushSettingUpstream`: a branch made from `origin/main` tracks it, and pushing it onto `main` would land unreviewed work on a shared branch. Only a branch with no upstream MUST be pushed with `.pushSettingUpstream` under its own name to `origin`, else the only remote; with none it MUST show `Push failed` / `This repository has no remote.`, and on a detached HEAD `Push failed` / `HEAD is not on a branch.`. Only remotes that have a URL count. Push Tag picks its remote the same way.
 - **pull-fetch**: Pull MUST run `.pull`; the toolbar's Fetch MUST run `.fetch(remote: nil)`, the sidebar's Fetch of a remote `.fetch(remote:)` for it.
 - **new-branch**: New Branch (toolbar, ref menu, commit menu) MUST ask one required field `Name` with the action `Create Branch`, then create the branch at the ref's full name, the commit's sha, or HEAD from the toolbar, and check it out.
@@ -105,11 +105,11 @@ The branch card's [branch management](cookbook:92f11498-2cb2-4b04-92b9-560d9f2de
 - **checkout**: Checking out a local branch MUST run `.checkout(name)`; a remote branch `.checkout` of the local branch already tracking it, else `.checkoutTracking("<remote>/<name>")`; a commit or a tag `.checkoutDetached(sha)`.
 - **rename-delete**: Rename MUST ask one field prefilled with the branch's name and run `.renameBranch` unless the name is unchanged. Deleting a local branch MUST confirm (destructive), run `.deleteBranch(force: false)` and, when git answers `not fully merged`, confirm again (`Delete unmerged branch?`, destructive) before `.deleteBranch(force: true)`; declining shows nothing. Deleting a remote branch MUST confirm (destructive), then run `.deleteRemoteBranch`.
 - **tags**: New Tag MUST ask `Name` (required) and `Message` (optional; empty makes a lightweight tag) and run `.createTag`; Delete Tag MUST confirm (destructive), then `.deleteTag`.
-- **stashes**: Stash MUST ask one optional `Message` and run `.stashSave`; the toolbar's Pop MUST run `.stashPop(0)` when there is a stash and nothing otherwise; the sidebar's Apply, Pop and Drop work by index, and Drop MUST confirm (destructive).
+- **stashes**: Stash MUST ask one optional `Message` and run `.stashSave`; the toolbar's Pop MUST run `.stashPop(0)` when there is a stash and nothing otherwise; the sidebar's Apply, Pop and Drop MUST act on the stash the menu named, found again by its sha in the current stash list just before git runs, so a stash pushed or dropped meanwhile by another tool never shifts the target; a stash that is gone MUST fail under the action's title with `That stash no longer exists.` and run nothing. Drop MUST confirm (destructive).
 - **commit-actions**: Cherry-pick and Revert MUST pass `mainline: 1` for a commit with more than one parent. A soft or mixed reset MUST run at once; a hard one MUST confirm `Reset <branch> to <shortID>?` / `Uncommitted changes are lost.` (destructive) first, naming `HEAD` when detached, where a reset is allowed.
 ## Appearance
 
-A titled, closable, miniaturizable, resizable window, 1200 x 760 points by default and at least 720 x 440, with a unified toolbar: a flexible space, the search field (placeholder `Search history`), then Refresh (`arrow.clockwise`). The title bar shows the folder name over the branch as its subtitle. Columns: sidebar about 220 points (160-360), centre at least 360, right column at least 320; in the right column the commit detail takes about 40 % of the height. Every pane is the git views' own, themed by them.
+The project window's frame and unified toolbar: the six verbs, then the project window's search field (placeholder `Search History` while the history pane is the searchable one) and help. The title is `Git: <name> → <branch>`. Panes: the overview at least 230 points and about a fifth of the width, the history at least 260 and about half, the commit at least 240 (about 65 % of the right column's height when terminals sit under it); inside the commit pane the detail and the bottom pane are each at least 160 points high. The overview's title bar carries the busy spinner and Refresh (`arrow.clockwise`). Every pane is the git views' own, themed by them.
 ## States
 
 - **Opening**: the window shows at once, empty, and fills as the model's first refresh lands.
@@ -120,12 +120,12 @@ A titled, closable, miniaturizable, resizable window, 1200 x 760 points by defau
 - **Asking**: a confirmation, text or failure sheet is attached to the window; the window's other controls wait behind it.
 ## Accessibility
 
-The window carries `git-window`. Its split carries `git.window.split`, the right column `git.window.right`, the centre container `git.window.centre`, the bottom container `git.window.bottom`, the error label `git.window.error`; the toolbar's verbs `git.toolbar.fetch`, `git.toolbar.pull`, `git.toolbar.push`, `git.toolbar.branch`, `git.toolbar.stash` and `git.toolbar.pop`, and its search field `git.window.search`; Refresh `git.window.refresh`. The panes keep the git views' own identifiers. Its sheets carry `git.prompt.confirm`, `git.prompt.text` or `git.prompt.failure`; their buttons `git.prompt.action`, `git.prompt.cancel` and `git.prompt.ok`; a text request's fields `git.prompt.field.<index>` (each with its label as accessibility label) inside `git.prompt.fields`.
+The window keeps the project window's identifiers. Its panes carry `git.window.overview`, `git.window.centre` (the history pane) and `git.window.commit`; inside the commit pane the detail host `git.window.detail`, its error label `git.window.error`, the split `git.window.right` and the bottom container `git.window.bottom`; in the overview's title bar the spinner `git.window.busy` (label `Running`) and Refresh `git.window.refresh`; the toolbar's verbs `git.toolbar.fetch`, `git.toolbar.pull`, `git.toolbar.push`, `git.toolbar.branch`, `git.toolbar.stash` and `git.toolbar.pop`. The views inside keep their own identifiers. Its sheets carry `git.prompt.confirm`, `git.prompt.text` or `git.prompt.failure`; their buttons `git.prompt.action`, `git.prompt.cancel` and `git.prompt.ok`; a text request's fields `git.prompt.field.<index>` (each with its label as accessibility label) inside `git.prompt.fields`. The not-in-a-repository alert's window carries `git.prompt.failure` and its OK `git.prompt.ok`.
 ## Conformance Test Vectors
 
 | ID | Requirements | Input | Expected |
 |----|-------------|-------|----------|
-| git-window-001 | window-key-canonical, one-window-per-key | A temporary repository with a subdirectory `sub`; open `sub`, then the root, both with `activates` false | The same controller both times; its window id is `git:` + the canonical root path; the remembered list holds that one path. |
+| git-window-001 | window-key-canonical, one-window-per-key, window-identity | A temporary repository with a subdirectory `sub`; open `sub`, then the root, both with `activates` false; then close it | The same controller both times, over a `.gitWindow` row whose path is the canonical root; the title begins `Git: `; the remembered list holds that one path; after closing, the feature holds no session. |
 | git-window-002 | non-repository-refused | A temporary directory that is not a repository; open it | nil; the remembered list is unchanged. |
 | git-window-003 | commands | Branch management for a checkout, with a registry that holds `git.action.openWindowForPath` | Its commands include `branch.action.openGitWindow.<checkout id>` titled `Open in Git Window`; running it executes the open-for-path command with the checkout's directory path. |
 | git-window-004 | commands | The same, with a registry that does not hold it | No such command. |
@@ -136,8 +136,8 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 | git-window-009 | refresh-reapplies-selection, refresh-button | A working-copy diff of a modified file; the file edited again, then a working-copy change; edited again, then Refresh | The diff shows the new text both times. |
 | git-window-010 | refresh-reapplies-selection | A blame of the working file; the file edited, then a working-copy change | The blame shows the new text. |
 | git-window-011 | refresh-reapplies-selection | A file history of `a.txt`; a new commit to it, then a history change | One more entry. |
-| git-window-012 | search-drives-history | Two commits; a `sha:` search for the older one's prefix, then a message search | The older commit is selected; then the model's query is the parsed message search and only the matching commit is listed. |
-| git-window-013 | window-identity | Subtitle `main`; the repository's `.git` moved away; the subtitle read again | The subtitle is still `main`. |
+| git-window-012 | search-drives-history | Two commits; a `sha:` search for the older one's prefix through the history pane's search, then a message search | The older commit is selected; then the model's query is the parsed message search and only the matching commit is listed. |
+| git-window-013 | window-identity | `title(kind:name:directory:branch:)` for a Git window named `adkitchen` with branch `main`, then none; then a refs change in a session | `Git: adkitchen → main`, then `Git: adkitchen`; the refs change asks the window to read its branch again. |
 | git-window-014 | file-type-override-validated | Names `C++`, `C#`, `Shell Script`, `bash`, an unknown name, a blank name | `cpp`, `csharp`, `shellscript`, `shellscript` (an alias), nil, nil. |
 | git-window-015 | commands | Open Git Window for Path run with no argument, then with a number | No window opens and nothing is remembered. |
 | git-window-016 | text-action-enablement | Fields `Name` (required) and `Message` (optional); values `["", "note"]`, `["   ", ""]`, `["v1", ""]`, `["v1"]` | Incomplete, incomplete, complete, incomplete. |
@@ -166,6 +166,12 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 | git-window-039 | toolbar-verbs | Build the window's toolbar items | The first six identifiers are `git.toolbar.fetch`, `.pull`, `.push`, `.branch`, `.stash`, `.pop`, with their labels and symbols. |
 | git-window-040 | toolbar-forwards | A session on a repository with one commit and no remote; press each button in turn, every question cancelled | Each press starts an action that finishes; Branch asks `New Branch`, Stash asks `Stash Changes`, Push shows `Push failed`. |
 | git-window-041 | toolbar-lifetime | Open a window, then close it | While open, the toolbar's session is the window's session and Fetch's button targets the toolbar; after closing, the feature holds no toolbar. |
+| git-window-042 | non-repository-refused | New Git Window… choosing a temporary directory that is not a repository, then a repository; and the alert for `/tmp/Downloads` | The user is told once, about the directory, and the repository opens its window without telling; the alert reads `Downloads is not in a Git repository`, has only `OK` (`git.prompt.ok`), and its OK closes it once. |
+| git-window-043 | stashes | Stashes `older` and `chosen`; another tool pushes `newcomer`; Drop `chosen` from the menu built before it, confirmed | No failure; `older` and `newcomer` remain and `chosen` is gone. |
+| git-window-044 | stashes | Stashes `gone` and `other`; `gone` dropped outside the window; Pop `gone` | `Pop stash failed`: `That stash no longer exists.`; `other` remains and the working tree is unchanged. |
+| git-window-045 | close-stops-model | A push started, then the window's session stopped | The action is cancelled and shows nothing. |
+| git-window-046 | commit | An empty repository; a commit; then `checkout --orphan fresh` | Amend disabled, then enabled, then disabled with HEAD resolving to nothing. |
+| git-window-047 | layout | The layout spec without terminals, then with | Three fixed panes `git.overview`, `git.history`, `git.commit`, one each; then a terminal region under the commit pane that keeps at least one terminal. |
 ## Edge Cases
 
 - **Symlinked spelling**: `/tmp/r` and `/private/tmp/r` resolve to one key and one window.
@@ -173,8 +179,10 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 - **Submodule row**: opens the submodule's own window, keyed by its own top level.
 - **Remembered root gone**: dropped at restore.
 - **Remembered root no longer a repository**: dropped at restore, since it no longer resolves.
-- **Detached HEAD**: subtitle `detached HEAD`.
-- **Two repositories open side by side**: each keeps its own divider positions.
+- **Detached HEAD**: the title names no branch (`Git: <name>`).
+- **Two repositories open side by side**: each keeps its own commit-pane divider position.
+- **A chosen folder in no repository**: the not-in-a-repository alert, nothing opened or remembered.
+- **A stash moved underneath**: the sidebar's stash actions follow the stash by sha; a vanished one fails with `That stash no longer exists.`.
 - **A repository path containing a newline**: the watcher reads each directory with its own `rev-parse`, so the path is not split.
 - **Refresh with nothing changed**: a commit picked by hand in the history stays selected.
 - **Fast typing in search**: the history view serialises queries; the window only forwards text.
@@ -191,15 +199,19 @@ The window carries `git-window`. Its split carries `git.window.split`, the right
 | `fileTypeOverride` | `@Sendable (URL) -> String?` | none | The app's File Types mapping: the language name the user chose for the file's extension, mapped to a language id through the grammar registry. |
 | `client` | `GitClient` | `.shared` | Every git call. |
 | `openRoots` | `UserSetting<[String]>` | `UserSettings.openGitWindowRoots` (`open_git_window_roots`) | Where the open windows are remembered. |
+| `database` | `ProjectDatabase` | none | Where the windows' `.gitWindow` rows go. |
+| `windows` | `ProjectWindowManager` | `.shared` | Opens the windows (`openStandaloneWindow`). |
+| `terminals` | `TerminalPaneFamily?` | nil | The terminal panes under the commit pane; nil leaves the commit pane alone in the right column. |
+| `notInRepository` | `(@MainActor (URL) -> Void)?` | nil | Tells the user a chosen folder is in no repository; nil shows the alert. A test seam. |
 ## Deep Linking
 
 Not applicable: the window defines no URL scheme or route; scripts reach it through `perform command "git.action.openWindowForPath" with arguments {"<path>"}`.
 ## Localization
 
-The menu item (`New Git Window…`), command titles, toolbar labels (`Search history`, `Refresh`), `detached HEAD` and the folder chooser's `Open` button are English literals today; ref names and paths are shown verbatim.
+The menu item (`New Git Window…`), command titles, pane titles (`Overview`, `History`, `Working Copy`, `Commit`), the search placeholder `Search History`, `Refresh`, the not-in-a-repository alert and the folder chooser's `Open` button are English literals today; ref names and paths are shown verbatim.
 ## Accessibility Options
 
-The panes follow the theme's fonts; the window adds no text of its own beyond the title and subtitle.
+The panes follow the theme's fonts; the window adds no text of its own beyond the title and the pane titles.
 ## Feature Flags
 
 Not applicable: the window contains no feature-flag reference.
@@ -211,13 +223,13 @@ Not applicable: the window contains no analytics call.
 The window shows local repository data only and sends nothing anywhere; the remembered list holds local paths.
 ## Logging
 
-Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and `GitDeferredRepositoryWatcher` (the last for its directories): a path refused as not a repository, missing TextMate resources or a highlighter that cannot be built (once), a failed branch read, a failed stash load and a watcher that could not resolve its directories, each at error level and by `GitClientError.logDescription` where the error is git's. `GitAlertPresenter` logs, at error level, a question it could not show because there was no window.
+Under the `Loggable` categories of `GitWindowFeature`, `GitWindowSession` and `GitDeferredRepositoryWatcher` (the last for its directories): a path refused as not a repository, a `.gitWindow` row that could not be recorded, an invalid layout, missing TextMate resources or a highlighter that cannot be built (once), a failed stash load, a failed action and a watcher that could not resolve its directories, each at error level and by `GitClientError.logDescription` where the error is git's. `GitAlertPresenter` logs, at error level, a question it could not show because there was no window.
 ## Platform Notes
 
 - **SwiftUI**: a `WindowGroup(for: URL.self)` with a `NavigationSplitView`; this toolkit's windows are AppKit.
 - **Compose**: not applicable (desktop git windows only).
 - **React/Web**: not applicable.
-- **AppKit / UIKit**: AppKit: `@MainActor public final class GitWindowFeature: AppFeature`, `public final class GitWindowController: SingleWindowController`, `GitWindowSplitViewController: ThemedSplitViewController`, the toolbar from `WindowToolbarBuilder`, all in `AgenticDeveloperHubSDKMacOS` (`macOS/Features/Git/Window/`). The window spec persists the frame only: the keyed window set, not the window manager, decides what reopens. UIKit: not applicable.
+- **AppKit / UIKit**: AppKit: `@MainActor public final class GitWindowFeature: AppFeature`, `GitWindowSession`, `public enum GitWindowPanes` (a `ComposableTabLayoutSpec` on `ComposableTabsLayout`), `GitWindowToolbar`, and `NotInRepositoryAlert`, all in `AgenticDeveloperHubSDKMacOS` (`macOS/Features/Git/Window/`); the window is a `ComposableTabsWindowController` from `ProjectWindowManager.openStandaloneWindow`. The keyed window set, not the window manager, decides what reopens. UIKit: not applicable.
 - **WinUI 3**: a window with a `SplitView`.
 ## Reference Implementations
 
@@ -243,8 +255,16 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and
 **Rationale**: The mapping stores display names (`C++`, `Shell Script`), not ids; only the registry knows its ids and aliases, so the mapping belongs beside it, and a name it cannot map falls through so the extension rules still apply.
 **Approved**: pending
 
-**Decision**: The divider layout is autosaved per repository.
+**Decision**: The commit pane's divider is autosaved per repository.
 **Rationale**: Two repositories open side by side would otherwise move each other's dividers, and the last one closed would win for every window.
+**Approved**: pending
+
+**Decision**: The Git window is the project window over a `.gitWindow` row, its panes fixed on the composable-tabs layout.
+**Rationale**: One window class carries the toolbar, search, title, frames and terminals for every window kind; the Git window supplies only its panes and its session.
+**Approved**: pending
+
+**Decision**: A folder chosen in no repository gets an alert window of its own, not a sheet.
+**Rationale**: No window exists yet to attach a sheet to; ordering it front without activating, and without a modal loop, keeps quiet presentation intact and every other window live.
 **Approved**: pending
 
 **Decision**: The watcher reads the git directory and the common directory with two separate `rev-parse` calls.
@@ -270,6 +290,7 @@ Under the `Loggable` categories of `GitWindowFeature`, `GitWindowController` and
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.5.0 | 2026-11-14 | Mike Fullerton | Review fixes: describes the composable-tabs panes, the project-window id and title; the not-in-a-repository alert; stashes found by sha; close cancels the action; Amend off on an orphan branch; vectors 042-047 |
 | 1.4.0 | 2026-11-14 | Mike Fullerton | Toolbar: Fetch, Pull, Push, Branch, Stash and Pop, aimed at the window's GitWindowToolbar and forwarded to the session's verbs; the toolbar kept beside the session and dropped on close |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Push goes where git resolves it: the checked-out branch with an upstream by a plain push, any other by its `@{push}` without `--set-upstream`, failing when git names none, never falling back to setting an upstream; the spinner shows only while git runs; local branch and tag deletes confirm destructively |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Actions: every intent and toolbar verb through one funnel, one at a time, with confirmations, failures and the busy spinner; only remotes with a URL count; a sheet ends when its window closes |

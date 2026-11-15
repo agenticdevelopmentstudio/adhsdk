@@ -9,7 +9,10 @@ public enum GitResetMode: String, Sendable, Hashable, CaseIterable {
 ///
 /// Each case is a fixed git command line: `verb` is the subcommand and `arguments` what
 /// follows it, so a caller names an intent and never assembles flags. Every path list is
-/// preceded by `--`, so a path that starts with a dash is never read as an option.
+/// preceded by `--`, so a path that starts with a dash is never read as an option, and every
+/// path is written as a `:(top,literal)` pathspec, so `[ab].txt` or `*.log` names that one
+/// file rather than every file the glob matches, and is read from the top level, as status
+/// reports it. An empty path list is refused (`emptyPathList`): git reads it as everything.
 public enum GitAction: Sendable, Hashable {
     case stage(paths: [String])
     case stageAll
@@ -75,12 +78,12 @@ public enum GitAction: Sendable, Hashable {
     /// Everything after the verb.
     public var arguments: [String] {
         switch self {
-        case .stage(let paths): ["--"] + paths
+        case .stage(let paths): ["--"] + Self.literal(paths)
         case .stageAll: ["-A"]
-        case .unstage(let paths): ["-q", "--"] + paths
+        case .unstage(let paths): ["-q", "--"] + Self.literal(paths)
         case .unstageAll: ["-q"]
-        case .discard(let paths): ["--worktree", "--"] + paths
-        case .removeUntracked(let paths): ["-f", "-d", "--"] + paths
+        case .discard(let paths): ["--worktree", "--"] + Self.literal(paths)
+        case .removeUntracked(let paths): ["-f", "-d", "--"] + Self.literal(paths)
         case let .commit(message, amend): ["--cleanup=strip", "-m", message] + (amend ? ["--amend"] : [])
         case .fetch(let remote): remote.map { ["--prune", $0] } ?? ["--all", "--prune"]
         case .pull: ["--no-edit"]
@@ -151,6 +154,24 @@ public enum GitAction: Sendable, Hashable {
     /// or nil when every operand is safe. `GitClient.perform` refuses an action that has one.
     public var invalidOperand: String? {
         operands.first { $0.isEmpty || $0.hasPrefix("-") }
+    }
+
+    /// Whether the action takes a path list and was given none. `GitClient.perform` refuses
+    /// it: `clean -f -d --` with no path deletes every untracked file, `reset -q --` unstages
+    /// everything. The `*All` cases are how a caller asks for everything.
+    public var hasEmptyPathList: Bool {
+        switch self {
+        case .stage(let paths), .unstage(let paths), .discard(let paths), .removeUntracked(let paths):
+            paths.isEmpty
+        default: false
+        }
+    }
+
+    /// The pathspec prefix every write path carries: top-level-relative, no glob magic.
+    public static let literalPathspecPrefix = ":(top,literal)"
+
+    private static func literal(_ paths: [String]) -> [String] {
+        paths.map { literalPathspecPrefix + $0 }
     }
 
     private static func mainlineArguments(_ mainline: Int?) -> [String] {

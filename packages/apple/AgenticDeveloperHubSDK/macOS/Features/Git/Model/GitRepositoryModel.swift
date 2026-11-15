@@ -20,6 +20,8 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     public private(set) var stashes: [GitStash] = []
     public private(set) var submodules: [GitSubmodule] = []
     public private(set) var worktrees: [GitWorktree] = []
+    /// The commit HEAD resolves to; nil on an unborn HEAD, an orphan branch included.
+    public private(set) var headCommit: String?
 
     public private(set) var commits: [GitCommit] = []
     public private(set) var graphRows: [CommitGraphLayout<String>.Row] = []
@@ -197,7 +199,8 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         async let stashes = Self.load { try await client.stashes(in: root) }
         async let submodules = Self.load { try await client.submodules(in: root) }
         async let worktrees = Self.load { try await client.worktrees(in: root) }
-        let loaded = await (refs: refs, stashes: stashes, submodules: submodules, worktrees: worktrees)
+        async let head = Self.load { try await client.resolveCommit("HEAD", in: root) }
+        let loaded = await (refs: refs, stashes: stashes, submodules: submodules, worktrees: worktrees, head: head)
         guard generation == refsGeneration else { return false }
 
         var applied = false
@@ -230,6 +233,14 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
             self.worktrees = value
             applied = true
         case .failure(let error): logFailure("worktrees", error)
+        }
+        switch loaded.head {
+        case .success(let value):
+            if value != headCommit {
+                headCommit = value
+                applied = true
+            }
+        case .failure(let error): logFailure("HEAD", error)
         }
         return applied
     }
@@ -271,9 +282,10 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
         refs.first { $0.kind == .localBranch && $0.isHead }
     }
 
-    /// False on an unborn HEAD: no history loaded and no local branch.
+    /// False on an unborn HEAD, including an orphan branch beside others: HEAD names no
+    /// commit, so there is nothing to amend.
     public var hasCommits: Bool {
-        !commits.isEmpty || refs.contains { $0.kind == .localBranch }
+        headCommit != nil
     }
 
     /// Runs `action`, then refreshes every part whether it succeeded or failed (a failed
@@ -294,6 +306,12 @@ public final class GitRepositoryModel: GitRefsDataSource, GitHistoryDataSource, 
     /// The repository's remote names, sorted.
     public func remotes(caller: GitCaller = GitCaller()) async throws -> [String] {
         try await client.remotes(in: root, caller: caller)
+    }
+
+    /// The stash list as git reports it now, not as the last refresh left it: a stash's
+    /// `stash@{N}` shifts whenever another is pushed or dropped.
+    public func currentStashes(caller: GitCaller = GitCaller()) async throws -> [GitStash] {
+        try await client.stashes(in: root, caller: caller)
     }
 
     /// HEAD's full message, or nil on an unborn HEAD.

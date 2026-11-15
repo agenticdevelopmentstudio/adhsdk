@@ -156,7 +156,11 @@
   cherry-pick and revert (commit, optional mainline), and reset (commit,
   soft, mixed or hard).
 - **write-action-mapping**: Each action MUST map to exactly this verb and
-  these arguments, every path list preceded by `--`: stage → `add -- <paths>`;
+  these arguments, every path list preceded by `--` and every path in it
+  written as the literal, top-relative pathspec `:(top,literal)<path>`, so a
+  path holding pathspec magic (`[ab].txt`, `*.log`, `app/[slug]/page.tsx`)
+  names only that file and is resolved from the repository root, as status
+  reports it: stage → `add -- <paths>`;
   stage all → `add -A`; unstage → `reset -q -- <paths>`; unstage all →
   `reset -q`; discard → `restore --worktree -- <paths>`; remove untracked →
   `clean -f -d -- <paths>`; commit → `commit --cleanup=strip -m <message>`,
@@ -187,7 +191,11 @@
   a push's upstream branch, and a rename's old and new names — include one that is empty or begins
   with `-`, with a distinct invalid-argument outcome carrying the verb and
   the offending value (its log description carries only the verb). Paths,
-  which follow `--`, and messages, which follow `-m`, are exempt.
+  which follow `--`, and messages, which follow `-m`, are exempt. It MUST
+  likewise refuse a stage, unstage, discard or remove-untracked action whose
+  path list is empty, as invalid-argument with an empty value: git reads an
+  empty pathspec list as the whole tree, so `clean -f -d --` with no paths
+  would delete every untracked file.
 - **write-budgets**: The perform verb MUST run through the same private
   execution step as every read — logged, attributed and mapped onto the
   same error outcomes — with its own wall-clock budget: the larger of the
@@ -202,8 +210,11 @@
   watching; together with `GIT_TERMINAL_PROMPT=0` a write either finishes
   or fails, and a write that cannot reach a remote (none configured)
   surfaces as command-failed, not as a timeout.
-- **remotes-command**: The remotes verb MUST invoke `git remote` and return
-  the names, one per line, sorted.
+- **remotes-command**: The remotes verb MUST invoke `git remote -v` and
+  return, once each and sorted, the names of the remotes that have a
+  non-empty URL. A name that exists only through a setting
+  (`remote.<name>.prune` with no `url`) is not a remote: `git remote` alone
+  would list it, and pushing or fetching it fails.
 - **last-commit-message**: The last-commit-message verb MUST return HEAD's
   full message (`git log -1 --no-color --no-show-signature --format=%B
   <HEAD>`) with trailing whitespace and newlines trimmed, and MUST return
@@ -314,10 +325,13 @@
   literal string `"unfinished"` when no exit status is available), and
   MUST NOT log the process's standard output or standard error.
 - **redaction-scope-and-positional-rule**: The command log's argument
-  redaction MUST return arguments unchanged for every verb except config.
-  For config, it MUST redact every argument at and after the first
-  non-flag (non-`-`-prefixed) argument position — replacing each with
-  `<redacted:<byte length>>` — regardless of whether that argument is
+  redaction MUST return arguments unchanged for every verb except config,
+  commit, tag and stash. For commit, tag and stash it MUST replace the
+  argument after each `-m` (the user's message) with `<redacted:<length>>`
+  and keep the rest; cherry-pick's and revert's `-m` is a mainline number
+  and is kept. For config, it MUST redact every argument at and after the
+  first non-flag (non-`-`-prefixed) argument position — replacing each with
+  `<redacted:<length>>`, the length in characters — regardless of whether that argument is
   shaped like a well-formed key; the config-entry key validator (below) is
   used only to decide whether to *keep* the argument found at that
   position, never to relocate the position itself.

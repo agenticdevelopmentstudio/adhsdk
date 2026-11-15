@@ -4,8 +4,10 @@
 - **Submodule row**: opens the submodule's own window, keyed by its own top level.
 - **Remembered root gone**: dropped at restore.
 - **Remembered root no longer a repository**: dropped at restore, since it no longer resolves.
-- **Detached HEAD**: subtitle `detached HEAD`.
-- **Two repositories open side by side**: each keeps its own divider positions.
+- **Detached HEAD**: the title names no branch (`Git: <name>`).
+- **Two repositories open side by side**: each keeps its own commit-pane divider position.
+- **A chosen folder in no repository**: the not-in-a-repository alert, nothing opened or remembered.
+- **A stash moved underneath**: the sidebar's stash actions follow the stash by sha; a vanished one fails with `That stash no longer exists.`.
 - **A repository path containing a newline**: the watcher reads each directory with its own `rev-parse`, so the path is not split.
 - **Refresh with nothing changed**: a commit picked by hand in the history stays selected.
 - **Fast typing in search**: the history view serialises queries; the window only forwards text.

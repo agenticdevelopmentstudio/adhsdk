@@ -60,7 +60,12 @@ public enum GitCommandLog {
     /// `--abbrev-ref HEAD` disappear from Console too. That deletes the feature
     /// to protect one argument position.
     ///
-    /// Today there is exactly one rule. `git config`'s arguments are
+    /// There are two rules. The first: `commit`, `tag` and `stash` carry a message after
+    /// `-m` (a commit or amend message, an annotated tag's message, a stash's), which is
+    /// the user's own text — a draft, a pasted token — so the argument after each `-m` is
+    /// redacted. Only those verbs: cherry-pick's and revert's `-m` is a mainline number.
+    ///
+    /// The second: `git config`'s arguments are
     /// `[<flags>..., <key>, <value>...]`: the key names a setting and is worth
     /// seeing, everything after it is the user's own data (`user.email`, a
     /// signing key, a URL that may carry a token).
@@ -77,9 +82,9 @@ public enum GitCommandLog {
     /// `--list` and `--unset` forms have nothing after their key and are
     /// untouched.
     ///
-    /// Expected additions as verbs arrive: `commit -m <message>` and any remote
-    /// URL.
+    /// Expected addition as verbs arrive: any remote URL.
     static func redactedArguments(verb: String, arguments: [String]) -> [String] {
+        if messageVerbs.contains(verb) { return redactedMessages(arguments) }
         guard verb == "config" else { return arguments }
         // What is tracked is the *position*, not whether a key was recognised.
         // `git config`'s grammar puts the key at the first non-flag argument,
@@ -95,6 +100,21 @@ public enum GitCommandLog {
             if argument.hasPrefix("-") { return argument }
             keyPositionSpent = true
             return GitConfigEntry.isWellFormedKey(argument) ? argument : "<redacted:\(argument.count)>"
+        }
+    }
+
+    /// The verbs whose `-m` is followed by the user's message.
+    static let messageVerbs: Set<String> = ["commit", "tag", "stash"]
+
+    private static func redactedMessages(_ arguments: [String]) -> [String] {
+        var redactNext = false
+        return arguments.map { argument in
+            if redactNext {
+                redactNext = false
+                return "<redacted:\(argument.count)>"
+            }
+            redactNext = argument == "-m"
+            return argument
         }
     }
 }

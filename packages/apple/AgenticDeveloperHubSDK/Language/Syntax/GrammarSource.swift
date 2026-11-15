@@ -79,7 +79,9 @@ public struct BundledGrammarSource: GrammarSource {
 /// `.tmLanguage.json`. Each of the file's `fileTypes` is matched as TextMate
 /// matches it, against the whole file name or the part after a dot: it is an
 /// extension, lowercased and given a leading dot, and, unless it starts with a
-/// dot, also an exact file name as written (`Makefile`). Files that are not
+/// dot, also an exact file name as written (`Makefile`). A grammar with no
+/// `fileTypes` offers its grammar by scope but no language, so it overrides a
+/// bundled grammar's text without hiding that language's extensions. Files that are not
 /// such JSON, and a second file for a scope already taken, are skipped with a
 /// log line; a missing directory offers nothing. Read once, at init.
 public struct DirectoryGrammarSource: GrammarSource {
@@ -106,7 +108,11 @@ public struct DirectoryGrammarSource: GrammarSource {
                 continue
             }
             files[scope] = url
-            let fileTypes = object["fileTypes"] as? [String] ?? []
+            let fileTypes = (object["fileTypes"] as? [String] ?? []).filter { !$0.isEmpty }
+            // A language with no extension and no file name resolves no file, and would
+            // hide a later source's language of the same id (a bundled `swift`). The
+            // grammar text still overrides by scope.
+            guard !fileTypes.isEmpty else { continue }
             languages.append(LanguageEntry(
                 id: String(name.dropLast(Self.suffix.count)),
                 scopeName: scope,

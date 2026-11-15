@@ -221,6 +221,46 @@ struct SyntaxHighlighterTests {
         #expect(result == nil)
     }
 
+    /// One thousand pattern matches per line in a user grammar, so a line takes longer
+    /// than a millisecond even with the JIT.
+    private static let slowGrammar = #"{"scopeName":"source.slow","patterns":[{"match":"a","name":"keyword.slow"}]}"#
+
+    private func slowHighlighter(lineTimeLimit: Int, timeBudget: Int) throws -> SyntaxHighlighter {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SyntaxHighlighterTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data(Self.slowGrammar.utf8).write(to: directory.appendingPathComponent("slow.tmLanguage.json"))
+        let registry = GrammarRegistry(sources: [DirectoryGrammarSource(directory: directory)])
+        return try SyntaxHighlighter(resources: TextMateFixture.resources(), registry: registry,
+                                     lineTimeLimit: lineTimeLimit, timeBudget: timeBudget)
+    }
+
+    @Test("a line that runs past the per-line limit leaves the text uncoloured and the engine usable")
+    func lineTimeLimitStopsALine() async throws {
+        let highlighter = try slowHighlighter(lineTimeLimit: 1, timeBudget: 60_000)
+        let theme = try TextMateFixture.theme("dark-plus")
+        let long = String(repeating: "a", count: 9_000)
+
+        #expect(try await highlighter.highlight(long, scopeName: "source.slow", theme: theme) == nil)
+        #expect(try await highlighter.highlight("a", scopeName: "source.slow", theme: theme)?.count == 1)
+    }
+
+    @Test("a text that runs past the overall budget is left uncoloured")
+    func timeBudgetStopsTheText() async throws {
+        let highlighter = try slowHighlighter(lineTimeLimit: 0, timeBudget: 0)
+        let theme = try TextMateFixture.theme("dark-plus")
+        let text = Array(repeating: String(repeating: "a", count: 2_000), count: 50).joined(separator: "\n")
+
+        #expect(try await highlighter.highlight(text, scopeName: "source.slow", theme: theme) == nil)
+    }
+
+    @Test("the timed-out answer is recognised only in its own shape")
+    func timedOutShape() {
+        #expect(SyntaxHighlighter.timedOut(json: #"{"timedOut":true}"#))
+        #expect(!SyntaxHighlighter.timedOut(json: #"{"lines":[]}"#))
+        #expect(!SyntaxHighlighter.timedOut(json: #"{"timedOut":false}"#))
+    }
+
     // MARK: - Line split and colours
 
     @Test("the Swift line split matches the bundle's /\\r\\n|\\r|\\n/")

@@ -1,6 +1,7 @@
 
 | Version | Date | Author | Summary |
 |---------|------|--------|---------|
+| 1.5.0 | 2026-11-14 | Mike Fullerton | Review fixes: describes the composable-tabs panes, the project-window id and title; the not-in-a-repository alert; stashes found by sha; close cancels the action; Amend off on an orphan branch; vectors 042-047 |
 | 1.4.0 | 2026-11-14 | Mike Fullerton | Toolbar: Fetch, Pull, Push, Branch, Stash and Pop, aimed at the window's GitWindowToolbar and forwarded to the session's verbs; the toolbar kept beside the session and dropped on close |
 | 1.3.0 | 2026-11-14 | Mike Fullerton | Push goes where git resolves it: the checked-out branch with an upstream by a plain push, any other by its `@{push}` without `--set-upstream`, failing when git names none, never falling back to setting an upstream; the spinner shows only while git runs; local branch and tag deletes confirm destructively |
 | 1.2.0 | 2026-11-14 | Mike Fullerton | Actions: every intent and toolbar verb through one funnel, one at a time, with confirmations, failures and the busy spinner; only remotes with a URL count; a sheet ends when its window closes |

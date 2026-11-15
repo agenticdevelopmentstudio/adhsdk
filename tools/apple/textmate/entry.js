@@ -9,8 +9,12 @@
 // API (every call after create needs create to have resolved):
 //   ADKHighlighter.create(wasmBytes: ArrayBuffer) -> Promise<void>
 //   ADKHighlighter.setTheme(themeJSON: string)
-//   ADKHighlighter.highlight(text: string, scopeName: string) -> Promise<string>
-//     resolves to JSON {"lines": [[[start, length, color, fontStyle], ...], ...]}
+//   ADKHighlighter.highlight(text: string, scopeName: string,
+//                            lineTimeLimit: number, timeBudget: number) -> Promise<string>
+//     resolves to JSON {"lines": [[[start, length, color, fontStyle], ...], ...]},
+//     or {"timedOut": true} when a line stopped early under lineTimeLimit
+//     (milliseconds, vscode-textmate's own per-line limit) or the whole text
+//     ran past timeBudget (milliseconds, checked between lines);
 //     color is uppercase "#RRGGBB" or, when the theme gives an alpha,
 //     "#RRGGBBAA" (a theme's "#RGB" and "#RGBA" are expanded to those);
 //     start and length in UTF-16 code units within the line; fontStyle the
@@ -83,7 +87,7 @@ async function grammar(scopeName) {
   return grammars.get(scopeName);
 }
 
-async function highlight(text, scopeName) {
+async function highlight(text, scopeName, lineTimeLimit, timeBudget) {
   const g = await grammar(scopeName);
   if (!g) throw new Error("no grammar for " + scopeName);
   const colorMap = requireRegistry().getColorMap();
@@ -91,8 +95,11 @@ async function highlight(text, scopeName) {
   const color = (id) => colors[id] ?? (colors[id] = normalizedColor(colorMap[id]));
   let state = tm.INITIAL;
   const lines = [];
+  const deadline = Date.now() + timeBudget;
   for (const line of text.split(/\r\n|\r|\n/)) {
-    const result = g.tokenizeLine2(line, state);
+    if (Date.now() > deadline) return JSON.stringify({ timedOut: true });
+    const result = g.tokenizeLine2(line, state, lineTimeLimit);
+    if (result.stoppedEarly) return JSON.stringify({ timedOut: true });
     const tokens = result.tokens;
     const count = tokens.length / 2;
     const runs = [];

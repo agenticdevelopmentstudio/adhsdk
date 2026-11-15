@@ -4,7 +4,7 @@
     "id": "6a830cf8-0b95-4ffd-b175-f5cf481490c4",
     "title": "Git Window",
     "type": "ingredient",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "status": "review",
     "language": "en",
     "created": "2026-11-14",
@@ -12,7 +12,7 @@
     "author": "Mike Fullerton",
     "copyright": "2026 Mike Fullerton",
     "license": "MIT",
-    "summary": "One window per repository, keyed by its canonical top level: the refs sidebar, the history or the working copy, and the commit detail over the diff, with search and Refresh in the toolbar; the feature that opens, remembers and restores those windows, shares one syntax highlighter between them and registers the commands that open them.",
+    "summary": "One window per repository, keyed by its canonical top level: the overview (refs sidebar), the history or the working copy, and the commit detail over the diff with terminals under it, on the project window's composable-tabs layout; the feature that opens, remembers and restores those windows, shares one syntax highlighter between them and registers the commands that open them.",
     "platforms": [
       "swift",
       "macos"
@@ -39,7 +39,7 @@
     "approved-by": "",
     "approved-date": ""
   },
-  "synced": "9116fd59adc89c0e",
+  "synced": "39ccfa31ce8a1d1e",
   "parts": [
     {"part": "intro"},
     {"part": "overview", "heading": "Overview"},

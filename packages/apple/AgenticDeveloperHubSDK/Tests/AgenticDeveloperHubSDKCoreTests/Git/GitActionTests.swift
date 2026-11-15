@@ -12,16 +12,30 @@ struct GitActionTests {
 
     @Test("staging and unstaging")
     func staging() {
-        expect(.stage(paths: ["a.txt", "-b"]), "add", ["--", "a.txt", "-b"])
+        expect(.stage(paths: ["a.txt", "-b"]), "add", ["--", ":(top,literal)a.txt", ":(top,literal)-b"])
         expect(.stageAll, "add", ["-A"])
-        expect(.unstage(paths: ["a.txt"]), "reset", ["-q", "--", "a.txt"])
+        expect(.unstage(paths: ["a.txt"]), "reset", ["-q", "--", ":(top,literal)a.txt"])
         expect(.unstageAll, "reset", ["-q"])
     }
 
     @Test("discarding and removing untracked files")
     func discarding() {
-        expect(.discard(paths: ["a.txt", "b.txt"]), "restore", ["--worktree", "--", "a.txt", "b.txt"])
-        expect(.removeUntracked(paths: ["c.txt"]), "clean", ["-f", "-d", "--", "c.txt"])
+        expect(.discard(paths: ["a.txt", "b.txt"]), "restore",
+               ["--worktree", "--", ":(top,literal)a.txt", ":(top,literal)b.txt"])
+        expect(.removeUntracked(paths: ["c.txt"]), "clean", ["-f", "-d", "--", ":(top,literal)c.txt"])
+    }
+
+    @Test("only a path-taking action with no paths has an empty path list")
+    func emptyPathLists() {
+        let empty: [GitAction] = [
+            .stage(paths: []), .unstage(paths: []), .discard(paths: []), .removeUntracked(paths: [])
+        ]
+        #expect(empty.allSatisfy { $0.hasEmptyPathList })
+        let full: [GitAction] = [
+            .stage(paths: ["a"]), .unstage(paths: ["a"]), .discard(paths: ["a"]), .removeUntracked(paths: ["a"]),
+            .stageAll, .unstageAll, .push, .stashSave(message: nil)
+        ]
+        #expect(!full.contains { $0.hasEmptyPathList })
     }
 
     @Test("committing, with and without amend")

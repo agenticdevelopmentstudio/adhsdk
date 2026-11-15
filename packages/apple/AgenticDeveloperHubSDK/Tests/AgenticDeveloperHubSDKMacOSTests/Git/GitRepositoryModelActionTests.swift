@@ -102,6 +102,21 @@ struct GitRepositoryModelActionTests {
         #expect(model.hasCommits)
     }
 
+    @Test("hasCommits is false on an orphan branch created beside others")
+    func hasCommitsIsFalseOnAnOrphanBranch() async throws {
+        let repository = try await GitTestRepository.make(prefix: "git-model-action")
+        defer { repository.tearDown() }
+        try await commitFile(repository, "base.txt", at: 100)
+        let model = makeModel(repository)
+        await model.start()
+        #expect(model.hasCommits)
+
+        try await repository.run(["switch", "--quiet", "--orphan", "fresh"])
+        await model.refresh(Set(GitRepositoryChange.allCases))
+        #expect(model.refs.contains { $0.kind == .localBranch })
+        #expect(!model.hasCommits)
+    }
+
     @Test("remotes and lastCommitMessage read through the client")
     func remotesAndLastCommitMessage() async throws {
         let remote = try await GitTestRepository.makeBare()
